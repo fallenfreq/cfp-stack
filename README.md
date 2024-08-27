@@ -1,3 +1,5 @@
+## This is a copy of myStack that I am refactoring to work with Cloudflare Pages. The readme bellow is for the original myStack.
+
 # Tech Stack Monorepo
 
 ## Overview
