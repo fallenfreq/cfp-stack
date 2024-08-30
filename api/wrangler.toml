@@ -2,7 +2,7 @@
 
 # name is optional for cloudflare pages
 name = "somefreq-pages"
-pages_build_output_dir = "../client/dist"
+pages_build_output_dir = "./client_dist"
 # not needed for cloudflare pages, just workers
 # main = "src/app.ts"
 compatibility_date = "2024-08-29"
