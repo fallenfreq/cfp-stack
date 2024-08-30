@@ -3,13 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "./dist/src/app.js",
   "exports": {
-    ".": {
-      "import": "./dist/src/app.js"
-    },
     "./appRouter": {
-      "import": "./dist/src/routes/appRouter.js"
+      "import": "./dist/routes/appRouter.js"
     }
   },
   "files": [
@@ -17,23 +13,19 @@
     "src"
   ],
   "scripts": {
-    "db": "docker compose -f ../nginx/docker-compose.yaml up pg",
-    "start": "node --experimental-json-modules --experimental-import-meta-resolve --trace-warnings -r dotenv/config 'dist/src/app.js'",
-    "preview": "pnpm --filter @vue-app/api start",
-    "dev": "tsc -w & nodemon --experimental-json-modules --experimental-import-meta-resolve --trace-warnings -r dotenv/config 'dist/src/app.js'",
-    "build": "tsc",
-    "migrate": "pnpm drizzle-kit generate:pg",
-    "migrate:push": "node -r dotenv/config dist/src/config/migrate.js"
+    "dev": "npx wrangler pages dev",
+    "build": "rm -rf dist functions .tsbuildinfo && tsc --build",
+    "migrate": "pnpm drizzle-kit generate:sqlite",
+    "migrate:push:local": "npx wrangler d1 migrations apply somefreq-db --local",
+    "migrate:push": "npx wrangler d1 migrations apply somefreq-db"
   },
   "dependencies": {
+    "@cloudflare/workers-types": "^4.20240821.1",
     "@trpc/server": "11.0.0-rc.402",
     "@types/node": "^20.1.4",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
     "drizzle-orm": "^0.30.9",
     "jsonwebtoken": "^9.0.0",
-    "postgres": "^3.4.4",
-    "queuetie": "^0.0.2",
     "zod": "^3.23.5"
   },
   "nodemonConfig": {

@@ -1,38 +1,26 @@
 import { TRPCError, initTRPC } from '@trpc/server'
-import type { CreateMyServerContextOptions } from './trpcAdapter.js'
+import { type DrizzleD1Database } from 'drizzle-orm/d1'
 import superjson from 'superjson'
 import axios from 'axios'
-import { envVars } from './config.js'
-import https from 'https'
-import fs from 'fs'
+import { getAllEnvs } from '../config/envs.js'
+import * as schema from '../schemas/schema.js'
 
-const createContext: (
-  opts: CreateMyServerContextOptions
-) => Promise<CreateMyServerContextOptions> = async ({ req, res, info }) => {
-  return {
-    req,
-    res,
-    info
-  }
+const { ZITADEL_INTROSPECTION_ENDPOINT, ZITADEL_CLIENT_ID, ZITADEL_CLIENT_SECRET } = getAllEnvs()
+
+// Define the type for the context
+type Context = {
+  db: DrizzleD1Database<typeof schema>
+  req: Request
 }
 
-type Context = Awaited<ReturnType<typeof createContext>>
-
-/**
- * Initialization of tRPC backend
- * Should be done only once per backend!
- */
+// Initialize tRPC with the correct context type
 const t = initTRPC.context<Context>().create({
   transformer: superjson
 })
 
-/**
- * Export reusable router and procedure helpers
- * that can be used throughout the router
- */
-
 const secure = t.middleware(async ({ next, ctx }) => {
-  const authHeader = ctx.req.headers.authorization
+  // test if get Authorization works
+  const authHeader = ctx.req.headers.get('Authorization')
   if (!authHeader) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
@@ -42,20 +30,13 @@ const secure = t.middleware(async ({ next, ctx }) => {
 
   const token = authHeader.split(' ')[1]
   try {
-    const response = await axios.post(envVars.ZITADEL_INTROSPECTION_ENDPOINT, `token=${token}`, {
-      ...(envVars.CA_PATH
-        ? {
-            httpsAgent: new https.Agent({
-              ca: fs.readFileSync(envVars.CA_PATH)
-            })
-          }
-        : {}),
+    const response = await axios.post(ZITADEL_INTROSPECTION_ENDPOINT, `token=${token}`, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       auth: {
-        username: envVars.ZITADEL_CLIENT_ID,
-        password: envVars.ZITADEL_CLIENT_SECRET
+        username: ZITADEL_CLIENT_ID,
+        password: ZITADEL_CLIENT_SECRET
       }
     })
 
@@ -82,4 +63,4 @@ const router = t.router
 const publicProcedure = t.procedure
 const secureProcedure = t.procedure.use(secure)
 
-export { router, publicProcedure, secureProcedure, createContext }
+export { router, publicProcedure, secureProcedure, type Context }

@@ -1,11 +1,11 @@
 // https://orm.drizzle.team/docs/column-types/pg
-import { integer, text, pgTable, serial, varchar, primaryKey } from 'drizzle-orm/pg-core'
+import { integer, text, sqliteTable, primaryKey } from 'drizzle-orm/sqlite-core'
 import { relations } from 'drizzle-orm'
 
-export const users = pgTable('users', {
-  userId: serial('user_id').primaryKey(),
+export const users = sqliteTable('users', {
+  userId: integer('user_id').primaryKey(),
   name: text('name'),
-  email: varchar('email', { length: 256 }).notNull()
+  email: text('email', { length: 256 }).notNull()
 })
 
 export const userRelations = relations(users, ({ one, many }) => ({
@@ -16,11 +16,11 @@ export const userRelations = relations(users, ({ one, many }) => ({
   posts: many(posts)
 }))
 
-export const posts = pgTable('posts', {
-  postId: serial('post_id').primaryKey(),
-  title: varchar('title', { length: 256 }).notNull(),
+export const posts = sqliteTable('posts', {
+  postId: integer('post_id').primaryKey(),
+  title: text('title', { length: 256 }).notNull(),
   body: text('body').notNull(),
-  slug: varchar('title', { length: 40 }),
+  slug: text('title', { length: 40 }),
   userId: integer('user_id')
     .notNull()
     .references(() => users.userId)
@@ -34,16 +34,16 @@ export const postRelations = relations(posts, ({ one, many }) => ({
   postCatagories: many(catagoriesPosts)
 }))
 
-export const catagories = pgTable('catagories', {
-  catagoryId: serial('catagory_id').primaryKey(),
-  catagory: varchar('catagory', { length: 40 }).notNull()
+export const catagories = sqliteTable('catagories', {
+  catagoryId: integer('catagory_id').primaryKey(),
+  catagory: text('catagory', { length: 40 }).notNull()
 })
 
 export const catagoryRelations = relations(catagories, ({ many }) => ({
   catagoryPosts: many(catagoriesPosts)
 }))
 
-export const catagoriesPosts = pgTable(
+export const catagoriesPosts = sqliteTable(
   'catagories_posts',
   {
     catagoryId: integer('catagory_id')
@@ -69,9 +69,9 @@ export const catagoriesPostsRelations = relations(catagoriesPosts, ({ one }) => 
   })
 }))
 
-export const profiles = pgTable('profiles', {
-  profileId: serial('id').primaryKey(),
-  bio: varchar('bio', { length: 256 }),
+export const profiles = sqliteTable('profiles', {
+  profileId: integer('id').primaryKey(),
+  bio: text('bio', { length: 256 }),
   userId: integer('user_id')
     .notNull()
     .references(() => users.userId)

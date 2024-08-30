@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
-import fs from 'node:fs'
+// import fs from 'node:fs'
 import extractCssVars from './plugins/extractCssVars'
 
 import { defineConfig } from 'vite'
@@ -23,12 +23,12 @@ export default defineConfig({
       resolvers: [PrimeVueResolver()]
     })
   ],
-  server: {
-    https: {
-      cert: fs.readFileSync('../certs/fullchain.pem'),
-      key: fs.readFileSync('../certs/privkey.pem')
-    }
-  },
+  // server: {
+  //   https: {
+  //     cert: fs.readFileSync('../certs/fullchain.pem'),
+  //     key: fs.readFileSync('../certs/privkey.pem')
+  //   }
+  // },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

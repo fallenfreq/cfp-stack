@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./functions",
+    "rootDir": "./functions_src",
+    "baseUrl": ".",
+    "paths": {
+      // Not currently supported by Cloudflare
+      "@/*": ["./dist/*"]
+    }
+  },
+  "include": ["functions_src/**/*.ts", "functions_src/**/*.d.ts"]
+}

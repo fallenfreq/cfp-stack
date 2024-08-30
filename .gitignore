@@ -26,7 +26,7 @@ Temporary Items
 .apdisk
 
 # hide secrets
-.env
+.dev.vars
 
 # ignore all directories called node_modules in current folder and any subfolders
 node_modules/
