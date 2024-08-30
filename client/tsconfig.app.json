@@ -8,15 +8,13 @@
     "src/**/*",
     "src/**/*.vue",
     "src/services/zitadelAuth.ts",
-    "../../api/src/routes/appRouter.ts",
-    "plugins"
+    "../../api/src/routes/appRouter.ts"
   ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
     "allowJs": true,
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

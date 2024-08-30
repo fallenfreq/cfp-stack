@@ -4,13 +4,16 @@ import zitadelAuth from '@/services/zitadelAuth'
 import type { AppRouter } from '@vue-app/api/appRouter'
 import superjson from 'superjson'
 
+const { VITE_API_PORT, VITE_API_HOST } = import.meta.env
+
 // Pass AppRouter as generic here. 👇 This lets the `trpc` object know
 // what procedures are available on the server and their input/output types.
+
 const trpc = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
       transformer: superjson,
-      url: `https://${import.meta.env.VITE_HOST}:${import.meta.env.VITE_API_PORT}/trpc`,
+      url: `${VITE_API_PORT === '443' ? 'https' : 'http'}://${VITE_API_HOST}:${VITE_API_PORT}/trpc`,
       headers: () => {
         return {
           Authorization: 'Bearer ' + zitadelAuth.oidcAuth.accessToken

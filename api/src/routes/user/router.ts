@@ -1,10 +1,7 @@
 import { publicProcedure, router } from '../../config/trpc.js'
-import { db } from '../../config/db.js'
 import { users, posts, profiles, catagories, catagoriesPosts } from '../../schemas/schema.js'
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
-
-// https://www.youtube.com/watch?v=R4ZgTB-1wEg&list=PLhnVDNT5zYN8PLdYddaU3jiZXeOyehhoU&index=4&ab_channel=SakuraDev
 
 const postValidator = z.object({
   title: z.string(),
@@ -33,7 +30,7 @@ const userValidator = z.object({
 // }
 
 const userRouter = router({
-  insert: publicProcedure.input(userValidator).mutation(async ({ input }) => {
+  insert: publicProcedure.input(userValidator).mutation(async ({ input, ctx: { db } }) => {
     const { profile: sentProfile, posts: sentPosts, ...userData } = input
 
     const newUser = await db
@@ -91,7 +88,7 @@ const userRouter = router({
 
   select: publicProcedure
     .input(z.object({ user_id: z.string() }))
-    .query(async ({ input: { user_id } }) => {
+    .query(async ({ input: { user_id }, ctx: { db } }) => {
       // with lets you select relations set in schemas
       // columns selects which own colums
       const postsJunctionSQL = await db.query.posts.findFirst({

@@ -1,18 +1,11 @@
-import 'dotenv/config'
 import type { Config } from 'drizzle-kit'
-
-// @ts-ignore allowImportingTsExtensions
-import { envVars } from './src/config/config.ts'
 
 export default {
   schema: './src/schemas/schema.ts',
-  out: './drizzle',
-  driver: 'pg',
+  out: './migrations', // This is where your migration files will be stored
+  driver: 'd1', // D1 driver
   dbCredentials: {
-    host: envVars.HOST,
-    port: Number(envVars.DB_PORT),
-    user: envVars.DB_USER,
-    password: envVars.DB_PASSWORD,
-    database: envVars.DB_NAME
+    wranglerConfigPath: '@vue-app/wrangler.toml', // Path to your wrangler.toml file
+    dbName: 'DB' // The binding name for your D1 database as defined in wrangler.toml
   }
 } satisfies Config

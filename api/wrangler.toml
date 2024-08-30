@@ -1,0 +1,31 @@
+# https://developers.cloudflare.com/pages/functions/wrangler-configuration/
+
+# name is optional for cloudflare pages
+name = "somefreq-pages"
+pages_build_output_dir = "../client/dist"
+# not needed for cloudflare pages, just workers
+# main = "src/app.ts"
+compatibility_date = "2024-08-29"
+# will slow down cold starts
+compatibility_flags = [
+  "nodejs_compat"
+]
+
+upload_source_maps = true
+
+
+[[d1_databases]]
+binding = "DB"
+database_name = "somefreq-db"
+database_id = "7f2fdab4-d3c2-4418-860b-c9f8817ddbd1"
+migrations_dir = "migrations"
+
+# use "wrangler secret put API_KEY" to save a secret
+# theres also an optional --env dev or --env production flags
+# .dev.vars file is used for dev enviroment variables and secrets
+# You can also set them from the cloudflare dashboard
+# [env.production.vars]
+
+[vars]
+ZITADEL_CLIENT_ID = "282314634059446901"
+ZITADEL_INTROSPECTION_ENDPOINT = "https://somefreq-instance-45dyjl.zitadel.cloud/oauth/v2/introspect"

@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    // will error if you have not checked a key has a value
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    // type import will be removed from js
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    // Generate d.ts files
+    "declaration": true,
+    // needed for drizzle orm to build
+    "skipLibCheck": true,
+    "types": ["@cloudflare/workers-types"]
+  }
+}
