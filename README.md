@@ -1,4 +1,4 @@
-## This is a copy of myStack that I am refactoring to work with Cloudflare Pages. The readme bellow is for the original myStack. I plan to use Zitadels free plan instead of self-hosting and have drizzle use cloudflares D1 serverless database also on the free plan.
+## This is a copy of myStack that ## This is a copy of myStack that has been refactored to run on Cloudflare Pages but has the same functionality. We are now using the free plan of Zitadel instead of self-hosting, We are still using drizzle as an ORM but with Cloudflare's D1 serverless database. The readme bellow is for the original and still needs to be amended.
 
 # Tech Stack Monorepo
 
