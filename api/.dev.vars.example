@@ -1,3 +1,4 @@
 # https://developers.cloudflare.com/workers/configuration/secrets/
 # These come from the API application that you create in Zitadel
 ZITADEL_CLIENT_SECRET = ""
+SMTP_PASSWORD = ""
