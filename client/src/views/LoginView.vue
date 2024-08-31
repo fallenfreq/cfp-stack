@@ -11,7 +11,7 @@ axios
   .request({
     method: 'GET',
     maxBodyLength: Infinity,
-    url: `${import.meta.env.VITE_API_ISSUER}oidc/v1/userinfo`,
+    url: `${import.meta.env.VITE_API_ZITADEL_ISSUER}oidc/v1/userinfo`,
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
