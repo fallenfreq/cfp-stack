@@ -1,6 +1,6 @@
 <template>
   <div class=".flex-grow">
-    <h1>About page</h1>
+    <h1>Branding portfolio</h1>
     <ComingSoon />
   </div>
 </template>

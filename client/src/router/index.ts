@@ -6,16 +6,6 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/primevue-demo',
-      name: 'primevueDemo',
-      component: () => import('../views/PrimevueDemo.vue')
-    },
-    {
-      path: '/vuestic-demo',
-      name: 'vuesticDemo',
-      component: () => import('../views/VuesticDemo.vue')
-    },
-    {
       path: '/',
       name: 'home',
       component: HomeView
@@ -29,12 +19,28 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue')
     },
     {
+      path: '/portfolio/branding',
+      name: 'portfolio-branding',
+      // route level code-splitting
+      // this generates a separate chunk (About.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('../views/PortfolioBranding.vue')
+    },
+    {
+      path: '/portfolio/web-design',
+      name: 'portfolio-web-design',
+      // route level code-splitting
+      // this generates a separate chunk (About.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('../views/PortfolioWebDesign.vue')
+    },
+    {
       path: '/login',
       name: 'login',
       meta: {
         authName: zitadelAuth.oidcAuth.authName
       },
-      component: () => import('../views/LoginView.vue')
+      component: () => import('../views/ProfileView.vue')
     },
     {
       path: '/admin',
@@ -57,7 +63,7 @@ const router = createRouter({
       },
       component: () => {
         if (zitadelAuth.oidcAuth.isAuthenticated) {
-          return import('../views/LoginView.vue')
+          return import('../views/ProfileView.vue')
         }
         return import('../views/NoAccess.vue')
       }

@@ -5,10 +5,7 @@
   -->
   <VaNavbar color="BackgroundPrimary" class="overflow-hidden rounded-lg border h-auto p-3 mb-3">
     <template #left>
-      <RouterLink class="flex items-center" to="/" tabindex="0" style="cursor: pointer">
-        <img alt="Vue logo" class="w-7 mr-1" src="@/assets/logo.svg" />
-      </RouterLink>
-      <VaNavbarItem class="sm:hidden block">
+      <VaNavbarItem style="margin-right: 0px" class="sm:hidden block">
         <VaDropdown :stickToEdges="true" :closeOnContentClick="false">
           <template #anchor>
             <VaButton
@@ -72,6 +69,12 @@
             </template>
           </VaDropdownContent>
         </VaDropdown>
+      </VaNavbarItem>
+      <VaNavbarItem>
+        <RouterLink class="flex items-center" to="/" tabindex="0" style="cursor: pointer">
+          <MothLogo class="w-8" />
+          <MothWordmark class="pl-4 h-5" />
+        </RouterLink>
       </VaNavbarItem>
     </template>
 
@@ -142,6 +145,8 @@
 import { ref } from 'vue'
 import zitadelAuth from '@/services/zitadelAuth'
 import { useRoute } from 'vue-router'
+import MothLogo from './brand/MothLogo.vue'
+import MothWordmark from './brand/MothWordmark.vue'
 
 interface MenuItem {
   title?: string
@@ -156,21 +161,20 @@ interface MenuItem {
 const route = useRoute()
 
 const items = ref<MenuItem[]>([
-  { title: 'Home', icon: 'home', to: '/' },
   { title: 'About', icon: 'info', to: '/about' },
   {
-    title: 'Demos',
+    title: 'Portfolio',
     icon: 'dashboard',
     children: [
       {
-        title: 'Vuestic',
+        title: 'Branding',
         icon: 'view_comfy',
-        to: '/vuestic-demo'
+        to: '/portfolio/branding'
       },
       {
-        title: 'Primevue',
+        title: 'Web & App Design',
         icon: 'view_comfy',
-        to: '/primevue-demo'
+        to: '/portfolio/web-design'
       }
     ]
   },
@@ -179,7 +183,7 @@ const items = ref<MenuItem[]>([
     icon: 'person',
     to: '/login',
     visible: () => !zitadelAuth.oidcAuth.isAuthenticated,
-    outsideHamburger: true
+    outsideHamburger: false
   },
 
   {
