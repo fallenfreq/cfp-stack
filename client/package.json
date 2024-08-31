@@ -1,5 +1,5 @@
 {
-  "name": "@vue-app/client",
+  "name": "@somefreq-app/client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@trpc/client": "11.0.0-rc.402",
-    "@vue-app/api": "workspace:*",
+    "@somefreq-app/api": "workspace:*",
     "@vuestic/tailwind": "^0.1.5",
     "@zitadel/vue": "^1.0.4",
     "npm": "^10.8.2",
