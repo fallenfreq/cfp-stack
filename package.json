@@ -1,21 +1,21 @@
 {
-  "name": "vue-app",
+  "name": "somefreq-app",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter @vue-app/* --parallel dev",
-    "build": "pnpm --filter @vue-app/* --parallel build",
-    "preview": "pnpm --filter @vue-app/* --parallel preview",
-    "dev:client": "pnpm --filter @vue-app/client dev",
-    "dev:api": "pnpm --filter @vue-app/api dev",
-    "build:client": "pnpm --filter @vue-app/client build",
-    "build:api": "pnpm --filter @vue-app/api build",
-    "preview:client": "pnpm --filter @vue-app/client preview",
+    "dev": "pnpm --filter @somefreq-app/* --parallel dev",
+    "build": "pnpm --filter @somefreq-app/* --parallel build",
+    "preview": "pnpm --filter @somefreq-app/* --parallel preview",
+    "dev:client": "pnpm --filter @somefreq-app/client dev",
+    "dev:api": "pnpm --filter @somefreq-app/api dev",
+    "build:client": "pnpm --filter @somefreq-app/client build",
+    "build:api": "pnpm --filter @somefreq-app/api build",
+    "preview:client": "pnpm --filter @somefreq-app/client preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
-    "migrate:api": "pnpm --filter @vue-app/api migrate",
-    "migrate:push:api": "pnpm --filter @vue-app/api migrate:push"
+    "migrate:api": "pnpm --filter @somefreq-app/api migrate",
+    "migrate:push:api": "pnpm --filter @somefreq-app/api migrate:push"
   },
   "dependencies": {
     "axios": "^1.7.2",
