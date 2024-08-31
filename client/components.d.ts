@@ -7,21 +7,13 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Button: typeof import('primevue/button')['default']
-    Checkbox: typeof import('primevue/checkbox')['default']
-    IconCommunity: typeof import('./src/components/icons/IconCommunity.vue')['default']
-    IconDocumentation: typeof import('./src/components/icons/IconDocumentation.vue')['default']
-    IconEcosystem: typeof import('./src/components/icons/IconEcosystem.vue')['default']
-    IconSupport: typeof import('./src/components/icons/IconSupport.vue')['default']
-    IconTooling: typeof import('./src/components/icons/IconTooling.vue')['default']
-    InputText: typeof import('primevue/inputtext')['default']
-    PrimeDarkModeSwitch: typeof import('./src/components/PrimeDarkModeSwitch.vue')['default']
-    PrimeNavBar: typeof import('./src/components/PrimeNavBar.vue')['default']
+    ComingSoon: typeof import('./src/components/ComingSoon.vue')['default']
+    MiniMothLogo: typeof import('./src/components/brand/MiniMothLogo.vue')['default']
+    MothLogo: typeof import('./src/components/brand/MothLogo.vue')['default']
+    MothWordmark: typeof import('./src/components/brand/MothWordmark.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    TheWelcome: typeof import('./src/components/TheWelcome.vue')['default']
     VuesticDarkModeSwitch: typeof import('./src/components/VuesticDarkModeSwitch.vue')['default']
     VuesticNavBar: typeof import('./src/components/VuesticNavBar.vue')['default']
-    WelcomeItem: typeof import('./src/components/WelcomeItem.vue')['default']
   }
 }
