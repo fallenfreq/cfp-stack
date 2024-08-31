@@ -12,7 +12,7 @@ const envSchema = z.object({
   ZITADEL_CLIENT_SECRET: z.string(),
   ZITADEL_INTROSPECTION_ENDPOINT: z.string(),
   SMTP_OUT_SERVER: z.string(),
-  SMTP_OUT_PORT_TLS: z.number(),
+  SMTP_OUT_PORT_TLS: z.string(),
   SMTP_PASSWORD: z.string(),
   DB: d1DatabaseSchema
 })
