@@ -2,3 +2,4 @@
 functions
 migrations
 client_dist
+.wrangler
