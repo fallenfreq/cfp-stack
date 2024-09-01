@@ -6,6 +6,7 @@
     @input="darkModeHandler"
     :indeterminate="pinkMode"
     :disabled="pinkMode"
+    size="small"
   >
     <template #innerLabel>
       <div class="va-text-center">
