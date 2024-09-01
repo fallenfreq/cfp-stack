@@ -1,6 +1,7 @@
 import { fileURLToPath, URL } from 'node:url'
-// import fs from 'node:fs'
 import extractCssVars from './plugins/extractCssVars'
+import createTrackChangesPlugin from './plugins/trackChangesPlugin'
+import touchFileAfterBuild from './plugins/touchFileAfterBuild'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -13,25 +14,23 @@ export default defineConfig({
     outDir: '../api/client_dist'
   },
   plugins: [
-    {
-      name: 'postbuild-commands',
-      buildStart: async () => {
-        // TODO: Need to make it so this only runs if ./src/assets/base.css has changed
-        console.log('Compiling css variables for Vuestic')
-        extractCssVars('./src/assets/base.css', './cssVariables')
+    createTrackChangesPlugin([
+      {
+        file: './src/assets/base.css',
+        onChange: () => {
+          console.log('Compiling css variables for Vuestic')
+          extractCssVars('./src/assets/base.css', './cssVariables')
+        }
       }
-    },
+    ]),
+    // This is to prevent a bug that stops wrangler pages dev [directory] from working
+    // it is supposed to refresh when static assets change but it doesn't
+    touchFileAfterBuild('../api/functions/trpc/[[trpc]].js'),
     vue(),
     Components({
       resolvers: [PrimeVueResolver()]
     })
   ],
-  // server: {
-  //   https: {
-  //     cert: fs.readFileSync('../certs/fullchain.pem'),
-  //     key: fs.readFileSync('../certs/privkey.pem')
-  //   }
-  // },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
