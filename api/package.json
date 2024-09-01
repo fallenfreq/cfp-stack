@@ -13,7 +13,8 @@
     "src"
   ],
   "scripts": {
-    "dev": "npx wrangler pages dev",
+    "dev": "concurrently \"npm run build:watch\" \"npx wrangler pages dev ./client_dist --live-reload\"",
+    "build:watch": "tsc --build -w",
     "build": "rm -rf dist functions .tsbuildinfo && tsc --build",
     "build:all": "pnpm --filter @somefreq-app/* --parallel build",
     "migrate": "pnpm drizzle-kit generate:sqlite",

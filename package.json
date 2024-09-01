@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "pnpm --filter @somefreq-app/* --parallel dev",
     "build": "pnpm --filter @somefreq-app/* --parallel build",
-    "preview": "pnpm --filter @somefreq-app/* --parallel preview",
     "dev:client": "pnpm --filter @somefreq-app/client dev",
     "dev:api": "pnpm --filter @somefreq-app/api dev",
     "build:client": "pnpm --filter @somefreq-app/client build",
@@ -28,6 +27,7 @@
     "@tsconfig/node20": "^20.1.4",
     "@types/lodash": "^4.17.0",
     "@types/node": "^20.12.5",
+    "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.23.0",
     "npm-run-all2": "^6.1.2",
