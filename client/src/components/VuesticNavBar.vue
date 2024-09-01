@@ -161,7 +161,7 @@ interface MenuItem {
 const route = useRoute()
 
 const items = ref<MenuItem[]>([
-  { title: 'About', icon: 'info', to: '/about' },
+  { title: 'Contact', icon: 'info', to: '/contact' },
   {
     title: 'Portfolio',
     icon: 'dashboard',
@@ -179,17 +179,8 @@ const items = ref<MenuItem[]>([
     ]
   },
   {
-    title: 'Login',
-    icon: 'person',
-    to: '/login',
-    visible: () => !zitadelAuth.oidcAuth.isAuthenticated,
-    outsideHamburger: false
-  },
-
-  {
     icon: 'account_circle',
     outsideHamburger: true,
-    visible: () => zitadelAuth.oidcAuth.isAuthenticated,
     children: [
       {
         icon: 'account_circle',
@@ -210,6 +201,12 @@ const items = ref<MenuItem[]>([
         icon: 'exit_to_app',
         command: () => zitadelAuth.oidcAuth.signOut(),
         visible: () => zitadelAuth.oidcAuth.isAuthenticated
+      },
+      {
+        title: 'Login',
+        icon: 'person',
+        to: '/login',
+        visible: () => !zitadelAuth.oidcAuth.isAuthenticated
       }
     ]
   }
