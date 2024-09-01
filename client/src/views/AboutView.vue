@@ -1,6 +1,0 @@
-<template>
-  <div class=".flex-grow">
-    <h1>About page</h1>
-    <ComingSoon />
-  </div>
-</template>
