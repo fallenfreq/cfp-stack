@@ -19,9 +19,8 @@ body {
   background-color: rgb(var(--backgroundPrimary));
   color: rgb(var(--textPrimary));
   min-height: 100vh;
-  transition:
-    color 0.5s,
-    background-color 0.5s;
+  transition: var(--transition);
+
   line-height: 1.6;
   font-family:
     'Source Sans Pro',

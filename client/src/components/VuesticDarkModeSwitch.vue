@@ -16,8 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue'
-import type { Ref } from 'vue'
+import { type Ref, ref, onMounted, inject } from 'vue'
 import { useColors, useGlobalConfig } from 'vuestic-ui'
 import { AddKeyCombo } from '@/symbols'
 const { applyPreset, currentPresetName } = useColors()
@@ -30,7 +29,7 @@ globalConfig.value.colors.presets.light.primary = `rgb(${primaryColor.replace(ne
 // Dark mode starts using the os preference
 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
   applyPreset('dark')
-  document.documentElement.classList.add('dark')
+  // The dark class is added in the head of the index.html using the same condition
 }
 
 let switchValue: Ref<boolean | null> = ref(document.documentElement.classList.contains('dark'))
