@@ -19,6 +19,9 @@ export default {
   },
 
   components: {
+    all: {
+      style: 'transition: var(--transition);'
+    },
     VaSidebarItem: {
       activeColor: 'primary-highlight-hover',
       hoverColor: 'primary-highlight-hover'
