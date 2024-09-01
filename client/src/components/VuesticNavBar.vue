@@ -1,3 +1,8 @@
+<style scoped>
+.va-navbar__item {
+  margin-right: 5px;
+}
+</style>
 <template>
   <!--
     overflow-hidden stops the darkmode switch from creating a horzontal scroll bar on the viewport
@@ -5,71 +10,6 @@
   -->
   <VaNavbar color="BackgroundPrimary" class="overflow-hidden rounded-lg border h-auto p-3 mb-3">
     <template #left>
-      <VaNavbarItem style="margin-right: 0px" class="sm:hidden block">
-        <VaDropdown :stickToEdges="true" :closeOnContentClick="false">
-          <template #anchor>
-            <VaButton
-              size="large"
-              class="mr-3"
-              text-color="TextPrimary"
-              preset="secondary"
-              icon="menu"
-            >
-            </VaButton>
-          </template>
-
-          <VaDropdownContent class="w-64">
-            <template v-for="item in items" :key="item.title">
-              <VaSidebarItem
-                :active="route.path === item.to"
-                v-if="!item.children && !item.outsideHamburger && (!item.visible || item.visible())"
-                :to="item.command ? undefined : item.to"
-                @click="item.command ? item.command() : undefined"
-                @keydown.enter="item.command ? item.command() : undefined"
-              >
-                <VaSidebarItemContent>
-                  <VaIcon :name="item.icon" />
-                  <VaSidebarItemTitle>{{ item.title }}</VaSidebarItemTitle>
-                </VaSidebarItemContent>
-              </VaSidebarItem>
-
-              <VaAccordion v-else-if="!item.outsideHamburger && (!item.visible || item.visible())">
-                <VaCollapse body-color="BackgroundElement">
-                  <template #header="{ value: isCollapsed }">
-                    <VaSidebarItem
-                      :active="item.children?.some((child) => child.to === route.path)"
-                    >
-                      <VaSidebarItemContent>
-                        <VaIcon :name="item.icon" />
-                        <VaSidebarItemTitle>{{ item.title }}</VaSidebarItemTitle>
-                        <VaSpacer />
-                        <VaIcon :name="isCollapsed ? 'va-arrow-up' : 'va-arrow-down'" />
-                      </VaSidebarItemContent>
-                    </VaSidebarItem>
-                  </template>
-                  <template #body>
-                    <template v-for="child in item.children">
-                      <VaSidebarItem
-                        :active="route.path === child.to"
-                        v-if="!child.visible || child.visible()"
-                        :key="child.title"
-                        :to="child.command ? undefined : child.to"
-                        @click="child.command ? child.command() : undefined"
-                        @keydown.enter="child.command ? child.command() : undefined"
-                      >
-                        <VaSidebarItemContent>
-                          <VaIcon :name="child.icon" />
-                          <VaSidebarItemTitle>{{ child.title }}</VaSidebarItemTitle>
-                        </VaSidebarItemContent>
-                      </VaSidebarItem>
-                    </template>
-                  </template>
-                </VaCollapse>
-              </VaAccordion>
-            </template>
-          </VaDropdownContent>
-        </VaDropdown>
-      </VaNavbarItem>
       <VaNavbarItem>
         <RouterLink class="flex items-center" to="/" tabindex="0" style="cursor: pointer">
           <MothLogo class="w-8" />
@@ -136,6 +76,68 @@
       </template>
       <VaNavbarItem>
         <VuesticDarkModeSwitch />
+      </VaNavbarItem>
+      <VaNavbarItem class="sm:hidden">
+        <div class="h-10 border-r ml-3"></div>
+      </VaNavbarItem>
+      <VaNavbarItem class="sm:hidden">
+        <VaDropdown :stickToEdges="true" :closeOnContentClick="false">
+          <template #anchor>
+            <VaButton size="large" text-color="TextPrimary" preset="secondary" icon="menu">
+            </VaButton>
+          </template>
+
+          <VaDropdownContent class="w-64">
+            <template v-for="item in items" :key="item.title">
+              <VaSidebarItem
+                :active="route.path === item.to"
+                v-if="!item.children && !item.outsideHamburger && (!item.visible || item.visible())"
+                :to="item.command ? undefined : item.to"
+                @click="item.command ? item.command() : undefined"
+                @keydown.enter="item.command ? item.command() : undefined"
+              >
+                <VaSidebarItemContent>
+                  <VaIcon :name="item.icon" />
+                  <VaSidebarItemTitle>{{ item.title }}</VaSidebarItemTitle>
+                </VaSidebarItemContent>
+              </VaSidebarItem>
+
+              <VaAccordion v-else-if="!item.outsideHamburger && (!item.visible || item.visible())">
+                <VaCollapse body-color="BackgroundElement">
+                  <template #header="{ value: isCollapsed }">
+                    <VaSidebarItem
+                      :active="item.children?.some((child) => child.to === route.path)"
+                    >
+                      <VaSidebarItemContent>
+                        <VaIcon :name="item.icon" />
+                        <VaSidebarItemTitle>{{ item.title }}</VaSidebarItemTitle>
+                        <VaSpacer />
+                        <VaIcon :name="isCollapsed ? 'va-arrow-up' : 'va-arrow-down'" />
+                      </VaSidebarItemContent>
+                    </VaSidebarItem>
+                  </template>
+                  <template #body>
+                    <template v-for="child in item.children">
+                      <VaSidebarItem
+                        :active="route.path === child.to"
+                        v-if="!child.visible || child.visible()"
+                        :key="child.title"
+                        :to="child.command ? undefined : child.to"
+                        @click="child.command ? child.command() : undefined"
+                        @keydown.enter="child.command ? child.command() : undefined"
+                      >
+                        <VaSidebarItemContent>
+                          <VaIcon :name="child.icon" />
+                          <VaSidebarItemTitle>{{ child.title }}</VaSidebarItemTitle>
+                        </VaSidebarItemContent>
+                      </VaSidebarItem>
+                    </template>
+                  </template>
+                </VaCollapse>
+              </VaAccordion>
+            </template>
+          </VaDropdownContent>
+        </VaDropdown>
       </VaNavbarItem>
     </template>
   </VaNavbar>
