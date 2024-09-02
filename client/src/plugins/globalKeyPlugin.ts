@@ -16,6 +16,10 @@ const handleKeydown = (event: KeyboardEvent): void => {
 }
 
 const addKeyCombo = (keyCombo: string, func: () => void): void => {
+  if (keyFunctionMap[keyCombo]) {
+    console.log(`Key combo ${keyCombo} is already registered.`)
+    return
+  }
   keyFunctionMap[keyCombo] = func
 }
 
