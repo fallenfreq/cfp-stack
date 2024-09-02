@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ComingSoon: typeof import('./src/components/ComingSoon.vue')['default']
+    DarkModeSwitch: typeof import('./src/components/DarkModeSwitch.vue')['default']
     MiniMothLogo: typeof import('./src/components/brand/MiniMothLogo.vue')['default']
     MothLogo: typeof import('./src/components/brand/MothLogo.vue')['default']
     MothWordmark: typeof import('./src/components/brand/MothWordmark.vue')['default']

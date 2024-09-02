@@ -75,7 +75,7 @@
         </VaNavbarItem>
       </template>
       <VaNavbarItem>
-        <VuesticDarkModeSwitch />
+        <DarkModeSwitch />
       </VaNavbarItem>
       <VaNavbarItem class="sm:hidden">
         <div class="h-10 border-r ml-3"></div>
