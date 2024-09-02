@@ -15,6 +15,7 @@ import './assets/main.css'
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
+import { createPinia } from 'pinia'
 import zitadelAuth from '@/services/zitadelAuth'
 
 declare module 'vue' {
@@ -30,6 +31,7 @@ zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
     const app = createApp(App)
     app.config.globalProperties.$zitadel = zitadelAuth
     app.use(globalKeyPlugin)
+    app.use(createPinia())
     app.use(router)
     app.use(vuestic)
     app.use(PrimeVue, {
