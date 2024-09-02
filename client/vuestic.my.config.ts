@@ -6,10 +6,12 @@ import {
 } from '@/utils/processTailwindColors'
 
 export default {
-  // These are the Vuestic default values and the defaults in Tailwind
+  // These are the Tailwind defaults instead of Vuestics being used for consistency
   // if these are changed in Tailwind, they should be updated here too
+  // xs is custom
   breakpoints: {
     thresholds: {
+      xs: 400,
       sm: 640,
       md: 768,
       lg: 1024,
