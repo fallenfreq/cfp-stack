@@ -12,8 +12,8 @@
     <template #left>
       <VaNavbarItem>
         <RouterLink class="flex items-center" to="/" tabindex="0" style="cursor: pointer">
-          <MothLogo class="w-8" />
-          <MothWordmark class="pl-4 h-5" />
+          <MothLogo class="hidden xs:block mr-4 w-8" />
+          <MothWordmark class="h-5" />
         </RouterLink>
       </VaNavbarItem>
     </template>
