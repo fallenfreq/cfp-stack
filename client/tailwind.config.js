@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 import defaultTheme from 'tailwindcss/defaultTheme'
+import cssVariables from './cssVariables.js'
 
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
@@ -7,7 +8,7 @@ export default {
   theme: {
     // larger screens should be added in extend
     screens: {
-      xs: '400px',
+      xs: cssVariables.root['--xs'] + 'px',
       ...defaultTheme.screens
     },
     extend: {
