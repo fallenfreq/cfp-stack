@@ -14,7 +14,6 @@ declare module 'vue' {
     MothWordmark: typeof import('./src/components/brand/MothWordmark.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    VuesticDarkModeSwitch: typeof import('./src/components/VuesticDarkModeSwitch.vue')['default']
     VuesticNavBar: typeof import('./src/components/VuesticNavBar.vue')['default']
   }
 }
