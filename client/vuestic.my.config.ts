@@ -4,6 +4,7 @@ import {
   processedDarkColors,
   processedPinkColors
 } from '@/utils/processTailwindColors'
+import cssVariables from './cssVariables.js'
 
 export default {
   // These are the Tailwind defaults instead of Vuestics being used for consistency
@@ -11,12 +12,12 @@ export default {
   // xs is custom
   breakpoints: {
     thresholds: {
-      xs: 400,
-      sm: 640,
-      md: 768,
-      lg: 1024,
-      xl: 1280,
-      '2xl': 1536
+      xs: cssVariables.root['--xs'],
+      sm: 'var(--sm)',
+      md: 'var(--md)',
+      lg: 'var(--lg)',
+      xl: 'var(--xl)',
+      '2xl': 'var(--xxl)'
     }
   },
 

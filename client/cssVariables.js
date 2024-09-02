@@ -3,6 +3,12 @@
 export default {
   "root": {
     "--transition": "color 0.5s ease, background-color 0.5s ease",
+    "--xs": "380",
+    "--sm": "640",
+    "--md": "768",
+    "--lg": "1024",
+    "--xl": "1280",
+    "--xxl": "1536",
     "--primary-50": "236 253 245",
     "--primary-100": "209 250 229",
     "--primary-200": "167 243 208",
