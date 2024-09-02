@@ -14,11 +14,12 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@trpc/client": "11.0.0-rc.402",
     "@somefreq-app/api": "workspace:*",
+    "@trpc/client": "11.0.0-rc.402",
     "@vuestic/tailwind": "^0.1.5",
     "@zitadel/vue": "^1.0.4",
     "npm": "^10.8.2",
+    "pinia": "^2.2.2",
     "postcss-safe-parser": "^7.0.0",
     "primeicons": "^7.0.0",
     "primevue": "^3",
