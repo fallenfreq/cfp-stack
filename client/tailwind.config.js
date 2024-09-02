@@ -1,19 +1,16 @@
 /** @type {import('tailwindcss').Config} */
+import defaultTheme from 'tailwindcss/defaultTheme'
+
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
-  // Use 'media' to control dark mode with a os-level setting
-  // Use 'selector' to control dark mode with a class
-
-  // if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-  //   document.documentElement.classList.add('dark')
-  // } else {
-  //   document.documentElement.classList.remove('dark')
-  // }
-
   darkMode: 'selector',
   theme: {
+    // larger screens should be added in extend
+    screens: {
+      xs: '400px',
+      ...defaultTheme.screens
+    },
     extend: {
-      // On instruction from tailwind.primevue.org
       colors: {
         primary: {
           DEFAULT: 'rgb(var(--primary))',
