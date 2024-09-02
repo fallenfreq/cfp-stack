@@ -8,6 +8,7 @@
     x="0px"
     y="0px"
     viewBox="0 0 34.3 32.72"
+    overflow="visible"
     style="enable-background: new 0 0 34.3 32.72"
     xml:space="preserve"
   >
