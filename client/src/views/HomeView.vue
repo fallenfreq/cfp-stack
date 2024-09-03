@@ -1,7 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div class="flex flex-col w-full max-w-5xl mx-auto px-4 py-8">
+  <div class="flex flex-col w-full max-w-5xl mx-auto px-6">
     <h1 class="text-4xl font-bold mb-8">Light Up Your Bright Ideas</h1>
 
     <h2 class="text-lg italic mb-4" style="opacity: 0.9">
