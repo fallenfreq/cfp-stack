@@ -22,7 +22,8 @@ export default {
   },
 
   components: {
-    all: {
+    VaNavbar: {
+      // Any component that uses a transition will override the default transition
       style: 'transition: var(--transition);'
     },
     VaSidebarItem: {
@@ -44,6 +45,16 @@ export default {
       }
     ],
     fonts: [
+      // fa- icons are used to pass brand icons to Vuestic using webfonts
+      // Font Awesome is installed as a package too so you can placed as an svg with:
+      // <FontAwesomeIcon :icon="faGithub" \>
+      {
+        name: 'fa-{icon}',
+        resolve: ({ icon }) => ({
+          content: icon,
+          class: 'fa-brands'
+        })
+      },
       // mi- icons are used by vustic to set some va- icons
       // This makes sure that the mi- icons also use the rounded material icons
       {
