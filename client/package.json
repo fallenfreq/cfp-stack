@@ -14,6 +14,9 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@fortawesome/vue-fontawesome": "^3.0.8",
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-brands-svg-icons": "^6.6.0",
     "@somefreq-app/api": "workspace:*",
     "@trpc/client": "11.0.0-rc.402",
     "@vuestic/tailwind": "^0.1.5",
