@@ -4,7 +4,7 @@
     <div class="flex space-x-4 mt-4">
       <!-- <FontAwesomeIcon :icon="faFacebook" class="cursor-pointer" /> -->
       <a href="https://github.com/fallenfreq" target="_blank" rel="noopener noreferrer nofollow">
-        <FontAwesomeIcon size="lg" :icon="faGithub" />
+        <FontAwesomeIcon size="xl" :icon="faGithub" />
       </a>
       <!-- <FontAwesomeIcon :icon="faInstagram" class="cursor-pointer" /> -->
     </div>
