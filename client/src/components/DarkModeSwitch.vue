@@ -1,16 +1,18 @@
 <template>
   <VaSwitch
-    v-model="DarkModeStore.isDarkMode"
+    v-model="store.isDarkMode"
     color="BackgroundSecondary"
     style="--va-switch-checker-background-color: #252723"
     @input="toggleDarkMode"
-    :indeterminate="isPinkMode"
-    :disabled="isPinkMode"
+    :indeterminate="store.isPinkMode"
+    :disabled="store.isPinkMode"
     size="small"
   >
     <template #innerLabel>
       <div class="va-text-center">
-        <VaIcon :name="isDarkMode == null ? '' : isDarkMode ? 'dark_mode' : 'light_mode'" />
+        <VaIcon
+          :name="store.isDarkMode == null ? '' : store.isDarkMode ? 'dark_mode' : 'light_mode'"
+        />
       </div>
     </template>
   </VaSwitch>
@@ -18,8 +20,8 @@
 
 <script setup lang="ts">
 import { useDarkModeStore } from '@/stores/darkModeStore'
-const DarkModeStore = useDarkModeStore()
-const { isDarkMode, isPinkMode, toggleDarkMode, togglePinkMode } = DarkModeStore
+const store = useDarkModeStore()
+const { toggleDarkMode, togglePinkMode } = store
 import { AddKeyCombo, injectSafe } from '@/symbols'
 import { onMounted } from 'vue'
 
