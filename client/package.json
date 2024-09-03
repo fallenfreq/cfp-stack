@@ -14,11 +14,12 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@fortawesome/vue-fontawesome": "^3.0.8",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-brands-svg-icons": "^6.6.0",
+    "@fortawesome/vue-fontawesome": "^3.0.8",
     "@somefreq-app/api": "workspace:*",
     "@trpc/client": "11.0.0-rc.402",
+    "@vitejs/plugin-vue-jsx": "^4.0.1",
     "@vuestic/tailwind": "^0.1.5",
     "@zitadel/vue": "^1.0.4",
     "npm": "^10.8.2",
