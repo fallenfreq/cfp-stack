@@ -5,6 +5,7 @@ import touchFileAfterBuild from './plugins/touchFileAfterBuild'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
 import Components from 'unplugin-vue-components/vite'
 import { PrimeVueResolver } from '@primevue/auto-import-resolver'
 
@@ -27,6 +28,7 @@ export default defineConfig({
     // it is supposed to refresh when static assets change but it doesn't
     touchFileAfterBuild('../api/functions/trpc/[[trpc]].js'),
     vue(),
+    vueJsx(),
     Components({
       resolvers: [PrimeVueResolver()]
     })
