@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BasicFooter: typeof import('./src/components/BasicFooter.vue')['default']
     ComingSoon: typeof import('./src/components/ComingSoon.vue')['default']
     DarkModeSwitch: typeof import('./src/components/DarkModeSwitch.vue')['default']
     MiniMothLogo: typeof import('./src/components/brand/MiniMothLogo.vue')['default']
