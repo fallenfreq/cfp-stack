@@ -1,0 +1,31 @@
+<template>
+  <div class="w-full h-auto">
+    <div
+      class="bg-backgroundSecondary border rounded-lg relative w-full aspect-[16/9] flex items-center justify-center"
+    >
+      <MothLogo v-if="isPlaceholder" class="w-1/2 h-1/2 opacity-10" />
+      <img v-else class="w-full h-full object-cover" :src="image" alt="Portfolio Image" />
+    </div>
+    <div class="py-3">
+      <h2>{{ title }}</h2>
+    </div>
+  </div>
+</template>
+
+<script setup>
+// Define props for the card
+const props = defineProps({
+  image: {
+    type: String,
+    default: null
+  },
+  title: {
+    type: String,
+    required: true
+  },
+  isPlaceholder: {
+    type: Boolean,
+    default: false // Flag to determine if it's a placeholder
+  }
+})
+</script>
