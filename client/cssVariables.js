@@ -2,7 +2,7 @@
 
 export default {
   "root": {
-    "--transition": "color 0.5s ease, background-color 0.5s ease",
+    "--transition": "background-color 0.5s ease",
     "--xs": "380",
     "--sm": "640",
     "--md": "768",
