@@ -8,6 +8,7 @@
 *,
 *::before,
 *::after {
+  transition: var(--transition);
   border-color: rgb(var(--backgroundBorder));
 }
 
@@ -19,8 +20,6 @@ body {
   background-color: rgb(var(--backgroundPrimary));
   color: rgb(var(--textPrimary));
   min-height: 100vh;
-  transition: var(--transition);
-
   line-height: 1.6;
   font-family:
     'Source Sans Pro',
