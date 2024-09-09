@@ -1,7 +1,7 @@
 import type { Config } from 'drizzle-kit'
 
 export default {
-  schema: './src/schemas/schema.ts',
+  schema: './src/schemas/*',
   out: './migrations', // This is where your migration files will be stored
   driver: 'd1', // D1 driver
   dbCredentials: {
