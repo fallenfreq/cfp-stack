@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import zitadelAuth from '@/services/zitadelAuth'
-import { trpc } from '../trpc'
+import { trpc } from '@/trpc'
 import axios from 'axios'
 
 const user = computed(() => zitadelAuth.oidcAuth.userProfile)
