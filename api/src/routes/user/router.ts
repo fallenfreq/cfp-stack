@@ -1,5 +1,5 @@
 import { publicProcedure, router } from '../../config/trpc.js'
-import { users, posts, profiles, catagories, catagoriesPosts } from '../../schemas/schema.js'
+import { users, posts, profiles, catagories, catagoriesPosts } from '../../schemas/user.js'
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 

@@ -8,7 +8,8 @@
     "src/**/*",
     "src/**/*.vue",
     "src/services/zitadelAuth.ts",
-    "../../api/src/routes/appRouter.ts"
+    "../../api/src/routes/appRouter.ts",
+    "../api/services/portfolio.ts"
   ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {

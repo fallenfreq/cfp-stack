@@ -2,11 +2,14 @@ import { publicProcedure, router } from '../config/trpc.js'
 import { z } from 'zod'
 import { secureRouter } from './secure/router.js'
 import { userRouter } from './user/router.js'
+import { portfolioRouter } from './portfolio/router.js'
 
 const appRouter = router({
   secure: secureRouter,
 
   user: userRouter,
+
+  portfolio: portfolioRouter,
 
   test: publicProcedure.query(async () => {
     return 'Some stuff'

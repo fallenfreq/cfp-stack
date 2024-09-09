@@ -3,7 +3,7 @@ import { type DrizzleD1Database } from 'drizzle-orm/d1'
 import superjson from 'superjson'
 import axios from 'axios'
 import { getAllEnvs } from '../config/envs.js'
-import * as schema from '../schemas/schema.js'
+import * as schema from '../schemas/user.js'
 
 const { ZITADEL_INTROSPECTION_ENDPOINT, ZITADEL_CLIENT_ID, ZITADEL_CLIENT_SECRET } = getAllEnvs()
 

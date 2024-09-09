@@ -2,10 +2,11 @@
   <div
     class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-5"
   >
+    <h1 v-if="isLoading">Loading...</h1>
     <BasicCard
       v-for="(item, index) in displayedItems"
       :key="index"
-      :image="item.image"
+      :image="item.imageUrl"
       :title="item.title"
       :is-placeholder="item.isPlaceholder"
       :class="[
@@ -19,14 +20,19 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
-import { fetchPortfolioItems } from '@/services/portfolio'
+import { getPortfolioEntries } from '@/services/portfolio'
+
+const { data, isLoading, run } = getPortfolioEntries()
 
 // Interface for PortfolioItem type
 interface PortfolioItem {
-  image: string | null
+  link?: string
+  id?: number
+  description?: string
+  imageUrl: string | null
   title: string
-  isPlaceholder: boolean
-  visibilityClasses?: string[] // New field for visibility classes
+  isPlaceholder?: boolean
+  visibilityClasses?: string[]
 }
 
 interface Breakpoints {
@@ -77,13 +83,15 @@ const getMaxItemsCount = (realItemsCount: number, placeholdersNeeded: Breakpoint
   return realItemsCount + highestPlaceholderCount
 }
 
-onMounted(async () => {
-  const items = (await fetchPortfolioItems()) as PortfolioItem[]
+const setDisplayedItems = async () => {
+  await run()
+  const items: PortfolioItem[] = data.value || []
   const placeholdersNeeded = calculatePlaceholdersNeeded(items.length)
+  const placeholders: PortfolioItem[] = []
 
   for (let i = 0; i < getMaxItemsCount(items.length, placeholdersNeeded); i++) {
     const placeholder: PortfolioItem = {
-      image: null,
+      imageUrl: null,
       title: 'Coming Soon!',
       isPlaceholder: true,
       visibilityClasses: []
@@ -95,9 +103,12 @@ onMounted(async () => {
         visibilityClasses?.push('visible-' + key)
     }
 
-    displayedItems.value.push(placeholder)
+    placeholders.push(placeholder)
   }
-})
+  displayedItems.value = [...items, ...placeholders]
+}
+
+onMounted(setDisplayedItems)
 </script>
 
 <style scoped>
