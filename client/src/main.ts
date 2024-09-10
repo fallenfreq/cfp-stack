@@ -19,6 +19,7 @@ import { createPinia } from 'pinia'
 import zitadelAuth from '@/services/zitadelAuth'
 
 import { VueQueryPlugin } from '@tanstack/vue-query'
+import { queryClient } from './config/queryClient'
 
 declare module 'vue' {
   interface ComponentCustomProperties {
@@ -34,7 +35,7 @@ zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
     app.config.globalProperties.$zitadel = zitadelAuth
     app.use(globalKeyPlugin)
     app.use(createPinia())
-    app.use(VueQueryPlugin)
+    app.use(VueQueryPlugin, { queryClient })
     app.use(router)
     app.use(vuestic)
     app.use(PrimeVue, {

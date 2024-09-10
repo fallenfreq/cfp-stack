@@ -3,6 +3,7 @@
     class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-5"
   >
     <h1 v-if="isPending">Loading...</h1>
+    <h1 v-else-if="isError">Error occurred retrieving portfolio</h1>
     <BasicCard
       v-for="(item, index) in displayedItems"
       :key="index"
@@ -22,7 +23,7 @@
 import { ref, watch } from 'vue'
 import { getPortfolioEntries } from '@/services/portfolio'
 
-const { data, isPending } = getPortfolioEntries()
+const { data, isPending, isError } = getPortfolioEntries()
 
 // Interface for PortfolioItem type
 interface PortfolioItem {
