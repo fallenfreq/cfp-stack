@@ -29,6 +29,6 @@ onMounted(() => {
   // Register the key combo and function
   console.log('Mounting a dark mode switch')
   const addKeyCombo = injectSafe(AddKeyCombo)
-  addKeyCombo('Cmd+k', togglePinkMode)
+  addKeyCombo('Ctrl+Shift+K', togglePinkMode)
 })
 </script>
