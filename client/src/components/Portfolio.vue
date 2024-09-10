@@ -2,8 +2,6 @@
   <div
     class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-5"
   >
-    <h1 v-if="isPending">Loading...</h1>
-    <h1 v-else-if="isError">Error occurred retrieving portfolio</h1>
     <BasicCard
       v-for="(item, index) in displayedItems"
       :key="index"
@@ -13,17 +11,18 @@
       :class="[
         'portfolio-item',
         { 'is-placeholder': item.isPlaceholder },
-        ...item.visibilityClasses
+        ...(item.visibilityClasses || [])
       ]"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { getPortfolioEntries } from '@/services/portfolio'
 
-const { data, isPending, isError } = getPortfolioEntries()
+// isPending is essential being handled by onMounted and watching for data changes bellow
+const { data, isError } = getPortfolioEntries()
 
 // Interface for PortfolioItem type
 interface PortfolioItem {
@@ -84,18 +83,21 @@ const getMaxItemsCount = (realItemsCount: number, placeholdersNeeded: Breakpoint
   return realItemsCount + highestPlaceholderCount
 }
 
-const setDisplayedItems = async () => {
+const setDisplayedItems = async (defaultItem?: Partial<PortfolioItem>) => {
   const items = data.value || []
   const placeholdersNeeded = calculatePlaceholdersNeeded(items.length)
   const placeholders: PortfolioItem[] = []
 
   for (let i = 0; i < getMaxItemsCount(items.length, placeholdersNeeded); i++) {
-    const placeholder: PortfolioItem = {
-      imageUrl: null,
-      title: 'Coming Soon!',
-      isPlaceholder: true,
-      visibilityClasses: []
-    }
+    const placeholder: PortfolioItem = Object.assign(
+      {
+        imageUrl: null,
+        title: '',
+        isPlaceholder: true,
+        visibilityClasses: []
+      },
+      defaultItem
+    )
 
     const { visibilityClasses } = placeholder
     for (const key of Object.keys(placeholdersNeeded)) {
@@ -108,8 +110,16 @@ const setDisplayedItems = async () => {
   displayedItems.value = [...items, ...placeholders]
 }
 
-watch(data, () => {
-  setDisplayedItems()
+watch([data, isError], () => {
+  if (isError.value && !data.value) {
+    setDisplayedItems({ title: '' })
+  } else if (data.value) {
+    setDisplayedItems({ title: 'Coming Soon!' })
+  }
+})
+
+onMounted(() => {
+  setDisplayedItems({ title: 'Loading...' })
 })
 </script>
 
