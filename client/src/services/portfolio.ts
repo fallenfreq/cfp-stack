@@ -1,8 +1,11 @@
 import { trpc } from '@/trpc'
-import { useService } from '@/utils/useService'
+import { useQuery } from '@tanstack/vue-query'
 
 const getPortfolioEntries = () => {
-  return useService(trpc.portfolio.entry.query)
+  return useQuery({
+    queryKey: ['getPortfolioEntries'],
+    queryFn: () => trpc.portfolio.entry.query()
+  })
 }
 
 export { getPortfolioEntries }

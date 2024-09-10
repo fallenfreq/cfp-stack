@@ -18,6 +18,7 @@
     "@fortawesome/free-brands-svg-icons": "^6.6.0",
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@somefreq-app/api": "workspace:*",
+    "@tanstack/vue-query": "^5.55.4",
     "@trpc/client": "11.0.0-rc.402",
     "@vitejs/plugin-vue-jsx": "^4.0.1",
     "@vuestic/tailwind": "^0.1.5",
