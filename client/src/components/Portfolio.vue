@@ -2,7 +2,7 @@
   <div
     class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-5"
   >
-    <h1 v-if="isLoading">Loading...</h1>
+    <h1 v-if="isPending">Loading...</h1>
     <BasicCard
       v-for="(item, index) in displayedItems"
       :key="index"
@@ -19,10 +19,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { getPortfolioEntries } from '@/services/portfolio'
 
-const { data, isLoading, run } = getPortfolioEntries()
+const { data, isPending } = getPortfolioEntries()
 
 // Interface for PortfolioItem type
 interface PortfolioItem {
@@ -84,8 +84,7 @@ const getMaxItemsCount = (realItemsCount: number, placeholdersNeeded: Breakpoint
 }
 
 const setDisplayedItems = async () => {
-  await run()
-  const items: PortfolioItem[] = data.value || []
+  const items = data.value || []
   const placeholdersNeeded = calculatePlaceholdersNeeded(items.length)
   const placeholders: PortfolioItem[] = []
 
@@ -108,7 +107,9 @@ const setDisplayedItems = async () => {
   displayedItems.value = [...items, ...placeholders]
 }
 
-onMounted(setDisplayedItems)
+watch(data, () => {
+  setDisplayedItems()
+})
 </script>
 
 <style scoped>
