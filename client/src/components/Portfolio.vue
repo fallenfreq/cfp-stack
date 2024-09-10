@@ -18,11 +18,15 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, defineProps } from 'vue'
 import { getPortfolioEntries } from '@/services/portfolio'
 
+const props = defineProps<{
+  portfolio: Parameters<typeof getPortfolioEntries>[0]
+}>()
+
 // isPending is essential being handled by onMounted and watching for data changes bellow
-const { data, isError } = getPortfolioEntries()
+const { data, isError } = getPortfolioEntries(props.portfolio)
 
 // Interface for PortfolioItem type
 interface PortfolioItem {
@@ -119,7 +123,7 @@ watch([data, isError], () => {
 })
 
 onMounted(() => {
-  setDisplayedItems({ title: 'Loading...' })
+  setDisplayedItems({ title: data.value ? 'Coming Soon!' : 'Loading...' })
 })
 </script>
 
