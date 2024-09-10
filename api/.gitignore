@@ -1,4 +1,5 @@
 # api specific 
 functions
 client_dist
+migrations
 .wrangler
