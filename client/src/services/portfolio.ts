@@ -1,9 +1,12 @@
 import { trpc } from '@/trpc'
-import { useQuery } from '@tanstack/vue-query'
+import { useQuery, type QueryFunctionContext } from '@tanstack/vue-query'
 
-const getPortfolioEntries = () => {
+const getPortfolioEntries = (
+  queryKey: QueryFunctionContext<['brandPortfolio' | 'webDesignPortfolio']>['queryKey']
+) => {
   return useQuery({
-    queryKey: ['getPortfolioEntries'],
+    queryKey,
+    // ctx is passed to the queryFn
     queryFn: () => trpc.portfolio.entry.query()
   })
 }
