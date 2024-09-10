@@ -18,7 +18,7 @@ upload_source_maps = true
 binding = "DB"
 database_name = "somefreq-db"
 database_id = "7f2fdab4-d3c2-4418-860b-c9f8817ddbd1"
-# migrations_dir = "migrations"
+migrations_dir = "migrations"
 
 # use "wrangler secret put API_KEY" to save a secret
 # theres also an optional --env dev or --env production flags
