@@ -71,7 +71,7 @@ const prettierPlugins = {
 //   editor.value.commands.insertContent(formattedContent)
 // }
 
-import initialContent from '@/tiptap/initialContent.html?raw'
+import initialContent from '@/../public/initialContent.html?raw'
 // Store the editor content as a reactive property
 
 // Utility functions to escape and unescape HTML content
@@ -220,3 +220,8 @@ const toggleView = async () => {
   }
 }
 </style>
+
+<!--
+create prettier formmater extetion
+youtube keeps being nested in more divs
+-->
