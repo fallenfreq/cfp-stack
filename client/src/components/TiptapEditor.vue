@@ -71,8 +71,7 @@ const prettierPlugins = {
 //   editor.value.commands.insertContent(formattedContent)
 // }
 
-import initialContent from '@/../public/initialContent.html?raw'
-// Store the editor content as a reactive property
+import initialContent from '@/tiptap/initialContent.html?raw'
 
 // Utility functions to escape and unescape HTML content
 const escapeHTML = (html: string) => {
