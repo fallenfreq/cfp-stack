@@ -17,6 +17,9 @@ declare module 'vue' {
     Portfolio: typeof import('./src/components/Portfolio.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    TiptapCodeBlock: typeof import('./src/components/TiptapCodeBlock.vue')['default']
+    TiptapEditor: typeof import('./src/components/TiptapEditor.vue')['default']
+    TiptapTest: typeof import('./src/components/TiptapTest.vue')['default']
     VuesticNavBar: typeof import('./src/components/VuesticNavBar.vue')['default']
   }
 }
