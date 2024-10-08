@@ -14,6 +14,16 @@ export default defineConfig({
   build: {
     outDir: '../api/client_dist'
   },
+  css: {
+    preprocessorOptions: {
+      sass: {
+        api: 'modern-compiler'
+      },
+      scss: {
+        api: 'modern-compiler'
+      }
+    }
+  },
   plugins: [
     createTrackChangesPlugin([
       {
