@@ -99,6 +99,7 @@ const editor = useEditor({
     StarterKit.configure({
       codeBlock: false
     }),
+    Div,
     Youtube,
     Image,
     Table,
@@ -106,7 +107,6 @@ const editor = useEditor({
     TableHeader,
     TableRow,
     Span,
-    Div,
     ...registerCustomNodes(),
     AllowAttributesExtension
   ],
@@ -144,79 +144,77 @@ const toggleView = async () => {
 
 <style lang="scss">
 /* Basic editor styles */
-.tiptap {
-  :first-child {
-    margin-top: 0;
-  }
+.tiptap:first-child {
+  margin-top: 0;
+}
 
-  pre {
-    background: rgb(var(--backgroundSecondary));
-    border-radius: 0.5rem;
-    color: rgb(var(--textPrimary));
-    font-family: 'JetBrainsMono', monospace;
-    margin: 1.5rem 0;
-    padding: 0.75rem 1rem;
+.tiptap pre {
+  background: rgb(var(--backgroundSecondary));
+  border-radius: 0.5rem;
+  color: rgb(var(--textPrimary));
+  font-family: 'JetBrainsMono', monospace;
+  margin: 1.5rem 0;
+  padding: 0.75rem 1rem;
+}
 
-    code {
-      background: none;
-      color: inherit;
-      font-size: 0.8rem;
-      padding: 0;
-    }
+.tiptap code {
+  background: none;
+  color: inherit;
+  font-size: 0.8rem;
+  padding: 0;
+}
 
-    /* Code styling */
-    .hljs-comment,
-    .hljs-quote {
-      color: #616161;
-    }
+/* Code styling */
+.hljs-comment,
+.hljs-quote {
+  color: #616161;
+}
 
-    .hljs-variable,
-    .hljs-template-variable,
-    .hljs-attribute,
-    .hljs-tag,
-    .hljs-name,
-    .hljs-regexp,
-    .hljs-link,
-    .hljs-name,
-    .hljs-selector-id,
-    .hljs-selector-class {
-      color: #f98181;
-    }
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attribute,
+.hljs-tag,
+.hljs-name,
+.hljs-regexp,
+.hljs-link,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: #f98181;
+}
 
-    .hljs-number,
-    .hljs-meta,
-    .hljs-built_in,
-    .hljs-builtin-name,
-    .hljs-literal,
-    .hljs-type,
-    .hljs-params {
-      color: #fbbc88;
-    }
+.hljs-number,
+.hljs-meta,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params {
+  color: #fbbc88;
+}
 
-    .hljs-string,
-    .hljs-symbol,
-    .hljs-bullet {
-      color: #b9f18d;
-    }
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet {
+  color: #b9f18d;
+}
 
-    .hljs-title,
-    .hljs-section {
-      color: #faf594;
-    }
+.hljs-title,
+.hljs-section {
+  color: #faf594;
+}
 
-    .hljs-keyword,
-    .hljs-selector-tag {
-      color: #70cff8;
-    }
+.hljs-keyword,
+.hljs-selector-tag {
+  color: #70cff8;
+}
 
-    .hljs-emphasis {
-      font-style: italic;
-    }
+.hljs-emphasis {
+  font-style: italic;
+}
 
-    .hljs-strong {
-      font-weight: 700;
-    }
-  }
+.hljs-strong {
+  font-weight: 700;
 }
 </style>
 
