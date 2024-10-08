@@ -99,7 +99,7 @@ const editor = useEditor({
     StarterKit.configure({
       codeBlock: false
     }),
-    Div,
+    // Div,
     Youtube,
     Image,
     Table,
@@ -220,5 +220,5 @@ const toggleView = async () => {
 
 <!--
 create prettier formmater extetion
-youtube keeps being nested in more divs
+youtube keeps being nested in more divs with Div active
 -->
