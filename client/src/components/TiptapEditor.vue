@@ -1,16 +1,16 @@
 <!-- src/components/Editor.vue -->
 <template>
-  <div v-if="editor" class="p-7 sticky top-0 z-10">
+  <div v-if="editor" class="px-7 sticky top-0 z-10">
     <VaChip
       @click="editor.chain().focus().toggleCodeBlock().run()"
       :class="['mr-2', { 'is-active': editor.isActive('codeBlock') }]"
     >
       Code block
     </VaChip>
-    <!-- <VaChip class="mr-2" @click="() => prettierFormat('html')">Format HTML</VaChip>
-    <VaChip class="mr-2" @click="() => prettierFormat('js')">Format JS</VaChip> -->
+    <VaChip class="mr-2" @click="() => prettierFormat('html')">Format HTML</VaChip>
+    <VaChip class="mr-2" @click="() => prettierFormat('babel')">Format JS</VaChip>
     <VaChip @click="toggleView">
-      {{ isCodeView ? 'T' : `\<\/\>` }}
+      {{ isCodeView ? 'Aa' : `\<\/\>` }}
     </VaChip>
   </div>
   <EditorContent class="p-7" :editor="editor" />
@@ -23,9 +23,11 @@ import { registerCustomNodes } from '@/tiptap/registerCustomNodes'
 import { AllowAttributesExtension } from '@/tiptap/allowAttributesExtension'
 import { initGenerateDynamicHTML } from '@/tiptap/jsonToHtml'
 
-import prettier from 'prettier'
-import htmlParser from 'prettier/parser-html'
-import jsParser from 'prettier/parser-babel'
+// import prettier from 'prettier'
+import prettier from 'prettier/standalone'
+import prettierPluginHtml from 'prettier/plugins/html'
+import prettierPluginBabel from 'prettier/plugins/babel'
+import prettierPluginEstree from 'prettier/plugins/estree'
 
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -50,26 +52,35 @@ import xml from 'highlight.js/lib/languages/xml'
 lowlight.register('html', xml)
 
 const prettierPlugins = {
-  html: htmlParser,
-  js: jsParser
+  html: [prettierPluginHtml],
+  babel: [prettierPluginBabel, prettierPluginEstree, prettierPluginHtml]
 }
 
+const printWidth = 99999999
+
 // Function to format selected text using Prettier
-// const prettierFormat = async (language: 'js' | 'html') => {
-//   if (!editor.value) return
-//   const selectedContent = editor.value.state.doc.textBetween(
-//     editor.value.state.selection.from,
-//     editor.value.state.selection.to
-//   )
-//   console.log({ selectedContent })
-//   if (!selectedContent) return
-//   const formattedContent = await prettier.format(selectedContent, {
-//     parser: 'html',
-//     plugins: [prettierPlugins[language]]
-//   })
-//   console.log({ formattedContent })
-//   editor.value.commands.insertContent(formattedContent)
-// }
+const prettierFormat = async (language: 'babel' | 'html') => {
+  if (!editor.value) return
+  const { anchor } = editor.value.state.selection
+  const textNode = editor.value.state.doc.nodeAt(anchor)
+  const resolvedPos = editor.value.state.doc.resolve(anchor)
+  const startPosition = resolvedPos.start(resolvedPos.depth)
+  const endPosition = resolvedPos.end(resolvedPos.depth)
+  const selectedContent = textNode?.textContent || ''
+
+  if (!selectedContent) return
+  const formattedContent = await prettier.format(selectedContent, {
+    parser: language,
+    plugins: prettierPlugins[language],
+    printWidth
+  })
+
+  editor.value.commands.insertContentAt(
+    { from: startPosition, to: endPosition },
+    { type: 'text', text: formattedContent }
+  )
+  editor.value.chain().focus().setTextSelection(anchor).run()
+}
 
 import initialContent from '@/tiptap/initialContent.html?raw'
 
@@ -99,7 +110,7 @@ const editor = useEditor({
     StarterKit.configure({
       codeBlock: false
     }),
-    // Div,
+    Div,
     Youtube,
     Image,
     Table,
@@ -132,7 +143,8 @@ const toggleView = async () => {
   } else {
     const htmlContent = await prettier.format(generateDynamicHTML(), {
       parser: 'html',
-      plugins: [htmlParser]
+      plugins: [prettierPluginHtml],
+      printWidth
     })
     editor.value.commands.setContent(
       `<pre><code class="language-html">${escapeHTML(htmlContent)}</code></pre>`
