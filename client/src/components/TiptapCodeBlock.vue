@@ -46,12 +46,17 @@ export default {
   position: relative;
 }
 
+/* id like to move this into an editor nav */
 .tiptap .code-block select {
   position: absolute;
-  background-color: rgb(var(--textPrimary));
-  color: rgb(var(--backgroundPrimary));
+  /* color: transparent; */
+  background-color: transparent;
+  width: 15px;
+  /* height: 22px; */
+  /* background-color: rgb(var(--textPrimary));
+  color: rgb(var(--backgroundPrimary)); */
   border-radius: 4px;
-  right: 0.5rem;
-  top: 0.5rem;
+  right: 0px;
+  top: -22px;
 }
 </style>
