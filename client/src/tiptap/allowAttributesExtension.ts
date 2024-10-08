@@ -2,7 +2,7 @@ import { Extension } from '@tiptap/vue-3'
 import { editorComponents } from './editorComponents'
 const componentNodeTypes = Object.keys(editorComponents)
 
-// List the nodes that you want to extend with `style` support
+// List the nodes that you want to extend with global attributes support
 const nodesWithStyle = [
   'blockquote',
   'bulletList',
