@@ -1,14 +1,13 @@
 <!-- src/components/Editor.vue -->
 <template>
-  <div v-if="editor" class="px-7 sticky top-0 z-10">
+  <div v-if="editor" class="flex flex-wrap gap-2 px-7 sticky z-10 top-2">
     <VaChip
       @click="editor.chain().focus().toggleCodeBlock().run()"
-      :class="['mr-2', { 'is-active': editor.isActive('codeBlock') }]"
+      :class="[{ 'is-active': editor.isActive('codeBlock') }]"
     >
       Code block
     </VaChip>
-    <VaChip class="mr-2" @click="() => prettierFormat('html')">Format HTML</VaChip>
-    <VaChip class="mr-2" @click="() => prettierFormat('babel')">Format JS</VaChip>
+    <VaChip @click="prettierFormat">Format</VaChip>
     <VaChip @click="toggleView">
       {{ isCodeView ? 'Aa' : `\<\/\>` }}
     </VaChip>
@@ -18,6 +17,7 @@
 
 <script setup lang="ts">
 import { type Component, ref, watchEffect } from 'vue'
+import { useToast } from 'vuestic-ui'
 import { type NodeViewProps, useEditor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-3'
 import { registerCustomNodes } from '@/tiptap/registerCustomNodes'
 import { AllowAttributesExtension } from '@/tiptap/allowAttributesExtension'
@@ -51,16 +51,27 @@ const lowlight = createLowlight(common)
 import xml from 'highlight.js/lib/languages/xml'
 lowlight.register('html', xml)
 
-const prettierPlugins = {
-  html: [prettierPluginHtml],
-  babel: [prettierPluginBabel, prettierPluginEstree, prettierPluginHtml]
+const printWidth = 99999999
+const prettierOptions = {
+  html: {
+    parser: 'html',
+    plugins: [prettierPluginHtml]
+  },
+  javascript: {
+    parser: 'babel',
+    plugins: [prettierPluginBabel, prettierPluginEstree, prettierPluginHtml]
+  }
 }
 
-const printWidth = 99999999
+// Type guard to check if the language is a valid PrettierLanguage
+function isPrettierLanguage(lang: any): lang is keyof typeof prettierOptions {
+  return lang in prettierOptions
+}
 
 // Function to format selected text using Prettier
-const prettierFormat = async (language: 'babel' | 'html') => {
+const prettierFormat = async () => {
   if (!editor.value) return
+
   const { anchor } = editor.value.state.selection
   const textNode = editor.value.state.doc.nodeAt(anchor)
   const resolvedPos = editor.value.state.doc.resolve(anchor)
@@ -69,16 +80,43 @@ const prettierFormat = async (language: 'babel' | 'html') => {
   const selectedContent = textNode?.textContent || ''
 
   if (!selectedContent) return
-  const formattedContent = await prettier.format(selectedContent, {
-    parser: language,
-    plugins: prettierPlugins[language],
-    printWidth
-  })
 
-  editor.value.commands.insertContentAt(
-    { from: startPosition, to: endPosition },
-    { type: 'text', text: formattedContent }
-  )
+  editor.value.commands.selectParentNode()
+  const parentNode = editor.value.state.doc.nodeAt(editor.value.state.selection.from)
+  const language = parentNode?.attrs.language
+
+  // Use the type guard to check and narrow the type of language
+  if (!language || !isPrettierLanguage(language)) {
+    useToast().notify({
+      duration: 10000,
+      color: 'warning',
+      position: 'bottom-right',
+      message: 'Formatting is not supported for ' + language
+    })
+    return
+  }
+
+  const { parser, plugins } = prettierOptions[language]
+
+  try {
+    const formattedContent = await prettier.format(selectedContent, {
+      parser,
+      plugins,
+      printWidth
+    })
+
+    editor.value.commands.insertContentAt(
+      { from: startPosition, to: endPosition },
+      { type: 'text', text: formattedContent }
+    )
+  } catch (error) {
+    useToast().notify({
+      duration: 10000,
+      color: 'danger',
+      position: 'bottom-right',
+      message: 'Formatting error: ' + (error instanceof Error ? error.message : 'Unknown error')
+    })
+  }
   editor.value.chain().focus().setTextSelection(anchor).run()
 }
 
@@ -156,24 +194,31 @@ const toggleView = async () => {
 
 <style>
 /* Basic editor styles */
-.tiptap:first-child {
-  margin-top: 0;
-}
-
 .tiptap pre {
   background: rgb(var(--backgroundSecondary));
   border-radius: 0.5rem;
   color: rgb(var(--textPrimary));
   font-family: 'JetBrainsMono', monospace;
-  margin: 1.5rem 0;
   padding: 0.75rem 1rem;
 }
 
-.tiptap code {
-  background: none;
-  color: inherit;
-  font-size: 0.8rem;
-  padding: 0;
+.tiptap [data-youtube-video] {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 */
+  height: 0;
+  overflow: hidden;
+}
+
+.tiptap [data-youtube-video] iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.tiptap:focus {
+  outline: none;
 }
 
 /* Code styling */
