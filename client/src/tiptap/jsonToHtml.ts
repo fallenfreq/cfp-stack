@@ -29,7 +29,9 @@ function createNodesFromSchema(editor: Editor) {
     'listItem',
     'orderedList',
     'paragraph',
-    'text'
+    'text',
+    'doc',
+    'youtube'
   ]
   return Object.keys(nodes)
     .filter((nodeName) => !exludeNodes.includes(nodeName))
