@@ -142,7 +142,7 @@ const toggleView = async () => {
 }
 </script>
 
-<style lang="scss">
+<style>
 /* Basic editor styles */
 .tiptap:first-child {
   margin-top: 0;
