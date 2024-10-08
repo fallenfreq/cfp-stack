@@ -10,7 +10,15 @@ const Div = Node.create({
   },
   // https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#render-html
   parseHTML() {
-    return [{ tag: 'div' }]
+    return [
+      {
+        tag: 'div',
+        getAttrs: (node) => {
+          // ProseMirror expects null or undefined if the check is successful.
+          return node.getAttribute('data-youtube-video') !== '' && null
+        }
+      }
+    ]
   },
   renderHTML({ HTMLAttributes }) {
     // The last elements in the array are the children and 0 is the default content
