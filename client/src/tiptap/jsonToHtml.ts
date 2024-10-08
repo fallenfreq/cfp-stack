@@ -44,6 +44,7 @@ function createNodesFromSchema(editor: Editor) {
         (attrs, attrName) => {
           attrs[attrName] = nodeType.spec.attrs?.[attrName].default || null
           // toDOM will crash if src is null for youtube mock node
+          // This is not currently in use as the offical youtube extension is being used instead
           if (attrName === 'src' && nodeType.name === 'youtube' && attrs[attrName] === null) {
             attrs[attrName] = 'https://www.youtube.com/embed/3lTUAWOgoHs'
           }
