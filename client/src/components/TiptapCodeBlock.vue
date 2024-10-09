@@ -1,13 +1,15 @@
 <template>
   <NodeViewWrapper class="code-block">
-    <select contenteditable="false" v-model="selectedLanguage">
-      <option :value="null">auto</option>
-      <option disabled>—</option>
-      <option v-for="(language, index) in languages" :value="language" :key="index">
-        {{ language }}
-      </option>
-    </select>
-    <pre><code><NodeViewContent /></code></pre>
+    <div class="flex b bg-backgroundSecondary p-2 border-b justify-end rounded-t-lg">
+      <select class="bg-transparent" contenteditable="false" v-model="selectedLanguage">
+        <option :value="null">auto</option>
+        <option disabled>—</option>
+        <option v-for="(language, index) in languages" :value="language" :key="index">
+          {{ language }}
+        </option>
+      </select>
+    </div>
+    <pre class="rounded-b-lg"><code><NodeViewContent /></code></pre>
   </NodeViewWrapper>
 </template>
 
@@ -41,22 +43,11 @@ export default {
 }
 </script>
 
-<style>
-.tiptap .code-block {
-  position: relative;
-}
-
-/* id like to move this into an editor nav */
-.tiptap .code-block select {
-  position: absolute;
-  /* color: transparent; */
-  background-color: transparent;
-  width: 15px;
-  /* height: 22px; */
-  /* background-color: rgb(var(--textPrimary));
-  color: rgb(var(--backgroundPrimary)); */
-  border-radius: 4px;
-  right: 0px;
-  top: -22px;
+<style scoped>
+pre {
+  background: rgb(var(--backgroundSecondary));
+  color: rgb(var(--textPrimary));
+  font-family: 'JetBrainsMono', monospace;
+  padding: 0.75rem 1rem;
 }
 </style>
