@@ -19,15 +19,22 @@
   pasting the iframe code inside the editor. The video will be embedded in the output, but here we
   are showing the code used to achieve this.
 </p>
-<div data-youtube-video>
-  <iframe
-    width="560"
-    height="315"
-    src="https://www.youtube.com/embed/3lTUAWOgoHs"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-  ></iframe>
+<!--
+There seems to be an issue adding a tailwind class after the page has loaded
+it just doesn't work so using style here for now
+-->
+<div style="max-width: 36rem" class="max-w-xl">
+  <div data-youtube-video>
+    <iframe
+      class="resp-yt"
+      width="auto"
+      height="auto"
+      src="https://www.youtube.com/embed/3lTUAWOgoHs"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+  </div>
 </div>
 <br />
 <p><strong>Example 2: Vuestic Buttons with Custom Classes and Inline Styles</strong></p>
@@ -57,27 +64,27 @@
 <br />
 <table class="custom-table" style="border-collapse: collapse; width: 100%; text-align: left">
   <thead>
-    <tr style="background-color: #f2f2f2">
-      <th style="padding: 8px; border: 1px solid #ddd">Name</th>
-      <th style="padding: 8px; border: 1px solid #ddd">Age</th>
-      <th style="padding: 8px; border: 1px solid #ddd">Occupation</th>
+    <tr>
+      <th style="padding: 8px; border: 1px solid">Name</th>
+      <th style="padding: 8px; border: 1px solid">Age</th>
+      <th style="padding: 8px; border: 1px solid">Occupation</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd">Alice</td>
-      <td style="padding: 8px; border: 1px solid #ddd">25</td>
-      <td style="padding: 8px; border: 1px solid #ddd">Engineer</td>
+      <td style="padding: 8px; border: 1px solid">Alice</td>
+      <td style="padding: 8px; border: 1px solid">25</td>
+      <td style="padding: 8px; border: 1px solid">Engineer</td>
     </tr>
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd">Bob</td>
-      <td style="padding: 8px; border: 1px solid #ddd">30</td>
-      <td style="padding: 8px; border: 1px solid #ddd">Designer</td>
+      <td style="padding: 8px; border: 1px solid">Bob</td>
+      <td style="padding: 8px; border: 1px solid">30</td>
+      <td style="padding: 8px; border: 1px solid">Designer</td>
     </tr>
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd">Charlie</td>
-      <td style="padding: 8px; border: 1px solid #ddd">28</td>
-      <td style="padding: 8px; border: 1px solid #ddd">Teacher</td>
+      <td style="padding: 8px; border: 1px solid">Charlie</td>
+      <td style="padding: 8px; border: 1px solid">28</td>
+      <td style="padding: 8px; border: 1px solid">Teacher</td>
     </tr>
   </tbody>
 </table>

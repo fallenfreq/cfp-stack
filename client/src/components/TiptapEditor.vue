@@ -1,6 +1,10 @@
 <!-- src/components/Editor.vue -->
 <template>
-  <div v-if="editor" class="flex flex-wrap gap-2 px-7 sticky z-10 top-2">
+  <!--
+  sticky wont work properly when the virtual keyboard is open
+  This needs fixing with js or anouther appraoch for the menu
+  -->
+  <div v-if="editor" class="flex flex-wrap gap-2 px-7 sticky top-2 z-10">
     <VaChip
       @click="editor.chain().focus().toggleCodeBlock().run()"
       :class="[{ 'is-active': editor.isActive('codeBlock') }]"
@@ -148,7 +152,6 @@ const editor = useEditor({
     StarterKit.configure({
       codeBlock: false
     }),
-    Div,
     Youtube,
     Image,
     Table,
@@ -156,6 +159,7 @@ const editor = useEditor({
     TableHeader,
     TableRow,
     Span,
+    Div,
     ...registerCustomNodes(),
     AllowAttributesExtension
   ],
@@ -193,22 +197,25 @@ const toggleView = async () => {
 </script>
 
 <style>
-/* Basic editor styles */
+/* Youtube video styling in the editor */
 
-.tiptap [data-youtube-video] {
+.tiptap [data-youtube-video]:has(iframe.resp-yt) {
   position: relative;
   padding-bottom: 56.25%; /* 16:9 */
   height: 0;
   overflow: hidden;
 }
 
-.tiptap [data-youtube-video] iframe {
+.tiptap [data-youtube-video] iframe.resp-yt {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  max-width: 100%;
 }
+
+/* Basic editor styles */
 
 .tiptap:focus {
   outline: none;
