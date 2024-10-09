@@ -194,13 +194,6 @@ const toggleView = async () => {
 
 <style>
 /* Basic editor styles */
-.tiptap pre {
-  background: rgb(var(--backgroundSecondary));
-  border-radius: 0.5rem;
-  color: rgb(var(--textPrimary));
-  font-family: 'JetBrainsMono', monospace;
-  padding: 0.75rem 1rem;
-}
 
 .tiptap [data-youtube-video] {
   position: relative;
