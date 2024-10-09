@@ -30,7 +30,6 @@ function createNodesFromSchema(editor: Editor) {
     'orderedList',
     'paragraph',
     'text',
-    'doc',
     'youtube'
   ]
   return Object.keys(nodes)
