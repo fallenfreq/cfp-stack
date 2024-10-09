@@ -15,7 +15,15 @@ const nodesWithStyle = [
   'orderedList',
   'paragraph',
   // custom nodes
-  'span'
+  'span',
+  'div',
+  // extra imported nodes
+  'youtube',
+  'image',
+  'table',
+  'tableCell',
+  'tableHeader',
+  'tableRow'
 ]
 
 const AllowAttributesExtension = Extension.create({
