@@ -89,13 +89,22 @@ const prettierFormat = async () => {
   const parentNode = editor.value.state.doc.nodeAt(editor.value.state.selection.from)
   const language = parentNode?.attrs.language
 
+  let message = ''
+  if (language === null) {
+    message = 'No language selected for formatting.'
+  } else if (language === undefined) {
+    message = 'Formatting is only available for code blocks.'
+  } else if (!isPrettierLanguage(language)) {
+    message = 'Formatting is not supported for the language: ' + language
+  }
+
   // Use the type guard to check and narrow the type of language
   if (!language || !isPrettierLanguage(language)) {
     useToast().notify({
       duration: 10000,
       color: 'warning',
       position: 'bottom-right',
-      message: 'Formatting is not supported for ' + language
+      message
     })
     return
   }
