@@ -11,6 +11,7 @@ export default {
       xs: cssVariables.root['--xs'] + 'px',
       ...defaultTheme.screens
     },
+    safelist: ['max-w-xl', 'max-w-full'],
     extend: {
       colors: {
         primary: {
