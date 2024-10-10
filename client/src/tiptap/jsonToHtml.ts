@@ -109,7 +109,19 @@ function initGenerateDynamicHTML(editor: Editor) {
         codeBlock: false
       }),
       ...dynamicNodes,
-      Youtube,
+      Youtube.extend({
+        addAttributes() {
+          const existingAttributes = this.parent?.() || {}
+          return {
+            ...existingAttributes,
+            resp: {
+              default: '',
+              parseHTML: (element) => element.getAttribute('resp'),
+              renderHTML: (attributes) => ({ resp: attributes.resp })
+            }
+          }
+        }
+      }),
       CodeBlockLowlight,
       AllowAttributesExtension
     ])

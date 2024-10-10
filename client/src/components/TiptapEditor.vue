@@ -161,7 +161,42 @@ const editor = useEditor({
     StarterKit.configure({
       codeBlock: false
     }),
-    Youtube,
+    Youtube.extend({
+      renderHTML({ node, HTMLAttributes }) {
+        const { resp } = node.attrs
+        const maxWidthStyle = resp ? `max-width: ${resp};` : null
+        // `this` is the function we are in > node.type.spec.toDOM?.(node).
+        // Use this.parent?.({ node, HTMLAttributes }) to get the original DomOutputSpec
+        const domOutputSpec = this.parent?.({ node, HTMLAttributes })
+        if (!domOutputSpec) throw new Error('No parent DomOutputSpec found')
+        return resp === '' || resp
+          ? [
+              'div',
+              // Adding data-youtube-video to stop my custom div extention from rendering it
+              { class: 'max-w-xl', 'data-youtube-video': '', style: maxWidthStyle },
+              domOutputSpec
+            ]
+          : domOutputSpec
+      },
+      addAttributes() {
+        const existingAttributes = this.parent?.() || {}
+        return {
+          ...existingAttributes,
+          resp: {
+            default: '',
+            renderHTML: (attributes) => {
+              return attributes.resp === '' || attributes.resp
+                ? {
+                    width: 'auto',
+                    height: 'auto',
+                    class: attributes.class || '' + ' resp-yt'
+                  }
+                : {}
+            }
+          }
+        }
+      }
+    }),
     Image,
     Table,
     TableCell,
