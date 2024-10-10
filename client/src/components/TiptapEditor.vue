@@ -1,8 +1,8 @@
 <!-- src/components/Editor.vue -->
 <template>
   <!--
-  sticky wont work properly when the virtual keyboard is open
-  This needs fixing with js or anouther appraoch for the menu
+    Sticky wont work properly when the virtual keyboard is open
+    This needs fixing with js or anouther appraoch for the menu
   -->
   <div v-if="editor" class="flex flex-wrap gap-2 px-7 sticky top-2 z-10">
     <VaChip
@@ -20,9 +20,9 @@
 </template>
 
 <script setup lang="ts">
-import { type Component, ref, watchEffect } from 'vue'
+import { ref, watchEffect } from 'vue'
 import { useToast } from 'vuestic-ui'
-import { type NodeViewProps, useEditor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-3'
+import { useEditor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-3'
 import { registerCustomNodes } from '@/tiptap/registerCustomNodes'
 import { AllowAttributesExtension } from '@/tiptap/allowAttributesExtension'
 import { initGenerateDynamicHTML } from '@/tiptap/jsonToHtml'
@@ -141,12 +141,21 @@ const isCodeView = ref(false)
 
 let generateDynamicHTML: ReturnType<typeof initGenerateDynamicHTML>
 
+import { defineComponent, h } from 'vue'
+import { nodeViewProps } from '@tiptap/vue-3'
+
 const editor = useEditor({
   extensions: [
     CodeBlockLowlight.extend({
       addNodeView() {
-        // There is currenltly a bug causing component type errors so I am using "as" for now
-        return VueNodeViewRenderer(TiptapCodeBlock as Component<NodeViewProps>)
+        return VueNodeViewRenderer(
+          defineComponent({
+            props: nodeViewProps,
+            setup(props) {
+              return () => h(TiptapCodeBlock, props)
+            }
+          })
+        )
       }
     }).configure({ lowlight }),
     StarterKit.configure({
@@ -274,8 +283,3 @@ const toggleView = async () => {
   font-weight: 700;
 }
 </style>
-
-<!--
-create prettier formmater extetion
-youtube keeps being nested in more divs with Div active
--->

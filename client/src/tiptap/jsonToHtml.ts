@@ -14,7 +14,6 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 // Function to build dynamic nodes based on editor schema
 function createNodesFromSchema(editor: Editor) {
   const nodes = editor.schema.nodes
-  // console.log(nodes)
   // exclude nodes from the starter kit to prevent dynamic nodes from being created
   // The dynamic nodes render vue compnents as their tags and strip default attributes
   // This keeps the code view clean and easier to work with
@@ -55,8 +54,6 @@ function createNodesFromSchema(editor: Editor) {
       const mockNode: Node | null = nodeType.createAndFill(mockAttributes)
       const domOutput = mockNode ? nodeType.spec.toDOM?.(mockNode) : null
 
-      // console.log({ nodeName, domOutput, mockAttributes })
-
       // We are using some but I think the array should be the last item if complex
       // The compex check and final tag is redundant right now since compex nodes are being rendered by their default extension
       const isComplexStructure =
@@ -95,7 +92,6 @@ function createNodesFromSchema(editor: Editor) {
               attrsToRender[attr] = HTMLAttributes[attr]
             }
           })
-          // console.log({ nodeName, HTMLAttributes })
           return nodeType.isLeaf ? [finalTag, attrsToRender] : [finalTag, attrsToRender, 0]
         }
       }

@@ -1,6 +1,12 @@
-import { VueNodeViewRenderer, Node, mergeAttributes, NodeViewWrapper } from '@tiptap/vue-3'
+import {
+  nodeViewProps,
+  NodeViewContent,
+  VueNodeViewRenderer,
+  Node,
+  mergeAttributes,
+  NodeViewWrapper
+} from '@tiptap/vue-3'
 import { defineComponent, h } from 'vue'
-import { nodeViewProps, NodeViewContent } from '@tiptap/vue-3'
 import { type ComponentData } from './editorComponents'
 
 // Utility function to create a Tiptap node for Vue components
@@ -40,7 +46,6 @@ export function createVueNode(
             return () =>
               h(NodeViewWrapper, { contenteditable }, [
                 h(component, props.node.attrs, {
-                  // Let Tiptap handle the content rendering
                   default: () => h(NodeViewContent, { ...(contentAs ? { as: contentAs } : {}) })
                 })
               ])
