@@ -272,14 +272,14 @@ const toggleView = async () => {
 <style>
 /* Youtube video styling in the editor */
 
-.tiptap [data-youtube-video]:has(iframe.resp-yt) {
+.tiptap [data-youtube-video]:has(> iframe.resp-yt) {
   position: relative;
   padding-bottom: 56.25%; /* 16:9 */
   height: 0;
   overflow: hidden;
 }
 
-.tiptap [data-youtube-video] iframe.resp-yt {
+.tiptap [data-youtube-video] > iframe.resp-yt {
   position: absolute;
   top: 0;
   left: 0;
