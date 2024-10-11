@@ -110,6 +110,30 @@ function initGenerateDynamicHTML(editor: Editor) {
       }),
       ...dynamicNodes,
       Youtube.extend({
+        renderHTML({ node, HTMLAttributes }) {
+          node.type.spec.attrs
+          // Use reduce to filter out default values from HTMLAttributes
+          const filteredAttributes = Object.keys((node.type.spec.attrs ??= {})).reduce(
+            (acc, key) => {
+              node.type.spec.attrs ??= {}
+              const attrSpec = node.type.spec.attrs[key]
+              const defaultValue = attrSpec.default
+              // Only add the attribute if it does not match the default value
+              if (HTMLAttributes[key] !== defaultValue) {
+                acc[key] = HTMLAttributes[key]
+              }
+              return acc
+            },
+            {} as Partial<typeof node.type.spec.attrs>
+          )
+          const domOutputSpec = this.parent?.({ node, HTMLAttributes })
+
+          if (domOutputSpec && Array.isArray(domOutputSpec) && domOutputSpec[2]?.[1]) {
+            domOutputSpec[2][1] = filteredAttributes
+          } else throw new Error('No parent DomOutputSpec or unexpected format')
+
+          return domOutputSpec
+        },
         addAttributes() {
           const existingAttributes = this.parent?.() || {}
           return {
