@@ -224,7 +224,7 @@ const editor = useEditor({
                 ? {
                     width: 'auto',
                     height: 'auto',
-                    class: attributes.class || '' + ' resp-yt'
+                    class: (attributes.class || '' + ' resp-yt').trim()
                   }
                 : {}
             }
