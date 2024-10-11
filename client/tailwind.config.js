@@ -4,7 +4,17 @@ import cssVariables from './cssVariables.js'
 
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
-  safelist: ['max-w-xl', 'max-w-full'],
+  safelist: [
+    'max-w-xl',
+    'max-w-full',
+    'max-w-2xl',
+    'text-2xl',
+    'text-3xl',
+    'text-4xl',
+    'text-5xl',
+    'text-6xl',
+    'text-7xl'
+  ],
   darkMode: 'selector',
   theme: {
     // larger screens should be added in extend

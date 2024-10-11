@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import { useToast } from 'vuestic-ui'
-import { useEditor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-3'
+import { useEditor, EditorContent, VueNodeViewRenderer, type NodeViewProps } from '@tiptap/vue-3'
 import { registerCustomNodes } from '@/tiptap/registerCustomNodes'
 import { AllowAttributesExtension } from '@/tiptap/allowAttributesExtension'
 import { initGenerateDynamicHTML } from '@/tiptap/jsonToHtml'
@@ -89,13 +89,15 @@ const prettierFormat = async () => {
   if (!editor.value) return
 
   const { anchor } = editor.value.state.selection
-  const textNode = editor.value.state.doc.nodeAt(anchor)
   const resolvedPos = editor.value.state.doc.resolve(anchor)
   const startPosition = resolvedPos.start(resolvedPos.depth)
   const endPosition = resolvedPos.end(resolvedPos.depth)
+  const textNode = editor.value.state.doc.nodeAt(startPosition)
   const selectedContent = textNode?.textContent || ''
 
-  if (!selectedContent) return
+  console.log({ anchor, textNode, selectedContent, resolvedPos, startPosition, endPosition })
+
+  if (!selectedContent) return editor.value.chain().focus().setTextSelection(anchor).run()
 
   editor.value.commands.selectParentNode()
   const parentNode = editor.value.state.doc.nodeAt(editor.value.state.selection.from)
@@ -167,7 +169,7 @@ const isCodeView = ref(false)
 
 let generateDynamicHTML: ReturnType<typeof initGenerateDynamicHTML>
 
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, type Component } from 'vue'
 import { nodeViewProps } from '@tiptap/vue-3'
 
 const editor = useEditor({
@@ -175,15 +177,19 @@ const editor = useEditor({
     CodeBlockLowlight.extend({
       addNodeView() {
         return VueNodeViewRenderer(
-          defineComponent({
-            props: nodeViewProps,
-            setup(props) {
-              return () =>
-                h(TiptapCodeBlock, {
-                  ...props
-                })
-            }
-          })
+          TiptapCodeBlock as Component<NodeViewProps>
+          // This passes all props as attributes instead of just attribuets
+          // it fixes any type errors but we have props as attributes that should not be there
+          // its not enough to just pass props.node.attrs because I assume the NodeViewWrapper needs more
+          // defineComponent({
+          //   props: nodeViewProps,
+          //   setup(props) {
+          //     return () =>
+          //       h(TiptapCodeBlock, {
+          //         ...props
+          //       })
+          //   }
+          // })
         )
       }
     }).configure({ lowlight }),
@@ -292,6 +298,21 @@ const toggleView = async () => {
 
 .tiptap:focus {
   outline: none;
+}
+
+.tiptap p:not(:last-child),
+.tiptap h1:not(:last-child),
+.tiptap h2:not(:last-child),
+.tiptap pre:not(:last-child),
+.tiptap table:not(:last-child),
+.tiptap .code-block:not(:last-child),
+.tiptap [data-node-view-wrapper]:not(:last-child),
+.tiptap [data-youtube-video]:not(:last-child) {
+  margin-bottom: 1rem;
+}
+
+.tiptap [data-youtube-video] > [data-youtube-video] {
+  margin-bottom: 0;
 }
 
 /* Code styling */
