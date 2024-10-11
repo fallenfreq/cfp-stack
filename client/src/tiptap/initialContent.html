@@ -1,97 +1,81 @@
-<h1>Just some rough examples</h1>
-<p class="one two">Welcome to the Interactive Editor!</p>
+<h1 class="text-4xl">Welcome to the Interactive Editor!</h1>
 <p>
   This is a demo showcasing the flexibility of the editor. You can use registered Vue components,
   apply custom styles and classes, embed YouTube videos, display images, add tables, and even work
   with syntax-highlighted code blocks.
 </p>
-<br />
 <p>
   The editor allows you to switch between a WYSIWYG view and an editable code view. This means you
   can directly modify the content or structure as code and see the changes live. Note that the
-  purpose here is to show the code, not necessarily render the final HTML output. Let’s explore some
-  examples below:
+  purpose here is to show the code that generates the final HTML output rather than the output
+  itself.
 </p>
-<br />
-<p><strong>Example 1: Embedded YouTube Video</strong></p>
+<h2 class="text-2xl"><strong>Example 1: Embedded YouTube Video</strong></h2>
 <p>
-  This is an example of embedding a YouTube video using an iframe. You can add any video by simply
-  pasting the iframe code inside the editor. The video will be embedded in the output, but here we
-  are showing the code used to achieve this.
+  This is an example of embedding a YouTube video using an iframe and the data-youtube-video
+  attribute. Take a look at the code in the browser to see how it differs from the rendered output.
 </p>
-
-<div data-youtube-video>
-  <iframe
-    resp="36rem"
-    src="https://www.youtube.com/embed/3lTUAWOgoHs"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-  ></iframe>
+<div data-youtube-video="">
+  <iframe src="https://www.youtube.com/embed/3lTUAWOgoHs" resp="36rem"></iframe>
 </div>
-
-<br />
-<p><strong>Example 2: Vuestic Buttons with Custom Classes and Inline Styles</strong></p>
+<h2 class="text-2xl"><strong>Example 2: Vuestic (component library) Buttons</strong></h2>
 <p>
   The following example shows two buttons rendered using the <code>&lt;VaButton&gt;</code> component
   from the Vuestic UI library. You can apply custom classes and styles to modify their appearance.
-  In this case, we're using inline styles and classes to demonstrate how you can customize the look
+  In this case, we're using inline styles and classes to demonstrate how you can customise the look
   of these buttons.
 </p>
-<br />
-<p>First, a block-level button with a pink background inside a paragraph:</p>
-<VaButton color="warning">
-  <p style="background: pink">Block-level Button</p>
-</VaButton>
-<br />
-<p>Next, an inline button with a custom class and pink background applied to the text:</p>
-<VaButton color="warning">
-  <span class="three" style="background: pink">Inline Button</span>
-</VaButton>
-<br />
-<p><strong>Example 3: Table with Custom Styling</strong></p>
+<p>
+  A limitation of the editor is that an element can only be set to contain either block or inline
+  elements, and a single element cannot contain a mix. The button below, which is a Vue component,
+  needs to contain inline elements but the first button contains a block element. The block element
+  is automatically removed, so we cannot see the pink.
+</p>
+<vabutton color="warning">Button contains block el</vabutton>
+<p>
+  The component contains an inline element which is rendered as intended. If the component's content
+  was supposed to be block, the inline element would be wrapped in a <code>&lt;p&gt;</code> tag
+  instead of being removed like with the block example.
+</p>
+<vabutton color="warning"
+  ><span style="background: pink" class="three">Button contains inline el</span></vabutton
+>
+<h2 class="text-2xl"><strong>Example 3: Table with Custom Styling</strong></h2>
 <p>
   You can easily create tables inside the editor. In this example, we are adding a simple table to
   demonstrate how you can format data and apply custom styles to tables.
 </p>
 <p>Here’s a sample table with added classes and inline styling:</p>
-<br />
-<table class="custom-table" style="border-collapse: collapse; width: 100%; text-align: left">
-  <thead>
-    <tr>
-      <th style="padding: 8px; border: 1px solid">Name</th>
-      <th style="padding: 8px; border: 1px solid">Age</th>
-      <th style="padding: 8px; border: 1px solid">Occupation</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="padding: 8px; border: 1px solid">Alice</td>
-      <td style="padding: 8px; border: 1px solid">25</td>
-      <td style="padding: 8px; border: 1px solid">Engineer</td>
-    </tr>
-    <tr>
-      <td style="padding: 8px; border: 1px solid">Bob</td>
-      <td style="padding: 8px; border: 1px solid">30</td>
-      <td style="padding: 8px; border: 1px solid">Designer</td>
-    </tr>
-    <tr>
-      <td style="padding: 8px; border: 1px solid">Charlie</td>
-      <td style="padding: 8px; border: 1px solid">28</td>
-      <td style="padding: 8px; border: 1px solid">Teacher</td>
-    </tr>
-  </tbody>
+<table style="border-collapse: collapse; width: 100%; text-align: left" class="custom-table">
+  <tr>
+    <th style="padding: 8px; border: 1px solid"><p>Name</p></th>
+    <th style="padding: 8px; border: 1px solid"><p>Age</p></th>
+    <th style="padding: 8px; border: 1px solid"><p>Occupation</p></th>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border: 1px solid"><p>Alice</p></td>
+    <td style="padding: 8px; border: 1px solid"><p>25</p></td>
+    <td style="padding: 8px; border: 1px solid"><p>Engineer</p></td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border: 1px solid"><p>Bob</p></td>
+    <td style="padding: 8px; border: 1px solid"><p>30</p></td>
+    <td style="padding: 8px; border: 1px solid"><p>Designer</p></td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border: 1px solid"><p>Charlie</p></td>
+    <td style="padding: 8px; border: 1px solid"><p>28</p></td>
+    <td style="padding: 8px; border: 1px solid"><p>Teacher</p></td>
+  </tr>
 </table>
-<br />
-<p><strong>Example 4: JavaScript Code with Syntax Highlighting</strong></p>
+<h2 class="text-2xl"><strong>Example 4: JavaScript Code with Syntax Highlighting</strong></h2>
 <p>
-  The editor also supports syntax highlighting for code. Below is an example of a simple FizzBuzz
-  JavaScript program. The editor automatically highlights the syntax based on the language
-  specified, in this case, JavaScript.
+  The editor also supports syntax highlighting for code and automatically highlights the syntax
+  based on the language selected — or detected if auto is selected. JavaScript and HTML also support
+  formatting by pressing the `Format` button while the cursor is in the code block.
 </p>
-<br />
 <pre><code class="language-javascript">// Simple JavaScript FizzBuzz example
-for (var i = 1; i <= 20; i++) {
+for (var i = 1; i &lt;= 20; i++) {
   if (i % 15 === 0) {
     console.log("FizzBuzz");
   } else if (i % 3 === 0) {
@@ -102,3 +86,15 @@ for (var i = 1; i <= 20; i++) {
     console.log(i);
   }
 }</code></pre>
+<h2 class="text-2xl"><strong>Markdown Shortcuts</strong></h2>
+<p>Markdown shortcuts make it easy to format the text while typing.</p>
+<p>
+  To test that, start a new line and type <code>#</code> followed by a space to get a heading. Try
+  <code>#</code>, <code>##</code>, <code>###</code>, <code>####</code>, <code>#####</code>,
+  <code>######</code> for different levels.
+</p>
+<p>
+  These conventions are called input rules in Tiptap. Some of them are enabled by default. Try
+  <code>&gt;</code> for blockquotes, <code>*</code>, <code>-</code> or <code>+</code> for bullet
+  lists, or <code>`foobar`</code> to highlight code, and <code>~~tildes~~</code> to strike text.
+</p>
