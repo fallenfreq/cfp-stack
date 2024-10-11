@@ -47,6 +47,7 @@ import TiptapCodeBlock from './TiptapCodeBlock.vue'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 // load all languages with "all" or common languages with "common"
 import { /*common,*/ createLowlight } from 'lowlight'
+import highlight from 'highlight.js'
 
 // create a lowlight instance
 const lowlight = createLowlight()
@@ -103,6 +104,7 @@ const prettierFormat = async () => {
   const language = isDetected
     ? lowlight.highlightAuto(selectedContent).data?.language || null
     : setLanguage
+  const languageName = highlight.getLanguage(language)?.name?.split(',')[0]
 
   let message = ''
   if (language === null) {
@@ -110,7 +112,7 @@ const prettierFormat = async () => {
   } else if (language === undefined) {
     message = 'Formatting is only available for code blocks.'
   } else if (!isPrettierLanguage(language)) {
-    message = `Formatting is not supported for the ${isDetected ? 'detected' : 'selected'} language: ${language}`
+    message = `Formatting is not supported for the ${isDetected ? 'detected' : 'selected'} language: ${languageName}`
   }
 
   // Use the type guard to check and narrow the type of language
