@@ -46,14 +46,25 @@ import Div from '@/tiptap/divExtention'
 import TiptapCodeBlock from './TiptapCodeBlock.vue'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 // load all languages with "all" or common languages with "common"
-import { common, createLowlight } from 'lowlight'
+import { /*common,*/ createLowlight } from 'lowlight'
 
 // create a lowlight instance
-const lowlight = createLowlight(common)
+const lowlight = createLowlight()
 
 // you can also register languages individually
 import xml from 'highlight.js/lib/languages/xml'
+import css from 'highlight.js/lib/languages/css'
+import json from 'highlight.js/lib/languages/json'
+import js from 'highlight.js/lib/languages/javascript'
+import ts from 'highlight.js/lib/languages/typescript'
+import py from 'highlight.js/lib/languages/python'
+
 lowlight.register('html', xml)
+lowlight.register('css', css)
+lowlight.register('json', json)
+lowlight.register('javascript', js)
+lowlight.register('typescript', ts)
+lowlight.register('python', py)
 
 const printWidth = 99999999
 const prettierOptions = {
@@ -87,15 +98,19 @@ const prettierFormat = async () => {
 
   editor.value.commands.selectParentNode()
   const parentNode = editor.value.state.doc.nodeAt(editor.value.state.selection.from)
-  const language = parentNode?.attrs.language
+  const setLanguage = parentNode?.attrs.language
+  const isDetected = setLanguage === null
+  const language = isDetected
+    ? lowlight.highlightAuto(selectedContent).data?.language || null
+    : setLanguage
 
   let message = ''
   if (language === null) {
-    message = 'No language selected for formatting.'
+    message = 'Auto detect failed to detect language.'
   } else if (language === undefined) {
     message = 'Formatting is only available for code blocks.'
   } else if (!isPrettierLanguage(language)) {
-    message = 'Formatting is not supported for the language: ' + language
+    message = `Formatting is not supported for the ${isDetected ? 'detected' : 'selected'} language: ${language}`
   }
 
   // Use the type guard to check and narrow the type of language
@@ -161,7 +176,10 @@ const editor = useEditor({
           defineComponent({
             props: nodeViewProps,
             setup(props) {
-              return () => h(TiptapCodeBlock, props)
+              return () =>
+                h(TiptapCodeBlock, {
+                  ...props
+                })
             }
           })
         )
