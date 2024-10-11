@@ -95,8 +95,6 @@ const prettierFormat = async () => {
   const textNode = editor.value.state.doc.nodeAt(startPosition)
   const selectedContent = textNode?.textContent || ''
 
-  console.log({ anchor, textNode, selectedContent, resolvedPos, startPosition, endPosition })
-
   if (!selectedContent) return editor.value.chain().focus().setTextSelection(anchor).run()
 
   editor.value.commands.selectParentNode()
