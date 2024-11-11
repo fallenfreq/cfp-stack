@@ -16,7 +16,7 @@
     "migrate:api": "pnpm --filter @somefreq-app/api migrate",
     "migrate:push:api": "pnpm --filter @somefreq-app/api migrate:push",
     "migrate:push:local:api": "pnpm --filter @somefreq-app/api migrate:push:local",
-    "loggin:api": "pnpm --filter @somefreq-app/api logging"
+    "logging:api": "pnpm --filter @somefreq-app/api logging"
   },
   "dependencies": {
     "axios": "^1.7.2",
