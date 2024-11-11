@@ -37,15 +37,15 @@ Zitadel needs to be running for the login button to work. You'll also need to lo
 #### Create Login App
 
 - Go to your specific instance URL `https://somefreq-instance.zitadel.cloud`.
-- Create a production project and save the Resource ID as `VITE_API_ZITADEL_PROJECT_RESOURCE_ID` in the client `.env` file.
+- Create a production project and save the Resource ID as `VITE_API_ZITADEL_PROJECT_RESOURCE_ID` in the `client/.env` file.
 - Add a new application, select User Agent, then PKCE for an SPA.
 - Add `https://some-domain/auth/signinwin/zitadel` as a redirect URI, using the domain used for your Cloudflare page.
 - Add `https://some-domain` as a Post Logout URI, using the domain used for your Cloudflare page.
-- Save the Client ID as `VITE_API_ZITADEL_CLIENT_ID` in the client `.env` file.
+- Save the Client ID as `VITE_API_ZITADEL_CLIENT_ID` in the `client/.env` file.
 
 ##### For development
 
-Create a development project and follow the same instructions again, only this time using local domains for the redirects. Currently, the production or development vars need to be commented out or in depending on your working environment. You'll need to add multiple domains if you'd like the redirects to work with both the Vite dev port `5173` and the Wrangler dev port `8788`. For example, `http://localhost:5173/auth/signinwin/zitadel` and `http://localhost:8788/auth/signinwin/zitadel`. The dev mode switch will need checking if using HTTP locally.
+Create a development project and follow the same instructions again, only this time using local domains for the redirects and add the environment variables to the `client/.env.development` file instead. You'll need to add multiple domains if you'd like the redirects to work with both the Vite dev port `5173` and the Wrangler dev port `8788`. For example, `http://localhost:5173/auth/signinwin/zitadel` and `http://localhost:8788/auth/signinwin/zitadel`. The dev mode switch will need checking if using HTTP locally.
 
 #### Create Token Inspection App
 
@@ -79,7 +79,8 @@ More information can be found on Corepack [here](https://nodejs.org/api/corepack
 - **Generate migrate files:** `pnpm migrate:api`
 - **Push generated migrate files to the production database:** `pnpm migrate:push:api`
 - **Push generated migrate files to the development database:** `pnpm migrate:push:local:api`
-- **Start API (Wrangler pages dev server) and Vite Dev Server:** `pnpm dev`
+- **Start Wrangler pages dev server:** `pnpm dev`
+- **Start Vite Dev Server for front end HMR:** `pnpm dev:vite:client`
 
 ## Deployment
 
