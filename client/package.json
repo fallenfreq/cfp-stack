@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite build --emptyOutDir --mode development --watch",
+    "dev": "vite build --mode development --watch",
     "dev:vite": "vite",
     "build": "run-p type-check \"build-only --emptyOutDir {@}\" --",
     "preview": "vite preview",
