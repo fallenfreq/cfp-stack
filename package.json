@@ -7,6 +7,7 @@
     "dev": "pnpm --filter @somefreq-app/* --parallel dev",
     "build": "pnpm --filter @somefreq-app/* --parallel build",
     "dev:client": "pnpm --filter @somefreq-app/client dev",
+    "dev:vite:client": "pnpm --filter @somefreq-app/client dev:vite",
     "dev:api": "pnpm --filter @somefreq-app/api dev",
     "build:client": "pnpm --filter @somefreq-app/client build",
     "build:api": "pnpm --filter @somefreq-app/api build",
