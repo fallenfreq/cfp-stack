@@ -1,4 +1,18 @@
-# https://developers.cloudflare.com/workers/configuration/secrets/
 # These come from the API application that you create in Zitadel
+# Anything in here will override the values in wrangler for development
+
+# For production
+# https://developers.cloudflare.com/pages/functions/bindings/#secrets
+# https://developers.cloudflare.com/workers/wrangler/commands/#pages
+# Production secrets should be set in via the cloudflare dashboard
+# or via `wrangler pages secret put API_KEY`
+# Production secrets are just here for reference 
+# ZITADEL_CLIENT_SECRET = ""
+
+
+# For local development
 ZITADEL_CLIENT_SECRET = ""
+ZITADEL_CLIENT_ID = ""
+ZITADEL_INTROSPECTION_ENDPOINT = ""
+
 SMTP_PASSWORD = ""
