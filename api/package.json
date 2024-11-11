@@ -20,7 +20,7 @@
     "migrate": "pnpm drizzle-kit generate:sqlite",
     "migrate:push:local": "npx wrangler d1 migrations apply somefreq-db --local",
     "migrate:push": "npx wrangler d1 migrations apply somefreq-db --remote",
-    "loggin": "npx wrangler pages deployment tail"
+    "logging": "npx wrangler pages deployment tail"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20240821.1",
