@@ -1,4 +1,6 @@
 # https://developers.cloudflare.com/pages/functions/wrangler-configuration/
+# https://developers.cloudflare.com/workers/wrangler/commands/#pages
+# https://developers.cloudflare.com/pages/functions/bindings/#secrets
 
 # name is optional for cloudflare pages
 name = "somefreq-pages"
@@ -15,16 +17,14 @@ upload_source_maps = true
 
 
 [[d1_databases]]
-binding = "DB"
+binding = "DB" # Makes the database available in the pages functions via env.DB
 database_name = "somefreq-db"
 database_id = "7f2fdab4-d3c2-4418-860b-c9f8817ddbd1"
 migrations_dir = "migrations"
 
-# use "wrangler secret put API_KEY" to save a secret
-# theres also an optional --env dev or --env production flags
+# use "wrangler pages secret put API_KEY" to save a secret
 # .dev.vars file is used for dev enviroment variables and secrets
 # You can also set them from the cloudflare dashboard
-# [env.production.vars]
 
 [vars]
 SMTP_OUT_SERVER = "smtppro.zoho.eu"
