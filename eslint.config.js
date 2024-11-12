@@ -10,6 +10,7 @@ export default [
       'typescript-eslint': tseslint.plugin
     },
     rules: {
+      'no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off'
     },
     languageOptions: {
