@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     BasicCard: typeof import('./src/components/BasicCard.vue')['default']
     BasicFooter: typeof import('./src/components/BasicFooter.vue')['default']
+    CollectionNav: typeof import('./src/components/CollectionNav.vue')['default']
     ComingSoon: typeof import('./src/components/ComingSoon.vue')['default']
     DarkModeSwitch: typeof import('./src/components/DarkModeSwitch.vue')['default']
     MiniMothLogo: typeof import('./src/components/brand/MiniMothLogo.vue')['default']
