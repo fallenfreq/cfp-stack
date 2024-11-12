@@ -14,7 +14,7 @@
 
 <script setup>
 // Define props for the card
-const props = defineProps({
+defineProps({
   image: {
     type: String,
     default: null

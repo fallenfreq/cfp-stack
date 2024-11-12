@@ -17,7 +17,7 @@
 <script setup lang="ts">
 const year = new Date().getFullYear()
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faFacebook } from '@fortawesome/free-brands-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
-import { faInstagram } from '@fortawesome/free-brands-svg-icons'
+// import { faFacebook } from '@fortawesome/free-brands-svg-icons'
+// import { faInstagram } from '@fortawesome/free-brands-svg-icons'
 </script>
