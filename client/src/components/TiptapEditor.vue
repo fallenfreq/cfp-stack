@@ -167,8 +167,8 @@ const isCodeView = ref(false)
 
 let generateDynamicHTML: ReturnType<typeof initGenerateDynamicHTML>
 
-import { defineComponent, h, type Component } from 'vue'
-import { nodeViewProps } from '@tiptap/vue-3'
+import { /* defineComponent, h, */ type Component } from 'vue'
+// import { nodeViewProps } from '@tiptap/vue-3'
 
 const editor = useEditor({
   extensions: [
