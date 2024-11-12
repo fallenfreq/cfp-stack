@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { NodeViewContent, nodeViewProps, type NodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
+import { NodeViewContent, nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3'
 import { computed } from 'vue'
 import highlight from 'highlight.js'
 
