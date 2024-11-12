@@ -9,6 +9,9 @@ export default [
     plugins: {
       'typescript-eslint': tseslint.plugin
     },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off'
+    },
     languageOptions: {
       parserOptions: {
         parser: tseslint.parser,
