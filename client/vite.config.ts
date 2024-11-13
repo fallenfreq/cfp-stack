@@ -40,6 +40,7 @@ export default defineConfig({
     vue(),
     vueJsx(),
     Components({
+      dts: true, // enabled by default if `typescript` is installed
       resolvers: [PrimeVueResolver()]
     })
   ],

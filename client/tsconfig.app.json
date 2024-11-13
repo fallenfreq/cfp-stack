@@ -7,7 +7,7 @@
     "env.d.ts",
     "src/**/*",
     "src/**/*.vue",
-    "src/services/zitadelAuth.ts",
+    "components.d.ts",
     "../../api/src/routes/appRouter.ts",
     "../api/services/portfolio.ts"
   ],
