@@ -80,5 +80,5 @@ export const profiles = sqliteTable('profiles', {
 export type User = typeof users.$inferSelect // return type when queried
 export type NewUser = typeof users.$inferInsert // insert type
 
-export type Post = typeof users.$inferSelect // return type when queried
-export type NewPost = typeof users.$inferInsert // insert type
+export type Posts = typeof posts.$inferSelect // return type when queried
+export type NewPost = typeof posts.$inferInsert // insert type

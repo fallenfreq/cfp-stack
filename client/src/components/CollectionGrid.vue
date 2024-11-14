@@ -5,39 +5,41 @@
     <BasicCard
       v-for="(item, index) in displayedItems"
       :key="index"
-      :image="item.imageUrl"
+      :imageUrl="item.imageUrl"
       :title="item.title"
-      :is-placeholder="item.isPlaceholder"
-      :class="[
-        'portfolio-item',
-        { 'is-placeholder': item.isPlaceholder },
-        ...(item.visibilityClasses || [])
-      ]"
+      @click="() => emit('selectItem', item)"
+      :class="
+        'isPlaceholder' in item && [
+          { 'is-placeholder': item.isPlaceholder },
+          ...item.visibilityClasses
+        ]
+      "
     />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch, defineProps } from 'vue'
+import { onMounted, ref, watch, defineProps, defineEmits } from 'vue'
 import { getPortfolioEntries } from '@/services/portfolio'
+import { type PortfolioEntry } from '@/../../api/src/schemas/portfolio'
 
 const props = defineProps<{
-  portfolio: Parameters<typeof getPortfolioEntries>[0]
+  name: Parameters<typeof getPortfolioEntries>[0]
 }>()
 
-// isPending is essential being handled by onMounted and watching for data changes bellow
-const { data, isError } = getPortfolioEntries(props.portfolio)
+// isPending is essentially being handled by onMounted and watching for data changes bellow
+const { data, isError } = getPortfolioEntries(props.name)
 
-// Interface for PortfolioItem type
-interface PortfolioItem {
-  link?: string
-  id?: number
-  description?: string
-  imageUrl: string | null
-  title: string
-  isPlaceholder?: boolean
-  visibilityClasses?: string[]
-}
+const emit = defineEmits<{
+  (event: 'selectItem', item: PortfolioEntry): void
+}>()
+
+type CollectionItem =
+  | PortfolioEntry
+  | (PortfolioEntry & {
+      isPlaceholder: boolean
+      visibilityClasses: string[]
+    })
 
 interface Breakpoints {
   default: number
@@ -58,7 +60,7 @@ const columns: Breakpoints = {
   '2xl': 5
 }
 
-const displayedItems = ref<PortfolioItem[]>([])
+const displayedItems = ref<CollectionItem[]>([])
 
 const calculatePlaceholdersNeeded = (numItems: number) => {
   const placeholdersNeeded: Breakpoints = {
@@ -87,21 +89,22 @@ const getMaxItemsCount = (realItemsCount: number, placeholdersNeeded: Breakpoint
   return realItemsCount + highestPlaceholderCount
 }
 
-const setDisplayedItems = async (defaultItem?: Partial<PortfolioItem>) => {
+const setDisplayedItems = async (title: CollectionItem['title'] = '') => {
   const items = data.value || []
   const placeholdersNeeded = calculatePlaceholdersNeeded(items.length)
-  const placeholders: PortfolioItem[] = []
+  const placeholders: CollectionItem[] = []
 
   for (let i = 0; i < getMaxItemsCount(items.length, placeholdersNeeded); i++) {
-    const placeholder: PortfolioItem = Object.assign(
-      {
-        imageUrl: null,
-        title: '',
-        isPlaceholder: true,
-        visibilityClasses: []
-      },
-      defaultItem
-    )
+    const placeholder: CollectionItem = {
+      portfolioEntryId: 0,
+      title,
+      description: '',
+      imageUrl: '',
+      link: '',
+      content: '',
+      isPlaceholder: true,
+      visibilityClasses: []
+    }
 
     const { visibilityClasses } = placeholder
     for (const key of Object.keys(placeholdersNeeded)) {
@@ -116,14 +119,14 @@ const setDisplayedItems = async (defaultItem?: Partial<PortfolioItem>) => {
 
 watch([data, isError], () => {
   if (isError.value && !data.value) {
-    setDisplayedItems({ title: '' })
+    setDisplayedItems('')
   } else if (data.value) {
-    setDisplayedItems({ title: 'Coming Soon!' })
+    setDisplayedItems('Coming Soon!')
   }
 })
 
 onMounted(() => {
-  setDisplayedItems({ title: data.value ? 'Coming Soon!' : 'Loading...' })
+  setDisplayedItems(data.value ? 'Coming Soon!' : 'Loading...')
 })
 </script>
 
