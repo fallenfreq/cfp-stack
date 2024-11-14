@@ -45,14 +45,22 @@ export default {
       }
     ],
     fonts: [
-      // fa- icons are used to pass brand icons to Vuestic using webfonts
-      // Font Awesome is installed as a package too so you can placed as an svg with:
+      // fab- and fas- could be used to pass font awesome v6 icons to Vuestic using webfonts.
+      // a custom kit would need to be installed for this to work though
+      // Font Awesome is installed as a svg package so you can place as an svg with:
       // <FontAwesomeIcon :icon="faGithub" \>
       {
-        name: 'fa-{icon}',
+        name: 'fab-{icon}',
         resolve: ({ icon }) => ({
-          content: icon,
-          class: 'fa-brands'
+          content: '',
+          class: `fa-brands fa-${icon}`
+        })
+      },
+      {
+        name: 'fas-{icon}',
+        resolve: ({ icon }) => ({
+          content: '',
+          class: `fa-solid fa-${icon}`
         })
       },
       // mi- icons are used by vustic to set some va- icons
