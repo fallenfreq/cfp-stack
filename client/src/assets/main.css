@@ -41,6 +41,33 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* https://developers.google.com/fonts/docs/material_symbols */
+
+/* self hosting Material icons */
+@font-face {
+  font-family: 'Material Symbols Rounded';
+  font-style: normal;
+  font-display: block; /* Prevents FOUC by blocking until font loads */
+  src: url(/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].woff2) format('woff2');
+}
+
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px; /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+}
+
+/* self hosting Material icons */
+
+/* This should be kept even if using cloud hosted */
 .material-symbols-rounded {
   font-variation-settings:
     'FILL' 0,
