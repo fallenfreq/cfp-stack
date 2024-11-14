@@ -16,8 +16,8 @@ export const useDarkModeStore = defineStore('darkMode', () => {
     // The dark class is added in the head of the index.html using the same condition
   }
 
-  let isDarkMode: Ref<boolean | null> = ref(document.documentElement.classList.contains('dark'))
-  let isPinkMode = ref(false)
+  const isDarkMode: Ref<boolean | null> = ref(document.documentElement.classList.contains('dark'))
+  const isPinkMode = ref(false)
 
   function toggleDarkMode(event: any) {
     if (event.target['checked']) {

@@ -8,8 +8,7 @@
     "src/**/*",
     "src/**/*.vue",
     "components.d.ts",
-    "../../api/src/routes/appRouter.ts",
-    "../api/services/portfolio.ts"
+    "../api/src/schemas/**/*"
   ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
