@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import zitadelAuth from '@/services/zitadelAuth'
 import { useStackableSheetStore } from '@/stores/sheetStore'
 const sheetStore = useStackableSheetStore()
-const isAuthenticated = computed(() => zitadelAuth.oidcAuth.isAuthenticated)
 </script>
 
 <template>
-  <StackableSheet mobileHeight="40%" desktopWidth="65%" @close="sheetStore.closeSheet">
+  <StackableSheet mobileHeight="50%" desktopWidth="65%" @close="sheetStore.closeSheet">
     <div v-if="sheetStore.sheetContent">
-      {{ sheetStore.sheetContent.title }}
       {{ sheetStore.sheetContent.content }}
+      This will soon display the content of the selected item.
     </div>
   </StackableSheet>
 
   <div class="mx-5">
-    <h1 class="text-4xl mb-5">Web & app design portfolio</h1>
-    <CollectionNav v-if="isAuthenticated" />
+    <div class="flex justify-between items-center mb-5">
+      <h1 class="text-4xl">Web & app design</h1>
+      <CollectionNav v-if="zitadelAuth.oidcAuth.isAuthenticated" />
+    </div>
     <CollectionGrid :name="['webDesignPortfolio']" @selectItem="sheetStore.openSheet" />
   </div>
 </template>
