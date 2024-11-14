@@ -7,7 +7,7 @@
       :key="index"
       :imageUrl="item.imageUrl"
       :title="item.title"
-      @click="() => emit('selectItem', item)"
+      @click="() => !('isPlaceholder' in item) && emit('selectItem', item)"
       :class="
         'isPlaceholder' in item && [
           { 'is-placeholder': item.isPlaceholder },
