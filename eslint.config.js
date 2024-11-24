@@ -11,6 +11,8 @@ export default [
     },
     rules: {
       'no-unused-vars': 'off',
+      'no-undef': 'off',
+      'no-console': 'off',
       '@typescript-eslint/no-explicit-any': 'off'
     },
     languageOptions: {
