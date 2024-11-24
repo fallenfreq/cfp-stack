@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import zitadelAuth from '@/services/zitadelAuth'
 import { useStackableSheetStore } from '@/stores/sheetStore'
-const sheetStore = useStackableSheetStore()
+import { type PortfolioEntry } from '@/../../api/src/schemas/portfolio'
+const sheetStore = useStackableSheetStore<PortfolioEntry>()
 </script>
 
 <template>

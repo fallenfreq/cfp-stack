@@ -7,12 +7,14 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AddMarkerSwitch: typeof import('./src/components/demos/map/AddMarkerSwitch.vue')['default']
     BasicCard: typeof import('./src/components/BasicCard.vue')['default']
     BasicFooter: typeof import('./src/components/BasicFooter.vue')['default']
     CollectionGrid: typeof import('./src/components/CollectionGrid.vue')['default']
     CollectionNav: typeof import('./src/components/CollectionNav.vue')['default']
     ComingSoon: typeof import('./src/components/ComingSoon.vue')['default']
     DarkModeSwitch: typeof import('./src/components/DarkModeSwitch.vue')['default']
+    GoogleAutocomplete: typeof import('./src/components/demos/map/GoogleAutocomplete.vue')['default']
     MiniMothLogo: typeof import('./src/components/brand/MiniMothLogo.vue')['default']
     MothLogo: typeof import('./src/components/brand/MothLogo.vue')['default']
     MothWordmark: typeof import('./src/components/brand/MothWordmark.vue')['default']
