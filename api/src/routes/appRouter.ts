@@ -3,11 +3,14 @@ import { z } from 'zod'
 import { secureRouter } from './secure/router.js'
 import { userRouter } from './user/router.js'
 import { portfolioRouter } from './portfolio/router.js'
+import { markersRouter } from './markers/router.js'
 
 const appRouter = router({
   secure: secureRouter,
 
   user: userRouter,
+
+  mapMarker: markersRouter,
 
   portfolio: portfolioRouter,
 

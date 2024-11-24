@@ -80,6 +80,19 @@ const router = createRouter({
         }
         return import('../views/NoAccess.vue')
       }
+    },
+    {
+      path: '/map-demo',
+      name: 'map',
+      meta: {
+        authName: zitadelAuth.oidcAuth.authName
+      },
+      component: () => {
+        if (zitadelAuth.oidcAuth.isAuthenticated) {
+          return import('../views/demo/GoogleMap.vue')
+        }
+        return import('../views/NoAccess.vue')
+      }
     }
   ]
 })
