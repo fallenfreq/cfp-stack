@@ -120,6 +120,7 @@ const deleteMarker = async (
   if (!toDeleteId) return
   try {
     await trpc.mapMarker.delete.mutate(parseInt(toDeleteId))
+    marker.position = null
     marker.map = null
     sheetStore.closeSheet()
   } catch (error) {
