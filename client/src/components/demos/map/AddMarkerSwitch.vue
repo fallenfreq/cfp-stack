@@ -90,7 +90,7 @@ const handleMapClick = async (event: google.maps.MapMouseEvent) => {
     tags
   })
 
-  // Add a visual marker to the map
+  // Add the marker to the map
   const { AdvancedMarkerElement } = (await google.maps.importLibrary(
     'marker'
   )) as google.maps.MarkerLibrary
@@ -104,6 +104,7 @@ const handleMapClick = async (event: google.maps.MapMouseEvent) => {
   })
   markerEl.addListener('click', onMarkerClick)
   liveMarkers[marker.mapMarkersId] = markerEl
+  toggleAddingMarkers()
 }
 
 // Function to toggle marker adding mode
@@ -116,7 +117,7 @@ const toggleAddingMarkers = () => {
       duration: 10000,
       color: 'info',
       position: 'bottom-right',
-      message: 'Click on the map to add a marker.\nClick the button again to stop adding markers.'
+      message: 'Click on the map to add a marker.'
     })
   } else {
     addListenerRef.value?.remove()
