@@ -54,6 +54,7 @@ export const useMarkerStore = defineStore('markerStore', () => {
     Object.values(allMarkers.value).forEach((marker) => {
       marker.tags.forEach((tag) => tagsSet.add(tag))
     })
+    if (selectedTag.value && !tagsSet.has(selectedTag.value)) selectedTag.value = null
     return Array.from(tagsSet)
   })
 
