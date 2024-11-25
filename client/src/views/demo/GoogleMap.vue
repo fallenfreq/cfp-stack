@@ -163,7 +163,7 @@ const deleteMarker = async (
         :outline="tag !== markerStore.selectedTag"
         size="small"
         class="tag-chip"
-        @click="markerStore.selectedTag = tag"
+        @click="markerStore.selectedTag === tag ? clearFilter() : (markerStore.selectedTag = tag)"
       >
         {{ tag }}
       </VaChip>
@@ -187,7 +187,7 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
           :key="index"
           size="small"
           class="chip"
-          @click="markerStore.selectedTag = tag"
+          @click="markerStore.selectedTag === tag ? clearFilter() : (markerStore.selectedTag = tag)"
         >
           {{ tag }}
         </VaChip>
