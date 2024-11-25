@@ -34,7 +34,7 @@ const toggleAddingMarkers = () => {
   isAddingMarkers.value = !isAddingMarkers.value
 
   if (isAddingMarkers.value) {
-    addListenerRef.value = props.map.addListener('click', handleMapClick)
+    addListenerRef.value = props.map.addListener('click', onMapClick)
     useToast().notify({
       duration: 10000,
       color: 'info',
@@ -48,7 +48,7 @@ const toggleAddingMarkers = () => {
 }
 
 // Handle adding a marker
-const handleMapClick = async (event: google.maps.MapMouseEvent) => {
+const onMapClick = async (event: google.maps.MapMouseEvent) => {
   if (!event.latLng) return
   const latLng = event.latLng
 
@@ -59,7 +59,7 @@ const handleMapClick = async (event: google.maps.MapMouseEvent) => {
   }
   const tags = prompt('Enter tags for the marker (comma-separated):')?.split(',') || []
 
-  const { marker } = await trpc.mapMarker.insert.mutate({
+  const { marker, tags: processedTags } = await trpc.mapMarker.insert.mutate({
     lat: latLng.lat(),
     lng: latLng.lng(),
     title,
@@ -79,7 +79,7 @@ const handleMapClick = async (event: google.maps.MapMouseEvent) => {
   markerEl.addListener('click', () => onMarkerClick(marker.mapMarkersId))
 
   // Add the marker to the store
-  markerStore.addMarker({ ...marker, tags }, markerEl)
+  markerStore.addMarker({ ...marker, tags: processedTags }, markerEl)
 
   toggleAddingMarkers()
 }

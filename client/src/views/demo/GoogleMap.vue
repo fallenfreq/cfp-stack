@@ -125,10 +125,12 @@ const deleteMarker = async (
   const { toDeleteId } = event.currentTarget.dataset
   if (!toDeleteId) return
   try {
-    await trpc.mapMarker.delete.mutate(parseInt(toDeleteId))
+    const markerId = parseInt(toDeleteId)
+    await trpc.mapMarker.delete.mutate(markerId)
     // Remove the marker from the map
     marker.position = null
     marker.map = null
+    markerStore.removeMarker(markerId)
     sheetStore.closeSheet()
   } catch (error) {
     console.error('Error deleting marker:', error)
@@ -156,7 +158,7 @@ const deleteMarker = async (
       >
     </div>
     <VaDivider />
-    <div class="tags-container">
+    <div v-if="markerStore.allTags.length" class="tags-container">
       <VaChip
         v-for="(tag, index) in markerStore.allTags"
         :key="index"
@@ -180,7 +182,7 @@ Marker ID: {{ sheetStore.sheetContent.content.mapMarkersId }}
 Latitude: {{ sheetStore.sheetContent.content.lat }}
 Longitude: {{ sheetStore.sheetContent.content.lng }}
       </pre>
-      <div class="chip-container">
+      <div v-if="sheetStore.sheetContent.content.tags.length" class="chip-container">
         <VaChip
           :outline="tag !== markerStore.selectedTag"
           v-for="(tag, index) in sheetStore.sheetContent.content.tags"
@@ -271,3 +273,6 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
   height: 100vh;
 }
 </style>
+
+<!-- adding two tags -->
+<!-- deleting a marker does not reset relaod the tags to remove -->
