@@ -3,13 +3,20 @@ import { type DrizzleD1Database } from 'drizzle-orm/d1'
 import superjson from 'superjson'
 import axios from 'axios'
 import { getAllEnvs } from '../config/envs.js'
-import * as schema from '../schemas/user.js'
+
+// not sure if this is the best way to pass the schema type to our db
+// we need a dynamic ctx really
+import * as user from '../schemas/user.js'
+import * as mapMarkers from '../schemas/mapMarkers.js'
+import * as portfolio from '../schemas/portfolio.js'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const schemas = { ...user, ...mapMarkers, ...portfolio }
 
 const { ZITADEL_INTROSPECTION_ENDPOINT, ZITADEL_CLIENT_ID, ZITADEL_CLIENT_SECRET } = getAllEnvs()
-
+type appDb = DrizzleD1Database<typeof schemas>
 // Define the type for the context
 type Context = {
-  db: DrizzleD1Database<typeof schema>
+  db: appDb
   req: Request
 }
 
@@ -63,4 +70,4 @@ const router = t.router
 const publicProcedure = t.procedure
 const secureProcedure = t.procedure.use(secure)
 
-export { router, publicProcedure, secureProcedure, type Context }
+export { router, publicProcedure, secureProcedure, type Context, type appDb }
