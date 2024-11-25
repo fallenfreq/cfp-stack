@@ -1,7 +1,14 @@
 import { secureProcedure, router } from '../../config/trpc.js'
-import { mapMarkers, tags, markerTags } from '../../schemas/mapMarkers.js'
-import { eq, or, like, and } from 'drizzle-orm'
+import {
+  mapMarkers as mapMarkersSchema,
+  tags as tagsSchema,
+  markerTags as markerTagsSchema
+} from '../../schemas/mapMarkers.js'
+import { eq, or, ilike, gte, lte, and, sql } from 'drizzle-orm'
+import { SQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { z } from 'zod'
+
+const lower = (column: SQLiteColumn) => sql`LOWER(${column})`
 
 const insertMarkerValidator = z.object({
   tags: z.array(z.string()),
@@ -12,17 +19,22 @@ const insertMarkerValidator = z.object({
 
 export const markersRouter = router({
   insert: secureProcedure.input(insertMarkerValidator).mutation(async ({ input, ctx: { db } }) => {
-    const { tags: sentTags, ...markerData } = input
+    const { tags, ...markerData } = input
+    const processedTags = tags.map((tag) => tag.trim().toLowerCase())
+
+    if (markerData.title) {
+      markerData.title = markerData.title.trim()
+    }
 
     // Insert the marker into the mapMarkers table
     const newMarker = await db
-      .insert(mapMarkers)
+      .insert(mapMarkersSchema)
       .values(markerData)
       .returning({
-        mapMarkersId: mapMarkers.mapMarkersId,
-        lat: mapMarkers.lat,
-        lng: mapMarkers.lng,
-        title: mapMarkers.title
+        mapMarkersId: mapMarkersSchema.mapMarkersId,
+        lat: mapMarkersSchema.lat,
+        lng: mapMarkersSchema.lng,
+        title: mapMarkersSchema.title
       })
       .then((markers) => markers[0]) // Safely retrieve the first marker or undefined
 
@@ -31,14 +43,14 @@ export const markersRouter = router({
     }
 
     const tagIds: number[] = []
-    for (const tag of sentTags) {
+    for (const tag of processedTags) {
       // Check if the tag already exists
       const existingTag = await db
-        .select({ tagId: tags.tagId })
-        .from(tags)
-        .where(eq(tags.name, tag))
+        .select({ tagId: tagsSchema.tagId })
+        .from(tagsSchema)
+        .where(eq(tagsSchema.name, tag))
         .limit(1)
-        .then((tags) => tags[0]) // Safely retrieve the first tag or undefined
+        .then((tags) => tags[0])
 
       let tagId: number
       if (existingTag) {
@@ -47,10 +59,10 @@ export const markersRouter = router({
       } else {
         // Insert the new tag and get its ID
         const newTag = await db
-          .insert(tags)
+          .insert(tagsSchema)
           .values({ name: tag })
-          .returning({ tagId: tags.tagId })
-          .then((tags) => tags[0]) // Safely retrieve the first tag or undefined
+          .returning({ tagId: tagsSchema.tagId })
+          .then((tags) => tags[0])
 
         if (!newTag) {
           throw new Error(`Failed to insert the tag: ${tag}`)
@@ -62,7 +74,7 @@ export const markersRouter = router({
     }
 
     // Insert into the markerTags join table
-    await db.insert(markerTags).values(
+    await db.insert(markerTagsSchema).values(
       tagIds.map((tagId) => ({
         markerId: newMarker.mapMarkersId,
         tagId
@@ -72,7 +84,7 @@ export const markersRouter = router({
     return {
       success: true,
       marker: newMarker,
-      tags: sentTags
+      tags: processedTags
     }
   }),
 
@@ -88,67 +100,67 @@ export const markersRouter = router({
               lng: z.number()
             })
           ])
-          .optional()
+          .optional(),
+        exactSearch: z.boolean().default(false)
       })
     )
-    .query(async ({ input: { search }, ctx: { db } }) => {
-      // Fetch markers and tags based on the search condition
-      const rows = await db
+    .query(async ({ input: { search, exactSearch }, ctx: { db } }) => {
+      // Function to handle case-insensitive LIKE or exact comparison
+      const matchString = (column: SQLiteColumn, value: string) =>
+        exactSearch ? eq(lower(column), value.toLowerCase()) : ilike(column, `%${value.trim()}%`)
+
+      // Function to handle lat/lng matching
+      const matchLatLng = (latColumn: SQLiteColumn, lngColumn: any, lat: number, lng: number) =>
+        exactSearch
+          ? and(eq(latColumn, lat), eq(lngColumn, lng))
+          : and(
+              // Adjust tolerance as needed
+              gte(latColumn, lat - 0.01),
+              lte(latColumn, lat + 0.01),
+              gte(lngColumn, lng - 0.01),
+              lte(lngColumn, lng + 0.01)
+            )
+
+      // Build the WHERE condition based on search type
+      const whereCondition =
+        search == null
+          ? undefined // No search, no condition
+          : typeof search === 'number'
+            ? eq(mapMarkersSchema.mapMarkersId, search)
+            : typeof search === 'string'
+              ? or(
+                  matchString(mapMarkersSchema.title, search),
+                  matchString(tagsSchema.name, search)
+                )
+              : search.lat != null && search.lng != null
+                ? matchLatLng(mapMarkersSchema.lat, mapMarkersSchema.lng, search.lat, search.lng)
+                : undefined
+
+      const aggregate = await db
         .select({
-          mapMarkersId: mapMarkers.mapMarkersId,
-          title: mapMarkers.title,
-          lat: mapMarkers.lat,
-          lng: mapMarkers.lng,
-          tagName: tags.name // Tag name from the tags table
+          mapMarkersId: mapMarkersSchema.mapMarkersId,
+          title: mapMarkersSchema.title,
+          lat: mapMarkersSchema.lat,
+          lng: mapMarkersSchema.lng,
+          // tags: tagsSchema.name
+          tags: sql<string>`GROUP_CONCAT(${tagsSchema.name}, ',')`.as('tags')
         })
-        .from(mapMarkers)
-        .leftJoin(markerTags, eq(mapMarkers.mapMarkersId, markerTags.markerId)) // Join with markerTags
-        .leftJoin(tags, eq(markerTags.tagId, tags.tagId)) // Join with tags
-        .where(
-          search // Or use searchNumber, searchObject as needed
-            ? typeof search === 'number'
-              ? eq(mapMarkers.mapMarkersId, search)
-              : typeof search === 'string'
-                ? or(like(mapMarkers.title, `%${search}%`), like(tags.name, `%${search}%`))
-                : search?.lat && search?.lng
-                  ? and(eq(mapMarkers.lat, search.lat), eq(mapMarkers.lng, search.lng))
-                  : undefined
-            : undefined
+        .from(mapMarkersSchema)
+        .leftJoin(markerTagsSchema, eq(mapMarkersSchema.mapMarkersId, markerTagsSchema.markerId))
+        .leftJoin(tagsSchema, eq(markerTagsSchema.tagId, tagsSchema.tagId))
+        .where(whereCondition)
+        .groupBy(
+          mapMarkersSchema.mapMarkersId,
+          mapMarkersSchema.title,
+          mapMarkersSchema.lat,
+          mapMarkersSchema.lng
         )
 
-      // Group results by marker ID
-      const groupedResults = rows.reduce(
-        (acc, row) => {
-          const { mapMarkersId, title, lat, lng, tagName } = row
-
-          // Initialize the marker entry if it doesn't exist
-          const marker = (acc[mapMarkersId] ||= {
-            mapMarkersId,
-            title,
-            lat,
-            lng,
-            tags: [] // Start with an empty array for tags
-          })
-
-          // Add the tag to the tags array if it's not already present
-          if (tagName && !marker.tags.includes(tagName)) {
-            marker.tags.push(tagName)
-          }
-
-          return acc
-        },
-        {} as Record<
-          number,
-          { mapMarkersId: number; title: string; lat: number; lng: number; tags: string[] }
-        >
-      )
-
       // Convert the grouped results to an array
-      const groupedArray = Object.values(groupedResults)
-
-      console.log('Grouped Results:', groupedArray)
-
-      return groupedArray
+      return aggregate.map((row) => ({
+        ...row,
+        tags: row.tags ? row.tags.split(',') : []
+      }))
     }),
 
   delete: secureProcedure.input(z.number()).mutation(async ({ input, ctx: { db } }) => {
@@ -157,6 +169,6 @@ export const markersRouter = router({
     // await db.run(sql`DROP TABLE IF EXISTS marker_tags;`)
     // await db.run(sql`DROP TABLE IF EXISTS map_markers;`)
     // await db.run(sql`DROP TABLE IF EXISTS tags;`)
-    return db.delete(mapMarkers).where(eq(mapMarkers.mapMarkersId, input)).execute()
+    return db.delete(mapMarkersSchema).where(eq(mapMarkersSchema.mapMarkersId, input)).execute()
   })
 })
