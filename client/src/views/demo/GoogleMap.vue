@@ -7,6 +7,13 @@ import { useDarkModeStore } from '@/stores/darkModeStore'
 import { useStackableSheetStore } from '@/stores/sheetStore'
 import { trpc } from '@/trpc'
 import { useToast } from 'vuestic-ui'
+import { useMarkerStore } from '@/stores/markerStore'
+
+const markerStore = useMarkerStore()
+
+const clearFilter = () => {
+  markerStore.selectedTag = null
+}
 
 const darkModeStore = useDarkModeStore()
 const sheetStore = useStackableSheetStore<{
@@ -110,7 +117,6 @@ watch(map, async () => {
   })
 })
 
-// pass it the marker instance somehow
 const deleteMarker = async (
   event: MouseEvent,
   marker: google.maps.marker.AdvancedMarkerElement
@@ -131,40 +137,80 @@ const deleteMarker = async (
 </script>
 
 <template>
+  <!-- Section above the map -->
+  <div class="marker-info-container">
+    <div class="marker-info-header">
+      <h3 class="marker-info-text font-bold text-3xl">
+        {{
+          markerStore.selectedTag
+            ? `"${markerStore.selectedTag}" markers are being displayed`
+            : 'All markers are displayed'
+        }}
+      </h3>
+      <VaButton
+        :disabled="!markerStore.selectedTag"
+        size="small"
+        @click="clearFilter"
+        class="clear-filter-button"
+        >Show All Markers</VaButton
+      >
+    </div>
+    <VaDivider />
+    <div class="tags-container">
+      <VaChip
+        v-for="(tag, index) in markerStore.allTags"
+        :key="index"
+        :outline="tag !== markerStore.selectedTag"
+        size="small"
+        class="tag-chip"
+        @click="markerStore.selectedTag = tag"
+      >
+        {{ tag }}
+      </VaChip>
+    </div>
+  </div>
+
+  <!-- StackableSheet with marker details -->
   <StackableSheet mobileHeight="50%" desktopWidth="65%" @close="sheetStore.closeSheet">
     <div v-if="sheetStore.sheetContent?.content">
-      <h2 class="text-3xl font-bold">Marker details</h2>
-      <br />
+      <h3 class="text-3xl font-bold">Marker Details</h3>
       <pre>
 Title: {{ sheetStore.sheetContent.content.title }}
 Marker ID: {{ sheetStore.sheetContent.content.mapMarkersId }}
 Latitude: {{ sheetStore.sheetContent.content.lat }}
 Longitude: {{ sheetStore.sheetContent.content.lng }}
       </pre>
-      <div>
+      <div class="chip-container">
         <VaChip
-          outline
+          :outline="tag !== markerStore.selectedTag"
           v-for="(tag, index) in sheetStore.sheetContent.content.tags"
           :key="index"
           size="small"
-          class="mr-2 mb-8"
-          @click="console.log('Filter by tag:', tag)"
-          >{{ tag }}</VaChip
+          class="chip"
+          @click="markerStore.selectedTag = tag"
         >
+          {{ tag }}
+        </VaChip>
       </div>
-      <!-- get directions to coordinates -->
-      <!-- make tags into pils that can be clicked to filter search the marckers -->
-      <VaButton
-        :data-to-delete-id="sheetStore.sheetContent.content.mapMarkersId"
-        color="primary"
-        @click="
-          (event: MouseEvent) =>
-            sheetStore.sheetContent && deleteMarker(event, sheetStore.sheetContent.marker)
-        "
-        >Delete marker</VaButton
-      >
+      <div class="Marker-info-button-group">
+        <VaButton :disabled="!markerStore.selectedTag" @click="markerStore.selectedTag = null"
+          >Show all markers</VaButton
+        >
+        <VaButton
+          :data-to-delete-id="sheetStore.sheetContent.content.mapMarkersId"
+          color="danger"
+          @click="
+            (event: MouseEvent) =>
+              sheetStore.sheetContent && deleteMarker(event, sheetStore.sheetContent.marker)
+          "
+        >
+          Delete Marker
+        </VaButton>
+      </div>
     </div>
   </StackableSheet>
+
+  <!-- Map container -->
   <div ref="mapContainer" id="map"></div>
   <div style="display: block">
     <GoogleAutocomplete v-if="map" :map="map" ref="googleAutocomplete" />
@@ -179,6 +225,48 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
 </style>
 
 <style scoped>
+.marker-info-container {
+  margin: 0 2rem 2rem 2rem;
+}
+
+.marker-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.marker-info-text {
+  /* font-size: 1.25rem;
+  font-weight: 500; */
+}
+
+.clear-filter-button {
+  /* font-size: 0.875rem; */
+}
+
+.Marker-info-button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.tag-chip {
+  cursor: pointer;
+}
+
+.chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
 #map {
   height: 100vh;
 }
