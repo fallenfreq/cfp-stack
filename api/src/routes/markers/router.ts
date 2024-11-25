@@ -1,3 +1,4 @@
+// TODO: seperate services from router
 import { secureProcedure, router } from '../../config/trpc.js'
 import {
   mapMarkers as mapMarkersSchema,
@@ -7,6 +8,7 @@ import {
 import { eq, or, ilike, gte, lte, and, sql } from 'drizzle-orm'
 import { SQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { z } from 'zod'
+import { type appDb } from '../../config/trpc.js'
 
 const lower = (column: SQLiteColumn) => sql`LOWER(${column})`
 
@@ -19,11 +21,38 @@ const insertMarkerValidator = z.object({
 
 const normalizeTag = (tag: string) => tag.trim().toLowerCase().replace(/\s+/g, '-')
 
+// Utility function for tag normalization and insertion
+async function getOrInsertTag(db: appDb, tag: string): Promise<number> {
+  const normalizedTag = normalizeTag(tag)
+  // Check if the tag already exists
+  const existingTag = await db
+    .select({ tagId: tagsSchema.tagId })
+    .from(tagsSchema)
+    .where(eq(tagsSchema.name, normalizedTag))
+    .limit(1)
+    .then((tags) => tags[0])
+
+  if (existingTag) {
+    return existingTag.tagId
+  }
+
+  // Insert the new tag and get its ID
+  const newTag = await db
+    .insert(tagsSchema)
+    .values({ name: normalizedTag })
+    .returning({ tagId: tagsSchema.tagId })
+    .then((tags) => tags[0])
+
+  if (!newTag) {
+    throw new Error(`Failed to insert the tag: ${normalizedTag}`)
+  }
+
+  return newTag.tagId
+}
+
 export const markersRouter = router({
   insert: secureProcedure.input(insertMarkerValidator).mutation(async ({ input, ctx: { db } }) => {
     const { tags, ...markerData } = input
-    const processedTags = tags.map((tag) => normalizeTag(tag))
-
     if (markerData.title) {
       markerData.title = markerData.title.trim()
     }
@@ -38,55 +67,28 @@ export const markersRouter = router({
         lng: mapMarkersSchema.lng,
         title: mapMarkersSchema.title
       })
-      .then((markers) => markers[0]) // Safely retrieve the first marker or undefined
+      .then((markers) => markers[0])
 
     if (!newMarker) {
       throw new Error('Failed to insert the marker')
     }
 
-    const tagIds: number[] = []
-    for (const tag of processedTags) {
-      // Check if the tag already exists
-      const existingTag = await db
-        .select({ tagId: tagsSchema.tagId })
-        .from(tagsSchema)
-        .where(eq(tagsSchema.name, tag))
-        .limit(1)
-        .then((tags) => tags[0])
-
-      let tagId: number
-      if (existingTag) {
-        // Use the existing tag ID
-        tagId = existingTag.tagId
-      } else {
-        // Insert the new tag and get its ID
-        const newTag = await db
-          .insert(tagsSchema)
-          .values({ name: tag })
-          .returning({ tagId: tagsSchema.tagId })
-          .then((tags) => tags[0])
-
-        if (!newTag) {
-          throw new Error(`Failed to insert the tag: ${tag}`)
-        }
-        tagId = newTag.tagId
-      }
-
-      tagIds.push(tagId)
-    }
-
+    const filteredTags = tags.filter(Boolean)
+    const tagIds = await Promise.all(filteredTags.map((tag) => getOrInsertTag(db, tag)))
     // Insert into the markerTags join table
-    await db.insert(markerTagsSchema).values(
-      tagIds.map((tagId) => ({
-        markerId: newMarker.mapMarkersId,
-        tagId
-      }))
-    )
+    if (tagIds.length > 0) {
+      await db.insert(markerTagsSchema).values(
+        tagIds.map((tagId) => ({
+          markerId: newMarker.mapMarkersId,
+          tagId
+        }))
+      )
+    }
 
     return {
       success: true,
       marker: newMarker,
-      tags: processedTags
+      tags: filteredTags
     }
   }),
 
@@ -149,7 +151,6 @@ export const markersRouter = router({
           title: mapMarkersSchema.title,
           lat: mapMarkersSchema.lat,
           lng: mapMarkersSchema.lng,
-          // tags: tagsSchema.name
           tags: sql<string>`GROUP_CONCAT(${tagsSchema.name}, ',')`.as('tags')
         })
         .from(mapMarkersSchema)
@@ -171,11 +172,64 @@ export const markersRouter = router({
     }),
 
   delete: secureProcedure.input(z.number()).mutation(async ({ input, ctx: { db } }) => {
-    // Drop tables in the correct order
-    // you can drop tables by commenting out all schemas and running a new migration
-    // await db.run(sql`DROP TABLE IF EXISTS marker_tags;`)
-    // await db.run(sql`DROP TABLE IF EXISTS map_markers;`)
-    // await db.run(sql`DROP TABLE IF EXISTS tags;`)
+    // Removing all empty tags before deleting the tag
+    // This is only here for development purposes since no empty tags should exist
+    // console.log('Removing empty tags before deleting the tag')
+    // removeEmptyTags(db)
+    //   .then(() => {
+    //     console.log('Empty tags removed successfully')
+    //   })
+    //   .catch((error) => {
+    //     console.error('Error removing empty tags:', error)
+    //   })
     return db.delete(mapMarkersSchema).where(eq(mapMarkersSchema.mapMarkersId, input)).execute()
-  })
+  }),
+
+  addTag: secureProcedure
+    .input(
+      z.object({
+        markerId: z.number(),
+        tag: z.string()
+      })
+    )
+    .mutation(async ({ input: { markerId, tag }, ctx: { db } }) => {
+      const tagId = await getOrInsertTag(db, tag)
+      await db.insert(markerTagsSchema).values({ markerId, tagId }).execute()
+
+      return {
+        success: true,
+        markerId,
+        tag: normalizeTag(tag)
+      }
+    }),
+
+  deleteTag: secureProcedure
+    .input(z.union([z.number(), z.string()]))
+    .mutation(async ({ input, ctx: { db } }) => {
+      return db
+        .delete(tagsSchema)
+        .where(typeof input === 'number' ? eq(tagsSchema.tagId, input) : eq(tagsSchema.name, input))
+        .execute()
+    })
 })
+
+// Function to remove empty tags from the database
+// async function removeEmptyTags(db: appDb): Promise<void> {
+//   const emptyTags = await db
+//     .select({ tagId: tagsSchema.tagId })
+//     .from(tagsSchema)
+//     .where(eq(tagsSchema.name, ''))
+//     .execute()
+
+//   if (emptyTags.length > 0) {
+//     await db
+//       .delete(tagsSchema)
+//       .where(
+//         inArray(
+//           tagsSchema.tagId,
+//           emptyTags.map((tag) => tag.tagId)
+//         )
+//       )
+//       .execute()
+//   }
+// }
