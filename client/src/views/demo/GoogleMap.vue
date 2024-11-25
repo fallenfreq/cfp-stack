@@ -120,6 +120,7 @@ const deleteMarker = async (
   if (!toDeleteId) return
   try {
     await trpc.mapMarker.delete.mutate(parseInt(toDeleteId))
+    // Remove the marker from the map
     marker.position = null
     marker.map = null
     sheetStore.closeSheet()
@@ -139,8 +140,20 @@ Title: {{ sheetStore.sheetContent.content.title }}
 Marker ID: {{ sheetStore.sheetContent.content.mapMarkersId }}
 Latitude: {{ sheetStore.sheetContent.content.lat }}
 Longitude: {{ sheetStore.sheetContent.content.lng }}
-Tags: {{ sheetStore.sheetContent.content.tags.join(', ') }}
       </pre>
+      <div>
+        <VaChip
+          outline
+          v-for="(tag, index) in sheetStore.sheetContent.content.tags"
+          :key="index"
+          size="small"
+          class="mr-2 mb-8"
+          @click="console.log('Filter by tag:', tag)"
+          >{{ tag }}</VaChip
+        >
+      </div>
+      <!-- get directions to coordinates -->
+      <!-- make tags into pils that can be clicked to filter search the marckers -->
       <VaButton
         :data-to-delete-id="sheetStore.sheetContent.content.mapMarkersId"
         color="primary"
