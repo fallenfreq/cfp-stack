@@ -17,10 +17,12 @@ const insertMarkerValidator = z.object({
   lng: z.number()
 })
 
+const normalizeTag = (tag: string) => tag.trim().toLowerCase().replace(/\s+/g, '-')
+
 export const markersRouter = router({
   insert: secureProcedure.input(insertMarkerValidator).mutation(async ({ input, ctx: { db } }) => {
     const { tags, ...markerData } = input
-    const processedTags = tags.map((tag) => tag.trim().toLowerCase())
+    const processedTags = tags.map((tag) => normalizeTag(tag))
 
     if (markerData.title) {
       markerData.title = markerData.title.trim()
@@ -110,7 +112,12 @@ export const markersRouter = router({
         exactSearch ? eq(lower(column), value.toLowerCase()) : ilike(column, `%${value.trim()}%`)
 
       // Function to handle lat/lng matching
-      const matchLatLng = (latColumn: SQLiteColumn, lngColumn: any, lat: number, lng: number) =>
+      const matchLatLng = (
+        latColumn: SQLiteColumn,
+        lngColumn: SQLiteColumn,
+        lat: number,
+        lng: number
+      ) =>
         exactSearch
           ? and(eq(latColumn, lat), eq(lngColumn, lng))
           : and(
@@ -130,7 +137,7 @@ export const markersRouter = router({
             : typeof search === 'string'
               ? or(
                   matchString(mapMarkersSchema.title, search),
-                  matchString(tagsSchema.name, search)
+                  matchString(tagsSchema.name, normalizeTag(search))
                 )
               : search.lat != null && search.lng != null
                 ? matchLatLng(mapMarkersSchema.lat, mapMarkersSchema.lng, search.lat, search.lng)
