@@ -136,6 +136,7 @@ const deleteMarker = async (
     console.error('Error deleting marker:', error)
   }
 }
+const { open } = window
 </script>
 
 <template>
@@ -154,7 +155,7 @@ const deleteMarker = async (
         size="small"
         @click="clearFilter"
         class="clear-filter-button"
-        >Show All Markers</VaButton
+        >All markers</VaButton
       >
     </div>
     <VaDivider />
@@ -196,7 +197,17 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
       </div>
       <div class="Marker-info-button-group">
         <VaButton :disabled="!markerStore.selectedTag" @click="markerStore.selectedTag = null"
-          >Show all markers</VaButton
+          >All markers</VaButton
+        >
+        <!-- https://www.google.com/maps/dir/?api=1&origin=34.1030032,-118.41046840000001&destination=34.059808,-118.368152 -->
+        <VaButton
+          @click="
+            open(
+              `https://maps.google.com/?q=${sheetStore.sheetContent.content.lat},${sheetStore.sheetContent.content.lng}`,
+              '_blank'
+            )
+          "
+          >Directions</VaButton
         >
         <VaButton
           :data-to-delete-id="sheetStore.sheetContent.content.mapMarkersId"
