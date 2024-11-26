@@ -189,10 +189,7 @@ const openAddTagPrompt = async () => {
 }
 
 const alltagsChipClick = (tag: string) => {
-  console.log({
-    selectedTags: markerStore.selectedTags.length,
-    allTags: markerStore.allTags.length
-  })
+  console.log({ allTags: markerStore.allTags, selectedTags: markerStore.selectedTags })
   return markerStore.selectedTags.includes(tag)
     ? clearFilter(tag) // Case 1: Tag is already selected, so clear it.
     : [tag, ...markerStore.selectedTags].length === markerStore.allTags.length
@@ -255,13 +252,7 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
           :key="index"
           size="small"
           :color="deleteMode ? 'danger' : undefined"
-          @click="
-            deleteMode
-              ? deleteTagFromMarker(tag)
-              : markerStore.selectedTags.some((selectedTag) => selectedTag === tag)
-                ? clearFilter(tag)
-                : markerStore.selectedTags.push(tag)
-          "
+          @click="deleteMode ? deleteTagFromMarker(tag) : alltagsChipClick(tag)"
         >
           {{ tag }}
         </VaChip>
