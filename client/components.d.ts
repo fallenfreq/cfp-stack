@@ -13,6 +13,7 @@ declare module 'vue' {
     CollectionGrid: typeof import('./src/components/CollectionGrid.vue')['default']
     CollectionNav: typeof import('./src/components/CollectionNav.vue')['default']
     ComingSoon: typeof import('./src/components/ComingSoon.vue')['default']
+    CurrentLocation: typeof import('./src/components/demos/map/currentLocation.vue')['default']
     DarkModeSwitch: typeof import('./src/components/DarkModeSwitch.vue')['default']
     GoogleAutocomplete: typeof import('./src/components/demos/map/GoogleAutocomplete.vue')['default']
     MiniMothLogo: typeof import('./src/components/brand/MiniMothLogo.vue')['default']
