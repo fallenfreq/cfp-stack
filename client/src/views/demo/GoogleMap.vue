@@ -263,8 +263,6 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
                 : markerStore.selectedTags.push(tag)
           "
         >
-          "
-
           {{ tag }}
         </VaChip>
 
