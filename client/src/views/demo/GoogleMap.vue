@@ -355,17 +355,17 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
 .tag-add-button {
   cursor: pointer;
   font-size: 1rem;
-  padding: 0.4rem;
+  padding: 0.3rem;
   border-radius: 4rem;
-  background-color: rgb(var(--backgroundPrimary), 0.5);
+  background-color: rgba(var(--backgroundPrimary) / 0.5);
 }
 
 .tag-delete-toggle {
   cursor: pointer;
   font-size: 1rem;
-  padding: 0.4rem;
+  padding: 0.3rem;
   border-radius: 4rem;
-  background-color: rgb(var(--backgroundPrimary), 0.5);
+  background-color: rgba(var(--backgroundPrimary) / 0.5);
 }
 </style>
 
