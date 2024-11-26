@@ -102,6 +102,12 @@ const renderMap = async () => {
 }
 
 onMounted(renderMap)
+watch(
+  () => sheetStore.isSheetOpen,
+  () => {
+    if (!sheetStore.isSheetOpen) deleteMode.value = false
+  }
+)
 watch(() => darkModeStore.isDarkMode, renderMap)
 watch(
   () => mapStore.map,
@@ -251,7 +257,16 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
           :key="index"
           size="small"
           :color="deleteMode ? 'danger' : undefined"
-          @click="deleteMode ? deleteTagFromMarker(tag) : alltagsChipClick(tag)"
+          @click="
+            async () => {
+              if (deleteMode) {
+                await deleteTagFromMarker(tag)
+                deleteMode = !deleteMode
+              } else {
+                alltagsChipClick(tag)
+              }
+            }
+          "
         >
           {{ tag }}
         </VaChip>
