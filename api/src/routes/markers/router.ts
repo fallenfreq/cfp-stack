@@ -1,4 +1,4 @@
-// TODO: seperate services from router
+// TODO: separate services from router
 import { secureProcedure, router } from '../../config/trpc.js'
 import {
   tags as tagsSchema,
@@ -19,6 +19,24 @@ const insertMarkerValidator = z.object({
   lat: z.number(),
   lng: z.number()
 })
+
+const updateMarkerValidator = z.object({
+  markerId: z.number(),
+  title: z.string().optional(),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+  tags: z.array(z.string()).optional()
+})
+
+type Defined<T> = T extends undefined ? never : T
+
+const filterUndefined = <T extends Record<string, any>>(
+  obj: T
+): {
+  [K in keyof T as T[K] extends undefined ? never : K]: Defined<T[K]>
+} => {
+  return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as any
+}
 
 const normalizeTag = (tag: string) => tag.trim().toLowerCase().replace(/\s+/g, '-')
 const normalizeTags = (tags: string[]) => {
@@ -181,6 +199,48 @@ export const markersRouter = router({
       }))
     }),
 
+  update: secureProcedure.input(updateMarkerValidator).mutation(async ({ input, ctx: { db } }) => {
+    const { markerId, tags, ...markerData } = input
+
+    const updates = filterUndefined(markerData)
+
+    // Normalize and handle tags if provided
+    let updatedTags: number[] = []
+    if (tags) {
+      const normalizedTags = normalizeTags(tags)
+      const tagsAndIds = await Promise.all(normalizedTags.map((tag) => getOrInsertTag(db, tag)))
+      updatedTags = tagsAndIds.map(({ tagId }) => tagId)
+
+      // Update markerTags association table
+      await db.delete(markerTagsSchema).where(eq(markerTagsSchema.markerId, markerId)).execute()
+
+      if (updatedTags.length > 0) {
+        await db.insert(markerTagsSchema).values(
+          updatedTags.map((tagId) => ({
+            markerId,
+            tagId
+          }))
+        )
+      }
+    }
+
+    // Update markerData if provided
+    if (Object.keys(markerData).length > 0) {
+      await db
+        .update(mapMarkersSchema)
+        .set(updates)
+        .where(eq(mapMarkersSchema.mapMarkersId, markerId))
+        .execute()
+    }
+
+    return {
+      success: true,
+      updatedFields: {
+        ...markerData,
+        tags: updatedTags
+      }
+    }
+  }),
   delete: secureProcedure.input(z.number()).mutation(async ({ input, ctx: { db } }) => {
     // Removing all empty tags before deleting the tag
     // This is only here for development purposes since no empty tags should exist

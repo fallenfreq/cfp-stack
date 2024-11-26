@@ -9,8 +9,11 @@ import { useMapStore } from '@/stores/mapStore'
 import { trpc } from '@/trpc'
 import { useToast } from 'vuestic-ui'
 import { useMarkerStore } from '@/stores/markerStore'
-import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faMinus, faPen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
+// import zitadelAuth from '@/services/zitadelAuth'
+// const user = computed(() => zitadelAuth.oidcAuth.userProfile)
 
 const markerStore = useMarkerStore()
 
@@ -201,6 +204,38 @@ const alltagsChipClick = (tag: string) => {
       ? clearFilter() // Case 2: Adding this tag selects all tags, so clear everything.
       : markerStore.selectedTags.push(tag) // Case 3: Add the tag to selectedTags.
 }
+
+const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title: string }) => {
+  const newTitle = prompt('Enter the new title:', markerContent.title)
+  if (newTitle === null || newTitle.trim() === '') {
+    // User canceled or didn't provide input
+    return
+  }
+
+  try {
+    // Send the new title to the server
+    await trpc.mapMarker.update.mutate({
+      markerId: markerContent.mapMarkersId,
+      title: newTitle
+    })
+
+    // Update the title locally
+    markerContent.title = newTitle
+
+    useToast().notify({
+      duration: 5000,
+      color: 'primary',
+      message: 'Title updated successfully!'
+    })
+  } catch (error) {
+    console.error('Error updating title:', error)
+    useToast().notify({
+      duration: 5000,
+      color: 'danger',
+      message: 'Failed to update title. Please try again.'
+    })
+  }
+}
 </script>
 
 <template>
@@ -243,13 +278,16 @@ const alltagsChipClick = (tag: string) => {
     <div v-if="sheetStore.sheetContent?.content">
       <h3 class="text-3xl font-bold">Marker Details</h3>
       <pre>
-Title: {{ sheetStore.sheetContent.content.title }}
+Title: {{ sheetStore.sheetContent.content.title }} <span><FontAwesomeIcon 
+      :icon="faPen" 
+      class="edit-title-icon" 
+      @click="() => sheetStore.sheetContent && openTitleEditPrompt(sheetStore.sheetContent.content)"
+    /></span>
 Marker ID: {{ sheetStore.sheetContent.content.mapMarkersId }}
 Latitude: {{ sheetStore.sheetContent.content.lat }}
 Longitude: {{ sheetStore.sheetContent.content.lng }}
 
-Tags</pre
-      >
+Tags</pre>
       <div class="marker-tags-section">
         <div v-if="sheetStore.sheetContent.content.tags.length" class="tags-container">
           <VaChip
@@ -389,13 +427,18 @@ Tags</pre
 }
 
 .tag-add-button,
-.tag-delete-toggle {
+.tag-delete-toggle,
+.edit-title-icon {
   cursor: pointer;
   font-size: 1rem;
   padding: 0.3rem;
   border-radius: 4rem;
   background-color: rgba(var(--backgroundPrimary) / 0.5);
   transition: background-color 0.3s ease;
+}
+
+.edit-title-icon {
+  font-size: 0.5rem;
 }
 
 .tag-add-button:hover,
@@ -411,5 +454,4 @@ pre {
 <!-- add geolocation -->
 <!-- select title to change its value -->
 
-<!-- toast when minus is clicked -->
 <!-- add posted by -->
