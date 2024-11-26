@@ -5,6 +5,7 @@ import GoogleAutocomplete from '@/components/demos/map/GoogleAutocomplete.vue'
 import AddMarkerSwitch from '@/components/demos/map/AddMarkerSwitch.vue'
 import { useDarkModeStore } from '@/stores/darkModeStore'
 import { useStackableSheetStore } from '@/stores/sheetStore'
+import { useMapStore } from '@/stores/mapStore'
 import { trpc } from '@/trpc'
 import { useToast } from 'vuestic-ui'
 import { useMarkerStore } from '@/stores/markerStore'
@@ -16,6 +17,8 @@ const markerStore = useMarkerStore()
 const clearFilter = () => {
   markerStore.selectedTag = null
 }
+
+const mapStore = useMapStore()
 
 const darkModeStore = useDarkModeStore()
 const sheetStore = useStackableSheetStore<{
@@ -38,7 +41,6 @@ const blackpool: google.maps.LatLngLiteral = {
 
 // Map container reference
 const mapContainer = ref<HTMLDivElement | null>(null)
-const map = ref<google.maps.Map | null>(null)
 
 // Refs for controls
 const googleAutocomplete = ref<typeof GoogleAutocomplete | null>(null)
@@ -92,32 +94,35 @@ const renderMap = async () => {
     colorScheme: darkModeStore.isDarkMode ? ColorScheme.DARK : ColorScheme.LIGHT,
     ...mapControls
   }
-  map.value = new Map(mapContainer.value, mapOptions)
+  mapStore.setMap(new Map(mapContainer.value, mapOptions))
 }
 
 onMounted(renderMap)
 watch(() => darkModeStore.isDarkMode, renderMap)
-watch(map, async () => {
-  await nextTick()
-  if (!map.value || !googleAutocomplete.value || !addMarkerSwitch.value) return
+watch(
+  () => mapStore.map,
+  async () => {
+    await nextTick()
+    if (!mapStore.map || !googleAutocomplete.value || !addMarkerSwitch.value) return
 
-  // Add Autocomplete
-  const autocompleteEl = googleAutocomplete.value.root
-  autocompleteEl.classList.add(mapsControlsStyle['spacing'])
-  map.value.controls[google.maps.ControlPosition.TOP_LEFT].push(autocompleteEl)
+    // Add Autocomplete
+    const autocompleteEl = googleAutocomplete.value.root
+    autocompleteEl.classList.add(mapsControlsStyle['spacing'])
+    mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT].push(autocompleteEl)
 
-  // Add Marker Switch
-  const addMarkerSwitchEl = addMarkerSwitch.value.root
-  addMarkerSwitchEl.classList.add(mapsControlsStyle['spacing'])
-  map.value.controls[google.maps.ControlPosition.TOP_LEFT].push(addMarkerSwitchEl)
+    // Add Marker Switch
+    const addMarkerSwitchEl = addMarkerSwitch.value.root
+    addMarkerSwitchEl.classList.add(mapsControlsStyle['spacing'])
+    mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT].push(addMarkerSwitchEl)
 
-  useToast().notify({
-    duration: 10000,
-    color: 'info',
-    position: 'bottom-right',
-    message: 'Click the plus button "+" at the top to enter "add marker mode"'
-  })
-})
+    useToast().notify({
+      duration: 10000,
+      color: 'info',
+      position: 'bottom-right',
+      message: 'Click the plus button "+" at the top to enter "add marker mode"'
+    })
+  }
+)
 
 const deleteMarker = async (
   event: MouseEvent,
@@ -233,6 +238,7 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
 
       <div v-if="sheetStore.sheetContent.content.tags.length" class="tags-container">
         <VaChip
+          class="tag-chip"
           :outline="tag !== markerStore.selectedTag"
           v-for="(tag, index) in sheetStore.sheetContent.content.tags"
           :key="index"
@@ -288,8 +294,8 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
   <!-- Map container -->
   <div ref="mapContainer" id="map"></div>
   <div style="display: none">
-    <GoogleAutocomplete v-if="map" :map="map" ref="googleAutocomplete" />
-    <AddMarkerSwitch v-if="map" :map="map" ref="addMarkerSwitch" />
+    <GoogleAutocomplete v-if="mapStore.map" :map="mapStore.map" ref="googleAutocomplete" />
+    <AddMarkerSwitch v-if="mapStore.map" ref="addMarkerSwitch" />
   </div>
 </template>
 
@@ -300,6 +306,10 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
 </style>
 
 <style scoped>
+.tag-chip {
+  font-weight: bold;
+}
+
 .marker-info-container {
   margin: 0 2rem 2rem 2rem;
 }
@@ -354,4 +364,3 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
 
 <!-- filter by multiple tags -->
 <!-- add geolocation -->
-<!-- add and remove tags from window -->
