@@ -79,6 +79,7 @@ export const markersRouter = router({
 
     const filteredTags = tags.filter(Boolean)
     const tagsAndIds = await Promise.all(filteredTags.map((tag) => getOrInsertTag(db, tag)))
+
     // Insert into the markerTags join table
     // normalizedTags, tagIds
     if (tagsAndIds.length > 0) {
@@ -203,9 +204,9 @@ export const markersRouter = router({
           .split(',')
           .filter(Boolean)
           .map(async (tag) => {
-            const { tagId } = await getOrInsertTag(db, tag)
+            const { tagId, normalizedTag } = await getOrInsertTag(db, tag)
             await db.insert(markerTagsSchema).values({ markerId, tagId }).execute()
-            return tag
+            return normalizedTag
           })
       )
     }),
