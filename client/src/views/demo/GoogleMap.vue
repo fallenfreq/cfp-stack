@@ -247,36 +247,51 @@ Title: {{ sheetStore.sheetContent.content.title }}
 Marker ID: {{ sheetStore.sheetContent.content.mapMarkersId }}
 Latitude: {{ sheetStore.sheetContent.content.lat }}
 Longitude: {{ sheetStore.sheetContent.content.lng }}
-      </pre>
 
-      <div v-if="sheetStore.sheetContent.content.tags.length" class="tags-container">
-        <VaChip
-          class="tag-chip"
-          :outline="!markerStore.selectedTags.some((selectedTag) => selectedTag === tag)"
-          v-for="(tag, index) in sheetStore.sheetContent.content.tags"
-          :key="index"
-          size="small"
-          :color="deleteMode ? 'danger' : undefined"
-          @click="
-            async () => {
-              if (deleteMode) {
-                await deleteTagFromMarker(tag)
-                deleteMode = !deleteMode
-              } else {
-                alltagsChipClick(tag)
+Tags</pre
+      >
+      <div class="marker-tags-section">
+        <div v-if="sheetStore.sheetContent.content.tags.length" class="tags-container">
+          <VaChip
+            class="tag-chip"
+            :outline="!markerStore.selectedTags.some((selectedTag) => selectedTag === tag)"
+            v-for="(tag, index) in sheetStore.sheetContent.content.tags"
+            :key="index"
+            size="small"
+            :color="deleteMode ? 'danger' : undefined"
+            @click="
+              async () => {
+                if (deleteMode) {
+                  await deleteTagFromMarker(tag)
+                  deleteMode = !deleteMode
+                } else {
+                  alltagsChipClick(tag)
+                }
               }
-            }
-          "
-        >
-          {{ tag }}
-        </VaChip>
+            "
+          >
+            {{ tag }}
+          </VaChip>
+        </div>
 
         <FontAwesomeIcon :icon="faPlus" class="tag-add-button" @click="openAddTagPrompt" />
         <FontAwesomeIcon
+          v-if="sheetStore.sheetContent.content.tags.length"
           :icon="faMinus"
           class="tag-delete-toggle"
           color="deleteMode ? 'danger' : undefined"
-          @click="deleteMode = !deleteMode"
+          @click="
+            () => {
+              deleteMode = !deleteMode
+              useToast().notify({
+                duration: 10000,
+                color: 'info',
+                position: 'bottom-right',
+                message:
+                  'Clicking a tag while they are red will delete the tag.\nClick - again or close the marker to cancel.'
+              })
+            }
+          "
         />
       </div>
 
@@ -356,33 +371,36 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
   margin-top: 2rem;
 }
 
-.tags-container,
-.tag-actions {
+.marker-tags-section,
+.tags-container {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+}
+
+.marker-tags-section {
   margin-bottom: 1rem;
+  margin-top: 0.5rem;
 }
 
 #map {
   height: 100vh;
 }
 
-.tag-add-button {
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0.3rem;
-  border-radius: 4rem;
-  background-color: rgba(var(--backgroundPrimary) / 0.5);
-}
-
+.tag-add-button,
 .tag-delete-toggle {
   cursor: pointer;
   font-size: 1rem;
   padding: 0.3rem;
   border-radius: 4rem;
   background-color: rgba(var(--backgroundPrimary) / 0.5);
+  transition: background-color 0.3s ease;
+}
+
+.tag-add-button:hover,
+.tag-delete-toggle:hover {
+  background-color: rgba(var(--backgroundPrimary) / 0.2);
 }
 
 pre {
@@ -393,7 +411,5 @@ pre {
 <!-- add geolocation -->
 <!-- select title to change its value -->
 
-<!-- remove red when sheet closes or after delete -->
 <!-- toast when minus is clicked -->
 <!-- add posted by -->
-<!-- pointer on chips -->
