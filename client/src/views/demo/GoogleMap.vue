@@ -14,8 +14,12 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const markerStore = useMarkerStore()
 
-const clearFilter = () => {
-  markerStore.selectedTag = null
+const clearFilter = (tag?: string) => {
+  if (tag) {
+    markerStore.selectedTags = markerStore.selectedTags.filter((selectedTag) => selectedTag !== tag)
+  } else {
+    markerStore.selectedTags = []
+  }
 }
 
 const mapStore = useMapStore()
@@ -147,15 +151,6 @@ const { open } = window
 
 const deleteMode = ref(false)
 
-// Toggle filtering of markers
-const toggleTagFilter = (tag: string) => {
-  if (markerStore.selectedTag === tag) {
-    clearFilter()
-  } else {
-    markerStore.selectedTag = tag
-  }
-}
-
 // Delete a tag from the marker
 const deleteTagFromMarker = async (tag: string) => {
   if (!sheetStore.sheetContent?.content) return
@@ -192,6 +187,18 @@ const openAddTagPrompt = async () => {
     console.error('Error adding tags:', error)
   }
 }
+
+const alltagsChipClick = (tag: string) => {
+  console.log({
+    selectedTags: markerStore.selectedTags.length,
+    allTags: markerStore.allTags.length
+  })
+  return markerStore.selectedTags.includes(tag)
+    ? clearFilter(tag) // Case 1: Tag is already selected, so clear it.
+    : [tag, ...markerStore.selectedTags].length === markerStore.allTags.length
+      ? clearFilter() // Case 2: Adding this tag selects all tags, so clear everything.
+      : markerStore.selectedTags.push(tag) // Case 3: Add the tag to selectedTags.
+}
 </script>
 
 <template>
@@ -200,13 +207,17 @@ const openAddTagPrompt = async () => {
     <div class="marker-info-header">
       <h3 class="text-3xl marker-info-text">
         {{
-          markerStore.selectedTag
-            ? `"${markerStore.selectedTag}" markers are being displayed`
+          markerStore.selectedTags.length
+            ? `"${markerStore.selectedTags}" markers are being displayed`
             : 'All markers are displayed'
         }}
       </h3>
-      <VaButton :disabled="!markerStore.selectedTag" size="small" @click="clearFilter">
-        All&nbsp;markers
+      <VaButton
+        :disabled="!markerStore.selectedTags.length"
+        size="small"
+        @click="() => clearFilter()"
+      >
+        All markers
       </VaButton>
     </div>
 
@@ -215,10 +226,10 @@ const openAddTagPrompt = async () => {
       <VaChip
         v-for="(tag, index) in markerStore.allTags"
         :key="index"
-        :outline="tag !== markerStore.selectedTag"
+        :outline="!markerStore.selectedTags.some((selectedTag) => selectedTag === tag)"
         size="small"
         class="tag-chip"
-        @click="markerStore.selectedTag === tag ? clearFilter() : (markerStore.selectedTag = tag)"
+        @click="() => alltagsChipClick(tag)"
       >
         {{ tag }}
       </VaChip>
@@ -239,13 +250,21 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
       <div v-if="sheetStore.sheetContent.content.tags.length" class="tags-container">
         <VaChip
           class="tag-chip"
-          :outline="tag !== markerStore.selectedTag"
+          :outline="!markerStore.selectedTags.some((selectedTag) => selectedTag === tag)"
           v-for="(tag, index) in sheetStore.sheetContent.content.tags"
           :key="index"
           size="small"
           :color="deleteMode ? 'danger' : undefined"
-          @click="deleteMode ? deleteTagFromMarker(tag) : toggleTagFilter(tag)"
+          @click="
+            deleteMode
+              ? deleteTagFromMarker(tag)
+              : markerStore.selectedTags.some((selectedTag) => selectedTag === tag)
+                ? clearFilter(tag)
+                : markerStore.selectedTags.push(tag)
+          "
         >
+          "
+
           {{ tag }}
         </VaChip>
 
@@ -261,8 +280,8 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
       <div class="Marker-info-button-group">
         <VaButton
           class="all-markers-button"
-          :disabled="!markerStore.selectedTag"
-          @click="markerStore.selectedTag = null"
+          :disabled="!markerStore.selectedTags.length"
+          @click="markerStore.selectedTags = []"
         >
           All markers
         </VaButton>
@@ -362,5 +381,4 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
 }
 </style>
 
-<!-- filter by multiple tags -->
 <!-- add geolocation -->

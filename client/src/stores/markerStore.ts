@@ -15,13 +15,15 @@ export const useMarkerStore = defineStore('markerStore', () => {
       }
     >
   >({})
-  const selectedTag = ref<string | null>(null)
+  const selectedTags = ref<string[]>([])
 
   // Filtered markers based on selected tag
   const filteredMarkers = computed(() => {
-    if (!selectedTag.value) return Object.values(allMarkers.value)
-    const tag = selectedTag.value
-    return Object.values(allMarkers.value).filter((marker) => marker.tags.includes(tag))
+    if (!selectedTags.value.length) return Object.values(allMarkers.value)
+    const tags = selectedTags.value
+    return Object.values(allMarkers.value).filter((marker) =>
+      tags.some((tag) => marker.tags.includes(tag))
+    )
   })
 
   const addMarker = (
@@ -54,13 +56,15 @@ export const useMarkerStore = defineStore('markerStore', () => {
     Object.values(allMarkers.value).forEach((marker) => {
       marker.tags.forEach((tag) => tagsSet.add(tag))
     })
-    if (selectedTag.value && !tagsSet.has(selectedTag.value)) selectedTag.value = null
+    if (selectedTags.value.length && !selectedTags.value.some((tag) => tagsSet.has(tag))) {
+      selectedTags.value = []
+    }
     return Array.from(tagsSet)
   })
 
   return {
     allMarkers,
-    selectedTag,
+    selectedTags,
     filteredMarkers,
     addMarker,
     removeMarker,
