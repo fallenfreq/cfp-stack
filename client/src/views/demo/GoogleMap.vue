@@ -8,6 +8,8 @@ import { useStackableSheetStore } from '@/stores/sheetStore'
 import { trpc } from '@/trpc'
 import { useToast } from 'vuestic-ui'
 import { useMarkerStore } from '@/stores/markerStore'
+import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const markerStore = useMarkerStore()
 
@@ -137,6 +139,54 @@ const deleteMarker = async (
   }
 }
 const { open } = window
+
+const deleteMode = ref(false)
+
+// Toggle filtering of markers
+const toggleTagFilter = (tag: string) => {
+  if (markerStore.selectedTag === tag) {
+    clearFilter()
+  } else {
+    markerStore.selectedTag = tag
+  }
+}
+
+// Delete a tag from the marker
+const deleteTagFromMarker = async (tag: string) => {
+  if (!sheetStore.sheetContent?.content) return
+  const markerId = sheetStore.sheetContent.content.mapMarkersId
+
+  try {
+    await trpc.mapMarker.deleteTagFromMarker.mutate({ markerId, tag })
+    // Update tags locally after deletion
+    sheetStore.sheetContent.content.tags = sheetStore.sheetContent.content.tags.filter(
+      (t) => t !== tag
+    )
+  } catch (error) {
+    console.error('Error deleting tag:', error)
+  }
+}
+
+// Open the prompt for adding tags
+const openAddTagPrompt = async () => {
+  const newTags = prompt('Enter new tags separated by commas:')
+  if (!newTags) return
+
+  const markerId = sheetStore?.sheetContent?.content.mapMarkersId
+  if (!markerId) return
+
+  try {
+    // this only take one tag need to make it take more than one and return the added tags
+    const addedTags = await trpc.mapMarker.addTagsToMarker.mutate({
+      markerId,
+      tags: newTags
+    })
+    // Update tags locally after addition
+    sheetStore?.sheetContent?.content.tags.push(...addedTags)
+  } catch (error) {
+    console.error('Error adding tags:', error)
+  }
+}
 </script>
 
 <template>
@@ -159,7 +209,7 @@ const { open } = window
       >
     </div>
     <VaDivider />
-    <div v-if="markerStore.allTags.length" class="tags-container">
+    <div v-if="markerStore.allTags.length" class="all-tags-container">
       <VaChip
         v-for="(tag, index) in markerStore.allTags"
         :key="index"
@@ -183,23 +233,32 @@ Marker ID: {{ sheetStore.sheetContent.content.mapMarkersId }}
 Latitude: {{ sheetStore.sheetContent.content.lat }}
 Longitude: {{ sheetStore.sheetContent.content.lng }}
       </pre>
-      <div v-if="sheetStore.sheetContent.content.tags.length" class="chip-container">
+
+      <div v-if="sheetStore.sheetContent.content.tags.length" class="tags-container">
         <VaChip
           :outline="tag !== markerStore.selectedTag"
           v-for="(tag, index) in sheetStore.sheetContent.content.tags"
           :key="index"
           size="small"
-          class="chip"
-          @click="markerStore.selectedTag === tag ? clearFilter() : (markerStore.selectedTag = tag)"
+          :color="deleteMode ? 'danger' : undefined"
+          @click="deleteMode ? deleteTagFromMarker(tag) : toggleTagFilter(tag)"
         >
           {{ tag }}
         </VaChip>
+
+        <FontAwesomeIcon :icon="faPlus" class="tag-add-button" @click="openAddTagPrompt" />
+        <FontAwesomeIcon
+          :icon="faMinus"
+          class="tag-delete-toggle"
+          color="deleteMode ? 'danger' : undefined"
+          @click="deleteMode = !deleteMode"
+        />
       </div>
+
       <div class="Marker-info-button-group">
-        <VaButton :disabled="!markerStore.selectedTag" @click="markerStore.selectedTag = null"
-          >All markers</VaButton
-        >
-        <!-- https://www.google.com/maps/dir/?api=1&origin=34.1030032,-118.41046840000001&destination=34.059808,-118.368152 -->
+        <VaButton :disabled="!markerStore.selectedTag" @click="markerStore.selectedTag = null">
+          All markers
+        </VaButton>
         <VaButton
           @click="
             open(
@@ -207,8 +266,9 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
               '_blank'
             )
           "
-          >Directions</VaButton
         >
+          Directions
+        </VaButton>
         <VaButton
           :data-to-delete-id="sheetStore.sheetContent.content.mapMarkersId"
           color="danger"
@@ -225,7 +285,7 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
 
   <!-- Map container -->
   <div ref="mapContainer" id="map"></div>
-  <div style="display: block">
+  <div style="display: none">
     <GoogleAutocomplete v-if="map" :map="map" ref="googleAutocomplete" />
     <AddMarkerSwitch v-if="map" :map="map" ref="addMarkerSwitch" />
   </div>
@@ -249,41 +309,47 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
   margin-bottom: 0.5rem;
 }
 
-.marker-info-text {
-  /* font-size: 1.25rem;
-  font-weight: 500; */
-}
-
-.clear-filter-button {
-  /* font-size: 0.875rem; */
-}
-
 .Marker-info-button-group {
   display: flex;
   gap: 0.5rem;
 }
 
-.tags-container {
+.all-tags-container {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 2rem;
 }
 
-.tag-chip {
-  cursor: pointer;
-}
-
-.chip-container {
+.tags-container,
+.tag-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
   margin-bottom: 1rem;
 }
 #map {
   height: 100vh;
 }
+
+.tag-add-button {
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.4rem;
+  border-radius: 4rem;
+  background-color: rgb(var(--backgroundPrimary), 0.5);
+}
+
+.tag-delete-toggle {
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.4rem;
+  border-radius: 4rem;
+  background-color: rgb(var(--backgroundPrimary), 0.5);
+}
 </style>
 
-<!-- adding two tags -->
-<!-- deleting a marker does not reset relaod the tags to remove -->
+<!-- filter by multiple tags -->
+<!-- add geolocation -->
+<!-- add and remove tags from window -->

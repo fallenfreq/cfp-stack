@@ -185,7 +185,27 @@ export const markersRouter = router({
     return db.delete(mapMarkersSchema).where(eq(mapMarkersSchema.mapMarkersId, input)).execute()
   }),
 
-  addTag: secureProcedure
+  addTagsToMarker: secureProcedure
+    .input(
+      z.object({
+        markerId: z.number(),
+        tags: z.string()
+      })
+    )
+    .mutation(async ({ input: { markerId, tags }, ctx: { db } }) => {
+      return await Promise.all(
+        tags
+          .split(',')
+          .filter(Boolean)
+          .map(async (tag) => {
+            const tagId = await getOrInsertTag(db, tag)
+            await db.insert(markerTagsSchema).values({ markerId, tagId }).execute()
+            return tag
+          })
+      )
+    }),
+
+  deleteTagFromMarker: secureProcedure
     .input(
       z.object({
         markerId: z.number(),
@@ -193,14 +213,29 @@ export const markersRouter = router({
       })
     )
     .mutation(async ({ input: { markerId, tag }, ctx: { db } }) => {
-      const tagId = await getOrInsertTag(db, tag)
-      await db.insert(markerTagsSchema).values({ markerId, tagId }).execute()
+      const normalizedTag = normalizeTag(tag)
 
-      return {
-        success: true,
-        markerId,
-        tag: normalizeTag(tag)
+      // Find the tagId for the provided tag
+      const existingTag = await db
+        .select({ tagId: tagsSchema.tagId })
+        .from(tagsSchema)
+        .where(eq(tagsSchema.name, normalizedTag))
+        .limit(1)
+        .then((tags) => tags[0])
+
+      if (!existingTag) {
+        throw new Error(`Tag '${tag}' does not exist.`)
       }
+
+      const tagId = existingTag.tagId
+
+      // Delete the association from the markerTags table
+      const result = await db
+        .delete(markerTagsSchema)
+        .where(and(eq(markerTagsSchema.markerId, markerId), eq(markerTagsSchema.tagId, tagId)))
+        .execute()
+
+      return result
     }),
 
   deleteTag: secureProcedure
