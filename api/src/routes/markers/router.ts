@@ -21,13 +21,17 @@ const insertMarkerValidator = z.object({
 })
 
 const normalizeTag = (tag: string) => tag.trim().toLowerCase().replace(/\s+/g, '-')
+const normalizeTags = (tags: string[]) => {
+  const normalized = tags.filter(Boolean).map(normalizeTag)
+  return Array.from(new Set(normalized))
+}
 
 // Utility function for tag normalization and insertion
+// normalize tags before calling getOrInsertTag
 async function getOrInsertTag(
   db: DrizzleD1Database<typeof schemas>,
-  tag: string
+  normalizedTag: string
 ): Promise<{ normalizedTag: string; tagId: number }> {
-  const normalizedTag = normalizeTag(tag)
   // Check if the tag already exists
   const existingTag = await db
     .select({ tagId: tagsSchema.tagId })
@@ -77,8 +81,8 @@ export const markersRouter = router({
       throw new Error('Failed to insert the marker')
     }
 
-    const filteredTags = tags.filter(Boolean)
-    const tagsAndIds = await Promise.all(filteredTags.map((tag) => getOrInsertTag(db, tag)))
+    const normalizedTags = normalizeTags(tags)
+    const tagsAndIds = await Promise.all(normalizedTags.map((tag) => getOrInsertTag(db, tag)))
 
     // Insert into the markerTags join table
     // normalizedTags, tagIds
@@ -200,14 +204,11 @@ export const markersRouter = router({
     )
     .mutation(async ({ input: { markerId, tags }, ctx: { db } }) => {
       return await Promise.all(
-        tags
-          .split(',')
-          .filter(Boolean)
-          .map(async (tag) => {
-            const { tagId, normalizedTag } = await getOrInsertTag(db, tag)
-            await db.insert(markerTagsSchema).values({ markerId, tagId }).execute()
-            return normalizedTag
-          })
+        normalizeTags(tags.split(',')).map(async (tag) => {
+          const { tagId, normalizedTag } = await getOrInsertTag(db, tag)
+          await db.insert(markerTagsSchema).values({ markerId, tagId }).execute()
+          return normalizedTag
+        })
       )
     }),
 
