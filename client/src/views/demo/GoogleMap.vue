@@ -193,21 +193,18 @@ const openAddTagPrompt = async () => {
   <!-- Section above the map -->
   <div class="marker-info-container">
     <div class="marker-info-header">
-      <h3 class="marker-info-text font-bold text-3xl">
+      <h3 class="text-3xl marker-info-text">
         {{
           markerStore.selectedTag
             ? `"${markerStore.selectedTag}" markers are being displayed`
             : 'All markers are displayed'
         }}
       </h3>
-      <VaButton
-        :disabled="!markerStore.selectedTag"
-        size="small"
-        @click="clearFilter"
-        class="clear-filter-button"
-        >All markers</VaButton
-      >
+      <VaButton :disabled="!markerStore.selectedTag" size="small" @click="clearFilter">
+        All&nbsp;markers
+      </VaButton>
     </div>
+
     <VaDivider />
     <div v-if="markerStore.allTags.length" class="all-tags-container">
       <VaChip
@@ -256,9 +253,14 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
       </div>
 
       <div class="Marker-info-button-group">
-        <VaButton :disabled="!markerStore.selectedTag" @click="markerStore.selectedTag = null">
+        <VaButton
+          class="all-markers-button"
+          :disabled="!markerStore.selectedTag"
+          @click="markerStore.selectedTag = null"
+        >
           All markers
         </VaButton>
+
         <VaButton
           @click="
             open(
@@ -303,10 +305,10 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
 }
 
 .marker-info-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto; /* Text takes remaining space, button fits content */
+  gap: 1rem; /* Spacing between text and button */
+  align-items: center; /* Aligns items vertically */
 }
 
 .Marker-info-button-group {
