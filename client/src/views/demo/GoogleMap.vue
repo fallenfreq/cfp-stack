@@ -367,6 +367,14 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
   border-radius: 4rem;
   background-color: rgba(var(--backgroundPrimary) / 0.5);
 }
+pre {
+  white-space: pre-wrap;
+}
 </style>
 
 <!-- add geolocation -->
+<!-- select title to change its value -->
+<!-- remove red when sheet closes or after delete -->
+<!-- toast when minus is clicked -->
+<!-- add posted by -->
+<!-- adding tags via sheet is not normalizing -->
