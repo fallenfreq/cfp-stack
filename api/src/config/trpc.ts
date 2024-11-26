@@ -4,18 +4,20 @@ import superjson from 'superjson'
 import axios from 'axios'
 import { getAllEnvs } from '../config/envs.js'
 
-// not sure if this is the best way to pass the schema type to our db
-// we need a dynamic ctx really
+// TODO: importing schemas from ../schemas/index.js causes type issues on query
+// but not if I do the same thing here. and here it breaks if I add mapMarkers
+
 import * as user from '../schemas/user.js'
 // import * as mapMarkers from '../schemas/mapMarkers.js'
 import * as portfolio from '../schemas/portfolio.js'
+// import * as schemas from '../schemas/index.js'
 
 // adding mapMarkers to schemas is causing the build to fail
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const schemas = { ...user, ...portfolio }
 
 const { ZITADEL_INTROSPECTION_ENDPOINT, ZITADEL_CLIENT_ID, ZITADEL_CLIENT_SECRET } = getAllEnvs()
-type appDb = DrizzleD1Database<typeof schemas>
+// type appDb = DrizzleD1Database<typeof schemas>
 // Define the type for the context
 type Context = {
   db: DrizzleD1Database<typeof schemas>
@@ -72,4 +74,4 @@ const router = t.router
 const publicProcedure = t.procedure
 const secureProcedure = t.procedure.use(secure)
 
-export { router, publicProcedure, secureProcedure, type Context, type appDb }
+export { router, publicProcedure, secureProcedure, type Context, type schemas }
