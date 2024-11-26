@@ -7,16 +7,18 @@ import { getAllEnvs } from '../config/envs.js'
 // not sure if this is the best way to pass the schema type to our db
 // we need a dynamic ctx really
 import * as user from '../schemas/user.js'
-import * as mapMarkers from '../schemas/mapMarkers.js'
+// import * as mapMarkers from '../schemas/mapMarkers.js'
 import * as portfolio from '../schemas/portfolio.js'
+
+// adding mapMarkers to schemas is causing the build to fail
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const schemas = { ...user, ...mapMarkers, ...portfolio }
+const schemas = { ...user, ...portfolio }
 
 const { ZITADEL_INTROSPECTION_ENDPOINT, ZITADEL_CLIENT_ID, ZITADEL_CLIENT_SECRET } = getAllEnvs()
 type appDb = DrizzleD1Database<typeof schemas>
 // Define the type for the context
 type Context = {
-  db: appDb
+  db: DrizzleD1Database<typeof schemas>
   req: Request
 }
 
