@@ -1,14 +1,15 @@
 // TODO: seperate services from router
 import { secureProcedure, router } from '../../config/trpc.js'
 import {
-  mapMarkers as mapMarkersSchema,
   tags as tagsSchema,
+  mapMarkers as mapMarkersSchema,
   markerTags as markerTagsSchema
-} from '../../schemas/mapMarkers.js'
+} from '../../schemas/mapMarker.js'
 import { eq, or, ilike, gte, lte, and, sql } from 'drizzle-orm'
 import { SQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { z } from 'zod'
-import { type appDb } from '../../config/trpc.js'
+import { type schemas } from '../../config/trpc.js'
+import { type DrizzleD1Database } from 'drizzle-orm/d1'
 
 const lower = (column: SQLiteColumn) => sql`LOWER(${column})`
 
@@ -22,7 +23,7 @@ const insertMarkerValidator = z.object({
 const normalizeTag = (tag: string) => tag.trim().toLowerCase().replace(/\s+/g, '-')
 
 // Utility function for tag normalization and insertion
-async function getOrInsertTag(db: appDb, tag: string): Promise<number> {
+async function getOrInsertTag(db: DrizzleD1Database<typeof schemas>, tag: string): Promise<number> {
   const normalizedTag = normalizeTag(tag)
   // Check if the tag already exists
   const existingTag = await db
