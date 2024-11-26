@@ -3,6 +3,7 @@ import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
 import { ref, onMounted, useCssModule, watch, nextTick } from 'vue'
 import GoogleAutocomplete from '@/components/demos/map/GoogleAutocomplete.vue'
 import AddMarkerSwitch from '@/components/demos/map/AddMarkerSwitch.vue'
+import CurrentLocationMarker from '@/components/demos/map/currentLocation.vue'
 import { useDarkModeStore } from '@/stores/darkModeStore'
 import { useStackableSheetStore } from '@/stores/sheetStore'
 import { useMapStore } from '@/stores/mapStore'
@@ -371,6 +372,7 @@ Tags</pre>
   <div style="display: none">
     <GoogleAutocomplete v-if="mapStore.map" :map="mapStore.map" ref="googleAutocomplete" />
     <AddMarkerSwitch v-if="mapStore.map" ref="addMarkerSwitch" />
+    <CurrentLocationMarker v-if="mapStore.map" />
   </div>
 </template>
 
@@ -452,6 +454,4 @@ pre {
 </style>
 
 <!-- add geolocation -->
-<!-- select title to change its value -->
-
 <!-- add posted by -->
