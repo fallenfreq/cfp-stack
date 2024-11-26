@@ -315,6 +315,7 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
 <style scoped>
 .tag-chip {
   font-weight: bold;
+  cursor: pointer;
 }
 
 .marker-info-container {
@@ -348,6 +349,7 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
   align-items: center;
   margin-bottom: 1rem;
 }
+
 #map {
   height: 100vh;
 }
@@ -367,6 +369,7 @@ Longitude: {{ sheetStore.sheetContent.content.lng }}
   border-radius: 4rem;
   background-color: rgba(var(--backgroundPrimary) / 0.5);
 }
+
 pre {
   white-space: pre-wrap;
 }
@@ -374,7 +377,8 @@ pre {
 
 <!-- add geolocation -->
 <!-- select title to change its value -->
+
 <!-- remove red when sheet closes or after delete -->
 <!-- toast when minus is clicked -->
 <!-- add posted by -->
-<!-- adding tags via sheet is not normalizing -->
+<!-- pointer on chips -->
