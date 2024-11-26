@@ -189,7 +189,6 @@ const openAddTagPrompt = async () => {
 }
 
 const alltagsChipClick = (tag: string) => {
-  console.log({ allTags: markerStore.allTags, selectedTags: markerStore.selectedTags })
   return markerStore.selectedTags.includes(tag)
     ? clearFilter(tag) // Case 1: Tag is already selected, so clear it.
     : [tag, ...markerStore.selectedTags].length === markerStore.allTags.length
