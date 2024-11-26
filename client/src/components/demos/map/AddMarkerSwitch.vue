@@ -6,7 +6,13 @@ import { trpc } from '@/trpc'
 import { useStackableSheetStore } from '@/stores/sheetStore'
 import { useToast } from 'vuestic-ui'
 import { useMarkerStore } from '@/stores/markerStore'
+import { useMapStore } from '@/stores/mapStore'
 import { useQuery } from '@tanstack/vue-query'
+
+const mapStore = useMapStore()
+if (!mapStore.map) {
+  throw new Error('Map not found in store.')
+}
 
 const sheetStore = useStackableSheetStore<{
   marker: google.maps.marker.AdvancedMarkerElement
@@ -19,7 +25,7 @@ const sheetStore = useStackableSheetStore<{
   }
 }>()
 const root = ref<HTMLElement | null>(null)
-const props = defineProps<{ map: google.maps.Map }>()
+// const props = defineProps<{ map: { ref: Ref<google.maps.Map> } }>()
 
 defineExpose({ root })
 
@@ -33,8 +39,8 @@ const addListenerRef = ref<google.maps.MapsEventListener | null>(null)
 const toggleAddingMarkers = () => {
   isAddingMarkers.value = !isAddingMarkers.value
 
-  if (isAddingMarkers.value) {
-    addListenerRef.value = props.map.addListener('click', onMapClick)
+  if (isAddingMarkers.value && mapStore.map) {
+    addListenerRef.value = mapStore.map.addListener('click', onMapClick)
     useToast().notify({
       duration: 10000,
       color: 'info',
@@ -70,14 +76,13 @@ const onMapClick = async (event: google.maps.MapMouseEvent) => {
     'marker'
   )) as google.maps.MarkerLibrary
   const markerEl = new AdvancedMarkerElement({
-    map: toRaw(props.map),
+    map: toRaw(mapStore.map),
     position: { lat: latLng.lat(), lng: latLng.lng() },
     collisionBehavior: 'REQUIRED' as google.maps.CollisionBehavior,
     title,
     gmpClickable: true
   })
   markerEl.addListener('click', () => onMarkerClick(marker.mapMarkersId))
-
   // Add the marker to the store
   markerStore.addMarker({ ...marker, tags: processedTags }, markerEl)
 
@@ -111,7 +116,7 @@ const renderMarkers = async () => {
   // Render filtered markers
   markerStore.filteredMarkers.forEach((markerData) => {
     const markerEl = new AdvancedMarkerElement({
-      map: toRaw(props.map),
+      map: toRaw(mapStore.map),
       position: { lat: markerData.lat, lng: markerData.lng },
       collisionBehavior: 'REQUIRED' as google.maps.CollisionBehavior,
       title: markerData.title
@@ -130,6 +135,7 @@ const selectMarkers = (search?: string | number | google.maps.LatLngLiteral) => 
 }
 
 // Watch for changes to filtered markers and re-render
+watch(() => mapStore.map, renderMarkers)
 watch(() => markerStore.filteredMarkers, renderMarkers)
 const { data: markers } = selectMarkers()
 
@@ -144,7 +150,7 @@ onMounted(async () => {
             'marker'
           )) as google.maps.MarkerLibrary
           const markerEl = new AdvancedMarkerElement({
-            map: toRaw(props.map),
+            map: toRaw(mapStore.map),
             position: { lat: marker.lat, lng: marker.lng },
             collisionBehavior: 'REQUIRED' as google.maps.CollisionBehavior,
             title: marker.title

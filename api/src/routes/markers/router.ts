@@ -23,7 +23,10 @@ const insertMarkerValidator = z.object({
 const normalizeTag = (tag: string) => tag.trim().toLowerCase().replace(/\s+/g, '-')
 
 // Utility function for tag normalization and insertion
-async function getOrInsertTag(db: DrizzleD1Database<typeof schemas>, tag: string): Promise<number> {
+async function getOrInsertTag(
+  db: DrizzleD1Database<typeof schemas>,
+  tag: string
+): Promise<{ normalizedTag: string; tagId: number }> {
   const normalizedTag = normalizeTag(tag)
   // Check if the tag already exists
   const existingTag = await db
@@ -34,7 +37,7 @@ async function getOrInsertTag(db: DrizzleD1Database<typeof schemas>, tag: string
     .then((tags) => tags[0])
 
   if (existingTag) {
-    return existingTag.tagId
+    return { normalizedTag, tagId: existingTag.tagId }
   }
 
   // Insert the new tag and get its ID
@@ -48,7 +51,7 @@ async function getOrInsertTag(db: DrizzleD1Database<typeof schemas>, tag: string
     throw new Error(`Failed to insert the tag: ${normalizedTag}`)
   }
 
-  return newTag.tagId
+  return { normalizedTag, tagId: newTag.tagId }
 }
 
 export const markersRouter = router({
@@ -75,11 +78,12 @@ export const markersRouter = router({
     }
 
     const filteredTags = tags.filter(Boolean)
-    const tagIds = await Promise.all(filteredTags.map((tag) => getOrInsertTag(db, tag)))
+    const tagsAndIds = await Promise.all(filteredTags.map((tag) => getOrInsertTag(db, tag)))
     // Insert into the markerTags join table
-    if (tagIds.length > 0) {
+    // normalizedTags, tagIds
+    if (tagsAndIds.length > 0) {
       await db.insert(markerTagsSchema).values(
-        tagIds.map((tagId) => ({
+        tagsAndIds.map(({ tagId }) => ({
           markerId: newMarker.mapMarkersId,
           tagId
         }))
@@ -89,7 +93,7 @@ export const markersRouter = router({
     return {
       success: true,
       marker: newMarker,
-      tags: filteredTags
+      tags: tagsAndIds.map(({ normalizedTag }) => normalizedTag)
     }
   }),
 
@@ -199,7 +203,7 @@ export const markersRouter = router({
           .split(',')
           .filter(Boolean)
           .map(async (tag) => {
-            const tagId = await getOrInsertTag(db, tag)
+            const { tagId } = await getOrInsertTag(db, tag)
             await db.insert(markerTagsSchema).values({ markerId, tagId }).execute()
             return tag
           })

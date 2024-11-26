@@ -43,7 +43,6 @@ defineProps<{
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: white;
 }
 
 /* Media query for mobile */
