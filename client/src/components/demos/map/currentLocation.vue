@@ -47,7 +47,6 @@ const updateLocationMarker = async (position: GeolocationPosition) => {
 watch(
   () => mapStore.map,
   () => {
-    console.log('Map changed:', mapStore.map)
     if (currentLocationMarker && mapStore.map) {
       currentLocationMarker.map = toRaw(mapStore.map)
     }

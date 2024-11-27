@@ -1,7 +1,7 @@
 <!-- This needs breaking up but I had a tight deadline and added more features than I was originally planning -->
 <script lang="ts" setup>
 import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
-import { ref, onMounted, useCssModule, watch, nextTick } from 'vue'
+import { ref, onMounted, useCssModule, watch, nextTick, getCurrentInstance } from 'vue'
 import GoogleAutocomplete from '@/components/demos/map/GoogleAutocomplete.vue'
 import AddMarkerSwitch from '@/components/demos/map/AddMarkerSwitch.vue'
 import CurrentLocationMarker from '@/components/demos/map/currentLocation.vue'
@@ -13,6 +13,9 @@ import { useToast } from 'vuestic-ui'
 import { useMarkerStore } from '@/stores/markerStore'
 import { faPlus, faMinus, faPen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { initPromptModal } from '@/services/promptModal'
+
+const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
 
 // import zitadelAuth from '@/services/zitadelAuth'
 // const user = computed(() => zitadelAuth.oidcAuth.userProfile)
@@ -174,7 +177,7 @@ const deleteTagFromMarker = async (tag: string) => {
 
 // Open the prompt for adding tags
 const openAddTagPrompt = async () => {
-  const newTags = prompt('Enter new tags separated by commas:')
+  const newTags = await showPrompt('Enter new tags separated by commas:')
   if (!newTags) return
 
   const markerId = sheetStore?.sheetContent?.content.mapMarkersId
@@ -202,7 +205,7 @@ const onTagClick = (tag: string) => {
 }
 
 const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title: string }) => {
-  const newTitle = prompt('Enter the new title:', markerContent.title)
+  const newTitle = await showPrompt('Enter the new title:')
   if (newTitle === null || newTitle.trim() === '') {
     // User canceled or didn't provide input
     return

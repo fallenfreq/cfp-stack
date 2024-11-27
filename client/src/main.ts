@@ -5,7 +5,7 @@ import { createVuestic } from 'vuestic-ui'
 import 'vuestic-ui/styles/essential.css'
 import 'vuestic-ui/styles/typography.css'
 import config from '../vuestic.my.config'
-const vuestic = createVuestic({ config })
+export const vuestic = createVuestic({ config })
 
 import PrimeVue from 'primevue/config'
 import Aura from './presets/aura'
