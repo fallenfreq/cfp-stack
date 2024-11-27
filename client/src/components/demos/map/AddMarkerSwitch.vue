@@ -64,6 +64,9 @@ const onMapClick = async (event: google.maps.MapMouseEvent) => {
     return
   }
   const tagsInput = prompt('Enter tags for the marker (comma-separated):')
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur()
+  }
   const tags = tagsInput ? tagsInput.split(',') : []
 
   const { marker, tags: processedTags } = await trpc.mapMarker.insert.mutate({
