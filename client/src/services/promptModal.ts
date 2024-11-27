@@ -1,13 +1,17 @@
 import { createApp, ref, type AppContext } from 'vue'
 import PromptModal from '@/components/input/promptModal.vue'
-
 import { vuestic } from '@/main'
 import { useColors } from 'vuestic-ui'
+
 const { currentPresetName } = useColors()
 
 const isVisible = ref(false)
 const message = ref('')
 const resolvePrompt = ref<((value: string | null) => void) | null>(null)
+
+// Singleton container
+let modalInstance: HTMLElement | null = null
+let appInstance: ReturnType<typeof createApp> | null = null
 
 // Function to show the prompt
 const showPrompt = async (promptMessage: string): Promise<string | null> => {
@@ -27,20 +31,26 @@ const handleClose = (value: string | null) => {
 
 // Mount the modal component globally
 const initPromptModal = (appContext?: AppContext) => {
-  const container = document.createElement('div')
-  document.body.appendChild(container)
-  const app = createApp(PromptModal, {
-    isVisible,
-    message: message,
-    rootCurrentPresetName: currentPresetName,
-    onSubmit: handleClose
-  })
+  if (!modalInstance) {
+    // Create only one container
+    modalInstance = document.createElement('div')
+    document.body.appendChild(modalInstance)
 
-  if (appContext) {
-    app._context = appContext
+    // Create only one app instance
+    appInstance = createApp(PromptModal, {
+      isVisible,
+      message: message,
+      rootCurrentPresetName: currentPresetName,
+      onSubmit: handleClose
+    })
+
+    if (appContext) {
+      appInstance._context = appContext
+    }
+
+    appInstance.use(vuestic)
+    appInstance.mount(modalInstance)
   }
-  app.use(vuestic)
-  app.mount(container)
   return showPrompt
 }
 
