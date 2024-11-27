@@ -97,8 +97,8 @@ const renderMap = async () => {
 
   // Map options
   const mapOptions: google.maps.MapOptions = {
-    center: blackpool,
-    zoom: 11,
+    center: mapStore.map?.getCenter() || blackpool,
+    zoom: mapStore.map?.getZoom() || 11,
     mapId: 'DEMO_MAP_ID',
     colorScheme: darkModeStore.isDarkMode ? ColorScheme.DARK : ColorScheme.LIGHT,
     ...mapControls
