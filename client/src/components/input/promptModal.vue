@@ -1,7 +1,7 @@
 <template>
   <div v-if="props.isVisible.value" class="prompt-modal">
     <div class="prompt-content">
-      <p>{{ message }}</p>
+      <h3 class="message text-2xl">{{ message }}</h3>
       <input ref="input" v-model="userInput" type="text" @keyup.enter="submit" />
       <div class="button-group">
         <VaButton color="primary" class="submit" @click="submit">Submit</VaButton>
@@ -75,8 +75,10 @@ const close = () => {
 .prompt-content {
   background: rgb(var(--backgroundSecondary));
   padding: 20px;
+  width: 100%;
+  max-width: 600px;
   border-radius: 5px;
-  text-align: center;
+  text-align: left;
   border-radius: 20px;
   margin: 0, 20px;
   max-width: 500px;
@@ -84,7 +86,6 @@ const close = () => {
 
 .prompt-content input {
   width: 100%;
-  min-width: 200px;
   background: rgb(var(--backgroundPrimary));
   padding: 5px;
   margin: 10px 0;
@@ -93,6 +94,7 @@ const close = () => {
 
 .button-group {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 5px;
 }
 </style>
