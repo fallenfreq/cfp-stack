@@ -42,12 +42,6 @@ const sheetStore = useStackableSheetStore<{
 }>()
 const mapsControlsStyle = useCssModule('mapsControls')
 
-// Define Blackpool's coordinates.
-const blackpool: google.maps.LatLngLiteral = {
-  lat: 53.8175053,
-  lng: -3.0356748
-}
-
 // Map container reference
 const mapContainer = ref<HTMLDivElement | null>(null)
 
@@ -97,7 +91,7 @@ const renderMap = async () => {
 
   // Map options
   const mapOptions: google.maps.MapOptions = {
-    center: mapStore.map?.getCenter() || blackpool,
+    center: mapStore.map?.getCenter() || mapStore.defaultCenter,
     zoom: mapStore.map?.getZoom() || 11,
     mapId: 'DEMO_MAP_ID',
     colorScheme: darkModeStore.isDarkMode ? ColorScheme.DARK : ColorScheme.LIGHT,
