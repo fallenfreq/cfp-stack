@@ -80,7 +80,7 @@ const close = () => {
   border-radius: 5px;
   text-align: left;
   border-radius: 20px;
-  margin: 20px, 0;
+  margin: 0 20px;
   max-width: 500px;
 }
 
