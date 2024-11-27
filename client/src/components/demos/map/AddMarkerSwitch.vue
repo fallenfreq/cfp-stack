@@ -118,6 +118,7 @@ const renderMarkers = async () => {
   Object.values(markerStore.allMarkers).forEach((markerData) => {
     if (markerData.markerInstance) {
       markerData.markerInstance.map = null
+      markerData.markerInstance.position = null
     }
   })
 

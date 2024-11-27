@@ -46,6 +46,7 @@ export const useMarkerStore = defineStore('markerStore', () => {
     const marker = allMarkers.value[mapMarkersId]
     if (marker?.markerInstance) {
       marker.markerInstance.map = null
+      marker.markerInstance.position = null
     }
     delete allMarkers.value[mapMarkersId]
   }

@@ -86,6 +86,7 @@ onBeforeUnmount(() => {
   }
   if (currentLocationMarker) {
     currentLocationMarker.map = null
+    currentLocationMarker.position = null
     currentLocationMarker = null
   }
 })
