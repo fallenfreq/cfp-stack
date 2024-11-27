@@ -75,7 +75,7 @@ async function onPlaceSelected(place: google.maps.places.Place) {
     results.value = []
     showDropdown.value = false
     const locationBias = request.locationBias as google.maps.CircleLiteral
-    locationBias.center = props.map.getCenter() || blackpool
+    locationBias.center = props.map.getCenter() || mapStore.defaultCenter
   } catch (error) {
     console.error('Error selecting place:', error)
   }
