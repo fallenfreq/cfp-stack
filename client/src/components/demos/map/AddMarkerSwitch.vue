@@ -63,7 +63,8 @@ const onMapClick = async (event: google.maps.MapMouseEvent) => {
     console.warn('Marker creation canceled.')
     return
   }
-  const tags = prompt('Enter tags for the marker (comma-separated):')?.split(',') || []
+  const tagsInput = prompt('Enter tags for the marker (comma-separated):')
+  const tags = tagsInput ? tagsInput.split(',') : []
 
   const { marker, tags: processedTags } = await trpc.mapMarker.insert.mutate({
     lat: latLng.lat(),
