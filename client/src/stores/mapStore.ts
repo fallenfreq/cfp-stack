@@ -8,5 +8,17 @@ export const useMapStore = defineStore('map', () => {
     map.value = newMap
   }
 
-  return { map, setMap }
+  const userLocation: Ref<google.maps.LatLngLiteral | null> = ref(null)
+
+  function setUserLocation(newLocation: google.maps.LatLngLiteral | null) {
+    userLocation.value = newLocation
+  }
+
+  function centerMapOnUser() {
+    if (map.value && userLocation.value) {
+      map.value.setCenter(userLocation.value)
+    }
+  }
+
+  return { map, setMap, userLocation, setUserLocation, centerMapOnUser }
 })

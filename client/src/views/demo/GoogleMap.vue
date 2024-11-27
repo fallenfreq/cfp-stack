@@ -1,3 +1,4 @@
+<!-- This needs breaking up but I had a tight deadline and added more features than I was originally planning -->
 <script lang="ts" setup>
 import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
 import { ref, onMounted, useCssModule, watch, nextTick } from 'vue'
@@ -453,5 +454,4 @@ pre {
 }
 </style>
 
-<!-- add geolocation -->
 <!-- add posted by -->
