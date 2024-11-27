@@ -25,6 +25,7 @@ declare module 'vue' {
     TiptapCodeBlock: typeof import('./src/components/TiptapCodeBlock.vue')['default']
     TiptapEditor: typeof import('./src/components/TiptapEditor.vue')['default']
     TiptapTest: typeof import('./src/components/TiptapTest.vue')['default']
+    TriangleShape: typeof import('./src/components/shapes/TriangleShape.vue')['default']
     VuesticNavBar: typeof import('./src/components/VuesticNavBar.vue')['default']
   }
 }
