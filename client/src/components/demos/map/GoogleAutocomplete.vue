@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useMapStore } from '@/stores/mapStore'
 const root = ref<HTMLElement | null>(null)
 const props = defineProps<{ map: google.maps.Map }>()
+
+const mapStore = useMapStore()
 
 defineExpose({
   root
@@ -10,10 +13,10 @@ defineExpose({
 let token: google.maps.places.AutocompleteSessionToken | null = null
 
 // Define Blackpool's coordinates.
-const blackpool: google.maps.LatLngLiteral = {
-  lat: 53.8175053,
-  lng: -3.0356748
-}
+// const blackpool: google.maps.LatLngLiteral = {
+//   lat: 53.8175053,
+//   lng: -3.0356748
+// }
 
 // Reactive variables for managing input, results, and request data.
 const input = ref('')
@@ -23,7 +26,7 @@ const showDropdown = ref(false)
 const request: google.maps.places.AutocompleteRequest = {
   input: '',
   locationBias: {
-    center: props.map.getCenter() || blackpool,
+    center: props.map.getCenter() || mapStore.userLocation || blackpool,
     radius: 500.0
   },
   includedPrimaryTypes: ['(regions)']
