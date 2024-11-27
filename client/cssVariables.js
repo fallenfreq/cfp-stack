@@ -46,7 +46,7 @@ export default {
     "--danger": "228 34 34",
     "--warning": "255 212 58",
     "--backgroundPrimary": "255 255 255",
-    "--backgroundSecondary": "248 249 250",
+    "--backgroundSecondary": "233 237 240",
     "--backgroundElement": "236 240 241",
     "--backgroundBorder": "222 229 242",
     "--textPrimary": "38 40 36",

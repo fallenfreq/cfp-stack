@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, toRaw } from 'vue'
+import { onMounted, ref, watch, toRaw, getCurrentInstance } from 'vue'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { trpc } from '@/trpc'
@@ -8,6 +8,9 @@ import { useToast } from 'vuestic-ui'
 import { useMarkerStore } from '@/stores/markerStore'
 import { useMapStore } from '@/stores/mapStore'
 import { useQuery } from '@tanstack/vue-query'
+import { initPromptModal } from '@/services/promptModal'
+
+const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
 
 const mapStore = useMapStore()
 if (!mapStore.map) {
@@ -25,7 +28,6 @@ const sheetStore = useStackableSheetStore<{
   }
 }>()
 const root = ref<HTMLElement | null>(null)
-// const props = defineProps<{ map: { ref: Ref<google.maps.Map> } }>()
 
 defineExpose({ root })
 
@@ -58,15 +60,13 @@ const onMapClick = async (event: google.maps.MapMouseEvent) => {
   if (!event.latLng) return
   const latLng = event.latLng
 
-  const title = prompt('Enter a title for the marker:')
+  const title = await showPrompt('Enter a title for the marker:')
   if (!title) {
     console.warn('Marker creation canceled.')
     return
   }
-  const tagsInput = prompt('Enter tags for the marker (comma-separated):')
-  if (document.activeElement instanceof HTMLElement) {
-    document.activeElement.blur()
-  }
+  const tagsInput = await showPrompt('Enter tags for the marker (comma-separated):')
+
   const tags = tagsInput ? tagsInput.split(',') : []
 
   const { marker, tags: processedTags } = await trpc.mapMarker.insert.mutate({

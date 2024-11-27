@@ -120,7 +120,7 @@ onMounted(() => {
   padding: 8px;
   font-size: 1rem;
   border: 1px solid rgb(var(--backgroundBorder));
-  background-color: rgb(var(--backgroundSecondary));
+  background-color: rgb(var(--backgroundPrimary));
   border-radius: 4px;
 }
 

@@ -97,9 +97,9 @@ export default {
         ...processedRootColors,
         ...processedPinkColors
       }
-    },
+    }
     // colors.variables is a shorcut for colors.presets[currentPresetName].
     // setting variables aswell as presets will overwrite the presets
-    variables: processedRootColors
+    // variables: processedRootColors
   }
 }
