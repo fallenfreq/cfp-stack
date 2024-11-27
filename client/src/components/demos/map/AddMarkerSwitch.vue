@@ -83,9 +83,9 @@ const onMapClick = async (event: google.maps.MapMouseEvent) => {
     gmpClickable: true
   })
   markerEl.addListener('click', () => onMarkerClick(marker.mapMarkersId))
+
   // Add the marker to the store
   markerStore.addMarker({ ...marker, tags: processedTags }, markerEl)
-
   toggleAddingMarkers()
 }
 
@@ -106,6 +106,10 @@ const renderMarkers = async () => {
     'marker'
   )) as google.maps.MarkerLibrary
 
+  //  create a LatLngBounds object to fit all markers
+  const { LatLngBounds } = (await google.maps.importLibrary('core')) as google.maps.CoreLibrary
+  const bounds = new LatLngBounds()
+
   // Clear existing markers on the map
   Object.values(markerStore.allMarkers).forEach((markerData) => {
     if (markerData.markerInstance) {
@@ -123,7 +127,11 @@ const renderMarkers = async () => {
     })
     markerEl.addListener('click', () => onMarkerClick(markerData.mapMarkersId))
     markerData.markerInstance = markerEl
+    if (markerEl.position) bounds.extend(markerEl.position)
   })
+
+  // This zooms in too much when there is only one marker on display
+  // mapStore.map?.fitBounds(bounds)
 }
 
 // The queryKey should be text included in a tag or the title of a marker

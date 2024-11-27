@@ -199,7 +199,7 @@ const openAddTagPrompt = async () => {
   }
 }
 
-const alltagsChipClick = (tag: string) => {
+const onTagClick = (tag: string) => {
   return markerStore.selectedTags.includes(tag)
     ? clearFilter(tag) // Case 1: Tag is already selected, so clear it.
     : [tag, ...markerStore.selectedTags].length === markerStore.allTags.length
@@ -268,7 +268,7 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
         :outline="!markerStore.selectedTags.some((selectedTag) => selectedTag === tag)"
         size="small"
         class="tag-chip"
-        @click="() => alltagsChipClick(tag)"
+        @click="() => onTagClick(tag)"
       >
         {{ tag }}
       </VaChip>
@@ -305,7 +305,7 @@ Tags</pre>
                   await deleteTagFromMarker(tag)
                   deleteMode = !deleteMode
                 } else {
-                  alltagsChipClick(tag)
+                  onTagClick(tag)
                 }
               }
             "
@@ -322,14 +322,14 @@ Tags</pre>
           color="deleteMode ? 'danger' : undefined"
           @click="
             () => {
-              deleteMode = !deleteMode
-              useToast().notify({
-                duration: 10000,
-                color: 'info',
-                position: 'bottom-right',
-                message:
-                  'Clicking a tag while they are red will delete the tag.\nClick - again or close the marker to cancel.'
-              })
+              ;(deleteMode = !deleteMode) &&
+                useToast().notify({
+                  duration: 10000,
+                  color: 'info',
+                  position: 'bottom-right',
+                  message:
+                    'Clicking a tag while they are red will delete the tag.\nClick - again or close the marker to cancel.'
+                })
             }
           "
         />
