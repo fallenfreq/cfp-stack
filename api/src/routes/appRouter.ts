@@ -4,9 +4,12 @@ import { secureRouter } from './secure/router.js'
 import { userRouter } from './user/router.js'
 import { portfolioRouter } from './portfolio/router.js'
 import { markersRouter } from './markers/router.js'
+import { keysRouter } from './keys/router.js'
 
 const appRouter = router({
   secure: secureRouter,
+
+  keys: keysRouter,
 
   user: userRouter,
 
