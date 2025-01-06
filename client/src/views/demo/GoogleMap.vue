@@ -52,14 +52,7 @@ const mapContainer = ref<HTMLDivElement | null>(null)
 const googleAutocomplete = ref<typeof GoogleAutocomplete | null>(null)
 const addMarkerSwitch = ref<typeof AddMarkerSwitch | null>(null)
 
-// Initialize the Google Maps loader
-const loaderOptions: LoaderOptions = {
-  apiKey: import.meta.env.VITE_API_GOOGLE_MAPS_API_KEY,
-  version: 'weekly',
-  libraries: ['places', 'marker']
-}
-const loader = new Loader(loaderOptions)
-const renderMap = async () => {
+const renderMap = async (loader: Loader) => {
   if (!mapContainer.value) {
     console.error('Map container ref not found')
     throw new Error('Map container ref not found')
@@ -103,14 +96,29 @@ const renderMap = async () => {
   mapStore.setMap(new Map(mapContainer.value, mapOptions))
 }
 
-onMounted(renderMap)
+let loader: Loader
+
+onMounted(async () => {
+  // Initialize the Google Maps loader
+  const loaderOptions: LoaderOptions = {
+    apiKey: await trpc.keys.googleMapsApiKey.query(),
+    version: 'weekly',
+    libraries: ['places', 'marker']
+  }
+  loader = new Loader(loaderOptions)
+  renderMap(loader)
+})
+
 watch(
   () => sheetStore.isSheetOpen,
   () => {
     if (!sheetStore.isSheetOpen) deleteMode.value = false
   }
 )
-watch(() => darkModeStore.isDarkMode, renderMap)
+watch(
+  () => darkModeStore.isDarkMode,
+  () => renderMap(loader)
+)
 watch(
   () => mapStore.map,
   async () => {

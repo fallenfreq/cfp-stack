@@ -14,6 +14,7 @@ const envSchema = z.object({
   SMTP_OUT_SERVER: z.string(),
   SMTP_OUT_PORT_TLS: z.string(),
   SMTP_PASSWORD: z.string(),
+  GOOGLE_MAPS_API_KEY: z.string(),
   DB: d1DatabaseSchema
 })
 
@@ -27,9 +28,9 @@ function initEnvs(envs: any) {
 }
 
 // Function to retrieve a specific environment variable
-function getEnv(key: keyof Envs) {
+function getEnv<Key extends keyof Envs>(key: Key): Envs[Key] {
   if (!validatedEnv) {
-    throw new Error('Environment variables have not been initialised')
+    throw new Error('Environment variables have not been initialized')
   }
   return validatedEnv[key]
 }
