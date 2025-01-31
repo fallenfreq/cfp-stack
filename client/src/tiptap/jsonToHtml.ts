@@ -55,7 +55,7 @@ function createNodesFromSchema(editor: Editor) {
       const domOutput = mockNode ? nodeType.spec.toDOM?.(mockNode) : null
 
       // We are using some but I think the array should be the last item if complex
-      // The compex check and final tag is redundant right now since compex nodes are being rendered by their default extension
+      // The complex check and final tag is redundant right now since complex nodes are being rendered by their default extension
       const isComplexStructure =
         Array.isArray(domOutput) && domOutput.some((item) => Array.isArray(item))
 
