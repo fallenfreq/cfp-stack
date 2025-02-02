@@ -30,22 +30,22 @@ function createNodesFromSchema(editor: Editor) {
     'paragraph',
     'text',
     'youtube'
+    // 'image'
   ]
   return Object.keys(nodes)
     .filter((nodeName) => !exludeNodes.includes(nodeName))
     .map((nodeName) => {
       const nodeType: NodeType = nodes[nodeName]
       const tag = nodeType.spec.parseDOM?.[0]?.tag || nodeName
-
       // Create a mock Node instance with minimal attributes and content
       const mockAttributes = Object.keys(nodeType.spec.attrs || {}).reduce(
         (attrs, attrName) => {
           attrs[attrName] = nodeType.spec.attrs?.[attrName].default || null
           // toDOM will crash if src is null for youtube mock node
           // This is not currently in use as the offical youtube extension is being used instead
-          if (attrName === 'src' && nodeType.name === 'youtube' && attrs[attrName] === null) {
-            attrs[attrName] = 'https://www.youtube.com/embed/3lTUAWOgoHs'
-          }
+          // if (attrName === 'src' && nodeType.name === 'youtube' && attrs[attrName] === null) {
+          //   attrs[attrName] = 'https://www.youtube.com/embed/3lTUAWOgoHs'
+          // }
           return attrs
         },
         {} as Record<string, any>
@@ -103,6 +103,7 @@ function createNodesFromSchema(editor: Editor) {
 // Function to generate HTML from the JSON with dynamic nodes
 function initGenerateDynamicHTML(editor: Editor) {
   const dynamicNodes = createNodesFromSchema(editor)
+  console.log({ dynamicNodes })
   return (json?: JSONContent) => {
     return generateHTML(json || editor.getJSON(), [
       StarterKit.configure({
