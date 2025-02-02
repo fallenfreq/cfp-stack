@@ -8,6 +8,7 @@ import {
 import { type NodeType, Node } from '@tiptap/pm/model'
 import { AllowAttributesExtension } from './allowAttributesExtension'
 import Youtube from '@tiptap/extension-youtube'
+import Image from '@tiptap/extension-image'
 import StarterKit from '@tiptap/starter-kit'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 
@@ -29,8 +30,8 @@ function createNodesFromSchema(editor: Editor) {
     'orderedList',
     'paragraph',
     'text',
-    'youtube'
-    // 'image'
+    'youtube',
+    'image'
   ]
   return Object.keys(nodes)
     .filter((nodeName) => !exludeNodes.includes(nodeName))
@@ -103,13 +104,13 @@ function createNodesFromSchema(editor: Editor) {
 // Function to generate HTML from the JSON with dynamic nodes
 function initGenerateDynamicHTML(editor: Editor) {
   const dynamicNodes = createNodesFromSchema(editor)
-  console.log({ dynamicNodes })
   return (json?: JSONContent) => {
     return generateHTML(json || editor.getJSON(), [
       StarterKit.configure({
         codeBlock: false
       }),
       ...dynamicNodes,
+      Image,
       Youtube.extend({
         renderHTML({ node, HTMLAttributes }) {
           const attrs = (node.type.spec.attrs ??= {})
