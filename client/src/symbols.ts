@@ -2,7 +2,7 @@ import { type InjectionKey, inject } from 'vue'
 
 const injectSafe = (key: InjectionKey<any>) => {
   return inject(key, () => {
-    throw new Error(`${key} is not provided!`)
+    throw new Error(`${String(key)} is not provided!`)
   })
 }
 
