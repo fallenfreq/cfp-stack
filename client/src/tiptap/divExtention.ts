@@ -5,6 +5,7 @@ const Div = Node.create({
   inline: false,
   group: 'block',
   content: 'block*',
+  draggable: true,
   addAttributes() {
     return {}
   },
