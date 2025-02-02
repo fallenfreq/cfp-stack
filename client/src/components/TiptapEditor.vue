@@ -238,7 +238,7 @@ const editor = useEditor({
       }
     }),
     Image,
-    Table,
+    Table.configure({ allowTableNodeSelection: true }),
     TableCell,
     TableHeader,
     TableRow,
@@ -286,6 +286,13 @@ let svgUrl = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' 
 </script>
 
 <style>
+div {
+  cursor: grab;
+}
+div > *:not(div) {
+  /* Reset cursor for all child elements */
+  cursor: default;
+}
 .drag-handle {
   position: fixed;
   opacity: 1;
@@ -316,10 +323,10 @@ let svgUrl = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' 
     pointer-events: none;
   }
 
-  @media screen and (max-width: 600px) {
+  /* @media screen and (max-width: 600px) {
     display: none;
     pointer-events: none;
-  }
+  } */
 }
 /* Styling for drop position */
 .ProseMirror-selectednode {
