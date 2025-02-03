@@ -22,7 +22,6 @@ function createNodesFromSchema(editor: Editor) {
     'blockquote',
     'bulletList',
     'codeBlock',
-    'document',
     'hardBreak',
     'heading',
     'horizontalRule',
@@ -31,7 +30,8 @@ function createNodesFromSchema(editor: Editor) {
     'paragraph',
     'text',
     'youtube',
-    'image'
+    'image',
+    'doc'
   ]
   return Object.keys(nodes)
     .filter((nodeName) => !exludeNodes.includes(nodeName))
