@@ -26,7 +26,6 @@ import Div from '@/tiptap/divExtention'
 
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
-import { Markdown } from 'tiptap-markdown'
 
 // Drag handle extension
 // used by GlobalDragHandle already
@@ -129,11 +128,11 @@ const editor = useEditor({
         class: 'flex items-start my-4'
       },
       nested: true
-    }),
-    Markdown.configure({
-      html: false,
-      transformCopiedText: true
     })
+    // Markdown.configure({
+    //   html: false,
+    //   transformCopiedText: true
+    // })
   ],
   content: initialContent,
   autofocus: true,
