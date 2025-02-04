@@ -13,7 +13,7 @@
     </VaChip>
     <VaChip @click="() => prettifySelectedCode(editor)">Format</VaChip>
     <VaChip @click="editorStore.toggleCodeView">
-      {{ editorStore.isCodeView ? 'Aa' : '</>' }}
+      {{ editorStore.isCodeView ? 'Aa' : '< >' }}
     </VaChip>
   </div>
 </template>
@@ -31,7 +31,7 @@ const show = ref(false)
 const position = ref({ top: 0, left: 0 })
 const toolbar = ref<HTMLElement | null>(null)
 
-const updatePosition = async() => {
+const updatePosition = async () => {
   const { view, state } = props.editor
   const { selection } = state
   const { from } = selection
@@ -59,13 +59,12 @@ const updatePosition = async() => {
   // Get the position of the node
   const rect = dom.getBoundingClientRect()
   position.value = {
-    top: rect.top + window.scrollY - (toolbarHeight+10),
-    left: rect.left + window.scrollX,
+    top: rect.top + window.scrollY - (toolbarHeight + 10),
+    left: rect.left + window.scrollX
   }
 
   show.value = true
 }
-
 
 // Watch for selection changes
 watch(() => props.editor.state.selection, updatePosition)
@@ -85,12 +84,14 @@ onUnmounted(() => {
 <style>
 .floating-toolbar {
   position: absolute;
-  background: rgba(var(--backgroundSecondary)/ 0.9);
+  background: rgba(var(--backgroundSecondary) / 0.9);
   border: 1px solid rgb(var(--backgroundBorder));
   padding: 8px;
   border-radius: 4px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  transition: transform 0.15s ease-in-out, opacity 0.15s ease-in-out;
+  transition:
+    transform 0.15s ease-in-out,
+    opacity 0.15s ease-in-out;
 }
 </style>
