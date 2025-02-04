@@ -24,6 +24,10 @@ import TableRow from '@tiptap/extension-table-row'
 import Span from '@/tiptap/spanExtention'
 import Div from '@/tiptap/divExtention'
 
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
+import { Markdown } from 'tiptap-markdown'
+
 // Drag handle extension
 // used by GlobalDragHandle already
 // import DropCursor from '@tiptap/extension-dropcursor'
@@ -114,7 +118,22 @@ const editor = useEditor({
     ...registerCustomNodes(),
     AllowAttributesExtension,
     GlobalDragHandle,
-    AutoJoiner
+    AutoJoiner,
+    TaskList.configure({
+      HTMLAttributes: {
+        class: 'not-prose pl-2'
+      }
+    }),
+    TaskItem.configure({
+      HTMLAttributes: {
+        class: 'flex items-start my-4'
+      },
+      nested: true
+    }),
+    Markdown.configure({
+      html: false,
+      transformCopiedText: true
+    })
   ],
   content: initialContent,
   autofocus: true,
