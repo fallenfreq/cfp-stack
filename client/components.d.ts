@@ -15,6 +15,7 @@ declare module 'vue' {
     ComingSoon: typeof import('./src/components/ComingSoon.vue')['default']
     CurrentLocation: typeof import('./src/components/demos/map/currentLocation.vue')['default']
     DarkModeSwitch: typeof import('./src/components/DarkModeSwitch.vue')['default']
+    FloatingEditorMenu: typeof import('./src/components/FloatingEditorMenu.vue')['default']
     GoogleAutocomplete: typeof import('./src/components/demos/map/GoogleAutocomplete.vue')['default']
     MiniMothLogo: typeof import('./src/components/brand/MiniMothLogo.vue')['default']
     MothLogo: typeof import('./src/components/brand/MothLogo.vue')['default']
