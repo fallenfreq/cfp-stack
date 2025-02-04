@@ -1,38 +1,18 @@
-<!-- src/components/Editor.vue -->
 <template>
-  <!--
-    Sticky wont work properly when the virtual keyboard is open
-    This needs fixing with js or anouther appraoch for the menu
-  -->
-  <div v-if="editor" class="flex flex-wrap gap-2 px-7 sticky top-2 z-10">
-    <VaChip
-      @click="editor.chain().focus().toggleCodeBlock().run()"
-      :class="[{ 'is-active': editor.isActive('codeBlock') }]"
-    >
-      Code block
-    </VaChip>
-    <VaChip @click="prettierFormat">Format</VaChip>
-    <VaChip @click="toggleView">
-      {{ isCodeView ? 'Aa' : `\<\/\>` }}
-    </VaChip>
-  </div>
+  <FloatingEditorMenu
+    v-if="editor"
+    :editor="editor"
+    class="flex flex-wrap gap-2 px-7 sticky top-2 z-10"
+  />
   <EditorContent class="p-7" :editor="editor" />
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
-import { useToast } from 'vuestic-ui'
 import { useEditor, EditorContent, VueNodeViewRenderer, type NodeViewProps } from '@tiptap/vue-3'
 import { registerCustomNodes } from '@/tiptap/registerCustomNodes'
 import { AllowAttributesExtension } from '@/tiptap/allowAttributesExtension'
-import { initGenerateDynamicHTML } from '@/tiptap/jsonToHtml'
 import cssVariables from '../../cssVariables.js'
-
-// import prettier from 'prettier'
-import prettier from 'prettier/standalone'
-import prettierPluginHtml from 'prettier/plugins/html'
-import prettierPluginBabel from 'prettier/plugins/babel'
-import prettierPluginEstree from 'prettier/plugins/estree'
+import initialContent from '@/tiptap/initialContent.html?raw'
 
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -45,161 +25,48 @@ import Span from '@/tiptap/spanExtention'
 import Div from '@/tiptap/divExtention'
 
 // Drag handle extension
-// import DropCursor from '@tiptap/extension-dropcursor' // used by GlobalDragHandle already
+// used by GlobalDragHandle already
+// import DropCursor from '@tiptap/extension-dropcursor'
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle'
 import AutoJoiner from 'tiptap-extension-auto-joiner'
 
 import TiptapCodeBlock from './TiptapCodeBlock.vue'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-// load all languages with "all" or common languages with "common"
-import { /*common,*/ createLowlight } from 'lowlight'
-import highlight from 'highlight.js'
 
-// create a lowlight instance
-const lowlight = createLowlight()
+import { type Component, watch } from 'vue'
+import FloatingEditorMenu from './FloatingEditorMenu.vue'
 
-// you can also register languages individually
-import xml from 'highlight.js/lib/languages/xml'
-import css from 'highlight.js/lib/languages/css'
-import json from 'highlight.js/lib/languages/json'
-import js from 'highlight.js/lib/languages/javascript'
-import ts from 'highlight.js/lib/languages/typescript'
-import py from 'highlight.js/lib/languages/python'
-
-lowlight.register('html', xml)
-lowlight.register('css', css)
-lowlight.register('json', json)
-lowlight.register('javascript', js)
-lowlight.register('typescript', ts)
-lowlight.register('python', py)
-
-const printWidth = 99999999
-const prettierOptions = {
-  html: {
-    parser: 'html',
-    plugins: [prettierPluginHtml]
-  },
-  javascript: {
-    parser: 'babel',
-    plugins: [prettierPluginBabel, prettierPluginEstree, prettierPluginHtml]
-  }
-}
-
-// Type guard to check if the language is a valid PrettierLanguage
-function isPrettierLanguage(lang: any): lang is keyof typeof prettierOptions {
-  return lang in prettierOptions
-}
-
-// Function to format selected text using Prettier
-const prettierFormat = async () => {
-  if (!editor.value) return
-
-  const { anchor } = editor.value.state.selection
-  const resolvedPos = editor.value.state.doc.resolve(anchor)
-  const startPosition = resolvedPos.start(resolvedPos.depth)
-  const endPosition = resolvedPos.end(resolvedPos.depth)
-  const textNode = editor.value.state.doc.nodeAt(startPosition)
-  const selectedContent = textNode?.textContent || ''
-
-  if (!selectedContent) return editor.value.chain().focus().setTextSelection(anchor).run()
-
-  editor.value.commands.selectParentNode()
-  const parentNode = editor.value.state.doc.nodeAt(editor.value.state.selection.from)
-  const setLanguage = parentNode?.attrs.language
-  const isDetected = setLanguage === null
-  const language = isDetected
-    ? lowlight.highlightAuto(selectedContent).data?.language || null
-    : setLanguage
-  const languageName = highlight.getLanguage(language)?.name?.split(',')[0]
-
-  let message = ''
-  if (language === null) {
-    message = 'Auto detect failed to detect language.'
-  } else if (language === undefined) {
-    message = 'Formatting is only available for code blocks.'
-  } else if (!isPrettierLanguage(language)) {
-    message = `Formatting is not supported for the ${isDetected ? 'detected' : 'selected'} language: ${languageName}`
-  }
-
-  // Use the type guard to check and narrow the type of language
-  if (!language || !isPrettierLanguage(language)) {
-    useToast().notify({
-      duration: 10000,
-      color: 'warning',
-      position: 'bottom-right',
-      message
-    })
-    return
-  }
-
-  const { parser, plugins } = prettierOptions[language]
-
-  try {
-    const formattedContent = await prettier.format(selectedContent, {
-      parser,
-      plugins,
-      printWidth
-    })
-
-    editor.value.commands.insertContentAt(
-      { from: startPosition, to: endPosition },
-      { type: 'text', text: formattedContent }
-    )
-  } catch (error) {
-    useToast().notify({
-      duration: 10000,
-      color: 'danger',
-      position: 'bottom-right',
-      message: 'Formatting error: ' + (error instanceof Error ? error.message : 'Unknown error')
-    })
-  }
-  editor.value.chain().focus().setTextSelection(anchor).run()
-}
-
-import initialContent from '@/tiptap/initialContent.html?raw'
-
-// Utility functions to escape and unescape HTML content
-const escapeHTML = (html: string) => {
-  return html
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-}
-
-// Track whether the user is in code view or normal view
-const isCodeView = ref(false)
-
-let generateDynamicHTML: ReturnType<typeof initGenerateDynamicHTML>
-
-import { /* defineComponent, h, */ type Component } from 'vue'
-// import { nodeViewProps } from '@tiptap/vue-3'
+import { useEditorStore } from '@/stores/editorStore.js'
 
 const editor = useEditor({
   extensions: [
     CodeBlockLowlight.extend({
       addNodeView() {
-        return VueNodeViewRenderer(
-          TiptapCodeBlock as Component<NodeViewProps>
-          // This passes all props as attributes instead of just attribuets
-          // it fixes any type errors but we have props as attributes that should not be there
-          // its not enough to just pass props.node.attrs because I assume the NodeViewWrapper needs more
-          // defineComponent({
-          //   props: nodeViewProps,
-          //   setup(props) {
-          //     return () =>
-          //       h(TiptapCodeBlock, {
-          //         ...props
-          //       })
-          //   }
-          // })
-        )
+        return VueNodeViewRenderer(TiptapCodeBlock as Component<NodeViewProps>)
       }
-    }).configure({ lowlight }),
+    }).configure({ lowlight: useEditorStore().lowlight }),
     StarterKit.configure({
-      codeBlock: false
-      // document: false
+      codeBlock: false,
+      bulletList: {
+        HTMLAttributes: {
+          class: 'list-disc list-outside leading-3 -mt-2'
+        }
+      },
+      orderedList: {
+        HTMLAttributes: {
+          class: 'list-decimal list-outside leading-3 -mt-2'
+        }
+      },
+      listItem: {
+        HTMLAttributes: {
+          class: 'leading-normal -mb-2'
+        }
+      },
+      blockquote: {
+        HTMLAttributes: {
+          class: 'border-l-4 border-stone-700'
+        }
+      }
     }),
     Youtube.extend({
       renderHTML({ node, HTMLAttributes }) {
@@ -246,7 +113,6 @@ const editor = useEditor({
     Div,
     ...registerCustomNodes(),
     AllowAttributesExtension,
-    // DropCursor,
     GlobalDragHandle,
     AutoJoiner
   ],
@@ -257,31 +123,15 @@ const editor = useEditor({
   }
 })
 
-// Watch for when editor.value is set and initialize generateDynamicHTML
-watchEffect(() => {
-  if (editor.value && !generateDynamicHTML) {
-    generateDynamicHTML = initGenerateDynamicHTML(editor.value)
+watch(
+  () => editor.value,
+  (newEditor) => {
+    if (newEditor) {
+      useEditorStore().setEditor(newEditor)
+    }
   }
-})
-
-// Toggle between code view and normal view
-const toggleView = async () => {
-  if (!editor.value) return
-  if (isCodeView.value) {
-    editor.value.commands.setContent(editor.value.getText())
-  } else {
-    const htmlContent = await prettier.format(generateDynamicHTML(), {
-      parser: 'html',
-      plugins: [prettierPluginHtml],
-      printWidth
-    })
-    editor.value.commands.setContent(
-      `<pre><code class="language-html">${escapeHTML(htmlContent)}</code></pre>`
-    )
-  }
-  isCodeView.value = !isCodeView.value
-}
-
+)
+useEditorStore().setEditor(editor.value || null)
 let svgUrl = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' style='fill: rgba(${cssVariables.root['--primary']} / 1)'%3E%3Cpath d='M3,2 C2.44771525,2 2,1.55228475 2,1 C2,0.44771525 2.44771525,0 3,0 C3.55228475,0 4,0.44771525 4,1 C4,1.55228475 3.55228475,2 3,2 Z M3,6 C2.44771525,6 2,5.55228475 2,5 C2,4.44771525 2.44771525,4 3,4 C3.55228475,4 4,4.44771525 4,5 C4,5.55228475 3.55228475,6 3,6 Z M3,10 C2.44771525,10 2,9.55228475 2,9 C2,8.44771525 2.44771525,8 3,8 C3.55228475,8 4,8.44771525 4,9 C4,9.55228475 3.55228475,10 3,10 Z M7,2 C6.44771525,2 6,1.55228475 6,1 C6,0.44771525 6.44771525,0 7,0 C7.55228475,0 8,0.44771525 8,1 C8,1.55228475 7.55228475,2 7,2 Z M7,6 C6.44771525,6 6,5.55228475 6,5 C6,4.44771525 6.44771525,4 7,4 C7.55228475,4 8,4.44771525 8,5 C8,5.55228475 7.55228475,6 7,6 Z M7,10 C6.44771525,10 6,9.55228475 6,9 C6,8.44771525 6.44771525,8 7,8 C7.55228475,8 8,8.44771525 8,9 C8,9.55228475 7.55228475,10 7,10 Z'%3E%3C/path%3E%3C/svg%3E")`
 </script>
 
@@ -323,10 +173,10 @@ div > *:not(div) {
     pointer-events: none;
   }
 
-  /* @media screen and (max-width: 600px) {
+  @media screen and (max-width: 600px) {
     display: none;
     pointer-events: none;
-  } */
+  }
 }
 /* Styling for drop position */
 .ProseMirror-selectednode {
