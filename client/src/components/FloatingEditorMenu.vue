@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { prettifySelectedCode } from '@/tiptap/editorUtils'
 import { useEditorStore } from '@/stores/editorStore.js'
 import type { Editor } from '@tiptap/vue-3'
@@ -33,6 +33,7 @@ const show = ref(false)
 const position = ref({ top: 0, left: 0 })
 const toolbar = ref<HTMLElement | null>(null)
 const selectedNodeType = ref<string | null>(null)
+const isTextNodeType = ref(false)
 
 const updatePosition = async () => {
   const { view, state } = props.editor
@@ -42,18 +43,27 @@ const updatePosition = async () => {
   const resolvedPos = state.doc.resolve(anchor)
   const startPosition = resolvedPos.start(resolvedPos.depth)
   const parentNodeType = resolvedPos.parent.type.name
+  const nodeType = state.doc.nodeAt(anchor)?.type.name
 
-  selectedNodeType.value = parentNodeType
+  isTextNodeType.value = nodeType === 'text'
+  selectedNodeType.value = isTextNodeType.value ? parentNodeType : nodeType || null
 
-  // Get the correct parent element (NodeView wrapper or regular block)
-  const parentEl = (view.nodeDOM(startPosition - 1) || view.nodeDOM(startPosition)) as HTMLElement
+  const nonTextNode = (
+    isTextNodeType.value ? view.nodeDOM(startPosition - 1) : view.nodeDOM(anchor)
+  ) as HTMLElement | null
 
   show.value = true
   await nextTick()
 
-  const rect = parentEl.getBoundingClientRect()
+  if (!nonTextNode) {
+    show.value = false
+    return
+  }
+
+  const rect = nonTextNode.getBoundingClientRect()
   const toolbarHeight = toolbar.value?.offsetHeight || 48
   const toolbarSpacing = 10
+
   position.value = {
     top: rect.top + window.scrollY - toolbarHeight - toolbarSpacing,
     left: rect.left + window.scrollX
@@ -62,16 +72,11 @@ const updatePosition = async () => {
   show.value = true
 }
 
-// Watch for selection changes
-watch(() => props.editor.state.selection, updatePosition)
-
-// Attach event listener for window resize
 onMounted(() => {
   props.editor.on('selectionUpdate', updatePosition)
   window.addEventListener('resize', updatePosition)
 })
 
-// Cleanup event listener
 onUnmounted(() => {
   window.removeEventListener('resize', updatePosition)
 })
