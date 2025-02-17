@@ -154,10 +154,15 @@ let svgUrl = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' 
 </script>
 
 <style>
-div {
+div[draggable='true'],
+img[draggable='true'] {
   cursor: grab;
+  &:active {
+    cursor: grabbing;
+  }
 }
-div > *:not(div) {
+
+div[draggable='true'] > * {
   /* Reset cursor for all child elements */
   cursor: default;
 }
