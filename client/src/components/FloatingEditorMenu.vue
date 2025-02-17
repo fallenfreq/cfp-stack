@@ -11,7 +11,9 @@
     >
       Code Block
     </VaChip>
-    <VaChip @click="() => prettifySelectedCode(editor)">Format</VaChip>
+    <VaChip v-if="selectedNodeType === 'codeBlock'" @click="() => prettifySelectedCode(editor)"
+      >Format</VaChip
+    >
     <VaChip @click="editorStore.toggleCodeView">
       {{ editorStore.isCodeView ? 'Aa' : '< >' }}
     </VaChip>
@@ -30,36 +32,30 @@ const props = defineProps<{ editor: Editor }>()
 const show = ref(false)
 const position = ref({ top: 0, left: 0 })
 const toolbar = ref<HTMLElement | null>(null)
+const selectedNodeType = ref<string | null>(null)
 
 const updatePosition = async () => {
   const { view, state } = props.editor
   const { selection } = state
-  const { from } = selection
+  const { anchor } = selection
 
-  // Get the node at the selection position
-  let dom = view.domAtPos(from).node as Node
+  const resolvedPos = state.doc.resolve(anchor)
+  const startPosition = resolvedPos.start(resolvedPos.depth)
+  const parentNodeType = resolvedPos.parent.type.name
 
-  // Ensure we get an HTML element, not a text node
-  if (dom.nodeType === Node.TEXT_NODE && dom.parentElement) {
-    dom = dom.parentElement
-  }
+  selectedNodeType.value = parentNodeType
 
-  // If still no valid element, hide the toolbar
-  if (!(dom instanceof HTMLElement)) {
-    show.value = false
-    return
-  }
-  // Ensure the toolbar is rendered to measure its height
+  // Get the correct parent element (NodeView wrapper or regular block)
+  const parentEl = (view.nodeDOM(startPosition - 1) || view.nodeDOM(startPosition)) as HTMLElement
+
   show.value = true
   await nextTick()
 
-  // Get the height of the toolbar
+  const rect = parentEl.getBoundingClientRect()
   const toolbarHeight = toolbar.value?.offsetHeight || 48
-  show.value = false
-  // Get the position of the node
-  const rect = dom.getBoundingClientRect()
+  const toolbarSpacing = 10
   position.value = {
-    top: rect.top + window.scrollY - (toolbarHeight + 10),
+    top: rect.top + window.scrollY - toolbarHeight - toolbarSpacing,
     left: rect.left + window.scrollX
   }
 
