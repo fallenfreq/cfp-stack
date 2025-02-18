@@ -11,6 +11,7 @@
 import { useEditor, EditorContent, VueNodeViewRenderer, type NodeViewProps } from '@tiptap/vue-3'
 import { registerCustomNodes } from '@/tiptap/registerCustomNodes'
 import { AllowAttributesExtension } from '@/tiptap/allowAttributesExtension'
+import { focusToSelect } from '@/tiptap/focusToSelect.js'
 import cssVariables from '../../cssVariables.js'
 import initialContent from '@/tiptap/initialContent.html?raw'
 
@@ -117,7 +118,9 @@ const editor = useEditor({
     ...registerCustomNodes(),
     AllowAttributesExtension,
     GlobalDragHandle,
-    AutoJoiner,
+    AutoJoiner.configure({
+      elementsToJoin: ['bulletList', 'orderedList'] // default
+    }),
     TaskList.configure({
       HTMLAttributes: {
         class: 'not-prose pl-2'
@@ -145,6 +148,7 @@ watch(
   () => editor.value,
   (newEditor) => {
     if (newEditor) {
+      focusToSelect(newEditor)
       useEditorStore().setEditor(newEditor)
     }
   }
