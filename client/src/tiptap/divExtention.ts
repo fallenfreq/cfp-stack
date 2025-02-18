@@ -4,8 +4,8 @@ const Div = Node.create({
   name: 'div',
   inline: false,
   group: 'block',
-  // When content is set, clicking a div will select the content istead of the div
-  content: 'block+',
+  // when content is set, clicking a div will select the content istead of the div
+  content: 'block*',
   selectable: true,
   draggable: true,
   addAttributes() {
@@ -13,15 +13,7 @@ const Div = Node.create({
   },
   // https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#render-html
   parseHTML() {
-    return [
-      {
-        tag: 'div',
-        getAttrs: (node) => {
-          // ProseMirror expects null or undefined if the check is successful.
-          return node.getAttribute('data-youtube-video') !== '' && null
-        }
-      }
-    ]
+    return [{ tag: 'div[data-container]' }]
   },
   renderHTML({ HTMLAttributes }) {
     // The last elements in the array are the children and 0 is the default content
