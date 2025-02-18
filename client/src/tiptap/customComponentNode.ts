@@ -34,7 +34,7 @@ export function createVueNode(
     // Render HTML and allow content inside the component
     renderHTML({ HTMLAttributes }) {
       // '0' means content goes inside
-      return [componentName, mergeAttributes(HTMLAttributes)]
+      return [componentName, mergeAttributes(HTMLAttributes), 0]
     },
 
     // Add node view for rendering Vue components inside the editor
