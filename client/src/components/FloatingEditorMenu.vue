@@ -46,10 +46,10 @@ const updatePosition = async () => {
   const nodeType = state.doc.nodeAt(anchor)?.type.name
 
   isTextNodeType.value = nodeType === 'text'
-  selectedNodeType.value = isTextNodeType.value ? parentNodeType : nodeType || null
+  selectedNodeType.value = isTextNodeType.value || !nodeType ? parentNodeType : nodeType || null
 
   const nonTextNode = (
-    isTextNodeType.value ? view.nodeDOM(startPosition - 1) : view.nodeDOM(anchor)
+    isTextNodeType.value || !nodeType ? view.nodeDOM(startPosition - 1) : view.nodeDOM(anchor)
   ) as HTMLElement | null
 
   show.value = true
