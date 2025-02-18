@@ -23,7 +23,7 @@ const editorComponents = {
     component: TiptapTest,
     props: {},
     content: 'block*',
-    contenteditable: false
+    contenteditable: true
   }
 } satisfies { [key: string]: ComponentData }
 

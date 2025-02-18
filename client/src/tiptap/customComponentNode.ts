@@ -18,6 +18,7 @@ export function createVueNode(
     name: componentName,
     group: 'block', // Group for layout purposes
     content,
+    selectable: true,
     atom: false, // Allow content inside the component (not atom)
 
     addAttributes() {
@@ -44,13 +45,34 @@ export function createVueNode(
           props: nodeViewProps,
           setup(props) {
             return () =>
-              h(NodeViewWrapper, { contenteditable }, [
-                h(component, props.node.attrs, {
-                  default: () => h(NodeViewContent, { ...(contentAs ? { as: contentAs } : {}) })
-                })
-              ])
+              // tabindex='-1' is required to make the none-editable node focusable for copying text
+              h(
+                NodeViewWrapper,
+                { contenteditable: false, tabindex: '-1' },
+                {
+                  default: () => [
+                    h(
+                      component,
+                      { ...props.node.attrs },
+                      {
+                        default: () =>
+                          h(NodeViewContent, {
+                            ...(contentAs ? { as: contentAs } : {}),
+                            contenteditable
+                          })
+                      }
+                    )
+                  ]
+                }
+              )
           }
-        })
+        }),
+        {
+          // stopEvent: (event) => {
+          //   console.log('stopEvent: ', event)
+          //   return true
+          // }
+        }
       )
     }
   })
