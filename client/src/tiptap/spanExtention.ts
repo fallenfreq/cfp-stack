@@ -5,6 +5,7 @@ const Span = Node.create({
   inline: true,
   group: 'inline',
   content: 'inline*',
+  draggable: true,
   addAttributes() {
     return {}
   },
