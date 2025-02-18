@@ -154,7 +154,7 @@ let svgUrl = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' 
 </script>
 
 <style>
-div[draggable='true'],
+div[data-container],
 img[draggable='true'] {
   cursor: grab;
   &:active {
@@ -162,7 +162,7 @@ img[draggable='true'] {
   }
 }
 
-div[draggable='true'] > * {
+div[data-container] > * {
   /* Reset cursor for all child elements */
   cursor: default;
 }

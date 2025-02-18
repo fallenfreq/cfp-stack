@@ -1,15 +1,15 @@
 import { Node } from '@tiptap/vue-3'
 
-// Todo: Make the div selectable so when we click it, "selection.anchor" can be used to get div dom element
 const Div = Node.create({
   name: 'div',
   inline: false,
   group: 'block',
-  content: 'block*',
-  draggable: true,
+  // When content is set, clicking a div will select the content istead of the div
+  content: 'block+',
   selectable: true,
+  draggable: true,
   addAttributes() {
-    return {}
+    return { 'data-container': { default: '' } }
   },
   // https://tiptap.dev/docs/editor/extensions/custom-extensions/extend-existing#render-html
   parseHTML() {
