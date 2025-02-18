@@ -4,7 +4,7 @@ const Div = Node.create({
   name: 'div',
   inline: false,
   group: 'block',
-  // when content is set, clicking a div will select the content istead of the div
+  // when content is set, clicking a div will select the content instead of the div
   content: 'block*',
   selectable: true,
   draggable: true,
