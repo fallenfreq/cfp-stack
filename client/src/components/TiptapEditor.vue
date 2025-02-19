@@ -8,7 +8,13 @@
 </template>
 
 <script setup lang="ts">
-import { useEditor, EditorContent, VueNodeViewRenderer, type NodeViewProps } from '@tiptap/vue-3'
+import {
+  useEditor,
+  EditorContent,
+  VueNodeViewRenderer,
+  type NodeViewProps,
+  mergeAttributes
+} from '@tiptap/vue-3'
 import { registerCustomNodes } from '@/tiptap/registerCustomNodes'
 import { AllowAttributesExtension } from '@/tiptap/allowAttributesExtension'
 import { focusToSelect } from '@/tiptap/focusToSelect.js'
@@ -22,6 +28,8 @@ import Table from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
+import Placeholder from '@tiptap/extension-placeholder'
+import Heading from '@tiptap/extension-heading'
 import Span from '@/tiptap/spanExtention'
 import Div from '@/tiptap/divExtention'
 
@@ -51,19 +59,20 @@ const editor = useEditor({
     }).configure({ lowlight: useEditorStore().lowlight }),
     StarterKit.configure({
       codeBlock: false,
+      heading: false,
       bulletList: {
         HTMLAttributes: {
-          class: 'list-disc list-outside leading-3 -mt-2'
+          class: 'list-disc list-outside'
         }
       },
       orderedList: {
         HTMLAttributes: {
-          class: 'list-decimal list-outside leading-3 -mt-2'
+          class: 'list-decimal list-inside'
         }
       },
       listItem: {
         HTMLAttributes: {
-          class: 'leading-normal -mb-2'
+          class: ''
         }
       },
       blockquote: {
@@ -108,6 +117,26 @@ const editor = useEditor({
         }
       }
     }),
+    Heading.extend({
+      levels: [1, 2, 3],
+      renderHTML({ node, HTMLAttributes }) {
+        const level = this.options.levels.includes(node.attrs.level)
+          ? node.attrs.level
+          : this.options.levels[0]
+        const classes: { [index: number]: string } = {
+          1: 'text-4xl',
+          2: 'text-2xl',
+          3: 'text-xl'
+        }
+        return [
+          `h${level}`,
+          mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+            class: `${classes[level]}`
+          }),
+          0
+        ]
+      }
+    }).configure({ levels: [1, 2, 3] }),
     Image,
     Table.configure({ allowTableNodeSelection: true }),
     TableCell,
@@ -115,6 +144,16 @@ const editor = useEditor({
     TableRow,
     Span,
     Div,
+    Placeholder.configure({
+      includeChildren: true,
+      showOnlyCurrent: false,
+      placeholder: ({ node }) => {
+        if (node.type.name === 'heading') {
+          return 'What’s the title?'
+        }
+        return 'Write something …'
+      }
+    }),
     ...registerCustomNodes(),
     AllowAttributesExtension,
     GlobalDragHandle,
@@ -170,6 +209,13 @@ div[data-container] > * {
   /* Reset cursor for all child elements */
   cursor: default;
 }
+.tiptap p.is-empty::before {
+  color: rgba(var(--textPrimary) / 0.5);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
 .drag-handle {
   position: fixed;
   opacity: 1;
@@ -207,7 +253,7 @@ div[data-container] > * {
 }
 /* Styling for drop position */
 .ProseMirror-selectednode {
-  outline: 3px solid var(--purple);
+  outline: 3px solid rgba(var(--primary) / 0.2);
 }
 /* Youtube video styling in the editor */
 
@@ -238,10 +284,24 @@ div[data-container] > * {
 .tiptap h2:not(:last-child),
 .tiptap pre:not(:last-child),
 .tiptap table:not(:last-child),
+.tiptap img:not(:last-child),
+.tiptap ol:not(:last-child),
+.tiptap ul:not(:last-child),
 .tiptap .code-block:not(:last-child),
 .tiptap [data-node-view-wrapper]:not(:last-child),
+.tiptap [data-container]:not(:last-child),
 .tiptap [data-youtube-video]:not(:last-child) {
   margin-bottom: 1rem;
+}
+
+.tiptap ol,
+.tiptap ul {
+  list-style-position: inside;
+}
+
+/* tiptap automatically adds p tags inside each li */
+.tiptap li > p {
+  display: inline-block;
 }
 
 .tiptap [data-youtube-video] > [data-youtube-video] {
