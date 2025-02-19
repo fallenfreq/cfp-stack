@@ -45,10 +45,10 @@ export function createVueNode(
           props: nodeViewProps,
           setup(props) {
             const { editor, node } = props
-            const { state, view } = editor
             const wrapperRef = ref<typeof NodeViewWrapper | null>(null) // Store wrapper reference
 
             const onSelectionUpdate = () => {
+              const { state, view } = editor
               const selection = state.selection
               const { anchor } = selection
               const wrapperEl = wrapperRef.value?.$el
@@ -92,6 +92,9 @@ export function createVueNode(
                       wrapper.setAttribute('contenteditable', 'false')
                       editor.off('selectionUpdate', onSelectionUpdate) // Remove the listener
                     }
+                  },
+                  onFocus: (event: any) => {
+                    console.log('onfocus of wrapper', event)
                   }
                 },
                 {
