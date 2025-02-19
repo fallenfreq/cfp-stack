@@ -11,6 +11,7 @@ import Youtube from '@tiptap/extension-youtube'
 import Image from '@tiptap/extension-image'
 import StarterKit from '@tiptap/starter-kit'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Heading from '@tiptap/extension-heading'
 
 function parseSelector(selector: string): {
   tag: string
@@ -129,8 +130,10 @@ function initGenerateDynamicHTML(editor: Editor) {
   return (json?: JSONContent) => {
     return generateHTML(json || editor.getJSON(), [
       StarterKit.configure({
-        codeBlock: false
+        codeBlock: false,
+        heading: false
       }),
+      Heading,
       ...dynamicNodes,
       Image,
       Youtube.extend({
