@@ -27,7 +27,8 @@ const focusToSelect = (editor: Editor) => {
 
     const pos = view.posAtDOM(parentNode, childIndex)
     if (pos == null) return
-
+    // TextSelection endpoint not pointing into a node with inline content (doc)
+    // Technically an error but this is doing what we want because of how the nave positions itself
     editor.commands.setTextSelection(pos)
   })
 }
