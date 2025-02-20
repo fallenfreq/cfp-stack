@@ -93,9 +93,6 @@ export function createVueNode(
                       wrapper.setAttribute('contenteditable', 'false')
                       editor.off('selectionUpdate', onSelectionUpdate)
                     }
-                  },
-                  onFocus: (event: any) => {
-                    console.log('onfocus of wrapper', event)
                   }
                 },
                 {
