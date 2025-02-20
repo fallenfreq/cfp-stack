@@ -78,6 +78,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  props.editor.off('selectionUpdate', updatePosition)
   window.removeEventListener('resize', updatePosition)
 })
 </script>
