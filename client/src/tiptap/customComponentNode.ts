@@ -67,7 +67,7 @@ export function createVueNode(
             }
 
             onUnmounted(() => {
-              editor.off('selectionUpdate')
+              editor.off('selectionUpdate', onSelectionUpdate)
             })
 
             return () =>
@@ -84,13 +84,14 @@ export function createVueNode(
                     const content = wrapper?.querySelector('[data-node-view-content]')
                     // If the focus was inside NodeViewContent, enable editing
                     if (wrapper && content && content.contains(target)) {
-                      // This transfers control to the editor so selectionUpdate event in setup is used to reset on
-                      // focus out of the NodeView. Focus out of content - yet still in nodeView - is handled in onFocusin still
+                      // Manages focus transitions within the NodeView. The `selectionUpdate` event, set up in the editor,
+                      // is used to reset the editor state when focus leaves the NodeView.  Focus changes within the
+                      // editable content of the NodeView are handled by the `onFocusin` handler.
                       wrapper.setAttribute('contenteditable', 'true')
-                      editor.on('selectionUpdate', onSelectionUpdate) // Attach listener
+                      editor.on('selectionUpdate', onSelectionUpdate)
                     } else {
                       wrapper.setAttribute('contenteditable', 'false')
-                      editor.off('selectionUpdate', onSelectionUpdate) // Remove the listener
+                      editor.off('selectionUpdate', onSelectionUpdate)
                     }
                   },
                   onFocus: (event: any) => {
