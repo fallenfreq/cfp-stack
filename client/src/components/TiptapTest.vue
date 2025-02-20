@@ -7,7 +7,7 @@
     <VaButton @click="onclick">Click me</VaButton>
     <p>Button clicked {{ count }} times</p>
 
-    The bit bellow is editable as it is passed into the slot via the editor.
+    The bit below is editable as it is passed into the slot via the editor.
     <slot></slot>
   </div>
 </template>
