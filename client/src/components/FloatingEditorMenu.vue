@@ -14,6 +14,8 @@
     <VaChip v-if="selectedNodeType === 'codeBlock'" @click="() => prettifySelectedCode(editor)"
       >Format</VaChip
     >
+  </div>
+  <div class="bottom-right-nav">
     <VaChip @click="editorStore.toggleCodeView">
       {{ editorStore.isCodeView ? 'Aa' : '< >' }}
     </VaChip>
@@ -84,6 +86,13 @@ onUnmounted(() => {
 </script>
 
 <style>
+.bottom-right-nav {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  padding: 8px;
+  z-index: 1000;
+}
 .floating-toolbar {
   position: absolute;
   background: rgba(var(--backgroundSecondary) / 0.9);
