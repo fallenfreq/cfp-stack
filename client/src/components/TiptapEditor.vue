@@ -1,9 +1,5 @@
 <template>
-  <FloatingEditorMenu
-    v-if="editor"
-    :editor="editor"
-    class="flex flex-wrap gap-2 px-7 sticky top-2 z-10"
-  />
+  <FloatingEditorMenu v-if="editor" :editor="editor" />
   <EditorContent class="p-7" :editor="editor" />
 </template>
 
