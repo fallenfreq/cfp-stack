@@ -73,7 +73,7 @@ const editor = useEditor({
       },
       blockquote: {
         HTMLAttributes: {
-          class: 'border-l-4 border-stone-700'
+          class: 'border-l-8 border-primary bg-backgroundSecondary p-4'
         }
       }
     }),
@@ -285,6 +285,7 @@ div[data-container] > * {
 .tiptap img:not(:last-child),
 .tiptap ol:not(:last-child),
 .tiptap ul:not(:last-child),
+.tiptap blockquote:not(:last-child),
 .tiptap .code-block:not(:last-child),
 .tiptap [data-node-view-wrapper]:not(:last-child),
 .tiptap [data-container]:not(:last-child),
