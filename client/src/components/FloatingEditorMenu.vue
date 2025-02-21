@@ -2,10 +2,16 @@
   <div
     v-if="show"
     ref="toolbar"
-    class="floating-toolbar"
+    class="floating-toolbar flex flex-wrap gap-2 px-7 sticky top-2 z-10"
     :style="{ top: `${position.top}px`, left: `${position.left}px` }"
   >
+    <!-- Use for when the caret is not in a text block  -->
+    <!--
+    <VaChip v-if="!isTextNodeType">
+    </VaChip>
+    -->
     <VaChip
+      v-if="isTextNodeType && !editorStore.isCodeView"
       @click="editor.chain().focus().toggleCodeBlock().run()"
       :class="{ 'is-active': editor.isActive('codeBlock') }"
     >
@@ -75,12 +81,12 @@ const updatePosition = async () => {
 }
 
 onMounted(() => {
-  props.editor.on('selectionUpdate', updatePosition)
+  props.editor.on('transaction', updatePosition)
   window.addEventListener('resize', updatePosition)
 })
 
 onUnmounted(() => {
-  props.editor.off('selectionUpdate', updatePosition)
+  props.editor.off('transaction', updatePosition)
   window.removeEventListener('resize', updatePosition)
 })
 </script>
