@@ -74,7 +74,7 @@ const nodeViewInteractionHandler = (editor: Editor) => {
   })
 
   // Can we find a more performant way to do this?
-  // focusin fires a lot and we only need it when focusing in a nodeView, not in content amd not a text node
+  // focusin fires a lot and we only need it when focusing in a nodeView, not in content and not a text node
   // or we just use this and not the moveSelectionToNodeView onSelectionChange
   editor.view.dom.addEventListener('focusin', (event) => {
     const focusedElement = event.target as HTMLElement
