@@ -9,6 +9,7 @@ type ComponentData = {
   // setting to block will allow inline but will wrap it in a block tag
   // the default block tag is 'paragraph'
   content: string // 'inline*' | 'block*'
+  atom?: boolean
   contenteditable?: boolean
   contentAs?: 'div' | 'span' | 'p'
 }
