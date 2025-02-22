@@ -12,14 +12,14 @@ import { type ComponentData } from './editorComponents'
 // Utility function to create a Tiptap node for Vue components
 export function createVueNode(
   componentName: string,
-  { component, content, props, contentAs, contenteditable = true }: ComponentData
+  { component, content, props, contentAs, contenteditable = true, atom = false }: ComponentData
 ) {
   return Node.create({
     name: componentName,
     group: 'block', // Group for layout purposes
     content,
     selectable: true,
-    atom: false, // Allow content inside the component (not atom)
+    atom,
 
     addAttributes() {
       return {
