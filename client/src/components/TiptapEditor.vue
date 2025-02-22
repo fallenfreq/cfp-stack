@@ -13,7 +13,7 @@ import {
 } from '@tiptap/vue-3'
 import { registerCustomNodes } from '@/tiptap/registerCustomNodes'
 import { AllowAttributesExtension } from '@/tiptap/allowAttributesExtension'
-import { focusToSelect } from '@/tiptap/focusToSelect.js'
+import { nodeViewInteractionHandler } from '@/tiptap/nodeViewInteractionHandler'
 import cssVariables from '../../cssVariables.js'
 import initialContent from '@/tiptap/initialContent.html?raw'
 
@@ -185,7 +185,7 @@ watch(
   () => editor.value,
   (newEditor) => {
     if (newEditor) {
-      focusToSelect(newEditor)
+      nodeViewInteractionHandler(newEditor)
       useEditorStore().setEditor(newEditor)
     }
   }
