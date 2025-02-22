@@ -18,7 +18,7 @@ const posFromDomPos = (
   return editor.view?.posAtDOM(node, offset) // Converts DOM node to ProseMirror position
 }
 const nodeViewInteractionHandler = (editor: Editor) => {
-  document.addEventListener('selectionchange', () => {
+  const onSelectionChange = () => {
     const selection = window.getSelection()
     if (!selection || selection.rangeCount === 0) return
 
@@ -55,17 +55,20 @@ const nodeViewInteractionHandler = (editor: Editor) => {
       // Technically an error but this is doing what we want because of how the nave positions itself
       editor.commands.setTextSelection(pos)
     }
-  })
+  }
+
+  document.addEventListener('selectionchange', onSelectionChange)
 
   editor.on('selectionUpdate', () => {
     const { state } = editor
     const nodeType = state.doc.nodeAt(state.selection.anchor)?.type.name
 
     if (nodeType === 'text') {
-      console.log('Focusing')
       editor.commands.focus()
     }
   })
+
+  return () => document.removeEventListener('selectionchange', onSelectionChange)
 }
 
 export { nodeViewInteractionHandler }
