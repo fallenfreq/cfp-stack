@@ -16,7 +16,7 @@ export function createVueNode(
 ) {
   return Node.create({
     name: componentName,
-    group: 'block', // Group for layout purposes
+    group: 'block',
     content,
     selectable: true,
     atom,
@@ -45,7 +45,7 @@ export function createVueNode(
           props: nodeViewProps,
           setup(props) {
             const { editor, node } = props
-            const wrapperRef = ref<typeof NodeViewWrapper | null>(null) // Store wrapper reference
+            const wrapperRef = ref<typeof NodeViewWrapper | null>(null)
 
             const onSelectionUpdate = () => {
               const { state, view } = editor
@@ -60,7 +60,14 @@ export function createVueNode(
               const selectionEl = view.nodeDOM(anchor) || view.nodeDOM(startPosition - 1)
 
               // if the selectionEl is not the contentEl and not inside the contentEl, disable editing
-              if (!(selectionEl === contentEl || contentEl.contains(selectionEl))) {
+              // selectionEl === wrapperEl when clicking the NodeView content with inline content
+              if (
+                !(
+                  selectionEl === contentEl ||
+                  contentEl.contains(selectionEl) ||
+                  selectionEl === wrapperEl
+                )
+              ) {
                 editor.off('selectionUpdate', onSelectionUpdate) // Remove the listener
                 wrapperEl.setAttribute('contenteditable', 'false')
               }
@@ -74,9 +81,9 @@ export function createVueNode(
               h(
                 NodeViewWrapper,
                 {
-                  contenteditable: false,
                   // tabindex='-1' is required to make the none-editable node focusable for copying text
                   tabindex: '-1',
+                  contenteditable: false,
                   ref: wrapperRef,
                   onFocusin: (event: FocusEvent) => {
                     const target = event.target
