@@ -35,6 +35,7 @@
     "@tiptap/extension-youtube": "^2.8.0",
     "@tiptap/pm": "^2.8.0",
     "@tiptap/starter-kit": "^2.8.0",
+    "@tiptap/suggestion": "^2.11.5",
     "@tiptap/vue-3": "^2.8.0",
     "@trpc/client": "11.0.0-rc.402",
     "@vitejs/plugin-vue-jsx": "^4.0.1",

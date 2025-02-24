@@ -32,6 +32,9 @@ import Div from '@/tiptap/divExtention'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 
+import SlashCommands from '@/tiptap/commands.js'
+import suggestion from '@/tiptap/suggestion.js'
+
 // Drag handle extension
 // used by GlobalDragHandle already
 // import DropCursor from '@tiptap/extension-dropcursor'
@@ -86,12 +89,7 @@ const editor = useEditor({
         const domOutputSpec = this.parent?.({ node, HTMLAttributes })
         if (!domOutputSpec) throw new Error('No parent DomOutputSpec found')
         return resp === '' || resp
-          ? [
-              'div',
-              // Adding data-youtube-video to stop my custom div extention from rendering it
-              { class: 'max-w-xl', 'data-youtube-video': '', style: maxWidthStyle },
-              domOutputSpec
-            ]
+          ? ['div', { class: 'max-w-xl', style: maxWidthStyle }, domOutputSpec]
           : domOutputSpec
       },
       addAttributes() {
@@ -134,7 +132,7 @@ const editor = useEditor({
       }
     }).configure({ levels: [1, 2, 3] }),
     Image,
-    Table.configure({ allowTableNodeSelection: true }),
+    Table.configure({ allowTableNodeSelection: true, HTMLAttributes: { class: 'tiptap-table' } }),
     TableCell,
     TableHeader,
     TableRow,
@@ -145,9 +143,10 @@ const editor = useEditor({
       showOnlyCurrent: false,
       placeholder: ({ node }) => {
         if (node.type.name === 'heading') {
+          console.log(node.type.name)
           return 'What’s the title?'
         }
-        return 'Write something …'
+        return 'Type slash for commands'
       }
     }),
     ...registerCustomNodes(),
@@ -166,11 +165,8 @@ const editor = useEditor({
         class: 'flex items-start my-4'
       },
       nested: true
-    })
-    // Markdown.configure({
-    //   html: false,
-    //   transformCopiedText: true
-    // })
+    }),
+    SlashCommands.configure({ suggestion })
   ],
   content: initialContent,
   autofocus: true,
@@ -194,6 +190,7 @@ watch(
 )
 
 onUnmounted(() => {
+  editor.value?.destroy()
   cleanUpFunctions.forEach((fn) => fn())
 })
 
@@ -210,9 +207,9 @@ img[draggable='true'] {
 }
 
 div[data-container] > * {
-  /* Reset cursor for all child elements */
   cursor: default;
 }
+
 .tiptap p.is-empty::before {
   color: rgba(var(--textPrimary) / 0.5);
   content: attr(data-placeholder);
@@ -220,6 +217,7 @@ div[data-container] > * {
   height: 0;
   pointer-events: none;
 }
+
 .drag-handle {
   position: fixed;
   opacity: 1;
@@ -255,12 +253,30 @@ div[data-container] > * {
     pointer-events: none;
   }
 }
+
+/* tiptap table style */
+.tiptap-table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+}
+
+.tiptap-table th,
+.tiptap-table td {
+  padding: 8px;
+  border: 1px solid;
+}
+
+.tiptap-table p {
+  margin: 0;
+}
+
 /* Styling for drop position */
 .ProseMirror-selectednode {
   outline: 3px solid rgba(var(--primary) / 0.2);
 }
-/* Youtube video styling in the editor */
 
+/* Youtube video styling in the editor */
 .tiptap [data-youtube-video]:has(> iframe.resp-yt) {
   position: relative;
   padding-bottom: 56.25%; /* 16:9 */
@@ -278,7 +294,6 @@ div[data-container] > * {
 }
 
 /* Basic editor styles */
-
 .tiptap:focus {
   outline: none;
 }
