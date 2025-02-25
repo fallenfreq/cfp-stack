@@ -87,10 +87,13 @@ function createNodesFromSchema(editor: Editor) {
               : ({} as Record<string, { default: any }>)
           )
 
+          console.log({ attributes })
+
           return attributes
         },
 
         renderHTML({ HTMLAttributes }) {
+          console.log({ HTMLAttributes })
           // Filter out attributes that match their default values
           const attrsToRender: Record<string, any> = {}
           Object.keys(HTMLAttributes).forEach((attr) => {
@@ -119,6 +122,8 @@ function initGenerateDynamicHTML(editor: Editor) {
       }),
       Heading,
       Image,
+      // TaskItem converts data-checked to checked so we can not access the data attribute
+      // using our generic implementation that is used above for nodeViews and a few other extensions
       TaskItem.extend({
         renderHTML({ node, HTMLAttributes }) {
           const selector = node.type.spec.parseDOM?.[0]?.tag || node.type.name
