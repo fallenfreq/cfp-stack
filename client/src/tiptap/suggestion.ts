@@ -17,19 +17,16 @@ const editorComponentItems: Item[] = Object.entries(editorComponents).map(([key,
   }
 }))
 
-// Popup function for YouTube URL
 const promptForYoutubeURL = (callback: (url: string) => void) => {
   const url = prompt('Enter YouTube video URL:')
   if (url) callback(url)
 }
 
-// Popup function for Image URL
 const promptForImageURL = (callback: (url: string) => void) => {
   const url = prompt('Enter Image URL:')
   if (url) callback(url)
 }
 
-// Popup function for Image URL
 const promptForTableSpec = (callback: (rows: number, cols: number) => void) => {
   const rows = prompt('Enter number of rows:')
   if (!rows) return
@@ -37,19 +34,32 @@ const promptForTableSpec = (callback: (rows: number, cols: number) => void) => {
   if (cols) callback(Number(rows), Number(cols))
 }
 
+const promptForLinkURL = (callback: (url: string) => void) => {
+  const url = prompt('Enter link URL:')
+  if (url) callback(url)
+}
+
 const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
   items: ({ query }: { query: string }): Item[] => {
+    const generateHeadingItems = (): Item[] => {
+      const items: Item[] = []
+      for (let i = 1; i <= 3; i++) {
+        items.push({
+          title: `Heading ${i}`,
+          command: ({ editor, range }) =>
+            editor.chain().focus().deleteRange(range).setNode('heading', { level: i }).run()
+        })
+      }
+      return items
+    }
+
     const items: Item[] = [
       {
-        title: 'Heading 1',
+        title: 'Paragraph',
         command: ({ editor, range }) =>
-          editor.chain().focus().deleteRange(range).setNode('heading', { level: 1 }).run()
+          editor.chain().focus().deleteRange(range).setNode('paragraph').run()
       },
-      {
-        title: 'Heading 2',
-        command: ({ editor, range }) =>
-          editor.chain().focus().deleteRange(range).setNode('heading', { level: 2 }).run()
-      },
+      ...generateHeadingItems(),
       {
         title: 'Table',
         command: ({ editor, range }) => {
@@ -87,6 +97,45 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
         }
       },
       {
+        title: 'Bullet List',
+        command: ({ editor, range }) =>
+          editor.chain().focus().deleteRange(range).toggleBulletList().run()
+      },
+      {
+        title: 'Ordered List',
+        command: ({ editor, range }) =>
+          editor.chain().focus().deleteRange(range).toggleOrderedList().run()
+      },
+      {
+        title: 'Task List',
+        command: ({ editor, range }) =>
+          editor.chain().focus().deleteRange(range).toggleTaskList().run()
+      },
+      {
+        title: 'Blockquote',
+        command: ({ editor, range }) =>
+          editor.chain().focus().deleteRange(range).toggleBlockquote().run()
+      },
+      {
+        title: 'Horizontal Rule',
+        command: ({ editor, range }) =>
+          editor.chain().focus().deleteRange(range).setHorizontalRule().run()
+      },
+      {
+        title: 'Link',
+        command: ({ editor, range }) => {
+          promptForLinkURL((url) => {
+            editor
+              .chain()
+              .focus()
+              .deleteRange(range)
+              .extendMarkRange('link')
+              .setLink({ href: url })
+              .run()
+          })
+        }
+      },
+      {
         title: 'Code block',
         command: ({ editor, range }) =>
           editor.chain().focus().deleteRange(range).setNode('codeBlock').run()
@@ -103,11 +152,11 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
           editor.chain().focus().deleteRange(range).setMark('italic').run()
       }
     ]
+
     return items
       .filter((item) => item.title.toLowerCase().startsWith(query.toLowerCase()))
-      .slice(0, 10)
+      .slice(0, 7)
   },
-
   render: () => {
     let component: VueRenderer | null = null
     let container: HTMLElement | null = null

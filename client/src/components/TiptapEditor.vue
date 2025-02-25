@@ -25,6 +25,7 @@ import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
 import Placeholder from '@tiptap/extension-placeholder'
+import link from '@tiptap/extension-link'
 import Heading from '@tiptap/extension-heading'
 import Span from '@/tiptap/spanExtention'
 import Div from '@/tiptap/divExtention'
@@ -138,6 +139,7 @@ const editor = useEditor({
     TableRow,
     Span,
     Div,
+    link,
     Placeholder.configure({
       includeChildren: true,
       showOnlyCurrent: false,
@@ -307,6 +309,7 @@ div[data-container] > * {
 .tiptap ol:not(:last-child),
 .tiptap ul:not(:last-child),
 .tiptap blockquote:not(:last-child),
+.tiptap hr:not(:last-child),
 .tiptap .code-block:not(:last-child),
 .tiptap [data-node-view-wrapper]:not(:last-child),
 .tiptap [data-container]:not(:last-child),

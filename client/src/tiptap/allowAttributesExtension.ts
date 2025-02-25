@@ -23,7 +23,9 @@ const nodesWithStyle = [
   'table',
   'tableCell',
   'tableHeader',
-  'tableRow'
+  'tableRow',
+  'taskItem',
+  'taskList'
 ]
 
 const AllowAttributesExtension = Extension.create({

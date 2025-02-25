@@ -5,13 +5,15 @@ import {
   type Editor,
   type NodeConfig
 } from '@tiptap/vue-3'
-import { type NodeType, Node } from '@tiptap/pm/model'
+import { type NodeType } from '@tiptap/pm/model'
 import { AllowAttributesExtension } from './allowAttributesExtension'
 import Youtube from '@tiptap/extension-youtube'
 import Image from '@tiptap/extension-image'
 import StarterKit from '@tiptap/starter-kit'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Heading from '@tiptap/extension-heading'
+import TaskItem from '@tiptap/extension-task-item'
+// import TaskList from '@tiptap/extension-task-list'
 
 function parseSelector(selector: string): {
   tag: string
@@ -53,7 +55,9 @@ function createNodesFromSchema(editor: Editor) {
     'text',
     'youtube',
     'image',
-    'doc'
+    'doc',
+    // 'taskList',
+    'taskItem'
   ]
   return Object.keys(nodes)
     .filter((nodeName) => !exludeNodes.includes(nodeName))
@@ -61,29 +65,6 @@ function createNodesFromSchema(editor: Editor) {
       const nodeType: NodeType = nodes[nodeName]
       const selector = nodeType.spec.parseDOM?.[0]?.tag || nodeName
       const { tag, requiredAttribute, value } = parseSelector(selector)
-
-      // Create a mock Node instance with minimal attributes and content
-      const mockAttributes = Object.keys(nodeType.spec.attrs || {}).reduce(
-        (attrs, attrName) => {
-          if (requiredAttribute) {
-            attrs[requiredAttribute] = value || ''
-          }
-          attrs[attrName] = nodeType.spec.attrs?.[attrName].default || null
-          return attrs
-        },
-        {} as Record<string, any>
-      )
-
-      const mockNode: Node | null = nodeType.createAndFill(mockAttributes)
-      const domOutput = mockNode ? nodeType.spec.toDOM?.(mockNode) : null
-
-      // We are using some but I think the array should be the last item if complex
-      // The complex check and final tag is redundant right now since complex nodes are being rendered by their default extension
-      const isComplexStructure =
-        Array.isArray(domOutput) && domOutput.some((item) => Array.isArray(item))
-
-      const finalTag = isComplexStructure ? nodeName : tag
-
       const { attrs = {}, ...restOfSpec } = nodeType.spec
 
       // Dynamically build the Node configuration using the spec
@@ -101,8 +82,11 @@ function createNodesFromSchema(editor: Editor) {
                 [attr]: { default: attrs[attr]?.default }
               }
             },
-            {} as Record<string, { default: any }>
+            requiredAttribute
+              ? { [requiredAttribute]: { default: value } }
+              : ({} as Record<string, { default: any }>)
           )
+
           return attributes
         },
 
@@ -115,7 +99,7 @@ function createNodesFromSchema(editor: Editor) {
               attrsToRender[attr] = HTMLAttributes[attr]
             }
           })
-          return nodeType.isLeaf ? [finalTag, attrsToRender] : [finalTag, attrsToRender, 0]
+          return nodeType.isLeaf ? [tag, attrsToRender] : [tag, attrsToRender, 0]
         }
       }
 
@@ -134,8 +118,19 @@ function initGenerateDynamicHTML(editor: Editor) {
         heading: false
       }),
       Heading,
-      ...dynamicNodes,
       Image,
+      TaskItem.extend({
+        renderHTML({ node, HTMLAttributes }) {
+          const selector = node.type.spec.parseDOM?.[0]?.tag || node.type.name
+          const { tag, requiredAttribute, value } = parseSelector(selector)
+          return [
+            tag,
+            { ...HTMLAttributes, ...(requiredAttribute ? { [requiredAttribute]: value } : {}) },
+            0
+          ]
+        }
+      }),
+      // TaskList,
       Youtube.extend({
         renderHTML({ node, HTMLAttributes }) {
           const attrs = (node.type.spec.attrs ??= {})
@@ -169,7 +164,8 @@ function initGenerateDynamicHTML(editor: Editor) {
         }
       }),
       CodeBlockLowlight,
-      AllowAttributesExtension
+      AllowAttributesExtension,
+      ...dynamicNodes
     ])
   }
 }

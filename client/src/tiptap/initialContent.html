@@ -10,6 +10,11 @@
   purpose here is to show the code that generates the final HTML output rather than the output
   itself.
 </p>
+<h2>Slash commands</h2>
+<p>
+  Type "/" and then continue to type to filter available commands. A maximum of 7 are shown at any
+  time.
+</p>
 <h2>Images</h2>
 <img src="https://placehold.co/800x400" />
 <p>
@@ -22,20 +27,26 @@
 </blockquote>
 <h2>List items</h2>
 <ol>
-  <li>One</li>
-  <li>Two</li>
-  <li>Three</li>
+  <li><p>One</p></li>
+  <li><p>Two</p></li>
+  <li><p>Three</p></li>
 </ol>
 <ul>
-  <li>One</li>
-  <li>Two</li>
-  <li>Three</li>
+  <li><p>One</p></li>
+  <li><p>Two</p></li>
+  <li><p>Three</p></li>
+</ul>
+<h2>Task list</h2>
+<ul data-type="taskList">
+  <li data-checked data-type="taskItem"><p>One</p></li>
+  <li data-checked data-type="taskItem"><p>Two</p></li>
+  <li data-type="taskItem"><p>Three</p></li>
 </ul>
 <h2>Divs</h2>
-<div data-container style="background-color: cadetblue; min-height: 75px">
-  Draggable with editable content
+<div style="background-color: cadetblue; min-height: 75px" data-container="">
+  <p>Draggable with editable content</p>
 </div>
-<div data-container style="background-color: pink; min-height: 75px">
+<div style="background-color: pink; min-height: 75px" data-container="">
   <vabutton color="warning">Button contains block el</vabutton>
 </div>
 <p>
@@ -51,9 +62,9 @@
   <iframe src="https://www.youtube.com/embed/3lTUAWOgoHs" resp="36rem"></iframe>
 </div>
 <h2>Interactive Vue component with editable content</h2>
-<TiptapTest class="bg-backgroundSecondary">
-  <p>Click the button to see the counter increment</p>
-</TiptapTest>
+<tiptaptest class="bg-backgroundSecondary"
+  ><p>Click the button to see the counter increment</p></tiptaptest
+>
 <h2>Vuestic (component library) Buttons</h2>
 <p>
   The following example shows two buttons rendered using the <code>&lt;VaButton&gt;</code> component
@@ -104,6 +115,8 @@
     <td><p>Teacher</p></td>
   </tr>
 </table>
+<h2>Horizontal rule</h2>
+<hr />
 <h2>JavaScript Code with Syntax Highlighting</h2>
 <p>
   The editor also supports syntax highlighting for code and automatically highlights the syntax
