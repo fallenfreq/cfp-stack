@@ -87,13 +87,10 @@ function createNodesFromSchema(editor: Editor) {
               : ({} as Record<string, { default: any }>)
           )
 
-          console.log({ attributes })
-
           return attributes
         },
 
         renderHTML({ HTMLAttributes }) {
-          console.log({ HTMLAttributes })
           // Filter out attributes that match their default values
           const attrsToRender: Record<string, any> = {}
           Object.keys(HTMLAttributes).forEach((attr) => {
