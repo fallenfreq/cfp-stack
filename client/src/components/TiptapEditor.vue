@@ -62,12 +62,12 @@ const editor = useEditor({
       heading: false,
       bulletList: {
         HTMLAttributes: {
-          class: 'list-disc list-outside'
+          class: 'list-disc'
         }
       },
       orderedList: {
         HTMLAttributes: {
-          class: 'list-decimal list-inside'
+          class: 'list-decimal'
         }
       },
       listItem: {
@@ -159,12 +159,12 @@ const editor = useEditor({
     }),
     TaskList.configure({
       HTMLAttributes: {
-        class: 'not-prose pl-2'
+        // class: 'pl-2'
       }
     }),
     TaskItem.configure({
       HTMLAttributes: {
-        class: 'flex items-start my-4'
+        class: 'flex items-start'
       },
       nested: true
     }),
@@ -322,9 +322,16 @@ div[data-container] > * {
   list-style-position: inside;
 }
 
+.tiptap li {
+  margin-bottom: 0.5rem;
+}
+
 /* tiptap automatically adds p tags inside each li */
 .tiptap li > p {
   display: inline-block;
+}
+.tiptap ul[data-type='taskList'] li label {
+  margin-right: 1em; /* Add space between checkbox and div */
 }
 
 .tiptap [data-youtube-video] > [data-youtube-video] {

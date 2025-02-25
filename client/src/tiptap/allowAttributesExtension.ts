@@ -39,18 +39,22 @@ const AllowAttributesExtension = Extension.create({
             // The values returned from parseHTML will be passed to renderHTML
             parseHTML: (element) => element.getAttribute('style'),
             renderHTML: (attributes) => {
-              return { style: attributes.style }
+              return attributes.style ? { style: attributes.style } : null
             }
           },
           class: {
             default: null,
-            parseHTML: (element) => element.classList.value || null,
-            renderHTML: (attributes) => ({ class: attributes.class })
+            parseHTML: (element) => element.classList.value,
+            renderHTML: (attributes) => {
+              return attributes.class ? { class: attributes.class } : null
+            }
           },
           id: {
             default: null,
             parseHTML: (element) => element.getAttribute('id'),
-            renderHTML: (attributes) => ({ id: attributes.id })
+            renderHTML: (attributes) => {
+              return attributes.id ? { id: attributes.id } : null
+            }
           }
         }
       }
