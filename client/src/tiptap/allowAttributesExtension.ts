@@ -43,7 +43,7 @@ const AllowAttributesExtension = Extension.create({
             }
           },
           class: {
-            default: null,
+            default: '',
             parseHTML: (element) => element.classList.value,
             renderHTML: (attributes) => {
               return attributes.class ? { class: attributes.class } : null
