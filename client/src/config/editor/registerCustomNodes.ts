@@ -1,5 +1,5 @@
-import { createVueNode } from './customComponentNode'
-import { editorComponents } from './editorComponents'
+import { createVueNode } from '@/editor/extentions/customComponentNode'
+import { editorComponents } from '@/config/editor/editorComponents'
 
 export function registerCustomNodes() {
   const customNodes: ReturnType<typeof createVueNode>[] = []

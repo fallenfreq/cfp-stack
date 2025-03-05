@@ -7,7 +7,7 @@ import {
   NodeViewWrapper
 } from '@tiptap/vue-3'
 import { defineComponent, h, onUnmounted, ref } from 'vue'
-import { type ComponentData } from './editorComponents'
+import { type ComponentData } from '@/config/editor/editorComponents'
 
 // Utility function to create a Tiptap node for Vue components
 export function createVueNode(
@@ -62,11 +62,9 @@ export function createVueNode(
               // if the selectionEl is not the contentEl and not inside the contentEl, disable editing
               // selectionEl === wrapperEl when clicking the NodeView content with inline content
               if (
-                !(
-                  selectionEl === contentEl ||
-                  contentEl.contains(selectionEl) ||
-                  selectionEl === wrapperEl
-                )
+                selectionEl !== contentEl &&
+                !contentEl.contains(selectionEl) &&
+                selectionEl !== wrapperEl
               ) {
                 editor.off('selectionUpdate', onSelectionUpdate) // Remove the listener
                 wrapperEl.setAttribute('contenteditable', 'false')

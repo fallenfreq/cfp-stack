@@ -6,7 +6,7 @@ import {
   type NodeConfig
 } from '@tiptap/vue-3'
 import { type NodeType } from '@tiptap/pm/model'
-import { AllowAttributesExtension } from './allowAttributesExtension'
+import { AllowAttributesExtension } from '@/editor/extentions/allowAttributesExtension'
 import Youtube from '@tiptap/extension-youtube'
 import Image from '@tiptap/extension-image'
 import StarterKit from '@tiptap/starter-kit'

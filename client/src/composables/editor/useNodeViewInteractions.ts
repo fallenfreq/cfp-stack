@@ -1,3 +1,5 @@
+// composables/useNodeViewInteractions.ts
+import { onMounted, onUnmounted } from 'vue'
 import { type Editor } from '@tiptap/vue-3'
 
 const getNativeCaretPosition = () => {
@@ -27,13 +29,13 @@ const moveSelectionToNodeView = (editor: Editor, nodeView: Element) => {
 
   const pos = editor.view.posAtDOM(parentNode, childIndex)
   if (pos == null) return
-  // TextSelection endpoint not pointing into a node with inline content (doc)
-  // Technically an error but this is doing what we want because of how the nave positions itself
+
   editor.commands.setTextSelection(pos)
 }
 
-const nodeViewInteractionHandler = (editor: Editor) => {
+export function useNodeViewInteractions(editor: Editor | null) {
   const onSelectionChange = () => {
+    if (!editor) return
     const selection = window.getSelection()
     if (!selection || selection.rangeCount === 0) return
 
@@ -56,40 +58,42 @@ const nodeViewInteractionHandler = (editor: Editor) => {
         editor.commands.setTextSelection(p)
       }
     }
-    // This will not cover all cases like the focusin event can
-    // else if (nodeView) {
-    //   moveSelectionToNodeView(editor, nodeView)
-    // }
   }
 
-  document.addEventListener('selectionchange', onSelectionChange)
-
-  editor.on('selectionUpdate', () => {
+  const onEditorSelectionUpdate = () => {
+    if (!editor) return
     const { state } = editor
     const nodeType = state.doc.nodeAt(state.selection.anchor)?.type.name
 
     if (nodeType === 'text') {
       editor.commands.focus()
     }
-  })
+  }
 
-  // Can we find a more performant way to do this?
-  // focusin fires a lot and we only need it when focusing in a nodeView, not in content and not a text node
-  // or we just use this and not the moveSelectionToNodeView onSelectionChange
-  editor.view.dom.addEventListener('focusin', (event) => {
+  const onEditorFocusIn = (event: FocusEvent) => {
+    if (!editor) return
     const focusedElement = event.target as HTMLElement
     if (!focusedElement) return
 
-    // Check if the focused element is inside a node-view-wrapper but NOT in its content
     const nodeView = focusedElement.closest('[data-node-view-wrapper]')
     const contentEl = nodeView?.querySelector('[data-node-view-content]')
 
     if (nodeView && (!contentEl || !contentEl.contains(focusedElement))) {
       moveSelectionToNodeView(editor, nodeView)
     }
+  }
+
+  onMounted(() => {
+    if (!editor) return
+
+    document.addEventListener('selectionchange', onSelectionChange)
+    editor.on('selectionUpdate', onEditorSelectionUpdate)
+    editor.view.dom.addEventListener('focusin', onEditorFocusIn)
   })
 
-  return () => document.removeEventListener('selectionchange', onSelectionChange)
+  onUnmounted(() => {
+    document.removeEventListener('selectionchange', onSelectionChange)
+    editor?.off('selectionUpdate', onEditorSelectionUpdate)
+    editor?.view.dom.removeEventListener('focusin', onEditorFocusIn)
+  })
 }
-
-export { nodeViewInteractionHandler }

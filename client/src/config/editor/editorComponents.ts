@@ -1,6 +1,6 @@
 import { VaButton } from 'vuestic-ui'
 import { type Component } from 'vue'
-import TiptapTest from '@/components/TiptapTest.vue'
+import TiptapTest from '@/components/editor/TiptapTest.vue'
 // Export an explicit list of components to register in the editor
 type ComponentData = {
   component: Component

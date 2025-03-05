@@ -1,13 +1,25 @@
 // the utils file needs editor and lowlight, both from the editor.vue
-import { useEditorStore } from '@/stores/editorStore'
 import { type Editor } from '@tiptap/vue-3'
 import highlight from 'highlight.js'
 import { useToast } from 'vuestic-ui'
+import { type Lowlight } from '@/config/editor/lowlight'
+import { isPrettierLanguage, prettifyCode } from '@/utils/codeFormatting'
 
-// Function to format selected text using Prettier
+const detectLanguage = (code: string, editor: Editor, setLanguage: string | null) => {
+  if (setLanguage === null) {
+    const lowlight = getExtensionOptions(editor, 'codeBlock')?.lowlight as Lowlight | undefined
+    return lowlight?.highlightAuto(code).data?.language || null
+  }
+  return setLanguage
+}
+
+function getExtensionOptions<T = any>(editor: Editor, name: string): T | undefined {
+  return editor.extensionManager.extensions.find((ext) => ext.name === name)?.options as
+    | T
+    | undefined
+}
+
 const prettifySelectedCode = async (editor: Editor) => {
-  const editorStore = useEditorStore()
-
   const { anchor } = editor.state.selection
   const resolvedPos = editor.state.doc.resolve(anchor)
   const startPosition = resolvedPos.start(resolvedPos.depth)
@@ -20,19 +32,18 @@ const prettifySelectedCode = async (editor: Editor) => {
   editor.commands.selectParentNode()
   const parentNode = editor.state.doc.nodeAt(editor.state.selection.from)
   const setLanguage = parentNode?.attrs.language
-  const language = editorStore.detectLanguage(selectedContent, setLanguage)
-
+  const language = detectLanguage(selectedContent, editor, setLanguage)
   let message = ''
   if (language === null) {
     message = 'Auto detect failed to detect language.'
   } else if (language === undefined) {
     message = 'Formatting is only available for code blocks.'
-  } else if (!editorStore.isPrettierLanguage(language)) {
+  } else if (!isPrettierLanguage(language)) {
     const languageName = highlight.getLanguage(language)?.name?.split(',')[0]
     message = `Formatting is not supported for the detected language: ${languageName}`
   }
 
-  if (!language || !editorStore.isPrettierLanguage(language)) {
+  if (!language || !isPrettierLanguage(language)) {
     useToast().notify({
       duration: 10000,
       color: 'warning',
@@ -43,7 +54,7 @@ const prettifySelectedCode = async (editor: Editor) => {
   }
 
   try {
-    const formattedContent = await editorStore.prettifyCode(selectedContent, language)
+    const formattedContent = await prettifyCode(selectedContent, language)
 
     editor.commands.insertContentAt(
       { from: startPosition, to: endPosition },
@@ -60,14 +71,4 @@ const prettifySelectedCode = async (editor: Editor) => {
   editor.chain().focus().setTextSelection(anchor).run()
 }
 
-// Utility functions to escape and unescape HTML content
-const escapeHTML = (html: string) => {
-  return html
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-}
-
-export { prettifySelectedCode, escapeHTML }
+export { prettifySelectedCode, getExtensionOptions }

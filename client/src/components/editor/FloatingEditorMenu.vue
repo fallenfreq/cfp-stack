@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { prettifySelectedCode } from '@/tiptap/editorUtils'
+import { prettifySelectedCode } from '@/utils/editor/editorUtils'
 import { useEditorStore } from '@/stores/editorStore.js'
 import type { Editor } from '@tiptap/vue-3'
 

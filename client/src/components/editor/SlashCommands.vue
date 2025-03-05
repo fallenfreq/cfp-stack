@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, defineProps } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps<{
   items: { title: string; command: (args: { editor: any; range: any }) => void }[]

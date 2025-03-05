@@ -1,6 +1,6 @@
 import { VueRenderer, type Editor, type Range } from '@tiptap/vue-3'
-import SlashCommands from './SlashCommands.vue'
-import { editorComponents } from './editorComponents'
+import SlashCommands from '@/components/editor/SlashCommands.vue'
+import { editorComponents } from '@/config/editor/editorComponents'
 import { type SuggestionOptions } from '@tiptap/suggestion'
 
 type Command = (props: { editor: Editor; range: Range }) => void

@@ -1,5 +1,5 @@
 import { Extension } from '@tiptap/vue-3'
-import { editorComponents } from './editorComponents'
+import { editorComponents } from '@/config/editor/editorComponents'
 const componentNodeTypes = Object.keys(editorComponents)
 
 // List the nodes that you want to extend with global attributes support

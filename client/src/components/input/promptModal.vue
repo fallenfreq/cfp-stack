@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, watch, type Ref } from 'vue'
+import { ref, watch, type Ref } from 'vue'
 import { useColors } from 'vuestic-ui'
 const { applyPreset } = useColors()
 
