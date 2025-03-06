@@ -1,13 +1,13 @@
 // stores/portfolioStore.ts
 import { defineStore } from 'pinia'
-import { ref, type UnwrapRef } from 'vue'
-// TODO: make this a generic store
+import { ref, type Ref } from 'vue'
+
 export const useStackableSheetStore = <T>() =>
   defineStore('stackableSheet', () => {
-    const sheetContent = ref<null | T>(null)
+    const sheetContent: Ref<null | T> = ref(null)
     const isSheetOpen = ref(false)
 
-    const openSheet = (item: null | UnwrapRef<T>) => {
+    const openSheet = (item: null | T) => {
       sheetContent.value = item
       isSheetOpen.value = true
     }
