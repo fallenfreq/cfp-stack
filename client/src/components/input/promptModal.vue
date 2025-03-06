@@ -36,23 +36,19 @@ watch(props.rootCurrentPresetName, () => {
   applyPreset(props.rootCurrentPresetName.value)
 })
 
-// Emits
 const emit = defineEmits<{
   (e: 'submit', value: string | null): void
 }>()
 
 const userInput = ref('')
 
-// Refs
 const input = ref<HTMLInputElement | null>(null)
 
-// Submit handler
 const submit = () => {
   emit('submit', userInput.value)
   if (input.value) userInput.value = ''
 }
 
-// Cancel handler
 const close = () => {
   emit('submit', null)
 }
