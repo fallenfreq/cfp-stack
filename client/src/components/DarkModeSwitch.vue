@@ -22,13 +22,18 @@
 import { useDarkModeStore } from '@/stores/darkModeStore'
 const store = useDarkModeStore()
 const { toggleDarkMode, togglePinkMode } = store
-import { AddKeyCombo, injectSafe } from '@/symbols'
-import { onMounted } from 'vue'
+import { AddKeyCombo, RemoveKeyCombo, injectSafe } from '@/symbols'
+import { onMounted, onUnmounted } from 'vue'
 
 onMounted(() => {
-  // Register the key combo and function
   console.log('Mounting a dark mode switch')
   const addKeyCombo = injectSafe(AddKeyCombo)
   addKeyCombo('Ctrl+Shift+K', togglePinkMode)
+})
+
+onUnmounted(() => {
+  console.log('Unmounting a dark mode switch')
+  const removeKeyCombo = injectSafe(RemoveKeyCombo)
+  removeKeyCombo('Ctrl+Shift+K')
 })
 </script>
