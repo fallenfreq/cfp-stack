@@ -1,9 +1,11 @@
 import { type InjectionKey, inject } from 'vue'
 
-const injectSafe = (key: InjectionKey<any>) => {
-  return inject(key, () => {
+const injectSafe = <T>(key: InjectionKey<T>): T => {
+  const injected = inject(key, null)
+  if (!injected) {
     throw new Error(`${String(key)} is not provided!`)
-  })
+  }
+  return injected
 }
 
 const AddKeyCombo: InjectionKey<(keyCombo: string, func: () => void) => void> =
