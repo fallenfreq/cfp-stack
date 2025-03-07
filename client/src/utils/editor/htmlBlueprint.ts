@@ -108,7 +108,7 @@ function createNodesFromSchema(editor: Editor) {
 }
 
 // Function to generate HTML from the JSON with dynamic nodes
-function initGenerateDynamicHTML(editor: Editor) {
+function initGenerateBlueprintHTML(editor: Editor) {
   const dynamicNodes = createNodesFromSchema(editor)
 
   return (json?: JSONContent) => {
@@ -172,4 +172,4 @@ function initGenerateDynamicHTML(editor: Editor) {
   }
 }
 
-export { initGenerateDynamicHTML }
+export { initGenerateBlueprintHTML }
