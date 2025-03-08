@@ -1,6 +1,6 @@
 <template>
   <NodeViewWrapper contenteditable="true" class="code-block">
-    <div class="flex b bg-backgroundSecondary p-2 border-b justify-end rounded-t-lg">
+    <div class="hljs flex p-2 justify-end relative shadow-sm dark:shadow-black/50 rounded-t-lg">
       <select
         class="bg-transparent"
         contenteditable="false"
@@ -14,7 +14,7 @@
         </option>
       </select>
     </div>
-    <pre class="rounded-b-lg"><code><NodeViewContent /></code></pre>
+    <pre class="hljs rounded-b-lg"><code><NodeViewContent /></code></pre>
   </NodeViewWrapper>
 </template>
 
@@ -43,9 +43,6 @@ const selectedLanguage = computed({
 
 <style scoped>
 pre {
-  background: rgb(var(--backgroundSecondary));
-  color: rgb(var(--textPrimary));
-  font-family: 'JetBrainsMono', monospace;
   padding: 0.75rem 1rem;
 }
 </style>

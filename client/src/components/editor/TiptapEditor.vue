@@ -51,6 +51,9 @@ import FloatingEditorMenu from './FloatingEditorMenu.vue'
 import { useEditorStore } from '@/stores/editorStore.js'
 import { lowlight } from '@/config/editor/lowlight'
 
+import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
+useSyntaxHighlighting()
+
 const editor = useEditor({
   extensions: [
     CodeBlockLowlight.extend({
@@ -190,15 +193,15 @@ let svgUrl = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' 
 </script>
 
 <style>
-div[data-container],
-img[draggable='true'] {
+.tiptap div[data-container],
+.tiptap img[draggable='true'] {
   cursor: grab;
   &:active {
     cursor: grabbing;
   }
 }
 
-div[data-container] > * {
+.tiptap div[data-container] > * {
   cursor: default;
 }
 
