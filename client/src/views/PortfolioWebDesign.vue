@@ -2,13 +2,13 @@
 import zitadelAuth from '@/services/zitadelAuth'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import { type PortfolioEntry } from '@/../../api/src/schemas/portfolio'
-const sheetStore = useStackableSheetStore<PortfolioEntry>()
+const { sheetContent, closeSheet, openSheet } = useStackableSheetStore<PortfolioEntry>()
 </script>
 
 <template>
-  <StackableSheet mobileHeight="50%" desktopWidth="65%" @close="sheetStore.closeSheet">
-    <div v-if="sheetStore.sheetContent">
-      {{ sheetStore.sheetContent.content }}
+  <StackableSheet mobileHeight="50%" desktopWidth="65%" @close="closeSheet">
+    <div v-if="sheetContent">
+      {{ sheetContent.content }}
       This will soon display the content of the selected item.
     </div>
   </StackableSheet>
@@ -18,6 +18,6 @@ const sheetStore = useStackableSheetStore<PortfolioEntry>()
       <h1 class="text-4xl">Web & app design</h1>
       <CollectionNav v-if="zitadelAuth.oidcAuth.isAuthenticated" />
     </div>
-    <CollectionGrid :name="['webDesignPortfolio']" @selectItem="sheetStore.openSheet" />
+    <CollectionGrid :name="['webDesignPortfolio']" @selectItem="openSheet" />
   </div>
 </template>

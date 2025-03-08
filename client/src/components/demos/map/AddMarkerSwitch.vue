@@ -17,7 +17,7 @@ if (!mapStore.map) {
   throw new Error('Map not found in store.')
 }
 
-const sheetStore = useStackableSheetStore<{
+const { openSheet } = useStackableSheetStore<{
   marker: google.maps.marker.AdvancedMarkerElement
   content: {
     mapMarkersId: number
@@ -98,7 +98,7 @@ const onMarkerClick = async (mapMarkersId: number) => {
   const markerData = markerStore.allMarkers[mapMarkersId]
   if (!markerData) return
 
-  sheetStore.openSheet({
+  openSheet({
     content: markerData,
     marker: markerData.markerInstance!
   })

@@ -33,7 +33,7 @@ const clearFilter = (tag?: string) => {
 const mapStore = useMapStore()
 
 const darkModeStore = useDarkModeStore()
-const sheetStore = useStackableSheetStore<{
+const { isSheetOpen, closeSheet, sheetContent } = useStackableSheetStore<{
   marker: google.maps.marker.AdvancedMarkerElement
   content: {
     mapMarkersId: number
@@ -43,6 +43,7 @@ const sheetStore = useStackableSheetStore<{
     tags: string[]
   }
 }>()
+
 const mapsControlsStyle = useCssModule('mapsControls')
 
 // Map container reference
@@ -110,9 +111,9 @@ onMounted(async () => {
 })
 
 watch(
-  () => sheetStore.isSheetOpen,
+  () => isSheetOpen,
   () => {
-    if (!sheetStore.isSheetOpen) deleteMode.value = false
+    if (!isSheetOpen) deleteMode.value = false
   }
 )
 watch(
@@ -158,7 +159,7 @@ const deleteMarker = async (
     marker.position = null
     marker.map = null
     markerStore.removeMarker(markerId)
-    sheetStore.closeSheet()
+    closeSheet()
   } catch (error) {
     console.error('Error deleting marker:', error)
   }
@@ -169,15 +170,13 @@ const deleteMode = ref(false)
 
 // Delete a tag from the marker
 const deleteTagFromMarker = async (tag: string) => {
-  if (!sheetStore.sheetContent?.content) return
-  const markerId = sheetStore.sheetContent.content.mapMarkersId
+  if (!sheetContent.value) return
+  const markerId = sheetContent.value.content.mapMarkersId
 
   try {
     await trpc.mapMarker.deleteTagFromMarker.mutate({ markerId, tag })
     // Update tags locally after deletion
-    sheetStore.sheetContent.content.tags = sheetStore.sheetContent.content.tags.filter(
-      (t) => t !== tag
-    )
+    sheetContent.value.content.tags = sheetContent.value.content.tags.filter((t: any) => t !== tag)
   } catch (error) {
     console.error('Error deleting tag:', error)
   }
@@ -188,7 +187,7 @@ const openAddTagPrompt = async () => {
   const newTags = await showPrompt('Enter new tags separated by commas:')
   if (!newTags) return
 
-  const markerId = sheetStore?.sheetContent?.content.mapMarkersId
+  const markerId = sheetContent.value?.content.mapMarkersId
   if (!markerId) return
 
   try {
@@ -198,7 +197,7 @@ const openAddTagPrompt = async () => {
       tags: newTags
     })
     // Update tags locally after addition
-    sheetStore?.sheetContent?.content.tags.push(...addedTags)
+    sheetContent.value.content.tags.push(...addedTags)
   } catch (error) {
     console.error('Error adding tags:', error)
   }
@@ -281,26 +280,26 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
   </div>
 
   <!-- StackableSheet with marker details -->
-  <StackableSheet mobileHeight="50%" desktopWidth="65%" @close="sheetStore.closeSheet">
-    <div v-if="sheetStore.sheetContent?.content">
+  <StackableSheet mobileHeight="50%" desktopWidth="65%" @close="closeSheet">
+    <div v-if="sheetContent">
       <h3 class="text-3xl font-bold">Marker Details</h3>
       <pre>
-Title: {{ sheetStore.sheetContent.content.title }} <span><FontAwesomeIcon 
+Title: {{ sheetContent.content.title }} <span><FontAwesomeIcon 
       :icon="faPen" 
       class="edit-title-icon" 
-      @click="() => sheetStore.sheetContent && openTitleEditPrompt(sheetStore.sheetContent.content)"
+      @click="() => sheetContent && openTitleEditPrompt(sheetContent.content)"
     /></span>
-Marker ID: {{ sheetStore.sheetContent.content.mapMarkersId }}
-Latitude: {{ sheetStore.sheetContent.content.lat }}
-Longitude: {{ sheetStore.sheetContent.content.lng }}
+Marker ID: {{sheetContent.content.mapMarkersId }}
+Latitude: {{sheetContent.content.lat }}
+Longitude: {{ sheetContent.content.lng }}
 
 Tags</pre>
       <div class="marker-tags-section">
-        <div v-if="sheetStore.sheetContent.content.tags.length" class="tags-container">
+        <div v-if="sheetContent.content.tags.length" class="tags-container">
           <VaChip
             class="tag-chip"
             :outline="!markerStore.selectedTags.some((selectedTag) => selectedTag === tag)"
-            v-for="(tag, index) in sheetStore.sheetContent.content.tags"
+            v-for="(tag, index) in sheetContent.content.tags"
             :key="index"
             size="small"
             :color="deleteMode ? 'danger' : undefined"
@@ -321,7 +320,7 @@ Tags</pre>
 
         <FontAwesomeIcon :icon="faPlus" class="tag-add-button" @click="openAddTagPrompt" />
         <FontAwesomeIcon
-          v-if="sheetStore.sheetContent.content.tags.length"
+          v-if="sheetContent.content.tags.length"
           :icon="faMinus"
           class="tag-delete-toggle"
           color="deleteMode ? 'danger' : undefined"
@@ -352,7 +351,7 @@ Tags</pre>
         <VaButton
           @click="
             open(
-              `https://maps.google.com/?q=${sheetStore.sheetContent.content.lat},${sheetStore.sheetContent.content.lng}`,
+              `https://maps.google.com/?q=${sheetContent.content.lat},${sheetContent.content.lng}`,
               '_blank'
             )
           "
@@ -360,12 +359,9 @@ Tags</pre>
           Directions
         </VaButton>
         <VaButton
-          :data-to-delete-id="sheetStore.sheetContent.content.mapMarkersId"
+          :data-to-delete-id="sheetContent.content.mapMarkersId"
           color="danger"
-          @click="
-            (event: MouseEvent) =>
-              sheetStore.sheetContent && deleteMarker(event, sheetStore.sheetContent.marker)
-          "
+          @click="(event: MouseEvent) => sheetContent && deleteMarker(event, sheetContent.marker)"
         >
           Delete Marker
         </VaButton>

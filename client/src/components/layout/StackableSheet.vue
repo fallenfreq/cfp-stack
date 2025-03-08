@@ -1,8 +1,8 @@
 <template>
   <Transition appear name="slide">
-    <div v-if="sheetStore.isSheetOpen" class="sheet z-20 bg-backgroundSecondary">
+    <div v-if="isSheetOpen" class="sheet z-20 bg-backgroundSecondary">
       <div class="close-button">
-        <FontAwesomeIcon @click="sheetStore.closeSheet" size="sm" :icon="faXmark" />
+        <FontAwesomeIcon @click="closeSheet" size="sm" :icon="faXmark" />
       </div>
 
       <slot></slot>
@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
-const sheetStore = useStackableSheetStore()
+const { isSheetOpen, closeSheet } = useStackableSheetStore()
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
