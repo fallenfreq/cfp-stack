@@ -1,6 +1,6 @@
-import { defineStore, acceptHMRUpdate } from 'pinia'
+import { defineStore } from 'pinia'
 import { type ShallowRef, ref, shallowRef, watchEffect } from 'vue'
-import { type Editor } from '@tiptap/vue-3'
+import type { Editor } from '@tiptap/vue-3'
 import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
 import { escapeHTML } from '@/utils/stringUtils'
 import { prettifyCode } from '@/utils/codeFormatting'
@@ -44,7 +44,3 @@ export const useEditorStore = defineStore('editor', () => {
     toggleCodeView
   }
 })
-
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useEditorStore, import.meta.hot))
-}

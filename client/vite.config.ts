@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 import extractCssVars from './plugins/extractCssVars'
 import createTrackChangesPlugin from './plugins/trackChangesPlugin'
 import touchFileAfterBuild from './plugins/touchFileAfterBuild'
+import { piniaHMRPlugin } from './plugins/piniaHMR'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -25,6 +26,7 @@ export default defineConfig({
     }
   },
   plugins: [
+    piniaHMRPlugin(),
     createTrackChangesPlugin([
       {
         file: './src/assets/base.css',

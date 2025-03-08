@@ -1,4 +1,4 @@
-import { defineStore, acceptHMRUpdate } from 'pinia'
+import { defineStore } from 'pinia'
 import { type Ref, ref } from 'vue'
 import { useColors, useGlobalConfig } from 'vuestic-ui'
 
@@ -59,7 +59,3 @@ export const useDarkModeStore = defineStore('darkMode', () => {
     togglePinkMode
   }
 })
-
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useDarkModeStore, import.meta.hot))
-}
