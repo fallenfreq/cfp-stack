@@ -38,7 +38,6 @@ export const useDarkModeStore = defineStore('darkMode', () => {
       document.documentElement.classList.remove('pink')
       document.documentElement.classList.add(previousMode)
       isPinkMode.value = false
-
       isDarkMode.value = document.documentElement.classList.contains('dark')
       console.log('Secret pink mode deactivated')
     } else {
