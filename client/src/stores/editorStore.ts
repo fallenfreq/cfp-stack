@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { type Ref, watchEffect, ref } from 'vue'
+import { type ShallowRef, ref, shallowRef, watchEffect } from 'vue'
 import { type Editor } from '@tiptap/vue-3'
 import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
 import { escapeHTML } from '@/utils/stringUtils'
@@ -7,7 +7,7 @@ import { prettifyCode } from '@/utils/codeFormatting'
 
 export const useEditorStore = defineStore('editor', () => {
   const isCodeView = ref(false)
-  const editor: Ref<Editor | null> = ref(null)
+  const editor: ShallowRef<Editor | null> = shallowRef(null)
   let generateBlueprintHTML: ReturnType<typeof initGenerateBlueprintHTML> | null = null
 
   watchEffect(() => {
