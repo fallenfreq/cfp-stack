@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { type Ref, ref } from 'vue'
 
 export const useMapStore = defineStore('map', () => {
@@ -27,3 +27,7 @@ export const useMapStore = defineStore('map', () => {
 
   return { map, setMap, userLocation, setUserLocation, centerMapOnUser, defaultCenter }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useMapStore, import.meta.hot))
+}

@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useMarkerStore = defineStore('markerStore', () => {
@@ -72,3 +72,7 @@ export const useMarkerStore = defineStore('markerStore', () => {
     allTags
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useMarkerStore, import.meta.hot))
+}

@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { useStackableSheetStore } from '@/stores/sheetStore'
+import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 const sheetStore = useStackableSheetStore()
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'

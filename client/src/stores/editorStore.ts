@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { type ShallowRef, ref, shallowRef, watchEffect } from 'vue'
 import { type Editor } from '@tiptap/vue-3'
 import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
@@ -6,7 +6,8 @@ import { escapeHTML } from '@/utils/stringUtils'
 import { prettifyCode } from '@/utils/codeFormatting'
 
 export const useEditorStore = defineStore('editor', () => {
-  const isCodeView = ref(false)
+  const codeViewDefault = false
+  const isCodeView = ref(codeViewDefault)
   const editor: ShallowRef<Editor | null> = shallowRef(null)
   let generateBlueprintHTML: ReturnType<typeof initGenerateBlueprintHTML> | null = null
 
@@ -18,7 +19,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   const setEditor = (newEditor: Editor | null) => {
     editor.value = newEditor
-    isCodeView.value = false
+    isCodeView.value = codeViewDefault
     generateBlueprintHTML = null
   }
 
@@ -43,3 +44,7 @@ export const useEditorStore = defineStore('editor', () => {
     toggleCodeView
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useEditorStore, import.meta.hot))
+}
