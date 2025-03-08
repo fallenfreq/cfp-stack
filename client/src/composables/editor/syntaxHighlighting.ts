@@ -4,7 +4,7 @@ import { useDarkModeStore } from '@/stores/darkModeStore'
 
 import lightTheme from 'highlight.js/styles/base16/ros-pine-dawn.min.css?url'
 import darkTheme from 'highlight.js/styles/base16/ros-pine-moon.min.css?url'
-console.log(darkTheme)
+
 // best contenders, However they still clash.
 // Using darkTheme for pink mode for now
 // import pinkTheme from 'highlight.js/styles/base16/cupcake.min.css?url'
