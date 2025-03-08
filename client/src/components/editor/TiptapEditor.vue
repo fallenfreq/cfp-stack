@@ -168,7 +168,9 @@ const editor = useEditor({
       },
       nested: true
     }),
-    Commands.configure({ suggestion })
+    // If the extention is not renamed, it will log the following warning:
+    // Duplicate extension names found: ['commands']. This can lead to issues.
+    Commands.extend({ name: 'slashCommands' }).configure({ suggestion })
   ],
   content: initialContent,
   autofocus: true,
