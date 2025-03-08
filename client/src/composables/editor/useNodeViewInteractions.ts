@@ -1,41 +1,44 @@
-// composables/useNodeViewInteractions.ts
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 import { type Editor } from '@tiptap/vue-3'
+import { useEditorStore } from '@/stores/editorStore'
+import { storeToRefs } from 'pinia'
 
-const getNativeCaretPosition = () => {
-  const selection = window.getSelection()
-  if (!selection || selection.rangeCount === 0) return null
+export function useNodeViewInteractions() {
+  const editorStore = useEditorStore()
+  const { editor } = storeToRefs(editorStore)
 
-  const range = selection.getRangeAt(0)
-  return { node: range.startContainer as globalThis.Node, offset: range.startOffset }
-}
+  const getNativeCaretPosition = () => {
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return null
 
-const posFromDomPos = (
-  editor: Editor,
-  position: { node: globalThis.Node; offset: number } | null
-) => {
-  if (!position) return
+    const range = selection.getRangeAt(0)
+    return { node: range.startContainer as globalThis.Node, offset: range.startOffset }
+  }
 
-  const { node, offset } = position
-  return editor.view?.posAtDOM(node, offset)
-}
+  const posFromDomPos = (
+    editor: Editor,
+    position: { node: globalThis.Node; offset: number } | null
+  ) => {
+    if (!position) return
+    const { node, offset } = position
+    return editor.view?.posAtDOM(node, offset)
+  }
 
-const moveSelectionToNodeView = (editor: Editor, nodeView: Element) => {
-  const parentNode = nodeView.parentElement
-  if (!parentNode) return
+  const moveSelectionToNodeView = (editor: Editor, nodeView: Element) => {
+    const parentNode = nodeView.parentElement
+    if (!parentNode) return
 
-  const childIndex = [...parentNode.children].indexOf(nodeView)
-  if (childIndex === -1) return
+    const childIndex = [...parentNode.children].indexOf(nodeView)
+    if (childIndex === -1) return
 
-  const pos = editor.view.posAtDOM(parentNode, childIndex)
-  if (pos == null) return
+    const pos = editor.view.posAtDOM(parentNode, childIndex)
+    if (pos == null) return
 
-  editor.commands.setTextSelection(pos)
-}
+    editor.commands.setTextSelection(pos)
+  }
 
-export function useNodeViewInteractions(editor: Editor | null) {
   const onSelectionChange = () => {
-    if (!editor) return
+    if (!editor.value) return
     const selection = window.getSelection()
     if (!selection || selection.rangeCount === 0) return
 
@@ -45,7 +48,7 @@ export function useNodeViewInteractions(editor: Editor | null) {
     const caretPos = getNativeCaretPosition()
     if (!caretPos) return
 
-    const p = posFromDomPos(editor, caretPos)
+    const p = posFromDomPos(editor.value, caretPos)
     if (!p) return
 
     const textNode = caretPos.node
@@ -53,25 +56,23 @@ export function useNodeViewInteractions(editor: Editor | null) {
     const contentEl = nodeView?.querySelector('[data-node-view-content]')
     if (!contentEl) return
 
-    if (contentEl.contains(textNode)) {
-      if (isCollapsed) {
-        editor.commands.setTextSelection(p)
-      }
+    if (contentEl.contains(textNode) && isCollapsed) {
+      editor.value.commands.setTextSelection(p)
     }
   }
 
   const onEditorSelectionUpdate = () => {
-    if (!editor) return
-    const { state } = editor
+    if (!editor.value) return
+    const { state } = editor.value
     const nodeType = state.doc.nodeAt(state.selection.anchor)?.type.name
 
     if (nodeType === 'text') {
-      editor.commands.focus()
+      editor.value.commands.focus()
     }
   }
 
   const onEditorFocusIn = (event: FocusEvent) => {
-    if (!editor) return
+    if (!editor.value) return
     const focusedElement = event.target as HTMLElement
     if (!focusedElement) return
 
@@ -79,21 +80,35 @@ export function useNodeViewInteractions(editor: Editor | null) {
     const contentEl = nodeView?.querySelector('[data-node-view-content]')
 
     if (nodeView && (!contentEl || !contentEl.contains(focusedElement))) {
-      moveSelectionToNodeView(editor, nodeView)
+      moveSelectionToNodeView(editor.value, nodeView)
     }
   }
 
-  onMounted(() => {
-    if (!editor) return
+  watch(
+    editor,
+    (newEditor, oldEditor) => {
+      if (oldEditor) {
+        oldEditor.off('selectionUpdate', onEditorSelectionUpdate)
+        oldEditor.view.dom.removeEventListener('focusin', onEditorFocusIn)
+      }
+      if (newEditor) {
+        newEditor.on('selectionUpdate', onEditorSelectionUpdate)
+        newEditor.view.dom.addEventListener('focusin', onEditorFocusIn)
+      }
+    },
+    { immediate: true }
+  )
 
+  onMounted(() => {
     document.addEventListener('selectionchange', onSelectionChange)
-    editor.on('selectionUpdate', onEditorSelectionUpdate)
-    editor.view.dom.addEventListener('focusin', onEditorFocusIn)
   })
 
   onUnmounted(() => {
     document.removeEventListener('selectionchange', onSelectionChange)
-    editor?.off('selectionUpdate', onEditorSelectionUpdate)
-    editor?.view.dom.removeEventListener('focusin', onEditorFocusIn)
+
+    if (editor.value) {
+      editor.value.off('selectionUpdate', onEditorSelectionUpdate)
+      editor.value.view.dom.removeEventListener('focusin', onEditorFocusIn)
+    }
   })
 }
