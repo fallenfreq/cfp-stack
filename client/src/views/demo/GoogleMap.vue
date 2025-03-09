@@ -242,7 +242,7 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
       <h3 class="text-3xl marker-info-text">
         {{
           markerStore.selectedTags.length
-            ? `"${markerStore.selectedTags}" markers are being displayed`
+            ? `"${markerStore.selectedTags.join(', ')}" markers are being displayed`
             : 'All markers are displayed'
         }}
       </h3>
