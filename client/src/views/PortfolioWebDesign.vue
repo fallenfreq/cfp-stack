@@ -10,7 +10,7 @@ const { closeSheet, openSheet } = sheetStore
 
 <template>
   <StackableSheet mobileHeight="50%" desktopWidth="65%" @close="closeSheet">
-    <div v-if="sheetContent?.id === 'portfolio'">
+    <div v-if="sheetContent?.id === 'collectionEntry'">
       {{ sheetContent.content.content }}
       This will soon display the content of the selected item.
     </div>
@@ -23,7 +23,7 @@ const { closeSheet, openSheet } = sheetStore
     </div>
     <CollectionGrid
       :name="['webDesignPortfolio']"
-      @selectItem="(portfolio) => openSheet({ id: 'portfolio', content: portfolio })"
+      @selectItem="(portfolio) => openSheet({ id: 'collectionEntry', content: portfolio })"
     />
   </div>
 </template>

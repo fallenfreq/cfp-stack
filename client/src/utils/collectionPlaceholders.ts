@@ -1,9 +1,10 @@
 // utils/createPlaceholders.ts
-import type { PortfolioEntry } from '@/../../api/src/schemas/portfolio'
+import type { CollectionEntry } from '@/../../api/src/schemas/collectionEntry'
 
 export type CollectionItem =
-  | PortfolioEntry
-  | (PortfolioEntry & {
+  | CollectionEntry
+  | (CollectionEntry & {
+      type: 'placeholder'
       isPlaceholder: boolean
       visibilityClasses: string[]
     })
@@ -47,7 +48,8 @@ function createPlaceholders(placeholdersNeeded: Breakpoints, title: string): Col
 
   for (let i = 0; i < getMaxItemsCount(0, placeholdersNeeded); i++) {
     const placeholder: CollectionItem = {
-      portfolioEntryId: 0,
+      collectionEntryId: 0,
+      type: 'placeholder',
       title,
       description: '',
       imageUrl: '',

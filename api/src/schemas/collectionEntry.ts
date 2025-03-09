@@ -1,6 +1,7 @@
 import { integer, text, sqliteTable } from 'drizzle-orm/sqlite-core'
-export const portfolioEntries = sqliteTable('portfolio_entries', {
-  portfolioEntryId: integer('portfolio_entry_id').primaryKey(),
+export const collectionEntries = sqliteTable('collection_entries', {
+  collectionEntryId: integer('collection_entry_id').primaryKey(),
+  type: text('type', { length: 256 }).notNull(),
   title: text('title', { length: 256 }).notNull(),
   description: text('description').notNull(),
   imageUrl: text('image_url', { length: 256 }).notNull(),
@@ -8,5 +9,5 @@ export const portfolioEntries = sqliteTable('portfolio_entries', {
   content: text('content', { mode: 'json' }).notNull() //.$type<{ foo: string }>()
 })
 
-export type PortfolioEntry = typeof portfolioEntries.$inferSelect
-export type NewPortfolioEntry = typeof portfolioEntries.$inferInsert
+export type CollectionEntry = typeof collectionEntries.$inferSelect
+export type NewCollectionEntry = typeof collectionEntries.$inferInsert

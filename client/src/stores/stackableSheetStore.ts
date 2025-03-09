@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { PortfolioEntry } from '@/../../api/src/schemas/portfolio'
+import type { CollectionEntry } from '@/../../api/src/schemas/collectionEntry'
 import type { MapMarkerItem } from '@/components/demos/map/AddMarkerSwitch.vue'
 
 type StackableItem =
-  | { id: 'portfolio'; content: PortfolioEntry }
+  | { id: 'collectionEntry'; content: CollectionEntry }
   | { id: 'mapMarker'; content: MapMarkerItem }
 
 export const useStackableSheetStore = defineStore('stackableSheet', () => {

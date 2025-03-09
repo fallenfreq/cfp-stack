@@ -11,7 +11,7 @@
       :class="
         'isPlaceholder' in item && {
           hidden: item.isPlaceholder && !item.visibilityClasses.includes('visible-default'),
-          block: !item.isPlaceholder || item.visibilityClasses.includes('visible-default'),
+          block: item.visibilityClasses.includes('visible-default'),
           'sm:block': item.visibilityClasses.includes('visible-sm'),
           'md:block': item.visibilityClasses.includes('visible-md'),
           'lg:block': item.visibilityClasses.includes('visible-lg'),
@@ -26,7 +26,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue'
 import { getPortfolioEntries } from '@/services/portfolio'
-import type { PortfolioEntry } from '@/../../api/src/schemas/portfolio'
+import type { CollectionEntry } from '@/../../api/src/schemas/collectionEntry'
 import {
   calculatePlaceholdersNeeded,
   createPlaceholders,
@@ -42,7 +42,7 @@ const props = defineProps<{
 const { data, isError } = getPortfolioEntries(props.name)
 
 const emit = defineEmits<{
-  (event: 'selectItem', item: PortfolioEntry): void
+  (event: 'selectItem', item: CollectionEntry): void
 }>()
 
 // Define breakpoints and the number of columns for each

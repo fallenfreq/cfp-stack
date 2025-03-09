@@ -9,12 +9,12 @@ import { getAllEnvs } from '../config/envs.js'
 
 import * as user from '../schemas/user.js'
 // import * as mapMarkers from '../schemas/mapMarkers.js'
-import * as portfolio from '../schemas/portfolio.js'
+import * as collection from '../schemas/collectionEntry.js'
 // import * as schemas from '../schemas/index.js'
 
 // adding mapMarkers to schemas is causing the build to fail
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const schemas = { ...user, ...portfolio }
+const schemas = { ...user, ...collection }
 
 const { ZITADEL_INTROSPECTION_ENDPOINT, ZITADEL_CLIENT_ID, ZITADEL_CLIENT_SECRET } = getAllEnvs()
 // type appDb = DrizzleD1Database<typeof schemas>

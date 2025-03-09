@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import type { Context } from '../../dist/config/trpc.js'
 import * as userSchema from '../../dist/schemas/user.js'
-import * as portfolioSchema from '../../dist/schemas/portfolio.js'
+import * as collectionSchema from '../../dist/schemas/collectionEntry.js'
 import { initEnvs, type Envs } from '../../dist/config/envs.js'
 
 export const onRequest: PagesFunction<Envs> = async ({ request, env }) => {
@@ -19,7 +19,7 @@ export const onRequest: PagesFunction<Envs> = async ({ request, env }) => {
       createContext: (): Context => {
         return {
           req: request,
-          db: drizzle(env.DB, { schema: { ...userSchema, ...portfolioSchema } })
+          db: drizzle(env.DB, { schema: { ...userSchema, ...collectionSchema } })
         }
       },
       onError: ({ error }) => {
