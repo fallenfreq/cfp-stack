@@ -10,6 +10,15 @@ import { useMapStore } from '@/stores/mapStore'
 import { useQuery } from '@tanstack/vue-query'
 import { initPromptModal } from '@/services/promptModal'
 
+export type MapMarkerItem = {
+  mapMarkersId: number
+  title: string
+  lat: number
+  lng: number
+  tags: string[]
+  markerInstance: google.maps.marker.AdvancedMarkerElement
+}
+
 const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
 
 const mapStore = useMapStore()
@@ -17,16 +26,7 @@ if (!mapStore.map) {
   throw new Error('Map not found in store.')
 }
 
-const { openSheet } = useStackableSheetStore<{
-  marker: google.maps.marker.AdvancedMarkerElement
-  content: {
-    mapMarkersId: number
-    title: string
-    lat: number
-    lng: number
-    tags: string[]
-  }
-}>()
+const { openSheet } = useStackableSheetStore()
 const root = ref<HTMLElement | null>(null)
 
 defineExpose({ root })
@@ -98,9 +98,10 @@ const onMarkerClick = async (mapMarkersId: number) => {
   const markerData = markerStore.allMarkers[mapMarkersId]
   if (!markerData) return
 
+  console.log()
   openSheet({
-    content: markerData,
-    marker: markerData.markerInstance!
+    id: 'mapMarker',
+    content: markerData
   })
 }
 

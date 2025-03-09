@@ -1,12 +1,17 @@
-import { defineStore, storeToRefs } from 'pinia'
-import { ref, computed } from 'vue'
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import type { PortfolioEntry } from '@/../../api/src/schemas/portfolio'
+import type { MapMarkerItem } from '@/components/demos/map/AddMarkerSwitch.vue'
 
-// _useStackableSheetStore needs to be exported for HMR to work
-export const _useStackableSheetStore = defineStore('stackableSheet', () => {
-  const sheetContent = ref<unknown>(null)
+type StackableItem =
+  | { id: 'portfolio'; content: PortfolioEntry }
+  | { id: 'mapMarker'; content: MapMarkerItem }
+
+export const useStackableSheetStore = defineStore('stackableSheet', () => {
+  const sheetContent = ref<StackableItem | null>(null)
   const isSheetOpen = ref(false)
 
-  const openSheet = <T>(item: T) => {
+  const openSheet = (item: StackableItem) => {
     sheetContent.value = item
     isSheetOpen.value = true
   }
@@ -23,18 +28,3 @@ export const _useStackableSheetStore = defineStore('stackableSheet', () => {
     closeSheet
   }
 })
-
-export function useStackableSheetStore<T>() {
-  const sheetStore = _useStackableSheetStore()
-  const { isSheetOpen } = storeToRefs(sheetStore)
-  // TODO: This is a workaround to get the correct type of sheetContent and needs rethinkng about
-  // since we are casting so it is not type safe anyway
-  const typedSheetContent = computed(() => sheetStore.sheetContent as T | null)
-
-  return {
-    sheetContent: typedSheetContent,
-    isSheetOpen,
-    openSheet: sheetStore.openSheet<T>,
-    closeSheet: sheetStore.closeSheet
-  }
-}

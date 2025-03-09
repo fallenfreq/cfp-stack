@@ -20,7 +20,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch, defineProps, defineEmits } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { getPortfolioEntries } from '@/services/portfolio'
 import { type PortfolioEntry } from '@/../../api/src/schemas/portfolio'
 

@@ -2,6 +2,7 @@
 <script lang="ts" setup>
 import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
 import { ref, onMounted, useCssModule, watch, nextTick, getCurrentInstance } from 'vue'
+import { storeToRefs } from 'pinia'
 import GoogleAutocomplete from '@/components/demos/map/GoogleAutocomplete.vue'
 import AddMarkerSwitch from '@/components/demos/map/AddMarkerSwitch.vue'
 import CurrentLocationMarker from '@/components/demos/map/currentLocation.vue'
@@ -31,18 +32,11 @@ const clearFilter = (tag?: string) => {
 }
 
 const mapStore = useMapStore()
-
 const darkModeStore = useDarkModeStore()
-const { isSheetOpen, closeSheet, sheetContent } = useStackableSheetStore<{
-  marker: google.maps.marker.AdvancedMarkerElement
-  content: {
-    mapMarkersId: number
-    title: string
-    lat: number
-    lng: number
-    tags: string[]
-  }
-}>()
+
+const sheetStore = useStackableSheetStore()
+const { isSheetOpen, sheetContent } = storeToRefs(sheetStore)
+const { closeSheet } = sheetStore
 
 const mapsControlsStyle = useCssModule('mapsControls')
 
@@ -110,12 +104,9 @@ onMounted(async () => {
   renderMap(loader)
 })
 
-watch(
-  () => isSheetOpen,
-  () => {
-    if (!isSheetOpen) deleteMode.value = false
-  }
-)
+watch(isSheetOpen, () => {
+  if (!isSheetOpen) deleteMode.value = false
+})
 watch(
   () => darkModeStore.isDarkMode,
   () => renderMap(loader)
@@ -170,13 +161,13 @@ const deleteMode = ref(false)
 
 // Delete a tag from the marker
 const deleteTagFromMarker = async (tag: string) => {
-  if (!sheetContent.value) return
+  if (!sheetContent.value || sheetContent.value.id !== 'mapMarker') return
   const markerId = sheetContent.value.content.mapMarkersId
 
   try {
     await trpc.mapMarker.deleteTagFromMarker.mutate({ markerId, tag })
     // Update tags locally after deletion
-    sheetContent.value.content.tags = sheetContent.value.content.tags.filter((t: any) => t !== tag)
+    sheetContent.value.content.tags = sheetContent.value.content.tags.filter((t) => t !== tag)
   } catch (error) {
     console.error('Error deleting tag:', error)
   }
@@ -187,8 +178,8 @@ const openAddTagPrompt = async () => {
   const newTags = await showPrompt('Enter new tags separated by commas:')
   if (!newTags) return
 
-  const markerId = sheetContent.value?.content.mapMarkersId
-  if (!markerId) return
+  if (!sheetContent.value || sheetContent.value.id !== 'mapMarker') return
+  const markerId = sheetContent.value.content.mapMarkersId
 
   try {
     // this only take one tag need to make it take more than one and return the added tags
@@ -281,13 +272,13 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 
   <!-- StackableSheet with marker details -->
   <StackableSheet mobileHeight="50%" desktopWidth="65%" @close="closeSheet">
-    <div v-if="sheetContent">
+    <div v-if="sheetContent?.id === 'mapMarker'">
       <h3 class="text-3xl font-bold">Marker Details</h3>
       <pre>
 Title: {{ sheetContent.content.title }} <span><FontAwesomeIcon 
       :icon="faPen" 
       class="edit-title-icon" 
-      @click="() => sheetContent && openTitleEditPrompt(sheetContent.content)"
+      @click="() => sheetContent?.id === 'mapMarker' && openTitleEditPrompt(sheetContent.content)"
     /></span>
 Marker ID: {{sheetContent.content.mapMarkersId }}
 Latitude: {{sheetContent.content.lat }}
@@ -361,7 +352,11 @@ Tags</pre>
         <VaButton
           :data-to-delete-id="sheetContent.content.mapMarkersId"
           color="danger"
-          @click="(event: MouseEvent) => sheetContent && deleteMarker(event, sheetContent.marker)"
+          @click="
+            (event: MouseEvent) =>
+              sheetContent?.id === 'mapMarker' &&
+              deleteMarker(event, sheetContent.content.markerInstance)
+          "
         >
           Delete Marker
         </VaButton>
