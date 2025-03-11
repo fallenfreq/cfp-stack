@@ -4,7 +4,7 @@ import postcss from 'postcss'
 
 type Variables = Record<string, string>
 
-const extraxtVars = (selector: string, cssAst: postcss.Result<postcss.Root>) => {
+const extractVars = (selector: string, cssAst: postcss.Result<postcss.Root>) => {
   const variables: Variables = {}
   cssAst.root.walkRules(selector, (rule) => {
     rule.walkDecls((decl) => {
@@ -41,9 +41,9 @@ const run = async (cssFilePath: string, saveLocation: string) => {
     from: cssFilePath,
     parser: safe
   })
-  const darkVariables = extraxtVars('.dark', cssAst)
-  const rootVariables = extraxtVars(':root', cssAst)
-  const pinkVariables = extraxtVars('.pink', cssAst)
+  const darkVariables = extractVars('.dark', cssAst)
+  const rootVariables = extractVars(':root', cssAst)
+  const pinkVariables = extractVars('.pink', cssAst)
 
   const jsonContent = {
     root: resolveAllVars(rootVariables, rootVariables),
