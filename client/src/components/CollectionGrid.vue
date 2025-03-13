@@ -8,17 +8,7 @@
       :imageUrl="item.imageUrl"
       :title="item.title"
       @click="() => emit('selectItem', item)"
-      :class="
-        'isPlaceholder' in item && {
-          hidden: item.isPlaceholder && !item.visibilityClasses.includes('visible-default'),
-          block: item.visibilityClasses.includes('visible-default'),
-          'sm:block': item.visibilityClasses.includes('visible-sm'),
-          'md:block': item.visibilityClasses.includes('visible-md'),
-          'lg:block': item.visibilityClasses.includes('visible-lg'),
-          'xl:block': item.visibilityClasses.includes('visible-xl'),
-          '2xl:block': item.visibilityClasses.includes('visible-2xl')
-        }
-      "
+      :class="visibilityMap.get(item)?.join(' ')"
     />
   </div>
 </template>
@@ -30,8 +20,7 @@ import type { CollectionEntry } from '@/../../api/src/schemas/collectionEntry'
 import {
   calculatePlaceholdersNeeded,
   createPlaceholders,
-  type Breakpoints,
-  type CollectionItem
+  type Breakpoints
 } from '@/utils/collectionPlaceholders'
 
 const props = defineProps<{
@@ -55,13 +44,30 @@ const columns: Breakpoints = {
   '2xl': 5
 }
 
-const displayedItems = ref<CollectionItem[]>([])
+const displayedItems = ref<CollectionEntry[]>([])
+const visibilityMap = ref<Map<CollectionEntry, string[]>>(new Map())
 
-const setDisplayedItems = async (title: CollectionItem['title'] = '') => {
+const setDisplayedItems = async (title: CollectionEntry['title'] = '') => {
   const items = data.value || []
   const placeholdersNeeded = calculatePlaceholdersNeeded(items.length, columns)
-  const placeholders = createPlaceholders(placeholdersNeeded, title)
+
+  const customClassMap = {
+    default: 'block',
+    sm: 'sm:block',
+    md: 'md:block',
+    lg: 'lg:block',
+    xl: 'xl:block',
+    '2xl': '2xl:block'
+  }
+
+  const { placeholders, visibilityMap: newVisibilityMap } = createPlaceholders(
+    placeholdersNeeded,
+    title,
+    customClassMap
+  )
+
   displayedItems.value = [...items, ...placeholders]
+  visibilityMap.value = newVisibilityMap
 }
 
 watch([data, isError], () => {
