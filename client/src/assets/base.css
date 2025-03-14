@@ -1,6 +1,6 @@
 /*
 If this file is changed, the dev server needs to be restarted for 
-./plugins/extractCssVars.ts to re-calcualte the cssVariables.js file.
+./plugins/extractCssVars.ts to re-calculate the cssVariables.js file.
 You can just save a file that will trigger a restart.
 */
 
@@ -86,9 +86,9 @@ You can just save a file that will trigger a restart.
 }
 
 /*
-Vuestic presests as vars.
+Vuestic presets as vars.
 The var primary which is a Vuestic colour is already set by PrimeVue.
-We are passing Vustic it's colours by processing the Tailwind colours
+We are passing Vuestic it's colours by processing the Tailwind colours
 and using the cssVariables.js file to resolve the variables.
 */
 

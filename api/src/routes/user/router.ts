@@ -1,5 +1,5 @@
 import { publicProcedure, router } from '../../config/trpc.js'
-import { users, posts, profiles, catagories, catagoriesPosts } from '../../schemas/user.js'
+import { users, posts, profiles, categories, categoriesPosts } from '../../schemas/user.js'
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 
@@ -90,20 +90,20 @@ const userRouter = router({
     .input(z.object({ user_id: z.string() }))
     .query(async ({ input: { user_id }, ctx: { db } }) => {
       // with lets you select relations set in schemas
-      // columns selects which own colums
+      // columns selects which own columns
       const postsJunctionSQL = await db.query.posts.findFirst({
         with: {
           author: true,
-          postCatagories: {
+          postCategories: {
             columns: {
               postId: false,
-              catagoryId: false
+              categoryId: false
             },
             with: {
-              postCatagories: {
+              postCategories: {
                 columns: {
-                  catagoryId: true,
-                  catagory: true
+                  categoryId: true,
+                  category: true
                 }
               }
             }
@@ -114,8 +114,8 @@ const userRouter = router({
       const postsJunctionQ = await db
         .select()
         .from(posts)
-        .innerJoin(catagoriesPosts, eq(posts.postId, catagoriesPosts.postId))
-        .innerJoin(catagories, eq(catagoriesPosts.catagoryId, catagories.catagoryId))
+        .innerJoin(categoriesPosts, eq(posts.postId, categoriesPosts.postId))
+        .innerJoin(categories, eq(categoriesPosts.categoryId, categories.categoryId))
 
       console.log({ postsJunctionSQL, postsJunctionQ })
 

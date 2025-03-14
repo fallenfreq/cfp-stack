@@ -12,7 +12,7 @@ import {
   mergeAttributes
 } from '@tiptap/vue-3'
 import { registerCustomNodes } from '@/config/editor/registerCustomNodes'
-import { AllowAttributesExtension } from '@/editor/extentions/allowAttributesExtension'
+import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExtension'
 import { useNodeViewInteractions } from '@/composables/editor/useNodeViewInteractions'
 import cssVariables from '@/../cssVariables.js'
 import initialContent from '@/config/editor/initialContent.html?raw'
@@ -27,14 +27,14 @@ import TableRow from '@tiptap/extension-table-row'
 import Placeholder from '@tiptap/extension-placeholder'
 import link from '@tiptap/extension-link'
 import Heading from '@tiptap/extension-heading'
-import Span from '@/editor/extentions/spanExtention'
-import Div from '@/editor/extentions/divExtention'
+import Span from '@/editor/extensions/spanExtension'
+import Div from '@/editor/extensions/divExtension'
 
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 
-import Commands from '@/editor/extentions/commands/commands.js'
-import suggestion from '@/editor/extentions/commands/suggestion.js'
+import Commands from '@/editor/extensions/commands/commands.js'
+import suggestion from '@/editor/extensions/commands/suggestion.js'
 
 // Drag handle extension
 // DropCursor used by GlobalDragHandle already
@@ -168,7 +168,7 @@ const editor = useEditor({
       },
       nested: true
     }),
-    // If the extention is not renamed, it will log the following warning:
+    // If the extension is not renamed, it will log the following warning:
     // Duplicate extension names found: ['commands']. This can lead to issues.
     Commands.extend({ name: 'slashCommands' }).configure({ suggestion })
   ],

@@ -31,40 +31,40 @@ export const postRelations = relations(posts, ({ one, many }) => ({
     fields: [posts.userId],
     references: [users.userId]
   }),
-  postCatagories: many(catagoriesPosts)
+  postCategories: many(categoriesPosts)
 }))
 
-export const catagories = sqliteTable('catagories', {
-  catagoryId: integer('catagory_id').primaryKey(),
-  catagory: text('catagory', { length: 40 }).notNull()
+export const categories = sqliteTable('categories', {
+  categoryId: integer('category_id').primaryKey(),
+  category: text('category', { length: 40 }).notNull()
 })
 
-export const catagoryRelations = relations(catagories, ({ many }) => ({
-  catagoryPosts: many(catagoriesPosts)
+export const categoryRelations = relations(categories, ({ many }) => ({
+  categoryPosts: many(categoriesPosts)
 }))
 
-export const catagoriesPosts = sqliteTable(
-  'catagories_posts',
+export const categoriesPosts = sqliteTable(
+  'categories_posts',
   {
-    catagoryId: integer('catagory_id')
+    categoryId: integer('category_id')
       .notNull()
-      .references(() => catagories.catagoryId),
+      .references(() => categories.categoryId),
     postId: integer('post_id')
       .notNull()
       .references(() => posts.postId)
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.postId, table.catagoryId] })
+    pk: primaryKey({ columns: [table.postId, table.categoryId] })
   })
 )
 
-export const catagoriesPostsRelations = relations(catagoriesPosts, ({ one }) => ({
-  postCatagories: one(catagories, {
-    fields: [catagoriesPosts.catagoryId],
-    references: [catagories.catagoryId]
+export const categoriesPostsRelations = relations(categoriesPosts, ({ one }) => ({
+  postCategories: one(categories, {
+    fields: [categoriesPosts.categoryId],
+    references: [categories.categoryId]
   }),
-  catagoryPosts: one(posts, {
-    fields: [catagoriesPosts.postId],
+  categoryPosts: one(posts, {
+    fields: [categoriesPosts.postId],
     references: [posts.postId]
   })
 }))

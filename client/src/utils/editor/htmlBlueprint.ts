@@ -6,7 +6,7 @@ import {
   type NodeConfig
 } from '@tiptap/vue-3'
 import { type NodeType } from '@tiptap/pm/model'
-import { AllowAttributesExtension } from '@/editor/extentions/allowAttributesExtension'
+import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExtension'
 import Youtube from '@tiptap/extension-youtube'
 import Image from '@tiptap/extension-image'
 import StarterKit from '@tiptap/starter-kit'
@@ -40,9 +40,9 @@ function parseSelector(selector: string): {
 function createNodesFromSchema(editor: Editor) {
   const nodes = editor.schema.nodes
   // exclude nodes from the starter kit to prevent dynamic nodes from being created
-  // The dynamic nodes render vue compnents as their tags and strip default attributes
+  // The dynamic nodes render vue components as their tags and strip default attributes
   // This keeps the code view clean and easier to work with
-  const exludeNodes = [
+  const excludeNodes = [
     'blockquote',
     'bulletList',
     'codeBlock',
@@ -60,7 +60,7 @@ function createNodesFromSchema(editor: Editor) {
     'taskItem'
   ]
   return Object.keys(nodes)
-    .filter((nodeName) => !exludeNodes.includes(nodeName))
+    .filter((nodeName) => !excludeNodes.includes(nodeName))
     .map((nodeName) => {
       const nodeType: NodeType = nodes[nodeName]
       const selector = nodeType.spec.parseDOM?.[0]?.tag || nodeName

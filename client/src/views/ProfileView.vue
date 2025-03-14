@@ -26,7 +26,7 @@ axios
   })
 
 // This is just here temporarily to test calling a secure endpoint on our tRPC API
-// The endpoint just returns a secure property and echos the input
+// The endpoint just returns a secure property and echoes the input
 trpc.secure.test
   .query('Sending data to tRPC secure endpoint from Vue client')
   .then((response) => {

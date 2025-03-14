@@ -1,6 +1,6 @@
 import cssVariables from '@/../cssVariables'
 // Import the Tailwind CSS configuration
-// This also contins the renamed colours so we are resolving an empty config instead
+// `defaultColors` also contains the renamed colours so we are resolving an empty config instead
 // import defaultColors from 'tailwindcss/colors'
 import resolveConfig from 'tailwindcss/resolveConfig'
 import tailwindConfig from '@/../tailwind.config'

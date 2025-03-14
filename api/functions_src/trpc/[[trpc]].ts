@@ -23,7 +23,7 @@ export const onRequest: PagesFunction<Envs> = async ({ request, env }) => {
         }
       },
       onError: ({ error }) => {
-        // Change error to hide deatils from the client and log if required
+        // Change error to hide details from the client and log if required
         if (error.code == 'INTERNAL_SERVER_ERROR') {
           // Can log errors from here
           console.log({

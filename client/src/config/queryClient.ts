@@ -1,7 +1,7 @@
 import { QueryClient, QueryCache } from '@tanstack/vue-query'
 import { useToast } from 'vuestic-ui'
 
-// You can subscribe for more controle via queryClient.getQueryCache().subscribe
+// You can subscribe for more control via queryClient.getQueryCache().subscribe
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({

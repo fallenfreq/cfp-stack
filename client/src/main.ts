@@ -1,7 +1,7 @@
 import { createVuestic } from 'vuestic-ui'
 
 // import 'vuestic-ui/css'
-// Vuestic css used when tailwind is used to stop confilcts
+// Vuestic css used when tailwind is used to stop conflicts
 import 'vuestic-ui/styles/essential.css'
 import 'vuestic-ui/styles/typography.css'
 import config from '../vuestic.my.config'

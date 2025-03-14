@@ -1,4 +1,4 @@
-import { createVueNode } from '@/editor/extentions/customComponentNode'
+import { createVueNode } from '@/editor/extensions/customComponentNode'
 import { editorComponents } from '@/config/editor/editorComponents'
 
 export function registerCustomNodes() {

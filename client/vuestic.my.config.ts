@@ -7,7 +7,7 @@ import {
 import cssVariables from './cssVariables.js'
 
 export default {
-  // These are the Tailwind defaults instead of Vuestics being used for consistency
+  // These are the Tailwind defaults instead of Vuestic's being used for consistency
   // if these are changed in Tailwind, they should be updated here too
   // xs is custom
   breakpoints: {
@@ -45,7 +45,7 @@ export default {
       }
     ],
     fonts: [
-      // fab- and fas- could be used to pass font awesome v6 icons to Vuestic using webfonts.
+      // fab- and fas- could be used to pass font awesome v6 icons to Vuestic using web fonts.
       // a custom kit would need to be installed for this to work though
       // Font Awesome is installed as a svg package so you can place as an svg with:
       // <FontAwesomeIcon :icon="faGithub" \>
@@ -63,7 +63,7 @@ export default {
           class: `fa-solid fa-${icon}`
         })
       },
-      // mi- icons are used by vustic to set some va- icons
+      // mi- icons are used by Vuestic to set some va- icons
       // This makes sure that the mi- icons also use the rounded material icons
       {
         name: 'mi-{icon}',
@@ -81,9 +81,6 @@ export default {
       }
     ]
   }),
-  // The || hex value is the default value that Vuestic uses
-  // its here more for reference than anything else
-  // primary is also a root colour so it's overriden by the root colours
   colors: {
     presets: {
       light: {
@@ -98,8 +95,8 @@ export default {
         ...processedPinkColors
       }
     }
-    // colors.variables is a shorcut for colors.presets[currentPresetName].
-    // setting variables aswell as presets will overwrite the presets
+    // colors.variables is a shortcut for colors.presets[currentPresetName].
+    // setting variables as well as presets will overwrite the presets
     // variables: processedRootColors
   }
 }

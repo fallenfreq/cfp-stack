@@ -23,7 +23,7 @@ database_id = "7f2fdab4-d3c2-4418-860b-c9f8817ddbd1"
 migrations_dir = "migrations"
 
 # use "wrangler pages secret put API_KEY" to save a secret
-# .dev.vars file is used for dev enviroment variables and secrets
+# .dev.vars file is used for dev environment variables and secrets
 # You can also set them from the cloudflare dashboard
 
 [vars]
