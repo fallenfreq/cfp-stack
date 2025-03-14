@@ -15,6 +15,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
     "migrate:api": "pnpm --filter @somefreq-app/api migrate",
+    "migrate:custom": "pnpm --filter @somefreq-app/api migrate:custom",
     "migrate:push:api": "pnpm --filter @somefreq-app/api migrate:push",
     "migrate:push:local:api": "pnpm --filter @somefreq-app/api migrate:push:local",
     "logging:api": "pnpm --filter @somefreq-app/api logging"

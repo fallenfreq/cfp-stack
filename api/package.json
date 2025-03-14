@@ -18,6 +18,7 @@
     "build": "rm -rf dist functions .tsbuildinfo && tsc --build",
     "build:all": "pnpm --filter @somefreq-app/* --parallel build",
     "migrate": "pnpm drizzle-kit generate:sqlite",
+    "migrate:custom": "drizzle-kit generate --custom --",
     "migrate:push:local": "npx wrangler d1 migrations apply somefreq-db --local",
     "migrate:push": "npx wrangler d1 migrations apply somefreq-db --remote",
     "logging": "npx wrangler pages deployment tail"
