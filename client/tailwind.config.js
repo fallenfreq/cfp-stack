@@ -19,6 +19,8 @@ export default {
   theme: {
     // larger screens should be added in extend
     screens: {
+      // calc is not supported in tailwind
+      // xs: 'calc(var(--xs) * 1px)',
       xs: cssVariables.root['--xs'] + 'px',
       ...defaultTheme.screens
     },
