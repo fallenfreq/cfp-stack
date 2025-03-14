@@ -3,7 +3,7 @@ import { jwtDecode } from 'jwt-decode'
 
 // zitadelAuth ts(2742)
 // The inferred type of 'zitadelAuth' cannot be named without a reference to '.pnpm/vue-oidc-client@1.0.0-alpha.5/node_modules/vue-oidc-client/vue3'. This is likely not portable. A type annotation is necessary.ts(2742)
-import type { OidcAuth } from 'vue-oidc-client/vue3'
+// import type { OidcAuth } from 'vue-oidc-client/vue3' // This used to be required, However, seems to be working without now
 
 // REDIRECT SETTINGS need to be set in the zitadel app correctly for login page to work
 const zitadelAuth = createZITADELAuth(
