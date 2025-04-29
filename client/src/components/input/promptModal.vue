@@ -20,20 +20,20 @@
 
 <script setup lang="ts">
 import { ref, watch, type Ref } from 'vue'
-import { useColors } from 'vuestic-ui'
-const { applyPreset } = useColors()
+import type { Theme } from '@/constants/theme'
+import { safeApplyPreset } from '@/utils/theme'
 
 // refs are normally unwrapped when passed to components
 // However this is loaded via createComponent which seem to pass the Ref
 const props = defineProps<{
   message: Ref<string>
   isVisible: Ref<boolean>
-  rootCurrentPresetName: Ref<string>
+  rootCurrentPresetName: Ref<Theme>
 }>()
 
-applyPreset(props.rootCurrentPresetName.value)
+safeApplyPreset(props.rootCurrentPresetName.value)
 watch(props.rootCurrentPresetName, () => {
-  applyPreset(props.rootCurrentPresetName.value)
+  safeApplyPreset(props.rootCurrentPresetName.value)
 })
 
 const emit = defineEmits<{

@@ -1,5 +1,5 @@
 import { createApp, ref, type AppContext } from 'vue'
-import PromptModal from '@/components/input/promptModal.vue'
+import PromptModal from '@/components/input/PromptModal.vue'
 import { vuestic } from '@/main'
 import { useColors } from 'vuestic-ui'
 

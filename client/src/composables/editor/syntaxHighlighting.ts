@@ -1,4 +1,5 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import type { Theme } from '@/constants/theme'
 // import 'highlight.js/lib/common'
 import { useDarkModeStore } from '@/stores/darkModeStore'
 
@@ -11,8 +12,7 @@ import darkTheme from 'highlight.js/styles/base16/ros-pine-moon.min.css?url'
 // import pinkTheme2 from 'highlight.js/styles/base16/horizon-light.min.css?url'
 // import pinkTheme3 from 'highlight.js/styles/base16/atelier-cave-light.min.css?url'
 
-//TODO: Add strict typing for themes
-const themes: Record<string, string> = {
+const themes: Record<Theme, string> = {
   light: lightTheme,
   dark: darkTheme,
   pink: darkTheme
@@ -22,7 +22,7 @@ const useSyntaxHighlighting = () => {
   const darkModeStore = useDarkModeStore()
   const themeLink = ref<HTMLLinkElement | null>(null)
 
-  const updateHighlightTheme = (theme: string) => {
+  const updateHighlightTheme = (theme: Theme) => {
     if (!themeLink.value) {
       themeLink.value = document.createElement('link')
       themeLink.value.rel = 'stylesheet'
