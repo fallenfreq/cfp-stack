@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { Plugin } from 'vite'
+import type { Plugin } from 'vite'
 
 export default function touchFileAfterBuild(targetFile: string): Plugin {
   return {

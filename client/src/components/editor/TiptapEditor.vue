@@ -1,6 +1,6 @@
 <template>
   <FloatingEditorMenu v-if="editor" :editor="editor" />
-  <EditorContent class="p-7" :editor="editor" />
+  <EditorContent v-if="editor" class="p-7" :editor="editor" />
 </template>
 
 <script setup lang="ts">

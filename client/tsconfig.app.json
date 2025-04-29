@@ -5,15 +5,23 @@
     "tailwind.config.js",
     "vuestic.my.config.ts",
     "env.d.ts",
-    "src/**/*",
-    "src/**/*.vue",
+    "./src/**/*.ts",
+    "./src/**/*.d.ts",
+    "./src/**/*.vue",
     "components.d.ts",
     "../api/src/schemas/**/*"
   ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
     "allowJs": true,
-    "composite": true,
+
+    // These already exist in the base config
+    // "strict": true,
+    // "verbatimModuleSyntax": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "isolatedModules": true,
+
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "baseUrl": ".",
     "paths": {

@@ -1,4 +1,4 @@
-import { Plugin } from 'vite'
+import type { Plugin } from 'vite'
 import { parse, print } from 'recast'
 import { visit, namedTypes as n, builders as b } from 'ast-types'
 import typescriptParser from 'recast/parsers/typescript'

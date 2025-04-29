@@ -52,7 +52,7 @@ const processTailwindConfigColors = (
 
         // Convert rgb to rgba syntax for compatibility
         if (resolvedValue.includes('/')) {
-          const [rgbPart, opacityPart] = resolvedValue.split('/')
+          const [rgbPart = '', opacityPart = ''] = resolvedValue.split('/')
           const rgbaPart = rgbPart.replace('rgb', 'rgba')
           resolvedValue = `${rgbaPart.trim()}, ${opacityPart.trim()}`
         }

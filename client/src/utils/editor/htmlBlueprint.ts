@@ -5,7 +5,6 @@ import {
   type Editor,
   type NodeConfig
 } from '@tiptap/vue-3'
-import { type NodeType } from '@tiptap/pm/model'
 import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExtension'
 import Youtube from '@tiptap/extension-youtube'
 import Image from '@tiptap/extension-image'
@@ -17,8 +16,8 @@ import TaskItem from '@tiptap/extension-task-item'
 
 function parseSelector(selector: string): {
   tag: string
-  requiredAttribute?: string
-  value?: string
+  requiredAttribute: string | null
+  value: string | null
 } {
   // Match the tag name and optional attribute selector
   const match = selector.match(/^(?<tag>\w+)(?:\[(?<attribute>[^\]=]+)(?:=(?<value>[^\]]+))?\])?$/)
@@ -29,10 +28,14 @@ function parseSelector(selector: string): {
 
   const { tag, attribute, value } = match.groups
 
+  if (!tag) {
+    throw new Error(`Invalid selector: ${selector}. Missing tag name.`)
+  }
+
   return {
     tag,
-    requiredAttribute: attribute,
-    value: value ? value.replace(/^['"]|['"]$/g, '') : undefined // Remove quotes from value
+    requiredAttribute: attribute || null, // Use the attribute name if present, otherwise null
+    value: value ? value.replace(/^['"]|['"]$/g, '') : null // Remove quotes from value
   }
 }
 
@@ -59,10 +62,10 @@ function createNodesFromSchema(editor: Editor) {
     // 'taskList',
     'taskItem'
   ]
-  return Object.keys(nodes)
-    .filter((nodeName) => !excludeNodes.includes(nodeName))
-    .map((nodeName) => {
-      const nodeType: NodeType = nodes[nodeName]
+
+  return Object.entries(nodes)
+    .filter(([nodeName]) => !excludeNodes.includes(nodeName))
+    .map(([nodeName, nodeType]) => {
       const selector = nodeType.spec.parseDOM?.[0]?.tag || nodeName
       const { tag, requiredAttribute, value } = parseSelector(selector)
       const { attrs = {}, ...restOfSpec } = nodeType.spec
@@ -136,15 +139,14 @@ function initGenerateBlueprintHTML(editor: Editor) {
       Youtube.extend({
         renderHTML({ node, HTMLAttributes }) {
           const attrs = (node.type.spec.attrs ??= {})
-          const filteredAttributes = Object.keys(attrs).reduce(
-            (acc, key) => {
-              if (HTMLAttributes[key] !== attrs[key].default) {
-                acc[key] = HTMLAttributes[key]
-              }
-              return acc
-            },
-            {} as Partial<typeof node.type.spec.attrs>
-          )
+          const filteredAttributes = Object.keys(attrs).reduce<
+            Partial<typeof node.type.spec.attrs>
+          >((acc, key) => {
+            if (HTMLAttributes[key] !== attrs[key]?.default) {
+              acc[key] = HTMLAttributes[key]
+            }
+            return acc
+          }, {})
           const domOutputSpec = this.parent?.({ node, HTMLAttributes })
 
           if (domOutputSpec && Array.isArray(domOutputSpec) && domOutputSpec[2]?.[1]) {

@@ -68,14 +68,14 @@ export default {
       {
         name: 'mi-{icon}',
         resolve: ({ icon }) => ({
-          content: icon,
+          content: icon || '',
           class: 'material-symbols-rounded'
         })
       },
       {
         name: '{icon}',
         resolve: ({ icon }) => ({
-          content: icon,
+          content: icon || '',
           class: 'material-symbols-rounded'
         })
       }

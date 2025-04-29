@@ -13,7 +13,7 @@
     // will error if you have not checked a key has a value
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    // type import will be removed from js
+    // type imports will be removed from js
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     // Generate d.ts files

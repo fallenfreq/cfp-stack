@@ -30,7 +30,8 @@ const resolveVar = (variables: Variables, varName: string, lookupVariables: Vari
 const resolveAllVars = (variables: Variables, lookupVariables: Variables) => {
   const resolvedVars: Variables = {}
   for (const key of Object.keys(variables)) {
-    resolvedVars[key] = resolveVar(variables, key, lookupVariables)
+    const resolvedVar = resolveVar(variables, key, lookupVariables)
+    if (resolvedVar) resolvedVars[key] = resolvedVar
   }
   return resolvedVars
 }
