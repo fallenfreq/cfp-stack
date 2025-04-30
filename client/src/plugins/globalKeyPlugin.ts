@@ -10,8 +10,9 @@ const keyFunctionMap: KeyFunctionMap = {}
 const handleKeydown = (event: KeyboardEvent): void => {
   const keyCombo = `${event.metaKey ? 'Cmd+' : ''}${event.ctrlKey ? 'Ctrl+' : ''}${event.shiftKey ? 'Shift+' : ''}${event.altKey ? 'Alt+' : ''}${event.key}`
 
-  if (keyFunctionMap[keyCombo]) {
-    keyFunctionMap[keyCombo]()
+  const keyFunction = keyFunctionMap[keyCombo]
+  if (keyFunction) {
+    keyFunction()
   }
 }
 

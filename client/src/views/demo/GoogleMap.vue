@@ -120,12 +120,12 @@ watch(
     // Add Autocomplete
     const autocompleteEl = googleAutocomplete.value.root
     autocompleteEl.classList.add(mapsControlsStyle['spacing'])
-    mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT].push(autocompleteEl)
+    mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT]?.push(autocompleteEl)
 
     // Add Marker Switch
     const addMarkerSwitchEl = addMarkerSwitch.value.root
     addMarkerSwitchEl.classList.add(mapsControlsStyle['spacing'])
-    mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT].push(addMarkerSwitchEl)
+    mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT]?.push(addMarkerSwitchEl)
 
     useToast().notify({
       duration: 10000,
@@ -293,7 +293,7 @@ Tags</pre>
             v-for="(tag, index) in sheetContent.content.tags"
             :key="index"
             size="small"
-            :color="deleteMode ? 'danger' : undefined"
+            :color="deleteMode ? 'danger' : ''"
             @click="
               async () => {
                 if (deleteMode) {

@@ -5,6 +5,8 @@
     "tailwind.config.js",
     "vuestic.my.config.ts",
     "env.d.ts",
+    "src/**/*.js",
+    "src/**/*.vue",
     "./src/**/*.ts",
     "./src/**/*.d.ts",
     "./src/**/*.vue",
