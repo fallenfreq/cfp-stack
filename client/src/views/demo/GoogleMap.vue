@@ -14,9 +14,9 @@ import { useToast } from 'vuestic-ui'
 import { useMarkerStore } from '@/stores/markerStore'
 import { faPlus, faMinus, faPen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { initPromptModalRename } from '@/services/promptModal'
+import { initPromptModal } from '@/services/promptModal'
 
-const showPrompt = initPromptModalRename(getCurrentInstance()?.appContext)
+const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
 
 // import zitadelAuth from '@/services/zitadelAuth'
 // const user = computed(() => zitadelAuth.oidcAuth.userProfile)

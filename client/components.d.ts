@@ -20,7 +20,7 @@ declare module 'vue' {
     MiniMothLogo: typeof import('./src/components/brand/MiniMothLogo.vue')['default']
     MothLogo: typeof import('./src/components/brand/MothLogo.vue')['default']
     MothWordmark: typeof import('./src/components/brand/MothWordmark.vue')['default']
-    PromptModalRename: typeof import('./src/components/input/PromptModalRename.vue')['default']
+    PromptModal: typeof import('./src/components/input/PromptModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SlashCommands: typeof import('./src/components/editor/SlashCommands.vue')['default']
