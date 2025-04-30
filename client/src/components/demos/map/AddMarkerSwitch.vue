@@ -8,7 +8,7 @@ import { useToast } from 'vuestic-ui'
 import { useMarkerStore } from '@/stores/markerStore'
 import { useMapStore } from '@/stores/mapStore'
 import { useQuery } from '@tanstack/vue-query'
-import { initPromptModal } from '@/services/promptModal'
+import { initPromptModalRename } from '@/services/promptModal'
 
 export type MapMarkerItem = {
   mapMarkersId: number
@@ -19,7 +19,7 @@ export type MapMarkerItem = {
   markerInstance: google.maps.marker.AdvancedMarkerElement
 }
 
-const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
+const showPrompt = initPromptModalRename(getCurrentInstance()?.appContext)
 
 const mapStore = useMapStore()
 if (!mapStore.map) {

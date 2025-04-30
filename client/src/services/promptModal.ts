@@ -1,5 +1,5 @@
 import { createApp, ref, type AppContext } from 'vue'
-import PromptModal from '@/components/input/PromptModal.vue'
+import PromptModalRename from '@/components/input/PromptModalRename.vue'
 import { vuestic } from '@/main'
 import { useColors } from 'vuestic-ui'
 
@@ -30,14 +30,14 @@ const handleClose = (value: string | null) => {
 }
 
 // Mount the modal component globally
-const initPromptModal = (appContext?: AppContext) => {
+const initPromptModalRename = (appContext?: AppContext) => {
   if (!modalInstance) {
     // Create only one container
     modalInstance = document.createElement('div')
     document.body.appendChild(modalInstance)
 
     // Create only one app instance
-    appInstance = createApp(PromptModal, {
+    appInstance = createApp(PromptModalRename, {
       isVisible,
       message: message,
       rootCurrentPresetName: currentPresetName,
@@ -54,4 +54,4 @@ const initPromptModal = (appContext?: AppContext) => {
   return showPrompt
 }
 
-export { initPromptModal }
+export { initPromptModalRename }
