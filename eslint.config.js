@@ -2,11 +2,12 @@ import js from '@eslint/js'
 import json from '@eslint/json'
 import markdown from '@eslint/markdown'
 import stylistic from '@stylistic/eslint-plugin'
-import { defineConfig } from 'eslint/config'
+import { defineConfig, globalIgnores } from 'eslint/config'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
+  globalIgnores(['**/dist'], 'Ignore dist directory'),
   {
     files: ['**/*.{js,mjs,cjs,ts}'],
     plugins: { js },
@@ -41,7 +42,6 @@ export default defineConfig([
       '@stylistic': stylistic
     },
     languageOptions: { parser: tseslint.parser, sourceType: 'module', globals: globals.node },
-    ignores: ['**/dist'],
     rules: {
       '@stylistic/operator-linebreak': ['error', 'before'],
       '@typescript-eslint/no-explicit-any': 'off'
