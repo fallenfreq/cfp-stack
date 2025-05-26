@@ -10,6 +10,6 @@ const config = {
 	printWidth: 100,
 	trailingComma: 'none',
 	plugins: ['prettier-plugin-organize-imports']
-};
+}
 
-export default config;
+export default config
