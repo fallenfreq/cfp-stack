@@ -1,5 +1,5 @@
-import { httpBatchLink, createTRPCClient } from '@trpc/client'
 import zitadelAuth from '@/services/zitadelAuth'
+import { createTRPCClient, httpBatchLink } from '@trpc/client'
 
 import type { AppRouter } from '@somefreq-app/api/appRouter'
 import superjson from 'superjson'
@@ -10,17 +10,17 @@ const { VITE_API_PORT, VITE_API_HOST } = import.meta.env
 // what procedures are available on the server and their input/output types.
 
 const trpc = createTRPCClient<AppRouter>({
-  links: [
-    httpBatchLink({
-      transformer: superjson,
-      url: `${VITE_API_PORT === '443' ? 'https' : 'http'}://${VITE_API_HOST}:${VITE_API_PORT}/trpc`,
-      headers: () => {
-        return {
-          Authorization: 'Bearer ' + zitadelAuth.oidcAuth.accessToken
-        }
-      }
-    })
-  ]
+	links: [
+		httpBatchLink({
+			transformer: superjson,
+			url: `${VITE_API_PORT === '443' ? 'https' : 'http'}://${VITE_API_HOST}:${VITE_API_PORT}/trpc`,
+			headers: () => {
+				return {
+					Authorization: 'Bearer ' + zitadelAuth.oidcAuth.accessToken
+				}
+			}
+		})
+	]
 })
 
 export { trpc }

@@ -2,12 +2,12 @@
 import { createLowlight } from 'lowlight'
 
 // You can also register languages individually
-import xml from 'highlight.js/lib/languages/xml'
 import css from 'highlight.js/lib/languages/css'
-import json from 'highlight.js/lib/languages/json'
 import js from 'highlight.js/lib/languages/javascript'
-import ts from 'highlight.js/lib/languages/typescript'
+import json from 'highlight.js/lib/languages/json'
 import py from 'highlight.js/lib/languages/python'
+import ts from 'highlight.js/lib/languages/typescript'
+import xml from 'highlight.js/lib/languages/xml'
 
 // Create a lowlight instance
 const lowlight = createLowlight()

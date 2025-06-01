@@ -7,62 +7,55 @@ import 'vue-oidc-client/vue3'
 
 // REDIRECT SETTINGS need to be set in the zitadel app correctly for login page to work
 const zitadelAuth = createZITADELAuth(
-  {
-    project_resource_id: import.meta.env.VITE_API_ZITADEL_PROJECT_RESOURCE_ID,
-    client_id: import.meta.env.VITE_API_ZITADEL_CLIENT_ID,
-    issuer: import.meta.env.VITE_API_ZITADEL_ISSUER
-  },
-  undefined,
-  undefined,
-  undefined,
-  {
-    scope: [
-      'openid',
-      'profile',
-      'email',
-      'offline_access',
-      `urn:zitadel:iam:org:project:id:${import.meta.env.VITE_API_ZITADEL_PROJECT_RESOURCE_ID}:aud`,
-      'urn:zitadel:iam:org:projects:roles',
-      'urn:zitadel:iam:user:metadata'
-    ].join(' ')
-  }
+	{
+		project_resource_id: import.meta.env.VITE_API_ZITADEL_PROJECT_RESOURCE_ID,
+		client_id: import.meta.env.VITE_API_ZITADEL_CLIENT_ID,
+		issuer: import.meta.env.VITE_API_ZITADEL_ISSUER
+	},
+	undefined,
+	undefined,
+	undefined,
+	{
+		scope: [
+			'openid',
+			'profile',
+			'email',
+			'offline_access',
+			`urn:zitadel:iam:org:project:id:${import.meta.env.VITE_API_ZITADEL_PROJECT_RESOURCE_ID}:aud`,
+			'urn:zitadel:iam:org:projects:roles',
+			'urn:zitadel:iam:user:metadata'
+		].join(' ')
+	}
 )
 
 // handle events
 zitadelAuth.oidcAuth.events.addAccessTokenExpiring(function () {
-  // eslint-disable-next-line no-console
-  console.log('access token expiring')
+	console.log('access token expiring')
 })
 
 zitadelAuth.oidcAuth.events.addAccessTokenExpired(function () {
-  // eslint-disable-next-line no-console
-  console.log('access token expired')
+	console.log('access token expired')
 })
 
 zitadelAuth.oidcAuth.events.addSilentRenewError(function (err) {
-  // eslint-disable-next-line no-console
-  console.error('silent renew error', err)
+	console.error('silent renew error', err)
 })
 
 zitadelAuth.oidcAuth.events.addUserLoaded(function (user) {
-  // eslint-disable-next-line no-console
-  console.log('Decoded jwt id_token', jwtDecode(user.id_token))
-  console.log('user loaded', user)
+	console.log('Decoded jwt id_token', jwtDecode(user.id_token))
+	console.log('user loaded', user)
 })
 
 zitadelAuth.oidcAuth.events.addUserUnloaded(function () {
-  // eslint-disable-next-line no-console
-  console.log('user unloaded')
+	console.log('user unloaded')
 })
 
 zitadelAuth.oidcAuth.events.addUserSignedOut(function () {
-  // eslint-disable-next-line no-console
-  console.log('user signed out')
+	console.log('user signed out')
 })
 
 zitadelAuth.oidcAuth.events.addUserSessionChanged(function () {
-  // eslint-disable-next-line no-console
-  console.log('user session changed')
+	console.log('user session changed')
 })
 
 export default zitadelAuth

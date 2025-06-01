@@ -1,27 +1,27 @@
-import { integer, text, real, sqliteTable } from 'drizzle-orm/sqlite-core'
+import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 // Map Markers Table
 export const mapMarkers = sqliteTable('map_markers', {
-  mapMarkersId: integer('map_markers_id').primaryKey(),
-  title: text('title', { length: 256 }).notNull(),
-  lat: real('lat').notNull(),
-  lng: real('lng').notNull()
+	mapMarkersId: integer('map_markers_id').primaryKey(),
+	title: text('title', { length: 256 }).notNull(),
+	lat: real('lat').notNull(),
+	lng: real('lng').notNull()
 })
 
 // Tags Table
 export const tags = sqliteTable('tags', {
-  tagId: integer('tag_id').primaryKey(),
-  name: text('name', { length: 128 }).notNull()
+	tagId: integer('tag_id').primaryKey(),
+	name: text('name', { length: 128 }).notNull()
 })
 
 // Marker_Tags Join Table
 export const markerTags = sqliteTable('marker_tags', {
-  markerId: integer('marker_id')
-    .notNull()
-    .references(() => mapMarkers.mapMarkersId, { onDelete: 'cascade' }),
-  tagId: integer('tag_id')
-    .notNull()
-    .references(() => tags.tagId, { onDelete: 'cascade' })
+	markerId: integer('marker_id')
+		.notNull()
+		.references(() => mapMarkers.mapMarkersId, { onDelete: 'cascade' }),
+	tagId: integer('tag_id')
+		.notNull()
+		.references(() => tags.tagId, { onDelete: 'cascade' })
 })
 
 export type Tag = typeof tags.$inferSelect

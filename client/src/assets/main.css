@@ -8,70 +8,70 @@
 *,
 *::before,
 *::after {
-  transition: var(--transition);
-  border-color: rgb(var(--backgroundBorder));
+	transition: var(--transition);
+	border-color: rgb(var(--backgroundBorder));
 }
 
 *:focus-visible {
-  outline: 2px solid rgb(var(--focus));
+	outline: 2px solid rgb(var(--focus));
 }
 
 body {
-  background-color: rgb(var(--backgroundPrimary));
-  color: rgb(var(--textPrimary));
-  min-height: 100vh;
-  line-height: 1.6;
-  font-family:
-    'Source Sans Pro',
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
-  font-size: 16px;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+	background-color: rgb(var(--backgroundPrimary));
+	color: rgb(var(--textPrimary));
+	min-height: 100vh;
+	line-height: 1.6;
+	font-family:
+		'Source Sans Pro',
+		Inter,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		Roboto,
+		Oxygen,
+		Ubuntu,
+		Cantarell,
+		'Fira Sans',
+		'Droid Sans',
+		'Helvetica Neue',
+		sans-serif;
+	font-size: 16px;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 /* https://developers.google.com/fonts/docs/material_symbols */
 
 /* self hosting Material icons */
 @font-face {
-  font-family: 'Material Symbols Rounded';
-  font-style: normal;
-  font-display: block; /* Prevents FOUC by blocking until font loads */
-  src: url(/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].woff2) format('woff2');
+	font-family: 'Material Symbols Rounded';
+	font-style: normal;
+	font-display: block; /* Prevents FOUC by blocking until font loads */
+	src: url(/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].woff2) format('woff2');
 }
 
 .material-symbols-rounded {
-  font-family: 'Material Symbols Rounded';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px; /* Preferred icon size */
-  display: inline-block;
-  line-height: 1;
-  text-transform: none;
-  letter-spacing: normal;
-  word-wrap: normal;
-  white-space: nowrap;
-  direction: ltr;
+	font-family: 'Material Symbols Rounded';
+	font-weight: normal;
+	font-style: normal;
+	font-size: 24px; /* Preferred icon size */
+	display: inline-block;
+	line-height: 1;
+	text-transform: none;
+	letter-spacing: normal;
+	word-wrap: normal;
+	white-space: nowrap;
+	direction: ltr;
 }
 
 /* self hosting Material icons */
 
 /* This should be kept even if using cloud hosted */
 .material-symbols-rounded {
-  font-variation-settings:
-    'FILL' 0,
-    'wght' 400,
-    'GRAD' 0,
-    'opsz' 48;
+	font-variation-settings:
+		'FILL' 0,
+		'wght' 400,
+		'GRAD' 0,
+		'opsz' 48;
 }

@@ -1,6 +1,6 @@
+import { eq } from 'drizzle-orm'
 import { publicProcedure, router } from '../../config/trpc.js'
 import { collectionEntries } from '../../schemas/collectionEntry.js'
-import { eq } from 'drizzle-orm'
 
 // return test items or throw to test without having to add items to the database
 // return [
@@ -15,10 +15,10 @@ import { eq } from 'drizzle-orm'
 // throw new Error('not implemented')
 
 export const portfolioRouter = router({
-  entry: publicProcedure.query(async (opt) => {
-    return opt.ctx.db
-      .select()
-      .from(collectionEntries)
-      .where(eq(collectionEntries.type, 'portfolio'))
-  })
+	entry: publicProcedure.query(async (opt) => {
+		return opt.ctx.db
+			.select()
+			.from(collectionEntries)
+			.where(eq(collectionEntries.type, 'portfolio'))
+	})
 })

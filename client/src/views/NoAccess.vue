@@ -1,6 +1,6 @@
 <template>
-  <div class="flex-grow">
-    <h1>Access denied</h1>
-    <h2>You don't have the role "admin" in your ZITADEL project.</h2>
-  </div>
+	<div class="flex-grow">
+		<h1>Access denied</h1>
+		<h2>You don't have the role "admin" in your ZITADEL project.</h2>
+	</div>
 </template>

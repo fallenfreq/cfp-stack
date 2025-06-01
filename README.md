@@ -97,13 +97,13 @@ The tRPC API endpoints are prefixed with `/trpc`. Unprefixed URLs will serve the
 
 ```typescript
 trpc.secure.test
-  .query('Sending data to tRPC secure endpoint from Vue client')
-  .then((response) => {
-    console.log('tRPC secure response', response)
-  })
-  .catch((error) => {
-    console.log(error)
-  })
+	.query('Sending data to tRPC secure endpoint from Vue client')
+	.then((response) => {
+		console.log('tRPC secure response', response)
+	})
+	.catch((error) => {
+		console.log(error)
+	})
 ```
 
 ## Styling

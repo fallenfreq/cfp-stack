@@ -1,26 +1,26 @@
-import { Extension } from '@tiptap/vue-3'
 import Suggestion from '@tiptap/suggestion'
+import { Extension } from '@tiptap/vue-3'
 
 export default Extension.create({
-  name: 'commands',
+	name: 'commands',
 
-  addOptions() {
-    return {
-      suggestion: {
-        char: '/',
-        command: ({ editor, range, props }: any) => {
-          props.command({ editor, range })
-        }
-      }
-    }
-  },
+	addOptions() {
+		return {
+			suggestion: {
+				char: '/',
+				command: ({ editor, range, props }: any) => {
+					props.command({ editor, range })
+				}
+			}
+		}
+	},
 
-  addProseMirrorPlugins() {
-    return [
-      Suggestion({
-        editor: this.editor,
-        ...this.options.suggestion
-      })
-    ]
-  }
+	addProseMirrorPlugins() {
+		return [
+			Suggestion({
+				editor: this.editor,
+				...this.options.suggestion
+			})
+		]
+	}
 })

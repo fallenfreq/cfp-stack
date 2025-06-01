@@ -1,8 +1,8 @@
 {
-  "include": ["client", "api", "eslint.config.js"],
-  "compilerOptions": {
-    "allowJs": false,
-    "baseUrl": ".",
-    "paths": {}
-  }
+	"include": ["client", "api", "eslint.config.js"],
+	"compilerOptions": {
+		"allowJs": false,
+		"baseUrl": ".",
+		"paths": {}
+	}
 }

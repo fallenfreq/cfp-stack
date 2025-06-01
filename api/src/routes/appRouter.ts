@@ -1,29 +1,29 @@
-import { publicProcedure, router } from '../config/trpc.js'
 import { z } from 'zod'
+import { publicProcedure, router } from '../config/trpc.js'
+import { keysRouter } from './keys/router.js'
+import { markersRouter } from './markers/router.js'
+import { portfolioRouter } from './portfolio/router.js'
 import { secureRouter } from './secure/router.js'
 import { userRouter } from './user/router.js'
-import { portfolioRouter } from './portfolio/router.js'
-import { markersRouter } from './markers/router.js'
-import { keysRouter } from './keys/router.js'
 
 const appRouter = router({
-  secure: secureRouter,
+	secure: secureRouter,
 
-  keys: keysRouter,
+	keys: keysRouter,
 
-  user: userRouter,
+	user: userRouter,
 
-  mapMarker: markersRouter,
+	mapMarker: markersRouter,
 
-  portfolio: portfolioRouter,
+	portfolio: portfolioRouter,
 
-  test: publicProcedure.query(async () => {
-    return 'Some stuff'
-  }),
+	test: publicProcedure.query(async () => {
+		return 'Some stuff'
+	}),
 
-  echo: publicProcedure.input(z.object({ name: z.string() })).query(async (opts) => {
-    return 'Echo back: ' + opts.input.name
-  })
+	echo: publicProcedure.input(z.object({ name: z.string() })).query(async (opts) => {
+		return 'Echo back: ' + opts.input.name
+	})
 })
 
 export { appRouter }

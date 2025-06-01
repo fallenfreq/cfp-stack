@@ -1,38 +1,38 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.png?v=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script>
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark')
-      }
-    </script>
-    <title>somefreq</title>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" href="/favicon.png?v=1" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<script>
+			if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+				document.documentElement.classList.add('dark')
+			}
+		</script>
+		<title>somefreq</title>
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;1,700&display=swap"
-      rel="stylesheet"
-    />
-    <!--
+		<link
+			href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;1,700&display=swap"
+			rel="stylesheet"
+		/>
+		<!--
     Uncomment and remove the self-hosted preload to return to cloud-hosted icons
     and set the icon_names you want to load
     -->
-    <!-- <link
+		<!-- <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200?icon_names=home,palette,settings&display=block"
     /> -->
-    <link
-      rel="preload"
-      href="/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin="anonymous"
-    />
-  </head>
-  <body>
-    <div class="min-h-screen flex flex-col" id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+		<link
+			rel="preload"
+			href="/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+		/>
+	</head>
+	<body>
+		<div class="min-h-screen flex flex-col" id="app"></div>
+		<script type="module" src="/src/main.ts"></script>
+	</body>
 </html>

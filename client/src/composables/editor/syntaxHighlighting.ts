@@ -1,5 +1,5 @@
-import { ref, watch, onMounted, onUnmounted } from 'vue'
 import type { Theme } from '@/constants/theme'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 // import 'highlight.js/lib/common'
 import { useDarkModeStore } from '@/stores/darkModeStore'
 
@@ -13,42 +13,42 @@ import darkTheme from 'highlight.js/styles/base16/ros-pine-moon.min.css?url'
 // import pinkTheme3 from 'highlight.js/styles/base16/atelier-cave-light.min.css?url'
 
 const themes: Record<Theme, string> = {
-  light: lightTheme,
-  dark: darkTheme,
-  pink: darkTheme
+	light: lightTheme,
+	dark: darkTheme,
+	pink: darkTheme
 }
 
 const useSyntaxHighlighting = () => {
-  const darkModeStore = useDarkModeStore()
-  const themeLink = ref<HTMLLinkElement | null>(null)
+	const darkModeStore = useDarkModeStore()
+	const themeLink = ref<HTMLLinkElement | null>(null)
 
-  const updateHighlightTheme = (theme: Theme) => {
-    if (!themeLink.value) {
-      themeLink.value = document.createElement('link')
-      themeLink.value.rel = 'stylesheet'
-      themeLink.value.type = 'text/css'
-      document.head.appendChild(themeLink.value)
-    }
+	const updateHighlightTheme = (theme: Theme) => {
+		if (!themeLink.value) {
+			themeLink.value = document.createElement('link')
+			themeLink.value.rel = 'stylesheet'
+			themeLink.value.type = 'text/css'
+			document.head.appendChild(themeLink.value)
+		}
 
-    themeLink.value.href = themes[theme]
-  }
-  watch(
-    () => darkModeStore.mode,
-    (newVal) => {
-      updateHighlightTheme(newVal)
-    }
-  )
+		themeLink.value.href = themes[theme]
+	}
+	watch(
+		() => darkModeStore.mode,
+		(newVal) => {
+			updateHighlightTheme(newVal)
+		}
+	)
 
-  onMounted(() => {
-    updateHighlightTheme(darkModeStore.mode)
-  })
+	onMounted(() => {
+		updateHighlightTheme(darkModeStore.mode)
+	})
 
-  onUnmounted(() => {
-    if (themeLink.value) {
-      themeLink.value.remove()
-      themeLink.value = null
-    }
-  })
+	onUnmounted(() => {
+		if (themeLink.value) {
+			themeLink.value.remove()
+			themeLink.value = null
+		}
+	})
 }
 
 export { useSyntaxHighlighting }

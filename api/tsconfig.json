@@ -1,12 +1,12 @@
 {
-  "files": [],
-  // src needs to build before functions because functions depends on src
-  "references": [
-    {
-      "path": "./tsconfig.src.json"
-    },
-    {
-      "path": "./tsconfig.functions.json"
-    }
-  ]
+	"files": [],
+	// src needs to build before functions because functions depends on src
+	"references": [
+		{
+			"path": "./tsconfig.src.json"
+		},
+		{
+			"path": "./tsconfig.functions.json"
+		}
+	]
 }

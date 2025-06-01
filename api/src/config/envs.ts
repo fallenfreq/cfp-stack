@@ -2,20 +2,20 @@ import { z } from 'zod'
 
 // Custom Zod validator for D1Database
 const d1DatabaseSchema = z.custom<D1Database>(
-  (value) => typeof value === 'object' && value !== null && 'prepare' in value,
-  { message: 'Invalid D1Database instance' }
+	(value) => typeof value === 'object' && value !== null && 'prepare' in value,
+	{ message: 'Invalid D1Database instance' }
 )
 
 // Define the schema using zod
 const envSchema = z.object({
-  ZITADEL_CLIENT_ID: z.string(),
-  ZITADEL_CLIENT_SECRET: z.string(),
-  ZITADEL_INTROSPECTION_ENDPOINT: z.string(),
-  SMTP_OUT_SERVER: z.string(),
-  SMTP_OUT_PORT_TLS: z.string(),
-  SMTP_PASSWORD: z.string(),
-  GOOGLE_MAPS_API_KEY: z.string(),
-  DB: d1DatabaseSchema
+	ZITADEL_CLIENT_ID: z.string(),
+	ZITADEL_CLIENT_SECRET: z.string(),
+	ZITADEL_INTROSPECTION_ENDPOINT: z.string(),
+	SMTP_OUT_SERVER: z.string(),
+	SMTP_OUT_PORT_TLS: z.string(),
+	SMTP_PASSWORD: z.string(),
+	GOOGLE_MAPS_API_KEY: z.string(),
+	DB: d1DatabaseSchema
 })
 
 // Infer the type from the schema
@@ -24,23 +24,23 @@ let validatedEnv: Envs | null = null
 
 // Function to initialize and validate environment variables
 function initEnvs(envs: any) {
-  validatedEnv = envSchema.parse(envs)
+	validatedEnv = envSchema.parse(envs)
 }
 
 // Function to retrieve a specific environment variable
 function getEnv<Key extends keyof Envs>(key: Key): Envs[Key] {
-  if (!validatedEnv) {
-    throw new Error('Environment variables have not been initialized')
-  }
-  return validatedEnv[key]
+	if (!validatedEnv) {
+		throw new Error('Environment variables have not been initialized')
+	}
+	return validatedEnv[key]
 }
 
 // Optionally, you can expose all validated environment variables
 function getAllEnvs() {
-  if (!validatedEnv) {
-    throw new Error('Environment variables have not been initialised')
-  }
-  return validatedEnv
+	if (!validatedEnv) {
+		throw new Error('Environment variables have not been initialised')
+	}
+	return validatedEnv
 }
 
-export { initEnvs, getEnv, getAllEnvs, type Envs }
+export { getAllEnvs, getEnv, initEnvs, type Envs }
