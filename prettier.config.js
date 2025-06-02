@@ -9,7 +9,8 @@ const config = {
 	singleQuote: true,
 	printWidth: 100,
 	trailingComma: 'none',
-	plugins: ['prettier-plugin-organize-imports']
+	plugins: ['prettier-plugin-organize-imports'],
+	organizeImportsSkipDestructiveCodeActions: true
 }
 
 export default config

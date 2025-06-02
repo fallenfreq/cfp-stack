@@ -1,10 +1,9 @@
-import base from '../eslint.config.js'
-
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 import { defineConfig } from 'eslint/config'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import base from '../eslint.config.js'
 
 export default defineConfig([
 	...base,
