@@ -8,9 +8,13 @@ const config = {
 	tabWidth: 2,
 	singleQuote: true,
 	printWidth: 100,
-	trailingComma: 'none',
-	plugins: ['prettier-plugin-organize-imports'],
-	organizeImportsSkipDestructiveCodeActions: true
+	trailingComma: 'all',
+	plugins: [
+		'prettier-plugin-organize-imports',
+		'prettier-plugin-multiline-arrays',
+	],
+	organizeImportsSkipDestructiveCodeActions: true,
+	experimentalOperatorPosition: 'start',
 }
 
 export default config
