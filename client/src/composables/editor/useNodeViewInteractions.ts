@@ -84,6 +84,8 @@ export function useNodeViewInteractions() {
 		}
 	}
 
+	const _domListenerMap = new WeakMap<Editor, HTMLElement>()
+
 	watch(
 		editor,
 		(newEditor, oldEditor) => {
@@ -93,7 +95,9 @@ export function useNodeViewInteractions() {
 			}
 			if (newEditor) {
 				newEditor.on('selectionUpdate', onEditorSelectionUpdate)
+
 				newEditor.view.dom.addEventListener('focusin', onEditorFocusIn)
+				_domListenerMap.set(newEditor, newEditor.view.dom)
 			}
 		},
 		{ immediate: true }
@@ -108,14 +112,10 @@ export function useNodeViewInteractions() {
 
 		if (editor.value) {
 			editor.value.off('selectionUpdate', onEditorSelectionUpdate)
-			// try a time delay on this and see if I can get the error locally
-			console.log('editor.value.view', editor.value.view)
-			console.log('isDestroyed', editor.value?.view.isDestroyed)
-			setTimeout(() => {
-				console.log('editor.value', editor.value)
-				console.log('isDestroyed', editor.value?.view.isDestroyed)
-				editor.value?.view.dom.removeEventListener('focusin', onEditorFocusIn)
-			}, 5000)
+			console.log({ _domListenerMap })
+			// Remove focusin listeners from all elements tracked in _domListenerMap
+			_domListenerMap.get(editor.value)?.removeEventListener('focusin', onEditorFocusIn)
+			// editor.value.view.dom.removeEventListener('focusin', onEditorFocusIn)
 		}
 	})
 }
