@@ -25,7 +25,7 @@ const nodesWithStyle = [
 	'tableHeader',
 	'tableRow',
 	'taskItem',
-	'taskList'
+	'taskList',
 ]
 
 const AllowAttributesExtension = Extension.create({
@@ -40,26 +40,26 @@ const AllowAttributesExtension = Extension.create({
 						parseHTML: (element) => element.getAttribute('style'),
 						renderHTML: (attributes) => {
 							return attributes.style ? { style: attributes.style } : null
-						}
+						},
 					},
 					class: {
 						default: '',
 						parseHTML: (element) => element.classList.value,
 						renderHTML: (attributes) => {
 							return attributes.class ? { class: attributes.class } : null
-						}
+						},
 					},
 					id: {
 						default: null,
 						parseHTML: (element) => element.getAttribute('id'),
 						renderHTML: (attributes) => {
 							return attributes.id ? { id: attributes.id } : null
-						}
-					}
-				}
-			}
+						},
+					},
+				},
+			},
 		]
-	}
+	},
 })
 
 export { AllowAttributesExtension }

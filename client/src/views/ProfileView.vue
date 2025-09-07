@@ -15,8 +15,8 @@ axios
 		headers: {
 			'Content-Type': 'application/json',
 			Accept: 'application/json',
-			Authorization: 'Bearer ' + zitadelAuth.oidcAuth.accessToken
-		}
+			Authorization: 'Bearer ' + zitadelAuth.oidcAuth.accessToken,
+		},
 	})
 	.then((response) => {
 		console.log('Zitadel response.data', response.data)
@@ -49,7 +49,7 @@ const claims = computed(() => {
 							}
 							return decodedObj
 						})
-					: user.value[key]
+					: user.value[key],
 		}))
 	}
 	return []
@@ -58,10 +58,13 @@ const claims = computed(() => {
 <template>
 	<div>
 		<h1>This is a login-protected page</h1>
-		<h2>The following profile data is extended by information from ZITADELs userinfo endpoint.</h2>
+		<h2>
+			The following profile data is extended by information from ZITADELs userinfo endpoint.
+		</h2>
 		<ul class="claims">
 			<li v-for="c in claims" :key="c.key">
-				<strong>{{ c.key }}</strong>: {{ c.value }}
+				<strong>{{ c.key }}</strong
+				>: {{ c.value }}
 			</li>
 		</ul>
 	</div>

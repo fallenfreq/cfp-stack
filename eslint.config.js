@@ -9,13 +9,13 @@ import tseslint from 'typescript-eslint'
 export default defineConfig([
 	globalIgnores(
 		['**/dist', '**/node_modules', '**/_demos', './api/{client_dist, functions}'],
-		'Global Ignores'
+		'Global Ignores',
 	),
 	{
 		files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
 		plugins: { js },
 		extends: ['js/recommended'],
-		languageOptions: { globals: globals.node }
+		languageOptions: { globals: globals.node },
 	},
 	tseslint.configs.strict,
 	tseslint.configs.stylistic,
@@ -24,25 +24,25 @@ export default defineConfig([
 		ignores: ['tsconfig.*json'],
 		plugins: { json },
 		language: 'json/json',
-		extends: ['json/recommended']
+		extends: ['json/recommended'],
 	},
 	{
 		files: ['**/*.jsonc', '**/tsconfig.*json', '.vscode/settings.json'],
 		plugins: { json },
 		language: 'json/jsonc',
-		extends: ['json/recommended']
+		extends: ['json/recommended'],
 	},
 	{
 		files: ['**/*.md'],
 		plugins: { markdown },
 		language: 'markdown/commonmark',
-		extends: ['markdown/recommended']
+		extends: ['markdown/recommended'],
 	},
 	// This can be used isolated to add individual rules over prettier
 	{
 		files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
 		plugins: {
-			'@stylistic': stylistic
+			'@stylistic': stylistic,
 		},
 		languageOptions: { parser: tseslint.parser, sourceType: 'module', globals: globals.node },
 		rules: {
@@ -61,9 +61,9 @@ export default defineConfig([
 					caughtErrorsIgnorePattern: '^_',
 					destructuredArrayIgnorePattern: '^_',
 					varsIgnorePattern: '^_',
-					ignoreRestSiblings: true
-				}
-			]
-		}
-	}
+					ignoreRestSiblings: true,
+				},
+			],
+		},
+	},
 ])

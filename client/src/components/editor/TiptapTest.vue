@@ -2,7 +2,8 @@
 	<div class="p-2">
 		<h1 class="text-2xl">Uneditable Heading</h1>
 		<p>
-			These sections are interactive but they are not editable as they are not apart of the editor.
+			These sections are interactive but they are not editable as they are not apart of the
+			editor.
 		</p>
 		<VaButton @click="onclick"> Click me </VaButton>
 		<p>Button clicked {{ count }} times</p>

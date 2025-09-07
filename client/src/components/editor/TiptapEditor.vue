@@ -139,7 +139,10 @@ const editor = useEditor({
 			},
 		}).configure({ levels: [1, 2, 3] }),
 		Image,
-		Table.configure({ allowTableNodeSelection: true, HTMLAttributes: { class: 'tiptap-table' } }),
+		Table.configure({
+			allowTableNodeSelection: true,
+			HTMLAttributes: { class: 'tiptap-table' },
+		}),
 		TableCell,
 		TableHeader,
 		TableRow,

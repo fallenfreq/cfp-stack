@@ -37,7 +37,7 @@ const selectedLanguage = computed({
 	},
 	set(language: string) {
 		props.updateAttributes({ language })
-	}
+	},
 })
 </script>
 

@@ -22,7 +22,7 @@ export const useMarkerStore = defineStore('markerStore', () => {
 		if (!selectedTags.value.length) return Object.values(allMarkers.value)
 		const tags = selectedTags.value
 		return Object.values(allMarkers.value).filter((marker) =>
-			tags.some((tag) => marker.tags.includes(tag))
+			tags.some((tag) => marker.tags.includes(tag)),
 		)
 	})
 
@@ -34,11 +34,11 @@ export const useMarkerStore = defineStore('markerStore', () => {
 			lng: number
 			tags: string[]
 		},
-		markerInstance: google.maps.marker.AdvancedMarkerElement
+		markerInstance: google.maps.marker.AdvancedMarkerElement,
 	) => {
 		allMarkers.value[markerData.mapMarkersId] = {
 			...markerData,
-			markerInstance
+			markerInstance,
 		}
 	}
 
@@ -69,6 +69,6 @@ export const useMarkerStore = defineStore('markerStore', () => {
 		filteredMarkers,
 		addMarker,
 		removeMarker,
-		allTags
+		allTags,
 	}
 })

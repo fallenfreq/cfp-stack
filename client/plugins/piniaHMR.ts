@@ -10,7 +10,7 @@ export function piniaHMRPlugin(): Plugin {
 			// Only process store files
 			if (id.includes('/stores/') && id.endsWith('.ts')) {
 				const ast = parse(code, {
-					parser: typescriptParser
+					parser: typescriptParser,
 				})
 
 				let hasHMR = false
@@ -43,7 +43,7 @@ export function piniaHMRPlugin(): Plugin {
 							hasHMR = true
 						}
 						this.traverse(path)
-					}
+					},
 				})
 
 				// Only wrap `defineStore` calls if no HMR logic exists
@@ -51,11 +51,13 @@ export function piniaHMRPlugin(): Plugin {
 					// Add `acceptHMRUpdate` to the existing Pinia import if it exists
 					if (!hasAcceptHMRImport && piniaImportNode) {
 						piniaImportNode = piniaImportNode as n.ImportDeclaration
-						piniaImportNode.specifiers?.push(b.importSpecifier(b.identifier('acceptHMRUpdate')))
+						piniaImportNode.specifiers?.push(
+							b.importSpecifier(b.identifier('acceptHMRUpdate')),
+						)
 					} else if (!hasAcceptHMRImport) {
 						// Add a new import statement if no Pinia import exists
 						const importStatement = parse(`import { acceptHMRUpdate } from 'pinia';`, {
-							parser: typescriptParser
+							parser: typescriptParser,
 						})
 						ast.program.body.unshift(importStatement.program.body[0])
 					}
@@ -63,7 +65,10 @@ export function piniaHMRPlugin(): Plugin {
 					// Wrap all `defineStore` calls in IIFEs that include HMR logic
 					visit(ast, {
 						visitCallExpression(path) {
-							if (n.Identifier.check(path.node.callee) && path.node.callee.name === 'defineStore') {
+							if (
+								n.Identifier.check(path.node.callee)
+								&& path.node.callee.name === 'defineStore'
+							) {
 								const storeIIFE = b.callExpression(
 									b.arrowFunctionExpression(
 										[],
@@ -71,8 +76,8 @@ export function piniaHMRPlugin(): Plugin {
 											b.variableDeclaration('const', [
 												b.variableDeclarator(
 													b.identifier('store'),
-													path.node // The original `defineStore(...)` call
-												)
+													path.node, // The original `defineStore(...)` call
+												),
 											]),
 											b.ifStatement(
 												b.identifier('import.meta.hot'),
@@ -82,24 +87,29 @@ export function piniaHMRPlugin(): Plugin {
 															b.memberExpression(
 																b.memberExpression(
 																	b.identifier('import.meta'),
-																	b.identifier('hot')
+																	b.identifier('hot'),
 																),
-																b.identifier('accept')
+																b.identifier('accept'),
 															),
 															[
-																b.callExpression(b.identifier('acceptHMRUpdate'), [
-																	b.identifier('store'),
-																	b.identifier('import.meta.hot')
-																])
-															]
-														)
-													)
-												])
+																b.callExpression(
+																	b.identifier('acceptHMRUpdate'),
+																	[
+																		b.identifier('store'),
+																		b.identifier(
+																			'import.meta.hot',
+																		),
+																	],
+																),
+															],
+														),
+													),
+												]),
 											),
-											b.returnStatement(b.identifier('store'))
-										])
+											b.returnStatement(b.identifier('store')),
+										]),
 									),
-									[]
+									[],
 								)
 
 								// Replace the original `defineStore(...)` call with the IIFE
@@ -109,7 +119,7 @@ export function piniaHMRPlugin(): Plugin {
 								return false
 							}
 							this.traverse(path)
-						}
+						},
 					})
 				}
 
@@ -118,6 +128,6 @@ export function piniaHMRPlugin(): Plugin {
 				return updatedCode
 			}
 			return code
-		}
+		},
 	}
 }

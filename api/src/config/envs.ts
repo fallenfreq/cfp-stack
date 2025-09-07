@@ -3,7 +3,7 @@ import { z } from 'zod'
 // Custom Zod validator for D1Database
 const d1DatabaseSchema = z.custom<D1Database>(
 	(value) => typeof value === 'object' && value !== null && 'prepare' in value,
-	{ message: 'Invalid D1Database instance' }
+	{ message: 'Invalid D1Database instance' },
 )
 
 // Define the schema using zod
@@ -15,7 +15,7 @@ const envSchema = z.object({
 	SMTP_OUT_PORT_TLS: z.string(),
 	SMTP_PASSWORD: z.string(),
 	GOOGLE_MAPS_API_KEY: z.string(),
-	DB: d1DatabaseSchema
+	DB: d1DatabaseSchema,
 })
 
 // Infer the type from the schema

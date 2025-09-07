@@ -15,13 +15,14 @@ export default {
 			{
 				'py-3 px-3.5': props.size == 'large',
 				'py-1.5 px-2': props.size == 'small',
-				'py-2 px-3': props.size == null
+				'py-2 px-3': props.size == null,
 			},
 
 			// Shape
 			{ 'rounded-md': parent.instance.$name !== 'InputGroup' },
 			{
-				'first:rounded-l-md rounded-none last:rounded-r-md': parent.instance.$name == 'InputGroup'
+				'first:rounded-l-md rounded-none last:rounded-r-md':
+					parent.instance.$name == 'InputGroup',
 			},
 			{ 'border-0 border-y border-l last:border-r': parent.instance.$name == 'InputGroup' },
 			{ 'first:ml-0 -ml-px': parent.instance.$name == 'InputGroup' && !props.showButtons },
@@ -45,7 +46,7 @@ export default {
 				'focus:outline-none focus:outline-offset-0 focus:ring-1 focus:ring-primary-500 dark:focus:ring-primary-400 focus:z-10':
 					!context.disabled,
 				'bg-surface-200 dark:bg-surface-700 select-none pointer-events-none cursor-default':
-					context.disabled
+					context.disabled,
 			},
 
 			// Filled State *for FloatLabel
@@ -53,7 +54,7 @@ export default {
 
 			// Misc
 			'appearance-none',
-			'transition-colors duration-200'
-		]
-	})
+			'transition-colors duration-200',
+		],
+	}),
 }

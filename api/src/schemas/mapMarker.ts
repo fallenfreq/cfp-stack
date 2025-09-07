@@ -5,13 +5,13 @@ export const mapMarkers = sqliteTable('map_markers', {
 	mapMarkersId: integer('map_markers_id').primaryKey(),
 	title: text('title', { length: 256 }).notNull(),
 	lat: real('lat').notNull(),
-	lng: real('lng').notNull()
+	lng: real('lng').notNull(),
 })
 
 // Tags Table
 export const tags = sqliteTable('tags', {
 	tagId: integer('tag_id').primaryKey(),
-	name: text('name', { length: 128 }).notNull()
+	name: text('name', { length: 128 }).notNull(),
 })
 
 // Marker_Tags Join Table
@@ -21,7 +21,7 @@ export const markerTags = sqliteTable('marker_tags', {
 		.references(() => mapMarkers.mapMarkersId, { onDelete: 'cascade' }),
 	tagId: integer('tag_id')
 		.notNull()
-		.references(() => tags.tagId, { onDelete: 'cascade' })
+		.references(() => tags.tagId, { onDelete: 'cascade' }),
 })
 
 export type Tag = typeof tags.$inferSelect

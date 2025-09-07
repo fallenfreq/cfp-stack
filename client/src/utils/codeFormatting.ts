@@ -6,12 +6,12 @@ import prettier from 'prettier/standalone'
 const prettierOptions = {
 	html: {
 		parser: 'html',
-		plugins: [prettierPluginHtml]
+		plugins: [prettierPluginHtml],
 	},
 	javascript: {
 		parser: 'babel',
-		plugins: [prettierPluginBabel, prettierPluginEstree, prettierPluginHtml]
-	}
+		plugins: [prettierPluginBabel, prettierPluginEstree, prettierPluginHtml],
+	},
 }
 
 // Type guard to check if the language is a valid PrettierLanguage
@@ -24,7 +24,7 @@ const prettifyCode = (code: string, language: keyof typeof prettierOptions) => {
 	return prettier.format(code, {
 		parser,
 		plugins,
-		printWidth: 99999999
+		printWidth: 99999999,
 	})
 }
 

@@ -13,7 +13,7 @@ export default {
 		'text-4xl',
 		'text-5xl',
 		'text-6xl',
-		'text-7xl'
+		'text-7xl',
 	],
 	darkMode: 'selector',
 	theme: {
@@ -22,7 +22,7 @@ export default {
 			// calc is not supported in tailwind
 			// xs: 'calc(var(--xs) * 1px)',
 			xs: cssVariables.root['--xs'] + 'px',
-			...defaultTheme.screens
+			...defaultTheme.screens,
 		},
 		extend: {
 			colors: {
@@ -34,7 +34,7 @@ export default {
 					highlight: {
 						DEFAULT: 'rgb(var(--primary)/var(--primary-highlight-opacity))',
 						inverse: 'rgb(var(--primary-highlight-inverse))',
-						hover: 'rgb(var(--primary)/var(--primary-highlight-hover-opacity))'
+						hover: 'rgb(var(--primary)/var(--primary-highlight-hover-opacity))',
 					},
 					50: 'rgb(var(--primary-50))',
 					100: 'rgb(var(--primary-100))',
@@ -46,7 +46,7 @@ export default {
 					700: 'rgb(var(--primary-700))',
 					800: 'rgb(var(--primary-800))',
 					900: 'rgb(var(--primary-900))',
-					950: 'rgb(var(--primary-950))'
+					950: 'rgb(var(--primary-950))',
 				},
 				surface: {
 					0: 'rgb(var(--surface-0))',
@@ -60,7 +60,7 @@ export default {
 					700: 'rgb(var(--surface-700))',
 					800: 'rgb(var(--surface-800))',
 					900: 'rgb(var(--surface-900))',
-					950: 'rgb(var(--surface-950))'
+					950: 'rgb(var(--surface-950))',
 				},
 				secondary: 'rgb(var(--secondary))',
 				success: 'rgb(var(--success))',
@@ -74,9 +74,9 @@ export default {
 				textPrimary: 'rgb(var(--textPrimary))',
 				textInverted: 'rgb(var(--textInverted))',
 				shadow: 'rgb(var(--shadow)/var(--shadow-opacity))',
-				focus: 'rgb(var(--focus))'
-			}
-		}
+				focus: 'rgb(var(--focus))',
+			},
+		},
 	},
-	plugins: []
+	plugins: [],
 }

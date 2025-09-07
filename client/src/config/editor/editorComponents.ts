@@ -18,13 +18,13 @@ const editorComponents = {
 	VaButton: {
 		component: VaButton,
 		props: VaButton.props,
-		content: 'inline*'
+		content: 'inline*',
 	},
 	TiptapTest: {
 		component: TiptapTest,
 		props: {},
-		content: 'block*'
-	}
+		content: 'block*',
+	},
 } satisfies Record<string, ComponentData>
 
 export { editorComponents, type ComponentData }

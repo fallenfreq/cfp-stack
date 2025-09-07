@@ -6,6 +6,6 @@ export default {
 	driver: 'd1', // D1 driver
 	dbCredentials: {
 		wranglerConfigPath: '@somefreq-app/wrangler.toml', // Path to your wrangler.toml file
-		dbName: 'DB' // The binding name for your D1 database as defined in wrangler.toml
-	}
+		dbName: 'DB', // The binding name for your D1 database as defined in wrangler.toml
+	},
 } satisfies Config

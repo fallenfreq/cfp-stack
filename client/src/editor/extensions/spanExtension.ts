@@ -16,14 +16,14 @@ const Span = Node.create({
 				tag: 'span',
 				getAttrs: () => {
 					return {}
-				}
-			}
+				},
+			},
 		]
 	},
 	renderHTML({ HTMLAttributes }) {
 		// The last elements in the array are the children and 0 is the default content
 		return ['span', { ...HTMLAttributes }, 0]
-	}
+	},
 })
 
 export default Span

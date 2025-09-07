@@ -17,7 +17,7 @@ const calculatePlaceholdersNeeded = (numItems: number, columns: Breakpoints) => 
 		md: 0,
 		lg: 0,
 		xl: 0,
-		'2xl': 0
+		'2xl': 0,
 	}
 
 	for (const key of Object.keys(columns)) {
@@ -29,7 +29,8 @@ const calculatePlaceholdersNeeded = (numItems: number, columns: Breakpoints) => 
 			placeholdersNeeded[key as keyof Breakpoints] = colCount + extra
 		} else {
 			const remainder = numItems % colCount
-			placeholdersNeeded[key as keyof Breakpoints] = remainder === 0 ? 0 : colCount - remainder
+			placeholdersNeeded[key as keyof Breakpoints] =
+				remainder === 0 ? 0 : colCount - remainder
 		}
 	}
 	return placeholdersNeeded
@@ -42,7 +43,7 @@ const getMaxItemsCount = (realItemsCount: number, placeholdersNeeded: Breakpoint
 function createPlaceholders(
 	placeholdersNeeded: Breakpoints,
 	title: string,
-	classMap: Partial<Record<keyof Breakpoints, string>> = {}
+	classMap: Partial<Record<keyof Breakpoints, string>> = {},
 ) {
 	const placeholders: CollectionEntry[] = []
 	const visibilityMap = new Map<CollectionEntry, string[]>()
@@ -55,7 +56,7 @@ function createPlaceholders(
 			description: '',
 			imageUrl: '',
 			link: '',
-			content: ''
+			content: '',
 		}
 
 		const classes: string[] = ['hidden']

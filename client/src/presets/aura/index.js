@@ -5,5 +5,5 @@ import inputtext from './inputtext/index.js'
 export default {
 	global,
 	button,
-	inputtext
+	inputtext,
 }

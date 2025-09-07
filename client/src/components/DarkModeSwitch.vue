@@ -11,7 +11,13 @@
 		<template #innerLabel>
 			<div class="va-text-center">
 				<VaIcon
-					:name="store.isDarkMode == null ? '' : store.isDarkMode ? 'dark_mode' : 'light_mode'"
+					:name="
+						store.isDarkMode == null
+							? ''
+							: store.isDarkMode
+								? 'dark_mode'
+								: 'light_mode'
+					"
 				/>
 			</div>
 		</template>

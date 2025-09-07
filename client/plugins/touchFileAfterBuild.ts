@@ -17,6 +17,6 @@ export default function touchFileAfterBuild(targetFile: string): Plugin {
 			} catch (err) {
 				console.error(`Failed to touch file: ${fullPath}`, err)
 			}
-		}
+		},
 	}
 }

@@ -48,7 +48,7 @@ const prettifySelectedCode = async (editor: Editor) => {
 			duration: 10000,
 			color: 'warning',
 			position: 'bottom-right',
-			message
+			message,
 		})
 		return
 	}
@@ -58,14 +58,15 @@ const prettifySelectedCode = async (editor: Editor) => {
 
 		editor.commands.insertContentAt(
 			{ from: startPosition, to: endPosition },
-			{ type: 'text', text: formattedContent }
+			{ type: 'text', text: formattedContent },
 		)
 	} catch (error) {
 		useToast().notify({
 			duration: 10000,
 			color: 'danger',
 			position: 'bottom-right',
-			message: 'Formatting error: ' + (error instanceof Error ? error.message : 'Unknown error')
+			message:
+				'Formatting error: ' + (error instanceof Error ? error.message : 'Unknown error'),
 		})
 	}
 	editor.chain().focus().setTextSelection(anchor).run()

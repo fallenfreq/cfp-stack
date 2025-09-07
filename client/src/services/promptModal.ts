@@ -41,7 +41,7 @@ const initPromptModal = (appContext?: AppContext) => {
 			isVisible,
 			message: message,
 			rootCurrentPresetName: currentPresetName,
-			onSubmit: handleClose
+			onSubmit: handleClose,
 		})
 
 		if (appContext) {

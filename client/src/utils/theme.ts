@@ -28,13 +28,13 @@ const safeCurrentPresetName: WritableComputedRef<Theme> = computed({
 		}
 		// This should never happen, but allows the return type to be safe
 		console.error(
-			`Invalid theme detected: "${value}". Resetting to OS preference: "${useOSThemePreference().value}".`
+			`Invalid theme detected: "${value}". Resetting to OS preference: "${useOSThemePreference().value}".`,
 		)
 		return themeToOsPreference()
 	},
 	set: (value: Theme) => {
 		safeApplyPreset(value)
-	}
+	},
 })
 
 export { safeApplyPreset, safeCurrentPresetName, themeToOsPreference }

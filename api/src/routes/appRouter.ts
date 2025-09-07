@@ -23,7 +23,7 @@ const appRouter = router({
 
 	echo: publicProcedure.input(z.object({ name: z.string() })).query(async (opts) => {
 		return 'Echo back: ' + opts.input.name
-	})
+	}),
 })
 
 export { appRouter }

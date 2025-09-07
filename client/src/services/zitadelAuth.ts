@@ -10,7 +10,7 @@ const zitadelAuth = createZITADELAuth(
 	{
 		project_resource_id: import.meta.env.VITE_API_ZITADEL_PROJECT_RESOURCE_ID,
 		client_id: import.meta.env.VITE_API_ZITADEL_CLIENT_ID,
-		issuer: import.meta.env.VITE_API_ZITADEL_ISSUER
+		issuer: import.meta.env.VITE_API_ZITADEL_ISSUER,
 	},
 	undefined,
 	undefined,
@@ -23,9 +23,9 @@ const zitadelAuth = createZITADELAuth(
 			'offline_access',
 			`urn:zitadel:iam:org:project:id:${import.meta.env.VITE_API_ZITADEL_PROJECT_RESOURCE_ID}:aud`,
 			'urn:zitadel:iam:org:projects:roles',
-			'urn:zitadel:iam:user:metadata'
-		].join(' ')
-	}
+			'urn:zitadel:iam:user:metadata',
+		].join(' '),
+	},
 )
 
 // handle events

@@ -26,7 +26,9 @@ const markerStore = useMarkerStore()
 
 const clearFilter = (tag?: string) => {
 	if (tag) {
-		markerStore.selectedTags = markerStore.selectedTags.filter((selectedTag) => selectedTag !== tag)
+		markerStore.selectedTags = markerStore.selectedTags.filter(
+			(selectedTag) => selectedTag !== tag,
+		)
 	} else {
 		markerStore.selectedTags = []
 	}

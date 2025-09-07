@@ -16,27 +16,27 @@ let watchId: number | null = null // Store the watchPosition ID
 const updateLocationMarker = async (position: GeolocationPosition) => {
 	const newPosition = {
 		lat: position.coords.latitude,
-		lng: position.coords.longitude
+		lng: position.coords.longitude,
 	}
 	mapStore.setUserLocation(newPosition)
 
 	if (!currentLocationMarker) {
 		const { AdvancedMarkerElement, PinElement } = (await google.maps.importLibrary(
-			'marker'
+			'marker',
 		)) as google.maps.MarkerLibrary
-		const pin
-			= customPin.value
+		const pin =
+			customPin.value
 			|| new PinElement({
 				scale: 0.8,
 				glyph: 'U',
 				glyphColor: 'black',
-				background: 'yellow'
+				background: 'yellow',
 			}).element
 		currentLocationMarker = new AdvancedMarkerElement({
 			position: newPosition,
 			map: toRaw(mapStore.map),
 			title: 'Current Location',
-			content: pin
+			content: pin,
 		})
 	} else {
 		currentLocationMarker.position = newPosition
@@ -50,7 +50,7 @@ watch(
 		if (currentLocationMarker && mapStore.map) {
 			currentLocationMarker.map = toRaw(mapStore.map)
 		}
-	}
+	},
 )
 
 onMounted(() => {
@@ -67,7 +67,7 @@ onMounted(() => {
 		(error) => {
 			console.error('Error watching position:', error.message)
 		},
-		{ enableHighAccuracy: true } // Optional: high-accuracy mode
+		{ enableHighAccuracy: true }, // Optional: high-accuracy mode
 	)
 
 	// Watch for the first user location to set the map center
@@ -76,7 +76,7 @@ onMounted(() => {
 		() => {
 			if (mapStore.userLocation) mapStore.map?.setCenter(mapStore.userLocation)
 			stopWatching()
-		}
+		},
 	)
 })
 

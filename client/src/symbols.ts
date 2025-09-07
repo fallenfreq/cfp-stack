@@ -8,9 +8,9 @@ const injectSafe = <T>(key: InjectionKey<T>): T => {
 	return injected
 }
 
-const AddKeyCombo: InjectionKey<(keyCombo: string, func: () => void) => void>
-	= Symbol('AddKeyCombo')
+const AddKeyCombo: InjectionKey<(keyCombo: string, func: () => void) => void> =
+	Symbol('AddKeyCombo')
 
 const RemoveKeyCombo: InjectionKey<(keyCombo: string) => void> = Symbol('RemoveKeyCombo')
 
-export { AddKeyCombo, RemoveKeyCombo, injectSafe }
+export { AddKeyCombo, injectSafe, RemoveKeyCombo }

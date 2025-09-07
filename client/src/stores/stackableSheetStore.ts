@@ -25,6 +25,6 @@ export const useStackableSheetStore = defineStore('stackableSheet', () => {
 		sheetContent,
 		isSheetOpen,
 		openSheet,
-		closeSheet
+		closeSheet,
 	}
 })

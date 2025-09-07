@@ -6,7 +6,7 @@ export const collectionEntries = sqliteTable('collection_entries', {
 	description: text('description').notNull(),
 	imageUrl: text('image_url', { length: 256 }).notNull(),
 	link: text('link', { length: 256 }).notNull(),
-	content: text('content', { mode: 'json' }).notNull() //.$type<{ foo: string }>()
+	content: text('content', { mode: 'json' }).notNull(), //.$type<{ foo: string }>()
 })
 
 export type CollectionEntry = typeof collectionEntries.$inferSelect

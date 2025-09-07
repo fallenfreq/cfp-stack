@@ -47,7 +47,7 @@ const toggleAddingMarkers = () => {
 			duration: 10000,
 			color: 'info',
 			position: 'bottom-right',
-			message: 'Click on the map to add a marker.'
+			message: 'Click on the map to add a marker.',
 		})
 	} else {
 		addListenerRef.value?.remove()
@@ -73,18 +73,18 @@ const onMapClick = async (event: google.maps.MapMouseEvent) => {
 		lat: latLng.lat(),
 		lng: latLng.lng(),
 		title,
-		tags
+		tags,
 	})
 
 	const { AdvancedMarkerElement } = (await google.maps.importLibrary(
-		'marker'
+		'marker',
 	)) as google.maps.MarkerLibrary
 	const markerEl = new AdvancedMarkerElement({
 		map: toRaw(mapStore.map),
 		position: { lat: latLng.lat(), lng: latLng.lng() },
 		collisionBehavior: 'REQUIRED' as google.maps.CollisionBehavior,
 		title,
-		gmpClickable: true
+		gmpClickable: true,
 	})
 	markerEl.addListener('click', () => onMarkerClick(marker.mapMarkersId))
 
@@ -101,14 +101,14 @@ const onMarkerClick = async (mapMarkersId: number) => {
 	console.log()
 	openSheet({
 		id: 'mapMarker',
-		content: markerData
+		content: markerData,
 	})
 }
 
 // Render markers based on the store
 const renderMarkers = async () => {
 	const { AdvancedMarkerElement } = (await google.maps.importLibrary(
-		'marker'
+		'marker',
 	)) as google.maps.MarkerLibrary
 
 	//  create a LatLngBounds object to fit all markers
@@ -129,7 +129,7 @@ const renderMarkers = async () => {
 			map: toRaw(mapStore.map),
 			position: { lat: markerData.lat, lng: markerData.lng },
 			collisionBehavior: 'REQUIRED' as google.maps.CollisionBehavior,
-			title: markerData.title
+			title: markerData.title,
 		})
 		markerEl.addListener('click', () => onMarkerClick(markerData.mapMarkersId))
 		markerData.markerInstance = markerEl
@@ -144,7 +144,7 @@ const renderMarkers = async () => {
 const selectMarkers = (search?: string | number | google.maps.LatLngLiteral) => {
 	return useQuery({
 		queryKey: ['selectMarkers', search],
-		queryFn: () => trpc.mapMarker.select.query({ search })
+		queryFn: () => trpc.mapMarker.select.query({ search }),
 	})
 }
 
@@ -161,20 +161,20 @@ onMounted(async () => {
 			if (markers.value) {
 				markers.value.forEach(async (marker) => {
 					const { AdvancedMarkerElement } = (await google.maps.importLibrary(
-						'marker'
+						'marker',
 					)) as google.maps.MarkerLibrary
 					const markerEl = new AdvancedMarkerElement({
 						map: toRaw(mapStore.map),
 						position: { lat: marker.lat, lng: marker.lng },
 						collisionBehavior: 'REQUIRED' as google.maps.CollisionBehavior,
-						title: marker.title
+						title: marker.title,
 					})
 					markerStore.addMarker(marker, markerEl)
 				})
 			}
 			renderMarkers()
 		},
-		{ immediate: true }
+		{ immediate: true },
 	)
 })
 </script>

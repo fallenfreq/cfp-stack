@@ -29,7 +29,7 @@ watch(
 	() => props.items,
 	() => {
 		selectedIndex.value = 0
-	}
+	},
 )
 
 const selectItem = (index: number) => {

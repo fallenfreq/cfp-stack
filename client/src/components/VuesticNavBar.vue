@@ -51,13 +51,22 @@
 			<VaNavbarItem class="sm:hidden">
 				<VaDropdown :stick-to-edges="true" :close-on-content-click="false">
 					<template #anchor>
-						<VaButton size="large" text-color="TextPrimary" preset="secondary" icon="menu" />
+						<VaButton
+							size="large"
+							text-color="TextPrimary"
+							preset="secondary"
+							icon="menu"
+						/>
 					</template>
 
 					<VaDropdownContent class="w-64">
 						<template v-for="item in items" :key="item.title">
 							<VaSidebarItem
-								v-if="!('children' in item) && !item.outsideHamburger && item.visible()"
+								v-if="
+									!('children' in item)
+									&& !item.outsideHamburger
+									&& item.visible()
+								"
 								v-bind="getSidebarItemProps(item)"
 							>
 								<VaSidebarItemContent>
@@ -66,20 +75,35 @@
 								</VaSidebarItemContent>
 							</VaSidebarItem>
 
-							<VaAccordion v-else-if="!item.outsideHamburger && (!item.visible || item.visible())">
+							<VaAccordion
+								v-else-if="
+									!item.outsideHamburger && (!item.visible || item.visible())
+								"
+							>
 								<VaCollapse body-color="BackgroundElement">
 									<template #header="{ value: isCollapsed }">
 										<VaSidebarItem
 											:active="
-												'children' in item &&
-												item.children.some((child) => 'to' in child && child.to === route.path)
+												'children' in item
+												&& item.children.some(
+													(child) =>
+														'to' in child && child.to === route.path,
+												)
 											"
 										>
 											<VaSidebarItemContent>
 												<VaIcon :name="item.icon" />
-												<VaSidebarItemTitle>{{ item.title }}</VaSidebarItemTitle>
+												<VaSidebarItemTitle>{{
+													item.title
+												}}</VaSidebarItemTitle>
 												<VaSpacer />
-												<VaIcon :name="isCollapsed ? 'va-arrow-up' : 'va-arrow-down'" />
+												<VaIcon
+													:name="
+														isCollapsed
+															? 'va-arrow-up'
+															: 'va-arrow-down'
+													"
+												/>
 											</VaSidebarItemContent>
 										</VaSidebarItem>
 									</template>
@@ -92,7 +116,9 @@
 											>
 												<VaSidebarItemContent>
 													<VaIcon :name="child.icon" />
-													<VaSidebarItemTitle>{{ child.title }}</VaSidebarItemTitle>
+													<VaSidebarItemTitle>{{
+														child.title
+													}}</VaSidebarItemTitle>
 												</VaSidebarItemContent>
 											</VaSidebarItem>
 										</template>
@@ -135,8 +161,8 @@ type ParentMenuItem = BaseMenuItem & {
 export type MenuItem = ToMenuItem | CommandMenuItem | ParentMenuItem
 
 function createMenuItem(
-	item: Partial<BaseMenuItem> &
-		({ to: string } | { command: () => void } | { children: MenuItem[] })
+	item: Partial<BaseMenuItem>
+		& ({ to: string } | { command: () => void } | { children: MenuItem[] }),
 ): MenuItem {
 	return {
 		title: item.title ?? '',
@@ -145,14 +171,14 @@ function createMenuItem(
 		visible: item.visible ?? (() => true),
 		...('to' in item ? { to: item.to } : {}),
 		...('command' in item ? { command: item.command } : {}),
-		...('children' in item ? { children: item.children } : {})
+		...('children' in item ? { children: item.children } : {}),
 	} as MenuItem
 }
 
 function getNavButtonProps(item: MenuItem) {
 	const props: Record<string, any> = {
 		size: 'large',
-		preset: 'secondary'
+		preset: 'secondary',
 	}
 
 	if ('to' in item) {
@@ -176,9 +202,10 @@ function getDropdownAnchorButtonProps(item: MenuItem) {
 		size: 'large',
 		preset: 'secondary',
 		'text-color':
-			'children' in item && item.children.some((child) => 'to' in child && route.path === child.to)
+			'children' in item
+			&& item.children.some((child) => 'to' in child && route.path === child.to)
 				? 'Primary'
-				: 'TextPrimary'
+				: 'TextPrimary',
 	}
 
 	if (!item.title) {
@@ -193,7 +220,7 @@ function getDropdownAnchorButtonProps(item: MenuItem) {
 
 function getSidebarItemProps(item: MenuItem) {
 	const props: Record<string, any> = {
-		active: 'to' in item && route.path === item.to
+		active: 'to' in item && route.path === item.to,
 	}
 
 	if ('to' in item) {
@@ -215,8 +242,12 @@ const items = ref<MenuItem[]>([
 		icon: 'dashboard',
 		children: [
 			createMenuItem({ title: 'Branding', icon: 'view_comfy', to: '/portfolio/branding' }),
-			createMenuItem({ title: 'Web & App Design', icon: 'view_comfy', to: '/portfolio/web-design' })
-		]
+			createMenuItem({
+				title: 'Web & App Design',
+				icon: 'view_comfy',
+				to: '/portfolio/web-design',
+			}),
+		],
 	}),
 	createMenuItem({
 		icon: 'account_circle',
@@ -226,28 +257,28 @@ const items = ref<MenuItem[]>([
 				title: 'Profile',
 				icon: 'account_circle',
 				to: '/profile',
-				visible: () => zitadelAuth.oidcAuth.isAuthenticated
+				visible: () => zitadelAuth.oidcAuth.isAuthenticated,
 			}),
 			createMenuItem({
 				title: 'Admin',
 				icon: 'settings',
 				to: '/admin',
-				visible: () => zitadelAuth.hasRole('admin')
+				visible: () => zitadelAuth.hasRole('admin'),
 			}),
 			createMenuItem({
 				title: 'Signout',
 				icon: 'exit_to_app',
 				command: () => zitadelAuth.oidcAuth.signOut(),
-				visible: () => zitadelAuth.oidcAuth.isAuthenticated
+				visible: () => zitadelAuth.oidcAuth.isAuthenticated,
 			}),
 			createMenuItem({
 				title: 'Login',
 				icon: 'person',
 				to: '/login',
-				visible: () => !zitadelAuth.oidcAuth.isAuthenticated
-			})
-		]
-	})
+				visible: () => !zitadelAuth.oidcAuth.isAuthenticated,
+			}),
+		],
+	}),
 ])
 
 // const items = ref<MenuItem[]>([

@@ -12,10 +12,10 @@ const queryClient = new QueryClient({
 				duration: 10000,
 				color: 'danger',
 				position: 'bottom-right',
-				message: error.message
+				message: error.message,
 			})
-		}
-	})
+		},
+	}),
 	// defaultOptions: {
 	//   queries: {
 	//     retry: 2

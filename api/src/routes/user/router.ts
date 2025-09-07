@@ -6,18 +6,18 @@ import { categories, categoriesPosts, posts, profiles, users } from '../../schem
 const postValidator = z.object({
 	title: z.string(),
 	body: z.string(),
-	slug: z.string()
+	slug: z.string(),
 })
 
 const profileValidator = z.object({
-	bio: z.string()
+	bio: z.string(),
 })
 
 const userValidator = z.object({
 	name: z.union([z.string(), z.null()]),
 	email: z.string().email('This is not a valid email.'),
 	posts: postValidator.optional(),
-	profile: profileValidator.optional()
+	profile: profileValidator.optional(),
 	// profile: z.object({ create: profileValidator }).optional()
 })
 
@@ -47,7 +47,7 @@ const userRouter = router({
 				.insert(profiles)
 				.values({
 					userId: newUserId,
-					...sentProfile
+					...sentProfile,
 				})
 				.execute()
 
@@ -56,7 +56,7 @@ const userRouter = router({
 				.insert(posts)
 				.values({
 					userId: newUserId,
-					...sentPosts
+					...sentPosts,
 				})
 				.execute()
 
@@ -65,8 +65,8 @@ const userRouter = router({
 		const allUsersQ = db.query.users.findMany({
 			with: {
 				posts: true,
-				profile: true
-			}
+				profile: true,
+			},
 		})
 
 		const allUsersSQL = await db
@@ -78,7 +78,7 @@ const userRouter = router({
 		const userSQL = await db.select().from(users).where(eq(users.userId, newUserId))
 
 		const userQ = await db.query.users.findFirst({
-			where: eq(users.userId, newUserId)
+			where: eq(users.userId, newUserId),
 		})
 
 		console.dir({ userSQL, userQ, allUsersQ, allUsersSQL, newUser }, { depth: null })
@@ -97,18 +97,18 @@ const userRouter = router({
 					postCategories: {
 						columns: {
 							postId: false,
-							categoryId: false
+							categoryId: false,
 						},
 						with: {
 							postCategories: {
 								columns: {
 									categoryId: true,
-									category: true
-								}
-							}
-						}
-					}
-				}
+									category: true,
+								},
+							},
+						},
+					},
+				},
 			})
 
 			const postsJunctionQ = await db
@@ -123,7 +123,7 @@ const userRouter = router({
 				.select()
 				.from(users)
 				.where(eq(users.userId, Number(user_id)))
-		})
+		}),
 })
 
 export { userRouter }

@@ -19,7 +19,9 @@ function parseSelector(selector: string): {
 	value: string | null
 } {
 	// Match the tag name and optional attribute selector
-	const match = selector.match(/^(?<tag>\w+)(?:\[(?<attribute>[^\]=]+)(?:=(?<value>[^\]]+))?\])?$/)
+	const match = selector.match(
+		/^(?<tag>\w+)(?:\[(?<attribute>[^\]=]+)(?:=(?<value>[^\]]+))?\])?$/,
+	)
 
 	if (!match || !match.groups) {
 		throw new Error(`Invalid selector: ${selector}`)
@@ -130,7 +132,10 @@ function initGenerateBlueprintHTML(editor: Editor) {
 					const { tag, requiredAttribute, value } = parseSelector(selector)
 					return [
 						tag,
-						{ ...HTMLAttributes, ...(requiredAttribute ? { [requiredAttribute]: value } : {}) },
+						{
+							...HTMLAttributes,
+							...(requiredAttribute ? { [requiredAttribute]: value } : {}),
+						},
 						0,
 					]
 				},

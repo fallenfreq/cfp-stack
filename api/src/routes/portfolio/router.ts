@@ -20,5 +20,5 @@ export const portfolioRouter = router({
 			.select()
 			.from(collectionEntries)
 			.where(eq(collectionEntries.type, 'portfolio'))
-	})
+	}),
 })

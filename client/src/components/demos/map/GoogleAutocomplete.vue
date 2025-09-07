@@ -7,7 +7,7 @@ const props = defineProps<{ map: google.maps.Map }>()
 const mapStore = useMapStore()
 
 defineExpose({
-	root
+	root,
 })
 
 let token: google.maps.places.AutocompleteSessionToken | null = null
@@ -21,9 +21,9 @@ const request: google.maps.places.AutocompleteRequest = {
 	input: '',
 	locationBias: {
 		center: props.map.getCenter() || mapStore.userLocation || mapStore.defaultCenter,
-		radius: 500.0
+		radius: 500.0,
 	},
-	includedPrimaryTypes: ['(regions)']
+	includedPrimaryTypes: ['(regions)'],
 }
 
 // Function to initialize the session token.
@@ -43,12 +43,12 @@ async function makeAcRequest() {
 	request.input = input.value
 
 	try {
-		const { suggestions }
-			= await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request)
+		const { suggestions } =
+			await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request)
 
 		results.value = suggestions.map((suggestion) => ({
 			text: suggestion.placePrediction!.text.toString(),
-			place: suggestion.placePrediction!.toPlace()
+			place: suggestion.placePrediction!.toPlace(),
 		}))
 
 		showDropdown.value = results.value.length > 0
@@ -63,7 +63,7 @@ async function makeAcRequest() {
 async function onPlaceSelected(place: google.maps.places.Place) {
 	try {
 		await place.fetchFields({
-			fields: ['location']
+			fields: ['location'],
 		})
 
 		const location = place.location as google.maps.LatLng
@@ -100,7 +100,7 @@ onMounted(() => {
 			placeholder="Go to a place..."
 			class="input-field"
 			@input="makeAcRequest"
-		>
+		/>
 		<ul v-if="showDropdown" class="dropdown-menu">
 			<li
 				v-for="(result, index) in results"

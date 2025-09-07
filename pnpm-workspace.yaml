@@ -1,9 +1,9 @@
 packages:
-  - client
-  - api
+    - client
+    - api
 
 onlyBuiltDependencies:
-  - core-js
-  - es5-ext
-  - esbuild
-  - vue-demi
+    - core-js
+    - es5-ext
+    - esbuild
+    - vue-demi

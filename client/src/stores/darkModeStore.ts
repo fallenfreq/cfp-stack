@@ -56,6 +56,6 @@ export const useDarkModeStore = defineStore('darkMode', () => {
 		isDarkMode,
 		isPinkMode,
 		toggleDarkMode,
-		togglePinkMode
+		togglePinkMode,
 	}
 })

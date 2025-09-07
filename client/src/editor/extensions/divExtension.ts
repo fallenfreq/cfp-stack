@@ -18,7 +18,7 @@ const Div = Node.create({
 	renderHTML({ HTMLAttributes }) {
 		// The last elements in the array are the children and 0 is the default content
 		return ['div', { ...HTMLAttributes }, 0]
-	}
+	},
 })
 
 export default Div

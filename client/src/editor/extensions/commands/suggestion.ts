@@ -17,7 +17,7 @@ const editorComponentItems: Item[] = Object.entries(editorComponents).map(([key,
 		} else {
 			editor.chain().focus().deleteRange(range).wrapIn(key).run()
 		}
-	}
+	},
 }))
 
 const promptForYoutubeURL = (callback: (url: string) => void) => {
@@ -50,7 +50,12 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 				items.push({
 					title: `Heading ${i}`,
 					command: ({ editor, range }) =>
-						editor.chain().focus().deleteRange(range).setNode('heading', { level: i }).run()
+						editor
+							.chain()
+							.focus()
+							.deleteRange(range)
+							.setNode('heading', { level: i })
+							.run(),
 				})
 			}
 			return items
@@ -60,7 +65,7 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 			{
 				title: 'Paragraph',
 				command: ({ editor, range }) =>
-					editor.chain().focus().deleteRange(range).setNode('paragraph').run()
+					editor.chain().focus().deleteRange(range).setNode('paragraph').run(),
 			},
 			...generateHeadingItems(),
 			{
@@ -74,7 +79,7 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 							.insertTable({ rows, cols, withHeaderRow: true })
 							.run()
 					})
-				}
+				},
 			},
 			{
 				title: 'YouTube Video',
@@ -85,11 +90,11 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 							.focus()
 							.deleteRange(range)
 							.setYoutubeVideo({
-								src: url
+								src: url,
 							})
 							.run()
 					})
-				}
+				},
 			},
 			{
 				title: 'Image',
@@ -97,32 +102,32 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 					promptForImageURL((url) => {
 						editor.chain().focus().deleteRange(range).setImage({ src: url }).run()
 					})
-				}
+				},
 			},
 			{
 				title: 'Bullet List',
 				command: ({ editor, range }) =>
-					editor.chain().focus().deleteRange(range).toggleBulletList().run()
+					editor.chain().focus().deleteRange(range).toggleBulletList().run(),
 			},
 			{
 				title: 'Ordered List',
 				command: ({ editor, range }) =>
-					editor.chain().focus().deleteRange(range).toggleOrderedList().run()
+					editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
 			},
 			{
 				title: 'Task List',
 				command: ({ editor, range }) =>
-					editor.chain().focus().deleteRange(range).toggleTaskList().run()
+					editor.chain().focus().deleteRange(range).toggleTaskList().run(),
 			},
 			{
 				title: 'Blockquote',
 				command: ({ editor, range }) =>
-					editor.chain().focus().deleteRange(range).toggleBlockquote().run()
+					editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
 			},
 			{
 				title: 'Horizontal Rule',
 				command: ({ editor, range }) =>
-					editor.chain().focus().deleteRange(range).setHorizontalRule().run()
+					editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
 			},
 			{
 				title: 'Link',
@@ -136,24 +141,24 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 							.setLink({ href: url })
 							.run()
 					})
-				}
+				},
 			},
 			{
 				title: 'Code block',
 				command: ({ editor, range }) =>
-					editor.chain().focus().deleteRange(range).setNode('codeBlock').run()
+					editor.chain().focus().deleteRange(range).setNode('codeBlock').run(),
 			},
 			...editorComponentItems,
 			{
 				title: 'Bold',
 				command: ({ editor, range }) =>
-					editor.chain().focus().deleteRange(range).setMark('bold').run()
+					editor.chain().focus().deleteRange(range).setMark('bold').run(),
 			},
 			{
 				title: 'Italic',
 				command: ({ editor, range }) =>
-					editor.chain().focus().deleteRange(range).setMark('italic').run()
-			}
+					editor.chain().focus().deleteRange(range).setMark('italic').run(),
+			},
 		]
 
 		return items
@@ -173,9 +178,9 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 					props: {
 						items: props.items,
 						editor: props.editor,
-						range: props.range
+						range: props.range,
 					},
-					editor: props.editor
+					editor: props.editor,
 				})
 
 				container.appendChild(component.element as HTMLElement)
@@ -217,9 +222,9 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 					container.remove()
 					container = null
 				}
-			}
+			},
 		}
-	}
+	},
 }
 
 export default suggestionOptions

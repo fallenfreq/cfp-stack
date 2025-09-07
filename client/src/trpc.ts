@@ -16,11 +16,11 @@ const trpc = createTRPCClient<AppRouter>({
 			url: `${VITE_API_PORT === '443' ? 'https' : 'http'}://${VITE_API_HOST}:${VITE_API_PORT}/trpc`,
 			headers: () => {
 				return {
-					Authorization: 'Bearer ' + zitadelAuth.oidcAuth.accessToken
+					Authorization: 'Bearer ' + zitadelAuth.oidcAuth.accessToken,
 				}
-			}
-		})
-	]
+			},
+		}),
+	],
 })
 
 export { trpc }

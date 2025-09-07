@@ -19,7 +19,7 @@ import { getPortfolioEntries } from '@/services/portfolio'
 import {
 	calculatePlaceholdersNeeded,
 	createPlaceholders,
-	type Breakpoints
+	type Breakpoints,
 } from '@/utils/collectionPlaceholders'
 import { onMounted, ref, watch } from 'vue'
 
@@ -39,7 +39,7 @@ const columns: Breakpoints = {
 	md: 3,
 	lg: 4,
 	xl: 4,
-	'2xl': 5
+	'2xl': 5,
 }
 
 const displayedItems = ref<CollectionEntry[]>([])
@@ -55,13 +55,13 @@ const setDisplayedItems = async (title: CollectionEntry['title'] = '') => {
 		md: 'md:block',
 		lg: 'lg:block',
 		xl: 'xl:block',
-		'2xl': '2xl:block'
+		'2xl': '2xl:block',
 	}
 
 	const { placeholders, visibilityMap: newVisibilityMap } = createPlaceholders(
 		placeholdersNeeded,
 		title,
-		customClassMap
+		customClassMap,
 	)
 
 	displayedItems.value = [...items, ...placeholders]

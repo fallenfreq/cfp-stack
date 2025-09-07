@@ -40,7 +40,7 @@ zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
 		app.use(vuestic)
 		app.use(PrimeVue, {
 			unstyled: true,
-			pt: Aura
+			pt: Aura,
 		})
 		app.mount('#app')
 	} else {

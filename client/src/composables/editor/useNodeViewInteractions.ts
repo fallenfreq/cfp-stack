@@ -17,7 +17,7 @@ export function useNodeViewInteractions() {
 
 	const posFromDomPos = (
 		editor: Editor,
-		position: { node: globalThis.Node; offset: number } | null
+		position: { node: globalThis.Node; offset: number } | null,
 	) => {
 		if (!position) return
 		const { node, offset } = position
@@ -96,7 +96,7 @@ export function useNodeViewInteractions() {
 				newEditor.view.dom.addEventListener('focusin', onEditorFocusIn)
 			}
 		},
-		{ immediate: true }
+		{ immediate: true },
 	)
 
 	onMounted(() => {

@@ -26,7 +26,7 @@ interface Context {
 
 // Initialize tRPC with the correct context type
 const t = initTRPC.context<Context>().create({
-	transformer: superjson
+	transformer: superjson,
 })
 
 const secure = t.middleware(async ({ next, ctx }) => {
@@ -35,7 +35,7 @@ const secure = t.middleware(async ({ next, ctx }) => {
 	if (!authHeader) {
 		throw new TRPCError({
 			code: 'UNAUTHORIZED',
-			message: 'No authorization header provided'
+			message: 'No authorization header provided',
 		})
 	}
 
@@ -43,18 +43,18 @@ const secure = t.middleware(async ({ next, ctx }) => {
 	try {
 		const response = await axios.post(ZITADEL_INTROSPECTION_ENDPOINT, `token=${token}`, {
 			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
+				'Content-Type': 'application/x-www-form-urlencoded',
 			},
 			auth: {
 				username: ZITADEL_CLIENT_ID,
-				password: ZITADEL_CLIENT_SECRET
-			}
+				password: ZITADEL_CLIENT_SECRET,
+			},
 		})
 
 		if (!response.data.active) {
 			throw new TRPCError({
 				code: 'FORBIDDEN',
-				message: 'Inactive token'
+				message: 'Inactive token',
 			})
 		}
 		return next({ ctx: { secure: true } })
@@ -65,7 +65,7 @@ const secure = t.middleware(async ({ next, ctx }) => {
 		throw new TRPCError({
 			code: 'INTERNAL_SERVER_ERROR',
 			message: `Failed to introspect token: ${message}`,
-			cause: error
+			cause: error,
 		})
 	}
 })

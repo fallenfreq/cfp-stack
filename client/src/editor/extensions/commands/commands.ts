@@ -10,8 +10,8 @@ export default Extension.create({
 				char: '/',
 				command: ({ editor, range, props }: any) => {
 					props.command({ editor, range })
-				}
-			}
+				},
+			},
 		}
 	},
 
@@ -19,8 +19,8 @@ export default Extension.create({
 		return [
 			Suggestion({
 				editor: this.editor,
-				...this.options.suggestion
-			})
+				...this.options.suggestion,
+			}),
 		]
-	}
+	},
 })

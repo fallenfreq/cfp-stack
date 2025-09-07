@@ -19,7 +19,7 @@ export const onRequest: PagesFunction<Envs> = async ({ request, env }) => {
 			createContext: (): Context => {
 				return {
 					req: request,
-					db: drizzle(env.DB, { schema: { ...userSchema, ...collectionSchema } })
+					db: drizzle(env.DB, { schema: { ...userSchema, ...collectionSchema } }),
 				}
 			},
 			onError: ({ error }) => {
@@ -29,14 +29,14 @@ export const onRequest: PagesFunction<Envs> = async ({ request, env }) => {
 					console.log({
 						name: error.name,
 						code: error.code,
-						message: error.message
+						message: error.message,
 					})
 					// Change error
 					error.stack = ''
 					error.message = 'Internal Server Error'
 				}
 				// throw Error('Will crash if thrown here')
-			}
+			},
 		})
 	} catch (error: any) {
 		// Handle errors that occur outside of tRPC

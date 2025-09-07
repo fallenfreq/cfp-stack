@@ -39,6 +39,6 @@ export default function createTrackChangesPlugin(options: FileOptions[]): Plugin
 			if (changedFiles.length > 0) {
 				console.log('Files changed:', changedFiles)
 			}
-		}
+		},
 	}
 }

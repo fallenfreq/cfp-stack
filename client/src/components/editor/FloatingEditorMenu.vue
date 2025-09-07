@@ -74,7 +74,7 @@ const updatePosition = async () => {
 
 	position.value = {
 		top: rect.top + window.scrollY - toolbarHeight - toolbarSpacing,
-		left: rect.left + window.scrollX
+		left: rect.left + window.scrollX,
 	}
 
 	show.value = true

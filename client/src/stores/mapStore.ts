@@ -10,7 +10,7 @@ export const useMapStore = defineStore('map', () => {
 
 	const defaultCenter: google.maps.LatLngLiteral = {
 		lat: 53.8175053,
-		lng: -3.0356748
+		lng: -3.0356748,
 	}
 
 	const userLocation: Ref<google.maps.LatLngLiteral | null> = ref(null)

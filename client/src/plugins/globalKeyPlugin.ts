@@ -31,7 +31,7 @@ const globalKeyPlugin: Plugin = {
 		app.provide(AddKeyCombo, addKeyCombo)
 		app.provide(RemoveKeyCombo, removeKeyCombo)
 		window.addEventListener('keydown', handleKeydown)
-	}
+	},
 }
 
 export default globalKeyPlugin

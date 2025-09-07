@@ -8,7 +8,7 @@ const router = createRouter({
 		{
 			path: '/',
 			name: 'home',
-			component: HomeView
+			component: HomeView,
 		},
 		{
 			path: '/contact',
@@ -16,7 +16,7 @@ const router = createRouter({
 			// route level code-splitting
 			// this generates a separate chunk (About.[hash].js) for this route
 			// which is lazy-loaded when the route is visited.
-			component: () => import('../views/ContactView.vue')
+			component: () => import('../views/ContactView.vue'),
 		},
 		{
 			path: '/portfolio/branding',
@@ -24,7 +24,7 @@ const router = createRouter({
 			// route level code-splitting
 			// this generates a separate chunk (About.[hash].js) for this route
 			// which is lazy-loaded when the route is visited.
-			component: () => import('../views/PortfolioBranding.vue')
+			component: () => import('../views/PortfolioBranding.vue'),
 		},
 		{
 			path: '/portfolio/web-design',
@@ -32,69 +32,69 @@ const router = createRouter({
 			// route level code-splitting
 			// this generates a separate chunk (About.[hash].js) for this route
 			// which is lazy-loaded when the route is visited.
-			component: () => import('../views/PortfolioWebDesign.vue')
+			component: () => import('../views/PortfolioWebDesign.vue'),
 		},
 		{
 			path: '/login',
 			name: 'login',
 			meta: {
-				authName: zitadelAuth.oidcAuth.authName
+				authName: zitadelAuth.oidcAuth.authName,
 			},
-			component: () => import('../views/ProfileView.vue')
+			component: () => import('../views/ProfileView.vue'),
 		},
 		{
 			path: '/admin',
 			name: 'admin',
 			meta: {
-				authName: zitadelAuth.oidcAuth.authName
+				authName: zitadelAuth.oidcAuth.authName,
 			},
 			component: () => {
 				if (zitadelAuth.hasRole('admin')) {
 					return import('../views/AdminView.vue')
 				}
 				return import('../views/NoAccess.vue')
-			}
+			},
 		},
 		{
 			path: '/profile',
 			name: 'profile',
 			meta: {
-				authName: zitadelAuth.oidcAuth.authName
+				authName: zitadelAuth.oidcAuth.authName,
 			},
 			component: () => {
 				if (zitadelAuth.oidcAuth.isAuthenticated) {
 					return import('../views/ProfileView.vue')
 				}
 				return import('../views/NoAccess.vue')
-			}
+			},
 		},
 		{
 			path: '/editor-demo',
 			name: 'editor',
 			meta: {
-				authName: zitadelAuth.oidcAuth.authName
+				authName: zitadelAuth.oidcAuth.authName,
 			},
 			component: () => {
 				if (zitadelAuth.oidcAuth.isAuthenticated) {
 					return import('../views/TiptapEditorDemo.vue')
 				}
 				return import('../views/NoAccess.vue')
-			}
+			},
 		},
 		{
 			path: '/map-demo',
 			name: 'map',
 			meta: {
-				authName: zitadelAuth.oidcAuth.authName
+				authName: zitadelAuth.oidcAuth.authName,
 			},
 			component: () => {
 				if (zitadelAuth.oidcAuth.isAuthenticated) {
 					return import('../views/demo/GoogleMap.vue')
 				}
 				return import('../views/NoAccess.vue')
-			}
-		}
-	]
+			},
+		},
+	],
 })
 
 zitadelAuth.oidcAuth.useRouter(router)

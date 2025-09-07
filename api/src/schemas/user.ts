@@ -5,15 +5,15 @@ import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 export const users = sqliteTable('users', {
 	userId: integer('user_id').primaryKey(),
 	name: text('name'),
-	email: text('email', { length: 256 }).notNull()
+	email: text('email', { length: 256 }).notNull(),
 })
 
 export const userRelations = relations(users, ({ one, many }) => ({
 	profile: one(profiles, {
 		fields: [users.userId],
-		references: [profiles.userId]
+		references: [profiles.userId],
 	}),
-	posts: many(posts)
+	posts: many(posts),
 }))
 
 export const posts = sqliteTable('posts', {
@@ -23,24 +23,24 @@ export const posts = sqliteTable('posts', {
 	slug: text('title', { length: 40 }),
 	userId: integer('user_id')
 		.notNull()
-		.references(() => users.userId)
+		.references(() => users.userId),
 })
 
 export const postRelations = relations(posts, ({ one, many }) => ({
 	author: one(users, {
 		fields: [posts.userId],
-		references: [users.userId]
+		references: [users.userId],
 	}),
-	postCategories: many(categoriesPosts)
+	postCategories: many(categoriesPosts),
 }))
 
 export const categories = sqliteTable('categories', {
 	categoryId: integer('category_id').primaryKey(),
-	category: text('category', { length: 40 }).notNull()
+	category: text('category', { length: 40 }).notNull(),
 })
 
 export const categoryRelations = relations(categories, ({ many }) => ({
-	categoryPosts: many(categoriesPosts)
+	categoryPosts: many(categoriesPosts),
 }))
 
 export const categoriesPosts = sqliteTable(
@@ -51,22 +51,22 @@ export const categoriesPosts = sqliteTable(
 			.references(() => categories.categoryId),
 		postId: integer('post_id')
 			.notNull()
-			.references(() => posts.postId)
+			.references(() => posts.postId),
 	},
 	(table) => ({
-		pk: primaryKey({ columns: [table.postId, table.categoryId] })
-	})
+		pk: primaryKey({ columns: [table.postId, table.categoryId] }),
+	}),
 )
 
 export const categoriesPostsRelations = relations(categoriesPosts, ({ one }) => ({
 	postCategories: one(categories, {
 		fields: [categoriesPosts.categoryId],
-		references: [categories.categoryId]
+		references: [categories.categoryId],
 	}),
 	categoryPosts: one(posts, {
 		fields: [categoriesPosts.postId],
-		references: [posts.postId]
-	})
+		references: [posts.postId],
+	}),
 }))
 
 export const profiles = sqliteTable('profiles', {
@@ -74,7 +74,7 @@ export const profiles = sqliteTable('profiles', {
 	bio: text('bio', { length: 256 }),
 	userId: integer('user_id')
 		.notNull()
-		.references(() => users.userId)
+		.references(() => users.userId),
 })
 
 export type User = typeof users.$inferSelect // return type when queried

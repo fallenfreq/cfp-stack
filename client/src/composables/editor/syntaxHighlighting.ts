@@ -15,7 +15,7 @@ import darkTheme from 'highlight.js/styles/base16/ros-pine-moon.min.css?url'
 const themes: Record<Theme, string> = {
 	light: lightTheme,
 	dark: darkTheme,
-	pink: darkTheme
+	pink: darkTheme,
 }
 
 const useSyntaxHighlighting = () => {
@@ -36,7 +36,7 @@ const useSyntaxHighlighting = () => {
 		() => darkModeStore.mode,
 		(newVal) => {
 			updateHighlightTheme(newVal)
-		}
+		},
 	)
 
 	onMounted(() => {

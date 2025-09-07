@@ -17,7 +17,7 @@ const defaultColors = resolveConfig({ content: { files: [] } }).theme.colors
 const processTailwindConfigColors = (
 	colors: ColorObject,
 	preset: string,
-	cssVariables: CssVariables
+	cssVariables: CssVariables,
 ) => {
 	const flattenColors = (colorObject: ColorObject, prefix = ''): ColorObject => {
 		return Object.keys(colorObject).reduce((accumulator, key) => {
@@ -39,7 +39,10 @@ const processTailwindConfigColors = (
 							const variableName = match.replace(/var\(--(.*?)\)/, '$1')
 							const variableValue = cssVariables[preset]?.[`--${variableName}`]
 							if (variableValue) {
-								resolvedValue = resolvedValue.replace(`var(--${variableName})`, variableValue)
+								resolvedValue = resolvedValue.replace(
+									`var(--${variableName})`,
+									variableValue,
+								)
 							} else {
 								return accumulator
 							}
@@ -74,7 +77,7 @@ const processTailwindConfigColors = (
 const processedRootColors = processTailwindConfigColors(
 	{ ...defaultColors, ...customColors },
 	'root',
-	cssVariables
+	cssVariables,
 )
 
 const processedDarkColors = processTailwindConfigColors(customColors, 'dark', cssVariables)
@@ -84,5 +87,5 @@ export {
 	processTailwindConfigColors,
 	processedDarkColors,
 	processedPinkColors,
-	processedRootColors
+	processedRootColors,
 }

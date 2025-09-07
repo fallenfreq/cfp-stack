@@ -5,14 +5,14 @@ import {
 	NodeViewWrapper,
 	VueNodeViewRenderer,
 	mergeAttributes,
-	nodeViewProps
+	nodeViewProps,
 } from '@tiptap/vue-3'
 import { defineComponent, h, onUnmounted, ref } from 'vue'
 
 // Utility function to create a Tiptap node for Vue components
 export function createVueNode(
 	componentName: string,
-	{ component, content, props, contentAs, contenteditable = true, atom = false }: ComponentData
+	{ component, content, props, contentAs, contenteditable = true, atom = false }: ComponentData,
 ) {
 	return Node.create({
 		name: componentName,
@@ -23,7 +23,7 @@ export function createVueNode(
 
 		addAttributes() {
 			return {
-				...props
+				...props,
 			}
 		},
 
@@ -57,7 +57,8 @@ export function createVueNode(
 
 							const resolvedPos = state.doc.resolve(anchor)
 							const startPosition = resolvedPos.start(resolvedPos.depth)
-							const selectionEl = view.nodeDOM(anchor) || view.nodeDOM(startPosition - 1)
+							const selectionEl =
+								view.nodeDOM(anchor) || view.nodeDOM(startPosition - 1)
 
 							// if the selectionEl is not the contentEl and not inside the contentEl, disable editing
 							// selectionEl === wrapperEl when clicking the NodeView content with inline content
@@ -86,7 +87,9 @@ export function createVueNode(
 									onFocusin: (event: FocusEvent) => {
 										const target = event.target
 										const wrapper = wrapperRef.value?.$el
-										const content = wrapper?.querySelector('[data-node-view-content]')
+										const content = wrapper?.querySelector(
+											'[data-node-view-content]',
+										)
 										// If the focus was inside NodeViewContent, enable editing
 										if (wrapper && content && content.contains(target)) {
 											// Manages focus transitions within the NodeView. The `selectionUpdate` event, set up in the editor,
@@ -98,7 +101,7 @@ export function createVueNode(
 											wrapper.setAttribute('contenteditable', 'false')
 											editor.off('selectionUpdate', onSelectionUpdate)
 										}
-									}
+									},
 								},
 								{
 									default: () => [
@@ -111,22 +114,22 @@ export function createVueNode(
 														...(contentAs ? { as: contentAs } : {}),
 														contenteditable,
 														// makes sure the onfocus target is the content if clicked when contenteditable is already true
-														tabindex: '-1'
-													})
-											}
-										)
-									]
-								}
+														tabindex: '-1',
+													}),
+											},
+										),
+									],
+								},
 							)
-					}
+					},
 				}),
 				{
 					// stopEvent: (event) => {
 					//   console.log('stopEvent: ', event)
 					//   return false
 					// }
-				}
+				},
 			)
-		}
+		},
 	})
 }

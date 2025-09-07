@@ -31,7 +31,7 @@ export const useEditorStore = defineStore('editor', () => {
 			if (generateBlueprintHTML === null) return
 			const htmlContent = await prettifyCode(generateBlueprintHTML(), 'html')
 			editor.value.commands.setContent(
-				`<pre><code class="language-html">${escapeHTML(htmlContent)}</code></pre>`
+				`<pre><code class="language-html">${escapeHTML(htmlContent)}</code></pre>`,
 			)
 		}
 		isCodeView.value = !isCodeView.value
@@ -41,6 +41,6 @@ export const useEditorStore = defineStore('editor', () => {
 		editor,
 		setEditor,
 		isCodeView,
-		toggleCodeView
+		toggleCodeView,
 	}
 })
