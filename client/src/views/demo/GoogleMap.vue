@@ -1,5 +1,6 @@
 <!-- This needs breaking up but I had a tight deadline and added more features than I was originally planning -->
 <script lang="ts" setup>
+/// <reference types="google.maps" />
 import AddMarkerSwitch from '@/components/demos/map/AddMarkerSwitch.vue'
 import GoogleAutocomplete from '@/components/demos/map/GoogleAutocomplete.vue'
 import CurrentLocationMarker from '@/components/demos/map/currentLocation.vue'
@@ -12,7 +13,6 @@ import { trpc } from '@/trpc'
 import { faMinus, faPen, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
-import '@types/google.maps'
 import { storeToRefs } from 'pinia'
 import { computed, getCurrentInstance, nextTick, onMounted, ref, useCssModule, watch } from 'vue'
 import { useToast } from 'vuestic-ui'
@@ -26,9 +26,7 @@ const markerStore = useMarkerStore()
 
 const clearFilter = (tag?: string) => {
 	if (tag) {
-		markerStore.selectedTags = markerStore.selectedTags.filter(
-			(selectedTag) => selectedTag !== tag,
-		)
+		markerStore.selectedTags = markerStore.selectedTags.filter((selectedTag) => selectedTag !== tag)
 	} else {
 		markerStore.selectedTags = []
 	}
@@ -67,21 +65,21 @@ const renderMap = async (loader: Loader) => {
 	const mapControls = {
 		mapTypeControl: true,
 		mapTypeControlOptions: {
-			style: window.google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-			position: window.google.maps.ControlPosition.INLINE_END_BLOCK_END,
+			style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+			position: google.maps.ControlPosition.INLINE_END_BLOCK_END,
 		},
 		zoomControl: true,
 		zoomControlOptions: {
-			position: window.google.maps.ControlPosition.LEFT_CENTER,
+			position: google.maps.ControlPosition.LEFT_CENTER,
 		},
 		scaleControl: true,
 		streetViewControl: true,
 		streetViewControlOptions: {
-			position: window.google.maps.ControlPosition.LEFT_CENTER,
+			position: google.maps.ControlPosition.LEFT_CENTER,
 		},
 		fullscreenControl: true,
 		fullscreenControlOptions: {
-			position: window.google.maps.ControlPosition.BLOCK_START_INLINE_END,
+			position: google.maps.ControlPosition.BLOCK_START_INLINE_END,
 		},
 	}
 
@@ -116,7 +114,7 @@ watch(isSheetOpen, () => {
 })
 watch(
 	() => darkModeStore.isDarkMode,
-	() => renderMap(loader),
+	() => renderMap(loader)
 )
 watch(
 	() => mapStore.map,
@@ -140,12 +138,12 @@ watch(
 			position: 'bottom-right',
 			message: 'Click the plus button "+" at the top to enter "add marker mode"',
 		})
-	},
+	}
 )
 
 const deleteMarker = async (
 	event: MouseEvent,
-	marker: google.maps.marker.AdvancedMarkerElement,
+	marker: google.maps.marker.AdvancedMarkerElement
 ) => {
 	if (!(event.currentTarget instanceof HTMLButtonElement)) return
 	const { toDeleteId } = event.currentTarget.dataset
@@ -350,7 +348,7 @@ Tags</pre>
 					@click="
 						open(
 							`https://maps.google.com/?q=${sheetContent.content.lat},${sheetContent.content.lng}`,
-							'_blank',
+							'_blank'
 						)
 					"
 				>
