@@ -1,7 +1,7 @@
 import { useEditorStore } from '@/stores/editorStore'
 import { type Editor } from '@tiptap/vue-3'
 import { storeToRefs } from 'pinia'
-import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { onBeforeUnmount, onMounted, onUnmounted, watch } from 'vue'
 
 export function useNodeViewInteractions() {
 	const editorStore = useEditorStore()
@@ -84,20 +84,30 @@ export function useNodeViewInteractions() {
 		}
 	}
 
-	const _domListenerMap = new WeakMap<Editor, HTMLElement>()
-
 	watch(
 		editor,
 		(newEditor, oldEditor) => {
-			if (oldEditor) {
-				oldEditor.off('selectionUpdate', onEditorSelectionUpdate)
-				oldEditor.view.dom.removeEventListener('focusin', onEditorFocusIn)
-			}
-			if (newEditor) {
-				newEditor.on('selectionUpdate', onEditorSelectionUpdate)
+			try {
+				console.log('Editor changed', { newEditor, oldEditor })
+				if (oldEditor && !oldEditor.isDestroyed) {
+					oldEditor.off('selectionUpdate', onEditorSelectionUpdate)
+					oldEditor.view.dom.removeEventListener('focusin', onEditorFocusIn)
+				}
+				if (newEditor) {
+					newEditor.on('selectionUpdate', onEditorSelectionUpdate)
 
-				newEditor.view.dom.addEventListener('focusin', onEditorFocusIn)
-				_domListenerMap.set(newEditor, newEditor.view.dom)
+					newEditor.on('create', () => {
+						console.log('Created editor')
+						newEditor.view.dom.addEventListener('focusin', onEditorFocusIn)
+					})
+
+					newEditor.on('destroy', () => {
+						console.log('Destroyed editor')
+						newEditor.view.dom.removeEventListener('focusin', onEditorFocusIn)
+					})
+				}
+			} catch (error) {
+				console.error('Error in editor watch:', error)
 			}
 		},
 		{ immediate: true }
@@ -109,13 +119,13 @@ export function useNodeViewInteractions() {
 
 	onBeforeUnmount(() => {
 		document.removeEventListener('selectionchange', onSelectionChange)
-
+		console.log('Before unmount editor', { editor: editor.value })
 		if (editor.value) {
 			editor.value.off('selectionUpdate', onEditorSelectionUpdate)
-			console.log({ _domListenerMap })
-			// Remove focusin listeners from all elements tracked in _domListenerMap
-			_domListenerMap.get(editor.value)?.removeEventListener('focusin', onEditorFocusIn)
-			// editor.value.view.dom.removeEventListener('focusin', onEditorFocusIn)
 		}
+	})
+
+	onUnmounted(() => {
+		console.log('Unmounted editor')
 	})
 }
