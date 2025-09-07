@@ -1,7 +1,7 @@
 import { useEditorStore } from '@/stores/editorStore'
 import { type Editor } from '@tiptap/vue-3'
 import { storeToRefs } from 'pinia'
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
 
 export function useNodeViewInteractions() {
 	const editorStore = useEditorStore()
@@ -17,7 +17,7 @@ export function useNodeViewInteractions() {
 
 	const posFromDomPos = (
 		editor: Editor,
-		position: { node: globalThis.Node; offset: number } | null,
+		position: { node: globalThis.Node; offset: number } | null
 	) => {
 		if (!position) return
 		const { node, offset } = position
@@ -96,14 +96,14 @@ export function useNodeViewInteractions() {
 				newEditor.view.dom.addEventListener('focusin', onEditorFocusIn)
 			}
 		},
-		{ immediate: true },
+		{ immediate: true }
 	)
 
 	onMounted(() => {
 		document.addEventListener('selectionchange', onSelectionChange)
 	})
 
-	onUnmounted(() => {
+	onBeforeUnmount(() => {
 		document.removeEventListener('selectionchange', onSelectionChange)
 
 		if (editor.value) {
