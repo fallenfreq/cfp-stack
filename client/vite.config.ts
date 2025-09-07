@@ -4,7 +4,6 @@ import { piniaHMRPlugin } from './plugins/piniaHMR'
 import touchFileAfterBuild from './plugins/touchFileAfterBuild'
 import createTrackChangesPlugin from './plugins/trackChangesPlugin'
 
-import { PrimeVueResolver } from '@primevue/auto-import-resolver'
 import vue from '@vitejs/plugin-vue'
 // import vueJsx from '@vitejs/plugin-vue-jsx'
 import Components from 'unplugin-vue-components/vite'
@@ -43,7 +42,7 @@ export default defineConfig({
 		// vueJsx(),
 		Components({
 			dts: true, // enabled by default if `typescript` is installed
-			resolvers: [PrimeVueResolver()],
+			resolvers: [],
 		}),
 	],
 	resolve: {

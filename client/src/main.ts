@@ -7,9 +7,6 @@ import 'vuestic-ui/styles/typography.css'
 import config from '../vuestic.my.config'
 export const vuestic = createVuestic({ config })
 
-import PrimeVue from 'primevue/config'
-import Aura from './presets/aura'
-
 import './assets/main.css'
 
 import zitadelAuth from '@/services/zitadelAuth'
@@ -38,10 +35,6 @@ zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
 		app.use(VueQueryPlugin, { queryClient })
 		app.use(router)
 		app.use(vuestic)
-		app.use(PrimeVue, {
-			unstyled: true,
-			pt: Aura,
-		})
 		app.mount('#app')
 	} else {
 		console.error('Startup was not ok')

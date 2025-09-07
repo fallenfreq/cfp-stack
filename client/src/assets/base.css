@@ -14,7 +14,10 @@ You can just save a file that will trigger a restart.
 	--xxl: 1536;
 }
 
-/* css by primevue */
+/*
+css based on primevue originally
+primevue is no longer used
+*/
 :root {
 	--primary-50: 236 253 245;
 	--primary-100: 209 250 229;
@@ -60,29 +63,6 @@ You can just save a file that will trigger a restart.
 	--primary-highlight-opacity: 0.2;
 	--primary-highlight-inverse: var(--surface-0);
 	--primary-highlight-hover-opacity: 0.3;
-}
-
-.customized-primary {
-	&:not(.dark) {
-		--primary: var(--primary-950);
-		--primary-inverse: var(--surface-0);
-		--primary-hover: var(--primary-800);
-		--primary-active-color: var(--primary-900);
-
-		--primary-highlight-opacity: 1;
-		--primary-highlight-inverse: var(--surface-0);
-		--primary-highlight-hover-opacity: 0.8;
-	}
-	&.dark {
-		--primary: var(--primary-50);
-		--primary-inverse: var(--surface-950);
-		--primary-hover: var(--primary-100);
-		--primary-active-color: var(--primary-100);
-
-		--primary-highlight-opacity: 0.1;
-		--primary-highlight-inverse: var(--surface-0);
-		--primary-highlight-hover-opacity: 0.2;
-	}
 }
 
 /*
