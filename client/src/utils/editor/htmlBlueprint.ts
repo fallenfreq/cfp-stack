@@ -2,7 +2,7 @@ import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExt
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Heading from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
-import TaskItem from '@tiptap/extension-task-item'
+import { TaskItem } from '@tiptap/extension-list'
 import Youtube from '@tiptap/extension-youtube'
 import StarterKit from '@tiptap/starter-kit'
 import {
@@ -10,9 +10,8 @@ import {
 	generateHTML,
 	type Editor,
 	type JSONContent,
-	type NodeConfig
+	type NodeConfig,
 } from '@tiptap/vue-3'
-// import TaskList from '@tiptap/extension-task-list'
 
 function parseSelector(selector: string): {
 	tag: string
@@ -35,7 +34,7 @@ function parseSelector(selector: string): {
 	return {
 		tag,
 		requiredAttribute: attribute || null, // Use the attribute name if present, otherwise null
-		value: value ? value.replace(/^['"]|['"]$/g, '') : null // Remove quotes from value
+		value: value ? value.replace(/^['"]|['"]$/g, '') : null, // Remove quotes from value
 	}
 }
 
@@ -60,7 +59,7 @@ function createNodesFromSchema(editor: Editor) {
 		'image',
 		'doc',
 		// 'taskList',
-		'taskItem'
+		'taskItem',
 	]
 
 	return Object.entries(nodes)
@@ -82,12 +81,12 @@ function createNodesFromSchema(editor: Editor) {
 						(acc, attr) => {
 							return {
 								...acc,
-								[attr]: { default: attrs[attr]?.default }
+								[attr]: { default: attrs[attr]?.default },
 							}
 						},
 						requiredAttribute
 							? { [requiredAttribute]: { default: value } }
-							: ({} as Record<string, { default: any }>)
+							: ({} as Record<string, { default: any }>),
 					)
 
 					return attributes
@@ -103,7 +102,7 @@ function createNodesFromSchema(editor: Editor) {
 						}
 					})
 					return nodeType.isLeaf ? [tag, attrsToRender] : [tag, attrsToRender, 0]
-				}
+				},
 			}
 
 			return TiptapNode.create(nodeConfig)
@@ -113,12 +112,13 @@ function createNodesFromSchema(editor: Editor) {
 // Function to generate HTML from the JSON with dynamic nodes
 function initGenerateBlueprintHTML(editor: Editor) {
 	const dynamicNodes = createNodesFromSchema(editor)
-
 	return (json?: JSONContent) => {
-		return generateHTML(json || editor.getJSON(), [
+		// `exactOptionalPropertyTypes: true` is causing an issue with editor.getJSON() because the
+		// attrs props could be undefined and not just not defined at all which clashes with JSONContent
+		return generateHTML(json || (editor.getJSON() as JSONContent), [
 			StarterKit.configure({
 				codeBlock: false,
-				heading: false
+				heading: false,
 			}),
 			Heading,
 			Image,
@@ -131,9 +131,9 @@ function initGenerateBlueprintHTML(editor: Editor) {
 					return [
 						tag,
 						{ ...HTMLAttributes, ...(requiredAttribute ? { [requiredAttribute]: value } : {}) },
-						0
+						0,
 					]
-				}
+				},
 			}),
 			// TaskList,
 			Youtube.extend({
@@ -162,14 +162,14 @@ function initGenerateBlueprintHTML(editor: Editor) {
 						resp: {
 							default: '',
 							parseHTML: (element) => element.getAttribute('resp'),
-							renderHTML: (attributes) => ({ resp: attributes.resp })
-						}
+							renderHTML: (attributes) => ({ resp: attributes.resp }),
+						},
 					}
-				}
+				},
 			}),
 			CodeBlockLowlight,
 			AllowAttributesExtension,
-			...dynamicNodes
+			...dynamicNodes,
 		])
 	}
 }

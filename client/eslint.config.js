@@ -3,6 +3,7 @@ import pluginVue from 'eslint-plugin-vue'
 import { defineConfig } from 'eslint/config'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import vueParser from 'vue-eslint-parser'
 import base from '../eslint.config.js'
 
 export default defineConfig([
@@ -14,8 +15,14 @@ export default defineConfig([
 		files: ['**/*.vue'],
 		extends: [pluginVue.configs['flat/recommended']],
 		languageOptions: {
-			parserOptions: { parser: tseslint.parser },
-			globals: { google: 'readonly' }
+			parser: vueParser,
+			parserOptions: {
+				parser: tseslint.parser,
+				ecmaVersion: 'latest',
+				sourceType: 'module',
+				extraFileExtensions: ['.vue'],
+			},
+			globals: { google: 'readonly' },
 		},
 		rules: {
 			'vue/html-indent': 'off',
@@ -26,15 +33,15 @@ export default defineConfig([
 			'vue/no-unused-vars': [
 				'error',
 				{
-					ignorePattern: '^_'
-				}
-			]
-		}
+					ignorePattern: '^_',
+				},
+			],
+		},
 	},
 	{
 		files: ['components.d.ts'],
 		rules: {
-			'@typescript-eslint/ban-ts-comment': 'off'
-		}
-	}
+			'@typescript-eslint/ban-ts-comment': 'off',
+		},
+	},
 ])

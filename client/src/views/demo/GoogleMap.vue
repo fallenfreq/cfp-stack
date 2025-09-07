@@ -12,8 +12,9 @@ import { trpc } from '@/trpc'
 import { faMinus, faPen, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
+import '@types/google.maps'
 import { storeToRefs } from 'pinia'
-import { getCurrentInstance, nextTick, onMounted, ref, useCssModule, watch } from 'vue'
+import { computed, getCurrentInstance, nextTick, onMounted, ref, useCssModule, watch } from 'vue'
 import { useToast } from 'vuestic-ui'
 
 const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
@@ -38,7 +39,12 @@ const sheetStore = useStackableSheetStore()
 const { isSheetOpen, sheetContent } = storeToRefs(sheetStore)
 const { closeSheet } = sheetStore
 
-const mapsControlsStyle = useCssModule('mapsControls')
+const mapsControlsStyle = useCssModule(/*'mapsControls'*/)
+
+// Computed property for efficient outline calculation
+const isTagOutlined = computed(() => {
+	return markerStore.allTags.map((tag) => !markerStore.selectedTags.includes(tag))
+})
 
 // Map container reference
 const mapContainer = ref<HTMLDivElement | null>(null)
@@ -60,24 +66,24 @@ const renderMap = async (loader: Loader) => {
 		mapTypeControl: true,
 		mapTypeControlOptions: {
 			style: window.google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-			position: window.google.maps.ControlPosition.INLINE_END_BLOCK_END
+			position: window.google.maps.ControlPosition.INLINE_END_BLOCK_END,
 		},
 		zoomControl: true,
 		zoomControlOptions: {
-			position: window.google.maps.ControlPosition.LEFT_CENTER
+			position: window.google.maps.ControlPosition.LEFT_CENTER,
 		},
 		scaleControl: true,
 		streetViewControl: true,
 		streetViewControlOptions: {
-			position: window.google.maps.ControlPosition.LEFT_CENTER
+			position: window.google.maps.ControlPosition.LEFT_CENTER,
 		},
 		fullscreenControl: true,
 		fullscreenControlOptions: {
-			position: window.google.maps.ControlPosition.BLOCK_START_INLINE_END
-		}
+			position: window.google.maps.ControlPosition.BLOCK_START_INLINE_END,
+		},
 	}
 
-	// @ts-expect-error: ColorScheme is not typed in the @types/googlemaps library
+	// @ts-expect-error: ColorScheme is not typed in the @types/google.maps library
 	const { ColorScheme } = await google.maps.importLibrary('core')
 	// Map options
 	const mapOptions: google.maps.MapOptions = {
@@ -85,7 +91,7 @@ const renderMap = async (loader: Loader) => {
 		zoom: mapStore.map?.getZoom() || 11,
 		mapId: 'DEMO_MAP_ID',
 		colorScheme: darkModeStore.isDarkMode ? ColorScheme.DARK : ColorScheme.LIGHT,
-		...mapControls
+		...mapControls,
 	}
 	mapStore.setMap(new Map(mapContainer.value, mapOptions))
 }
@@ -97,7 +103,7 @@ onMounted(async () => {
 	const loaderOptions: LoaderOptions = {
 		apiKey: await trpc.keys.googleMapsApiKey.query(),
 		version: 'weekly',
-		libraries: ['places', 'marker']
+		libraries: ['places', 'marker'],
 	}
 	loader = new Loader(loaderOptions)
 	renderMap(loader)
@@ -108,7 +114,7 @@ watch(isSheetOpen, () => {
 })
 watch(
 	() => darkModeStore.isDarkMode,
-	() => renderMap(loader)
+	() => renderMap(loader),
 )
 watch(
 	() => mapStore.map,
@@ -130,14 +136,14 @@ watch(
 			duration: 10000,
 			color: 'info',
 			position: 'bottom-right',
-			message: 'Click the plus button "+" at the top to enter "add marker mode"'
+			message: 'Click the plus button "+" at the top to enter "add marker mode"',
 		})
-	}
+	},
 )
 
 const deleteMarker = async (
 	event: MouseEvent,
-	marker: google.maps.marker.AdvancedMarkerElement
+	marker: google.maps.marker.AdvancedMarkerElement,
 ) => {
 	if (!(event.currentTarget instanceof HTMLButtonElement)) return
 	const { toDeleteId } = event.currentTarget.dataset
@@ -184,7 +190,7 @@ const openAddTagPrompt = async () => {
 		// this only take one tag need to make it take more than one and return the added tags
 		const addedTags = await trpc.mapMarker.addTagsToMarker.mutate({
 			markerId,
-			tags: newTags
+			tags: newTags,
 		})
 		// Update tags locally after addition
 		sheetContent.value.content.tags.push(...addedTags)
@@ -212,7 +218,7 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 		// Send the new title to the server
 		await trpc.mapMarker.update.mutate({
 			markerId: markerContent.mapMarkersId,
-			title: newTitle
+			title: newTitle,
 		})
 
 		// Update the title locally
@@ -221,14 +227,14 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 		useToast().notify({
 			duration: 5000,
 			color: 'primary',
-			message: 'Title updated successfully!'
+			message: 'Title updated successfully!',
 		})
 	} catch (error) {
 		console.error('Error updating title:', error)
 		useToast().notify({
 			duration: 5000,
 			color: 'danger',
-			message: 'Failed to update title. Please try again.'
+			message: 'Failed to update title. Please try again.',
 		})
 	}
 }
@@ -258,8 +264,8 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 		<div v-if="markerStore.allTags.length" class="all-tags-container">
 			<VaChip
 				v-for="(tag, index) in markerStore.allTags"
-				:key="index"
-				:outline="!markerStore.selectedTags.some((selectedTag) => selectedTag === tag)"
+				:key="tag"
+				:outline="isTagOutlined[index]!"
 				size="small"
 				class="tag-chip"
 				@click="() => onTagClick(tag)"
@@ -288,9 +294,9 @@ Tags</pre>
 				<div v-if="sheetContent.content.tags.length" class="tags-container">
 					<VaChip
 						v-for="(tag, index) in sheetContent.content.tags"
-						:key="index"
+						:key="tag"
 						class="tag-chip"
-						:outline="!markerStore.selectedTags.some((selectedTag) => selectedTag === tag)"
+						:outline="isTagOutlined[index]!"
 						size="small"
 						:color="deleteMode ? 'danger' : ''"
 						@click="
@@ -316,13 +322,13 @@ Tags</pre>
 					color="deleteMode ? 'danger' : undefined"
 					@click="
 						() => {
-							;(deleteMode = !deleteMode) &&
-								useToast().notify({
+							;(deleteMode = !deleteMode)
+								&& useToast().notify({
 									duration: 10000,
 									color: 'info',
 									position: 'bottom-right',
 									message:
-										'Clicking a tag while they are red will delete the tag.\nClick - again or close the marker to cancel.'
+										'Clicking a tag while they are red will delete the tag.\nClick - again or close the marker to cancel.',
 								})
 						}
 					"
@@ -342,7 +348,7 @@ Tags</pre>
 					@click="
 						open(
 							`https://maps.google.com/?q=${sheetContent.content.lat},${sheetContent.content.lng}`,
-							'_blank'
+							'_blank',
 						)
 					"
 				>
@@ -353,8 +359,8 @@ Tags</pre>
 					color="danger"
 					@click="
 						(event: MouseEvent) =>
-							sheetContent?.id === 'mapMarker' &&
-							deleteMarker(event, sheetContent.content.markerInstance)
+							sheetContent?.id === 'mapMarker'
+							&& deleteMarker(event, sheetContent.content.markerInstance)
 					"
 				>
 					Delete Marker
@@ -372,7 +378,8 @@ Tags</pre>
 	</div>
 </template>
 
-<style module="mapsControls">
+<!-- module="mapsControls" -->
+<style module>
 .spacing {
 	margin: 10px 0 0 10px;
 }

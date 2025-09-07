@@ -6,24 +6,24 @@ import createTrackChangesPlugin from './plugins/trackChangesPlugin'
 
 import { PrimeVueResolver } from '@primevue/auto-import-resolver'
 import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
+// import vueJsx from '@vitejs/plugin-vue-jsx'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
 	build: {
-		outDir: '../api/client_dist'
+		outDir: '../api/client_dist',
 	},
 	css: {
 		preprocessorOptions: {
 			sass: {
-				api: 'modern-compiler'
+				api: 'modern-compiler',
 			},
 			scss: {
-				api: 'modern-compiler'
-			}
-		}
+				api: 'modern-compiler',
+			},
+		},
 	},
 	plugins: [
 		piniaHMRPlugin(),
@@ -33,22 +33,22 @@ export default defineConfig({
 				onChange: () => {
 					console.log('Compiling css variables for Vuestic')
 					extractCssVars('./src/assets/base.css', './cssVariables')
-				}
-			}
+				},
+			},
 		]),
 		// This is to prevent a bug that stops wrangler pages dev [directory] from working
 		// it is supposed to refresh when static assets change but it doesn't
 		touchFileAfterBuild('../api/functions/trpc/[[trpc]].js'),
 		vue(),
-		vueJsx(),
+		// vueJsx(),
 		Components({
 			dts: true, // enabled by default if `typescript` is installed
-			resolvers: [PrimeVueResolver()]
-		})
+			resolvers: [PrimeVueResolver()],
+		}),
 	],
 	resolve: {
 		alias: {
-			'@': fileURLToPath(new URL('./src', import.meta.url))
-		}
-	}
+			'@': fileURLToPath(new URL('./src', import.meta.url)),
+		},
+	},
 })

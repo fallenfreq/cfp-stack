@@ -25,7 +25,7 @@
 		"build:client": "pnpm --filter @somefreq-app/client build",
 		"build:api": "pnpm --filter @somefreq-app/api build",
 		"preview:client": "pnpm --filter @somefreq-app/client preview",
-		"lint": "eslint --flag unstable_config_lookup_from_file --fix",
+		"lint": "eslint --flag v10_config_lookup_from_file --fix",
 		"format": "prettier --write .",
 		"migrate:api": "pnpm --filter @somefreq-app/api migrate",
 		"migrate:custom": "pnpm --filter @somefreq-app/api migrate:custom",
@@ -57,7 +57,7 @@
 		"prettier-plugin-multiline-arrays": "^4.0.3",
 		"prettier-plugin-organize-imports": "^4.1.0",
 		"stylistic": "^0.2.4",
-		"typescript": "~5.4.5",
+		"typescript": "~5.9.2",
 		"typescript-eslint": "^8.33.0"
 	},
 	"packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
