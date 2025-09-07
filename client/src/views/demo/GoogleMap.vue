@@ -39,7 +39,7 @@ const sheetStore = useStackableSheetStore()
 const { isSheetOpen, sheetContent } = storeToRefs(sheetStore)
 const { closeSheet } = sheetStore
 
-const mapsControlsStyle = useCssModule(/*'mapsControls'*/)
+const mapsControlsStyle = useCssModule('mapsControls')
 
 // Computed property for efficient outline calculation
 const isTagOutlined = computed(() => {
@@ -378,8 +378,7 @@ Tags</pre>
 	</div>
 </template>
 
-<!-- module="mapsControls" -->
-<style module>
+<style module="mapsControls">
 .spacing {
 	margin: 10px 0 0 10px;
 }
