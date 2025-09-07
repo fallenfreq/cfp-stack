@@ -108,7 +108,14 @@ export function useNodeViewInteractions() {
 
 		if (editor.value) {
 			editor.value.off('selectionUpdate', onEditorSelectionUpdate)
-			editor.value.view.dom.removeEventListener('focusin', onEditorFocusIn)
+			// try a time delay on this and see if I can get the error locally
+			console.log('editor.value.view', editor.value.view)
+			console.log('isDestroyed', editor.value?.view.isDestroyed)
+			setTimeout(() => {
+				console.log('editor.value', editor.value)
+				console.log('isDestroyed', editor.value?.view.isDestroyed)
+				editor.value?.view.dom.removeEventListener('focusin', onEditorFocusIn)
+			}, 5000)
 		}
 	})
 }
