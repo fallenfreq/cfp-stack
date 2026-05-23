@@ -1,8 +1,7 @@
 <template>
 	<div
 		v-if="show"
-		ref="toolbar"
-		class="floating-toolbar flex flex-wrap gap-2 px-7 sticky top-2 z-10"
+		class="floating-toolbar flex flex-wrap gap-2 px-7 z-10"
 		:style="{ top: `${position.top}px`, left: `${position.left}px` }"
 	>
 		<!-- Use for when the caret is not in a text block  -->
@@ -32,18 +31,20 @@
 import { useEditorStore } from '@/stores/editorStore.js'
 import { prettifySelectedCode } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 const editorStore = useEditorStore()
 const props = defineProps<{ editor: Editor }>()
 
 const show = ref(false)
 const position = ref({ top: 0, left: 0 })
-const toolbar = ref<HTMLElement | null>(null)
 const selectedNodeType = ref<string | null>(null)
 const isTextNodeType = ref(false)
 
-const updatePosition = async () => {
+const TOOLBAR_HEIGHT = 48
+const TOOLBAR_SPACING = 10
+
+const updatePosition = () => {
 	const { view, state } = props.editor
 	const { selection } = state
 	const { anchor } = selection
@@ -60,21 +61,16 @@ const updatePosition = async () => {
 		isTextNodeType.value || !nodeType ? view.nodeDOM(startPosition - 1) : view.nodeDOM(anchor)
 	) as HTMLElement | null
 
-	show.value = true
-	await nextTick()
-
 	if (!nonTextNode) {
 		show.value = false
 		return
 	}
 
 	const rect = nonTextNode.getBoundingClientRect()
-	const toolbarHeight = toolbar.value?.offsetHeight || 48
-	const toolbarSpacing = 10
 
 	position.value = {
-		top: rect.top + window.scrollY - toolbarHeight - toolbarSpacing,
-		left: rect.left + window.scrollX,
+		top: rect.top - TOOLBAR_HEIGHT - TOOLBAR_SPACING,
+		left: rect.left,
 	}
 
 	show.value = true
@@ -83,11 +79,13 @@ const updatePosition = async () => {
 onMounted(() => {
 	props.editor.on('transaction', updatePosition)
 	window.addEventListener('resize', updatePosition)
+	window.addEventListener('scroll', updatePosition, { passive: true })
 })
 
 onUnmounted(() => {
 	props.editor.off('transaction', updatePosition)
 	window.removeEventListener('resize', updatePosition)
+	window.removeEventListener('scroll', updatePosition)
 })
 </script>
 
@@ -100,7 +98,7 @@ onUnmounted(() => {
 	z-index: 1000;
 }
 .floating-toolbar {
-	position: absolute;
+	position: fixed;
 	background: rgba(var(--backgroundSecondary) / 0.9);
 	border: 1px solid rgb(var(--backgroundBorder));
 	padding: 8px;

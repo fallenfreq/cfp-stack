@@ -168,18 +168,18 @@ const DragHandle = Extension.create<DragHandleOptions>({
 		const fadeLogic: FadeLogic = {
 			timer: null,
 
-			lock(_view) {
+			lock(view) {
 				if (this.timer) {
 					clearTimeout(this.timer)
 					this.timer = null
 				}
-				const handle = document.querySelector<HTMLElement>(`.${options.dragHandleClass}`)
+				const handle = view.dom.querySelector<HTMLElement>(`.${options.dragHandleClass}`)
 				handle?.classList.remove('fading')
 			},
 
 			unlock(view) {
 				if (this.timer) return
-				const handle = document.querySelector<HTMLElement>(`.${options.dragHandleClass}`)
+				const handle = view.dom.querySelector<HTMLElement>(`.${options.dragHandleClass}`)
 				handle?.classList.add('fading')
 
 				this.timer = setTimeout(() => {
