@@ -34,6 +34,9 @@ node_modules/
 # stop build file syncing
 dist/
 
+# generated files
+client/cssVariables.js
+
 .tsbuildinfo
 TODO.md
 *.code-workspace
