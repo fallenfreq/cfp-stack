@@ -69,7 +69,7 @@ const router = createRouter({
 			},
 		},
 		{
-			path: '/editor-demo',
+			path: '/demo/editor',
 			name: 'editor',
 			meta: {
 				authName: zitadelAuth.oidcAuth.authName,
@@ -82,7 +82,7 @@ const router = createRouter({
 			},
 		},
 		{
-			path: '/map-demo',
+			path: '/demo/map',
 			name: 'map',
 			meta: {
 				authName: zitadelAuth.oidcAuth.authName,

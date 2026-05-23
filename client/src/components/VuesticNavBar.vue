@@ -31,7 +31,10 @@
 
 						<VaDropdownContent class="w-64">
 							<template v-for="child in item.children" :key="child.title">
-								<VaSidebarItem v-bind="getSidebarItemProps(child)">
+								<VaSidebarItem
+									v-if="!child.visible || child.visible()"
+									v-bind="getSidebarItemProps(child)"
+								>
 									<VaSidebarItemContent>
 										<VaIcon :name="child.icon" />
 										<VaSidebarItemTitle>{{ child.title }}</VaSidebarItemTitle>
@@ -112,7 +115,7 @@
 											<VaSidebarItem
 												v-if="child.visible()"
 												:key="child.title"
-												:active="'to' in child && route.path === child.to"
+												v-bind="getSidebarItemProps(child)"
 											>
 												<VaSidebarItemContent>
 													<VaIcon :name="child.icon" />
@@ -247,6 +250,15 @@ const items = ref<MenuItem[]>([
 				icon: 'view_comfy',
 				to: '/portfolio/web-design',
 			}),
+		],
+	}),
+	createMenuItem({
+		title: 'Demo',
+		icon: 'science',
+		visible: () => zitadelAuth.oidcAuth.isAuthenticated,
+		children: [
+			createMenuItem({ title: 'Editor', icon: 'edit_note', to: '/demo/editor' }),
+			createMenuItem({ title: 'Map', icon: 'map', to: '/demo/map' }),
 		],
 	}),
 	createMenuItem({
