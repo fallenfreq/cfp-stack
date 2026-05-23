@@ -1,0 +1,302 @@
+import './dragHandle.css'
+import { type Node as ProseMirrorNode } from '@tiptap/pm/model'
+import { Plugin, PluginKey, NodeSelection } from '@tiptap/pm/state'
+import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
+import { Extension } from '@tiptap/vue-3'
+
+const dragHandlePluginKey = new PluginKey<DragHandleState>('dragHandle')
+
+interface DragHandleOptions {
+	dragHandleClass: string
+	shouldShowHandle: (node: ProseMirrorNode, depth: number) => boolean
+}
+
+interface DragHandleState {
+	decorations: DecorationSet
+	activePos: number | null
+}
+
+interface FadeLogic {
+	timer: ReturnType<typeof setTimeout> | null
+	lock: (view: EditorView) => void
+	unlock: (view: EditorView) => void
+	destroy: () => void
+}
+
+interface MatchResult {
+	node: ProseMirrorNode
+	pos: number
+}
+
+function findClosestDraggableParent(
+	state: EditorView['state'],
+	pos: number,
+	options: DragHandleOptions,
+): MatchResult | null {
+	const $pos = state.doc.resolve(pos)
+
+	for (let depth = $pos.depth; depth >= 1; depth--) {
+		const node = $pos.node(depth)
+		if (node.type.spec.selectable === false) continue
+		if (options.shouldShowHandle(node, depth)) {
+			return { node, pos: $pos.before(depth) }
+		}
+	}
+
+	return null
+}
+
+function findNodeDOM(view: EditorView, pos: number): HTMLElement | null {
+	const nodeDOM = view.nodeDOM(pos)
+	if (nodeDOM && nodeDOM.nodeType === Node.ELEMENT_NODE) {
+		return nodeDOM as HTMLElement
+	}
+	return null
+}
+
+function setupCleanup(
+	handle: HTMLElement,
+	handlers: {
+		mousedown: (e: MouseEvent) => void
+		dragstart: (e: DragEvent) => void
+		dragend: () => void
+	},
+) {
+	setTimeout(() => {
+		if (!handle.parentElement) return
+
+		const observer = new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				for (const removed of Array.from(mutation.removedNodes)) {
+					if (removed === handle || (removed as Element).contains?.(handle)) {
+						handle.removeEventListener('mousedown', handlers.mousedown)
+						handle.removeEventListener('dragstart', handlers.dragstart)
+						handle.removeEventListener('dragend', handlers.dragend)
+						observer.disconnect()
+						return
+					}
+				}
+			}
+		})
+
+		observer.observe(handle.parentElement, { childList: true, subtree: true })
+	}, 0)
+}
+
+function createEventHandlers(
+	view: EditorView,
+	getPos: () => number | undefined,
+	handle: HTMLElement,
+) {
+	const mousedown = (_event: MouseEvent) => {
+		if (view.composing) return
+		const pos = getPos()
+		if (typeof pos !== 'number') return
+		view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)))
+	}
+
+	const dragstart = (event: DragEvent) => {
+		if (view.composing) return
+		const pos = getPos()
+		if (typeof pos !== 'number') return
+
+		view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)))
+
+		const nodeDOM = findNodeDOM(view, pos)
+		if (nodeDOM && event.dataTransfer) {
+			event.dataTransfer.effectAllowed = 'move'
+			event.dataTransfer.setDragImage(nodeDOM, 0, 0)
+		}
+
+		handle.classList.add('dragging')
+	}
+
+	const dragend = () => {
+		handle.classList.remove('dragging')
+	}
+
+	return { mousedown, dragstart, dragend }
+}
+
+function createDragHandle(
+	view: EditorView,
+	getPos: () => number | undefined,
+	className: string,
+): HTMLElement {
+	const handle = document.createElement('div')
+	handle.className = className
+	handle.contentEditable = 'false'
+	handle.draggable = true
+
+	handle.innerHTML = `
+		<svg width="10" height="16" viewBox="0 0 10 16">
+			<circle cx="2" cy="2" r="1.5" fill="currentColor"/>
+			<circle cx="2" cy="8" r="1.5" fill="currentColor"/>
+			<circle cx="2" cy="14" r="1.5" fill="currentColor"/>
+			<circle cx="8" cy="2" r="1.5" fill="currentColor"/>
+			<circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+			<circle cx="8" cy="14" r="1.5" fill="currentColor"/>
+		</svg>
+	`
+
+	const handlers = createEventHandlers(view, getPos, handle)
+
+	handle.addEventListener('mousedown', handlers.mousedown)
+	handle.addEventListener('dragstart', handlers.dragstart)
+	handle.addEventListener('dragend', handlers.dragend)
+
+	setupCleanup(handle, handlers)
+
+	return handle
+}
+
+const DragHandle = Extension.create<DragHandleOptions>({
+	name: 'dragHandle',
+
+	addOptions() {
+		return {
+			dragHandleClass: 'drag-handle',
+			shouldShowHandle: (node, depth) =>
+				depth === 1 && node.isBlock && node.type.name !== 'doc',
+		}
+	},
+
+	addProseMirrorPlugins() {
+		const options = this.options
+		let rafPending = false
+
+		const fadeLogic: FadeLogic = {
+			timer: null,
+
+			lock(_view) {
+				if (this.timer) {
+					clearTimeout(this.timer)
+					this.timer = null
+				}
+				const handle = document.querySelector<HTMLElement>(`.${options.dragHandleClass}`)
+				handle?.classList.remove('fading')
+			},
+
+			unlock(view) {
+				if (this.timer) return
+				const handle = document.querySelector<HTMLElement>(`.${options.dragHandleClass}`)
+				handle?.classList.add('fading')
+
+				this.timer = setTimeout(() => {
+					view.dispatch(
+						view.state.tr.setMeta('updateDragHandle', { action: 'remove' }),
+					)
+					this.timer = null
+				}, 2000)
+			},
+
+			destroy() {
+				if (this.timer) {
+					clearTimeout(this.timer)
+					this.timer = null
+				}
+			},
+		}
+
+		return [
+			new Plugin<DragHandleState>({
+				key: dragHandlePluginKey,
+
+				state: {
+					init() {
+						return { decorations: DecorationSet.empty, activePos: null }
+					},
+
+					apply(tr, prev) {
+						const meta = tr.getMeta('updateDragHandle') as
+							| { action: 'remove' }
+							| { pos: number }
+							| undefined
+
+						if (meta && 'action' in meta && meta.action === 'remove') {
+							return { decorations: DecorationSet.empty, activePos: null }
+						}
+
+						if (meta && 'pos' in meta) {
+							const decoration = Decoration.widget(
+								meta.pos,
+								(view, getPos) =>
+									createDragHandle(view, getPos, options.dragHandleClass),
+								{ side: -1, ignoreSelection: true, key: 'drag-handle' },
+							)
+							return {
+								decorations: DecorationSet.create(tr.doc, [decoration]),
+								activePos: meta.pos,
+							}
+						}
+
+						return {
+							decorations: prev.decorations.map(tr.mapping, tr.doc),
+							activePos:
+								prev.activePos != null ? tr.mapping.map(prev.activePos) : null,
+						}
+					},
+				},
+
+				props: {
+					decorations(state) {
+						return dragHandlePluginKey.getState(state)?.decorations
+					},
+
+					handleDOMEvents: {
+						mousemove(view, event) {
+							if (view.composing || !view.hasFocus()) return false
+
+							if (rafPending) return false
+							rafPending = true
+
+							requestAnimationFrame(() => {
+								rafPending = false
+
+								const onHandle = (event.target as Element | null)?.closest(
+									`.${options.dragHandleClass}`,
+								)
+								const coords = view.posAtCoords({
+									left: event.clientX,
+									top: event.clientY,
+								})
+								const match = coords
+									? findClosestDraggableParent(view.state, coords.pos, options)
+									: null
+
+								if (onHandle || match) {
+									fadeLogic.lock(view)
+									if (match) {
+										const state = dragHandlePluginKey.getState(view.state)
+										if (state?.activePos !== match.pos) {
+											view.dispatch(
+												view.state.tr.setMeta('updateDragHandle', {
+													pos: match.pos,
+												}),
+											)
+										}
+									}
+								} else {
+									fadeLogic.unlock(view)
+								}
+							})
+
+							return false
+						},
+
+						mouseleave(view) {
+							fadeLogic.unlock(view)
+							return false
+						},
+					},
+				},
+
+				destroy() {
+					fadeLogic.destroy()
+				},
+			}),
+		]
+	},
+})
+
+export { DragHandle }

@@ -21,7 +21,7 @@ import {
 
 import Div from '@/editor/extensions/divExtension'
 import Span from '@/editor/extensions/spanExtension'
-import { DragHandle } from '@tiptap/extension-drag-handle'
+import { DragHandle } from '@/editor/extensions/dragHandle'
 import Heading from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -48,7 +48,6 @@ useSyntaxHighlighting()
 
 const editor = useEditor({
 	extensions: [
-		// by default, you can style just using the class 'drag-handle'
 		DragHandle,
 		CodeBlockLowlight.extend({
 			addNodeView() {
@@ -207,37 +206,6 @@ watch(editor, (newEditor) => {
 	float: left;
 	height: 0;
 	pointer-events: none;
-}
-
-.drag-handle {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	/* width: 1.75rem;
-	height: 1.75rem; */
-	cursor: grab;
-	border-radius: 0.375rem;
-	background-color: rgba(var(--textPrimary) / 0.05);
-	color: rgba(var(--primary) / 1);
-	font-size: 1.5rem;
-	font-weight: 700;
-	transition:
-		background-color 0.2s ease,
-		opacity 0.2s ease;
-
-	&::after {
-		content: '⠿';
-		pointer-events: none;
-	}
-
-	&:hover {
-		background-color: rgba(var(--textPrimary) / 0.1);
-	}
-
-	&:active {
-		background-color: rgba(var(--textPrimary) / 0.15);
-		cursor: grabbing;
-	}
 }
 
 /* tiptap table style */

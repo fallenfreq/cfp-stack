@@ -1,0 +1,39 @@
+.tiptap {
+	position: relative;
+}
+
+.drag-handle {
+	position: absolute;
+	left: -1.5rem;
+	margin-top: -2px;
+	width: 24px;
+	height: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: rgb(var(--backgroundSecondary));
+	border: 1px solid rgb(var(--backgroundBorder));
+	border-radius: 4px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+	color: rgba(var(--textPrimary) / 0.4);
+	cursor: grab;
+	z-index: 50;
+	opacity: 1;
+	transition: opacity 1s ease 1s;
+
+	&:hover {
+		background-color: rgba(var(--textPrimary) / 0.05);
+		color: rgba(var(--primary) / 1);
+		border-color: rgb(var(--primary));
+	}
+
+	&.dragging {
+		cursor: grabbing;
+		background-color: rgba(var(--primary) / 0.1);
+		border-color: rgb(var(--primary));
+	}
+
+	&.fading {
+		opacity: 0;
+	}
+}
