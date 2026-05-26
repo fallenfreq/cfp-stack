@@ -258,8 +258,15 @@ const DragHandle = Extension.create<DragHandleOptions>({
 							// we insert or move the widget decoration.  Re-read state at
 							// fire time so stale captures from rapid moves don't matter.
 							requestAnimationFrame(() => {
-								const anchor = view.state.selection.anchor
-								const match = findClosestDraggableParent(view.state, anchor, options)
+								const { selection } = view.state
+								// NodeSelection: use the selected node directly. The depth walk
+								// fails for top-level nodes (anchor resolves at depth 0) and
+								// returns the wrong node for nested ones.
+								const match: MatchResult | null =
+									selection instanceof NodeSelection &&
+									selection.node.type.spec.selectable !== false
+										? { node: selection.node, pos: selection.from }
+										: findClosestDraggableParent(view.state, selection.anchor, options)
 								if (match) {
 									fadeLogic.lock(view)
 									const state = dragHandlePluginKey.getState(view.state)
