@@ -35,15 +35,15 @@ function findClosestDraggableParent(
 ): MatchResult | null {
 	const $pos = state.doc.resolve(pos)
 
-	// Inline atoms (e.g. Image) are not block nodes so the depth walk below
-	// never reaches them.
+	// Atom nodes (Image, HR, …) bypass the depth walk: block atoms resolve to
+	// depth 0 where the loop can't fire; inline atoms are never block nodes.
+	// Always show a handle for atoms so they can be dragged regardless of
+	// activeDepth.  Text nodes are isLeaf (→ isAtom) but not draggable atoms;
+	// hardBreak has selectable:false — both are excluded below.
 	const adjacent = $pos.nodeAfter ?? $pos.nodeBefore
-	if (adjacent?.isAtom && !adjacent.isBlock) {
+	if (adjacent?.isAtom && !adjacent.isText && adjacent.type.spec.selectable !== false) {
 		const atomPos = $pos.nodeAfter ? pos : pos - adjacent.nodeSize
-		const atomDepth = $pos.depth + 1
-		if (options.shouldShowHandle(adjacent, atomDepth)) {
-			return { node: adjacent, pos: atomPos }
-		}
+		return { node: adjacent, pos: atomPos }
 	}
 
 	for (let depth = $pos.depth; depth >= 1; depth--) {
@@ -254,19 +254,24 @@ const DragHandle = Extension.create<DragHandleOptions>({
 						update(view, prevState) {
 							if (view.state.selection.eq(prevState.selection)) return
 							if (view.composing) return
-							const anchor = view.state.selection.anchor
-							const match = findClosestDraggableParent(view.state, anchor, options)
-							if (match) {
-								fadeLogic.lock(view)
-								const state = dragHandlePluginKey.getState(view.state)
-								if (state?.activePos !== match.pos) {
-									view.dispatch(
-										view.state.tr.setMeta('updateDragHandle', { pos: match.pos }),
-									)
+							// Defer so the browser finishes cursor/focus handling before
+							// we insert or move the widget decoration.  Re-read state at
+							// fire time so stale captures from rapid moves don't matter.
+							requestAnimationFrame(() => {
+								const anchor = view.state.selection.anchor
+								const match = findClosestDraggableParent(view.state, anchor, options)
+								if (match) {
+									fadeLogic.lock(view)
+									const state = dragHandlePluginKey.getState(view.state)
+									if (state?.activePos !== match.pos) {
+										view.dispatch(
+											view.state.tr.setMeta('updateDragHandle', { pos: match.pos }),
+										)
+									}
+								} else {
+									fadeLogic.unlock(view)
 								}
-							} else {
-								fadeLogic.unlock(view)
-							}
+							})
 						},
 					}
 				},
@@ -279,6 +284,12 @@ const DragHandle = Extension.create<DragHandleOptions>({
 					handleDOMEvents: {
 						mousemove(view, event) {
 							if (view.composing || !view.hasFocus()) return false
+							// Touch-synthesised mousemove fires before mousedown commits the
+							// cursor.  The rAF below can land between those two events and
+							// insert the widget while cursor placement is still pending,
+							// which disrupts it.  The view() hook handles touch instead.
+							const isTouch = (event as any).sourceCapabilities?.firesTouchEvents
+							if (isTouch) return false
 
 							if (rafPending) return false
 							rafPending = true
