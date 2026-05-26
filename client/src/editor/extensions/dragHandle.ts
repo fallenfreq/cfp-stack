@@ -35,6 +35,17 @@ function findClosestDraggableParent(
 ): MatchResult | null {
 	const $pos = state.doc.resolve(pos)
 
+	// Inline atoms (e.g. Image) are not block nodes so the depth walk below
+	// never reaches them.
+	const adjacent = $pos.nodeAfter ?? $pos.nodeBefore
+	if (adjacent?.isAtom && !adjacent.isBlock) {
+		const atomPos = $pos.nodeAfter ? pos : pos - adjacent.nodeSize
+		const atomDepth = $pos.depth + 1
+		if (options.shouldShowHandle(adjacent, atomDepth)) {
+			return { node: adjacent, pos: atomPos }
+		}
+	}
+
 	for (let depth = $pos.depth; depth >= 1; depth--) {
 		const node = $pos.node(depth)
 		if (node.type.spec.selectable === false) continue
@@ -236,6 +247,28 @@ const DragHandle = Extension.create<DragHandleOptions>({
 								prev.activePos != null ? tr.mapping.map(prev.activePos) : null,
 						}
 					},
+				},
+
+				view() {
+					return {
+						update(view, prevState) {
+							if (view.state.selection.eq(prevState.selection)) return
+							if (view.composing) return
+							const anchor = view.state.selection.anchor
+							const match = findClosestDraggableParent(view.state, anchor, options)
+							if (match) {
+								fadeLogic.lock(view)
+								const state = dragHandlePluginKey.getState(view.state)
+								if (state?.activePos !== match.pos) {
+									view.dispatch(
+										view.state.tr.setMeta('updateDragHandle', { pos: match.pos }),
+									)
+								}
+							} else {
+								fadeLogic.unlock(view)
+							}
+						},
+					}
 				},
 
 				props: {
