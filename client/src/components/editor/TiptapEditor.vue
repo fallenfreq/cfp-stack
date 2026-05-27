@@ -66,8 +66,7 @@ const editor = useEditor({
 		DragHandle.configure({
 			shouldShowHandle: (node, depth) =>
 				depth <= dragHandleStore.activeDepth &&
-				(node.isBlock || node.isAtom || node.type.spec.draggable) &&
-				node.type.name !== 'doc',
+				(node.isBlock || node.isAtom || node.type.spec.draggable),
 		}),
 		CodeBlockLowlight.extend({
 			addNodeView() {

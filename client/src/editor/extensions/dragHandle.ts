@@ -73,35 +73,6 @@ function findNodeDOM(view: EditorView, pos: number): HTMLElement | null {
 	return null
 }
 
-function setupCleanup(
-	handle: HTMLElement,
-	handlers: {
-		mousedown: (e: MouseEvent) => void
-		dragstart: (e: DragEvent) => void
-		dragend: () => void
-	},
-) {
-	setTimeout(() => {
-		if (!handle.parentElement) return
-
-		const observer = new MutationObserver((mutations) => {
-			for (const mutation of mutations) {
-				for (const removed of Array.from(mutation.removedNodes)) {
-					if (removed === handle || (removed as Element).contains?.(handle)) {
-						handle.removeEventListener('mousedown', handlers.mousedown)
-						handle.removeEventListener('dragstart', handlers.dragstart)
-						handle.removeEventListener('dragend', handlers.dragend)
-						observer.disconnect()
-						return
-					}
-				}
-			}
-		})
-
-		observer.observe(handle.parentElement, { childList: true, subtree: true })
-	}, 0)
-}
-
 function createEventHandlers(
 	view: EditorView,
 	getPos: () => number | undefined,
@@ -171,8 +142,6 @@ function createDragHandle(
 	handle.addEventListener('dragstart', handlers.dragstart)
 	handle.addEventListener('dragend', handlers.dragend)
 
-	setupCleanup(handle, handlers)
-
 	return handle
 }
 
@@ -182,8 +151,7 @@ const DragHandle = Extension.create<DragHandleOptions>({
 	addOptions() {
 		return {
 			dragHandleClass: 'drag-handle',
-			shouldShowHandle: (node, depth) =>
-				depth === 1 && node.isBlock && node.type.name !== 'doc',
+			shouldShowHandle: (node, depth) => depth === 1 && node.isBlock,
 		}
 	},
 
