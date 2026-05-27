@@ -142,7 +142,7 @@ onUnmounted(() => {
 		color 0.1s,
 		background 0.1s;
 }
-.path-node:hover:not(:disabled) {
+.path-node:hover:not(:disabled):not(.is-active) {
 	color: rgb(var(--textPrimary));
 	background: rgba(var(--textPrimary) / 0.06);
 }
