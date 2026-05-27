@@ -1,7 +1,10 @@
 <template>
 	<div v-if="!editor" class="p-7">Loading editor...</div>
 	<div v-else>
-		<FloatingEditorMenu :editor="editor" />
+		<NodePath :editor="editor" />
+		<div class="node-path-spacer" aria-hidden="true" />
+		<FloatingToolbar :editor="editor" />
+		<CodeViewToggle />
 		<EditorContent class="p-7" :editor="editor" />
 	</div>
 </template>
@@ -11,6 +14,11 @@ import { useNodeViewInteractions } from '@/composables/editor/useNodeViewInterac
 import initialContent from '@/config/editor/initialContent.html?raw'
 import { registerCustomNodes } from '@/config/editor/registerCustomNodes'
 import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExtension'
+import {
+	FloatingToolbarExtension,
+	type ToolbarItem,
+} from '@/editor/extensions/floatingToolbar'
+import { defaultToolbarItems } from '@/editor/extensions/floatingToolbar/defaultItems'
 import {
 	EditorContent,
 	VueNodeViewRenderer,
@@ -22,6 +30,10 @@ import {
 import Div from '@/editor/extensions/divExtension'
 import Span from '@/editor/extensions/spanExtension'
 import { DragHandle } from '@/editor/extensions/dragHandle'
+import { useDragHandleStore } from '@/stores/dragHandleStore'
+import CodeViewToggle from './CodeViewToggle.vue'
+import FloatingToolbar from './FloatingToolbar.vue'
+import NodePath from './NodePath.vue'
 import Heading from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -38,7 +50,6 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import TiptapCodeBlock from './TiptapCodeBlock.vue'
 
 import { watch, type Component } from 'vue'
-import FloatingEditorMenu from './FloatingEditorMenu.vue'
 
 import { lowlight } from '@/config/editor/lowlight'
 import { useEditorStore } from '@/stores/editorStore.js'
@@ -46,9 +57,17 @@ import { useEditorStore } from '@/stores/editorStore.js'
 import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
 useSyntaxHighlighting()
 
+const toolbarItems: ToolbarItem[] = defaultToolbarItems
+const dragHandleStore = useDragHandleStore()
+
 const editor = useEditor({
 	extensions: [
-		DragHandle,
+		FloatingToolbarExtension.configure({ items: toolbarItems }),
+		DragHandle.configure({
+			shouldShowHandle: (node, depth) =>
+				depth <= dragHandleStore.activeDepth &&
+				(node.isBlock || node.isAtom || node.type.spec.draggable),
+		}),
 		CodeBlockLowlight.extend({
 			addNodeView() {
 				return VueNodeViewRenderer(TiptapCodeBlock as Component<NodeViewProps>)
@@ -188,6 +207,10 @@ watch(editor, (newEditor) => {
 </script>
 
 <style>
+.node-path-spacer {
+	height: 29px;
+}
+
 .tiptap div[data-container],
 .tiptap img[draggable='true'] {
 	cursor: grab;

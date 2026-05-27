@@ -44,7 +44,7 @@ export function createVueNode(
 				defineComponent({
 					props: nodeViewProps,
 					setup(props) {
-						const { editor, node } = props
+						const { editor } = props
 						const wrapperRef = ref<typeof NodeViewWrapper | null>(null)
 
 						const onSelectionUpdate = () => {
@@ -84,6 +84,32 @@ export function createVueNode(
 									tabindex: '-1',
 									contenteditable: false,
 									ref: wrapperRef,
+									onMousedown: (event: MouseEvent) => {
+										const target = event.target as Element
+										const wrapper = wrapperRef.value?.$el
+										const content = wrapper?.querySelector(
+											'[data-node-view-content]',
+										)
+										if (!wrapper || !content || content.contains(target)) return
+										// Stop ProseMirror from processing this mousedown.
+										// PM's own handler calls view.focus() for selectable nodes,
+										// which on mobile focuses the contenteditable editor and
+										// eventually opens the keyboard.
+										event.stopPropagation()
+									},
+									onClick: (event: MouseEvent) => {
+										const target = event.target as Element
+										const wrapper = wrapperRef.value?.$el
+										const content = wrapper?.querySelector(
+											'[data-node-view-content]',
+										)
+										if (!wrapper || !content || content.contains(target)) return
+										if (props.selected) return
+										const pos = props.getPos()
+										if (typeof pos === 'number') {
+											props.editor.commands.setNodeSelection(pos)
+										}
+									},
 									onFocusin: (event: FocusEvent) => {
 										const target = event.target
 										const wrapper = wrapperRef.value?.$el
@@ -107,7 +133,7 @@ export function createVueNode(
 									default: () => [
 										h(
 											component,
-											{ ...node.attrs },
+											{ ...props.node.attrs },
 											{
 												default: () =>
 													h(NodeViewContent, {
