@@ -2,7 +2,6 @@
 	<div v-if="!editor" class="p-7">Loading editor...</div>
 	<div v-else>
 		<NodePath :editor="editor" />
-		<div class="node-path-spacer" aria-hidden="true" />
 		<FloatingToolbar :editor="editor" />
 		<CodeViewToggle />
 		<EditorContent class="p-7" :editor="editor" />
@@ -207,10 +206,6 @@ watch(editor, (newEditor) => {
 </script>
 
 <style>
-.node-path-spacer {
-	height: 29px;
-}
-
 .tiptap div[data-container],
 .tiptap img[draggable='true'] {
 	cursor: grab;
