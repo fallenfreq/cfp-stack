@@ -35,15 +35,23 @@ function findClosestDraggableParent(
 ): MatchResult | null {
 	const $pos = state.doc.resolve(pos)
 
-	// Atom nodes (Image, HR, …) bypass the depth walk: block atoms resolve to
-	// depth 0 where the loop can't fire; inline atoms are never block nodes.
-	// Always show a handle for atoms so they can be dragged regardless of
-	// activeDepth.  Text nodes are isLeaf (→ isAtom) but not draggable atoms;
-	// hardBreak has selectable:false — both are excluded below.
+	// Atoms and non-editable NodeViews both resolve just *outside* the node via
+	// posAtCoords (the browser can't place a cursor inside contenteditable=false).
+	// posAtCoords therefore returns a position at the parent depth, causing the
+	// depth walk to miss the node entirely.  Detect the node via $pos.nodeAfter /
+	// $pos.nodeBefore before the walk fires and return it directly.
+	// — Atoms (Image, HR…): always return regardless of activeDepth.
+	// — Non-atom blocks (custom NodeViews with content): return only when
+	//   shouldShowHandle approves the depth, so activeDepth is still respected.
+	// Text nodes are isLeaf(→isAtom) but not draggable; hardBreak has
+	// selectable:false — both excluded by the guards below.
 	const adjacent = $pos.nodeAfter ?? $pos.nodeBefore
-	if (adjacent?.isAtom && !adjacent.isText && adjacent.type.spec.selectable !== false) {
-		const atomPos = $pos.nodeAfter ? pos : pos - adjacent.nodeSize
-		return { node: adjacent, pos: atomPos }
+	if (adjacent && !adjacent.isText && adjacent.type.spec.selectable !== false) {
+		const adjacentDepth = $pos.depth + 1
+		if (adjacent.isAtom || options.shouldShowHandle(adjacent, adjacentDepth)) {
+			const nodePos = $pos.nodeAfter ? pos : pos - adjacent.nodeSize
+			return { node: adjacent, pos: nodePos }
+		}
 	}
 
 	for (let depth = $pos.depth; depth >= 1; depth--) {
@@ -118,6 +126,13 @@ function createEventHandlers(
 			event.dataTransfer.effectAllowed = 'move'
 			event.dataTransfer.setDragImage(nodeDOM, 0, 0)
 		}
+
+		// ProseMirror's own dragstart handler fires after ours (via bubbling) and
+		// walks up to the nearest node with draggable:true in its spec (e.g. a parent
+		// div), overwriting view.dragging with that ancestor's slice.  Set
+		// view.dragging ourselves and stop propagation so the correct node is dropped.
+		view.dragging = { slice: view.state.selection.content(), move: !event.altKey }
+		event.stopPropagation()
 
 		handle.classList.add('dragging')
 	}
