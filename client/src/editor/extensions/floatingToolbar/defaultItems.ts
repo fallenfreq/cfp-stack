@@ -150,6 +150,33 @@ const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerIt
 }
 
 const getWrapInItems = (editor: Editor, _ctx: ToolbarItemContext): NodePickerItem[] => {
+	const { selection } = editor.state
+	const isInlineContext =
+		!selection.empty &&
+		!(selection instanceof NodeSelection) &&
+		selection.$from.parent.inlineContent
+
+	if (isInlineContext) {
+		const items: NodePickerItem[] = []
+		for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
+			if (EXCLUDED_NODE_TYPES.has(typeName) || !type.isInline || type.isLeaf) continue
+			const meta = NODE_META[typeName] ?? { label: typeName, iconName: 'widgets' }
+			items.push({
+				label: meta.label,
+				iconName: meta.iconName,
+				active: editor.isActive(typeName),
+				action: () => {
+					const { from, to } = editor.state.selection
+					const content = editor.state.doc.slice(from, to).content
+					const nodeType = editor.state.schema.nodes[typeName]
+					const node = nodeType.create({}, content)
+					editor.view.dispatch(editor.state.tr.replaceWith(from, to, node))
+				},
+			})
+		}
+		return items
+	}
+
 	const items: NodePickerItem[] = []
 	for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
 		if (EXCLUDED_NODE_TYPES.has(typeName) || type.isLeaf) continue
@@ -303,18 +330,22 @@ export const defaultToolbarItems = [
 		id: 'unwrap-node',
 		label: icon('move_up'),
 		show: (editor, ctx) => {
-			try {
-				return (
-					ctx.activeNode.type.isBlock &&
-					!ctx.activeNode.type.isTextblock &&
-					editor.can().lift(ctx.activeNode.type.name)
-				)
-			} catch {
-				return false
-			}
+			if (!ctx.activeNode.type.isBlock || ctx.activeNode.type.isTextblock) return false
+			if (ctx.activeNode.childCount === 0) return false
+			const { $pos, depth } = resolveActivePos(editor, ctx)
+			if (depth === 0) return false
+			const parent = $pos.node(depth - 1)
+			const index = $pos.index(depth - 1)
+			return parent.canReplace(index, index + 1, ctx.activeNode.content)
 		},
-		action: (editor, ctx) =>
-			editor.chain().focus().lift(ctx.activeNode.type.name).run(),
+		action: (editor, ctx) => {
+			const { $pos, depth } = resolveActivePos(editor, ctx)
+			if (depth === 0) return
+			const nodePos = $pos.before(depth)
+			const node = $pos.node(depth)
+			const tr = editor.state.tr.replaceWith(nodePos, nodePos + node.nodeSize, node.content)
+			editor.view.dispatch(tr)
+		},
 	}),
 	toolbarButtonItem({
 		id: 'delete-node',
