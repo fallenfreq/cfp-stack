@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { useDragHandleStore } from '@/stores/dragHandleStore'
-import { NodeSelection } from '@tiptap/pm/state'
+import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
@@ -32,6 +32,7 @@ const tick = ref(0)
 interface PathSegment {
 	name: string
 	depth: number
+	start: number // $pos.start(depth); -1 for leaf nodes
 }
 
 const path = computed((): PathSegment[] => {
@@ -54,6 +55,7 @@ const path = computed((): PathSegment[] => {
 		segments.push({
 			name: $pos.node(depth).type.name,
 			depth,
+			start: $pos.start(depth),
 		})
 	}
 
@@ -63,6 +65,7 @@ const path = computed((): PathSegment[] => {
 		segments.push({
 			name: selection.node.type.name,
 			depth: $pos.depth + 1,
+			start: -1,
 		})
 	}
 
@@ -79,7 +82,25 @@ const effectiveActiveDepth = computed(() => {
 const handleDepthClick = (segment: PathSegment) => {
 	if (segment.depth === 0) return
 	dragHandleStore.setActiveDepth(segment.depth)
-	props.editor.commands.focus()
+
+	const { state } = props.editor
+	const { selection } = state
+
+	// A non-leaf NodeSelection only resolves as deep as the selected node.
+	// Dispatch a TextSelection inside deeper targets so resolveActivePos() isn't clamped.
+	const pathPos =
+		selection instanceof NodeSelection && !selection.node.isLeaf
+			? selection.from + 1
+			: selection.anchor
+	const selDepth = state.doc.resolve(pathPos).depth
+
+	if (segment.start >= 0 && selDepth < segment.depth) {
+		props.editor.view.dispatch(
+			state.tr.setSelection(TextSelection.near(state.doc.resolve(segment.start))),
+		)
+	} else {
+		props.editor.commands.focus()
+	}
 }
 
 const onTransaction = () => {
