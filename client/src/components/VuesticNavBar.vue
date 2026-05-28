@@ -96,9 +96,11 @@
 										>
 											<VaSidebarItemContent>
 												<VaIcon :name="item.icon" />
-												<VaSidebarItemTitle>{{
+												<VaSidebarItemTitle>
+{{
 													item.title
-												}}</VaSidebarItemTitle>
+												}}
+</VaSidebarItemTitle>
 												<VaSpacer />
 												<VaIcon
 													:name="
@@ -119,9 +121,11 @@
 											>
 												<VaSidebarItemContent>
 													<VaIcon :name="child.icon" />
-													<VaSidebarItemTitle>{{
+													<VaSidebarItemTitle>
+{{
 														child.title
-													}}</VaSidebarItemTitle>
+													}}
+</VaSidebarItemTitle>
 												</VaSidebarItemContent>
 											</VaSidebarItem>
 										</template>

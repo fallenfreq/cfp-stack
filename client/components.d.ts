@@ -33,6 +33,12 @@ declare module 'vue' {
     TiptapEditor: typeof import('./src/components/editor/TiptapEditor.vue')['default']
     TiptapTest: typeof import('./src/components/editor/TiptapTest.vue')['default']
     ToolbarButton: typeof import('./src/components/editor/toolbar/ToolbarButton.vue')['default']
+    ToolbarIcon: typeof import('./src/components/editor/toolbar/ToolbarIcon.vue')['default']
+    ToolbarImageUrlControl: typeof import('./src/components/editor/toolbar/ToolbarImageUrlControl.vue')['default']
+    ToolbarLinkControl: typeof import('./src/components/editor/toolbar/ToolbarLinkControl.vue')['default']
+    ToolbarNodePicker: typeof import('./src/components/editor/toolbar/ToolbarNodePicker.vue')['default']
+    ToolbarRevealInput: typeof import('./src/components/editor/toolbar/ToolbarRevealInput.vue')['default']
+    ToolbarYouTubeUrlControl: typeof import('./src/components/editor/toolbar/ToolbarYouTubeUrlControl.vue')['default']
     TriangleShape: typeof import('./src/components/shapes/TriangleShape.vue')['default']
     VuesticNavBar: typeof import('./src/components/VuesticNavBar.vue')['default']
   }
