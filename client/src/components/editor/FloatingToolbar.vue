@@ -2,7 +2,7 @@
 	<div
 		v-if="visibleItems.length"
 		class="floating-toolbar flex flex-wrap gap-2 px-7 z-10"
-		:style="{ top: `${position.top}px`, left: `${position.left}px` }"
+		:style="{ top: `${position.top}px`, left: `${position.left}px`, right: '0' }"
 	>
 		<component
 			:is="item.component"
@@ -77,10 +77,11 @@ const updatePosition = () => {
 	const domNode = props.editor.view.nodeDOM(domPos) as HTMLElement | null
 	if (!domNode) return
 
-	const rect = domNode.getBoundingClientRect()
+	const nodeRect = domNode.getBoundingClientRect()
+	const editorRect = (props.editor.view.dom as HTMLElement).getBoundingClientRect()
 	position.value = {
-		top: rect.top - TOOLBAR_SPACING,
-		left: rect.left,
+		top: nodeRect.top - TOOLBAR_SPACING,
+		left: editorRect.left,
 	}
 }
 
