@@ -304,42 +304,54 @@ export const defaultToolbarItems = [
 		id: 'heading-1',
 		label: icon('format_h1'),
 		show: isParagraphOrHeading,
-		active: (editor) => editor.isActive('heading', { level: 1 }),
+		active: (_editor, ctx) => ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 1,
 		action: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
 	}),
 	toolbarButtonItem({
 		id: 'heading-2',
 		label: icon('format_h2'),
 		show: isParagraphOrHeading,
-		active: (editor) => editor.isActive('heading', { level: 2 }),
+		active: (_editor, ctx) => ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 2,
 		action: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
 	}),
 	toolbarButtonItem({
 		id: 'heading-3',
 		label: icon('format_h3'),
 		show: isParagraphOrHeading,
-		active: (editor) => editor.isActive('heading', { level: 3 }),
+		active: (_editor, ctx) => ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 3,
 		action: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
 	}),
 	toolbarButtonItem({
 		id: 'blockquote',
 		label: icon('format_quote'),
 		show: isParagraphOrHeading,
-		active: (editor) => editor.isActive('blockquote'),
+		active: (editor, ctx) => {
+			const { $pos, depth } = resolveActivePos(editor, ctx)
+			return depth > 0 && $pos.node(depth - 1).type.name === 'blockquote'
+		},
 		action: (editor) => editor.chain().focus().toggleBlockquote().run(),
 	}),
 	toolbarButtonItem({
 		id: 'bullet-list',
 		label: icon('format_list_bulleted'),
 		show: isParagraphOrHeading,
-		active: (editor) => editor.isActive('bulletList'),
+		active: (editor, ctx) => {
+			const { $pos, depth } = resolveActivePos(editor, ctx)
+			// listItem sits between bulletList and the paragraph; check up to 2 levels
+			return (depth > 0 && $pos.node(depth - 1).type.name === 'bulletList') ||
+				(depth > 1 && $pos.node(depth - 2).type.name === 'bulletList')
+		},
 		action: (editor) => editor.chain().focus().toggleBulletList().run(),
 	}),
 	toolbarButtonItem({
 		id: 'ordered-list',
 		label: icon('format_list_numbered'),
 		show: isParagraphOrHeading,
-		active: (editor) => editor.isActive('orderedList'),
+		active: (editor, ctx) => {
+			const { $pos, depth } = resolveActivePos(editor, ctx)
+			return (depth > 0 && $pos.node(depth - 1).type.name === 'orderedList') ||
+				(depth > 1 && $pos.node(depth - 2).type.name === 'orderedList')
+		},
 		action: (editor) => editor.chain().focus().toggleOrderedList().run(),
 	}),
 
