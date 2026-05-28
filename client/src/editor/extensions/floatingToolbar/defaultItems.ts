@@ -353,8 +353,10 @@ export const defaultToolbarItems = [
 	),
 	toolbarCustomItem(
 		'wrap-in',
-		(_editor, ctx) =>
-			ctx.activeNode.type.isBlock && !useEditorStore().isCodeView,
+		(editor, ctx) =>
+			!useEditorStore().isCodeView &&
+			(ctx.activeNode.type.isBlock ||
+				(!editor.state.selection.empty && editor.state.selection.$from.parent.inlineContent)),
 		ToolbarNodePicker,
 		{ iconName: 'frame_source', getItems: getWrapInItems },
 	),
@@ -362,7 +364,7 @@ export const defaultToolbarItems = [
 		id: 'unwrap-node',
 		label: icon('move_up'),
 		show: (editor, ctx) => {
-			if (!ctx.activeNode.type.isBlock || ctx.activeNode.type.isTextblock) return false
+			if (ctx.activeNode.type.isTextblock || ctx.activeNode.type.isLeaf) return false
 			if (ctx.activeNode.childCount === 0) return false
 			const { $pos, depth } = resolveActivePos(editor, ctx)
 			if (depth === 0) return false
