@@ -333,7 +333,9 @@ const DragHandle = Extension.create<DragHandleOptions>({
 							return false
 						},
 
-						mouseleave(view) {
+						mouseleave(view, event) {
+							const to = (event as MouseEvent).relatedTarget as Element | null
+							if (to?.closest('.node-path')) return false
 							fadeLogic.unlock(view)
 							return false
 						},

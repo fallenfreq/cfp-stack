@@ -9,6 +9,7 @@
 					'is-doc': segment.depth === 0,
 				}"
 				:disabled="segment.depth === 0"
+				@mousedown.prevent
 				@click="handleDepthClick(segment)"
 			>
 				{{ segment.name }}
@@ -31,8 +32,6 @@ const tick = ref(0)
 interface PathSegment {
 	name: string
 	depth: number
-	/** First content position inside this node; null for doc and leaf atoms. */
-	pos: number | null
 }
 
 const path = computed((): PathSegment[] => {
@@ -55,18 +54,15 @@ const path = computed((): PathSegment[] => {
 		segments.push({
 			name: $pos.node(depth).type.name,
 			depth,
-			pos: depth === 0 ? null : $pos.start(depth),
 		})
 	}
 
-	// Leaf atoms (Image, HR, …) have no content positions, so we can't resolve
-	// inside them.  Append them at parentDepth + 1 so they appear in the path
-	// and can be targeted for drag; pos stays null (no cursor to place inside).
+	// Leaf atoms (Image, HR, …) have no content positions.
+	// Append them at parentDepth + 1 so they appear in the path.
 	if (selection instanceof NodeSelection && selection.node.isLeaf) {
 		segments.push({
 			name: selection.node.type.name,
 			depth: $pos.depth + 1,
-			pos: null,
 		})
 	}
 
@@ -83,11 +79,7 @@ const effectiveActiveDepth = computed(() => {
 const handleDepthClick = (segment: PathSegment) => {
 	if (segment.depth === 0) return
 	dragHandleStore.setActiveDepth(segment.depth)
-	// Leaf atoms: just update depth — the drag handle resolves them on the next
-	// mousemove.  Navigable nodes: move cursor so view() shows the handle.
-	if (segment.pos !== null) {
-		props.editor.chain().focus().setTextSelection(segment.pos).run()
-	}
+	props.editor.commands.focus()
 }
 
 const onTransaction = () => {
