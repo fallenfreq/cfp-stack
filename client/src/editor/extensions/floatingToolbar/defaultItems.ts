@@ -1,3 +1,4 @@
+import ToolbarAttributeEditor from '@/components/editor/toolbar/ToolbarAttributeEditor.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import ToolbarImageUrlControl from '@/components/editor/toolbar/ToolbarImageUrlControl.vue'
 import ToolbarLinkControl from '@/components/editor/toolbar/ToolbarLinkControl.vue'
@@ -453,42 +454,42 @@ export const defaultToolbarItems = [
 	toolbarButtonItem({
 		id: 'table-add-row-before',
 		label: '+ Row ↑',
-		show: (editor) => isInTable(editor),
+		show: isInTable,
 		disabled: (editor) => !editor.can().addRowBefore(),
 		action: (editor) => editor.chain().focus().addRowBefore().run(),
 	}),
 	toolbarButtonItem({
 		id: 'table-add-row-after',
 		label: '+ Row ↓',
-		show: (editor) => isInTable(editor),
+		show: isInTable,
 		disabled: (editor) => !editor.can().addRowAfter(),
 		action: (editor) => editor.chain().focus().addRowAfter().run(),
 	}),
 	toolbarButtonItem({
 		id: 'table-delete-row',
 		label: 'Del Row',
-		show: (editor) => isInTable(editor),
+		show: isInTable,
 		disabled: (editor) => !editor.can().deleteRow(),
 		action: (editor) => editor.chain().focus().deleteRow().run(),
 	}),
 	toolbarButtonItem({
 		id: 'table-add-col-before',
 		label: '+ Col ←',
-		show: (editor) => isInTable(editor),
+		show: isInTable,
 		disabled: (editor) => !editor.can().addColumnBefore(),
 		action: (editor) => editor.chain().focus().addColumnBefore().run(),
 	}),
 	toolbarButtonItem({
 		id: 'table-add-col-after',
 		label: '+ Col →',
-		show: (editor) => isInTable(editor),
+		show: isInTable,
 		disabled: (editor) => !editor.can().addColumnAfter(),
 		action: (editor) => editor.chain().focus().addColumnAfter().run(),
 	}),
 	toolbarButtonItem({
 		id: 'table-delete-col',
 		label: 'Del Col',
-		show: (editor) => isInTable(editor),
+		show: isInTable,
 		disabled: (editor) => !editor.can().deleteColumn(),
 		action: (editor) => editor.chain().focus().deleteColumn().run(),
 	}),
@@ -506,5 +507,12 @@ export const defaultToolbarItems = [
 				editor.state.selection.$from.parent.type.name !== 'codeBlock' &&
 				!useEditorStore().isCodeView),
 		ToolbarLinkControl,
+	),
+
+	// --- Node attribute editor ---
+	toolbarCustomItem(
+		'attr-editor',
+		(_e, ctx) => ctx.activeDepth > 0 && !useEditorStore().isCodeView,
+		ToolbarAttributeEditor,
 	),
 ]
