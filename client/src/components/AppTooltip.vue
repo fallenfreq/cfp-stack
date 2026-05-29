@@ -4,6 +4,9 @@
 		:aria-describedby="tooltipId"
 		@mouseenter="onEnter"
 		@mouseleave="onLeave"
+		@touchstart.passive="onTouchStart"
+		@touchend="onTouchEnd"
+		@touchcancel="onTouchEnd"
 	>
 		<slot />
 		<span
@@ -30,14 +33,32 @@ const props = defineProps<{
 const tooltipId = `tooltip-${Math.random().toString(36).slice(2)}`
 const visible = ref(false)
 let timer: ReturnType<typeof setTimeout> | null = null
+let lastTouchEnd = 0
 
 const onEnter = () => {
+	// Block the synthesized mouseenter that touch browsers fire after a tap
+	if (Date.now() - lastTouchEnd < 600) return
 	timer = setTimeout(() => {
 		visible.value = true
 	}, props.delay ?? 400)
 }
 
 const onLeave = () => {
+	if (timer) {
+		clearTimeout(timer)
+		timer = null
+	}
+	visible.value = false
+}
+
+const onTouchStart = () => {
+	timer = setTimeout(() => {
+		visible.value = true
+	}, 500)
+}
+
+const onTouchEnd = () => {
+	lastTouchEnd = Date.now()
 	if (timer) {
 		clearTimeout(timer)
 		timer = null
