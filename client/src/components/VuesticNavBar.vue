@@ -19,30 +19,36 @@
 					v-if="!item.visible || item.visible()"
 					:class="{ 'hidden sm:block': !item.outsideHamburger }"
 				>
-					<VaButton v-if="!('children' in item)" v-bind="getNavButtonProps(item)">
-						{{ item.title }}
-					</VaButton>
-					<VaDropdown v-else :stick-to-edges="true">
-						<template #anchor>
-							<VaButton v-bind="getDropdownAnchorButtonProps(item)">
-								{{ item.title }}
-							</VaButton>
-						</template>
-
-						<VaDropdownContent class="w-64">
-							<template v-for="child in item.children" :key="child.title">
-								<VaSidebarItem
-									v-if="!child.visible || child.visible()"
-									v-bind="getSidebarItemProps(child)"
-								>
-									<VaSidebarItemContent>
-										<VaIcon :name="child.icon" />
-										<VaSidebarItemTitle>{{ child.title }}</VaSidebarItemTitle>
-									</VaSidebarItemContent>
-								</VaSidebarItem>
+					<AppTooltip :text="item.title" placement="bottom">
+						<VaButton v-if="!('children' in item)" v-bind="getNavButtonProps(item)">
+							{{ item.title }}
+						</VaButton>
+						<VaDropdown v-else :stick-to-edges="true">
+							<template #anchor>
+								<VaButton v-bind="getDropdownAnchorButtonProps(item)">
+									{{ item.title }}
+								</VaButton>
 							</template>
-						</VaDropdownContent>
-					</VaDropdown>
+
+							<VaDropdownContent class="w-64">
+								<template v-for="child in item.children" :key="child.title">
+									<VaSidebarItem
+										v-if="!child.visible || child.visible()"
+										v-bind="getSidebarItemProps(child)"
+									>
+										<VaSidebarItemContent>
+											<VaIcon :name="child.icon" />
+											<VaSidebarItemTitle>
+{{
+												child.title
+											}}
+</VaSidebarItemTitle>
+										</VaSidebarItemContent>
+									</VaSidebarItem>
+								</template>
+							</VaDropdownContent>
+						</VaDropdown>
+					</AppTooltip>
 				</VaNavbarItem>
 			</template>
 			<VaNavbarItem>
@@ -141,6 +147,7 @@ import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import MothLogo from './brand/MothLogo.vue'
 import MothWordmark from './brand/MothWordmark.vue'
+import AppTooltip from './AppTooltip.vue'
 
 interface BaseMenuItem {
 	title: string

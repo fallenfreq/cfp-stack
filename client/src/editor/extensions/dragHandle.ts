@@ -240,8 +240,15 @@ const DragHandle = Extension.create<DragHandleOptions>({
 							const pos = dragHandlePluginKey.getState(view.state)?.activePos
 							const prevPos = dragHandlePluginKey.getState(prevState)?.activePos
 							if (pos !== prevPos) {
-								if (pos != null) positionHandle(view, pos, handle)
-								else handle.style.display = 'none'
+								if (pos != null) {
+									positionHandle(view, pos, handle)
+									handle.dataset.depth = String(
+										view.state.doc.resolve(pos).depth + 1,
+									)
+								} else {
+									handle.style.display = 'none'
+									delete handle.dataset.depth
+								}
 							}
 
 							// Selection-change: find and dispatch the new handle position

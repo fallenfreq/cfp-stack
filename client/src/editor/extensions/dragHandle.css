@@ -34,4 +34,16 @@
 	&.fading {
 		opacity: 0;
 	}
+
+	&::before {
+		content: attr(data-depth);
+		position: absolute;
+		top: -13px;
+		left: 50%;
+		transform: translateX(-50%);
+		font-size: 9px;
+		line-height: 1;
+		color: rgba(var(--textPrimary) / 0.4);
+		pointer-events: none;
+	}
 }

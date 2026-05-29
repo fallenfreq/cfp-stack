@@ -282,6 +282,7 @@ export const defaultToolbarItems = [
 	// --- Inline marks (any textblock) ---
 	toolbarButtonItem({
 		id: 'bold',
+		tooltip: 'Bold',
 		label: icon('format_bold'),
 		show: isFormattableTextblock,
 		active: (editor) => editor.isActive('bold'),
@@ -289,6 +290,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'italic',
+		tooltip: 'Italic',
 		label: icon('format_italic'),
 		show: isFormattableTextblock,
 		active: (editor) => editor.isActive('italic'),
@@ -296,6 +298,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'strike',
+		tooltip: 'Strikethrough',
 		label: icon('format_strikethrough'),
 		show: isFormattableTextblock,
 		active: (editor) => editor.isActive('strike'),
@@ -303,6 +306,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'inline-code',
+		tooltip: 'Inline Code',
 		label: icon('code'),
 		show: isFormattableTextblock,
 		active: (editor) => editor.isActive('code'),
@@ -312,6 +316,7 @@ export const defaultToolbarItems = [
 	// --- Block conversions (paragraph or heading) ---
 	toolbarButtonItem({
 		id: 'code-block',
+		tooltip: 'Code Block',
 		label: icon('data_object'),
 		show: isTextblock,
 		active: (editor) => editor.isActive('codeBlock'),
@@ -319,6 +324,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'heading-1',
+		tooltip: 'Heading 1',
 		label: icon('format_h1'),
 		show: isParagraphOrHeading,
 		active: (_editor, ctx) =>
@@ -327,6 +333,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'heading-2',
+		tooltip: 'Heading 2',
 		label: icon('format_h2'),
 		show: isParagraphOrHeading,
 		active: (_editor, ctx) =>
@@ -335,6 +342,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'heading-3',
+		tooltip: 'Heading 3',
 		label: icon('format_h3'),
 		show: isParagraphOrHeading,
 		active: (_editor, ctx) =>
@@ -343,6 +351,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'blockquote',
+		tooltip: 'Blockquote',
 		label: icon('format_quote'),
 		show: isParagraphOrHeading,
 		active: (editor, ctx) => {
@@ -353,6 +362,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'bullet-list',
+		tooltip: 'Bullet List',
 		label: icon('format_list_bulleted'),
 		show: isParagraphOrHeading,
 		active: (editor, ctx) => {
@@ -367,6 +377,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'ordered-list',
+		tooltip: 'Numbered List',
 		label: icon('format_list_numbered'),
 		show: isParagraphOrHeading,
 		active: (editor, ctx) => {
@@ -400,6 +411,7 @@ export const defaultToolbarItems = [
 	),
 	toolbarButtonItem({
 		id: 'unwrap-node',
+		tooltip: 'Unwrap',
 		label: icon('move_up'),
 		show: (editor, ctx) => {
 			if (ctx.activeNode.type.isTextblock || ctx.activeNode.type.isLeaf) return false
@@ -421,6 +433,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'delete-node',
+		tooltip: 'Delete Node',
 		label: icon('delete'),
 		show: (_e, ctx) => ctx.activeNode.type.name !== 'doc',
 		action: (editor, ctx) => {
@@ -438,6 +451,7 @@ export const defaultToolbarItems = [
 	// --- Code block controls ---
 	toolbarButtonItem({
 		id: 'format',
+		tooltip: 'Format Code',
 		label: icon('auto_fix_high'),
 		show: (_editor, ctx) => ctx.activeNode.type.name === 'codeBlock',
 		action: (editor) => prettifySelectedCode(editor),
@@ -446,6 +460,7 @@ export const defaultToolbarItems = [
 	// --- List switching (when active node is a list wrapper) ---
 	toolbarButtonItem({
 		id: 'list-bullet',
+		tooltip: 'Bullet List',
 		label: icon('format_list_bulleted'),
 		show: isListNode,
 		active: (_editor, ctx) => ctx.activeNode.type.name === 'bulletList',
@@ -456,6 +471,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'list-ordered',
+		tooltip: 'Numbered List',
 		label: icon('format_list_numbered'),
 		show: isListNode,
 		active: (_editor, ctx) => ctx.activeNode.type.name === 'orderedList',
@@ -466,6 +482,7 @@ export const defaultToolbarItems = [
 	}),
 	toolbarButtonItem({
 		id: 'list-task',
+		tooltip: 'Task List',
 		label: icon('checklist'),
 		show: isListNode,
 		active: (_editor, ctx) => ctx.activeNode.type.name === 'taskList',

@@ -1,3 +1,4 @@
+import AppTooltip from '@/components/AppTooltip.vue'
 import ToolbarButton from '@/components/editor/toolbar/ToolbarButton.vue'
 import type { Editor } from '@tiptap/vue-3'
 import type { Component, VNodeChild } from 'vue'
@@ -8,6 +9,8 @@ interface ButtonItemOptions {
 	id: string
 	/** String label or render function returning icon/VNode content. */
 	label: string | (() => VNodeChild)
+	/** Tooltip text shown on hover. Omit for items that already have a visible text label. */
+	tooltip?: string
 	show: (editor: Editor, context: ToolbarItemContext) => boolean
 	active?: (editor: Editor, context: ToolbarItemContext) => boolean
 	disabled?: (editor: Editor, context: ToolbarItemContext) => boolean
@@ -41,8 +44,8 @@ export function toolbarButtonItem(options: ButtonItemOptions): ToolbarItem {
 		component: defineComponent({
 			props: ['editor', 'context'],
 			setup(props: { editor: Editor; context: ToolbarItemContext }) {
-				return () =>
-					h(
+				return () => {
+					const btn = h(
 						ToolbarButton,
 						{
 							active: options.active?.(props.editor, props.context) ?? false,
@@ -51,6 +54,10 @@ export function toolbarButtonItem(options: ButtonItemOptions): ToolbarItem {
 						},
 						typeof options.label === 'string' ? () => options.label : options.label,
 					)
+					return options.tooltip
+						? h(AppTooltip, { text: options.tooltip, placement: 'bottom' }, () => btn)
+						: btn
+				}
 			},
 		}),
 	}
