@@ -13,6 +13,7 @@ interface DragHandleOptions {
 
 interface DragHandleState {
 	activePos: number | null
+	forceRefresh: boolean
 }
 
 interface FadeLogic {
@@ -171,7 +172,7 @@ const DragHandle = Extension.create<DragHandleOptions>({
 
 				state: {
 					init() {
-						return { activePos: null }
+						return { activePos: null, forceRefresh: false }
 					},
 
 					apply(tr, prev) {
@@ -181,16 +182,17 @@ const DragHandle = Extension.create<DragHandleOptions>({
 							| undefined
 
 						if (meta && 'action' in meta && meta.action === 'remove') {
-							return { activePos: null }
+							return { activePos: null, forceRefresh: false }
 						}
 
 						if (meta && 'pos' in meta) {
-							return { activePos: meta.pos }
+							return { activePos: meta.pos, forceRefresh: false }
 						}
 
 						return {
 							activePos:
 								prev.activePos != null ? tr.mapping.map(prev.activePos) : null,
+							forceRefresh: !!tr.getMeta('refreshDragHandle'),
 						}
 					},
 				},
@@ -251,8 +253,9 @@ const DragHandle = Extension.create<DragHandleOptions>({
 								}
 							}
 
-							// Selection-change: find and dispatch the new handle position
-							if (view.state.selection.eq(prevState.selection)) return
+							// Selection-change (or explicit refresh): find and dispatch new handle position
+							const forceRefresh = dragHandlePluginKey.getState(view.state)?.forceRefresh
+							if (!forceRefresh && view.state.selection.eq(prevState.selection)) return
 							if (view.composing) return
 							// Defer so the browser finishes cursor/focus handling before
 							// dispatching.  Re-read state at fire time so stale captures

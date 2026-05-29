@@ -87,7 +87,7 @@ const handleDepthClick = (segment: PathSegment) => {
 	const { selection } = state
 
 	// A non-leaf NodeSelection only resolves as deep as the selected node.
-	// Dispatch a TextSelection inside deeper targets so resolveActivePos() isn't clamped.
+	// Resolve one step inside so selDepth reflects the node's actual depth.
 	const pathPos =
 		selection instanceof NodeSelection && !selection.node.isLeaf
 			? selection.from + 1
@@ -95,11 +95,16 @@ const handleDepthClick = (segment: PathSegment) => {
 	const selDepth = state.doc.resolve(pathPos).depth
 
 	if (segment.start >= 0 && selDepth < segment.depth) {
+		// Cursor is shallower than target — move it inside the node.
 		props.editor.view.dispatch(
 			state.tr.setSelection(TextSelection.near(state.doc.resolve(segment.start))),
 		)
 	} else {
-		props.editor.commands.focus()
+		// Cursor is already inside the target node — keep it in place but tag the
+		// transaction so the drag handle plugin recomputes with the new activeDepth.
+		// On mobile, mousemove never fires after a tap so without this the handle
+		// stays at the previous depth.
+		props.editor.view.dispatch(state.tr.setMeta('refreshDragHandle', true))
 	}
 }
 
