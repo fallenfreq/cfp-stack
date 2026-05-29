@@ -43,15 +43,15 @@ The full-stack experience runs at **8788** (wrangler serves both the API and the
 
 ## Key scripts
 
-| Script | What it does |
-|---|---|
-| `pnpm dev` | Start both servers |
-| `pnpm build` | Build client + API |
-| `pnpm migrate:api` | Generate Drizzle migration files |
-| `pnpm migrate:push:local:api` | Apply migrations to local D1 |
-| `pnpm migrate:push:api` | Apply migrations to production D1 |
-| `pnpm lint` | ESLint with auto-fix |
-| `pnpm format` | Prettier |
+| Script                        | What it does                      |
+| ----------------------------- | --------------------------------- |
+| `pnpm dev`                    | Start both servers                |
+| `pnpm build`                  | Build client + API                |
+| `pnpm migrate:api`            | Generate Drizzle migration files  |
+| `pnpm migrate:push:local:api` | Apply migrations to local D1      |
+| `pnpm migrate:push:api`       | Apply migrations to production D1 |
+| `pnpm lint`                   | ESLint with auto-fix              |
+| `pnpm format`                 | Prettier                          |
 
 ## Auth setup (Zitadel)
 

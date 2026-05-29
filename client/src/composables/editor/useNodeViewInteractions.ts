@@ -17,7 +17,7 @@ export function useNodeViewInteractions() {
 
 	const posFromDomPos = (
 		editor: Editor,
-		position: { node: globalThis.Node; offset: number } | null
+		position: { node: globalThis.Node; offset: number } | null,
 	) => {
 		if (!position) return
 		const { node, offset } = position
@@ -110,7 +110,7 @@ export function useNodeViewInteractions() {
 				console.error('Error in editor watch:', error)
 			}
 		},
-		{ immediate: true }
+		{ immediate: true },
 	)
 
 	onMounted(() => {

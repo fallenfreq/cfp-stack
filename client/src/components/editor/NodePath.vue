@@ -9,6 +9,7 @@
 					'is-doc': segment.depth === 0,
 				}"
 				:disabled="segment.depth === 0"
+				@mousedown.prevent
 				@click="handleDepthClick(segment)"
 			>
 				{{ segment.name }}
@@ -19,7 +20,7 @@
 
 <script setup lang="ts">
 import { useDragHandleStore } from '@/stores/dragHandleStore'
-import { NodeSelection } from '@tiptap/pm/state'
+import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
@@ -31,12 +32,11 @@ const tick = ref(0)
 interface PathSegment {
 	name: string
 	depth: number
-	/** First content position inside this node; null for doc and leaf atoms. */
-	pos: number | null
+	start: number // $pos.start(depth); -1 for leaf nodes
 }
 
 const path = computed((): PathSegment[] => {
-	tick.value
+	void tick.value
 	const { state } = props.editor
 	const { selection } = state
 
@@ -55,18 +55,17 @@ const path = computed((): PathSegment[] => {
 		segments.push({
 			name: $pos.node(depth).type.name,
 			depth,
-			pos: depth === 0 ? null : $pos.start(depth),
+			start: $pos.start(depth),
 		})
 	}
 
-	// Leaf atoms (Image, HR, …) have no content positions, so we can't resolve
-	// inside them.  Append them at parentDepth + 1 so they appear in the path
-	// and can be targeted for drag; pos stays null (no cursor to place inside).
+	// Leaf atoms (Image, HR, …) have no content positions.
+	// Append them at parentDepth + 1 so they appear in the path.
 	if (selection instanceof NodeSelection && selection.node.isLeaf) {
 		segments.push({
 			name: selection.node.type.name,
 			depth: $pos.depth + 1,
-			pos: null,
+			start: -1,
 		})
 	}
 
@@ -83,10 +82,24 @@ const effectiveActiveDepth = computed(() => {
 const handleDepthClick = (segment: PathSegment) => {
 	if (segment.depth === 0) return
 	dragHandleStore.setActiveDepth(segment.depth)
-	// Leaf atoms: just update depth — the drag handle resolves them on the next
-	// mousemove.  Navigable nodes: move cursor so view() shows the handle.
-	if (segment.pos !== null) {
-		props.editor.chain().focus().setTextSelection(segment.pos).run()
+
+	const { state } = props.editor
+	const { selection } = state
+
+	// A non-leaf NodeSelection only resolves as deep as the selected node.
+	// Dispatch a TextSelection inside deeper targets so resolveActivePos() isn't clamped.
+	const pathPos =
+		selection instanceof NodeSelection && !selection.node.isLeaf
+			? selection.from + 1
+			: selection.anchor
+	const selDepth = state.doc.resolve(pathPos).depth
+
+	if (segment.start >= 0 && selDepth < segment.depth) {
+		props.editor.view.dispatch(
+			state.tr.setSelection(TextSelection.near(state.doc.resolve(segment.start))),
+		)
+	} else {
+		props.editor.commands.focus()
 	}
 }
 
@@ -105,10 +118,8 @@ onUnmounted(() => {
 
 <style>
 .node-path {
-	position: fixed;
+	position: sticky;
 	top: 0;
-	left: 0;
-	right: 0;
 	z-index: 100;
 	display: flex;
 	align-items: center;

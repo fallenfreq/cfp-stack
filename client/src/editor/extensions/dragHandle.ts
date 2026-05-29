@@ -1,8 +1,8 @@
-import './dragHandle.css'
 import { type Node as ProseMirrorNode } from '@tiptap/pm/model'
-import { Plugin, PluginKey, NodeSelection } from '@tiptap/pm/state'
+import { NodeSelection, Plugin, PluginKey } from '@tiptap/pm/state'
 import { type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
+import './dragHandle.css'
 
 const dragHandlePluginKey = new PluginKey<DragHandleState>('dragHandle')
 
@@ -152,9 +152,7 @@ const DragHandle = Extension.create<DragHandleOptions>({
 				this.handle?.classList.add('fading')
 
 				this.timer = setTimeout(() => {
-					view.dispatch(
-						view.state.tr.setMeta('updateDragHandle', { action: 'remove' }),
-					)
+					view.dispatch(view.state.tr.setMeta('updateDragHandle', { action: 'remove' }))
 					this.timer = null
 				}, 2000)
 			},
@@ -258,16 +256,22 @@ const DragHandle = Extension.create<DragHandleOptions>({
 								// fails for top-level nodes (anchor resolves at depth 0) and
 								// returns the wrong node for nested ones.
 								const match: MatchResult | null =
-									selection instanceof NodeSelection &&
-									selection.node.type.spec.selectable !== false
+									selection instanceof NodeSelection
+									&& selection.node.type.spec.selectable !== false
 										? { node: selection.node, pos: selection.from }
-										: findClosestDraggableParent(view.state, selection.anchor, options)
+										: findClosestDraggableParent(
+												view.state,
+												selection.anchor,
+												options,
+											)
 								if (match) {
 									fadeLogic.lock()
 									const state = dragHandlePluginKey.getState(view.state)
 									if (state?.activePos !== match.pos) {
 										view.dispatch(
-											view.state.tr.setMeta('updateDragHandle', { pos: match.pos }),
+											view.state.tr.setMeta('updateDragHandle', {
+												pos: match.pos,
+											}),
 										)
 									}
 								} else {
@@ -333,7 +337,9 @@ const DragHandle = Extension.create<DragHandleOptions>({
 							return false
 						},
 
-						mouseleave(view) {
+						mouseleave(view, event) {
+							const to = (event as MouseEvent).relatedTarget as Element | null
+							if (to?.closest('.node-path')) return false
 							fadeLogic.unlock(view)
 							return false
 						},

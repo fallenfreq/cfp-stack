@@ -2,7 +2,6 @@
 	<div v-if="!editor" class="p-7">Loading editor...</div>
 	<div v-else>
 		<NodePath :editor="editor" />
-		<div class="node-path-spacer" aria-hidden="true" />
 		<FloatingToolbar :editor="editor" />
 		<CodeViewToggle />
 		<EditorContent class="p-7" :editor="editor" />
@@ -14,10 +13,7 @@ import { useNodeViewInteractions } from '@/composables/editor/useNodeViewInterac
 import initialContent from '@/config/editor/initialContent.html?raw'
 import { registerCustomNodes } from '@/config/editor/registerCustomNodes'
 import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExtension'
-import {
-	FloatingToolbarExtension,
-	type ToolbarItem,
-} from '@/editor/extensions/floatingToolbar'
+import { FloatingToolbarExtension, type ToolbarItem } from '@/editor/extensions/floatingToolbar'
 import { defaultToolbarItems } from '@/editor/extensions/floatingToolbar/defaultItems'
 import {
 	EditorContent,
@@ -28,18 +24,18 @@ import {
 } from '@tiptap/vue-3'
 
 import Div from '@/editor/extensions/divExtension'
-import Span from '@/editor/extensions/spanExtension'
 import { DragHandle } from '@/editor/extensions/dragHandle'
+import Span from '@/editor/extensions/spanExtension'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
-import CodeViewToggle from './CodeViewToggle.vue'
-import FloatingToolbar from './FloatingToolbar.vue'
-import NodePath from './NodePath.vue'
 import Heading from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
 import Youtube from '@tiptap/extension-youtube'
 import StarterKit from '@tiptap/starter-kit'
+import CodeViewToggle from './CodeViewToggle.vue'
+import FloatingToolbar from './FloatingToolbar.vue'
+import NodePath from './NodePath.vue'
 
 import { TaskItem, TaskList } from '@tiptap/extension-list'
 
@@ -65,8 +61,8 @@ const editor = useEditor({
 		FloatingToolbarExtension.configure({ items: toolbarItems }),
 		DragHandle.configure({
 			shouldShowHandle: (node, depth) =>
-				depth <= dragHandleStore.activeDepth &&
-				(node.isBlock || node.isAtom || node.type.spec.draggable),
+				depth <= dragHandleStore.activeDepth
+				&& (node.isBlock || node.isAtom || node.type.spec.draggable),
 		}),
 		CodeBlockLowlight.extend({
 			addNodeView() {
@@ -95,6 +91,9 @@ const editor = useEditor({
 				HTMLAttributes: {
 					class: 'border-l-8 border-primary bg-backgroundSecondary p-4',
 				},
+			},
+			link: {
+				openOnClick: 'ifNotEditable',
 			},
 		}),
 		Youtube.extend({
@@ -207,10 +206,6 @@ watch(editor, (newEditor) => {
 </script>
 
 <style>
-.node-path-spacer {
-	height: 29px;
-}
-
 .tiptap div[data-container],
 .tiptap img[draggable='true'] {
 	cursor: grab;
@@ -273,6 +268,11 @@ watch(editor, (newEditor) => {
 /* Basic editor styles */
 .tiptap:focus {
 	outline: none;
+}
+
+.tiptap a {
+	color: rgb(var(--primary));
+	text-decoration: underline;
 }
 
 .tiptap p:not(:last-child),

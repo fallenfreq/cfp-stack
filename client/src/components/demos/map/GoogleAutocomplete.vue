@@ -100,7 +100,7 @@ onMounted(() => {
 			placeholder="Go to a place..."
 			class="input-field"
 			@input="makeAcRequest"
-		/>
+		>
 		<ul v-if="showDropdown" class="dropdown-menu">
 			<li
 				v-for="(result, index) in results"
