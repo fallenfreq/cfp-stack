@@ -71,6 +71,9 @@ const onTouchEnd = () => {
 .tooltip-root {
 	position: relative;
 	display: inline-flex;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
 }
 
 .tooltip-popup {
@@ -94,7 +97,7 @@ const onTouchEnd = () => {
 }
 
 .placement-top {
-	bottom: calc(100% + 5px);
+	bottom: calc(100% + 15px);
 	left: 50%;
 	transform: translateX(-50%);
 }

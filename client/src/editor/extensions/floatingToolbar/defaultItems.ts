@@ -397,7 +397,7 @@ export const defaultToolbarItems = [
 		(_e, ctx) =>
 			ctx.activeDepth > 0 && !ctx.activeNode.type.isLeaf && !useEditorStore().isCodeView,
 		ToolbarNodePicker,
-		{ iconName: 'change_circle', getItems: getTurnIntoItems },
+		{ props: { iconName: 'change_circle', getItems: getTurnIntoItems }, tooltip: 'Change Type' },
 	),
 	toolbarCustomItem(
 		'wrap-in',
@@ -407,7 +407,7 @@ export const defaultToolbarItems = [
 				|| (!editor.state.selection.empty
 					&& editor.state.selection.$from.parent.inlineContent)),
 		ToolbarNodePicker,
-		{ iconName: 'frame_source', getItems: getWrapInItems },
+		{ props: { iconName: 'frame_source', getItems: getWrapInItems }, tooltip: 'Wrap In' },
 	),
 	toolbarButtonItem({
 		id: 'unwrap-node',
@@ -557,6 +557,7 @@ export const defaultToolbarItems = [
 				&& editor.state.selection.$from.parent.type.name !== 'codeBlock'
 				&& !useEditorStore().isCodeView),
 		ToolbarLinkControl,
+		{ tooltip: 'Link' },
 	),
 
 	// --- Node attribute editor ---
@@ -564,5 +565,6 @@ export const defaultToolbarItems = [
 		'attr-editor',
 		(_e, ctx) => ctx.activeDepth > 0 && !useEditorStore().isCodeView,
 		ToolbarAttributeEditor,
+		{ tooltip: 'Attributes' },
 	),
 ]
