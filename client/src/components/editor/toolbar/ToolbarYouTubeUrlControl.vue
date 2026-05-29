@@ -17,6 +17,5 @@ const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
 
 const initialUrl = computed(() => (props.context.activeNode.attrs.src as string) ?? '')
 
-const applyUrl = (url: string) =>
-	props.editor.chain().focus().setYoutubeVideo({ src: url }).run()
+const applyUrl = (url: string) => props.editor.chain().focus().setYoutubeVideo({ src: url }).run()
 </script>

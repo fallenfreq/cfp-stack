@@ -64,7 +64,7 @@ const resolveActive = (): { context: ToolbarItemContext; domPos: number | null }
 }
 
 const activeNodeContext = computed((): ToolbarItemContext => {
-	tick.value
+	void tick.value
 	return resolveActive().context
 })
 
@@ -92,7 +92,7 @@ const items = computed(
 )
 
 const visibleItems = computed(() => {
-	tick.value
+	void tick.value
 	const context = activeNodeContext.value
 	return items.value.filter((item) => item.show(props.editor, context))
 })

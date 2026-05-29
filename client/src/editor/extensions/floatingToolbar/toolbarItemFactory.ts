@@ -27,7 +27,8 @@ export function toolbarCustomItem(
 		component: defineComponent({
 			props: ['editor', 'context'],
 			setup(props: { editor: Editor; context: ToolbarItemContext }) {
-				return () => h(component, { editor: props.editor, context: props.context, ...extraProps })
+				return () =>
+					h(component, { editor: props.editor, context: props.context, ...extraProps })
 			},
 		}),
 	}

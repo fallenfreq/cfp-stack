@@ -12,8 +12,8 @@ import { Fragment } from '@tiptap/pm/model'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
 import { h } from 'vue'
-import type { ToolbarItemContext } from './types'
 import { toolbarButtonItem, toolbarCustomItem } from './toolbarItemFactory'
+import type { ToolbarItemContext } from './types'
 
 const icon = (name: string) => () => h(ToolbarIcon, null, () => name)
 
@@ -24,15 +24,14 @@ const isTextblock = (_e: Editor, ctx: ToolbarItemContext) =>
 // Inline mark ops (bold, italic…) follow the cursor — safe at any depth since they only affect
 // selected text, never change block structure.
 const isFormattableTextblock = (editor: Editor) =>
-	editor.state.selection.$from.parent.type.isTextblock &&
-	editor.state.selection.$from.parent.type.name !== 'codeBlock' &&
-	!useEditorStore().isCodeView
+	editor.state.selection.$from.parent.type.isTextblock
+	&& editor.state.selection.$from.parent.type.name !== 'codeBlock'
+	&& !useEditorStore().isCodeView
 
 const isParagraphOrHeading = (_e: Editor, ctx: ToolbarItemContext) =>
 	['paragraph', 'heading'].includes(ctx.activeNode.type.name) && !useEditorStore().isCodeView
 
-const isInTable = (editor: Editor) =>
-	editor.isActive('tableCell') || editor.isActive('tableHeader')
+const isInTable = (editor: Editor) => editor.isActive('tableCell') || editor.isActive('tableHeader')
 
 const isListNode = (_e: Editor, ctx: ToolbarItemContext) =>
 	['bulletList', 'orderedList', 'taskList'].includes(ctx.activeNode.type.name)
@@ -43,12 +42,12 @@ const EXCLUDED_NODE_TYPES = new Set(['doc', 'text'])
 
 // Display metadata for known types; unknown custom nodes fall back to { label: typeName, iconName: 'widgets' }
 const NODE_META: Record<string, { label: string; iconName: string }> = {
-	paragraph:  { label: 'Paragraph',  iconName: 'notes' },
-	heading:    { label: 'Heading',    iconName: 'title' },
-	codeBlock:  { label: 'Code Block', iconName: 'data_object' },
+	paragraph: { label: 'Paragraph', iconName: 'notes' },
+	heading: { label: 'Heading', iconName: 'title' },
+	codeBlock: { label: 'Code Block', iconName: 'data_object' },
 	blockquote: { label: 'Blockquote', iconName: 'format_quote' },
-	div:        { label: 'Div',        iconName: 'frame_source' },
-	span:       { label: 'Span',       iconName: 'short_text' },
+	div: { label: 'Div', iconName: 'frame_source' },
+	span: { label: 'Span', iconName: 'short_text' },
 }
 
 // Mirrors FloatingToolbar's resolveActive() position logic — shared by all helpers below.
@@ -70,7 +69,7 @@ const canReplaceNodeType = (
 	editor: Editor,
 	ctx: ToolbarItemContext,
 	typeName: string,
-	attrs: Record<string, unknown> = {},
+	_attrs: Record<string, unknown> = {},
 ): boolean => {
 	const newType = editor.state.schema.nodes[typeName]
 	if (!newType) return false
@@ -102,7 +101,11 @@ const replaceNodeType = (
 	const compatibleAttrs = Object.fromEntries(
 		Object.entries(node.attrs).filter(([key]) => key in targetAttrSpec),
 	)
-	const newNode = newType.create({ ...compatibleAttrs, ...explicitAttrs }, node.content, node.marks)
+	const newNode = newType.create(
+		{ ...compatibleAttrs, ...explicitAttrs },
+		node.content,
+		node.marks,
+	)
 	// Node type names don't contribute to ProseMirror position space, so the cursor's offset
 	// from nodePos is identical in the new node. Bypass step mapping (which squeezes
 	// positions inside the replaced range to the boundary) by reapplying the offset directly.
@@ -124,7 +127,8 @@ const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerIt
 				const attrs = { level }
 				// setNode is cursor-based — only use it when the active node IS the textblock
 				// the cursor is in, otherwise it would convert the inner paragraph instead.
-				const canSet = ctx.activeNode.type.isTextblock && editor.can().setNode(typeName, attrs)
+				const canSet =
+					ctx.activeNode.type.isTextblock && editor.can().setNode(typeName, attrs)
 				const canReplace = !canSet && canReplaceNodeType(editor, ctx, typeName, attrs)
 				if (!canSet && !canReplace) continue
 				items.push({
@@ -132,7 +136,7 @@ const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerIt
 					iconName: `format_h${level}`,
 					active: editor.isActive(typeName, attrs),
 					action: () =>
-						(ctx.activeNode.type.isTextblock && editor.can().setNode(typeName, attrs))
+						ctx.activeNode.type.isTextblock && editor.can().setNode(typeName, attrs)
 							? editor.chain().focus().setNode(typeName, attrs).run()
 							: replaceNodeType(editor, ctx, typeName, attrs),
 				})
@@ -148,7 +152,7 @@ const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerIt
 			iconName: meta.iconName,
 			active: editor.isActive(typeName),
 			action: () =>
-				(ctx.activeNode.type.isTextblock && editor.can().setNode(typeName))
+				ctx.activeNode.type.isTextblock && editor.can().setNode(typeName)
 					? editor.chain().focus().setNode(typeName).run()
 					: replaceNodeType(editor, ctx, typeName),
 		})
@@ -166,7 +170,10 @@ const canWrapNodeInType = (editor: Editor, ctx: ToolbarItemContext, typeName: st
 	const node = $pos.node(depth)
 	const parent = $pos.node(depth - 1)
 	const index = $pos.index(depth - 1)
-	return parent.canReplaceWith(index, index + 1, wrapType) && wrapType.validContent(Fragment.from(node))
+	return (
+		parent.canReplaceWith(index, index + 1, wrapType)
+		&& wrapType.validContent(Fragment.from(node))
+	)
 }
 
 const wrapNodeInType = (editor: Editor, ctx: ToolbarItemContext, typeName: string): void => {
@@ -178,16 +185,20 @@ const wrapNodeInType = (editor: Editor, ctx: ToolbarItemContext, typeName: strin
 	const nodePos = $pos.before(depth)
 	// ProseMirror maps the selection through the transaction automatically.
 	editor.view.dispatch(
-		editor.state.tr.replaceWith(nodePos, nodePos + node.nodeSize, wrapType.create(null, Fragment.from(node))),
+		editor.state.tr.replaceWith(
+			nodePos,
+			nodePos + node.nodeSize,
+			wrapType.create(null, Fragment.from(node)),
+		),
 	)
 }
 
 const getWrapInItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem[] => {
 	const { selection } = editor.state
 	const isInlineContext =
-		!selection.empty &&
-		!(selection instanceof NodeSelection) &&
-		selection.$from.parent.inlineContent
+		!selection.empty
+		&& !(selection instanceof NodeSelection)
+		&& selection.$from.parent.inlineContent
 
 	if (isInlineContext) {
 		const items: NodePickerItem[] = []
@@ -257,7 +268,11 @@ const switchListType = (
 	})
 
 	const cursorOffset = state.selection.from - listPos
-	const tr = state.tr.replaceWith(listPos, listPos + listNode.nodeSize, targetListType.create({}, newItems))
+	const tr = state.tr.replaceWith(
+		listPos,
+		listPos + listNode.nodeSize,
+		targetListType.create({}, newItems),
+	)
 	tr.setSelection(TextSelection.near(tr.doc.resolve(listPos + cursorOffset)))
 	view.dispatch(tr)
 }
@@ -305,21 +320,24 @@ export const defaultToolbarItems = [
 		id: 'heading-1',
 		label: icon('format_h1'),
 		show: isParagraphOrHeading,
-		active: (_editor, ctx) => ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 1,
+		active: (_editor, ctx) =>
+			ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 1,
 		action: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
 	}),
 	toolbarButtonItem({
 		id: 'heading-2',
 		label: icon('format_h2'),
 		show: isParagraphOrHeading,
-		active: (_editor, ctx) => ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 2,
+		active: (_editor, ctx) =>
+			ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 2,
 		action: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
 	}),
 	toolbarButtonItem({
 		id: 'heading-3',
 		label: icon('format_h3'),
 		show: isParagraphOrHeading,
-		active: (_editor, ctx) => ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 3,
+		active: (_editor, ctx) =>
+			ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 3,
 		action: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
 	}),
 	toolbarButtonItem({
@@ -339,8 +357,10 @@ export const defaultToolbarItems = [
 		active: (editor, ctx) => {
 			const { $pos, depth } = resolveActivePos(editor, ctx)
 			// listItem sits between bulletList and the paragraph; check up to 2 levels
-			return (depth > 0 && $pos.node(depth - 1).type.name === 'bulletList') ||
-				(depth > 1 && $pos.node(depth - 2).type.name === 'bulletList')
+			return (
+				(depth > 0 && $pos.node(depth - 1).type.name === 'bulletList')
+				|| (depth > 1 && $pos.node(depth - 2).type.name === 'bulletList')
+			)
 		},
 		action: (editor) => editor.chain().focus().toggleBulletList().run(),
 	}),
@@ -350,8 +370,10 @@ export const defaultToolbarItems = [
 		show: isParagraphOrHeading,
 		active: (editor, ctx) => {
 			const { $pos, depth } = resolveActivePos(editor, ctx)
-			return (depth > 0 && $pos.node(depth - 1).type.name === 'orderedList') ||
-				(depth > 1 && $pos.node(depth - 2).type.name === 'orderedList')
+			return (
+				(depth > 0 && $pos.node(depth - 1).type.name === 'orderedList')
+				|| (depth > 1 && $pos.node(depth - 2).type.name === 'orderedList')
+			)
 		},
 		action: (editor) => editor.chain().focus().toggleOrderedList().run(),
 	}),
@@ -360,16 +382,18 @@ export const defaultToolbarItems = [
 	toolbarCustomItem(
 		'turn-into',
 		// !isLeaf: for a leaf NodeSelection resolveActivePos resolves to the parent, giving wrong results
-		(_e, ctx) => ctx.activeDepth > 0 && !ctx.activeNode.type.isLeaf && !useEditorStore().isCodeView,
+		(_e, ctx) =>
+			ctx.activeDepth > 0 && !ctx.activeNode.type.isLeaf && !useEditorStore().isCodeView,
 		ToolbarNodePicker,
 		{ iconName: 'change_circle', getItems: getTurnIntoItems },
 	),
 	toolbarCustomItem(
 		'wrap-in',
 		(editor, ctx) =>
-			!useEditorStore().isCodeView &&
-			(ctx.activeNode.type.isBlock ||
-				(!editor.state.selection.empty && editor.state.selection.$from.parent.inlineContent)),
+			!useEditorStore().isCodeView
+			&& (ctx.activeNode.type.isBlock
+				|| (!editor.state.selection.empty
+					&& editor.state.selection.$from.parent.inlineContent)),
 		ToolbarNodePicker,
 		{ iconName: 'frame_source', getItems: getWrapInItems },
 	),
@@ -495,17 +519,25 @@ export const defaultToolbarItems = [
 	}),
 
 	// --- Media URL editing ---
-	toolbarCustomItem('image-url', (_e, ctx) => ctx.activeNode.type.name === 'image', ToolbarImageUrlControl),
-	toolbarCustomItem('youtube-url', (_e, ctx) => ctx.activeNode.type.name === 'youtube', ToolbarYouTubeUrlControl),
+	toolbarCustomItem(
+		'image-url',
+		(_e, ctx) => ctx.activeNode.type.name === 'image',
+		ToolbarImageUrlControl,
+	),
+	toolbarCustomItem(
+		'youtube-url',
+		(_e, ctx) => ctx.activeNode.type.name === 'youtube',
+		ToolbarYouTubeUrlControl,
+	),
 
 	// --- Link controls ---
 	toolbarCustomItem(
 		'link',
 		(editor) =>
-			editor.isActive('link') ||
-			(editor.state.selection.$from.parent.type.isTextblock &&
-				editor.state.selection.$from.parent.type.name !== 'codeBlock' &&
-				!useEditorStore().isCodeView),
+			editor.isActive('link')
+			|| (editor.state.selection.$from.parent.type.isTextblock
+				&& editor.state.selection.$from.parent.type.name !== 'codeBlock'
+				&& !useEditorStore().isCodeView),
 		ToolbarLinkControl,
 	),
 

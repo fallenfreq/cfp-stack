@@ -9,16 +9,18 @@
 			class="attr-checkbox"
 			:checked="!!value"
 			@change="emit('update', attrKey, ($event.target as HTMLInputElement).checked)"
-		/>
+		>
 		<input
 			v-else-if="typeof specDefault === 'number'"
 			ref="inputEl"
 			type="number"
 			class="attr-input"
 			:value="value as number"
-			@change="emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)"
+			@change="
+				emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
+			"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		/>
+		>
 		<textarea
 			v-else-if="attrKey === 'style'"
 			ref="inputEl"
@@ -35,7 +37,7 @@
 			:value="value as string"
 			@change="emit('update', attrKey, ($event.target as HTMLInputElement).value)"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		/>
+		>
 
 		<ToolbarButton @mousedown.prevent="emit('remove', attrKey)">
 			<ToolbarIcon>close</ToolbarIcon>

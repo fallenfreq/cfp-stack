@@ -96,7 +96,11 @@ function createNodesFromSchema(editor: Editor) {
 				},
 
 				renderHTML({ HTMLAttributes }) {
-					const attrsToRender = filterNonDefaultAttrs(HTMLAttributes, attrs, requiredAttribute ?? undefined)
+					const attrsToRender = filterNonDefaultAttrs(
+						HTMLAttributes,
+						attrs,
+						requiredAttribute ?? undefined,
+					)
 					return nodeType.isLeaf ? [tag, attrsToRender] : [tag, attrsToRender, 0]
 				},
 			}

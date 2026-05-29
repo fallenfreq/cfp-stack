@@ -53,9 +53,9 @@ import { filterNonDefaultAttrs } from '@/utils/editor/editorUtils'
 import { NodeSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, onUnmounted, ref, watch, type CSSProperties } from 'vue'
+import ToolbarAttrRow from './ToolbarAttrRow.vue'
 import ToolbarButton from './ToolbarButton.vue'
 import ToolbarIcon from './ToolbarIcon.vue'
-import ToolbarAttrRow from './ToolbarAttrRow.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
 
@@ -91,9 +91,7 @@ const resolveNodePos = (): number | null => {
 const dispatch = (newAttrs: Record<string, unknown>) => {
 	const nodePos = resolveNodePos()
 	if (nodePos === null) return
-	props.editor.view.dispatch(
-		props.editor.state.tr.setNodeMarkup(nodePos, null, newAttrs),
-	)
+	props.editor.view.dispatch(props.editor.state.tr.setNodeMarkup(nodePos, null, newAttrs))
 }
 
 const onUpdate = (key: string, value: unknown) => {
@@ -122,7 +120,10 @@ const toggle = () => {
 		// Right-align to button by default, but clamp so it never leaves the viewport.
 		// Convert the clamped viewport-absolute x back to a parent-relative left offset.
 		const viewportLeft = rect.right - PANEL_WIDTH
-		const clamped = Math.max(MARGIN, Math.min(viewportLeft, window.innerWidth - PANEL_WIDTH - MARGIN))
+		const clamped = Math.max(
+			MARGIN,
+			Math.min(viewportLeft, window.innerWidth - PANEL_WIDTH - MARGIN),
+		)
 		panelStyle.value = { left: `${clamped - rect.left}px` }
 	}
 	open.value = !open.value

@@ -12,7 +12,9 @@
 					:class="{ 'is-active': item.active }"
 					@mousedown.prevent="select(item)"
 				>
-					<span class="material-symbols-rounded picker-item-icon">{{ item.iconName }}</span>
+					<span class="material-symbols-rounded picker-item-icon">{{
+						item.iconName
+					}}</span>
 					<span>{{ item.label }}</span>
 				</div>
 			</template>

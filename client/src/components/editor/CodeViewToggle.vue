@@ -7,8 +7,8 @@
 </template>
 
 <script setup lang="ts">
-import ToolbarButton from './toolbar/ToolbarButton.vue'
 import { useEditorStore } from '@/stores/editorStore'
+import ToolbarButton from './toolbar/ToolbarButton.vue'
 
 const editorStore = useEditorStore()
 </script>

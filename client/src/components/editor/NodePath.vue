@@ -36,7 +36,7 @@ interface PathSegment {
 }
 
 const path = computed((): PathSegment[] => {
-	tick.value
+	void tick.value
 	const { state } = props.editor
 	const { selection } = state
 

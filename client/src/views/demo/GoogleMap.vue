@@ -26,7 +26,9 @@ const markerStore = useMarkerStore()
 
 const clearFilter = (tag?: string) => {
 	if (tag) {
-		markerStore.selectedTags = markerStore.selectedTags.filter((selectedTag) => selectedTag !== tag)
+		markerStore.selectedTags = markerStore.selectedTags.filter(
+			(selectedTag) => selectedTag !== tag,
+		)
 	} else {
 		markerStore.selectedTags = []
 	}
@@ -114,7 +116,7 @@ watch(isSheetOpen, () => {
 })
 watch(
 	() => darkModeStore.isDarkMode,
-	() => renderMap(loader)
+	() => renderMap(loader),
 )
 watch(
 	() => mapStore.map,
@@ -138,12 +140,12 @@ watch(
 			position: 'bottom-right',
 			message: 'Click the plus button "+" at the top to enter "add marker mode"',
 		})
-	}
+	},
 )
 
 const deleteMarker = async (
 	event: MouseEvent,
-	marker: google.maps.marker.AdvancedMarkerElement
+	marker: google.maps.marker.AdvancedMarkerElement,
 ) => {
 	if (!(event.currentTarget instanceof HTMLButtonElement)) return
 	const { toDeleteId } = event.currentTarget.dataset
@@ -348,7 +350,7 @@ Tags</pre>
 					@click="
 						open(
 							`https://maps.google.com/?q=${sheetContent.content.lat},${sheetContent.content.lng}`,
-							'_blank'
+							'_blank',
 						)
 					"
 				>
