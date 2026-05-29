@@ -85,7 +85,6 @@ const renderMap = async (loader: Loader) => {
 		},
 	}
 
-	// @ts-expect-error: ColorScheme is not typed in the @types/google.maps library
 	const { ColorScheme } = await google.maps.importLibrary('core')
 	// Map options
 	const mapOptions: google.maps.MapOptions = {

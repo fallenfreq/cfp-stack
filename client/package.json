@@ -47,7 +47,7 @@
 		"vuestic-ui": "^1.10.3"
 	},
 	"devDependencies": {
-		"@types/google.maps": "^3.58.1",
+		"@types/google.maps": "^3.64.1",
 		"@types/postcss-safe-parser": "^5.0.4",
 		"@vitejs/plugin-vue": "^6.0.5",
 		"@vue/tsconfig": "^0.8.1",

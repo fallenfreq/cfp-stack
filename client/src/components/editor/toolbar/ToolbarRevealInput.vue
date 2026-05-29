@@ -12,7 +12,7 @@
 				:placeholder="placeholder ?? 'https://'"
 				@keydown.enter.prevent="apply"
 				@keydown.escape.prevent="collapse"
-			>
+			/>
 			<ToolbarButton @click="apply">
 				<ToolbarIcon>check</ToolbarIcon>
 			</ToolbarButton>
@@ -33,7 +33,7 @@ const props = defineProps<{
 	placeholder?: string
 	initialUrl: string
 	onApply: (url: string) => void
-	onRemove?: () => void
+	onRemove?: (() => void) | undefined
 	autoReveal?: boolean
 }>()
 

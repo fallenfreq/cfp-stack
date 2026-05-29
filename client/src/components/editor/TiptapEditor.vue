@@ -27,7 +27,7 @@ import Div from '@/editor/extensions/divExtension'
 import { DragHandle } from '@/editor/extensions/dragHandle'
 import Span from '@/editor/extensions/spanExtension'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
-import Heading from '@tiptap/extension-heading'
+import Heading, { type Level } from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
@@ -62,7 +62,7 @@ const editor = useEditor({
 		DragHandle.configure({
 			shouldShowHandle: (node, depth) =>
 				depth <= dragHandleStore.activeDepth
-				&& (node.isBlock || node.isAtom || node.type.spec.draggable),
+				&& !!(node.isBlock || node.isAtom || node.type.spec.draggable),
 		}),
 		CodeBlockLowlight.extend({
 			addNodeView() {
@@ -93,7 +93,7 @@ const editor = useEditor({
 				},
 			},
 			link: {
-				openOnClick: 'ifNotEditable',
+				openOnClick: 'whenNotEditable',
 			},
 		}),
 		Youtube.extend({
@@ -131,7 +131,7 @@ const editor = useEditor({
 			addOptions() {
 				return {
 					...this.parent?.(),
-					levels: [1, 2, 3] as number[],
+					levels: [1, 2, 3] as Level[],
 				}
 			},
 

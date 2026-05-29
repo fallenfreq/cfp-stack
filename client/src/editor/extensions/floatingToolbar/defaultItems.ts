@@ -213,6 +213,7 @@ const getWrapInItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem
 					const { from, to } = editor.state.selection
 					const content = editor.state.doc.slice(from, to).content
 					const nodeType = editor.state.schema.nodes[typeName]
+					if (!nodeType) return
 					const node = nodeType.create({}, content)
 					editor.view.dispatch(editor.state.tr.replaceWith(from, to, node))
 				},

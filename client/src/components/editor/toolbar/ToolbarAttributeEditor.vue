@@ -99,7 +99,7 @@ const onUpdate = (key: string, value: unknown) => {
 }
 
 const onRemove = (key: string) => {
-	const def = props.context.activeNode.type.spec.attrs[key]?.default ?? null
+	const def = props.context.activeNode.type.spec.attrs?.[key]?.default ?? null
 	dispatch({ ...props.context.activeNode.attrs, [key]: def })
 }
 
