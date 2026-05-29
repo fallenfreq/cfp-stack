@@ -71,15 +71,7 @@ const router = createRouter({
 		{
 			path: '/demo/editor',
 			name: 'editor',
-			meta: {
-				authName: zitadelAuth.oidcAuth.authName,
-			},
-			component: () => {
-				if (zitadelAuth.oidcAuth.isAuthenticated) {
-					return import('../views/TiptapEditorDemo.vue')
-				}
-				return import('../views/NoAccess.vue')
-			},
+			component: () => import('../views/TiptapEditorDemo.vue'),
 		},
 		{
 			path: '/demo/map',
