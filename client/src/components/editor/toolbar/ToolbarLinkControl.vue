@@ -5,6 +5,7 @@
 		:initial-url="linkHref"
 		:on-apply="applyLink"
 		:on-remove="isLinkActive ? removeLink : undefined"
+		:auto-reveal="true"
 	/>
 </template>
 

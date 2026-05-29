@@ -95,6 +95,9 @@ const editor = useEditor({
 					class: 'border-l-8 border-primary bg-backgroundSecondary p-4',
 				},
 			},
+			link: {
+				openOnClick: 'ifNotEditable',
+			},
 		}),
 		Youtube.extend({
 			renderHTML({ node, HTMLAttributes }) {
@@ -268,6 +271,11 @@ watch(editor, (newEditor) => {
 /* Basic editor styles */
 .tiptap:focus {
 	outline: none;
+}
+
+.tiptap a {
+	color: rgb(var(--primary));
+	text-decoration: underline;
 }
 
 .tiptap p:not(:last-child),

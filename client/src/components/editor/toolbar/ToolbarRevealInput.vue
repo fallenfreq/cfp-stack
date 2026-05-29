@@ -34,6 +34,7 @@ const props = defineProps<{
 	initialUrl: string
 	onApply: (url: string) => void
 	onRemove?: () => void
+	autoReveal?: boolean
 }>()
 
 const revealed = ref(false)
@@ -44,7 +45,7 @@ watch(
 	() => props.initialUrl,
 	(newUrl) => {
 		localUrl.value = newUrl
-		revealed.value = false
+		revealed.value = props.autoReveal ? !!newUrl : false
 	},
 )
 
