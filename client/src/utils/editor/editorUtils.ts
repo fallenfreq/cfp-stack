@@ -72,4 +72,23 @@ const prettifySelectedCode = async (editor: Editor) => {
 	editor.chain().focus().setTextSelection(anchor).run()
 }
 
-export { getExtensionOptions, prettifySelectedCode }
+const isAbsent = (v: unknown) => v === null || v === undefined || v === ''
+
+// Returns only attrs whose value differs from the schema default.
+// null, undefined, and '' are all treated as "not set" — if the spec default is absent,
+// any absent value is excluded regardless of exact form.
+// Pass `required` to force-include one key regardless (used by code view for data-container etc.)
+const filterNonDefaultAttrs = (
+	attrs: Record<string, unknown>,
+	specAttrs: Record<string, { default?: unknown }>,
+	required?: string,
+): Record<string, unknown> =>
+	Object.fromEntries(
+		Object.entries(attrs).filter(([key, value]) => {
+			if (key === required) return true
+			const def = specAttrs[key]?.default ?? null
+			return isAbsent(def) ? !isAbsent(value) : value !== def
+		}),
+	)
+
+export { filterNonDefaultAttrs, getExtensionOptions, prettifySelectedCode }

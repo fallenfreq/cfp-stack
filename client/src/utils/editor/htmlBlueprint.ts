@@ -1,4 +1,5 @@
 import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExtension'
+import { filterNonDefaultAttrs } from '@/utils/editor/editorUtils'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Heading from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
@@ -95,14 +96,7 @@ function createNodesFromSchema(editor: Editor) {
 				},
 
 				renderHTML({ HTMLAttributes }) {
-					// Filter out attributes that match their default values
-					const attrsToRender: Record<string, any> = {}
-					Object.keys(HTMLAttributes).forEach((attr) => {
-						const defaultValue = attrs[attr]?.default
-						if (HTMLAttributes[attr] !== defaultValue || attr === requiredAttribute) {
-							attrsToRender[attr] = HTMLAttributes[attr]
-						}
-					})
+					const attrsToRender = filterNonDefaultAttrs(HTMLAttributes, attrs, requiredAttribute ?? undefined)
 					return nodeType.isLeaf ? [tag, attrsToRender] : [tag, attrsToRender, 0]
 				},
 			}
@@ -144,14 +138,7 @@ function initGenerateBlueprintHTML(editor: Editor) {
 			Youtube.extend({
 				renderHTML({ node, HTMLAttributes }) {
 					const attrs = (node.type.spec.attrs ??= {})
-					const filteredAttributes = Object.keys(attrs).reduce<
-						Partial<typeof node.type.spec.attrs>
-					>((acc, key) => {
-						if (HTMLAttributes[key] !== attrs[key]?.default) {
-							acc[key] = HTMLAttributes[key]
-						}
-						return acc
-					}, {})
+					const filteredAttributes = filterNonDefaultAttrs(HTMLAttributes, attrs)
 					const domOutputSpec = this.parent?.({ node, HTMLAttributes })
 
 					if (domOutputSpec && Array.isArray(domOutputSpec) && domOutputSpec[2]?.[1]) {
