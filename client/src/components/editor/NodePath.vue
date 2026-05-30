@@ -100,10 +100,7 @@ const handleDepthClick = (segment: PathSegment) => {
 			state.tr.setSelection(TextSelection.near(state.doc.resolve(segment.start))),
 		)
 	} else {
-		// Cursor is already inside the target node — keep it in place but tag the
-		// transaction so the drag handle plugin recomputes with the new activeDepth.
-		// On mobile, mousemove never fires after a tap so without this the handle
-		// stays at the previous depth.
+		// Keep cursor in place; tag so the drag handle recomputes with new activeDepth.
 		props.editor.view.dispatch(state.tr.setMeta('refreshDragHandle', true))
 	}
 }
