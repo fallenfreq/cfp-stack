@@ -5,6 +5,7 @@ import type { Component } from 'vue'
 export interface ToolbarItemContext {
 	activeNode: Node
 	activeDepth: number
+	nodePos: number | null
 }
 
 export interface ToolbarItem {

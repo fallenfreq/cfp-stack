@@ -35,9 +35,9 @@ const TOOLBAR_SPACING = 10
 
 const tick = ref(0)
 
-// Resolves the active node (matching NodePath's logic) and the doc position of
-// its DOM node for positioning.  Returns domPos=null when no valid node exists.
-const resolveActive = (): { context: ToolbarItemContext; domPos: number | null } => {
+// Resolves the active node (matching NodePath's logic) and its doc position.
+// Returns nodePos=null when no valid node exists.
+const resolveActive = (): ToolbarItemContext => {
 	const { state } = props.editor
 	const { selection } = state
 
@@ -51,30 +51,28 @@ const resolveActive = (): { context: ToolbarItemContext; domPos: number | null }
 	const effectiveDepth = Math.min(dragHandleStore.activeDepth, $pos.depth)
 
 	if (selection instanceof NodeSelection && selection.node.isLeaf) {
-		return {
-			context: { activeNode: selection.node, activeDepth: $pos.depth + 1 },
-			domPos: selection.from,
-		}
+		return { activeNode: selection.node, activeDepth: $pos.depth + 1, nodePos: selection.from }
 	}
 
 	return {
-		context: { activeNode: $pos.node(effectiveDepth), activeDepth: effectiveDepth },
-		domPos: effectiveDepth > 0 ? $pos.before(effectiveDepth) : null,
+		activeNode: $pos.node(effectiveDepth),
+		activeDepth: effectiveDepth,
+		nodePos: effectiveDepth > 0 ? $pos.before(effectiveDepth) : null,
 	}
 }
 
 const activeNodeContext = computed((): ToolbarItemContext => {
 	void tick.value
-	return resolveActive().context
+	return resolveActive()
 })
 
 const updatePosition = () => {
 	tick.value++
 
-	const { domPos } = resolveActive()
-	if (domPos === null) return
+	const { nodePos } = resolveActive()
+	if (nodePos === null) return
 
-	const domNode = props.editor.view.nodeDOM(domPos) as HTMLElement | null
+	const domNode = props.editor.view.nodeDOM(nodePos) as HTMLElement | null
 	if (!domNode) return
 
 	const nodeRect = domNode.getBoundingClientRect()
