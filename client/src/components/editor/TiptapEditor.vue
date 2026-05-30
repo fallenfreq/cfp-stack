@@ -49,15 +49,19 @@ import { watch, type Component } from 'vue'
 
 import { lowlight } from '@/config/editor/lowlight'
 import { useEditorStore } from '@/stores/editorStore.js'
+import { MultiSelectExtension, multiSelectPluginKey } from '@/editor/extensions/multiSelect'
+import { useMultiSelectStore } from '@/stores/multiSelectStore'
 
 import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
 useSyntaxHighlighting()
 
 const toolbarItems: ToolbarItem[] = defaultToolbarItems
 const dragHandleStore = useDragHandleStore()
+const multiSelectStore = useMultiSelectStore()
 
 const editor = useEditor({
 	extensions: [
+		MultiSelectExtension,
 		FloatingToolbarExtension.configure({ items: toolbarItems }),
 		DragHandle.configure({
 			shouldShowHandle: (node, depth) =>
@@ -201,6 +205,10 @@ useNodeViewInteractions()
 watch(editor, (newEditor) => {
 	if (newEditor) {
 		useEditorStore().setEditor(newEditor)
+		newEditor.on('transaction', () => {
+			const state = multiSelectPluginKey.getState(newEditor.state)
+			multiSelectStore.sync(state?.positions ?? [])
+		})
 	}
 })
 </script>
@@ -246,6 +254,12 @@ watch(editor, (newEditor) => {
 /* Styling for drop position */
 .ProseMirror-selectednode {
 	outline: 3px solid rgba(var(--primary) / 0.2);
+}
+
+.node-selected {
+	outline: 2px solid rgb(var(--primary));
+	outline-offset: 1px;
+	border-radius: 2px;
 }
 
 /* Youtube video styling in the editor */
