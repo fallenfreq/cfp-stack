@@ -35,7 +35,7 @@ type ButtonItemBase = {
 
 /** Icon-only button — tooltip is required so it can never be accidentally omitted. */
 type IconButtonItem = ButtonItemBase & {
-	label: () => VNodeChild
+	label: (editor: Editor, context: ToolbarItemContext) => VNodeChild
 	tooltip: string
 }
 
@@ -63,9 +63,12 @@ export function toolbarCustomItem(
 	})
 }
 
+function isIconItem(o: ButtonItemOptions): o is IconButtonItem {
+	return typeof o.label !== 'string'
+}
+
 export function toolbarButtonItem(options: ButtonItemOptions): ToolbarItem {
 	return toolbarItem(options.id, options.show, (editor, context) => {
-		const isIcon = typeof options.label !== 'string'
 		const btn = h(
 			ToolbarButton,
 			{
@@ -73,8 +76,10 @@ export function toolbarButtonItem(options: ButtonItemOptions): ToolbarItem {
 				disabled: options.disabled?.(editor, context) ?? false,
 				onClick: () => options.action(editor, context),
 			},
-			isIcon ? options.label : () => options.label,
+			isIconItem(options)
+				? () => options.label(editor, context)
+				: () => options.label,
 		)
-		return withTooltip(btn, isIcon ? (options as IconButtonItem).tooltip : undefined)
+		return withTooltip(btn, isIconItem(options) ? options.tooltip : undefined)
 	})
 }

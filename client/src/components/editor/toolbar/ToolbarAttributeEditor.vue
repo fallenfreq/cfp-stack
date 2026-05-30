@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
-import { filterNonDefaultAttrs } from '@/utils/editor/editorUtils'
+import { filterNonDefaultAttrs, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, onUnmounted, ref, watch, type CSSProperties } from 'vue'
 import ToolbarAttrRow from './ToolbarAttrRow.vue'
@@ -62,11 +62,11 @@ const open = ref(false)
 const buttonEl = ref<HTMLElement | null>(null)
 const pendingKey = ref<string | null>(null)
 const panelStyle = ref<CSSProperties>({})
-const capturedPos = ref<number | null>(null)
+const capturedPos = ref<NodePos | null>(null)
 
 const capturedNode = computed(() => {
 	if (capturedPos.value === null) return props.context.activeNode
-	return props.editor.state.doc.resolve(capturedPos.value).nodeAfter ?? props.context.activeNode
+	return nodeAt(props.editor.state.doc, capturedPos.value)
 })
 
 const specAttrs = computed(
@@ -90,15 +90,13 @@ const dispatch = (newAttrs: Record<string, unknown>) => {
 
 const onUpdate = (key: string, value: unknown) => {
 	if (capturedPos.value === null) return
-	const node = props.editor.state.doc.resolve(capturedPos.value).nodeAfter
-	if (!node) return
+	const node = nodeAt(props.editor.state.doc, capturedPos.value)
 	dispatch({ ...node.attrs, [key]: value })
 }
 
 const onRemove = (key: string) => {
 	if (capturedPos.value === null) return
-	const node = props.editor.state.doc.resolve(capturedPos.value).nodeAfter
-	if (!node) return
+	const node = nodeAt(props.editor.state.doc, capturedPos.value)
 	const def = node.type.spec.attrs?.[key]?.default ?? null
 	dispatch({ ...node.attrs, [key]: def })
 }
