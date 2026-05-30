@@ -30,6 +30,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SlashCommands: typeof import('./src/components/editor/SlashCommands.vue')['default']
     StackableSheet: typeof import('./src/components/layout/StackableSheet.vue')['default']
+    StyleAttrEditor: typeof import('./src/components/editor/toolbar/StyleAttrEditor.vue')['default']
     TiptapCodeBlock: typeof import('./src/components/editor/TiptapCodeBlock.vue')['default']
     TiptapEditor: typeof import('./src/components/editor/TiptapEditor.vue')['default']
     TiptapTest: typeof import('./src/components/editor/TiptapTest.vue')['default']
