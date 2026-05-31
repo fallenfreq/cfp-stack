@@ -313,16 +313,11 @@ watch(editor, (newEditor) => {
 
 .tiptap ol,
 .tiptap ul {
-	list-style-position: inside;
+	padding-left: 1.5rem; /* restore indentation reset by Tailwind Preflight */
 }
 
 .tiptap li {
 	margin-bottom: 0.5rem;
-}
-
-/* tiptap automatically adds p tags inside each li */
-.tiptap li > p {
-	display: inline-block;
 }
 .tiptap ul[data-type='taskList'] li label {
 	margin-right: 1em; /* Add space between checkbox and div */

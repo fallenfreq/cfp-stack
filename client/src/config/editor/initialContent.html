@@ -1,151 +1,391 @@
-<h1>Welcome to the Interactive Editor!</h1>
-<p>
-	This is a demo showcasing the flexibility of the editor. You can use registered Vue components,
-	apply custom styles and classes, embed YouTube videos, display images, add tables, and even work
-	with syntax-highlighted code blocks.
-</p>
-<p>
-	The editor allows you to switch between a WYSIWYG view and an editable code view. This means you
-	can directly modify the content or structure as code and see the changes live. Note that the
-	purpose here is to show the code that generates the final HTML output rather than the output
-	itself.
-</p>
-<h2>Slash commands</h2>
-<p>
-	Type "/" and then continue to type to filter available commands. A maximum of 7 are shown at any
-	time.
-</p>
-<h2>Images</h2>
-<img src="https://placehold.co/800x400" />
-<p>
-	You can easily add images to the editor. The example below shows an image that can be dragged
-	with or without using the drag handle.
-</p>
-<h2>Block quote example</h2>
-<blockquote>
-	<p>The answer to the Ultimate Question of Life, the Universe, and Everything is 42.</p>
-</blockquote>
-<h2>Ordered list</h2>
-<ol>
-	<li><p>One</p></li>
-	<li><p>Two</p></li>
-	<li><p>Three</p></li>
-</ol>
-<h2>Unordered list</h2>
-<ul>
-	<li><p>One</p></li>
-	<li><p>Two</p></li>
-	<li><p>Three</p></li>
-</ul>
-<h2>Task list</h2>
-<ul data-type="taskList">
-	<li data-checked data-type="taskItem"><p>One</p></li>
-	<li data-checked data-type="taskItem"><p>Two</p></li>
-	<li data-type="taskItem"><p>Three</p></li>
-</ul>
-<h2>Divs</h2>
-<div style="background-color: cadetblue; min-height: 75px" data-container="">
-	<p>Draggable with editable content</p>
-</div>
-<div style="background-color: pink; min-height: 75px" data-container="">
-	<vaButton color="warning">Button contains block el</vaButton>
-</div>
-<p>
-	Div elements can also be added and customized with styles. The example below shows a div with a
-	background color and editable content.
-</p>
-<h2>Embedded YouTube Video</h2>
-<p>
-	This is an example of embedding a YouTube video using an iframe and the data-youtube-video
-	attribute. Take a look at the code in the browser to see how it differs from the rendered
-	output.
-</p>
-<div data-youtube-video="">
-	<iframe src="https://www.youtube.com/embed/3lTUAWOgoHs" resp="36rem"></iframe>
-</div>
-<h2>Interactive Vue component with editable content</h2>
-<tiptapTest class="bg-backgroundSecondary"
-	><p>Click the button to see the counter increment</p></tiptapTest
->
-<h2>Vuestic (component library) Buttons</h2>
-<p>
-	The following example shows two buttons rendered using the
-	<code>&lt;VaButton&gt;</code> component from the Vuestic UI library. You can apply custom
-	classes and styles to modify their appearance. In this case, we're using inline styles and
-	classes to demonstrate how you can customise the look of these buttons.
-</p>
-<p>
-	A limitation of the editor is that an element can only be set to contain either block or inline
-	elements, and a single element cannot contain a mix. The button below, which is a Vue component,
-	needs to contain inline elements but the first button contains a block element. The block
-	element is automatically removed, so we cannot see the pink.
-</p>
-<vaButton color="warning">Button contains block el</vaButton>
-<p>
-	The component contains an inline element which is rendered as intended. If the component's
-	content was supposed to be block, the inline element would be wrapped in a
-	<code>&lt;p&gt;</code> tag instead of being removed like with the block example.
-</p>
-<vaButton color="warning"
-	><span style="background: pink" class="three">Button contains inline el</span></vaButton
->
-<h2>Table with Custom Styling</h2>
-<p>
-	You can easily create tables inside the editor. In this example, we are adding a simple table to
-	demonstrate how you can format data and apply custom styles to tables.
-</p>
-<p>Here’s a sample table with added classes and inline styling:</p>
-<table>
-	<tr>
-		<th><p>Name</p></th>
-		<th><p>Age</p></th>
-		<th><p>Occupation</p></th>
-	</tr>
-	<tr>
-		<td><p>Alice</p></td>
-		<td><p>25</p></td>
-		<td><p>Engineer</p></td>
-	</tr>
-	<tr>
-		<td><p>Bob</p></td>
-		<td><p>30</p></td>
-		<td><p>Designer</p></td>
-	</tr>
-	<tr>
-		<td><p>Charlie</p></td>
-		<td><p>28</p></td>
-		<td><p>Teacher</p></td>
-	</tr>
-</table>
-<h2>Horizontal rule</h2>
+<img src="https://placehold.co/1200x300" style="width:100%;border-radius:8px" />
+
+<layoutSplit split="2/3" gap="lg">
+
+	<layoutSection gap="sm">
+		<h1>Block Builder</h1>
+		<p>
+			A <strong>rich content editor</strong> for Vue 3, built on <em>Tiptap</em> and
+			<em>ProseMirror</em>. Every block is draggable, every node is configurable, and
+			layouts compose without writing CSS. This page is built entirely with Block Builder —
+			explore it to see what's possible.
+		</p>
+	</layoutSection>
+
+	<layoutCard variant="outlined" padding="md" radius="md">
+		<h3>Quick Reference</h3>
+		<ul>
+			<li><p>Type <code>/</code> to open the command palette</p></li>
+			<li><p>Drag the ⠿ handle to reorder blocks</p></li>
+			<li><p>Select text to open the floating toolbar</p></li>
+			<li><p>Click the node path breadcrumb to control drag depth</p></li>
+		</ul>
+	</layoutCard>
+
+</layoutSplit>
+
 <hr />
-<h2>JavaScript Code with Syntax Highlighting</h2>
+
+<h2>Layout Components</h2>
 <p>
-	The editor also supports syntax highlighting for code and automatically highlights the syntax
-	based on the language selected — or detected if auto is selected. JavaScript and HTML also
-	support formatting by pressing the `Format` button while the cursor is in the code block.
+	Layout components are block containers inserted via the <code>/</code> command. They control
+	arrangement without touching CSS, and all support the global attribute editor for custom
+	<code>style</code>, <code>class</code>, and <code>id</code> overrides.
 </p>
-<pre><code class="language-javascript">// Simple JavaScript FizzBuzz example
-for (var i = 1; i &lt;= 20; i++) {
-  if (i % 15 === 0) {
-    console.log("FizzBuzz");
-  } else if (i % 3 === 0) {
-    console.log("Fizz");
-  } else if (i % 5 === 0) {
-    console.log("Buzz");
-  } else {
-    console.log(i);
-  }
-}</code></pre>
-<h2>Markdown Shortcuts</h2>
-<p>Markdown shortcuts make it easy to format the text while typing.</p>
+
+<layoutCard variant="filled" padding="md" radius="md">
+	<h3>LayoutSection</h3>
+	<p>
+		A <strong>flex-column container</strong> with configurable <em>gap</em>, <em>padding</em>,
+		and <em>align</em> props. Use it to group blocks with consistent spacing. The three
+		paragraphs below are inside a LayoutSection with <code>gap="sm"</code> and
+		<code>align="start"</code>.
+	</p>
+	<layoutSection gap="sm" align="start">
+		<p>First item in the LayoutSection.</p>
+		<p>Second item — the gap between these is controlled by the <code>gap</code> prop.</p>
+		<p>Third item. The <code>align</code> prop controls cross-axis alignment (start / center / end / stretch).</p>
+	</layoutSection>
+</layoutCard>
+
+<h3>LayoutSplit</h3>
 <p>
-	To test that, start a new line and type <code>#</code> followed by a space to get a heading. Try
-	<code>#</code>, <code>##</code>, <code>###</code>, <code>####</code>, <code>#####</code>,
-	<code>######</code> for different levels.
+	Creates a <strong>two-column asymmetric grid</strong>. The <code>split</code> prop sets the
+	ratio: 1/4, 1/3, 2/5, 1/2, 3/5, 2/3, or 3/4. The two cards below are the two direct
+	children of this LayoutSplit — each becomes one grid cell. The <code>collapse</code> prop
+	controls the container-query breakpoint at which it stacks to a single column.
 </p>
+<layoutSplit split="1/2" gap="md">
+	<layoutCard variant="outlined" padding="md" radius="md">
+		<h3>Left column</h3>
+		<p>
+			Any block content can go inside — paragraphs, lists, nested layout components, images,
+			code blocks. This is a <code>split="1/2"</code> (equal width) layout.
+		</p>
+	</layoutCard>
+	<layoutCard variant="outlined" padding="md" radius="md">
+		<h3>Right column</h3>
+		<p>
+			The <code>gap</code> prop sets the gutter. Try the attribute editor on the LayoutSplit
+			wrapper to change the split ratio or gap live.
+		</p>
+	</layoutCard>
+</layoutSplit>
+
+<h3>LayoutColumns</h3>
 <p>
-	These conventions are called input rules in Tiptap. Some of them are enabled by default. Try
-	<code>&gt;</code> for blockquotes, <code>*</code>, <code>-</code> or <code>+</code> for bullet
-	lists, or <code>`foobar`</code> to highlight code, and <code>~~tildes~~</code> to strike text.
+	An <strong>N-column equal grid</strong> — 2, 3, or 4 columns. Each direct child becomes
+	one cell. The three cards below are in a <code>columns="3"</code> grid.
 </p>
+<layoutColumns columns="3" gap="md">
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>Column 1</h3>
+		<p>2, 3, or 4 equal columns. Each direct child is one cell.</p>
+	</layoutCard>
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>Column 2</h3>
+		<p>The <code>gap</code> prop controls the gutter between columns.</p>
+	</layoutCard>
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>Column 3</h3>
+		<p>The <code>collapse</code> prop sets the breakpoint at which it stacks to one column.</p>
+	</layoutCard>
+</layoutColumns>
+
+<layoutSplit split="2/3" gap="md">
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>LayoutCard</h3>
+		<p>
+			A styled container with four <strong>variants</strong>: <em>elevated</em> (box shadow, the
+			default), <em>outlined</em> (border), <em>filled</em> (secondary background), and
+			<em>plain</em> (no decoration). Also accepts <code>padding</code> and <code>radius</code>
+			props.
+		</p>
+	</layoutCard>
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>LayoutCenter</h3>
+		<p>
+			Constrains children to a max-width and centres them horizontally. Options: xs (20rem)
+			through 2xl (42rem) or full. Used below for the code example.
+		</p>
+	</layoutCard>
+</layoutSplit>
+
+<hr />
+
+<h2>Text Formatting</h2>
+<p>
+	Select any text to reveal the <strong>floating toolbar</strong>. Inline formatting is available
+	on any text node: <strong>bold</strong>, <em>italic</em>, <s>strikethrough</s>, and
+	<code>inline code</code>. Standard keyboard shortcuts work too — <code>Ctrl+B</code>,
+	<code>Ctrl+I</code> — as do markdown input rules like <code>**bold**</code> and
+	<code>`code`</code>.
+</p>
+<blockquote>
+	<p>
+		Blockquotes are available from the slash command or by converting a paragraph via
+		the toolbar's <strong>Turn Into</strong> picker. Start a line with <code>&gt;</code> as a
+		markdown shortcut.
+	</p>
+</blockquote>
+
+<h2>Block Types</h2>
+<p>
+	Every block type is available from the <code>/</code> command palette. Headings, lists, and
+	blockquotes also have markdown shortcuts that fire as you type.
+</p>
+
+<layoutSplit split="1/2" gap="lg">
+
+	<layoutSection gap="sm">
+		<h3>Lists</h3>
+		<p>Three list types — bullet, ordered, and task. All can be converted between each other from the toolbar. Markdown shortcuts: <code>-</code> or <code>*</code> for bullet, <code>1.</code> for ordered.</p>
+		<ul>
+			<li><p>Bullet list item</p></li>
+			<li><p>Another bullet item</p></li>
+		</ul>
+		<ol>
+			<li><p>Ordered item one</p></li>
+			<li><p>Ordered item two</p></li>
+		</ol>
+		<ul data-type="taskList">
+			<li data-checked data-type="taskItem"><p>Task item (checked)</p></li>
+			<li data-type="taskItem"><p>Task item (unchecked)</p></li>
+		</ul>
+	</layoutSection>
+
+	<layoutSection gap="sm">
+		<h3>Other blocks</h3>
+		<p>Horizontal rule — insert with <code>/hr</code> or type <code>---</code> on a blank line.</p>
+		<hr />
+		<p>Images — insert via <code>/image</code>. Select an image to edit its URL from the toolbar.</p>
+		<img src="https://placehold.co/400x150" />
+		<p>Tables — add and remove rows and columns from the toolbar while the cursor is inside a cell.</p>
+		<table>
+			<tr><th><p>Prop</p></th><th><p>Options</p></th></tr>
+			<tr><td><p>gap / padding</p></td><td><p>none · xs · sm · md · lg · xl</p></td></tr>
+			<tr><td><p>radius</p></td><td><p>none · sm · md · lg</p></td></tr>
+			<tr><td><p>variant</p></td><td><p>elevated · outlined · filled · plain</p></td></tr>
+		</table>
+	</layoutSection>
+
+</layoutSplit>
+
+<h2>Code Blocks</h2>
+<p>
+	Syntax highlighting for JavaScript, TypeScript, Python, JSON, CSS, and HTML. Select
+	<em>auto</em> for automatic detection. When a code block is focused the toolbar shows a
+	<strong>Format</strong> button — for JavaScript and HTML it runs a full code formatter in place.
+</p>
+
+<layoutCenter maxWidth="2xl">
+	<pre><code class="language-typescript">import { useEditor } from '@tiptap/vue-3'
+import { blockBuilderExtensions } from '@/editor/extensions'
+
+const editor = useEditor({
+  extensions: blockBuilderExtensions({
+    dragHandle: true,
+    multiSelect: true,
+    floatingToolbar: true,
+  }),
+  content: initialContent,
+})</code></pre>
+</layoutCenter>
+
+<hr />
+
+<h2>The Floating Toolbar</h2>
+<p>
+	The toolbar appears above any selected node or text range and adapts its items to what makes
+	sense in context. Hovering over a button shows a tooltip describing what it does.
+</p>
+
+<layoutColumns columns="3" gap="md">
+
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>Block Conversion</h3>
+		<ul>
+			<li><p><strong>Turn Into</strong> — convert the block to a different type: heading levels, paragraph, blockquote, bullet list, ordered list, code block</p></li>
+			<li><p><strong>Wrap In</strong> — wrap the selection inside a container: any layout component or other block wrapper</p></li>
+			<li><p><strong>Unwrap</strong> — remove the wrapper node and promote its children to the parent level</p></li>
+			<li><p><strong>Delete Node</strong> — remove the selected block entirely</p></li>
+		</ul>
+	</layoutCard>
+
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>Inline Formatting</h3>
+		<p>Shown when any text is selected:</p>
+		<ul>
+			<li><p><strong>Bold</strong> — <code>Ctrl+B</code></p></li>
+			<li><p><strong>Italic</strong> — <code>Ctrl+I</code></p></li>
+			<li><p><strong>Strikethrough</strong></p></li>
+			<li><p><strong>Inline code</strong></p></li>
+			<li><p><strong>Link</strong> — opens a URL editor inline for the selected text</p></li>
+		</ul>
+	</layoutCard>
+
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>Attribute Editor</h3>
+		<p>
+			Available on every node at depth &gt; 0. Opens an inline panel where you can set:
+		</p>
+		<ul>
+			<li><p><code>style</code> — inline CSS with a dedicated style editor</p></li>
+			<li><p><code>class</code> — CSS class list</p></li>
+			<li><p><code>id</code> — element ID</p></li>
+			<li><p>Component-specific props — gap, padding, variant, split ratio, etc., shown as dropdowns for enum values</p></li>
+		</ul>
+	</layoutCard>
+
+</layoutColumns>
+
+<layoutColumns columns="3" gap="md">
+
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>Table Controls</h3>
+		<p>Appear only when the cursor is inside a table cell:</p>
+		<ul>
+			<li><p>Add row before / after</p></li>
+			<li><p>Delete current row</p></li>
+			<li><p>Add column before / after</p></li>
+			<li><p>Delete current column</p></li>
+		</ul>
+	</layoutCard>
+
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>List Controls</h3>
+		<p>Appear when the active node is a list wrapper:</p>
+		<ul>
+			<li><p>Toggle bullet list</p></li>
+			<li><p>Toggle ordered list</p></li>
+			<li><p>Toggle task list</p></li>
+			<li><p>Switching between types rewrites item node types and preserves content</p></li>
+		</ul>
+	</layoutCard>
+
+	<layoutCard variant="elevated" padding="md" radius="md">
+		<h3>Media Controls</h3>
+		<p>Shown when an image or video is selected:</p>
+		<ul>
+			<li><p><strong>Image URL editor</strong> — edit the <code>src</code> attribute of the selected image</p></li>
+			<li><p><strong>YouTube URL editor</strong> — edit the video URL and set a responsive max-width</p></li>
+			<li><p><strong>Format code</strong> — shown for code blocks; runs the formatter for JS and HTML</p></li>
+		</ul>
+	</layoutCard>
+
+</layoutColumns>
+
+<h2>Node Path &amp; Depth Control</h2>
+
+<layoutSplit split="1/2" gap="lg">
+
+	<layoutSection gap="sm">
+		<h3>The Node Path Breadcrumb</h3>
+		<p>
+			At the top of the editor, a breadcrumb trail shows the full nesting path of the cursor's
+			current position — for example: <code>doc › LayoutCard › p</code>. Each segment
+			represents one ancestor node, from the document root on the left to the deepest selected
+			node on the right.
+		</p>
+		<p>
+			Clicking a segment sets the <strong>active depth</strong> to that level. This controls
+			which blocks show a drag handle. It's the primary way to target a specific nesting level
+			for drag-and-drop when blocks are deeply nested.
+		</p>
+	</layoutSection>
+
+	<layoutSection gap="sm">
+		<h3>Active Depth &amp; the Drag Handle</h3>
+		<p>
+			The <strong>active depth</strong> is a ceiling: any block at depth ≤ active depth gets a
+			drag handle. A small number above the handle shows its depth. This means:
+		</p>
+		<ul>
+			<li><p>Depth 1 — only top-level blocks show handles (default)</p></li>
+			<li><p>Depth 2 — top-level and their direct children get handles</p></li>
+			<li><p>Deeper — more nesting levels become individually draggable</p></li>
+		</ul>
+		<p>
+			The floating toolbar also respects active depth: it targets the shallowest relevant
+			ancestor of the cursor position, up to the active depth ceiling.
+		</p>
+	</layoutSection>
+
+</layoutSplit>
+
+<h2>Drag Handle &amp; Multi-select</h2>
+
+<layoutSplit split="1/2" gap="lg">
+
+	<layoutSection gap="sm">
+		<h3>Drag Handle</h3>
+		<p>
+			A ⠿ handle appears to the left of any draggable block when you hover near it. Drag it
+			to reorder. The handle fades after 2 seconds of inactivity — move the cursor back to the
+			left edge to show it again.
+		</p>
+		<p>
+			Which blocks show handles is determined by the active depth (above). At depth 1 only the
+			outermost blocks are draggable; increasing depth makes nested blocks draggable too.
+		</p>
+	</layoutSection>
+
+	<layoutSection gap="sm">
+		<h3>Multi-select (Virtual Selection)</h3>
+		<p>
+			The toolbar's selection mode lets you select multiple blocks. Use <strong>Add
+			siblings</strong> or <strong>Add children</strong> to extend the selection, then:
+		</p>
+		<ul>
+			<li><p><strong>Move before / after target</strong> — repositions the whole group</p></li>
+			<li><p><strong>Wrap selected</strong> — wraps them all in a new container</p></li>
+			<li><p><strong>Delete selected</strong> — removes all at once</p></li>
+		</ul>
+		<p>
+			Dragging a node that's part of a multi-select moves the entire group. A composite
+			preview shows up to three cloned nodes with a badge indicating how many are moving.
+		</p>
+	</layoutSection>
+
+</layoutSplit>
+
+<h2>Inline vs Block Content</h2>
+
+<layoutCard variant="filled" padding="lg" radius="md">
+	<p>
+		Every element in the editor's schema is configured to hold either <strong>block
+		content</strong> (paragraphs, headings, other layout blocks) or <strong>inline
+		content</strong> (text, bold, links). A single element cannot mix both — this is a
+		ProseMirror constraint.
+	</p>
+	<p>
+		If you place a block element (e.g. a paragraph) inside a component that only accepts inline
+		content, it is silently dropped. Conversely, bare text inside a block container is
+		automatically wrapped in a paragraph. The <strong>Wrap In</strong> toolbar action always
+		targets block-content containers, so inline-only components don't appear in its picker.
+	</p>
+</layoutCard>
+
+<h2>Demo Video</h2>
+
+<layoutCenter maxWidth="xl">
+	<div data-youtube-video="">
+		<iframe src="https://www.youtube.com/embed/3lTUAWOgoHs" resp="36rem"></iframe>
+	</div>
+</layoutCenter>
+
+<hr />
+
+<layoutCard variant="filled" padding="lg" radius="md">
+	<h3>v1.0 Roadmap</h3>
+	<ul data-type="taskList">
+		<li data-checked data-type="taskItem"><p>Floating toolbar with context-aware items</p></li>
+		<li data-checked data-type="taskItem"><p>Five layout container components</p></li>
+		<li data-checked data-type="taskItem"><p>Multi-select drag-and-drop</p></li>
+		<li data-checked data-type="taskItem"><p>Global style / class / id attributes on all nodes</p></li>
+		<li data-checked data-type="taskItem"><p>Node path breadcrumb with depth control</p></li>
+		<li data-type="taskItem"><p>Image upload and resize handles</p></li>
+		<li data-type="taskItem"><p>Collaborative editing via WebSockets</p></li>
+		<li data-type="taskItem"><p>Export to Markdown and HTML</p></li>
+	</ul>
+</layoutCard>
