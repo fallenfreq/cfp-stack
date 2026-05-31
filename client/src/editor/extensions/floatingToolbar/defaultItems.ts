@@ -6,10 +6,17 @@ import ToolbarNodePicker, {
 	type NodePickerItem,
 } from '@/components/editor/toolbar/ToolbarNodePicker.vue'
 import ToolbarYouTubeUrlControl from '@/components/editor/toolbar/ToolbarYouTubeUrlControl.vue'
-import { type MultiSelectAction, multiSelectPluginKey } from '@/editor/extensions/multiSelect'
+import { multiSelectPluginKey, type MultiSelectAction } from '@/editor/extensions/multiSelect'
 import { useEditorStore } from '@/stores/editorStore'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
-import { allAreSiblings, getChildBlockPositions, getSiblingPositions, nodeAt, prettifySelectedCode, type NodePos } from '@/utils/editor/editorUtils'
+import {
+	allAreSiblings,
+	getChildBlockPositions,
+	getSiblingPositions,
+	nodeAt,
+	prettifySelectedCode,
+	type NodePos,
+} from '@/utils/editor/editorUtils'
 import { Fragment } from '@tiptap/pm/model'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
@@ -531,7 +538,10 @@ export const defaultToolbarItems = [
 		(_e, ctx) =>
 			ctx.activeDepth > 0 && !ctx.activeNode.type.isLeaf && !useEditorStore().isCodeView,
 		ToolbarNodePicker,
-		{ props: { iconName: 'change_circle', getItems: getTurnIntoItems }, tooltip: 'Change Type' },
+		{
+			props: { iconName: 'change_circle', getItems: getTurnIntoItems },
+			tooltip: 'Change Type',
+		},
 	),
 	toolbarCustomItem(
 		'wrap-in',
@@ -712,17 +722,19 @@ export const defaultToolbarItems = [
 				ctx.nodePos !== null && useMultiSelectStore().positions.includes(ctx.nodePos)
 			return h(ToolbarIcon, null, () => (inSel ? 'check_box' : 'check_box_outline_blank'))
 		},
-		show: (_, ctx) =>
-			ctx.nodePos !== null && ctx.activeNode.type.spec.selectable !== false,
+		show: (_, ctx) => ctx.nodePos !== null && ctx.activeNode.type.spec.selectable !== false,
 		active: (_, ctx) =>
 			ctx.nodePos !== null && useMultiSelectStore().positions.includes(ctx.nodePos),
 		action: (editor, ctx) => {
 			const nodePos = ctx.nodePos
 			if (nodePos === null) return
 			const positions = useMultiSelectStore().positions
-			selDispatch(editor, positions.includes(nodePos)
-				? { action: 'remove', pos: nodePos }
-				: { action: 'add', pos: nodePos })
+			selDispatch(
+				editor,
+				positions.includes(nodePos)
+					? { action: 'remove', pos: nodePos }
+					: { action: 'add', pos: nodePos },
+			)
 		},
 	}),
 
@@ -790,7 +802,8 @@ export const defaultToolbarItems = [
 		action: (editor, ctx) => {
 			if (ctx.nodePos === null) return
 			const childPositions = getChildBlockPositions(editor.state.doc, ctx.nodePos)
-			if (childPositions.length) selDispatch(editor, { action: 'addMany', positions: childPositions })
+			if (childPositions.length)
+				selDispatch(editor, { action: 'addMany', positions: childPositions })
 		},
 	}),
 

@@ -17,9 +17,9 @@ import { FloatingToolbarExtension, type ToolbarItem } from '@/editor/extensions/
 import { defaultToolbarItems } from '@/editor/extensions/floatingToolbar/defaultItems'
 import {
 	EditorContent,
-	VueNodeViewRenderer,
 	mergeAttributes,
 	useEditor,
+	VueNodeViewRenderer,
 	type NodeViewProps,
 } from '@tiptap/vue-3'
 
@@ -48,8 +48,12 @@ import TiptapCodeBlock from './TiptapCodeBlock.vue'
 import { watch, type Component } from 'vue'
 
 import { lowlight } from '@/config/editor/lowlight'
+import {
+	buildMultiDragSlice,
+	MultiSelectExtension,
+	multiSelectPluginKey,
+} from '@/editor/extensions/multiSelect'
 import { useEditorStore } from '@/stores/editorStore.js'
-import { buildMultiDragSlice, MultiSelectExtension, multiSelectPluginKey } from '@/editor/extensions/multiSelect'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 
 import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'

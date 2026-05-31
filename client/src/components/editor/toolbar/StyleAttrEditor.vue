@@ -60,7 +60,15 @@ onMounted(() => {
 				syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
 				css(),
 				bracketMatching(),
-				keymap.of([{ key: 'Enter', run: (v) => { v.dispatch(v.state.replaceSelection('\n')); return true } }]),
+				keymap.of([
+					{
+						key: 'Enter',
+						run: (v) => {
+							v.dispatch(v.state.replaceSelection('\n'))
+							return true
+						},
+					},
+				]),
 				themeCompartment.of(darkModeStore.isDarkMode ? oneDark : []),
 				EditorView.lineWrapping,
 				EditorView.domEventHandlers({

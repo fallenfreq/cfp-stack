@@ -8,7 +8,13 @@ import tseslint from 'typescript-eslint'
 
 export default defineConfig([
 	globalIgnores(
-		['**/dist', '**/node_modules', '**/_demos', './api/{client_dist, functions}'],
+		[
+			'**/dist',
+			'**/node_modules',
+			'**/_demos',
+			'./api/{client_dist,functions}',
+			'**/.wrangler',
+		],
 		'Global Ignores',
 	),
 	{

@@ -85,7 +85,9 @@ const addableKeys = computed(() =>
 
 const dispatch = (newAttrs: Record<string, unknown>) => {
 	if (capturedPos.value === null) return
-	props.editor.view.dispatch(props.editor.state.tr.setNodeMarkup(capturedPos.value, null, newAttrs))
+	props.editor.view.dispatch(
+		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, newAttrs),
+	)
 }
 
 const onUpdate = (key: string, value: unknown) => {

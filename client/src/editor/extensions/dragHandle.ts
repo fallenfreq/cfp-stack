@@ -9,7 +9,11 @@ const dragHandlePluginKey = new PluginKey<DragHandleState>('dragHandle')
 interface DragHandleOptions {
 	dragHandleClass: string
 	shouldShowHandle: (node: ProseMirrorNode, depth: number) => boolean
-	buildDragSlice?: (view: EditorView, pos: number, event: DragEvent) => { slice: Slice; move: boolean } | null
+	buildDragSlice?: (
+		view: EditorView,
+		pos: number,
+		event: DragEvent,
+	) => { slice: Slice; move: boolean } | null
 }
 
 interface DragHandleState {
@@ -262,8 +266,11 @@ const DragHandle = Extension.create<DragHandleOptions>({
 							// Selection-change (or explicit refresh): find and dispatch new handle position.
 							// refreshDragHandle meta is set by NodePath when activeDepth changes but the
 							// cursor stays put — on mobile, mousemove never fires after a tap.
-							const forceRefresh = dragHandlePluginKey.getState(view.state)?.forceRefresh
-							if (!forceRefresh && view.state.selection.eq(prevState.selection)) return
+							const forceRefresh = dragHandlePluginKey.getState(
+								view.state,
+							)?.forceRefresh
+							if (!forceRefresh && view.state.selection.eq(prevState.selection))
+								return
 							if (view.composing) return
 							// Defer so the browser finishes cursor/focus handling before
 							// dispatching.  Re-read state at fire time so stale captures

@@ -63,7 +63,8 @@ const claims = computed(() => {
 		</h2>
 		<ul class="claims">
 			<li v-for="c in claims" :key="c.key">
-				<strong>{{ c.key }}</strong>: {{ c.value }}
+				<strong>{{ c.key }}</strong
+				>: {{ c.value }}
 			</li>
 		</ul>
 	</div>

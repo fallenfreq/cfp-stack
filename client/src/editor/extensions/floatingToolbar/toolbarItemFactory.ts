@@ -25,7 +25,7 @@ function toolbarItem(
 	}
 }
 
-type ButtonItemBase = {
+interface ButtonItemBase {
 	id: string
 	show: (editor: Editor, context: ToolbarItemContext) => boolean
 	active?: (editor: Editor, context: ToolbarItemContext) => boolean
@@ -76,9 +76,7 @@ export function toolbarButtonItem(options: ButtonItemOptions): ToolbarItem {
 				disabled: options.disabled?.(editor, context) ?? false,
 				onClick: () => options.action(editor, context),
 			},
-			isIconItem(options)
-				? () => options.label(editor, context)
-				: () => options.label,
+			isIconItem(options) ? () => options.label(editor, context) : () => options.label,
 		)
 		return withTooltip(btn, isIconItem(options) ? options.tooltip : undefined)
 	})

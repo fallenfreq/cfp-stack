@@ -133,8 +133,7 @@ const getChildBlockPositions = (doc: ProseMirrorNode, nodePos: NodePos): NodePos
 // Trusted entry points for creating NodePos values from ProseMirror APIs.
 // All as-NodePos casts in the codebase must live here.
 const nodeSelectionPos = (selection: NodeSelection): NodePos => selection.from as NodePos
-const resolvedNodePos = ($pos: ResolvedPos, depth: number): NodePos =>
-	$pos.before(depth) as NodePos
+const resolvedNodePos = ($pos: ResolvedPos, depth: number): NodePos => $pos.before(depth) as NodePos
 
 // Returns true if all positions share the same parent (i.e. are siblings of each other).
 const allAreSiblings = (doc: ProseMirrorNode, positions: NodePos[]): boolean => {

@@ -53,7 +53,11 @@ const resolveActive = (): ToolbarItemContext => {
 	const effectiveDepth = Math.min(dragHandleStore.activeDepth, $pos.depth)
 
 	if (selection instanceof NodeSelection && selection.node.isLeaf) {
-		return { activeNode: selection.node, activeDepth: $pos.depth + 1, nodePos: nodeSelectionPos(selection) }
+		return {
+			activeNode: selection.node,
+			activeDepth: $pos.depth + 1,
+			nodePos: nodeSelectionPos(selection),
+		}
 	}
 
 	return {

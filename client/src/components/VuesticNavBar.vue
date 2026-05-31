@@ -39,10 +39,8 @@
 										<VaSidebarItemContent>
 											<VaIcon :name="child.icon" />
 											<VaSidebarItemTitle>
-{{
-												child.title
-											}}
-</VaSidebarItemTitle>
+												{{ child.title }}
+											</VaSidebarItemTitle>
 										</VaSidebarItemContent>
 									</VaSidebarItem>
 								</template>
@@ -145,9 +143,9 @@
 import zitadelAuth from '@/services/zitadelAuth'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
+import AppTooltip from './AppTooltip.vue'
 import MothLogo from './brand/MothLogo.vue'
 import MothWordmark from './brand/MothWordmark.vue'
-import AppTooltip from './AppTooltip.vue'
 
 interface BaseMenuItem {
 	title: string

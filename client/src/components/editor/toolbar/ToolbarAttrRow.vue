@@ -9,7 +9,7 @@
 			class="attr-checkbox"
 			:checked="!!value"
 			@change="emit('update', attrKey, ($event.target as HTMLInputElement).checked)"
-		>
+		/>
 		<input
 			v-else-if="typeof specDefault === 'number'"
 			ref="inputEl"
@@ -20,7 +20,7 @@
 				emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
 			"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		>
+		/>
 		<StyleAttrEditor
 			v-else-if="attrKey === 'style'"
 			:value="(value as string) ?? ''"
@@ -34,7 +34,7 @@
 			:value="value as string"
 			@change="emit('update', attrKey, ($event.target as HTMLInputElement).value)"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		>
+		/>
 
 		<ToolbarButton @mousedown.prevent="emit('remove', attrKey)">
 			<ToolbarIcon>close</ToolbarIcon>
@@ -98,7 +98,6 @@ onMounted(() => {
 .attr-input:focus {
 	border-color: rgb(var(--primary));
 }
-
 
 .attr-checkbox {
 	width: 14px;

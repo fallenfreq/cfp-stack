@@ -1,5 +1,5 @@
-import type { Node } from '@tiptap/pm/model'
 import type { NodePos } from '@/utils/editor/editorUtils'
+import type { Node } from '@tiptap/pm/model'
 import type { Editor } from '@tiptap/vue-3'
 import type { Component } from 'vue'
 
