@@ -10,6 +10,7 @@
 				:attr-key="key"
 				:value="value"
 				:spec-default="specAttrs[key]?.default ?? null"
+				v-bind="propOptions[key] ? { specOptions: propOptions[key] } : {}"
 				@update="onUpdate"
 				@remove="onRemove"
 			/>
@@ -19,6 +20,7 @@
 				:attr-key="pendingKey"
 				:value="''"
 				:spec-default="specAttrs[pendingKey]?.default ?? null"
+				v-bind="propOptions[pendingKey] ? { specOptions: propOptions[pendingKey] } : {}"
 				:pending="true"
 				@update="onPendingUpdate"
 				@remove="pendingKey = null"
@@ -48,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import { editorComponents } from '@/config/editor/editorComponents'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { filterNonDefaultAttrs, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
@@ -72,6 +75,17 @@ const capturedNode = computed(() => {
 const specAttrs = computed(
 	() => capturedNode.value.type.spec.attrs as Record<string, { default?: unknown }>,
 )
+
+const propOptions = computed(() => {
+	const name = capturedNode.value.type.name as keyof typeof editorComponents
+	const componentData = editorComponents[name]
+	if (!componentData) return {}
+	return Object.fromEntries(
+		Object.entries(componentData.props as Record<string, { options?: string[] }>)
+			.filter(([, v]) => v?.options)
+			.map(([k, v]) => [k, v.options!]),
+	)
+})
 
 const nonDefaultAttrs = computed(() =>
 	filterNonDefaultAttrs(capturedNode.value.attrs, specAttrs.value),

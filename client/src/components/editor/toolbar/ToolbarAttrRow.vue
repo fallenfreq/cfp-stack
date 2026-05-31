@@ -26,6 +26,14 @@
 			:value="(value as string) ?? ''"
 			@update="(val) => emit('update', attrKey, val)"
 		/>
+		<select
+			v-else-if="specOptions"
+			class="attr-input attr-select"
+			:value="value as string"
+			@change="emit('update', attrKey, ($event.target as HTMLSelectElement).value)"
+		>
+			<option v-for="opt in specOptions" :key="opt" :value="opt">{{ opt }}</option>
+		</select>
 		<input
 			v-else
 			ref="inputEl"
@@ -52,6 +60,7 @@ const props = defineProps<{
 	attrKey: string
 	value: unknown
 	specDefault: unknown
+	specOptions?: string[]
 	pending?: boolean
 }>()
 
@@ -104,5 +113,9 @@ onMounted(() => {
 	height: 14px;
 	flex-shrink: 0;
 	accent-color: rgb(var(--primary));
+}
+
+.attr-select {
+	cursor: pointer;
 }
 </style>
