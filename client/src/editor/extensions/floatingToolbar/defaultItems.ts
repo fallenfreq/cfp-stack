@@ -9,7 +9,7 @@ import ToolbarYouTubeUrlControl from '@/components/editor/toolbar/ToolbarYouTube
 import { type MultiSelectAction, multiSelectPluginKey } from '@/editor/extensions/multiSelect'
 import { useEditorStore } from '@/stores/editorStore'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
-import { getChildBlockPositions, getSiblingPositions, nodeAt, prettifySelectedCode, type NodePos } from '@/utils/editor/editorUtils'
+import { allAreSiblings, getChildBlockPositions, getSiblingPositions, nodeAt, prettifySelectedCode, type NodePos } from '@/utils/editor/editorUtils'
 import { Fragment } from '@tiptap/pm/model'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
@@ -343,6 +343,75 @@ const selMoveAfter = (editor: Editor, ctx: ToolbarItemContext) => {
 	editor.view.dispatch(tr.setMeta(multiSelectPluginKey, { action: 'clear' }))
 }
 
+const selReplace = (editor: Editor, ctx: ToolbarItemContext) => {
+	const nodePos = ctx.nodePos
+	if (nodePos === null) return
+	const positions = useMultiSelectStore().positions
+	if (positions.includes(nodePos)) return
+	const sorted = [...positions].sort((a, b) => a - b)
+	const content = Fragment.fromArray(sorted.map((p) => nodeAt(editor.state.doc, p)))
+	const targetNode = nodeAt(editor.state.doc, nodePos)
+	let tr = editor.state.tr
+	for (const pos of [...sorted].reverse()) {
+		const node = nodeAt(tr.doc, pos)
+		tr = tr.delete(pos, pos + node.nodeSize)
+	}
+	tr = tr.replaceWith(
+		tr.mapping.map(nodePos),
+		tr.mapping.map(nodePos + targetNode.nodeSize),
+		content,
+	)
+	editor.view.dispatch(tr.setMeta(multiSelectPluginKey, { action: 'clear' }))
+}
+
+const canWrapSiblingsInType = (editor: Editor, positions: NodePos[], typeName: string): boolean => {
+	const wrapType = editor.state.schema.nodes[typeName]
+	if (!wrapType) return false
+	const doc = editor.state.doc
+	const sorted = [...positions].sort((a, b) => a - b)
+	const [firstPos] = sorted
+	if (firstPos === undefined) return false
+	const $first = doc.resolve(firstPos)
+	const startIndex = $first.index()
+	return (
+		$first.parent.canReplaceWith(startIndex, startIndex + sorted.length, wrapType)
+		&& wrapType.validContent(Fragment.fromArray(sorted.map((p) => nodeAt(doc, p))))
+	)
+}
+
+const wrapSiblingsInType = (editor: Editor, positions: NodePos[], typeName: string): void => {
+	const wrapType = editor.state.schema.nodes[typeName]
+	if (!wrapType) return
+	const doc = editor.state.doc
+	const sorted = [...positions].sort((a, b) => a - b)
+	const [firstPos] = sorted
+	if (firstPos === undefined) return
+	const lastPos = sorted[sorted.length - 1] ?? firstPos
+	const wrapper = wrapType.create(null, Fragment.fromArray(sorted.map((p) => nodeAt(doc, p))))
+	editor.view.dispatch(
+		editor.state.tr
+			.replaceWith(firstPos, lastPos + nodeAt(doc, lastPos).nodeSize, wrapper)
+			.setMeta(multiSelectPluginKey, { action: 'clear' }),
+	)
+}
+
+const getSelWrapItems = (editor: Editor, _ctx: ToolbarItemContext): NodePickerItem[] => {
+	const positions = useMultiSelectStore().positions
+	const items: NodePickerItem[] = []
+	for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
+		if (EXCLUDED_NODE_TYPES.has(typeName) || type.isLeaf) continue
+		if (!canWrapSiblingsInType(editor, positions, typeName)) continue
+		const meta = NODE_META[typeName] ?? { label: typeName, iconName: 'widgets' }
+		items.push({
+			label: meta.label,
+			iconName: meta.iconName,
+			active: false,
+			action: () => wrapSiblingsInType(editor, positions, typeName),
+		})
+	}
+	return items
+}
+
 export const defaultToolbarItems = [
 	// --- Inline marks (any textblock) ---
 	toolbarButtonItem({
@@ -468,7 +537,7 @@ export const defaultToolbarItems = [
 		'wrap-in',
 		(editor, ctx) =>
 			!useEditorStore().isCodeView
-			&& (ctx.activeNode.type.isBlock
+			&& (ctx.nodePos !== null
 				|| (!editor.state.selection.empty
 					&& editor.state.selection.$from.parent.inlineContent)),
 		ToolbarNodePicker,
@@ -756,6 +825,26 @@ export const defaultToolbarItems = [
 			ctx.nodePos === null || useMultiSelectStore().positions.includes(ctx.nodePos),
 		action: selMoveAfter,
 	}),
+
+	toolbarButtonItem({
+		id: 'sel-replace',
+		tooltip: 'Replace target',
+		label: icon('find_replace'),
+		show: () => useMultiSelectStore().positions.length > 0,
+		disabled: (_, ctx) =>
+			ctx.nodePos === null || useMultiSelectStore().positions.includes(ctx.nodePos),
+		action: selReplace,
+	}),
+
+	toolbarCustomItem(
+		'sel-wrap',
+		(editor) => {
+			const positions = useMultiSelectStore().positions
+			return positions.length > 0 && allAreSiblings(editor.state.doc, positions)
+		},
+		ToolbarNodePicker,
+		{ props: { iconName: 'wrap_text', getItems: getSelWrapItems }, tooltip: 'Wrap selection' },
+	),
 
 	toolbarButtonItem({
 		id: 'sel-delete',
