@@ -21,7 +21,8 @@ import {
 } from '@/editor/extensions/floatingToolbar'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
-import { getExtensionOptions } from '@/utils/editor/editorUtils'
+import { useMultiSelectStore } from '@/stores/multiSelectStore'
+import { getExtensionOptions, nodeSelectionPos, resolvedNodePos } from '@/utils/editor/editorUtils'
 import { NodeSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -29,15 +30,16 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 const props = defineProps<{ editor: Editor }>()
 
 const dragHandleStore = useDragHandleStore()
+const multiSelectStore = useMultiSelectStore()
 const position = ref({ top: 0, left: 0 })
 
 const TOOLBAR_SPACING = 10
 
 const tick = ref(0)
 
-// Resolves the active node (matching NodePath's logic) and the doc position of
-// its DOM node for positioning.  Returns domPos=null when no valid node exists.
-const resolveActive = (): { context: ToolbarItemContext; domPos: number | null } => {
+// Resolves the active node (matching NodePath's logic) and its doc position.
+// Returns nodePos=null when no valid node exists.
+const resolveActive = (): ToolbarItemContext => {
 	const { state } = props.editor
 	const { selection } = state
 
@@ -51,30 +53,28 @@ const resolveActive = (): { context: ToolbarItemContext; domPos: number | null }
 	const effectiveDepth = Math.min(dragHandleStore.activeDepth, $pos.depth)
 
 	if (selection instanceof NodeSelection && selection.node.isLeaf) {
-		return {
-			context: { activeNode: selection.node, activeDepth: $pos.depth + 1 },
-			domPos: selection.from,
-		}
+		return { activeNode: selection.node, activeDepth: $pos.depth + 1, nodePos: nodeSelectionPos(selection) }
 	}
 
 	return {
-		context: { activeNode: $pos.node(effectiveDepth), activeDepth: effectiveDepth },
-		domPos: effectiveDepth > 0 ? $pos.before(effectiveDepth) : null,
+		activeNode: $pos.node(effectiveDepth),
+		activeDepth: effectiveDepth,
+		nodePos: effectiveDepth > 0 ? resolvedNodePos($pos, effectiveDepth) : null,
 	}
 }
 
 const activeNodeContext = computed((): ToolbarItemContext => {
 	void tick.value
-	return resolveActive().context
+	return resolveActive()
 })
 
 const updatePosition = () => {
 	tick.value++
 
-	const { domPos } = resolveActive()
-	if (domPos === null) return
+	const { nodePos } = resolveActive()
+	if (nodePos === null) return
 
-	const domNode = props.editor.view.nodeDOM(domPos) as HTMLElement | null
+	const domNode = props.editor.view.nodeDOM(nodePos) as HTMLElement | null
 	if (!domNode) return
 
 	const nodeRect = domNode.getBoundingClientRect()
@@ -94,6 +94,11 @@ const items = computed(
 const visibleItems = computed(() => {
 	void tick.value
 	const context = activeNodeContext.value
+	if (multiSelectStore.positions.length > 0) {
+		return items.value
+			.filter((i) => i.id.startsWith('sel-'))
+			.filter((i) => i.show(props.editor, context))
+	}
 	return items.value.filter((item) => item.show(props.editor, context))
 })
 
@@ -112,6 +117,14 @@ onUnmounted(() => {
 </script>
 
 <style>
+.sel-count {
+	font-size: 0.75rem;
+	color: rgba(var(--textPrimary) / 0.6);
+	padding: 0 4px;
+	white-space: nowrap;
+	align-self: center;
+}
+
 .floating-toolbar {
 	position: fixed;
 	transform: translateY(-100%);

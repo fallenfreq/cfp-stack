@@ -49,8 +49,7 @@
 
 <script setup lang="ts">
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
-import { filterNonDefaultAttrs } from '@/utils/editor/editorUtils'
-import { NodeSelection } from '@tiptap/pm/state'
+import { filterNonDefaultAttrs, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, onUnmounted, ref, watch, type CSSProperties } from 'vue'
 import ToolbarAttrRow from './ToolbarAttrRow.vue'
@@ -63,13 +62,19 @@ const open = ref(false)
 const buttonEl = ref<HTMLElement | null>(null)
 const pendingKey = ref<string | null>(null)
 const panelStyle = ref<CSSProperties>({})
+const capturedPos = ref<NodePos | null>(null)
+
+const capturedNode = computed(() => {
+	if (capturedPos.value === null) return props.context.activeNode
+	return nodeAt(props.editor.state.doc, capturedPos.value)
+})
 
 const specAttrs = computed(
-	() => props.context.activeNode.type.spec.attrs as Record<string, { default?: unknown }>,
+	() => capturedNode.value.type.spec.attrs as Record<string, { default?: unknown }>,
 )
 
 const nonDefaultAttrs = computed(() =>
-	filterNonDefaultAttrs(props.context.activeNode.attrs, specAttrs.value),
+	filterNonDefaultAttrs(capturedNode.value.attrs, specAttrs.value),
 )
 
 const addableKeys = computed(() =>
@@ -78,29 +83,22 @@ const addableKeys = computed(() =>
 	),
 )
 
-const resolveNodePos = (): number | null => {
-	const { selection } = props.editor.state
-	const depth = props.context.activeDepth
-	if (depth === 0) return null
-	if (selection instanceof NodeSelection) return selection.from
-	const $pos = props.editor.state.doc.resolve(selection.anchor)
-	const resolvedDepth = Math.min(depth, $pos.depth)
-	return resolvedDepth > 0 ? $pos.before(resolvedDepth) : null
-}
-
 const dispatch = (newAttrs: Record<string, unknown>) => {
-	const nodePos = resolveNodePos()
-	if (nodePos === null) return
-	props.editor.view.dispatch(props.editor.state.tr.setNodeMarkup(nodePos, null, newAttrs))
+	if (capturedPos.value === null) return
+	props.editor.view.dispatch(props.editor.state.tr.setNodeMarkup(capturedPos.value, null, newAttrs))
 }
 
 const onUpdate = (key: string, value: unknown) => {
-	dispatch({ ...props.context.activeNode.attrs, [key]: value })
+	if (capturedPos.value === null) return
+	const node = nodeAt(props.editor.state.doc, capturedPos.value)
+	dispatch({ ...node.attrs, [key]: value })
 }
 
 const onRemove = (key: string) => {
-	const def = props.context.activeNode.type.spec.attrs?.[key]?.default ?? null
-	dispatch({ ...props.context.activeNode.attrs, [key]: def })
+	if (capturedPos.value === null) return
+	const node = nodeAt(props.editor.state.doc, capturedPos.value)
+	const def = node.type.spec.attrs?.[key]?.default ?? null
+	dispatch({ ...node.attrs, [key]: def })
 }
 
 const onPendingUpdate = (key: string, value: unknown) => {
@@ -112,19 +110,27 @@ const startAdd = (key: string) => {
 	pendingKey.value = key
 }
 
+const repositionPanel = () => {
+	if (!buttonEl.value) return
+	const rect = buttonEl.value.getBoundingClientRect()
+	const PANEL_WIDTH = 300
+	const MARGIN = 4
+	// Right-align to button by default, but clamp so it never leaves the viewport.
+	// Convert the clamped viewport-absolute x back to a parent-relative left offset.
+	const viewportLeft = rect.right - PANEL_WIDTH
+	const clamped = Math.max(
+		MARGIN,
+		Math.min(viewportLeft, window.innerWidth - PANEL_WIDTH - MARGIN),
+	)
+	panelStyle.value = { left: `${clamped - rect.left}px` }
+}
+
 const toggle = () => {
 	if (!open.value && buttonEl.value) {
-		const rect = buttonEl.value.getBoundingClientRect()
-		const PANEL_WIDTH = 220
-		const MARGIN = 4
-		// Right-align to button by default, but clamp so it never leaves the viewport.
-		// Convert the clamped viewport-absolute x back to a parent-relative left offset.
-		const viewportLeft = rect.right - PANEL_WIDTH
-		const clamped = Math.max(
-			MARGIN,
-			Math.min(viewportLeft, window.innerWidth - PANEL_WIDTH - MARGIN),
-		)
-		panelStyle.value = { left: `${clamped - rect.left}px` }
+		capturedPos.value = props.context.nodePos
+		repositionPanel()
+	} else {
+		capturedPos.value = null
 	}
 	open.value = !open.value
 }
@@ -135,11 +141,33 @@ const onDocMousedown = (e: MouseEvent) => {
 }
 
 watch(open, (isOpen) => {
-	if (isOpen) document.addEventListener('mousedown', onDocMousedown)
-	else document.removeEventListener('mousedown', onDocMousedown)
+	if (isOpen) {
+		document.addEventListener('mousedown', onDocMousedown)
+		window.addEventListener('resize', repositionPanel)
+		window.visualViewport?.addEventListener('resize', repositionPanel)
+	} else {
+		document.removeEventListener('mousedown', onDocMousedown)
+		window.removeEventListener('resize', repositionPanel)
+		window.visualViewport?.removeEventListener('resize', repositionPanel)
+	}
 })
 
-onUnmounted(() => document.removeEventListener('mousedown', onDocMousedown))
+watch(
+	() => props.context.nodePos,
+	(nodePos) => {
+		if (!open.value || capturedPos.value === null) return
+		if (nodePos !== capturedPos.value) {
+			open.value = false
+			capturedPos.value = null
+		}
+	},
+)
+
+onUnmounted(() => {
+	document.removeEventListener('mousedown', onDocMousedown)
+	window.removeEventListener('resize', repositionPanel)
+	window.visualViewport?.removeEventListener('resize', repositionPanel)
+})
 </script>
 
 <style scoped>
@@ -155,9 +183,9 @@ onUnmounted(() => document.removeEventListener('mousedown', onDocMousedown))
 	border: 1px solid rgb(var(--backgroundBorder));
 	border-radius: 4px;
 	padding: 4px;
-	min-width: 220px;
+	min-width: 300px;
 	max-width: calc(100vw - 8px);
-	max-height: 300px;
+	max-height: 400px;
 	overflow-y: auto;
 	scrollbar-width: none;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);

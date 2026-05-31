@@ -21,13 +21,10 @@
 			"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
 		>
-		<textarea
+		<StyleAttrEditor
 			v-else-if="attrKey === 'style'"
-			ref="inputEl"
-			class="attr-input attr-textarea"
-			:value="value as string"
-			@change="emit('update', attrKey, ($event.target as HTMLTextAreaElement).value)"
-			@keydown.enter.prevent="($event.target as HTMLTextAreaElement).blur()"
+			:value="(value as string) ?? ''"
+			@update="(val) => emit('update', attrKey, val)"
 		/>
 		<input
 			v-else
@@ -47,6 +44,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import StyleAttrEditor from './StyleAttrEditor.vue'
 import ToolbarButton from './ToolbarButton.vue'
 import ToolbarIcon from './ToolbarIcon.vue'
 
@@ -101,14 +99,6 @@ onMounted(() => {
 	border-color: rgb(var(--primary));
 }
 
-.attr-textarea {
-	height: auto;
-	min-height: 44px;
-	resize: vertical;
-	padding: 3px 5px;
-	font-family: monospace;
-	line-height: 1.4;
-}
 
 .attr-checkbox {
 	width: 14px;

@@ -1,9 +1,24 @@
 // the utils file needs editor and lowlight, both from the editor.vue
 import { type Lowlight } from '@/config/editor/lowlight'
 import { isPrettierLanguage, prettifyCode } from '@/utils/codeFormatting'
+import { type Node as ProseMirrorNode, type ResolvedPos } from '@tiptap/pm/model'
+import { NodeSelection } from '@tiptap/pm/state'
+import { type EditorView } from '@tiptap/pm/view'
 import { type Editor } from '@tiptap/vue-3'
 import highlight from 'highlight.js'
 import { useToast } from 'vuestic-ui'
+
+// A position guaranteed to be the "before" offset of an existing node in the document.
+// Produced only at verified entry points (resolveActive, NodeSelection.from, plugin mapResult).
+declare const _nodePos: unique symbol
+export type NodePos = number & { readonly [_nodePos]: true }
+
+// Overloaded so NodePos callers get Node directly; plain number callers get Node | null.
+function nodeAt(doc: ProseMirrorNode, pos: NodePos): ProseMirrorNode
+function nodeAt(doc: ProseMirrorNode, pos: number): ProseMirrorNode | null
+function nodeAt(doc: ProseMirrorNode, pos: number): ProseMirrorNode | null {
+	return doc.nodeAt(pos)
+}
 
 const detectLanguage = (code: string, editor: Editor, setLanguage: string | null) => {
 	if (setLanguage === null) {
@@ -91,4 +106,91 @@ const filterNonDefaultAttrs = (
 		}),
 	)
 
-export { filterNonDefaultAttrs, getExtensionOptions, prettifySelectedCode }
+// Returns the "before" positions of all siblings of the node at nodePos (including itself).
+const getSiblingPositions = (doc: ProseMirrorNode, nodePos: NodePos): NodePos[] => {
+	const $pos = doc.resolve(nodePos)
+	const parentDepth = $pos.depth
+	const parent = $pos.node(parentDepth)
+	const parentStart = $pos.start(parentDepth)
+	const positions: NodePos[] = []
+	parent.forEach((_, offset) => {
+		positions.push((parentStart + offset) as NodePos)
+	})
+	return positions
+}
+
+// Returns the "before" positions of all direct block children of the node at nodePos.
+const getChildBlockPositions = (doc: ProseMirrorNode, nodePos: NodePos): NodePos[] => {
+	const node = nodeAt(doc, nodePos)
+	const contentStart = (nodePos + 1) as NodePos
+	const positions: NodePos[] = []
+	node.forEach((child, offset) => {
+		if (child.isBlock) positions.push((contentStart + offset) as NodePos)
+	})
+	return positions
+}
+
+// Trusted entry points for creating NodePos values from ProseMirror APIs.
+// All as-NodePos casts in the codebase must live here.
+const nodeSelectionPos = (selection: NodeSelection): NodePos => selection.from as NodePos
+const resolvedNodePos = ($pos: ResolvedPos, depth: number): NodePos =>
+	$pos.before(depth) as NodePos
+
+// Returns true if all positions share the same parent (i.e. are siblings of each other).
+const allAreSiblings = (doc: ProseMirrorNode, positions: NodePos[]): boolean => {
+	const [first, ...rest] = positions
+	if (first === undefined) return true
+	const siblingSet = new Set(getSiblingPositions(doc, first))
+	return rest.every((pos) => siblingSet.has(pos))
+}
+
+// Resolves the nearest selectable block at the given mouse/drag event coordinates.
+// Returns the node's position, the node itself, and whether to insert before or after it.
+// insertBefore is determined by: gap direction (nodeAfter → before, nodeBefore → after)
+// or vertical cursor position within the node's bounding box (top half → before).
+const findBlockAtCoords = (
+	view: EditorView,
+	event: MouseEvent,
+): { pos: NodePos; node: ProseMirrorNode; insertBefore: boolean } | null => {
+	const rawPos = view.posAtCoords({ left: event.clientX, top: event.clientY })
+	if (!rawPos) return null
+
+	const doc = view.state.doc
+	const $drop = doc.resolve(rawPos.pos)
+
+	// Cursor is in the gap between siblings — direction follows which side the cursor is on
+	const adjacent = $drop.nodeAfter ?? $drop.nodeBefore
+	if (adjacent && adjacent.isBlock && adjacent.type.spec.selectable !== false) {
+		const pos = ($drop.nodeAfter ? $drop.pos : $drop.pos - adjacent.nodeSize) as NodePos
+		return { pos, node: adjacent, insertBefore: !!$drop.nodeAfter }
+	}
+
+	// Walk up to the nearest selectable block ancestor
+	for (let d = $drop.depth; d >= 1; d--) {
+		const node = $drop.node(d)
+		if (!node.isBlock || node.type.spec.selectable === false) continue
+		const pos = resolvedNodePos($drop, d)
+		const nodeDOM = view.nodeDOM(pos) as HTMLElement | null
+		const rect = nodeDOM?.getBoundingClientRect()
+		return {
+			pos,
+			node,
+			insertBefore: rect ? event.clientY < (rect.top + rect.bottom) / 2 : true,
+		}
+	}
+
+	return null
+}
+
+export {
+	allAreSiblings,
+	filterNonDefaultAttrs,
+	findBlockAtCoords,
+	getChildBlockPositions,
+	getExtensionOptions,
+	getSiblingPositions,
+	nodeAt,
+	nodeSelectionPos,
+	prettifySelectedCode,
+	resolvedNodePos,
+}

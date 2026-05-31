@@ -52,6 +52,10 @@ const onLeave = () => {
 }
 
 const onTouchStart = () => {
+	if (timer) {
+		clearTimeout(timer)
+		timer = null
+	}
 	timer = setTimeout(() => {
 		visible.value = true
 	}, 500)
