@@ -1,7 +1,6 @@
-import { allAreSiblings, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
+import { findBlockAtCoords, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import { Fragment } from '@tiptap/pm/model'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
-import { dropPoint } from '@tiptap/pm/transform'
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
 
@@ -77,17 +76,28 @@ let pendingMultiDrag: NodePos[] | null = null
 
 export const buildMultiDragSlice = (view: EditorView, pos: number) => {
 	const positions = multiSelectPluginKey.getState(view.state)?.positions ?? []
-	if (positions.length < 2 || !positions.some((p) => p === pos)) return null
-	if (!allAreSiblings(view.state.doc, positions)) return null
+	if (positions.length < 2) return null
+
+	const doc = view.state.doc
+	const dragNode = doc.nodeAt(pos)
+	if (!dragNode) return null
+
+	// Activate if the dragged node is selected or is an ancestor of a selected node
+	// (handles the case where activeDepth shows a parent of the selected items)
+	const isRelevant = positions.some(
+		(p) => p === pos || (p > pos && p < pos + dragNode.nodeSize),
+	)
+	if (!isRelevant) return null
 
 	const sorted = [...positions].sort((a, b) => a - b)
 	const [firstPos] = sorted
-	const lastPos = sorted[sorted.length - 1]
-	if (firstPos === undefined || lastPos === undefined) return null
+	if (firstPos === undefined) return null
 
 	pendingMultiDrag = sorted
+	const firstNode = nodeAt(doc, firstPos)
+	// Placeholder slice — handleDrop overrides the actual operation
 	return {
-		slice: view.state.doc.slice(firstPos, lastPos + nodeAt(view.state.doc, lastPos).nodeSize),
+		slice: doc.slice(firstPos, firstPos + firstNode.nodeSize),
 		move: false as const,
 	}
 }
@@ -99,30 +109,21 @@ const multiDragPlugin = new Plugin({
 			const sorted = pendingMultiDrag
 			pendingMultiDrag = null
 
-			const [firstPos] = sorted
-			const lastPos = sorted[sorted.length - 1]
-			if (firstPos === undefined || lastPos === undefined) return false
+			const target = findBlockAtCoords(view, event)
+			if (!target || sorted.includes(target.pos)) return false
 
+			const { pos: targetPos, node: targetNode, insertBefore } = target
 			const doc = view.state.doc
-			const endPos = lastPos + nodeAt(doc, lastPos).nodeSize
-			const slice = doc.slice(firstPos, endPos)
-
-			const rawPos = view.posAtCoords({ left: event.clientX, top: event.clientY })
-			if (!rawPos) return false
-
-			const insertPos = dropPoint(doc, rawPos.pos, slice)
-			if (insertPos == null) return false
-			if (insertPos > firstPos && insertPos < endPos) return false
-
 			const content = Fragment.fromArray(sorted.map((p) => nodeAt(doc, p)))
 			let tr = view.state.tr
-			if (insertPos <= firstPos) {
-				tr = tr.insert(insertPos, content)
-				tr = tr.delete(tr.mapping.map(firstPos), tr.mapping.map(endPos))
-			} else {
-				tr = tr.delete(firstPos, endPos)
-				tr = tr.insert(tr.mapping.map(insertPos), content)
+			for (const p of [...sorted].reverse()) {
+				const node = tr.doc.nodeAt(p)!
+				tr = tr.delete(p, p + node.nodeSize)
 			}
+			const insertAt = insertBefore
+				? tr.mapping.map(targetPos)
+				: tr.mapping.map(targetPos + targetNode.nodeSize)
+			tr = tr.insert(insertAt, content)
 			tr = tr.setMeta(multiSelectPluginKey, { action: 'clear' })
 			view.dragging = null
 			view.dispatch(tr)
