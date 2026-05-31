@@ -1,4 +1,4 @@
-import { type Node as ProseMirrorNode } from '@tiptap/pm/model'
+import { type Node as ProseMirrorNode, type Slice } from '@tiptap/pm/model'
 import { NodeSelection, Plugin, PluginKey } from '@tiptap/pm/state'
 import { type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
@@ -9,6 +9,7 @@ const dragHandlePluginKey = new PluginKey<DragHandleState>('dragHandle')
 interface DragHandleOptions {
 	dragHandleClass: string
 	shouldShowHandle: (node: ProseMirrorNode, depth: number) => boolean
+	buildDragSlice?: (view: EditorView, pos: number, event: DragEvent) => { slice: Slice; move: boolean } | null
 }
 
 interface DragHandleState {
@@ -87,7 +88,7 @@ function positionHandle(view: EditorView, pos: number, handle: HTMLElement): voi
 	handle.style.display = 'flex'
 }
 
-function createEventHandlers(view: EditorView, handle: HTMLElement) {
+function createEventHandlers(view: EditorView, handle: HTMLElement, options: DragHandleOptions) {
 	const mousedown = (_event: MouseEvent) => {
 		if (view.composing) return
 		const pos = dragHandlePluginKey.getState(view.state)?.activePos
@@ -100,15 +101,20 @@ function createEventHandlers(view: EditorView, handle: HTMLElement) {
 		const pos = dragHandlePluginKey.getState(view.state)?.activePos
 		if (typeof pos !== 'number') return
 
-		view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)))
-
 		const nodeDOM = findNodeDOM(view, pos)
 		if (nodeDOM && event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move'
 			event.dataTransfer.setDragImage(nodeDOM, 0, 0)
 		}
 
-		view.dragging = { slice: view.state.selection.content(), move: !event.altKey }
+		const custom = options.buildDragSlice?.(view, pos, event)
+		if (custom) {
+			view.dragging = custom
+		} else {
+			view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)))
+			view.dragging = { slice: view.state.selection.content(), move: !event.altKey }
+		}
+
 		handle.classList.add('dragging')
 	}
 
@@ -217,7 +223,7 @@ const DragHandle = Extension.create<DragHandleOptions>({
 					document.body.appendChild(handle)
 					fadeLogic.handle = handle
 
-					const handlers = createEventHandlers(initialView, handle)
+					const handlers = createEventHandlers(initialView, handle, options)
 					handle.addEventListener('mousedown', handlers.mousedown)
 					handle.addEventListener('dragstart', handlers.dragstart)
 					handle.addEventListener('dragend', handlers.dragend)

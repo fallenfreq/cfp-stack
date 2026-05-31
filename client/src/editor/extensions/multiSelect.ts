@@ -1,6 +1,8 @@
-import { nodeAt, type NodePos } from '@/utils/editor/editorUtils'
+import { allAreSiblings, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
+import { Fragment } from '@tiptap/pm/model'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
-import { Decoration, DecorationSet } from '@tiptap/pm/view'
+import { dropPoint } from '@tiptap/pm/transform'
+import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
 
 export interface MultiSelectState {
@@ -20,6 +22,7 @@ const MultiSelectExtension = Extension.create({
 
 	addProseMirrorPlugins() {
 		return [
+			multiDragPlugin,
 			new Plugin<MultiSelectState>({
 				key: multiSelectPluginKey,
 
@@ -64,6 +67,79 @@ const MultiSelectExtension = Extension.create({
 				},
 			}),
 		]
+	},
+})
+
+// --- Multi-drag ---
+// Positions of the nodes being dragged. Set by buildMultiDragSlice (called from the drag
+// handle's dragstart), cleared on drop or dragend.
+let pendingMultiDrag: NodePos[] | null = null
+
+export const buildMultiDragSlice = (view: EditorView, pos: number) => {
+	const positions = multiSelectPluginKey.getState(view.state)?.positions ?? []
+	if (positions.length < 2 || !positions.some((p) => p === pos)) return null
+	if (!allAreSiblings(view.state.doc, positions)) return null
+
+	const sorted = [...positions].sort((a, b) => a - b)
+	const [firstPos] = sorted
+	const lastPos = sorted[sorted.length - 1]
+	if (firstPos === undefined || lastPos === undefined) return null
+
+	pendingMultiDrag = sorted
+	return {
+		slice: view.state.doc.slice(firstPos, lastPos + nodeAt(view.state.doc, lastPos).nodeSize),
+		move: false as const,
+	}
+}
+
+const multiDragPlugin = new Plugin({
+	props: {
+		handleDrop(view, event) {
+			if (!pendingMultiDrag) return false
+			const sorted = pendingMultiDrag
+			pendingMultiDrag = null
+
+			const [firstPos] = sorted
+			const lastPos = sorted[sorted.length - 1]
+			if (firstPos === undefined || lastPos === undefined) return false
+
+			const doc = view.state.doc
+			const endPos = lastPos + nodeAt(doc, lastPos).nodeSize
+			const slice = doc.slice(firstPos, endPos)
+
+			const rawPos = view.posAtCoords({ left: event.clientX, top: event.clientY })
+			if (!rawPos) return false
+
+			const insertPos = dropPoint(doc, rawPos.pos, slice)
+			if (insertPos == null) return false
+			if (insertPos > firstPos && insertPos < endPos) return false
+
+			const content = Fragment.fromArray(sorted.map((p) => nodeAt(doc, p)))
+			let tr = view.state.tr
+			if (insertPos <= firstPos) {
+				tr = tr.insert(insertPos, content)
+				tr = tr.delete(tr.mapping.map(firstPos), tr.mapping.map(endPos))
+			} else {
+				tr = tr.delete(firstPos, endPos)
+				tr = tr.insert(tr.mapping.map(insertPos), content)
+			}
+			tr = tr.setMeta(multiSelectPluginKey, { action: 'clear' })
+			view.dragging = null
+			view.dispatch(tr)
+			return true
+		},
+	},
+
+	view() {
+		const onDragEnd = () => {
+			pendingMultiDrag = null
+		}
+		window.addEventListener('dragend', onDragEnd)
+		return {
+			destroy() {
+				window.removeEventListener('dragend', onDragEnd)
+			},
+		}
 	},
 })
 

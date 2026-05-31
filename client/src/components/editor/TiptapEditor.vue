@@ -49,7 +49,7 @@ import { watch, type Component } from 'vue'
 
 import { lowlight } from '@/config/editor/lowlight'
 import { useEditorStore } from '@/stores/editorStore.js'
-import { MultiSelectExtension, multiSelectPluginKey } from '@/editor/extensions/multiSelect'
+import { buildMultiDragSlice, MultiSelectExtension, multiSelectPluginKey } from '@/editor/extensions/multiSelect'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 
 import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
@@ -67,6 +67,7 @@ const editor = useEditor({
 			shouldShowHandle: (node, depth) =>
 				depth <= dragHandleStore.activeDepth
 				&& !!(node.isBlock || node.isAtom || node.type.spec.draggable),
+			buildDragSlice: buildMultiDragSlice,
 		}),
 		CodeBlockLowlight.extend({
 			addNodeView() {
