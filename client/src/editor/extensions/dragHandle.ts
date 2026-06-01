@@ -34,6 +34,10 @@ interface MatchResult {
 	pos: number
 }
 
+const HANDLE_SIZE = 24
+const HANDLE_GAP = 4
+const HOVER_UPDATE_DELAY = 300
+
 function findClosestDraggableParent(
 	state: EditorView['state'],
 	pos: number,
@@ -85,10 +89,13 @@ function positionHandle(view: EditorView, pos: number, handle: HTMLElement): voi
 		handle.style.display = 'none'
 		return
 	}
+
 	const nodeRect = nodeDOM.getBoundingClientRect()
 	const editorRect = view.dom.getBoundingClientRect()
+	const gutterLeft = editorRect.left - HANDLE_SIZE - HANDLE_GAP
+	const nodeLeft = nodeRect.left - HANDLE_SIZE - HANDLE_GAP
 	handle.style.top = `${nodeRect.top - 2}px`
-	handle.style.left = `${editorRect.left - 28}px`
+	handle.style.left = `${Math.max(gutterLeft, nodeLeft)}px`
 	handle.style.display = 'flex'
 }
 
@@ -144,7 +151,41 @@ const DragHandle = Extension.create<DragHandleOptions>({
 
 	addProseMirrorPlugins() {
 		const options = this.options
-		let rafPending = false
+		let isPointerOverHandle = false
+		let hoverUpdateTimer: ReturnType<typeof setTimeout> | null = null
+		let pendingHoverCoords: { left: number; top: number } | null = null
+
+		const clearHoverUpdateTimer = () => {
+			if (!hoverUpdateTimer) return
+			clearTimeout(hoverUpdateTimer)
+			hoverUpdateTimer = null
+		}
+
+		const queueHoverUpdate = (view: EditorView) => {
+			if (hoverUpdateTimer) return
+
+			hoverUpdateTimer = setTimeout(() => {
+				hoverUpdateTimer = null
+				if (isPointerOverHandle) return
+
+				const coords = pendingHoverCoords
+				pendingHoverCoords = null
+				if (!coords) return
+
+				const pos = view.posAtCoords(coords)
+				const match = pos ? findClosestDraggableParent(view.state, pos.pos, options) : null
+
+				if (match) {
+					fadeLogic.lock()
+					const state = dragHandlePluginKey.getState(view.state)
+					if (state?.activePos !== match.pos) {
+						view.dispatch(view.state.tr.setMeta('updateDragHandle', { pos: match.pos }))
+					}
+				} else {
+					fadeLogic.unlock(view)
+				}
+			}, HOVER_UPDATE_DELAY)
+		}
 
 		const fadeLogic: FadeLogic = {
 			handle: null,
@@ -232,8 +273,14 @@ const DragHandle = Extension.create<DragHandleOptions>({
 					handle.addEventListener('dragstart', handlers.dragstart)
 					handle.addEventListener('dragend', handlers.dragend)
 
-					const mouseenter = () => fadeLogic.lock()
-					const mouseleave = () => fadeLogic.unlock(currentView)
+					const mouseenter = () => {
+						isPointerOverHandle = true
+						fadeLogic.lock()
+					}
+					const mouseleave = () => {
+						isPointerOverHandle = false
+						fadeLogic.unlock(currentView)
+					}
 					handle.addEventListener('mouseenter', mouseenter)
 					handle.addEventListener('mouseleave', mouseleave)
 
@@ -306,6 +353,7 @@ const DragHandle = Extension.create<DragHandleOptions>({
 						},
 
 						destroy() {
+							clearHoverUpdateTimer()
 							handle.removeEventListener('mousedown', handlers.mousedown)
 							handle.removeEventListener('dragstart', handlers.dragstart)
 							handle.removeEventListener('dragend', handlers.dragend)
@@ -324,40 +372,17 @@ const DragHandle = Extension.create<DragHandleOptions>({
 						mousemove(view, event) {
 							if (view.composing || !view.hasFocus()) return false
 							// Touch-synthesised mousemove fires before mousedown commits the
-							// cursor.  The rAF below can land between those two events and
+							// cursor.  The delayed hover update below can land between those two events and
 							// position the handle while cursor placement is still pending,
 							// which disrupts it.  The view() hook handles touch instead.
 							const isTouch = (event as any).sourceCapabilities?.firesTouchEvents
 							if (isTouch) return false
 
-							if (rafPending) return false
-							rafPending = true
-
-							requestAnimationFrame(() => {
-								rafPending = false
-
-								const coords = view.posAtCoords({
-									left: event.clientX,
-									top: event.clientY,
-								})
-								const match = coords
-									? findClosestDraggableParent(view.state, coords.pos, options)
-									: null
-
-								if (match) {
-									fadeLogic.lock()
-									const state = dragHandlePluginKey.getState(view.state)
-									if (state?.activePos !== match.pos) {
-										view.dispatch(
-											view.state.tr.setMeta('updateDragHandle', {
-												pos: match.pos,
-											}),
-										)
-									}
-								} else {
-									fadeLogic.unlock(view)
-								}
-							})
+							pendingHoverCoords = {
+								left: event.clientX,
+								top: event.clientY,
+							}
+							if (!isPointerOverHandle) queueHoverUpdate(view)
 
 							return false
 						},
@@ -365,6 +390,8 @@ const DragHandle = Extension.create<DragHandleOptions>({
 						mouseleave(view, event) {
 							const to = (event as MouseEvent).relatedTarget as Element | null
 							if (to?.closest('.node-path')) return false
+							pendingHoverCoords = null
+							clearHoverUpdateTimer()
 							fadeLogic.unlock(view)
 							return false
 						},
