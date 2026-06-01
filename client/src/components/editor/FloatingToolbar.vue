@@ -1,16 +1,19 @@
 <template>
 	<div
 		v-if="visibleItems.length"
-		class="floating-toolbar flex flex-wrap gap-2 px-7 z-10"
-		:style="{ top: `${position.top}px`, left: `${position.left}px`, right: '0' }"
+		ref="toolbarEl"
+		class="floating-toolbar z-10"
+		:style="{ top: `${position.top}px`, left: `${position.left}px` }"
 	>
-		<component
-			:is="item.component"
-			v-for="item in visibleItems"
-			:key="item.id"
-			:editor="editor"
-			:context="activeNodeContext"
-		/>
+		<OverflowRow :refresh-key="toolbarRefreshKey">
+			<component
+				:is="item.component"
+				v-for="item in visibleItems"
+				:key="item.id"
+				:editor="editor"
+				:context="activeNodeContext"
+			/>
+		</OverflowRow>
 	</div>
 </template>
 
@@ -25,15 +28,18 @@ import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import { getExtensionOptions, nodeSelectionPos, resolvedNodePos } from '@/utils/editor/editorUtils'
 import { NodeSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import OverflowRow from './OverflowRow.vue'
 
 const props = defineProps<{ editor: Editor }>()
 
 const dragHandleStore = useDragHandleStore()
 const multiSelectStore = useMultiSelectStore()
 const position = ref({ top: 0, left: 0 })
+const toolbarEl = ref<HTMLElement | null>(null)
 
 const TOOLBAR_SPACING = 10
+const VIEWPORT_PADDING = 8
 
 const tick = ref(0)
 
@@ -72,7 +78,18 @@ const activeNodeContext = computed((): ToolbarItemContext => {
 	return resolveActive()
 })
 
-const updatePosition = () => {
+const toolbarRefreshKey = computed(() => `${visibleItems.value.map((item) => item.id).join('|')}:${tick.value}`)
+
+const clampLeftToViewport = async (preferredLeft: number) => {
+	await nextTick()
+
+	const width = toolbarEl.value?.offsetWidth ?? 0
+	const maxLeft = Math.max(VIEWPORT_PADDING, window.innerWidth - width - VIEWPORT_PADDING)
+
+	position.value.left = Math.min(Math.max(preferredLeft, VIEWPORT_PADDING), maxLeft)
+}
+
+const updatePosition = async () => {
 	tick.value++
 
 	const { nodePos } = resolveActive()
@@ -82,11 +99,12 @@ const updatePosition = () => {
 	if (!domNode) return
 
 	const nodeRect = domNode.getBoundingClientRect()
-	const editorRect = (props.editor.view.dom as HTMLElement).getBoundingClientRect()
 	position.value = {
 		top: nodeRect.top - TOOLBAR_SPACING,
-		left: editorRect.left,
+		left: nodeRect.left,
 	}
+
+	await clampLeftToViewport(nodeRect.left)
 }
 
 const items = computed(
@@ -131,6 +149,10 @@ onUnmounted(() => {
 
 .floating-toolbar {
 	position: fixed;
+	display: block;
+	box-sizing: border-box;
+	width: fit-content;
+	max-width: calc(100vw - 1rem);
 	transform: translateY(-100%);
 	background: rgba(var(--backgroundSecondary) / 0.9);
 	border: 1px solid rgb(var(--backgroundBorder));
@@ -138,5 +160,6 @@ onUnmounted(() => {
 	border-radius: 4px;
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 	z-index: 1000;
+	overflow: visible;
 }
 </style>

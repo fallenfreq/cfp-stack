@@ -1,5 +1,6 @@
 <template>
 	<span
+		ref="rootEl"
 		class="tooltip-root"
 		:aria-describedby="tooltipId"
 		@mouseenter="onEnter"
@@ -9,20 +10,23 @@
 		@touchcancel="onTouchEnd"
 	>
 		<slot />
-		<span
-			v-if="visible && text"
-			:id="tooltipId"
-			role="tooltip"
-			class="tooltip-popup"
-			:class="`placement-${placement ?? 'bottom'}`"
-		>
-			{{ text }}
-		</span>
+		<Teleport to="body">
+			<span
+				v-if="visible && text"
+				:id="tooltipId"
+				ref="popupEl"
+				role="tooltip"
+				class="tooltip-popup"
+				:style="tooltipStyle"
+			>
+				{{ text }}
+			</span>
+		</Teleport>
 	</span>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onUnmounted, ref } from 'vue'
 
 const props = defineProps<{
 	text: string
@@ -32,14 +36,58 @@ const props = defineProps<{
 
 const tooltipId = `tooltip-${Math.random().toString(36).slice(2)}`
 const visible = ref(false)
+const rootEl = ref<HTMLElement | null>(null)
+const popupEl = ref<HTMLElement | null>(null)
+const tooltipStyle = ref<Record<string, string>>({})
 let timer: ReturnType<typeof setTimeout> | null = null
 let lastTouchEnd = 0
+
+const getTooltipPosition = (
+	triggerRect: DOMRect,
+	popupRect: DOMRect,
+	placement: 'top' | 'bottom' | 'left' | 'right',
+) => {
+	const gap = placement === 'top' ? 15 : 5
+	const centeredLeft = triggerRect.left + (triggerRect.width - popupRect.width) / 2
+	const centeredTop = triggerRect.top + (triggerRect.height - popupRect.height) / 2
+
+	if (placement === 'top') {
+		return { top: triggerRect.top - popupRect.height - gap, left: centeredLeft }
+	}
+	if (placement === 'left') {
+		return { top: centeredTop, left: triggerRect.left - popupRect.width - gap }
+	}
+	if (placement === 'right') {
+		return { top: centeredTop, left: triggerRect.right + gap }
+	}
+	return { top: triggerRect.bottom + gap, left: centeredLeft }
+}
+
+const updatePosition = async () => {
+	await nextTick()
+
+	if (!rootEl.value || !popupEl.value) return
+
+	const triggerRect = rootEl.value.getBoundingClientRect()
+	const popupRect = popupEl.value.getBoundingClientRect()
+	const { top, left } = getTooltipPosition(
+		triggerRect,
+		popupRect,
+		props.placement ?? 'bottom',
+	)
+
+	tooltipStyle.value = {
+		top: `${top}px`,
+		left: `${left}px`,
+	}
+}
 
 const onEnter = () => {
 	// Block the synthesized mouseenter that touch browsers fire after a tap
 	if (Date.now() - lastTouchEnd < 600) return
 	timer = setTimeout(() => {
 		visible.value = true
+		updatePosition()
 	}, props.delay ?? 400)
 }
 
@@ -58,6 +106,7 @@ const onTouchStart = () => {
 	}
 	timer = setTimeout(() => {
 		visible.value = true
+		updatePosition()
 	}, 500)
 }
 
@@ -69,6 +118,10 @@ const onTouchEnd = () => {
 	}
 	visible.value = false
 }
+
+onUnmounted(() => {
+	if (timer) clearTimeout(timer)
+})
 </script>
 
 <style scoped>
@@ -81,7 +134,7 @@ const onTouchEnd = () => {
 }
 
 .tooltip-popup {
-	position: absolute;
+	position: fixed;
 	z-index: 1100;
 	pointer-events: none;
 	white-space: nowrap;
@@ -92,29 +145,5 @@ const onTouchEnd = () => {
 	border: 1px solid rgb(var(--backgroundBorder));
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 	color: rgb(var(--textPrimary));
-}
-
-.placement-bottom {
-	top: calc(100% + 5px);
-	left: 50%;
-	transform: translateX(-50%);
-}
-
-.placement-top {
-	bottom: calc(100% + 15px);
-	left: 50%;
-	transform: translateX(-50%);
-}
-
-.placement-left {
-	right: calc(100% + 5px);
-	top: 50%;
-	transform: translateY(-50%);
-}
-
-.placement-right {
-	left: calc(100% + 5px);
-	top: 50%;
-	transform: translateY(-50%);
 }
 </style>

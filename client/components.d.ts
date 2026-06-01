@@ -30,6 +30,7 @@ declare module 'vue' {
     MothLogo: typeof import('./src/components/brand/MothLogo.vue')['default']
     MothWordmark: typeof import('./src/components/brand/MothWordmark.vue')['default']
     NodePath: typeof import('./src/components/editor/NodePath.vue')['default']
+    OverflowRow: typeof import('./src/components/editor/OverflowRow.vue')['default']
     PromptModal: typeof import('./src/components/input/PromptModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
