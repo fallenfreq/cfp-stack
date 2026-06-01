@@ -78,7 +78,9 @@ const activeNodeContext = computed((): ToolbarItemContext => {
 	return resolveActive()
 })
 
-const toolbarRefreshKey = computed(() => `${visibleItems.value.map((item) => item.id).join('|')}:${tick.value}`)
+const toolbarRefreshKey = computed(
+	() => `${visibleItems.value.map((item) => item.id).join('|')}:${tick.value}`,
+)
 
 const clampLeftToViewport = async (preferredLeft: number) => {
 	await nextTick()

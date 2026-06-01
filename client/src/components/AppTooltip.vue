@@ -70,11 +70,7 @@ const updatePosition = async () => {
 
 	const triggerRect = rootEl.value.getBoundingClientRect()
 	const popupRect = popupEl.value.getBoundingClientRect()
-	const { top, left } = getTooltipPosition(
-		triggerRect,
-		popupRect,
-		props.placement ?? 'bottom',
-	)
+	const { top, left } = getTooltipPosition(triggerRect, popupRect, props.placement ?? 'bottom')
 
 	tooltipStyle.value = {
 		top: `${top}px`,

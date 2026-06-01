@@ -1,19 +1,18 @@
 <template>
-	<div
-		class="overflow-row"
-		:class="{
-			'has-overflow-left': overflow.left,
-			'has-overflow-right': overflow.right,
-		}"
-	>
-		<div ref="scrollerEl" class="overflow-row__scroller" @scroll.passive="syncOverflow">
+	<div class="overflow-row">
+		<div
+			ref="scrollerEl"
+			class="overflow-row__scroller"
+			:style="maskStyle"
+			@scroll.passive="syncOverflow"
+		>
 			<slot />
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
 	refreshKey?: unknown
@@ -40,59 +39,24 @@ const refreshOverflow = async () => {
 	syncOverflow()
 }
 
+const maskStyle = computed(() => {
+	const { left, right } = overflow.value
+	if (left && right)
+		return {
+			maskImage:
+				'linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent)',
+		}
+	if (left) return { maskImage: 'linear-gradient(to right, transparent, black 40px)' }
+	if (right) return { maskImage: 'linear-gradient(to left, transparent, black 40px)' }
+	return {}
+})
+
 onMounted(refreshOverflow)
 
 watch(() => props.refreshKey, refreshOverflow)
 </script>
 
 <style scoped>
-.overflow-row {
-	position: relative;
-	overflow: visible;
-}
-
-.overflow-row::before,
-.overflow-row::after {
-	content: '';
-	position: absolute;
-	top: 1px;
-	bottom: 1px;
-	width: 34px;
-	border-radius: 3px;
-	pointer-events: none;
-	opacity: 0;
-	transition: opacity 0.15s ease;
-	z-index: 1;
-}
-
-.overflow-row::before {
-	left: 1px;
-	background: linear-gradient(
-		to right,
-		rgba(var(--backgroundSecondary) / 1) 0%,
-		rgba(var(--backgroundSecondary) / 0.94) 42%,
-		rgba(var(--backgroundSecondary) / 0)
-	);
-}
-
-.overflow-row::after {
-	right: 1px;
-	background: linear-gradient(
-		to left,
-		rgba(var(--backgroundSecondary) / 1) 0%,
-		rgba(var(--backgroundSecondary) / 0.94) 42%,
-		rgba(var(--backgroundSecondary) / 0)
-	);
-}
-
-.overflow-row.has-overflow-left::before {
-	opacity: 0.95;
-}
-
-.overflow-row.has-overflow-right::after {
-	opacity: 0.95;
-}
-
 .overflow-row__scroller {
 	display: flex;
 	flex-wrap: nowrap;
