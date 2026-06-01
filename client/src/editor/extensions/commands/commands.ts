@@ -1,7 +1,12 @@
-import Suggestion from '@tiptap/suggestion'
+import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion'
 import { Extension } from '@tiptap/vue-3'
 
-export default Extension.create({
+type CommandSuggestionOptions = Omit<SuggestionOptions, 'editor'> & {
+	char?: string
+	command?: ({ editor, range, props }: any) => void
+}
+
+export default Extension.create<{ suggestion: CommandSuggestionOptions }>({
 	name: 'commands',
 
 	addOptions() {
@@ -11,7 +16,7 @@ export default Extension.create({
 				command: ({ editor, range, props }: any) => {
 					props.command({ editor, range })
 				},
-			},
+			} satisfies CommandSuggestionOptions,
 		}
 	},
 

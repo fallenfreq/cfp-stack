@@ -3,7 +3,6 @@
 	"compilerOptions": {
 		"outDir": "./functions",
 		"rootDir": "./functions_src",
-		"baseUrl": ".",
 		"paths": {
 			// Not currently supported by Cloudflare
 			"@/*": ["./dist/*"]
