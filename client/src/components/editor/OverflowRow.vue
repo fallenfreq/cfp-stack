@@ -1,5 +1,11 @@
 <template>
-	<div class="overflow-row">
+	<div
+		class="overflow-row"
+		:class="{
+			'has-overflow-left': overflow.left,
+			'has-overflow-right': overflow.right,
+		}"
+	>
 		<div
 			ref="scrollerEl"
 			class="overflow-row__scroller"
@@ -57,6 +63,46 @@ watch(() => props.refreshKey, refreshOverflow)
 </script>
 
 <style scoped>
+.overflow-row {
+	position: relative;
+}
+
+.overflow-row::before,
+.overflow-row::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 0;
+	height: 0;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+	z-index: 1;
+}
+
+.overflow-row::before {
+	left: 3px;
+	border-top: 4px solid transparent;
+	border-bottom: 4px solid transparent;
+	border-right: 5px solid rgba(var(--textPrimary) / 0.5);
+}
+
+.overflow-row::after {
+	right: 3px;
+	border-top: 4px solid transparent;
+	border-bottom: 4px solid transparent;
+	border-left: 5px solid rgba(var(--textPrimary) / 0.5);
+}
+
+.overflow-row.has-overflow-left::before {
+	opacity: 1;
+}
+
+.overflow-row.has-overflow-right::after {
+	opacity: 1;
+}
+
 .overflow-row__scroller {
 	display: flex;
 	flex-wrap: nowrap;

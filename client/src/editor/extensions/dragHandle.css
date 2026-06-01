@@ -38,7 +38,7 @@
 	&::before {
 		content: attr(data-depth);
 		position: absolute;
-		top: -13px;
+		top: calc(100% + 4px);
 		left: 50%;
 		transform: translateX(-50%);
 		font-size: 9px;
