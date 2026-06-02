@@ -3,49 +3,53 @@
 		<ToolbarButton @click="toggle">
 			<ToolbarIcon>tune</ToolbarIcon>
 		</ToolbarButton>
-		<div v-if="open" class="attr-panel" :style="panelStyle" @mousedown.stop>
-			<ToolbarAttrRow
-				v-for="[key, value] in Object.entries(nonDefaultAttrs)"
-				:key="key"
-				:attr-key="key"
-				:value="value"
-				:spec-default="specAttrs[key]?.default ?? null"
-				v-bind="propOptions[key] ? { specOptions: propOptions[key] } : {}"
-				@update="onUpdate"
-				@remove="onRemove"
-			/>
-
-			<ToolbarAttrRow
-				v-if="pendingKey"
-				:attr-key="pendingKey"
-				:value="''"
-				:spec-default="specAttrs[pendingKey]?.default ?? null"
-				v-bind="propOptions[pendingKey] ? { specOptions: propOptions[pendingKey] } : {}"
-				:pending="true"
-				@update="onPendingUpdate"
-				@remove="pendingKey = null"
-			/>
-
-			<div
-				v-if="!Object.keys(nonDefaultAttrs).length && !pendingKey && !addableKeys.length"
-				class="attr-empty"
-			>
-				No attributes set
-			</div>
-
-			<template v-if="addableKeys.length && !pendingKey">
-				<div v-if="Object.keys(nonDefaultAttrs).length" class="attr-divider" />
-				<button
-					v-for="key in addableKeys"
+		<Teleport to="body">
+			<div v-if="open" class="attr-panel" :style="panelStyle" @mousedown.stop>
+				<ToolbarAttrRow
+					v-for="[key, value] in Object.entries(nonDefaultAttrs)"
 					:key="key"
-					class="attr-add-btn"
-					@mousedown.prevent="startAdd(key)"
+					:attr-key="key"
+					:value="value"
+					:spec-default="specAttrs[key]?.default ?? null"
+					v-bind="propOptions[key] ? { specOptions: propOptions[key] } : {}"
+					@update="onUpdate"
+					@remove="onRemove"
+				/>
+
+				<ToolbarAttrRow
+					v-if="pendingKey"
+					:attr-key="pendingKey"
+					:value="''"
+					:spec-default="specAttrs[pendingKey]?.default ?? null"
+					v-bind="propOptions[pendingKey] ? { specOptions: propOptions[pendingKey] } : {}"
+					:pending="true"
+					@update="onPendingUpdate"
+					@remove="pendingKey = null"
+				/>
+
+				<div
+					v-if="
+						!Object.keys(nonDefaultAttrs).length && !pendingKey && !addableKeys.length
+					"
+					class="attr-empty"
 				>
-					<span class="material-symbols-rounded">add</span>
-					{{ key }}
-				</button>
-			</template>
-		</div>
+					No attributes set
+				</div>
+
+				<template v-if="addableKeys.length && !pendingKey">
+					<div v-if="Object.keys(nonDefaultAttrs).length" class="attr-divider" />
+					<button
+						v-for="key in addableKeys"
+						:key="key"
+						class="attr-add-btn"
+						@mousedown.prevent="startAdd(key)"
+					>
+						<span class="material-symbols-rounded">add</span>
+						{{ key }}
+					</button>
+				</template>
+			</div>
+		</Teleport>
 	</div>
 </template>
 
@@ -138,7 +142,11 @@ const repositionPanel = () => {
 		MARGIN,
 		Math.min(viewportLeft, window.innerWidth - PANEL_WIDTH - MARGIN),
 	)
-	panelStyle.value = { left: `${clamped - rect.left}px` }
+	panelStyle.value = {
+		position: 'fixed',
+		top: `${rect.bottom + 4}px`,
+		left: `${clamped}px`,
+	}
 }
 
 const toggle = () => {
@@ -192,8 +200,6 @@ onUnmounted(() => {
 }
 
 .attr-panel {
-	position: absolute;
-	top: calc(100% + 4px);
 	z-index: 1001;
 	background: rgb(var(--backgroundSecondary));
 	border: 1px solid rgb(var(--backgroundBorder));

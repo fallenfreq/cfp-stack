@@ -231,6 +231,12 @@ watch(editor, (newEditor) => {
 	cursor: default;
 }
 
+.material-symbols-rounded.icon-inline {
+	font-size: 1.1em;
+	vertical-align: -0.2em;
+	opacity: 0.85;
+}
+
 .tiptap p.is-empty::before {
 	color: rgba(var(--textPrimary) / 0.5);
 	content: attr(data-placeholder);
@@ -305,9 +311,9 @@ watch(editor, (newEditor) => {
 .tiptap blockquote:not(:last-child),
 .tiptap hr:not(:last-child),
 .tiptap .code-block:not(:last-child),
-.tiptap [data-node-view-wrapper]:not(:last-child),
-.tiptap [data-container]:not(:last-child),
-.tiptap [data-youtube-video]:not(:last-child) {
+.tiptap > [data-node-view-wrapper]:not(:last-child),
+.tiptap > [data-container]:not(:last-child),
+.tiptap > [data-youtube-video]:not(:last-child) {
 	margin-bottom: 1rem;
 }
 

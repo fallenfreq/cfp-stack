@@ -89,7 +89,7 @@ const editorComponents = {
 		component: LayoutCard,
 		props: withOptions(LayoutCard.props, {
 			padding: SPACING_OPTIONS,
-			variant: ['elevated', 'outlined', 'filled', 'plain'],
+			variant: ['elevated', 'outlined', 'filled', 'plain', 'feature'],
 			radius: ['none', 'sm', 'md', 'lg'],
 		}),
 		content: 'block*',

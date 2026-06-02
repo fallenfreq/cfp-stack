@@ -15,7 +15,7 @@ import { type PropType } from 'vue'
 defineProps({
 	padding: { type: String as PropType<'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'>, default: 'md' },
 	variant: {
-		type: String as PropType<'elevated' | 'outlined' | 'filled' | 'plain'>,
+		type: String as PropType<'elevated' | 'outlined' | 'filled' | 'plain' | 'feature'>,
 		default: 'elevated',
 	},
 	radius: { type: String as PropType<'none' | 'sm' | 'md' | 'lg'>, default: 'md' },
@@ -26,6 +26,7 @@ defineProps({
 .layout-card {
 	container-type: inline-size;
 	width: 100%;
+	height: 100%;
 	border-radius: var(--radius);
 	overflow: hidden;
 }
@@ -35,7 +36,9 @@ defineProps({
 }
 
 .layout-card.variant-elevated {
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	background: rgb(var(--backgroundSecondary));
+	border: 1px solid rgb(var(--backgroundBorder));
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .layout-card.variant-outlined {
@@ -44,5 +47,10 @@ defineProps({
 
 .layout-card.variant-filled {
 	background: rgb(var(--backgroundSecondary));
+}
+
+.layout-card.variant-feature {
+	background: rgba(var(--primary) / 0.08);
+	border: 1px solid rgba(var(--primary) / 0.2);
 }
 </style>
