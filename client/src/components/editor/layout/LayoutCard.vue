@@ -31,7 +31,8 @@ defineProps({
 	overflow: hidden;
 }
 
-.layout-card :deep([data-node-view-content]) {
+:global(.layout-card > [data-node-view-content]) {
+	display: block; /* defensive reset — prevents inherited grid/flex */
 	padding: var(--padding);
 }
 

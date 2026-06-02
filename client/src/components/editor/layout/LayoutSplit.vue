@@ -2,7 +2,7 @@
 	<div
 		class="layout-split"
 		:class="collapse !== 'never' ? `collapse-${collapse}` : ''"
-		:style="{ '--split-template': SPLIT_TEMPLATES[split], '--gap': SPACING[gap] }"
+		:style="{ '--split-template': SPLIT_TEMPLATES[split], '--gap': SPACING[gap], '--align': align }"
 	>
 		<slot />
 	</div>
@@ -19,6 +19,10 @@ defineProps({
 	},
 	gap: { type: String as PropType<'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'>, default: 'md' },
 	collapse: { type: String as PropType<'never' | 'xs' | 'sm' | 'md'>, default: 'sm' },
+	align: {
+		type: String as PropType<'start' | 'center' | 'end' | 'stretch'>,
+		default: 'stretch',
+	},
 })
 </script>
 
@@ -28,26 +32,31 @@ defineProps({
 	width: 100%;
 }
 
-.layout-split :deep([data-node-view-content]) {
+:global(.layout-split > [data-node-view-content]) {
 	display: grid;
 	grid-template-columns: var(--split-template);
 	gap: var(--gap);
+	align-items: var(--align, stretch);
+}
+
+:global(.layout-split > [data-node-view-content] > *) {
+	margin-bottom: 0;
 }
 
 /* breakpoint values match --xs/--sm/--md in src/assets/base.css */
-.layout-split.collapse-xs :deep([data-node-view-content]) {
+:global(.layout-split.collapse-xs > [data-node-view-content]) {
 	@container (max-width: 380px) {
 		grid-template-columns: 1fr;
 	}
 }
 
-.layout-split.collapse-sm :deep([data-node-view-content]) {
+:global(.layout-split.collapse-sm > [data-node-view-content]) {
 	@container (max-width: 640px) {
 		grid-template-columns: 1fr;
 	}
 }
 
-.layout-split.collapse-md :deep([data-node-view-content]) {
+:global(.layout-split.collapse-md > [data-node-view-content]) {
 	@container (max-width: 768px) {
 		grid-template-columns: 1fr;
 	}

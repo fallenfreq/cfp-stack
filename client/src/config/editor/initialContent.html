@@ -135,23 +135,20 @@
 <h2>Block Types</h2>
 <p>
 	Every block type is available from the <code>/</code> command palette. Headings, lists, and
-	blockquotes also have markdown shortcuts that fire as you type.
+	blockquotes also have markdown shortcuts that fire as you type. Horizontal rules are available
+	via <code>/hr</code> or by typing <code>---</code> on a blank line.
 </p>
 
 <layoutColumns columns="3" gap="md">
 	<layoutSection gap="sm">
 		<h3>Lists</h3>
-		<p>
-			Three list types — bullet, ordered, and task. Convert between them from the toolbar.
-			Markdown shortcuts: <code>-</code> for bullet, <code>1.</code> for ordered.
-		</p>
 		<ul>
-			<li><p>Bullet list item</p></li>
-			<li><p>Another bullet item</p></li>
+			<li><p>Bullet — type <code>-</code> to start</p></li>
+			<li><p>Another item</p></li>
 		</ul>
 		<ol>
-			<li><p>Ordered item one</p></li>
-			<li><p>Ordered item two</p></li>
+			<li><p>Ordered — type <code>1.</code> to start</p></li>
+			<li><p>Another item</p></li>
 		</ol>
 		<ul data-type="taskList">
 			<li data-checked data-type="taskItem"><p>Task item (checked)</p></li>
@@ -160,26 +157,14 @@
 	</layoutSection>
 
 	<layoutSection gap="sm">
-		<h3>Media &amp; HR</h3>
-		<p>
-			Horizontal rule — insert with <code>/hr</code> or type <code>---</code> on a blank
-			line.
-		</p>
-		<hr />
-		<p>
-			Images — insert via <code>/image</code>. Select an image to reveal the
-			<span class="material-symbols-rounded icon-inline">edit</span> URL editor in the
-			toolbar.
-		</p>
-		<img src="https://placehold.co/400x200" />
+		<h3>Images</h3>
+		<p>Insert via <code>/image</code>. Select to reveal the <span class="material-symbols-rounded icon-inline">edit</span> URL editor.</p>
+		<img src="https://placehold.co/400x360" style="width: 100%" />
 	</layoutSection>
 
 	<layoutSection gap="sm">
 		<h3>Tables</h3>
-		<p>
-			Insert via <code>/table</code>. Click inside a cell to see row and column controls in
-			the toolbar.
-		</p>
+		<p>Insert via <code>/table</code>. Click any cell for row and column controls.</p>
 		<table>
 			<tr>
 				<th><p>Name</p></th>
@@ -213,8 +198,7 @@
 	<strong>Format</strong> button — for JavaScript and HTML it runs a full code formatter in place.
 </p>
 
-<layoutCenter maxWidth="2xl">
-	<pre><code class="language-typescript">import { useEditor } from '@tiptap/vue-3'
+<pre><code class="language-typescript">import { useEditor } from '@tiptap/vue-3'
 import { blockBuilderExtensions } from '@/editor/extensions'
 
 const editor = useEditor({
@@ -225,7 +209,6 @@ const editor = useEditor({
   }),
   content: initialContent,
 })</code></pre>
-</layoutCenter>
 
 <hr />
 
@@ -558,7 +541,7 @@ const editor = useEditor({
 	below is live:
 </p>
 
-<tiptapTest>
+<tiptapTest class="bg-backgroundSecondary">
 	<p>This is the editable slot — select it, format it, or delete it.</p>
 </tiptapTest>
 
@@ -568,6 +551,8 @@ const editor = useEditor({
 	attribute editor — it behaves exactly like any other node. Real-world uses: data widgets, live
 	form previews, embedded charts, custom media players — anything a Vue component can do.
 </p>
+<p>Components from third-party libraries work the same way — this is a live Vuestic UI button node:</p>
+<vaButton block>Vuestic UI Button</vaButton>
 
 <hr />
 

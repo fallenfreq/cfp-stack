@@ -2,7 +2,7 @@
 	<div
 		class="layout-columns"
 		:class="collapse !== 'never' ? `collapse-${collapse}` : ''"
-		:style="{ '--cols': columns, '--gap': SPACING[gap] }"
+		:style="{ '--cols': columns, '--gap': SPACING[gap], '--align': align }"
 	>
 		<slot />
 	</div>
@@ -16,6 +16,10 @@ defineProps({
 	columns: { type: String as PropType<'2' | '3' | '4'>, default: '2' },
 	gap: { type: String as PropType<'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'>, default: 'md' },
 	collapse: { type: String as PropType<'never' | 'xs' | 'sm' | 'md'>, default: 'sm' },
+	align: {
+		type: String as PropType<'start' | 'center' | 'end' | 'stretch'>,
+		default: 'stretch',
+	},
 })
 </script>
 
@@ -25,26 +29,31 @@ defineProps({
 	width: 100%;
 }
 
-.layout-columns :deep([data-node-view-content]) {
+:global(.layout-columns > [data-node-view-content]) {
 	display: grid;
 	grid-template-columns: repeat(var(--cols), 1fr);
 	gap: var(--gap);
+	align-items: var(--align, stretch);
+}
+
+:global(.layout-columns > [data-node-view-content] > *) {
+	margin-bottom: 0;
 }
 
 /* breakpoint values match --xs/--sm/--md in src/assets/base.css */
-.layout-columns.collapse-xs :deep([data-node-view-content]) {
+:global(.layout-columns.collapse-xs > [data-node-view-content]) {
 	@container (max-width: 380px) {
 		grid-template-columns: 1fr;
 	}
 }
 
-.layout-columns.collapse-sm :deep([data-node-view-content]) {
+:global(.layout-columns.collapse-sm > [data-node-view-content]) {
 	@container (max-width: 640px) {
 		grid-template-columns: 1fr;
 	}
 }
 
-.layout-columns.collapse-md :deep([data-node-view-content]) {
+:global(.layout-columns.collapse-md > [data-node-view-content]) {
 	@container (max-width: 768px) {
 		grid-template-columns: 1fr;
 	}

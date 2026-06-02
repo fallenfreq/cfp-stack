@@ -1,34 +1,37 @@
 <template>
-	<div ref="pickerEl" class="toolbar-node-picker">
+	<div ref="anchorEl" class="toolbar-node-picker">
 		<ToolbarButton @click="toggle">
 			<ToolbarIcon>{{ iconName }}</ToolbarIcon>
 		</ToolbarButton>
-		<div v-if="open" class="node-picker-list">
-			<template v-if="computedItems.length">
-				<div
-					v-for="item in computedItems"
-					:key="item.label"
-					class="picker-item"
-					:class="{ 'is-active': item.active }"
-					@mousedown.prevent="select(item)"
-				>
-					<span class="material-symbols-rounded picker-item-icon">{{
-						item.iconName
-					}}</span>
-					<span>{{ item.label }}</span>
-				</div>
-			</template>
-			<div v-else class="picker-item picker-empty">No compatible types</div>
-		</div>
+		<ToolbarPanel :open="open" :anchor-el="anchorEl" @close="close">
+			<div class="picker-list">
+				<template v-if="computedItems.length">
+					<div
+						v-for="item in computedItems"
+						:key="item.label"
+						class="picker-item"
+						:class="{ 'is-active': item.active }"
+						@mousedown.prevent="select(item)"
+					>
+						<span class="material-symbols-rounded picker-item-icon">{{
+							item.iconName
+						}}</span>
+						<span>{{ item.label }}</span>
+					</div>
+				</template>
+				<div v-else class="picker-item picker-empty">No compatible types</div>
+			</div>
+		</ToolbarPanel>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import type { Editor } from '@tiptap/vue-3'
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import ToolbarButton from './ToolbarButton.vue'
 import ToolbarIcon from './ToolbarIcon.vue'
+import ToolbarPanel from './ToolbarPanel.vue'
 
 export interface NodePickerItem {
 	label: string
@@ -45,7 +48,7 @@ const props = defineProps<{
 }>()
 
 const open = ref(false)
-const pickerEl = ref<HTMLElement | null>(null)
+const anchorEl = ref<HTMLElement | null>(null)
 
 const computedItems = computed(() => props.getItems(props.editor, props.context))
 
@@ -61,49 +64,17 @@ const select = (item: NodePickerItem) => {
 	item.action()
 	close()
 }
-
-const onDocMousedown = (e: MouseEvent) => {
-	if (pickerEl.value && !pickerEl.value.contains(e.target as Node)) {
-		close()
-	}
-}
-
-watch(open, (isOpen) => {
-	if (isOpen) {
-		document.addEventListener('mousedown', onDocMousedown)
-	} else {
-		document.removeEventListener('mousedown', onDocMousedown)
-	}
-})
-
-onUnmounted(() => {
-	document.removeEventListener('mousedown', onDocMousedown)
-})
 </script>
 
 <style scoped>
-.toolbar-node-picker {
-	position: relative;
-}
-
-.node-picker-list {
-	position: absolute;
-	top: 100%;
-	left: 0;
-	z-index: 1001;
-	background: rgb(var(--backgroundSecondary));
-	border: 1px solid rgb(var(--backgroundBorder));
-	border-radius: 4px;
-	padding: 4px;
+.picker-list {
 	min-width: 160px;
 	max-height: 240px;
 	overflow-y: auto;
 	scrollbar-width: none;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-	margin-top: 4px;
 }
 
-.node-picker-list::-webkit-scrollbar {
+.picker-list::-webkit-scrollbar {
 	display: none;
 }
 

@@ -300,26 +300,16 @@ watch(editor, (newEditor) => {
 	text-decoration: underline;
 }
 
-.tiptap p:not(:last-child),
-.tiptap h1:not(:last-child),
-.tiptap h2:not(:last-child),
-.tiptap pre:not(:last-child),
-.tiptap table:not(:last-child),
-.tiptap img:not(:last-child),
-.tiptap ol:not(:last-child),
-.tiptap ul:not(:last-child),
-.tiptap blockquote:not(:last-child),
-.tiptap hr:not(:last-child),
-.tiptap .code-block:not(:last-child),
+.tiptap :is(p, h1, h2, h3, pre, table, img, ol, ul, blockquote, hr, .code-block):not(:last-child),
 .tiptap > [data-node-view-wrapper]:not(:last-child),
 .tiptap > [data-container]:not(:last-child),
 .tiptap > [data-youtube-video]:not(:last-child) {
 	margin-bottom: 1rem;
 }
 
-.tiptap ol,
-.tiptap ul {
-	padding-left: 1.5rem; /* restore indentation reset by Tailwind Preflight */
+.tiptap ul:not([data-type='taskList']),
+.tiptap ol {
+	padding-left: 1.5em; /* em scales with font size so markers stay proportional */
 }
 
 .tiptap li {

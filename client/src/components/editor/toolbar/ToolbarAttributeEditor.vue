@@ -3,8 +3,8 @@
 		<ToolbarButton @click="toggle">
 			<ToolbarIcon>tune</ToolbarIcon>
 		</ToolbarButton>
-		<Teleport to="body">
-			<div v-if="open" class="attr-panel" :style="panelStyle" @mousedown.stop>
+		<ToolbarPanel :open="open" :anchor-el="buttonEl" align="right" @close="onClose">
+			<div class="attr-content">
 				<ToolbarAttrRow
 					v-for="[key, value] in Object.entries(nonDefaultAttrs)"
 					:key="key"
@@ -49,7 +49,7 @@
 					</button>
 				</template>
 			</div>
-		</Teleport>
+		</ToolbarPanel>
 	</div>
 </template>
 
@@ -58,17 +58,17 @@ import { editorComponents } from '@/config/editor/editorComponents'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { filterNonDefaultAttrs, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
-import { computed, onUnmounted, ref, watch, type CSSProperties } from 'vue'
+import { computed, ref, watch } from 'vue'
 import ToolbarAttrRow from './ToolbarAttrRow.vue'
 import ToolbarButton from './ToolbarButton.vue'
 import ToolbarIcon from './ToolbarIcon.vue'
+import ToolbarPanel from './ToolbarPanel.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
 
 const open = ref(false)
 const buttonEl = ref<HTMLElement | null>(null)
 const pendingKey = ref<string | null>(null)
-const panelStyle = ref<CSSProperties>({})
 const capturedPos = ref<NodePos | null>(null)
 
 const capturedNode = computed(() => {
@@ -130,51 +130,19 @@ const startAdd = (key: string) => {
 	pendingKey.value = key
 }
 
-const repositionPanel = () => {
-	if (!buttonEl.value) return
-	const rect = buttonEl.value.getBoundingClientRect()
-	const PANEL_WIDTH = 300
-	const MARGIN = 4
-	// Right-align to button by default, but clamp so it never leaves the viewport.
-	// Convert the clamped viewport-absolute x back to a parent-relative left offset.
-	const viewportLeft = rect.right - PANEL_WIDTH
-	const clamped = Math.max(
-		MARGIN,
-		Math.min(viewportLeft, window.innerWidth - PANEL_WIDTH - MARGIN),
-	)
-	panelStyle.value = {
-		position: 'fixed',
-		top: `${rect.bottom + 4}px`,
-		left: `${clamped}px`,
-	}
-}
-
 const toggle = () => {
-	if (!open.value && buttonEl.value) {
+	if (!open.value) {
 		capturedPos.value = props.context.nodePos
-		repositionPanel()
 	} else {
 		capturedPos.value = null
 	}
 	open.value = !open.value
 }
 
-const onDocMousedown = (e: MouseEvent) => {
-	// @mousedown.stop on the panel means anything reaching here is outside it.
-	if (!buttonEl.value?.contains(e.target as Node)) open.value = false
+const onClose = () => {
+	open.value = false
+	capturedPos.value = null
 }
-
-watch(open, (isOpen) => {
-	if (isOpen) {
-		document.addEventListener('mousedown', onDocMousedown)
-		window.addEventListener('resize', repositionPanel)
-		window.visualViewport?.addEventListener('resize', repositionPanel)
-	} else {
-		document.removeEventListener('mousedown', onDocMousedown)
-		window.removeEventListener('resize', repositionPanel)
-		window.visualViewport?.removeEventListener('resize', repositionPanel)
-	}
-})
 
 watch(
 	() => props.context.nodePos,
@@ -186,12 +154,6 @@ watch(
 		}
 	},
 )
-
-onUnmounted(() => {
-	document.removeEventListener('mousedown', onDocMousedown)
-	window.removeEventListener('resize', repositionPanel)
-	window.visualViewport?.removeEventListener('resize', repositionPanel)
-})
 </script>
 
 <style scoped>
@@ -199,21 +161,15 @@ onUnmounted(() => {
 	position: relative;
 }
 
-.attr-panel {
-	z-index: 1001;
-	background: rgb(var(--backgroundSecondary));
-	border: 1px solid rgb(var(--backgroundBorder));
-	border-radius: 4px;
-	padding: 4px;
+.attr-content {
 	min-width: 300px;
 	max-width: calc(100vw - 8px);
 	max-height: 400px;
 	overflow-y: auto;
 	scrollbar-width: none;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.attr-panel::-webkit-scrollbar {
+.attr-content::-webkit-scrollbar {
 	display: none;
 }
 

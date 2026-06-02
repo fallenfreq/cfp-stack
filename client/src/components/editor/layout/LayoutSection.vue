@@ -27,11 +27,15 @@ defineProps({
 	width: 100%;
 }
 
-.layout-section :deep([data-node-view-content]) {
+:global(.layout-section > [data-node-view-content]) {
 	display: flex;
 	flex-direction: column;
 	gap: var(--gap);
 	padding: var(--padding);
 	align-items: var(--align);
+}
+
+:global(.layout-section > [data-node-view-content] > *) {
+	margin-bottom: 0;
 }
 </style>
