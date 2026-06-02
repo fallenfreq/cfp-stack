@@ -1,31 +1,27 @@
 <img src="https://placehold.co/1200x300" style="width: 100%; border-radius: 8px" />
 
-<layoutSplit split="2/3" gap="lg">
-	<layoutSection gap="sm">
-		<h1>Block Builder</h1>
-		<p>
-			A <strong>rich content editor</strong> for Vue 3, built on <em>Tiptap</em> and
-			<em>ProseMirror</em>. Every block is draggable, every node is configurable, and layouts
-			compose without writing CSS. This page is built entirely with Block Builder — explore it
-			to see what's possible.
-		</p>
-	</layoutSection>
+<h1>Block Builder</h1>
+<p>
+	A <strong>rich content editor</strong> for Vue 3, built on <em>Tiptap</em> and
+	<em>ProseMirror</em>. Every block is draggable, every node is configurable, and layouts compose
+	without writing CSS. This page is built entirely with Block Builder — explore it to see what's
+	possible.
+</p>
 
-	<layoutCard variant="feature" padding="md" radius="md">
-		<h3>Quick Reference</h3>
+<layoutCard variant="feature" padding="md" radius="md">
+	<h3>Quick Reference</h3>
+	<layoutColumns columns="2" gap="md" collapse="xs">
 		<ul>
-			<li>
-				<p>Type <code>/</code> to open the command palette</p>
-			</li>
+			<li><p>Type <code>/</code> to open the command palette</p></li>
 			<li><p>Drag the ⠿ handle to reorder blocks</p></li>
 			<li><p>Select text or click a block to open the floating toolbar</p></li>
-			<li><p>Click the node path breadcrumb to set drag depth and toolbar target</p></li>
-			<li>
-				<p>Click <code>&lt; &gt;</code> at the bottom right to toggle HTML source view</p>
-			</li>
 		</ul>
-	</layoutCard>
-</layoutSplit>
+		<ul>
+			<li><p>Click the node path breadcrumb to set drag depth and toolbar target</p></li>
+			<li><p>Click <code>&lt; &gt;</code> at the bottom right to toggle HTML source view</p></li>
+		</ul>
+	</layoutColumns>
+</layoutCard>
 
 <hr />
 
