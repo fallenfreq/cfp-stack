@@ -142,13 +142,12 @@
 	blockquotes also have markdown shortcuts that fire as you type.
 </p>
 
-<layoutSplit split="1/2" gap="lg">
+<layoutColumns columns="3" gap="md">
 	<layoutSection gap="sm">
 		<h3>Lists</h3>
 		<p>
-			Three list types — bullet, ordered, and task. All can be converted between each other
-			from the toolbar. Markdown shortcuts: <code>-</code> or <code>*</code> for bullet,
-			<code>1.</code> for ordered.
+			Three list types — bullet, ordered, and task. Convert between them from the toolbar.
+			Markdown shortcuts: <code>-</code> for bullet, <code>1.</code> for ordered.
 		</p>
 		<ul>
 			<li><p>Bullet list item</p></li>
@@ -165,37 +164,50 @@
 	</layoutSection>
 
 	<layoutSection gap="sm">
-		<h3>Other blocks</h3>
+		<h3>Media &amp; HR</h3>
 		<p>
-			Horizontal rule — insert with <code>/hr</code> or type <code>---</code> on a blank line.
+			Horizontal rule — insert with <code>/hr</code> or type <code>---</code> on a blank
+			line.
 		</p>
 		<hr />
 		<p>
-			Images — insert via <code>/image</code>. Select an image to edit its URL from the
+			Images — insert via <code>/image</code>. Select an image to reveal the
+			<span class="material-symbols-rounded icon-inline">edit</span> URL editor in the
 			toolbar.
 		</p>
-		<img src="https://placehold.co/400x150" />
-		<p>Tables — click inside a cell to see row and column controls in the toolbar.</p>
+		<img src="https://placehold.co/400x200" />
+	</layoutSection>
+
+	<layoutSection gap="sm">
+		<h3>Tables</h3>
+		<p>
+			Insert via <code>/table</code>. Click inside a cell to see row and column controls in
+			the toolbar.
+		</p>
 		<table>
 			<tr>
-				<th><p>Prop</p></th>
-				<th><p>Options</p></th>
+				<th><p>Name</p></th>
+				<th><p>Role</p></th>
+				<th><p>Status</p></th>
 			</tr>
 			<tr>
-				<td><p>gap / padding</p></td>
-				<td><p>none · xs · sm · md · lg · xl</p></td>
+				<td><p>Alice</p></td>
+				<td><p>Design</p></td>
+				<td><p>Active</p></td>
 			</tr>
 			<tr>
-				<td><p>radius</p></td>
-				<td><p>none · sm · md · lg</p></td>
+				<td><p>Bob</p></td>
+				<td><p>Engineering</p></td>
+				<td><p>Active</p></td>
 			</tr>
 			<tr>
-				<td><p>variant</p></td>
-				<td><p>elevated · outlined · filled · plain · feature</p></td>
+				<td><p>Carol</p></td>
+				<td><p>Product</p></td>
+				<td><p>Away</p></td>
 			</tr>
 		</table>
 	</layoutSection>
-</layoutSplit>
+</layoutColumns>
 
 <h2>Code Blocks</h2>
 <p>
