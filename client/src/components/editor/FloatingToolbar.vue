@@ -58,11 +58,21 @@ const resolveActive = (): ToolbarItemContext => {
 	const $pos = state.doc.resolve(pathPos)
 	const effectiveDepth = Math.min(dragHandleStore.activeDepth, $pos.depth)
 
+	// Cap the leaf branch by activeDepth: only return the leaf itself when the
+	// user has activeDepth set deep enough to reach it.  Otherwise fall through
+	// to the standard depth-resolution path so the cursor's parent at
+	// effectiveDepth becomes active — the leaf still gets its NodeSelection
+	// outline (it remains the PM selection), but the toolbar / drag handle
+	// target the in-cap ancestor.  Clicking the leaf in NodePath bumps
+	// activeDepth past leafDepth and re-runs this through the leaf branch.
 	if (selection instanceof NodeSelection && selection.node.isLeaf) {
-		return {
-			activeNode: selection.node,
-			activeDepth: $pos.depth + 1,
-			nodePos: nodeSelectionPos(selection),
+		const leafDepth = $pos.depth + 1
+		if (dragHandleStore.activeDepth >= leafDepth) {
+			return {
+				activeNode: selection.node,
+				activeDepth: leafDepth,
+				nodePos: nodeSelectionPos(selection),
+			}
 		}
 	}
 
