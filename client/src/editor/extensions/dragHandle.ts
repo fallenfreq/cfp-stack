@@ -49,10 +49,10 @@ function findClosestDraggableParent(
 	// posAtCoords (the browser can't place a cursor inside contenteditable=false).
 	// posAtCoords therefore returns a position at the parent depth, causing the
 	// depth walk to miss the node entirely.  Detect the node via $pos.nodeAfter /
-	// $pos.nodeBefore before the walk fires and return it directly.
-	// — Atoms (Image, HR…): always return regardless of activeDepth.
-	// — Non-atom blocks (custom NodeViews with content): return only when
-	//   shouldShowHandle approves the depth, so activeDepth is still respected.
+	// $pos.nodeBefore before the walk fires and return it through the same
+	// shouldShowHandle gate the depth walk uses, so activeDepth is respected
+	// uniformly — atoms (image, HR) at deeper depths fall through to the walk
+	// and the handle lands on the nearest ancestor that satisfies the cap.
 	// Text nodes are isLeaf(→isAtom) but not draggable; hardBreak has
 	// selectable:false — both excluded by the guards below.
 	const adjacent = $pos.nodeAfter ?? $pos.nodeBefore
@@ -65,7 +65,7 @@ function findClosestDraggableParent(
 		&& (adjacent.isBlock || adjacent.type.spec.selectable !== false)
 	) {
 		const adjacentDepth = $pos.depth + 1
-		if (adjacent.isAtom || options.shouldShowHandle(adjacent, adjacentDepth)) {
+		if (options.shouldShowHandle(adjacent, adjacentDepth)) {
 			const nodePos = $pos.nodeAfter ? pos : pos - adjacent.nodeSize
 			return { node: adjacent, pos: nodePos }
 		}

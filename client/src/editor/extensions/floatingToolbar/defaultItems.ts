@@ -743,7 +743,7 @@ export const defaultToolbarItems = [
 				ctx.nodePos !== null && useMultiSelectStore().positions.includes(ctx.nodePos)
 			return h(ToolbarIcon, null, () => (inSel ? 'check_box' : 'check_box_outline_blank'))
 		},
-		show: (_, ctx) => ctx.nodePos !== null && ctx.activeNode.type.spec.selectable !== false,
+		show: (_, ctx) => ctx.nodePos !== null,
 		active: (_, ctx) =>
 			ctx.nodePos !== null && useMultiSelectStore().positions.includes(ctx.nodePos),
 		action: (editor, ctx) => {
@@ -766,7 +766,6 @@ export const defaultToolbarItems = [
 		show: (editor, ctx) =>
 			useMultiSelectStore().positions.length > 0
 			&& ctx.nodePos !== null
-			&& ctx.activeNode.type.spec.selectable !== false
 			&& selPrevUnselected(editor, ctx) !== null,
 		action: (editor, ctx) => {
 			const pos = selPrevUnselected(editor, ctx)
@@ -781,7 +780,6 @@ export const defaultToolbarItems = [
 		show: (editor, ctx) =>
 			useMultiSelectStore().positions.length > 0
 			&& ctx.nodePos !== null
-			&& ctx.activeNode.type.spec.selectable !== false
 			&& selNextUnselected(editor, ctx) !== null,
 		action: (editor, ctx) => {
 			const pos = selNextUnselected(editor, ctx)
@@ -795,7 +793,6 @@ export const defaultToolbarItems = [
 		label: icon('select_all'),
 		show: (editor, ctx) => {
 			if (useMultiSelectStore().positions.length === 0 || ctx.nodePos === null) return false
-			if (ctx.activeNode.type.spec.selectable === false) return false
 			const positions = useMultiSelectStore().positions
 			return getSiblingPositions(editor.state.doc, ctx.nodePos).some(
 				(p) => p !== ctx.nodePos && !positions.includes(p),
@@ -818,7 +815,6 @@ export const defaultToolbarItems = [
 		show: (editor, ctx) =>
 			useMultiSelectStore().positions.length > 0
 			&& ctx.nodePos !== null
-			&& ctx.activeNode.type.spec.selectable !== false
 			&& getChildBlockPositions(editor.state.doc, ctx.nodePos).length > 0,
 		action: (editor, ctx) => {
 			if (ctx.nodePos === null) return
