@@ -12,13 +12,21 @@ import { defineComponent, h, onUnmounted, ref } from 'vue'
 // Utility function to create a Tiptap node for Vue components
 export function createVueNode(
 	componentName: string,
-	{ component, content, props, contentAs, contenteditable = true, atom = false }: ComponentData,
+	{
+		component,
+		content,
+		props,
+		contentAs,
+		contenteditable = true,
+		atom = false,
+		decorative = false,
+	}: ComponentData,
 ) {
 	return Node.create({
 		name: componentName,
 		group: 'block',
 		content,
-		selectable: true,
+		selectable: false,
 		atom,
 
 		addAttributes() {
@@ -60,14 +68,13 @@ export function createVueNode(
 							const selectionEl =
 								view.nodeDOM(anchor) || view.nodeDOM(startPosition - 1)
 
-							// if the selectionEl is not the contentEl and not inside the contentEl, disable editing
 							// selectionEl === wrapperEl when clicking the NodeView content with inline content
 							if (
 								selectionEl !== contentEl
 								&& !contentEl.contains(selectionEl)
 								&& selectionEl !== wrapperEl
 							) {
-								editor.off('selectionUpdate', onSelectionUpdate) // Remove the listener
+								editor.off('selectionUpdate', onSelectionUpdate)
 								wrapperEl.setAttribute('contenteditable', 'false')
 							}
 						}
@@ -82,7 +89,6 @@ export function createVueNode(
 								{
 									// tabindex='-1' is required to make the none-editable node focusable for copying text
 									tabindex: '-1',
-									contenteditable: false,
 									ref: wrapperRef,
 									onMousedown: (event: MouseEvent) => {
 										const target = event.target as Element
@@ -97,37 +103,38 @@ export function createVueNode(
 										// eventually opens the keyboard.
 										event.stopPropagation()
 									},
-									onClick: (event: MouseEvent) => {
-										const target = event.target as Element
-										const wrapper = wrapperRef.value?.$el
-										const content = wrapper?.querySelector(
-											'[data-node-view-content]',
-										)
-										if (!wrapper || !content || content.contains(target)) return
-										if (props.selected) return
-										const pos = props.getPos()
-										if (typeof pos === 'number') {
-											props.editor.commands.setNodeSelection(pos)
-										}
-									},
-									onFocusin: (event: FocusEvent) => {
-										const target = event.target
-										const wrapper = wrapperRef.value?.$el
-										const content = wrapper?.querySelector(
-											'[data-node-view-content]',
-										)
-										// If the focus was inside NodeViewContent, enable editing
-										if (wrapper && content && content.contains(target)) {
-											// Manages focus transitions within the NodeView. The `selectionUpdate` event, set up in the editor,
-											// is used to reset the editor state when focus leaves the NodeView.  Focus changes within the
-											// editable content of the NodeView are handled by the `onFocusin` handler.
-											wrapper.setAttribute('contenteditable', 'true')
-											editor.on('selectionUpdate', onSelectionUpdate)
-										} else {
-											wrapper.setAttribute('contenteditable', 'false')
-											editor.off('selectionUpdate', onSelectionUpdate)
-										}
-									},
+									// `decorative: true` opts the wrapper into contenteditable=false at rest
+									// so non-editable Vue decorations can't have a cursor placed in them.
+									// The focus toggle below flips it true while editing the content and
+									// back to false when the selection leaves.
+									//
+									// FUTURE: replace this focus-based toggle with a `selectstart` listener
+									// at the document level (flips this wrapper to contenteditable=true)
+									// plus a `selectionchange` listener that flips back when the selection
+									// collapses, and a `beforeinput` listener on the wrapper that
+									// preventDefaults when the target ranges escape contentDOM.  That
+									// would fix mobile cold-drag-in (focusin is reactive; selectstart
+									// fires before the selection extends) without letting delete/paste/
+									// type damage the decoration DOM during the transient editable window.
+									...(decorative
+										? {
+												contenteditable: false,
+												onFocusin: (event: FocusEvent) => {
+													const target = event.target
+													const wrapper = wrapperRef.value?.$el
+													const content = wrapper?.querySelector(
+														'[data-node-view-content]',
+													)
+													if (wrapper && content && content.contains(target)) {
+														wrapper.setAttribute('contenteditable', 'true')
+														editor.on('selectionUpdate', onSelectionUpdate)
+													} else {
+														wrapper.setAttribute('contenteditable', 'false')
+														editor.off('selectionUpdate', onSelectionUpdate)
+													}
+												},
+											}
+										: {}),
 								},
 								{
 									default: () => [
@@ -149,12 +156,6 @@ export function createVueNode(
 							)
 					},
 				}),
-				{
-					// stopEvent: (event) => {
-					//   console.log('stopEvent: ', event)
-					//   return false
-					// }
-				},
 			)
 		},
 	})

@@ -23,6 +23,11 @@ interface ComponentData {
 	atom?: boolean
 	contenteditable?: boolean
 	contentAs?: 'div' | 'span' | 'p'
+	// Opts the NodeViewWrapper into contenteditable=false at rest so non-editable
+	// decorations inside the Vue component can't have a cursor placed in them.
+	// Leave false for pure layout components — that lets mobile drag-select pass
+	// through the wrapper cleanly (no contenteditable=false boundary).
+	decorative?: boolean
 }
 
 const SPACING_OPTIONS = ['none', 'xs', 'sm', 'md', 'lg', 'xl']
@@ -49,6 +54,7 @@ const editorComponents = {
 		component: TiptapTest,
 		props: {},
 		content: 'block*',
+		decorative: true,
 	},
 	LayoutSection: {
 		component: LayoutSection,

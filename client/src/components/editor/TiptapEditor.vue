@@ -38,6 +38,7 @@ import FloatingToolbar from './FloatingToolbar.vue'
 import NodePath from './NodePath.vue'
 
 import { TaskItem, TaskList } from '@tiptap/extension-list'
+import { CustomTaskItem } from '@/editor/extensions/customTaskItem'
 
 import Commands from '@/editor/extensions/commands/commands.js'
 import suggestion from '@/editor/extensions/commands/suggestion.js'
@@ -188,7 +189,7 @@ const editor = useEditor({
 		...registerCustomNodes(),
 		AllowAttributesExtension,
 		TaskList.configure(),
-		TaskItem.configure({
+		CustomTaskItem.configure({
 			HTMLAttributes: {
 				class: 'flex items-start',
 			},

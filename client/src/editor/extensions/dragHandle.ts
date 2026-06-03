@@ -1,5 +1,5 @@
-import { type Node as ProseMirrorNode, type Slice } from '@tiptap/pm/model'
-import { NodeSelection, Plugin, PluginKey } from '@tiptap/pm/state'
+import { Fragment, Slice, type Node as ProseMirrorNode } from '@tiptap/pm/model'
+import { NodeSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state'
 import { type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
 import './dragHandle.css'
@@ -56,7 +56,10 @@ function findClosestDraggableParent(
 	// Text nodes are isLeaf(→isAtom) but not draggable; hardBreak has
 	// selectable:false — both excluded by the guards below.
 	const adjacent = $pos.nodeAfter ?? $pos.nodeBefore
-	if (adjacent && !adjacent.isText && adjacent.type.spec.selectable !== false) {
+	// !isText excludes text nodes; the second clause keeps hardBreak (inline,
+	// selectable:false) out while allowing our block-level selectable:false
+	// nodes (custom Vue nodes, taskItem) and selectable atoms (image) through.
+	if (adjacent && !adjacent.isText && (adjacent.isBlock || adjacent.type.spec.selectable !== false)) {
 		const adjacentDepth = $pos.depth + 1
 		if (adjacent.isAtom || options.shouldShowHandle(adjacent, adjacentDepth)) {
 			const nodePos = $pos.nodeAfter ? pos : pos - adjacent.nodeSize
@@ -66,7 +69,6 @@ function findClosestDraggableParent(
 
 	for (let depth = $pos.depth; depth >= 1; depth--) {
 		const node = $pos.node(depth)
-		if (node.type.spec.selectable === false) continue
 		if (options.shouldShowHandle(node, depth)) {
 			return { node, pos: $pos.before(depth) }
 		}
@@ -99,12 +101,25 @@ function positionHandle(view: EditorView, pos: number, handle: HTMLElement): voi
 	handle.style.display = 'flex'
 }
 
+// NodeSelection.create throws on selectable:false nodes.  Span the node with a
+// TextSelection instead so view.state.selection.content() still yields a slice
+// containing the node for drag-and-drop.
+function selectNodeForDrag(view: EditorView, pos: number): void {
+	const node = view.state.doc.nodeAt(pos)
+	if (!node) return
+	const selection =
+		node.type.spec.selectable === false
+			? TextSelection.create(view.state.doc, pos, pos + node.nodeSize)
+			: NodeSelection.create(view.state.doc, pos)
+	view.dispatch(view.state.tr.setSelection(selection))
+}
+
 function createEventHandlers(view: EditorView, handle: HTMLElement, options: DragHandleOptions) {
 	const mousedown = (_event: MouseEvent) => {
 		if (view.composing) return
 		const pos = dragHandlePluginKey.getState(view.state)?.activePos
 		if (typeof pos !== 'number') return
-		view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)))
+		selectNodeForDrag(view, pos)
 	}
 
 	const dragstart = (event: DragEvent) => {
@@ -122,8 +137,16 @@ function createEventHandlers(view: EditorView, handle: HTMLElement, options: Dra
 		if (custom) {
 			view.dragging = custom
 		} else {
-			view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)))
-			view.dragging = { slice: view.state.selection.content(), move: !event.altKey }
+			selectNodeForDrag(view, pos)
+			const node = view.state.doc.nodeAt(pos)
+			// TextSelection.content() opens the slice at the parent boundary, so
+			// PM can't re-insert the dragged node cleanly.  Build the slice the
+			// way NodeSelection.content() does it internally.
+			const slice =
+				node && node.type.spec.selectable === false
+					? new Slice(Fragment.from(node), 0, 0)
+					: view.state.selection.content()
+			view.dragging = { slice, move: !event.altKey }
 		}
 
 		handle.classList.add('dragging')
