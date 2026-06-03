@@ -90,23 +90,29 @@ export function createVueNode(
 									// tabindex='-1' is required to make the none-editable node focusable for copying text
 									tabindex: '-1',
 									ref: wrapperRef,
-									onMousedown: (event: MouseEvent) => {
+									// Tap outside the editable content selects the whole node so the
+									// floating toolbar and drag handle position over it.  Works even
+									// with selectable:false — NodeSelection.create does not enforce
+									// the selectable flag (only Selection.near / drag-select paths do).
+									onClick: (event: MouseEvent) => {
 										const target = event.target as Element
 										const wrapper = wrapperRef.value?.$el
 										const content = wrapper?.querySelector(
 											'[data-node-view-content]',
 										)
 										if (!wrapper || !content || content.contains(target)) return
-										// Stop ProseMirror from processing this mousedown.
-										// PM's own handler calls view.focus() for selectable nodes,
-										// which on mobile focuses the contenteditable editor and
-										// eventually opens the keyboard.
-										event.stopPropagation()
+										if (props.selected) return
+										const pos = props.getPos()
+										if (typeof pos === 'number') {
+											props.editor.commands.setNodeSelection(pos)
+										}
 									},
 									// `decorative: true` opts the wrapper into contenteditable=false at rest
 									// so non-editable Vue decorations can't have a cursor placed in them.
-									// The focus toggle below flips it true while editing the content and
-									// back to false when the selection leaves.
+									// onMousedown blocks PM's mousedown handler (which would call
+									// view.focus() and pop the mobile keyboard) when the user taps a
+									// decoration.  The focus toggle flips the wrapper true while editing
+									// the content and back to false when the selection leaves.
 									//
 									// FUTURE: replace this focus-based toggle with a `selectstart` listener
 									// at the document level (flips this wrapper to contenteditable=true)
@@ -119,6 +125,16 @@ export function createVueNode(
 									...(decorative
 										? {
 												contenteditable: false,
+												onMousedown: (event: MouseEvent) => {
+													const target = event.target as Element
+													const wrapper = wrapperRef.value?.$el
+													const content = wrapper?.querySelector(
+														'[data-node-view-content]',
+													)
+													if (!wrapper || !content || content.contains(target))
+														return
+													event.stopPropagation()
+												},
 												onFocusin: (event: FocusEvent) => {
 													const target = event.target
 													const wrapper = wrapperRef.value?.$el
@@ -129,7 +145,7 @@ export function createVueNode(
 														wrapper.setAttribute('contenteditable', 'true')
 														editor.on('selectionUpdate', onSelectionUpdate)
 													} else {
-														wrapper.setAttribute('contenteditable', 'false')
+														wrapper?.setAttribute('contenteditable', 'false')
 														editor.off('selectionUpdate', onSelectionUpdate)
 													}
 												},
