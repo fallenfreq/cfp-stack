@@ -57,6 +57,19 @@ const NODE_META: Record<string, { label: string; iconName: string }> = {
 	blockquote: { label: 'Blockquote', iconName: 'format_quote' },
 	div: { label: 'Div', iconName: 'frame_source' },
 	span: { label: 'Span', iconName: 'short_text' },
+	bulletList: { label: 'Bullet List', iconName: 'format_list_bulleted' },
+	orderedList: { label: 'Numbered List', iconName: 'format_list_numbered' },
+	taskList: { label: 'Task List', iconName: 'checklist' },
+}
+
+// Lists whose items are a different node type can't be converted via the
+// canReplaceNodeType path because their item schemas don't validate each
+// other's content (bulletList/orderedList → listItem+, taskList → taskItem+).
+// The "Change to" picker uses switchListType for these cases.
+const LIST_ITEM_MAP: Record<string, string> = {
+	bulletList: 'listItem',
+	orderedList: 'listItem',
+	taskList: 'taskItem',
 }
 
 // Mirrors FloatingToolbar's resolveActive() position logic — shared by all helpers below.
@@ -126,6 +139,7 @@ const replaceNodeType = (
 
 const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem[] => {
 	const items: NodePickerItem[] = []
+	const sourceItemType = LIST_ITEM_MAP[ctx.activeNode.type.name]
 	for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
 		if (EXCLUDED_NODE_TYPES.has(typeName) || type.isLeaf) continue
 		const meta = NODE_META[typeName] ?? { label: typeName, iconName: 'widgets' }
@@ -155,15 +169,22 @@ const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerIt
 
 		const canSet = ctx.activeNode.type.isTextblock && editor.can().setNode(typeName)
 		const canReplace = !canSet && canReplaceNodeType(editor, ctx, typeName)
-		if (!canSet && !canReplace) continue
+		// Cross-item-type list switch (taskList ↔ bulletList/orderedList) — needs
+		// switchListType because canReplaceNodeType's validContent check rejects
+		// converting between listItem+ and taskItem+ content.
+		const targetItemType = LIST_ITEM_MAP[typeName]
+		const isListSwitch =
+			!!sourceItemType && !!targetItemType && sourceItemType !== targetItemType
+		if (!canSet && !canReplace && !isListSwitch) continue
 		items.push({
 			label: meta.label,
 			iconName: meta.iconName,
 			active: editor.isActive(typeName),
-			action: () =>
-				ctx.activeNode.type.isTextblock && editor.can().setNode(typeName)
-					? editor.chain().focus().setNode(typeName).run()
-					: replaceNodeType(editor, ctx, typeName),
+			action: () => {
+				if (canSet) editor.chain().focus().setNode(typeName).run()
+				else if (canReplace) replaceNodeType(editor, ctx, typeName)
+				else if (isListSwitch) switchListType(editor, ctx, typeName, targetItemType!)
+			},
 		})
 	}
 	return items

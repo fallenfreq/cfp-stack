@@ -131,7 +131,11 @@ export function createVueNode(
 													const content = wrapper?.querySelector(
 														'[data-node-view-content]',
 													)
-													if (!wrapper || !content || content.contains(target))
+													if (
+														!wrapper
+														|| !content
+														|| content.contains(target)
+													)
 														return
 													event.stopPropagation()
 												},
@@ -141,12 +145,28 @@ export function createVueNode(
 													const content = wrapper?.querySelector(
 														'[data-node-view-content]',
 													)
-													if (wrapper && content && content.contains(target)) {
-														wrapper.setAttribute('contenteditable', 'true')
-														editor.on('selectionUpdate', onSelectionUpdate)
+													if (
+														wrapper
+														&& content
+														&& content.contains(target)
+													) {
+														wrapper.setAttribute(
+															'contenteditable',
+															'true',
+														)
+														editor.on(
+															'selectionUpdate',
+															onSelectionUpdate,
+														)
 													} else {
-														wrapper?.setAttribute('contenteditable', 'false')
-														editor.off('selectionUpdate', onSelectionUpdate)
+														wrapper?.setAttribute(
+															'contenteditable',
+															'false',
+														)
+														editor.off(
+															'selectionUpdate',
+															onSelectionUpdate,
+														)
 													}
 												},
 											}

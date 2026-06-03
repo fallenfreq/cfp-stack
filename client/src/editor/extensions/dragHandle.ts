@@ -59,7 +59,11 @@ function findClosestDraggableParent(
 	// !isText excludes text nodes; the second clause keeps hardBreak (inline,
 	// selectable:false) out while allowing our block-level selectable:false
 	// nodes (custom Vue nodes, taskItem) and selectable atoms (image) through.
-	if (adjacent && !adjacent.isText && (adjacent.isBlock || adjacent.type.spec.selectable !== false)) {
+	if (
+		adjacent
+		&& !adjacent.isText
+		&& (adjacent.isBlock || adjacent.type.spec.selectable !== false)
+	) {
 		const adjacentDepth = $pos.depth + 1
 		if (adjacent.isAtom || options.shouldShowHandle(adjacent, adjacentDepth)) {
 			const nodePos = $pos.nodeAfter ? pos : pos - adjacent.nodeSize

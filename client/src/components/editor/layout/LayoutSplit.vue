@@ -2,7 +2,11 @@
 	<div
 		class="layout-split"
 		:class="collapse !== 'never' ? `collapse-${collapse}` : ''"
-		:style="{ '--split-template': SPLIT_TEMPLATES[split], '--gap': SPACING[gap], '--align': align }"
+		:style="{
+			'--split-template': SPLIT_TEMPLATES[split],
+			'--gap': SPACING[gap],
+			'--align': align,
+		}"
 	>
 		<slot />
 	</div>
