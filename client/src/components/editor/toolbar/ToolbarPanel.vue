@@ -74,7 +74,7 @@ const onDocMousedown = (e: MouseEvent) => {
 // capture: true so we catch scroll on any ancestor (e.g. a scrollable layout
 // container around the editor), not just the window itself.
 const onScroll = () => reposition()
-const onScrollOptions: AddEventListenerOptions = { passive: true, capture: true }
+const onScrollOptions = { passive: true, capture: true } as const
 
 watch(
 	() => props.open,
