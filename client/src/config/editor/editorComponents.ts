@@ -4,12 +4,14 @@ import LayoutColumns from '@/components/editor/layout/LayoutColumns.vue'
 import LayoutSection from '@/components/editor/layout/LayoutSection.vue'
 import LayoutSplit from '@/components/editor/layout/LayoutSplit.vue'
 import TiptapTest from '@/components/editor/TiptapTest.vue'
+import { enumAttr } from '@/editor/enumAttr'
 import { type Component } from 'vue'
 import { VaButton } from 'vuestic-ui'
 
 interface PropSpec {
 	default: unknown
-	options?: string[]
+	options?: readonly unknown[]
+	validate?: (value: unknown) => void
 }
 
 // Export an explicit list of components to register in the editor
@@ -32,15 +34,16 @@ interface ComponentData {
 
 const SPACING_OPTIONS = ['none', 'xs', 'sm', 'md', 'lg', 'xl']
 const COLLAPSE_OPTIONS = ['never', 'xs', 'sm', 'md']
+const RADIUS_OPTIONS = ['none', 'sm', 'md', 'lg'] as const
 
 const withOptions = (
 	componentProps: Record<string, any>,
-	optionsMap: Record<string, string[]>,
+	optionsMap: Record<string, readonly string[]>,
 ): Record<string, PropSpec> =>
 	Object.fromEntries(
 		Object.entries(componentProps).map(([k, v]) => [
 			k,
-			{ ...v, ...(optionsMap[k] ? { options: optionsMap[k] } : {}) },
+			optionsMap[k] ? { ...v, ...enumAttr(v.default, optionsMap[k]) } : v,
 		]),
 	)
 
@@ -88,8 +91,9 @@ const editorComponents = {
 	LayoutCenter: {
 		component: LayoutCenter,
 		props: withOptions(LayoutCenter.props, {
-			maxWidth: ['xs', 'sm', 'md', 'lg', 'xl', '2xl', 'full'],
+			maxWidth: ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', 'full'],
 			padding: SPACING_OPTIONS,
+			gap: SPACING_OPTIONS,
 		}),
 		content: 'block*',
 	},
@@ -98,10 +102,10 @@ const editorComponents = {
 		props: withOptions(LayoutCard.props, {
 			padding: SPACING_OPTIONS,
 			variant: ['elevated', 'outlined', 'filled', 'plain', 'feature'],
-			radius: ['none', 'sm', 'md', 'lg'],
+			radius: RADIUS_OPTIONS,
 		}),
 		content: 'block*',
 	},
 } satisfies Record<string, ComponentData>
 
-export { editorComponents, type ComponentData, type PropSpec }
+export { editorComponents, RADIUS_OPTIONS, type ComponentData, type PropSpec }

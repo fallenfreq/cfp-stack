@@ -21,6 +21,7 @@ export const MAX_WIDTH: Record<string, string> = {
 	lg: '32rem',
 	xl: '36rem',
 	'2xl': '42rem',
+	'3xl': '48rem',
 	full: '100%',
 }
 

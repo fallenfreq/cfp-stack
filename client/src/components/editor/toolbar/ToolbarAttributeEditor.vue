@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { editorComponents } from '@/config/editor/editorComponents'
+import type { EnumExtensionAttribute } from '@/editor/enumAttr'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { filterNonDefaultAttrs, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
@@ -81,13 +81,12 @@ const specAttrs = computed(
 )
 
 const propOptions = computed(() => {
-	const name = capturedNode.value.type.name as keyof typeof editorComponents
-	const componentData = editorComponents[name]
-	if (!componentData) return {}
+	const nodeName = capturedNode.value.type.name
+	const attrs = props.editor.extensionManager.attributes as EnumExtensionAttribute[]
 	return Object.fromEntries(
-		Object.entries(componentData.props as Record<string, { options?: string[] }>)
-			.filter(([, v]) => v?.options)
-			.map(([k, v]) => [k, v.options!]),
+		attrs
+			.filter((entry) => entry.type === nodeName && entry.attribute.options?.length)
+			.map((entry) => [entry.name, entry.attribute.options!]),
 	)
 })
 

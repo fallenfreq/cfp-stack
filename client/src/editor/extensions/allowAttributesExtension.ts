@@ -1,4 +1,5 @@
-import { editorComponents } from '@/config/editor/editorComponents'
+import { editorComponents, RADIUS_OPTIONS } from '@/config/editor/editorComponents'
+import { dataAttr } from '@/editor/enumAttr'
 import { Extension } from '@tiptap/vue-3'
 const componentNodeTypes = Object.keys(editorComponents)
 
@@ -57,6 +58,18 @@ const AllowAttributesExtension = Extension.create({
 						},
 					},
 				},
+			},
+			// Per-node `radius` lives here so img + codeBlock share one declaration
+			// (different sensible defaults) and the attribute panel auto-surfaces a
+			// dropdown via `extensionManager.attributes`. LayoutCard's existing
+			// `radius` Vue prop is parallel and uses the same RADIUS_OPTIONS list.
+			{
+				types: ['image'],
+				attributes: { radius: dataAttr('radius', 'none', RADIUS_OPTIONS) },
+			},
+			{
+				types: ['codeBlock'],
+				attributes: { radius: dataAttr('radius', 'md', RADIUS_OPTIONS) },
 			},
 		]
 	},

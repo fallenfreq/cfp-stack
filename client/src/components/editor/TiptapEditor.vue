@@ -4,7 +4,7 @@
 		<NodePath :editor="editor" />
 		<FloatingToolbar :editor="editor" />
 		<CodeViewToggle />
-		<EditorContent class="p-7" :editor="editor" />
+		<EditorContent :editor="editor" />
 	</div>
 </template>
 
@@ -23,6 +23,7 @@ import {
 	type NodeViewProps,
 } from '@tiptap/vue-3'
 
+import { enumAttr } from '@/editor/enumAttr'
 import Div from '@/editor/extensions/divExtension'
 import { DragHandle } from '@/editor/extensions/dragHandle'
 import Span from '@/editor/extensions/spanExtension'
@@ -142,6 +143,17 @@ const editor = useEditor({
 				return {
 					...this.parent?.(),
 					levels: [1, 2, 3] as Level[],
+				}
+			},
+
+			addAttributes() {
+				const parent = (this.parent?.() ?? {}) as Record<string, unknown>
+				return {
+					...parent,
+					level: {
+						...(parent.level as object),
+						...enumAttr(this.options.levels[0], this.options.levels),
+					},
 				}
 			},
 
@@ -289,6 +301,19 @@ watch(editor, (newEditor) => {
 	width: 100%;
 	height: 100%;
 	max-width: 100%;
+}
+
+/* Image radius — data-radius is set by the global `radius` attribute and
+   maps to the same RADIUS token sizes used by LayoutCard. Default 'none'
+   renders no attribute. */
+.tiptap img[data-radius='sm'] {
+	border-radius: 4px;
+}
+.tiptap img[data-radius='md'] {
+	border-radius: 8px;
+}
+.tiptap img[data-radius='lg'] {
+	border-radius: 16px;
 }
 
 /* Basic editor styles */

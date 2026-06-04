@@ -2,14 +2,35 @@
 	<div class="attr-row">
 		<span class="attr-key">{{ attrKey }}</span>
 
+		<StyleAttrEditor
+			v-if="attrKey === 'style'"
+			:value="(value as string) ?? ''"
+			@update="(val) => emit('update', attrKey, val)"
+		/>
+		<select
+			v-else-if="specOptions"
+			class="attr-input attr-select"
+			:value="String(specOptions.indexOf(value))"
+			@change="
+				emit(
+					'update',
+					attrKey,
+					specOptions[Number(($event.target as HTMLSelectElement).value)],
+				)
+			"
+		>
+			<option v-for="(opt, i) in specOptions" :key="String(opt)" :value="String(i)">
+				{{ opt }}
+			</option>
+		</select>
 		<input
-			v-if="typeof specDefault === 'boolean'"
+			v-else-if="typeof specDefault === 'boolean'"
 			ref="inputEl"
 			type="checkbox"
 			class="attr-checkbox"
 			:checked="!!value"
 			@change="emit('update', attrKey, ($event.target as HTMLInputElement).checked)"
-		/>
+		>
 		<input
 			v-else-if="typeof specDefault === 'number'"
 			ref="inputEl"
@@ -20,20 +41,7 @@
 				emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
 			"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		/>
-		<StyleAttrEditor
-			v-else-if="attrKey === 'style'"
-			:value="(value as string) ?? ''"
-			@update="(val) => emit('update', attrKey, val)"
-		/>
-		<select
-			v-else-if="specOptions"
-			class="attr-input attr-select"
-			:value="value as string"
-			@change="emit('update', attrKey, ($event.target as HTMLSelectElement).value)"
 		>
-			<option v-for="opt in specOptions" :key="opt" :value="opt">{{ opt }}</option>
-		</select>
 		<input
 			v-else
 			ref="inputEl"
@@ -42,7 +50,7 @@
 			:value="value as string"
 			@change="emit('update', attrKey, ($event.target as HTMLInputElement).value)"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		/>
+		>
 
 		<ToolbarButton @mousedown.prevent="emit('remove', attrKey)">
 			<ToolbarIcon>close</ToolbarIcon>
@@ -60,7 +68,7 @@ const props = defineProps<{
 	attrKey: string
 	value: unknown
 	specDefault: unknown
-	specOptions?: string[]
+	specOptions?: readonly unknown[]
 	pending?: boolean
 }>()
 
