@@ -72,6 +72,8 @@ const LIST_ITEM_MAP: Record<string, string> = {
 	taskList: 'taskItem',
 }
 
+const isNotCodeView = () => !useEditorStore().isCodeView
+
 // Mirrors FloatingToolbar's resolveActive() position logic — shared by all helpers below.
 const resolveActivePos = (editor: Editor, ctx: ToolbarItemContext) => {
 	const { selection } = editor.state
@@ -137,52 +139,58 @@ const replaceNodeType = (
 	editor.view.dispatch(tr)
 }
 
-const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem[] => {
-	const items: NodePickerItem[] = []
-	const sourceItemType = LIST_ITEM_MAP[ctx.activeNode.type.name]
+// Enumerates all non-excluded, non-leaf schema nodes with display metadata.
+// 'heading' is expanded to three level-specific entries so callers don't need to special-case it.
+function blockNodeEntries(editor: Editor) {
+	const result: {
+		typeName: string
+		type: (typeof editor.schema.nodes)[string]
+		attrs: Record<string, unknown>
+		label: string
+		iconName: string
+	}[] = []
 	for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
 		if (EXCLUDED_NODE_TYPES.has(typeName) || type.isLeaf) continue
 		const meta = NODE_META[typeName] ?? { label: typeName, iconName: 'widgets' }
-
-		// heading is one schema node but three picker candidates (level 1/2/3)
 		if (typeName === 'heading') {
-			for (let level = 1; level <= 3; level++) {
-				const attrs = { level }
-				// setNode is cursor-based — only use it when the active node IS the textblock
-				// the cursor is in, otherwise it would convert the inner paragraph instead.
-				const canSet =
-					ctx.activeNode.type.isTextblock && editor.can().setNode(typeName, attrs)
-				const canReplace = !canSet && canReplaceNodeType(editor, ctx, typeName, attrs)
-				if (!canSet && !canReplace) continue
-				items.push({
+			for (let level = 1; level <= 3; level++)
+				result.push({
+					typeName,
+					type,
+					attrs: { level },
 					label: `Heading ${level}`,
 					iconName: `format_h${level}`,
-					active: editor.isActive(typeName, attrs),
-					action: () =>
-						ctx.activeNode.type.isTextblock && editor.can().setNode(typeName, attrs)
-							? editor.chain().focus().setNode(typeName, attrs).run()
-							: replaceNodeType(editor, ctx, typeName, attrs),
 				})
-			}
-			continue
+		} else {
+			result.push({ typeName, type, attrs: {}, ...meta })
 		}
+	}
+	return result
+}
 
-		const canSet = ctx.activeNode.type.isTextblock && editor.can().setNode(typeName)
-		const canReplace = !canSet && canReplaceNodeType(editor, ctx, typeName)
+const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem[] => {
+	const items: NodePickerItem[] = []
+	const sourceItemType = LIST_ITEM_MAP[ctx.activeNode.type.name]
+	for (const { typeName, attrs, label, iconName } of blockNodeEntries(editor)) {
+		const hasAttrs = Object.keys(attrs).length > 0
+		// setNode is cursor-based — only use it when the active node IS the textblock
+		// the cursor is in, otherwise it would convert the inner paragraph instead.
+		const canSet = ctx.activeNode.type.isTextblock && editor.can().setNode(typeName, attrs)
+		const canReplace = !canSet && canReplaceNodeType(editor, ctx, typeName, attrs)
 		// Cross-item-type list switch (taskList ↔ bulletList/orderedList) — needs
 		// switchListType because canReplaceNodeType's validContent check rejects
 		// converting between listItem+ and taskItem+ content.
 		const targetItemType = LIST_ITEM_MAP[typeName]
 		const isListSwitch =
-			!!sourceItemType && !!targetItemType && sourceItemType !== targetItemType
+			!hasAttrs && !!sourceItemType && !!targetItemType && sourceItemType !== targetItemType
 		if (!canSet && !canReplace && !isListSwitch) continue
 		items.push({
-			label: meta.label,
-			iconName: meta.iconName,
-			active: editor.isActive(typeName),
+			label,
+			iconName,
+			active: hasAttrs ? editor.isActive(typeName, attrs) : editor.isActive(typeName),
 			action: () => {
-				if (canSet) editor.chain().focus().setNode(typeName).run()
-				else if (canReplace) replaceNodeType(editor, ctx, typeName)
+				if (canSet) editor.chain().focus().setNode(typeName, attrs).run()
+				else if (canReplace) replaceNodeType(editor, ctx, typeName, attrs)
 				else if (isListSwitch) switchListType(editor, ctx, typeName, targetItemType!)
 			},
 		})
@@ -253,13 +261,11 @@ const getWrapInItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem
 	}
 
 	const items: NodePickerItem[] = []
-	for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
-		if (EXCLUDED_NODE_TYPES.has(typeName) || type.isLeaf) continue
+	for (const { typeName, label, iconName } of blockNodeEntries(editor)) {
 		if (!canWrapNodeInType(editor, ctx, typeName)) continue
-		const meta = NODE_META[typeName] ?? { label: typeName, iconName: 'widgets' }
 		items.push({
-			label: meta.label,
-			iconName: meta.iconName,
+			label,
+			iconName,
 			active: editor.isActive(typeName),
 			action: () => wrapNodeInType(editor, ctx, typeName),
 		})
@@ -426,13 +432,11 @@ const wrapSiblingsInType = (editor: Editor, positions: NodePos[], typeName: stri
 const getSelWrapItems = (editor: Editor, _ctx: ToolbarItemContext): NodePickerItem[] => {
 	const positions = useMultiSelectStore().positions
 	const items: NodePickerItem[] = []
-	for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
-		if (EXCLUDED_NODE_TYPES.has(typeName) || type.isLeaf) continue
+	for (const { typeName, label, iconName } of blockNodeEntries(editor)) {
 		if (!canWrapSiblingsInType(editor, positions, typeName)) continue
-		const meta = NODE_META[typeName] ?? { label: typeName, iconName: 'widgets' }
 		items.push({
-			label: meta.label,
-			iconName: meta.iconName,
+			label,
+			iconName,
 			active: false,
 			action: () => wrapSiblingsInType(editor, positions, typeName),
 		})
@@ -440,7 +444,53 @@ const getSelWrapItems = (editor: Editor, _ctx: ToolbarItemContext): NodePickerIt
 	return items
 }
 
+const getInsertIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem[] => {
+	const { $pos, depth } = resolveActivePos(editor, ctx)
+	if (depth === 0) return []
+	const node = $pos.node(depth)
+	const match = node.type.contentMatch.matchFragment(node.content)
+	if (!match) return []
+
+	return blockNodeEntries(editor)
+		.filter(({ type }) => match.matchType(type) !== null)
+		.map(({ type, attrs, label, iconName }) => ({
+			label,
+			iconName,
+			active: false,
+			action: () => {
+				const { $pos: p, depth: d } = resolveActivePos(editor, ctx)
+				if (d === 0) return
+				const n = p.node(d)
+				const nPos = p.before(d)
+				const insertPos = nPos + n.nodeSize - 1
+				const newNode = type.createAndFill(attrs)
+				if (!newNode) return
+				const tr = editor.state.tr.insert(insertPos, newNode)
+				tr.setSelection(TextSelection.near(tr.doc.resolve(insertPos + 1)))
+				editor.view.dispatch(tr.scrollIntoView())
+			},
+		}))
+}
+
 export const defaultToolbarItems = [
+	// --- Undo / Redo ---
+	toolbarButtonItem({
+		id: 'undo',
+		tooltip: 'Undo',
+		label: icon('undo'),
+		show: isNotCodeView,
+		disabled: (editor) => !editor.can().undo(),
+		action: (editor) => editor.chain().focus().undo().run(),
+	}),
+	toolbarButtonItem({
+		id: 'redo',
+		tooltip: 'Redo',
+		label: icon('redo'),
+		show: isNotCodeView,
+		disabled: (editor) => !editor.can().redo(),
+		action: (editor) => editor.chain().focus().redo().run(),
+	}),
+
 	// --- Inline marks (any textblock) ---
 	toolbarButtonItem({
 		id: 'bold',
@@ -552,7 +602,17 @@ export const defaultToolbarItems = [
 		action: (editor) => editor.chain().focus().toggleOrderedList().run(),
 	}),
 
-	// --- Turn into / Wrap in / Unwrap / Delete ---
+	// --- Insert / Turn into / Wrap in / Unwrap / Delete ---
+	toolbarCustomItem(
+		'insert',
+		(_e, ctx) =>
+			ctx.activeDepth > 0
+			&& !ctx.activeNode.type.isLeaf
+			&& !ctx.activeNode.type.isTextblock
+			&& isNotCodeView(),
+		ToolbarNodePicker,
+		{ props: { iconName: 'add', getItems: getInsertIntoItems }, tooltip: 'Insert' },
+	),
 	toolbarCustomItem(
 		'turn-into',
 		// !isLeaf: for a leaf NodeSelection resolveActivePos resolves to the parent, giving wrong results
