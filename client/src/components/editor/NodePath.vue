@@ -122,7 +122,7 @@ onUnmounted(() => {
 .node-path {
 	position: sticky;
 	top: 0;
-	z-index: 100;
+	z-index: 1100;
 	display: flex;
 	align-items: center;
 	padding: 4px 1.75rem;

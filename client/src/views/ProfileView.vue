@@ -56,15 +56,14 @@ const claims = computed(() => {
 })
 </script>
 <template>
-	<div>
+	<div class="pt-5">
 		<h1>This is a login-protected page</h1>
 		<h2>
 			The following profile data is extended by information from ZITADELs userinfo endpoint.
 		</h2>
 		<ul class="claims">
 			<li v-for="c in claims" :key="c.key">
-				<strong>{{ c.key }}</strong
-				>: {{ c.value }}
+				<strong>{{ c.key }}</strong>: {{ c.value }}
 			</li>
 		</ul>
 	</div>

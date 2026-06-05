@@ -243,7 +243,7 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 
 <template>
 	<!-- Section above the map -->
-	<div class="marker-info-container">
+	<div class="marker-info-container pt-5">
 		<div class="marker-info-header">
 			<h3 class="text-3xl marker-info-text">
 				{{

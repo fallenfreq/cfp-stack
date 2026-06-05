@@ -148,12 +148,14 @@ onMounted(() => {
 	window.addEventListener('resize', updatePosition)
 	window.addEventListener('scroll', updatePosition, { passive: true })
 	updatePosition()
+	;(props.editor.view.dom as HTMLElement).classList.add('has-floating-toolbar')
 })
 
 onUnmounted(() => {
 	props.editor.off('transaction', updatePosition)
 	window.removeEventListener('resize', updatePosition)
 	window.removeEventListener('scroll', updatePosition)
+	;(props.editor.view.dom as HTMLElement).classList.remove('has-floating-toolbar')
 })
 </script>
 
@@ -164,6 +166,11 @@ onUnmounted(() => {
 	padding: 0 4px;
 	white-space: nowrap;
 	align-self: center;
+}
+
+.tiptap.has-floating-toolbar[contenteditable='true'] {
+	/* toolbar height (~46px) + 2 × TOOLBAR_SPACING (2 × 10px) */
+	padding-top: 4.125rem;
 }
 
 .floating-toolbar {

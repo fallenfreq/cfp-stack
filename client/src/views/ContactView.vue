@@ -1,5 +1,5 @@
 <template>
-	<div class="flex justify-center">
+	<div class="flex justify-center pt-5">
 		<div>
 			<h1 class="font-bold">Contact</h1>
 			<p>Mobile: 07572377622</p>
