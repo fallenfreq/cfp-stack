@@ -20,7 +20,7 @@
 			"
 		>
 			<option v-for="(opt, i) in specOptions" :key="String(opt)" :value="String(i)">
-				{{ opt }}
+				{{ opt }}{{ specOptions[i] === specDefault ? ' (default)' : '' }}
 			</option>
 		</select>
 		<input
@@ -30,7 +30,7 @@
 			class="attr-checkbox"
 			:checked="!!value"
 			@change="emit('update', attrKey, ($event.target as HTMLInputElement).checked)"
-		/>
+		>
 		<input
 			v-else-if="typeof specDefault === 'number'"
 			ref="inputEl"
@@ -41,16 +41,19 @@
 				emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
 			"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		/>
+		>
 		<input
 			v-else
 			ref="inputEl"
 			type="text"
 			class="attr-input"
 			:value="value as string"
-			@change="emit('update', attrKey, ($event.target as HTMLInputElement).value)"
+			@input="onTextInput(($event.target as HTMLInputElement).value)"
+			@blur="onTextBlur(($event.target as HTMLInputElement).value)"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		/>
+		>
+
+		<span v-if="isAtDefault" class="attr-default-badge">default</span>
 
 		<ToolbarButton @mousedown.prevent="emit('remove', attrKey)">
 			<ToolbarIcon>close</ToolbarIcon>
@@ -59,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import StyleAttrEditor from './StyleAttrEditor.vue'
 import ToolbarButton from './ToolbarButton.vue'
 import ToolbarIcon from './ToolbarIcon.vue'
@@ -69,6 +72,7 @@ const props = defineProps<{
 	value: unknown
 	specDefault: unknown
 	specOptions?: readonly unknown[]
+	isAtDefault?: boolean
 	pending?: boolean
 }>()
 
@@ -78,9 +82,38 @@ const emit = defineEmits<{
 }>()
 
 const inputEl = ref<HTMLElement | null>(null)
+let textDebounceTimer: ReturnType<typeof setTimeout> | null = null
+let pendingTextVal: string | null = null
+
+const onTextInput = (val: string) => {
+	pendingTextVal = val
+	if (textDebounceTimer !== null) clearTimeout(textDebounceTimer)
+	textDebounceTimer = setTimeout(() => {
+		textDebounceTimer = null
+		pendingTextVal = null
+		emit('update', props.attrKey, val)
+	}, 600)
+}
+
+const onTextBlur = (val: string) => {
+	if (textDebounceTimer === null) return
+	clearTimeout(textDebounceTimer)
+	textDebounceTimer = null
+	pendingTextVal = null
+	emit('update', props.attrKey, val)
+}
 
 onMounted(() => {
 	if (props.pending) inputEl.value?.focus()
+})
+
+onUnmounted(() => {
+	if (textDebounceTimer !== null) {
+		clearTimeout(textDebounceTimer)
+		textDebounceTimer = null
+		if (pendingTextVal !== null) emit('update', props.attrKey, pendingTextVal)
+		pendingTextVal = null
+	}
 })
 </script>
 
@@ -125,5 +158,12 @@ onMounted(() => {
 
 .attr-select {
 	cursor: pointer;
+}
+
+.attr-default-badge {
+	font-size: 0.65rem;
+	color: rgba(var(--textPrimary) / 0.4);
+	flex-shrink: 0;
+	white-space: nowrap;
 }
 </style>

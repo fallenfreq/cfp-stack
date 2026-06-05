@@ -10,6 +10,15 @@
 				<div class="style-editor-frame" :class="{ 'style-editor-frame--fs': fullscreen }">
 					<div ref="editorEl" class="style-attr-editor" />
 					<button
+						v-if="!fullscreen"
+						class="style-fs-open"
+						tabindex="-1"
+						@mousedown.prevent
+						@click="fullscreen = true"
+					>
+						<span class="material-symbols-rounded">open_in_full</span>
+					</button>
+					<button
 						v-if="fullscreen"
 						class="style-fs-close"
 						@mousedown.prevent
@@ -20,15 +29,6 @@
 				</div>
 			</div>
 		</Teleport>
-		<button
-			v-if="!fullscreen"
-			class="style-fs-open"
-			tabindex="-1"
-			@mousedown.prevent
-			@click="fullscreen = true"
-		>
-			<span class="material-symbols-rounded">open_in_full</span>
-		</button>
 	</div>
 </template>
 
@@ -49,6 +49,15 @@ const darkModeStore = useDarkModeStore()
 const themeCompartment = new Compartment()
 const fullscreen = ref(false)
 let view: EditorView | null = null
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+const flushDebounce = () => {
+	if (debounceTimer === null) return
+	clearTimeout(debounceTimer)
+	debounceTimer = null
+	const content = view?.state.doc.toString() ?? ''
+	if (content !== props.value) emit('update', content)
+}
 
 onMounted(() => {
 	view = new EditorView({
@@ -71,8 +80,13 @@ onMounted(() => {
 				]),
 				themeCompartment.of(darkModeStore.isDarkMode ? oneDark : []),
 				EditorView.lineWrapping,
-				EditorView.domEventHandlers({
-					blur: () => emit('update', view!.state.doc.toString()),
+				EditorView.updateListener.of((update) => {
+					if (!update.docChanged) return
+					if (debounceTimer !== null) clearTimeout(debounceTimer)
+					debounceTimer = setTimeout(() => {
+						debounceTimer = null
+						emit('update', view!.state.doc.toString())
+					}, 600)
 				}),
 			],
 		}),
@@ -81,8 +95,7 @@ onMounted(() => {
 })
 
 const closeFullscreen = () => {
-	const content = view!.state.doc.toString()
-	if (content !== props.value) emit('update', content)
+	flushDebounce()
 	fullscreen.value = false
 }
 
@@ -115,6 +128,7 @@ watch(
 
 onUnmounted(() => {
 	document.removeEventListener('keydown', onKeyDown)
+	flushDebounce()
 	view?.destroy()
 	view = null
 })
@@ -122,11 +136,8 @@ onUnmounted(() => {
 
 <style scoped>
 .style-attr-editor-root {
-	display: flex;
 	flex: 1;
 	min-width: 0;
-	align-items: stretch;
-	gap: 2px;
 }
 
 .style-editor-wrap {
@@ -149,6 +160,7 @@ onUnmounted(() => {
 	flex: 1;
 	min-width: 0;
 	display: flex;
+	position: relative;
 }
 
 .style-editor-frame--fs {
@@ -199,26 +211,29 @@ onUnmounted(() => {
 }
 
 .style-fs-open {
+	position: absolute;
+	bottom: 3px;
+	right: 3px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 20px;
-	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
 	background: none;
 	border: none;
 	border-radius: 3px;
-	color: rgba(var(--textPrimary) / 0.4);
+	color: rgba(var(--textPrimary) / 0.35);
 	cursor: pointer;
 	padding: 0;
 }
 
 .style-fs-open:hover {
 	color: rgb(var(--textPrimary));
-	background: rgba(var(--textPrimary) / 0.06);
+	background: rgba(var(--backgroundPrimary) / 0.85);
 }
 
 .style-fs-open .material-symbols-rounded {
-	font-size: 14px;
+	font-size: 13px;
 }
 
 .style-fs-close {
