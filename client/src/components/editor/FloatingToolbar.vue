@@ -111,6 +111,13 @@ const updatePosition = async () => {
 	if (!domNode) return
 
 	const nodeRect = domNode.getBoundingClientRect()
+	// Layout not yet committed (typical on initial mount before the editor's
+	// DOM has its real size). Skip — we'll be called again on the next
+	// transaction/scroll once the browser has finished layout, and `transform:
+	// translateY(-100%)` keeps the toolbar off-screen at the default {0,0}
+	// position in the meantime.
+	if (nodeRect.width === 0 && nodeRect.height === 0) return
+
 	position.value = {
 		top: nodeRect.top - TOOLBAR_SPACING,
 		left: nodeRect.left,

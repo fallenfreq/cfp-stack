@@ -3,6 +3,7 @@
 		class="toolbar-btn"
 		:class="{ 'is-active': active }"
 		:disabled="disabled"
+		@mousedown.prevent
 		@click="$emit('click')"
 	>
 		<slot />

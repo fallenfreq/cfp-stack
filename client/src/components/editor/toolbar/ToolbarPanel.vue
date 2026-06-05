@@ -104,6 +104,12 @@ onUnmounted(() => {
 
 <style scoped>
 .toolbar-panel {
+	/* Position must be fixed from the first paint: before reposition() writes
+	 * an inline `position: fixed`, a default `static` block element teleported
+	 * into <body> stretches to the full viewport width, and the first
+	 * offsetWidth read returns ~viewport width — clamping the panel to the
+	 * left edge on the first open. */
+	position: fixed;
 	z-index: 1001;
 	background: rgb(var(--backgroundSecondary));
 	border: 1px solid rgb(var(--backgroundBorder));
