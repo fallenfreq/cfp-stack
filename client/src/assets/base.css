@@ -6,6 +6,7 @@ You can just save a file that will trigger a restart.
 
 :root {
 	--transition: background-color 0.5s ease;
+	--toolbar-height: 44px;
 	--xs: 380;
 	--sm: 640;
 	--md: 768;

@@ -18,6 +18,8 @@ declare module 'vue' {
     ComingSoon: typeof import('./src/components/ComingSoon.vue')['default']
     CurrentLocation: typeof import('./src/components/demos/map/currentLocation.vue')['default']
     DarkModeSwitch: typeof import('./src/components/DarkModeSwitch.vue')['default']
+    DragHandleBlock: typeof import('./src/components/editor/DragHandleBlock.vue')['default']
+    FloatingDragHandle: typeof import('./src/components/editor/FloatingDragHandle.vue')['default']
     FloatingEditorMenu: typeof import('./src/components/editor/FloatingEditorMenu.vue')['default']
     FloatingToolbar: typeof import('./src/components/editor/FloatingToolbar.vue')['default']
     GoogleAutocomplete: typeof import('./src/components/demos/map/GoogleAutocomplete.vue')['default']
