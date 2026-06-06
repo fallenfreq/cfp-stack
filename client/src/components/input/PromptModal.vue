@@ -4,7 +4,7 @@
 			<h3 class="message text-2xl">
 				{{ message }}
 			</h3>
-			<input ref="input" v-model="userInput" type="text" @keyup.enter="submit" />
+			<input ref="input" v-model="userInput" type="text" @keyup.enter="submit">
 			<div class="button-group">
 				<VaButton color="primary" class="submit" @click="submit"> Submit </VaButton>
 				<VaButton
@@ -66,7 +66,7 @@ const close = () => {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	z-index: 1000;
+	z-index: var(--z-modal);
 }
 
 .prompt-content {

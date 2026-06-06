@@ -7,6 +7,15 @@ You can just save a file that will trigger a restart.
 :root {
 	--transition: background-color 0.5s ease;
 	--toolbar-height: 44px;
+
+	/* Z-index scale — edit here, not per-component.
+	   Vuestic derives: VaNavbar = overlay−100 (→100), VaToast = overlay+100 (→300). */
+	--z-toolbar: 10;
+	--z-panel: 20;
+	--z-nodepath: 30;
+	--va-z-index-teleport-overlay: 200; /* VaDropdown nav/hamburger menus */
+	--z-overlay: 300;  /* tooltips — above nav menus and toast */
+	--z-modal: 400;    /* full-screen modals */
 	--xs: 380;
 	--sm: 640;
 	--md: 768;

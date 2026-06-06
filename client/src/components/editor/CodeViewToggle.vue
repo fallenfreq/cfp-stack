@@ -19,6 +19,6 @@ const editorStore = useEditorStore()
 	bottom: 0;
 	right: 0;
 	padding: 8px;
-	z-index: 1000;
+	z-index: var(--z-toolbar);
 }
 </style>

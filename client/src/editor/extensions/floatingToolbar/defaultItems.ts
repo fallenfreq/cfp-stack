@@ -101,7 +101,8 @@ const resolveActivePos = (editor: Editor, ctx: ToolbarItemContext) => {
 						return (d = target.depth) => (d === leafDepth ? leafNode : target.node(d))
 					}
 					if (prop === 'before') {
-						return (d = target.depth + 1) => (d === leafDepth ? leafPos : target.before(d))
+						return (d = target.depth + 1) =>
+							d === leafDepth ? leafPos : target.before(d)
 					}
 					return Reflect.get(target, prop, receiver)
 				},

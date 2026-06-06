@@ -4,6 +4,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* useZIndex sets z-index as an inline style (1, 2, 3…); !important beats inline styles. */
+body .va-dropdown__content-wrapper {
+	z-index: var(--va-z-index-teleport-overlay) !important;
+}
+
 *,
 *::before,
 *::after {

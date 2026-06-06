@@ -131,7 +131,7 @@ onUnmounted(() => {
 
 .tooltip-popup {
 	position: fixed;
-	z-index: 1100;
+	z-index: var(--z-overlay);
 	pointer-events: none;
 	white-space: nowrap;
 	font-size: 11px;

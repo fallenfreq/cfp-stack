@@ -110,7 +110,7 @@ onUnmounted(() => {
 	 * offsetWidth read returns ~viewport width — clamping the panel to the
 	 * left edge on the first open. */
 	position: fixed;
-	z-index: 1001;
+	z-index: var(--z-panel);
 	background: rgb(var(--backgroundSecondary));
 	border: 1px solid rgb(var(--backgroundBorder));
 	border-radius: 4px;

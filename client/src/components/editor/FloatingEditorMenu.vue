@@ -1,7 +1,7 @@
 <template>
 	<div
 		v-if="show"
-		class="floating-toolbar flex flex-wrap gap-2 px-7 z-10"
+		class="floating-toolbar flex flex-wrap gap-2 px-7"
 		:style="{ top: `${position.top}px`, left: `${position.left}px` }"
 	>
 		<!-- Use for when the caret is not in a text block  -->
@@ -95,7 +95,7 @@ onUnmounted(() => {
 	bottom: 0;
 	right: 0;
 	padding: 8px;
-	z-index: 1000;
+	z-index: var(--z-toolbar);
 }
 .floating-toolbar {
 	position: fixed;
@@ -104,7 +104,7 @@ onUnmounted(() => {
 	padding: 8px;
 	border-radius: 4px;
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-	z-index: 1000;
+	z-index: var(--z-toolbar);
 	transition:
 		transform 0.15s ease-in-out,
 		opacity 0.15s ease-in-out;

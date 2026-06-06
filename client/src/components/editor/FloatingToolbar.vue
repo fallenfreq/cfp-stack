@@ -2,7 +2,7 @@
 	<div
 		v-if="visibleItems.length"
 		ref="toolbarEl"
-		class="floating-toolbar z-10"
+		class="floating-toolbar"
 		:style="{
 			top: `${position.top}px`,
 			left: `${position.left}px`,
@@ -188,7 +188,7 @@ onUnmounted(() => {
 	border: 1px solid rgb(var(--backgroundBorder));
 	border-radius: 4px;
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-	z-index: 1000;
+	z-index: var(--z-toolbar);
 	overflow: hidden;
 }
 

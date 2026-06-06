@@ -68,7 +68,7 @@ onUnmounted(() => {
 .floating-drag-handle-wrapper {
 	position: fixed;
 	transform: translateY(-100%);
-	z-index: 1000;
+	z-index: var(--z-toolbar);
 	opacity: 1;
 	transition: opacity 1s ease 1s;
 }
