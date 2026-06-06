@@ -1,48 +1,38 @@
-import { Fragment, Slice, type Node as ProseMirrorNode } from '@tiptap/pm/model'
-import { NodeSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state'
+import type { Node as ProseMirrorNode, Slice } from '@tiptap/pm/model'
+import { NodeSelection, Plugin, TextSelection } from '@tiptap/pm/state'
+import { dropPoint } from '@tiptap/pm/transform'
 import { type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
-import './dragHandle.css'
-
-const dragHandlePluginKey = new PluginKey<DragHandleState>('dragHandle')
 
 interface DragHandleOptions {
-	dragHandleClass: string
 	shouldShowHandle: (node: ProseMirrorNode, depth: number) => boolean
 	buildDragSlice?: (
 		view: EditorView,
 		pos: number,
 		event: DragEvent,
 	) => { slice: Slice; move: boolean } | null
+	setHoverPos: (pos: number) => void
+	onHoverLost: () => void
+	// Fired from the plugin's handleDrop, before PM dispatches the drop
+	// transaction.  Depth is computed from the drop coordinates via the same
+	// dropPoint utility PM uses internally — wire this to setActiveDepth so the
+	// toolbar follows the dragged node when its depth changes on drop.
+	onDrop: (depth: number) => void
 }
 
-interface DragHandleState {
-	activePos: number | null
-	forceRefresh: boolean
-}
-
-interface FadeLogic {
-	handle: HTMLElement | null
-	timer: ReturnType<typeof setTimeout> | null
-	lock: () => void
-	unlock: (view: EditorView) => void
-	destroy: () => void
-}
-
-interface MatchResult {
+interface DragHandleTarget {
 	node: ProseMirrorNode
 	pos: number
+	depth: number
 }
 
-const HANDLE_SIZE = 24
-const HANDLE_GAP = 4
 const HOVER_UPDATE_DELAY = 300
 
 function findClosestDraggableParent(
 	state: EditorView['state'],
 	pos: number,
 	options: DragHandleOptions,
-): MatchResult | null {
+): DragHandleTarget | null {
 	const $pos = state.doc.resolve(pos)
 
 	// Atoms and non-editable NodeViews both resolve just *outside* the node via
@@ -55,6 +45,11 @@ function findClosestDraggableParent(
 	// and the handle lands on the nearest ancestor that satisfies the cap.
 	// Text nodes are isLeaf(→isAtom) but not draggable; hardBreak has
 	// selectable:false — both excluded by the guards below.
+	//
+	// This branch also covers the drag-handle mousedown path:
+	// selectNodeForDrag dispatches TextSelection(doc, pos, pos+nodeSize) for
+	// selectable:false wrappers, leaving the anchor *before* the wrapper.
+	// $pos.nodeAfter resolves to the wrapper here, keeping the handle on it.
 	const adjacent = $pos.nodeAfter ?? $pos.nodeBefore
 	// !isText excludes text nodes; the second clause keeps hardBreak (inline,
 	// selectable:false) out while allowing our block-level selectable:false
@@ -67,18 +62,38 @@ function findClosestDraggableParent(
 		const adjacentDepth = $pos.depth + 1
 		if (options.shouldShowHandle(adjacent, adjacentDepth)) {
 			const nodePos = $pos.nodeAfter ? pos : pos - adjacent.nodeSize
-			return { node: adjacent, pos: nodePos }
+			return { node: adjacent, pos: nodePos, depth: adjacentDepth }
 		}
 	}
 
 	for (let depth = $pos.depth; depth >= 1; depth--) {
 		const node = $pos.node(depth)
 		if (options.shouldShowHandle(node, depth)) {
-			return { node, pos: $pos.before(depth) }
+			return { node, pos: $pos.before(depth), depth }
 		}
 	}
 
 	return null
+}
+
+// Maps the editor's current selection to the position the drag handle should
+// target.  Used by both hover (via posAtCoords + the same depth/adjacent walk)
+// and selection-driven UI (the floating toolbar's inline handle) so the two
+// always agree on which node owns the handle for any given state.
+function resolveDragHandleTargetFromSelection(
+	state: EditorView['state'],
+	options: DragHandleOptions,
+): DragHandleTarget | null {
+	const { selection } = state
+	// Non-leaf NodeSelection's anchor sits before the node at the parent depth;
+	// pushing one step inside lets the depth walk land at the node itself.
+	// Everything else (TextSelection — including the selectNodeForDrag span —
+	// leaf NodeSelection, AllSelection) goes through the adjacent check.
+	const startPos =
+		selection instanceof NodeSelection && !selection.node.isLeaf
+			? selection.from + 1
+			: selection.anchor
+	return findClosestDraggableParent(state, startPos, options)
 }
 
 function findNodeDOM(view: EditorView, pos: number): HTMLElement | null {
@@ -87,22 +102,6 @@ function findNodeDOM(view: EditorView, pos: number): HTMLElement | null {
 		return nodeDOM as HTMLElement
 	}
 	return null
-}
-
-function positionHandle(view: EditorView, pos: number, handle: HTMLElement): void {
-	const nodeDOM = findNodeDOM(view, pos)
-	if (!nodeDOM) {
-		handle.style.display = 'none'
-		return
-	}
-
-	const nodeRect = nodeDOM.getBoundingClientRect()
-	const editorRect = view.dom.getBoundingClientRect()
-	const gutterLeft = editorRect.left - HANDLE_SIZE - HANDLE_GAP
-	const nodeLeft = nodeRect.left - HANDLE_SIZE - HANDLE_GAP
-	handle.style.top = `${nodeRect.top - 2}px`
-	handle.style.left = `${Math.max(gutterLeft, nodeLeft)}px`
-	handle.style.display = 'flex'
 }
 
 // NodeSelection.create throws on selectable:false nodes.  Span the node with a
@@ -118,310 +117,105 @@ function selectNodeForDrag(view: EditorView, pos: number): void {
 	view.dispatch(view.state.tr.setSelection(selection))
 }
 
-function createEventHandlers(view: EditorView, handle: HTMLElement, options: DragHandleOptions) {
-	const mousedown = (_event: MouseEvent) => {
-		if (view.composing) return
-		const pos = dragHandlePluginKey.getState(view.state)?.activePos
-		if (typeof pos !== 'number') return
-		selectNodeForDrag(view, pos)
-	}
-
-	const dragstart = (event: DragEvent) => {
-		if (view.composing) return
-		const pos = dragHandlePluginKey.getState(view.state)?.activePos
-		if (typeof pos !== 'number') return
-
-		const nodeDOM = findNodeDOM(view, pos)
-		if (nodeDOM && event.dataTransfer) {
-			event.dataTransfer.effectAllowed = 'move'
-			event.dataTransfer.setDragImage(nodeDOM, 0, 0)
-		}
-
-		const custom = options.buildDragSlice?.(view, pos, event)
-		if (custom) {
-			view.dragging = custom
-		} else {
-			selectNodeForDrag(view, pos)
-			const node = view.state.doc.nodeAt(pos)
-			// TextSelection.content() opens the slice at the parent boundary, so
-			// PM can't re-insert the dragged node cleanly.  Build the slice the
-			// way NodeSelection.content() does it internally.
-			const slice =
-				node && node.type.spec.selectable === false
-					? new Slice(Fragment.from(node), 0, 0)
-					: view.state.selection.content()
-			view.dragging = { slice, move: !event.altKey }
-		}
-
-		handle.classList.add('dragging')
-	}
-
-	const dragend = () => {
-		handle.classList.remove('dragging')
-		// Clear drag state in case the drop landed outside the editor, where
-		// ProseMirror's own dragend listener won't fire.
-		view.dragging = null
-	}
-
-	return { mousedown, dragstart, dragend }
-}
-
 const DragHandle = Extension.create<DragHandleOptions>({
 	name: 'dragHandle',
 
 	addOptions() {
+		const noop = () => {
+			/* default: caller wires real callbacks via .configure() */
+		}
 		return {
-			dragHandleClass: 'drag-handle',
 			shouldShowHandle: (node, depth) => depth === 1 && node.isBlock,
+			setHoverPos: noop,
+			onHoverLost: noop,
+			onDrop: noop,
 		}
 	},
 
 	addProseMirrorPlugins() {
 		const options = this.options
-		let isPointerOverHandle = false
-		let hoverUpdateTimer: ReturnType<typeof setTimeout> | null = null
-		let pendingHoverCoords: { left: number; top: number } | null = null
+		let hoverTimer: ReturnType<typeof setTimeout> | null = null
+		let pendingCoords: { left: number; top: number } | null = null
 
-		const clearHoverUpdateTimer = () => {
-			if (!hoverUpdateTimer) return
-			clearTimeout(hoverUpdateTimer)
-			hoverUpdateTimer = null
+		const clearHoverTimer = () => {
+			if (!hoverTimer) return
+			clearTimeout(hoverTimer)
+			hoverTimer = null
 		}
 
 		const queueHoverUpdate = (view: EditorView) => {
-			if (hoverUpdateTimer) return
-
-			hoverUpdateTimer = setTimeout(() => {
-				hoverUpdateTimer = null
-				if (isPointerOverHandle) return
-
-				const coords = pendingHoverCoords
-				pendingHoverCoords = null
+			if (hoverTimer) return
+			hoverTimer = setTimeout(() => {
+				hoverTimer = null
+				const coords = pendingCoords
+				pendingCoords = null
 				if (!coords) return
-
 				const pos = view.posAtCoords(coords)
 				const match = pos ? findClosestDraggableParent(view.state, pos.pos, options) : null
-
-				if (match) {
-					fadeLogic.lock()
-					const state = dragHandlePluginKey.getState(view.state)
-					if (state?.activePos !== match.pos) {
-						view.dispatch(view.state.tr.setMeta('updateDragHandle', { pos: match.pos }))
-					}
-				} else {
-					fadeLogic.unlock(view)
-				}
+				if (match) options.setHoverPos(match.pos)
+				else options.onHoverLost()
 			}, HOVER_UPDATE_DELAY)
 		}
 
-		const fadeLogic: FadeLogic = {
-			handle: null,
-			timer: null,
-
-			lock() {
-				if (this.timer) {
-					clearTimeout(this.timer)
-					this.timer = null
-				}
-				this.handle?.classList.remove('fading')
-			},
-
-			unlock(view) {
-				if (this.timer) return
-				this.handle?.classList.add('fading')
-
-				this.timer = setTimeout(() => {
-					view.dispatch(view.state.tr.setMeta('updateDragHandle', { action: 'remove' }))
-					this.timer = null
-				}, 2000)
-			},
-
-			destroy() {
-				if (this.timer) {
-					clearTimeout(this.timer)
-					this.timer = null
-				}
-			},
-		}
-
 		return [
-			new Plugin<DragHandleState>({
-				key: dragHandlePluginKey,
-
-				state: {
-					init() {
-						return { activePos: null, forceRefresh: false }
-					},
-
-					apply(tr, prev) {
-						const meta = tr.getMeta('updateDragHandle') as
-							| { action: 'remove' }
-							| { pos: number }
-							| undefined
-
-						if (meta && 'action' in meta && meta.action === 'remove') {
-							return { activePos: null, forceRefresh: false }
-						}
-
-						if (meta && 'pos' in meta) {
-							return { activePos: meta.pos, forceRefresh: false }
-						}
-
-						return {
-							activePos:
-								prev.activePos != null ? tr.mapping.map(prev.activePos) : null,
-							forceRefresh: !!tr.getMeta('refreshDragHandle'),
-						}
-					},
-				},
-
-				view(initialView) {
-					let currentView = initialView
-
-					const handle = document.createElement('div')
-					handle.className = options.dragHandleClass
-					handle.contentEditable = 'false'
-					handle.draggable = true
-					handle.innerHTML = `
-						<svg width="10" height="16" viewBox="0 0 10 16">
-							<circle cx="2" cy="2" r="1.5" fill="currentColor"/>
-							<circle cx="2" cy="8" r="1.5" fill="currentColor"/>
-							<circle cx="2" cy="14" r="1.5" fill="currentColor"/>
-							<circle cx="8" cy="2" r="1.5" fill="currentColor"/>
-							<circle cx="8" cy="8" r="1.5" fill="currentColor"/>
-							<circle cx="8" cy="14" r="1.5" fill="currentColor"/>
-						</svg>
-					`
-					document.body.appendChild(handle)
-					fadeLogic.handle = handle
-
-					const handlers = createEventHandlers(initialView, handle, options)
-					handle.addEventListener('mousedown', handlers.mousedown)
-					handle.addEventListener('dragstart', handlers.dragstart)
-					handle.addEventListener('dragend', handlers.dragend)
-
-					const mouseenter = () => {
-						isPointerOverHandle = true
-						fadeLogic.lock()
-					}
-					const mouseleave = () => {
-						isPointerOverHandle = false
-						fadeLogic.unlock(currentView)
-					}
-					handle.addEventListener('mouseenter', mouseenter)
-					handle.addEventListener('mouseleave', mouseleave)
-
-					const reposition = () => {
-						const pos = dragHandlePluginKey.getState(currentView.state)?.activePos
-						if (pos != null) positionHandle(currentView, pos, handle)
-					}
-					window.addEventListener('scroll', reposition, { capture: true, passive: true })
-					window.addEventListener('resize', reposition, { passive: true })
-
-					return {
-						update(view, prevState) {
-							currentView = view
-
-							// Reposition the overlay whenever activePos changes
-							const pos = dragHandlePluginKey.getState(view.state)?.activePos
-							const prevPos = dragHandlePluginKey.getState(prevState)?.activePos
-							if (pos !== prevPos) {
-								if (pos != null) {
-									positionHandle(view, pos, handle)
-									handle.dataset.depth = String(
-										view.state.doc.resolve(pos).depth + 1,
-									)
-								} else {
-									handle.style.display = 'none'
-									delete handle.dataset.depth
-								}
-							}
-
-							// Selection-change (or explicit refresh): find and dispatch new handle position.
-							// refreshDragHandle meta is set by NodePath when activeDepth changes but the
-							// cursor stays put — on mobile, mousemove never fires after a tap.
-							const forceRefresh = dragHandlePluginKey.getState(
-								view.state,
-							)?.forceRefresh
-							if (!forceRefresh && view.state.selection.eq(prevState.selection))
-								return
-							if (view.composing) return
-							// Defer so the browser finishes cursor/focus handling before
-							// dispatching.  Re-read state at fire time so stale captures
-							// from rapid moves don't matter.
-							requestAnimationFrame(() => {
-								const { selection } = view.state
-								// NodeSelection: use the selected node directly. The depth walk
-								// fails for top-level nodes (anchor resolves at depth 0) and
-								// returns the wrong node for nested ones.
-								const match: MatchResult | null =
-									selection instanceof NodeSelection
-									&& selection.node.type.spec.selectable !== false
-										? { node: selection.node, pos: selection.from }
-										: findClosestDraggableParent(
-												view.state,
-												selection.anchor,
-												options,
-											)
-								if (match) {
-									fadeLogic.lock()
-									const state = dragHandlePluginKey.getState(view.state)
-									if (state?.activePos !== match.pos) {
-										view.dispatch(
-											view.state.tr.setMeta('updateDragHandle', {
-												pos: match.pos,
-											}),
-										)
-									}
-								} else {
-									fadeLogic.unlock(view)
-								}
-							})
-						},
-
-						destroy() {
-							clearHoverUpdateTimer()
-							handle.removeEventListener('mousedown', handlers.mousedown)
-							handle.removeEventListener('dragstart', handlers.dragstart)
-							handle.removeEventListener('dragend', handlers.dragend)
-							handle.removeEventListener('mouseenter', mouseenter)
-							handle.removeEventListener('mouseleave', mouseleave)
-							handle.remove()
-							window.removeEventListener('scroll', reposition, { capture: true })
-							window.removeEventListener('resize', reposition)
-							fadeLogic.destroy()
-						},
-					}
-				},
-
+			new Plugin({
 				props: {
 					handleDOMEvents: {
 						mousemove(view, event) {
 							if (view.composing || !view.hasFocus()) return false
 							// Touch-synthesised mousemove fires before mousedown commits the
-							// cursor.  The delayed hover update below can land between those two events and
-							// position the handle while cursor placement is still pending,
-							// which disrupts it.  The view() hook handles touch instead.
-							const isTouch = (event as any).sourceCapabilities?.firesTouchEvents
+							// cursor.  The delayed hover update below can land between those two events
+							// and disrupt cursor placement.  Skip touch entirely; we have no hover
+							// concept on touch devices.
+							const isTouch = (
+								event as MouseEvent & {
+									sourceCapabilities?: { firesTouchEvents?: boolean }
+								}
+							).sourceCapabilities?.firesTouchEvents
 							if (isTouch) return false
 
-							pendingHoverCoords = {
-								left: event.clientX,
-								top: event.clientY,
-							}
-							if (!isPointerOverHandle) queueHoverUpdate(view)
-
+							pendingCoords = { left: event.clientX, top: event.clientY }
+							queueHoverUpdate(view)
 							return false
 						},
 
-						mouseleave(view, event) {
+						mouseleave(_view, event) {
 							const to = (event as MouseEvent).relatedTarget as Element | null
+							// Don't fade when crossing into NodePath or the floating handle
+							// itself — both are legitimate places the pointer can land while
+							// still "interacting" with the same node.
 							if (to?.closest('.node-path')) return false
-							pendingHoverCoords = null
-							clearHoverUpdateTimer()
-							fadeLogic.unlock(view)
+							if (to?.closest('.floating-drag-handle-wrapper')) return false
+							pendingCoords = null
+							clearHoverTimer()
+							options.onHoverLost()
 							return false
 						},
+					},
+
+					// Fires before PM dispatches the drop transaction.  We compute the
+					// dropped node's new depth from the event's coordinates (same path
+					// PM uses internally to position its drop preview line) and call
+					// onDrop synchronously — by the time the drop transaction reaches
+					// FloatingToolbar's listener, activeDepth has already been bumped,
+					// so the toolbar's first re-resolve lands on the dropped node.
+					handleDrop(view, event, slice) {
+						const coords = view.posAtCoords({
+							left: event.clientX,
+							top: event.clientY,
+						})
+						if (!coords) return false
+						const insertPos = dropPoint(view.state.doc, coords.pos, slice)
+						if (insertPos === null) return false
+						// dropPoint returns the parent position; the slice's top-level
+						// node sits one depth inside it.  Closed slices (which the drag
+						// handle always produces — Fragment.from(node) for non-selectable,
+						// NodeSelection.content() for selectable) put their root node
+						// exactly there.
+						const $insert = view.state.doc.resolve(insertPos)
+						const newDepth = $insert.depth + 1
+						if (newDepth > 0) options.onDrop(newDepth)
+						return false
 					},
 				},
 			}),
@@ -429,4 +223,5 @@ const DragHandle = Extension.create<DragHandleOptions>({
 	},
 })
 
-export { DragHandle }
+export { DragHandle, findNodeDOM, resolveDragHandleTargetFromSelection, selectNodeForDrag }
+export type { DragHandleOptions, DragHandleTarget }

@@ -65,6 +65,8 @@ watch(() => props.refreshKey, refreshOverflow)
 <style scoped>
 .overflow-row {
 	position: relative;
+	display: flex;
+	height: 100%;
 }
 
 .overflow-row::before,
@@ -104,11 +106,12 @@ watch(() => props.refreshKey, refreshOverflow)
 }
 
 .overflow-row__scroller {
+	flex: 1;
 	display: flex;
 	flex-wrap: nowrap;
+	align-items: center;
 	gap: 0.5rem;
-	width: max-content;
-	max-width: calc(100vw - 2rem);
+	padding: 0 0.5rem;
 	overflow-x: auto;
 	overflow-y: hidden;
 	overscroll-behavior-x: contain;

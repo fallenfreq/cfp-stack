@@ -3,9 +3,19 @@
 		v-if="visibleItems.length"
 		ref="toolbarEl"
 		class="floating-toolbar z-10"
-		:style="{ top: `${position.top}px`, left: `${position.left}px` }"
+		:style="{
+			top: `${position.top}px`,
+			left: `${position.left}px`,
+			'max-width': `${position.maxWidth}px`,
+		}"
 	>
-		<OverflowRow :refresh-key="toolbarRefreshKey">
+		<DragHandleBlock
+			v-if="activeNodeContext.nodePos !== null"
+			:editor="editor"
+			:node-pos="activeNodeContext.nodePos"
+			variant="inline"
+		/>
+		<OverflowRow class="toolbar-overflow" :refresh-key="toolbarRefreshKey">
 			<component
 				:is="item.component"
 				v-for="item in visibleItems"
@@ -19,23 +29,27 @@
 
 <script setup lang="ts">
 import {
+	resolveDragHandleTargetFromSelection,
+	type DragHandleOptions,
+} from '@/editor/extensions/dragHandle'
+import {
 	FloatingToolbarExtension,
 	type FloatingToolbarOptions,
 } from '@/editor/extensions/floatingToolbar'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
-import { getExtensionOptions, nodeSelectionPos, resolvedNodePos } from '@/utils/editor/editorUtils'
-import { NodeSelection } from '@tiptap/pm/state'
+import { getExtensionOptions } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import DragHandleBlock from './DragHandleBlock.vue'
 import OverflowRow from './OverflowRow.vue'
 
 const props = defineProps<{ editor: Editor }>()
 
 const dragHandleStore = useDragHandleStore()
 const multiSelectStore = useMultiSelectStore()
-const position = ref({ top: 0, left: 0 })
+const position = ref({ top: 0, left: 0, maxWidth: 0 })
 const toolbarEl = ref<HTMLElement | null>(null)
 
 const TOOLBAR_SPACING = 10
@@ -43,43 +57,20 @@ const VIEWPORT_PADDING = 8
 
 const tick = ref(0)
 
-// Resolves the active node (matching NodePath's logic) and its doc position.
-// Returns nodePos=null when no valid node exists.
+// Defers to the drag-handle extension's resolver so the toolbar and the drag
+// handle always agree on which node is active for any given selection — same
+// logic the hover plugin uses via posAtCoords, so floating and inline handles
+// behave identically.
 const resolveActive = (): ToolbarItemContext => {
 	const { state } = props.editor
-	const { selection } = state
-
-	// For non-leaf NodeSelection the anchor is before the node; resolve inside instead.
-	const pathPos =
-		selection instanceof NodeSelection && !selection.node.isLeaf
-			? selection.from + 1
-			: selection.anchor
-
-	const $pos = state.doc.resolve(pathPos)
-	const effectiveDepth = Math.min(dragHandleStore.activeDepth, $pos.depth)
-
-	// Cap the leaf branch by activeDepth: only return the leaf itself when the
-	// user has activeDepth set deep enough to reach it.  Otherwise fall through
-	// to the standard depth-resolution path so the cursor's parent at
-	// effectiveDepth becomes active — the leaf still gets its NodeSelection
-	// outline (it remains the PM selection), but the toolbar / drag handle
-	// target the in-cap ancestor.  Clicking the leaf in NodePath bumps
-	// activeDepth past leafDepth and re-runs this through the leaf branch.
-	if (selection instanceof NodeSelection && selection.node.isLeaf) {
-		const leafDepth = $pos.depth + 1
-		if (dragHandleStore.activeDepth >= leafDepth) {
-			return {
-				activeNode: selection.node,
-				activeDepth: leafDepth,
-				nodePos: nodeSelectionPos(selection),
-			}
-		}
-	}
-
+	const options = getExtensionOptions<DragHandleOptions>(props.editor, 'dragHandle')
+	if (!options) return { activeNode: state.doc, activeDepth: 0, nodePos: null }
+	const target = resolveDragHandleTargetFromSelection(state, options)
+	if (!target) return { activeNode: state.doc, activeDepth: 0, nodePos: null }
 	return {
-		activeNode: $pos.node(effectiveDepth),
-		activeDepth: effectiveDepth,
-		nodePos: effectiveDepth > 0 ? resolvedNodePos($pos, effectiveDepth) : null,
+		activeNode: target.node,
+		activeDepth: target.depth,
+		nodePos: target.pos,
 	}
 }
 
@@ -92,19 +83,11 @@ const toolbarRefreshKey = computed(
 	() => `${visibleItems.value.map((item) => item.id).join('|')}:${tick.value}`,
 )
 
-const clampLeftToViewport = async (preferredLeft: number) => {
-	await nextTick()
-
-	const width = toolbarEl.value?.offsetWidth ?? 0
-	const maxLeft = Math.max(VIEWPORT_PADDING, window.innerWidth - width - VIEWPORT_PADDING)
-
-	position.value.left = Math.min(Math.max(preferredLeft, VIEWPORT_PADDING), maxLeft)
-}
-
 const updatePosition = async () => {
 	tick.value++
 
 	const { nodePos } = resolveActive()
+	dragHandleStore.setSelectionNodePos(nodePos)
 	if (nodePos === null) return
 
 	const domNode = props.editor.view.nodeDOM(nodePos) as HTMLElement | null
@@ -118,12 +101,32 @@ const updatePosition = async () => {
 	// position in the meantime.
 	if (nodeRect.width === 0 && nodeRect.height === 0) return
 
+	// First pass: tentatively position at the node's left edge with maxWidth
+	// allowing the toolbar to grow up to the full available viewport width.
+	// The second pass below measures the actual rendered width and shifts the
+	// toolbar left if it would overflow the right viewport edge.
+	const preferredLeft = Math.max(nodeRect.left, VIEWPORT_PADDING)
 	position.value = {
 		top: nodeRect.top - TOOLBAR_SPACING,
-		left: nodeRect.left,
+		left: preferredLeft,
+		maxWidth: window.innerWidth - 2 * VIEWPORT_PADDING,
 	}
 
-	await clampLeftToViewport(nodeRect.left)
+	await nextTick()
+	if (!toolbarEl.value) return
+
+	// Shift left to give the toolbar room to fit, clamped to VIEWPORT_PADDING.
+	// If natural width still exceeds (innerWidth - 2 * VIEWPORT_PADDING), the
+	// toolbar settles at left = VIEWPORT_PADDING and OverflowRow handles the
+	// horizontal scroll inside.
+	const width = toolbarEl.value.offsetWidth
+	const maxLeft = Math.max(VIEWPORT_PADDING, window.innerWidth - width - VIEWPORT_PADDING)
+	const left = Math.min(preferredLeft, maxLeft)
+	position.value = {
+		top: nodeRect.top - TOOLBAR_SPACING,
+		left,
+		maxWidth: window.innerWidth - left - VIEWPORT_PADDING,
+	}
 }
 
 const items = computed(
@@ -155,6 +158,7 @@ onUnmounted(() => {
 	props.editor.off('transaction', updatePosition)
 	window.removeEventListener('resize', updatePosition)
 	window.removeEventListener('scroll', updatePosition)
+	dragHandleStore.setSelectionNodePos(null)
 	;(props.editor.view.dom as HTMLElement).classList.remove('has-floating-toolbar')
 })
 </script>
@@ -169,23 +173,27 @@ onUnmounted(() => {
 }
 
 .tiptap.has-floating-toolbar[contenteditable='true'] {
-	/* toolbar height (~46px) + 2 × TOOLBAR_SPACING (2 × 10px) */
-	padding-top: 4.125rem;
+	padding-top: calc(var(--toolbar-height) + 20px);
 }
 
 .floating-toolbar {
 	position: fixed;
-	display: block;
+	display: flex;
+	align-items: stretch;
 	box-sizing: border-box;
 	width: fit-content;
-	max-width: calc(100vw - 1rem);
+	height: var(--toolbar-height);
 	transform: translateY(-100%);
 	background: rgba(var(--backgroundSecondary) / 0.9);
 	border: 1px solid rgb(var(--backgroundBorder));
-	padding: 8px;
 	border-radius: 4px;
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 	z-index: 1000;
-	overflow: visible;
+	overflow: hidden;
+}
+
+.toolbar-overflow {
+	flex: 1;
+	min-width: 0;
 }
 </style>

@@ -3,6 +3,7 @@
 	<div v-else>
 		<NodePath :editor="editor" />
 		<FloatingToolbar :editor="editor" />
+		<FloatingDragHandle :editor="editor" />
 		<CodeViewToggle />
 		<EditorContent :editor="editor" />
 	</div>
@@ -35,6 +36,7 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
 import Youtube from '@tiptap/extension-youtube'
 import StarterKit from '@tiptap/starter-kit'
 import CodeViewToggle from './CodeViewToggle.vue'
+import FloatingDragHandle from './FloatingDragHandle.vue'
 import FloatingToolbar from './FloatingToolbar.vue'
 import NodePath from './NodePath.vue'
 
@@ -74,6 +76,9 @@ const editor = useEditor({
 				depth <= dragHandleStore.activeDepth
 				&& !!(node.isBlock || node.isAtom || node.type.spec.draggable),
 			buildDragSlice: buildMultiDragSlice,
+			setHoverPos: (pos) => dragHandleStore.setHoverNodePos(pos),
+			onHoverLost: () => dragHandleStore.unlockFade(),
+			onDrop: (depth) => dragHandleStore.setActiveDepth(depth),
 		}),
 		CodeBlockLowlight.extend({
 			addNodeView() {
@@ -232,6 +237,10 @@ watch(editor, (newEditor) => {
 </script>
 
 <style>
+.tiptap {
+	position: relative;
+}
+
 .tiptap div[data-container],
 .tiptap img[draggable='true'] {
 	cursor: grab;
