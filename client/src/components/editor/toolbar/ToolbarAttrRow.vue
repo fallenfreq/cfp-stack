@@ -71,7 +71,7 @@ const props = defineProps<{
 	attrKey: string
 	value: unknown
 	specDefault: unknown
-	specOptions?: readonly unknown[]
+	specOptions?: readonly unknown[] | undefined
 	isAtDefault?: boolean
 	pending?: boolean
 }>()

@@ -1,3 +1,4 @@
+import type { NodePos } from '@/utils/editor/editorUtils'
 import type { Node as ProseMirrorNode, Slice } from '@tiptap/pm/model'
 import { NodeSelection, Plugin, TextSelection } from '@tiptap/pm/state'
 import { dropPoint } from '@tiptap/pm/transform'
@@ -22,7 +23,7 @@ interface DragHandleOptions {
 
 interface DragHandleTarget {
 	node: ProseMirrorNode
-	pos: number
+	pos: NodePos
 	depth: number
 }
 
@@ -61,7 +62,7 @@ function findClosestDraggableParent(
 	) {
 		const adjacentDepth = $pos.depth + 1
 		if (options.shouldShowHandle(adjacent, adjacentDepth)) {
-			const nodePos = $pos.nodeAfter ? pos : pos - adjacent.nodeSize
+			const nodePos = ($pos.nodeAfter ? pos : pos - adjacent.nodeSize) as NodePos
 			return { node: adjacent, pos: nodePos, depth: adjacentDepth }
 		}
 	}
@@ -69,7 +70,7 @@ function findClosestDraggableParent(
 	for (let depth = $pos.depth; depth >= 1; depth--) {
 		const node = $pos.node(depth)
 		if (options.shouldShowHandle(node, depth)) {
-			return { node, pos: $pos.before(depth), depth }
+			return { node, pos: $pos.before(depth) as NodePos, depth }
 		}
 	}
 
