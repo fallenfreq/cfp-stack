@@ -50,10 +50,10 @@ const maskStyle = computed(() => {
 	if (left && right)
 		return {
 			maskImage:
-				'linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent)',
+				'linear-gradient(to right, transparent, black 60px, black calc(100% - 60px), transparent)',
 		}
-	if (left) return { maskImage: 'linear-gradient(to right, transparent, black 40px)' }
-	if (right) return { maskImage: 'linear-gradient(to left, transparent, black 40px)' }
+	if (left) return { maskImage: 'linear-gradient(to right, transparent, black 60px)' }
+	if (right) return { maskImage: 'linear-gradient(to left, transparent, black 60px)' }
 	return {}
 })
 
@@ -84,14 +84,14 @@ watch(() => props.refreshKey, refreshOverflow)
 }
 
 .overflow-row::before {
-	left: 3px;
+	left: 8px;
 	border-top: 4px solid transparent;
 	border-bottom: 4px solid transparent;
 	border-right: 5px solid rgba(var(--textPrimary) / 0.5);
 }
 
 .overflow-row::after {
-	right: 3px;
+	right: 8px;
 	border-top: 4px solid transparent;
 	border-bottom: 4px solid transparent;
 	border-left: 5px solid rgba(var(--textPrimary) / 0.5);
