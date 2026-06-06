@@ -83,6 +83,33 @@ const resolveActivePos = (editor: Editor, ctx: ToolbarItemContext) => {
 			: selection.anchor
 	const $pos = editor.state.doc.resolve(pathPos)
 	const depth = Math.min(ctx.activeDepth, $pos.depth)
+
+	// Leaf NodeSelections (e.g. block images) have nodeSize=1 — there is no interior
+	// position so selection.from resolves at the parent's depth, making $pos.depth one
+	// short of the leaf and causing $pos.node(depth) to return the wrong node.  When
+	// ctx identifies a leaf as active (set correctly by resolveDragHandleTargetFromSelection),
+	// proxy $pos so node() and before() at leafDepth return the leaf itself and its
+	// position, keeping all callers unchanged.
+	if (selection instanceof NodeSelection && selection.node.isLeaf && ctx.nodePos !== null) {
+		const leafDepth = $pos.depth + 1
+		if (Math.min(ctx.activeDepth, leafDepth) === leafDepth) {
+			const leafNode = ctx.activeNode
+			const leafPos = ctx.nodePos
+			const patched = new Proxy($pos, {
+				get(target, prop, receiver) {
+					if (prop === 'node') {
+						return (d = target.depth) => (d === leafDepth ? leafNode : target.node(d))
+					}
+					if (prop === 'before') {
+						return (d = target.depth + 1) => (d === leafDepth ? leafPos : target.before(d))
+					}
+					return Reflect.get(target, prop, receiver)
+				},
+			})
+			return { $pos: patched, depth: leafDepth }
+		}
+	}
+
 	return { $pos, depth }
 }
 
