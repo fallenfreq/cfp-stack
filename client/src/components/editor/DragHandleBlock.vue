@@ -42,13 +42,16 @@ const props = withDefaults(
 
 const isDragging = ref(false)
 
-const onMousedown = () => {
+const onMousedown = (event: MouseEvent) => {
 	const view = props.editor.view
 	if (view.composing) return
-	// Floating variant defers selection to dragstart so a click-then-drag
-	// doesn't unmount the source element before the browser fires dragstart
-	// (selection-change → store updates → floatingHandlePos goes null).
-	if (!props.selectOnMousedown) return
+	if (!props.selectOnMousedown) {
+		// Prevent blur — the editor must stay focused for the drag to work.
+		// The floating variant never changes the selection so the toolbar stays
+		// on the current active node for the full drag lifecycle.
+		event.preventDefault()
+		return
+	}
 	selectNodeForDrag(view, props.nodePos)
 }
 
@@ -68,16 +71,16 @@ const onDragstart = (event: DragEvent) => {
 	if (custom) {
 		view.dragging = custom
 	} else {
-		selectNodeForDrag(view, pos)
+		// Inline variant: select the node so the toolbar follows the drag.
+		// Floating variant: build the slice directly without a selection
+		// transaction — the toolbar stays on the current active node and the
+		// floating handle element stays mounted for the full drag lifecycle.
+		if (props.selectOnMousedown) {
+			selectNodeForDrag(view, pos)
+		}
 		const node = view.state.doc.nodeAt(pos)
-		// TextSelection.content() opens the slice at the parent boundary, so PM
-		// can't re-insert the dragged node cleanly.  Build the slice the way
-		// NodeSelection.content() does internally.
-		const slice =
-			node && node.type.spec.selectable === false
-				? new Slice(Fragment.from(node), 0, 0)
-				: view.state.selection.content()
-		view.dragging = { slice, move: !event.altKey }
+		if (!node) return
+		view.dragging = { slice: new Slice(Fragment.from(node), 0, 0), move: !event.altKey }
 	}
 
 	isDragging.value = true
