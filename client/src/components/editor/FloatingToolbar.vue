@@ -1,6 +1,6 @@
 <template>
 	<div
-		v-if="visibleItems.length"
+		v-if="displayedItems.length"
 		ref="toolbarEl"
 		class="floating-toolbar"
 		:style="{
@@ -18,7 +18,7 @@
 		<OverflowRow class="toolbar-overflow" :refresh-key="toolbarRefreshKey">
 			<component
 				:is="item.component"
-				v-for="item in visibleItems"
+				v-for="item in displayedItems"
 				:key="item.id"
 				:editor="editor"
 				:context="activeNodeContext"
@@ -40,8 +40,9 @@ import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/typ
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import { getExtensionOptions } from '@/utils/editor/editorUtils'
+import type { ToolbarItem } from '@/editor/extensions/floatingToolbar'
 import type { Editor } from '@tiptap/vue-3'
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import DragHandleBlock from './DragHandleBlock.vue'
 import OverflowRow from './OverflowRow.vue'
 
@@ -79,11 +80,28 @@ const activeNodeContext = computed((): ToolbarItemContext => {
 	return resolveActive()
 })
 
+// While the inline drag handle is dragging, freeze the visible items so that
+// the selectNodeForDrag transaction (fired in onDragstart) can't remove items
+// and shorten the toolbar — which would shift the handle under the drag image.
+// flush:'sync' captures the snapshot before the transaction changes the selection.
+const frozenItems = ref<ToolbarItem[] | null>(null)
+watch(
+	() => dragHandleStore.isToolbarHandleDragging,
+	(dragging) => {
+		frozenItems.value = dragging ? visibleItems.value : null
+	},
+	{ flush: 'sync' },
+)
+const displayedItems = computed(() => frozenItems.value ?? visibleItems.value)
+
 const toolbarRefreshKey = computed(
-	() => `${visibleItems.value.map((item) => item.id).join('|')}:${tick.value}`,
+	() => `${displayedItems.value.map((item) => item.id).join('|')}:${tick.value}`,
 )
 
 const updatePosition = async () => {
+	// Skip layout updates while the toolbar handle is mid-drag so the toolbar
+	// position doesn't jump under the browser's drag image.
+	if (dragHandleStore.isToolbarHandleDragging) return
 	tick.value++
 
 	const { nodePos } = resolveActive()

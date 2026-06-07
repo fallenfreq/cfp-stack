@@ -62,11 +62,16 @@ const onDragstart = (event: DragEvent) => {
 		event.dataTransfer.setDragImage(nodeDOM, 0, 0)
 	}
 
-	// Lock the floating handle in place before any selection transaction so
-	// floatingHandlePos stays non-null while the drag is live (selectNodeForDrag
-	// makes selectionNodePos === hoverNodePos, which would normally collapse it).
+	// For the floating variant: lock floatingHandlePos so it doesn't collapse
+	// to null when selectNodeForDrag makes selectionNodePos === hoverNodePos.
+	// For the inline variant: freeze the toolbar layout (visibleItems + position)
+	// so selecting the node mid-drag doesn't restructure the toolbar and shift
+	// the drag handle under the browser's in-progress drag image.
+	// Both flags must be set BEFORE selectNodeForDrag dispatches its transaction.
 	if (props.variant === 'floating') {
 		dragHandleStore.setIsFloatDragging(true)
+	} else {
+		dragHandleStore.setIsToolbarHandleDragging(true)
 	}
 
 	const opts = getExtensionOptions<DragHandleOptions>(props.editor, 'dragHandle')
@@ -90,6 +95,8 @@ const onDragend = () => {
 	isDragging.value = false
 	if (props.variant === 'floating') {
 		dragHandleStore.setIsFloatDragging(false)
+	} else {
+		dragHandleStore.setIsToolbarHandleDragging(false)
 	}
 	// Clear drag state in case the drop landed outside the editor, where
 	// ProseMirror's own dragend listener won't fire.

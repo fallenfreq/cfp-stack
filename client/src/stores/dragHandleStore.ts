@@ -9,6 +9,10 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 	const hoverNodePos = ref<number | null>(null)
 	const isFading = ref(false)
 	const isFloatDragging = ref(false)
+	// True for the duration of an inline toolbar handle drag.  FloatingToolbar
+	// freezes its visibleItems and skips updatePosition while this is set so the
+	// toolbar layout doesn't shift under the browser's drag image.
+	const isToolbarHandleDragging = ref(false)
 	let fadeTimer: ReturnType<typeof setTimeout> | null = null
 
 	// Hover handle only shows when it would target a different node than the
@@ -57,17 +61,23 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 		isFloatDragging.value = v
 	}
 
+	const setIsToolbarHandleDragging = (v: boolean) => {
+		isToolbarHandleDragging.value = v
+	}
+
 	return {
 		activeDepth,
 		selectionNodePos,
 		hoverNodePos,
 		isFading,
 		isFloatDragging,
+		isToolbarHandleDragging,
 		floatingHandlePos,
 		setActiveDepth,
 		setSelectionNodePos,
 		setHoverNodePos,
 		setIsFloatDragging,
+		setIsToolbarHandleDragging,
 		lockFade,
 		unlockFade,
 	}
