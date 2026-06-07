@@ -288,13 +288,14 @@ const getWrapInItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem
 		return items
 	}
 
+	const { $pos, depth } = resolveActivePos(editor, ctx)
 	const items: NodePickerItem[] = []
 	for (const { typeName, label, iconName } of blockNodeEntries(editor)) {
 		if (!canWrapNodeInType(editor, ctx, typeName)) continue
 		items.push({
 			label,
 			iconName,
-			active: editor.isActive(typeName),
+			active: depth > 0 && $pos.node(depth - 1).type.name === typeName,
 			action: () => wrapNodeInType(editor, ctx, typeName),
 		})
 	}
