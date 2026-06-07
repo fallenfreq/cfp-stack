@@ -3,6 +3,7 @@
 	<div v-else>
 		<NodePath :editor="editor" />
 		<FloatingToolbar :editor="editor" />
+		<ToolbarScrollHint :editor="editor" />
 		<FloatingDragHandle :editor="editor" />
 		<CodeViewToggle />
 		<EditorContent :editor="editor" />
@@ -39,6 +40,7 @@ import CodeViewToggle from './CodeViewToggle.vue'
 import FloatingDragHandle from './FloatingDragHandle.vue'
 import FloatingToolbar from './FloatingToolbar.vue'
 import NodePath from './NodePath.vue'
+import ToolbarScrollHint from './ToolbarScrollHint.vue'
 
 import { CustomTaskItem } from '@/editor/extensions/customTaskItem'
 import { TaskList } from '@tiptap/extension-list'
