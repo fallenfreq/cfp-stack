@@ -11,7 +11,6 @@
 			:editor="editor"
 			:node-pos="visiblePos"
 			variant="floating"
-			:select-on-mousedown="false"
 		/>
 	</div>
 </template>

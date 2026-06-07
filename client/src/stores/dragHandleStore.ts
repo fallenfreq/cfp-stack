@@ -8,12 +8,16 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 	const selectionNodePos = ref<number | null>(null)
 	const hoverNodePos = ref<number | null>(null)
 	const isFading = ref(false)
+	const isFloatDragging = ref(false)
 	let fadeTimer: ReturnType<typeof setTimeout> | null = null
 
 	// Hover handle only shows when it would target a different node than the
 	// toolbar's active node — otherwise the toolbar's inline handle already serves.
+	// During a floating-handle drag the selection is forced onto the hover node,
+	// so we keep the handle mounted until dragend via the isFloatDragging lock.
 	const floatingHandlePos = computed(() =>
-		hoverNodePos.value !== null && hoverNodePos.value !== selectionNodePos.value
+		hoverNodePos.value !== null &&
+		(isFloatDragging.value || hoverNodePos.value !== selectionNodePos.value)
 			? hoverNodePos.value
 			: null,
 	)
@@ -49,15 +53,21 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 		lockFade()
 	}
 
+	const setIsFloatDragging = (v: boolean) => {
+		isFloatDragging.value = v
+	}
+
 	return {
 		activeDepth,
 		selectionNodePos,
 		hoverNodePos,
 		isFading,
+		isFloatDragging,
 		floatingHandlePos,
 		setActiveDepth,
 		setSelectionNodePos,
 		setHoverNodePos,
+		setIsFloatDragging,
 		lockFade,
 		unlockFade,
 	}

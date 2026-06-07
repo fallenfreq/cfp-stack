@@ -25,6 +25,7 @@ import {
 	selectNodeForDrag,
 	type DragHandleOptions,
 } from '@/editor/extensions/dragHandle'
+import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { getExtensionOptions } from '@/utils/editor/editorUtils'
 import { Fragment, Slice } from '@tiptap/pm/model'
 import type { Editor } from '@tiptap/vue-3'
@@ -35,24 +36,19 @@ const props = withDefaults(
 		editor: Editor
 		nodePos: number
 		variant?: 'inline' | 'floating'
-		selectOnMousedown?: boolean
 	}>(),
-	{ variant: 'inline', selectOnMousedown: true },
+	{ variant: 'inline' },
 )
 
+const dragHandleStore = useDragHandleStore()
 const isDragging = ref(false)
 
-const onMousedown = (event: MouseEvent) => {
+const onMousedown = () => {
 	const view = props.editor.view
 	if (view.composing) return
-	if (!props.selectOnMousedown) {
-		// Prevent blur — the editor must stay focused for the drag to work.
-		// The floating variant never changes the selection so the toolbar stays
-		// on the current active node for the full drag lifecycle.
-		event.preventDefault()
-		return
-	}
-	selectNodeForDrag(view, props.nodePos)
+	// Keep the editor focused without calling event.preventDefault() — that would
+	// block dragstart from firing.  view.focus() is a no-op when already focused.
+	view.focus()
 }
 
 const onDragstart = (event: DragEvent) => {
@@ -66,18 +62,22 @@ const onDragstart = (event: DragEvent) => {
 		event.dataTransfer.setDragImage(nodeDOM, 0, 0)
 	}
 
+	// Lock the floating handle in place before any selection transaction so
+	// floatingHandlePos stays non-null while the drag is live (selectNodeForDrag
+	// makes selectionNodePos === hoverNodePos, which would normally collapse it).
+	if (props.variant === 'floating') {
+		dragHandleStore.setIsFloatDragging(true)
+	}
+
 	const opts = getExtensionOptions<DragHandleOptions>(props.editor, 'dragHandle')
 	const custom = opts?.buildDragSlice?.(view, pos, event)
 	if (custom) {
 		view.dragging = custom
 	} else {
-		// Inline variant: select the node so the toolbar follows the drag.
-		// Floating variant: build the slice directly without a selection
-		// transaction — the toolbar stays on the current active node and the
-		// floating handle element stays mounted for the full drag lifecycle.
-		if (props.selectOnMousedown) {
-			selectNodeForDrag(view, pos)
-		}
+		// Select the node so PM's drop handler knows what to delete on a move.
+		// For the floating handle this fires AFTER the lock above, so the element
+		// stays mounted even though the selection jumps to the hover node.
+		selectNodeForDrag(view, pos)
 		const node = view.state.doc.nodeAt(pos)
 		if (!node) return
 		view.dragging = { slice: new Slice(Fragment.from(node), 0, 0), move: !event.altKey }
@@ -88,6 +88,9 @@ const onDragstart = (event: DragEvent) => {
 
 const onDragend = () => {
 	isDragging.value = false
+	if (props.variant === 'floating') {
+		dragHandleStore.setIsFloatDragging(false)
+	}
 	// Clear drag state in case the drop landed outside the editor, where
 	// ProseMirror's own dragend listener won't fire.
 	// eslint-disable-next-line vue/no-mutating-props
