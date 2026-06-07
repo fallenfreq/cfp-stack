@@ -156,7 +156,9 @@ const multiDragPlugin = new Plugin({
 			pendingMultiDrag = null
 
 			const target = findBlockAtCoords(view, event)
-			if (!target || sorted.includes(target.pos)) return false
+			// Return true to consume the event without inserting — prevents PM's own drop
+			// handler from inserting the placeholder slice (phantom copy of the first node).
+			if (!target || sorted.includes(target.pos)) return true
 
 			const { pos: targetPos, node: targetNode, insertBefore } = target
 			const doc = view.state.doc

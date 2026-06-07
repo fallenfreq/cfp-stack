@@ -157,9 +157,12 @@ const findBlockAtCoords = (
 	const doc = view.state.doc
 	const $drop = doc.resolve(rawPos.pos)
 
-	// Cursor is in the gap between siblings — direction follows which side the cursor is on
+	// Cursor is in the gap between siblings — direction follows which side the cursor is on.
+	// selectable:false nodes (e.g. customComponentNode, customTaskItem) are valid insertion
+	// references even though they can't be NodeSelected — drop targeting is about position,
+	// not selectability.
 	const adjacent = $drop.nodeAfter ?? $drop.nodeBefore
-	if (adjacent && adjacent.isBlock && adjacent.type.spec.selectable !== false) {
+	if (adjacent && adjacent.isBlock) {
 		const pos = ($drop.nodeAfter ? $drop.pos : $drop.pos - adjacent.nodeSize) as NodePos
 		return { pos, node: adjacent, insertBefore: !!$drop.nodeAfter }
 	}
