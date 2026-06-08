@@ -19,6 +19,8 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 	// toolbar's active node — otherwise the toolbar's inline handle already serves.
 	// During a floating-handle drag the selection is forced onto the hover node,
 	// so we keep the handle mounted until dragend via the isFloatDragging lock.
+	const isDragging = computed(() => isFloatDragging.value || isToolbarHandleDragging.value)
+
 	const floatingHandlePos = computed(() =>
 		hoverNodePos.value !== null &&
 		(isFloatDragging.value || hoverNodePos.value !== selectionNodePos.value)
@@ -72,6 +74,7 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 		isFading,
 		isFloatDragging,
 		isToolbarHandleDragging,
+		isDragging,
 		floatingHandlePos,
 		setActiveDepth,
 		setSelectionNodePos,

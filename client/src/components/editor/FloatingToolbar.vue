@@ -86,7 +86,7 @@ const activeNodeContext = computed((): ToolbarItemContext => {
 // flush:'sync' captures the snapshot before the transaction changes the selection.
 const frozenItems = ref<ToolbarItem[] | null>(null)
 watch(
-	() => dragHandleStore.isToolbarHandleDragging,
+	() => dragHandleStore.isDragging,
 	(dragging) => {
 		frozenItems.value = dragging ? visibleItems.value : null
 	},
@@ -101,7 +101,7 @@ const toolbarRefreshKey = computed(
 const updatePosition = async () => {
 	// Skip layout updates while the toolbar handle is mid-drag so the toolbar
 	// position doesn't jump under the browser's drag image.
-	if (dragHandleStore.isToolbarHandleDragging) return
+	if (dragHandleStore.isDragging) return
 	tick.value++
 
 	const { nodePos } = resolveActive()

@@ -24,7 +24,7 @@ import DragHandleBlock from './DragHandleBlock.vue'
 const props = defineProps<{ editor: Editor }>()
 const store = useDragHandleStore()
 
-const HANDLE_GAP = 4
+const HANDLE_GAP = 10
 
 const visiblePos = computed(() => store.floatingHandlePos)
 const pixelPos = ref<{ top: number; left: number } | null>(null)

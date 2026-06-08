@@ -1,6 +1,6 @@
 import { findBlockAtCoords, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import { Fragment } from '@tiptap/pm/model'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state'
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
 
@@ -172,6 +172,8 @@ const multiDragPlugin = new Plugin({
 				? tr.mapping.map(targetPos)
 				: tr.mapping.map(targetPos + targetNode.nodeSize)
 			tr = tr.insert(insertAt, content)
+			const mappedInsert = tr.mapping.map(insertAt)
+			tr = tr.setSelection(TextSelection.create(tr.doc, mappedInsert, mappedInsert + content.size))
 			tr = tr.setMeta(multiSelectPluginKey, { action: 'clear' })
 			view.dragging = null
 			view.dispatch(tr)

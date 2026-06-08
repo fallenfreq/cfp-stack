@@ -186,7 +186,11 @@ const DragHandle = Extension.create<DragHandleOptions>({
 							// itself — both are legitimate places the pointer can land while
 							// still "interacting" with the same node.
 							if (to?.closest('.node-path')) return false
-							if (to?.closest('.floating-drag-handle-wrapper')) return false
+							if (to?.closest('.floating-drag-handle-wrapper')) {
+								clearHoverTimer()
+								pendingCoords = null
+								return false
+							}
 							pendingCoords = null
 							clearHoverTimer()
 							options.onHoverLost()
