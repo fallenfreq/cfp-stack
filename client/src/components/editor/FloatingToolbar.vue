@@ -1,6 +1,6 @@
 <template>
 	<div
-		v-if="displayedItems.length"
+		v-if="visibleItems.length"
 		ref="toolbarEl"
 		class="floating-toolbar"
 		:style="{
@@ -9,16 +9,23 @@
 			'max-width': `${position.maxWidth}px`,
 		}"
 	>
-		<DragHandleBlock
-			v-if="activeNodeContext.nodePos !== null"
-			:editor="editor"
-			:node-pos="activeNodeContext.nodePos"
-			variant="inline"
-		/>
+		<!-- Passive slot for the unified drag handle.  FloatingDragHandle floats
+		     over this with position:fixed; the ghost SVG keeps the toolbar looking
+		     complete when the handle has moved to a hovered node elsewhere. -->
+		<div class="toolbar-slot" aria-hidden="true">
+			<svg width="10" height="16" viewBox="0 0 10 16">
+				<circle cx="2" cy="2" r="1.5" fill="currentColor" />
+				<circle cx="2" cy="8" r="1.5" fill="currentColor" />
+				<circle cx="2" cy="14" r="1.5" fill="currentColor" />
+				<circle cx="8" cy="2" r="1.5" fill="currentColor" />
+				<circle cx="8" cy="8" r="1.5" fill="currentColor" />
+				<circle cx="8" cy="14" r="1.5" fill="currentColor" />
+			</svg>
+		</div>
 		<OverflowRow class="toolbar-overflow" :refresh-key="toolbarRefreshKey">
 			<component
 				:is="item.component"
-				v-for="item in displayedItems"
+				v-for="item in visibleItems"
 				:key="item.id"
 				:editor="editor"
 				:context="activeNodeContext"
@@ -40,10 +47,8 @@ import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/typ
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import { getExtensionOptions } from '@/utils/editor/editorUtils'
-import type { ToolbarItem } from '@/editor/extensions/floatingToolbar'
 import type { Editor } from '@tiptap/vue-3'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import DragHandleBlock from './DragHandleBlock.vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import OverflowRow from './OverflowRow.vue'
 
 const props = defineProps<{ editor: Editor }>()
@@ -60,8 +65,7 @@ const tick = ref(0)
 
 // Defers to the drag-handle extension's resolver so the toolbar and the drag
 // handle always agree on which node is active for any given selection — same
-// logic the hover plugin uses via posAtCoords, so floating and inline handles
-// behave identically.
+// logic the hover plugin uses via posAtCoords.
 const resolveActive = (): ToolbarItemContext => {
 	const { state } = props.editor
 	const options = getExtensionOptions<DragHandleOptions>(props.editor, 'dragHandle')
@@ -80,28 +84,11 @@ const activeNodeContext = computed((): ToolbarItemContext => {
 	return resolveActive()
 })
 
-// While the inline drag handle is dragging, freeze the visible items so that
-// the selectNodeForDrag transaction (fired in onDragstart) can't remove items
-// and shorten the toolbar — which would shift the handle under the drag image.
-// flush:'sync' captures the snapshot before the transaction changes the selection.
-const frozenItems = ref<ToolbarItem[] | null>(null)
-watch(
-	() => dragHandleStore.isDragging,
-	(dragging) => {
-		frozenItems.value = dragging ? visibleItems.value : null
-	},
-	{ flush: 'sync' },
-)
-const displayedItems = computed(() => frozenItems.value ?? visibleItems.value)
-
 const toolbarRefreshKey = computed(
-	() => `${displayedItems.value.map((item) => item.id).join('|')}:${tick.value}`,
+	() => `${visibleItems.value.map((item) => item.id).join('|')}:${tick.value}`,
 )
 
 const updatePosition = async () => {
-	// Skip layout updates while the toolbar handle is mid-drag so the toolbar
-	// position doesn't jump under the browser's drag image.
-	if (dragHandleStore.isDragging) return
 	tick.value++
 
 	const { nodePos } = resolveActive()
@@ -208,6 +195,18 @@ onUnmounted(() => {
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 	z-index: var(--z-toolbar);
 	overflow: hidden;
+}
+
+.toolbar-slot {
+	width: var(--toolbar-height);
+	flex-shrink: 0;
+	align-self: stretch;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-right: 1px solid rgb(var(--backgroundBorder));
+	color: rgba(var(--textPrimary) / 0.15);
+	pointer-events: none;
 }
 
 .toolbar-overflow {

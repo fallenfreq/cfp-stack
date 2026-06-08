@@ -8,24 +8,18 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 	const selectionNodePos = ref<number | null>(null)
 	const hoverNodePos = ref<number | null>(null)
 	const isFading = ref(false)
-	const isFloatDragging = ref(false)
-	// True for the duration of an inline toolbar handle drag.  FloatingToolbar
-	// freezes its visibleItems and skips updatePosition while this is set so the
-	// toolbar layout doesn't shift under the browser's drag image.
-	const isToolbarHandleDragging = ref(false)
+	const isDragging = ref(false)
+	// Locked at dragstart so the handle keeps targeting the same node even if
+	// hoverNodePos changes mid-drag.  currentTargetPos returns this while
+	// isDragging is true.
+	const frozenTargetPos = ref<number | null>(null)
 	let fadeTimer: ReturnType<typeof setTimeout> | null = null
 
-	// Hover handle only shows when it would target a different node than the
-	// toolbar's active node — otherwise the toolbar's inline handle already serves.
-	// During a floating-handle drag the selection is forced onto the hover node,
-	// so we keep the handle mounted until dragend via the isFloatDragging lock.
-	const isDragging = computed(() => isFloatDragging.value || isToolbarHandleDragging.value)
-
-	const floatingHandlePos = computed(() =>
-		hoverNodePos.value !== null &&
-		(isFloatDragging.value || hoverNodePos.value !== selectionNodePos.value)
-			? hoverNodePos.value
-			: null,
+	// The node the unified drag handle is currently targeting.  Defaults to the
+	// hovered node when one is set; otherwise the selection-driven active node.
+	// Locked to frozenTargetPos for the duration of a drag.
+	const currentTargetPos = computed<number | null>(() =>
+		isDragging.value ? frozenTargetPos.value : (hoverNodePos.value ?? selectionNodePos.value),
 	)
 
 	const lockFade = () => {
@@ -59,12 +53,12 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 		lockFade()
 	}
 
-	const setIsFloatDragging = (v: boolean) => {
-		isFloatDragging.value = v
+	const setIsDragging = (v: boolean) => {
+		isDragging.value = v
 	}
 
-	const setIsToolbarHandleDragging = (v: boolean) => {
-		isToolbarHandleDragging.value = v
+	const setFrozenTargetPos = (pos: number | null) => {
+		frozenTargetPos.value = pos
 	}
 
 	return {
@@ -72,15 +66,14 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 		selectionNodePos,
 		hoverNodePos,
 		isFading,
-		isFloatDragging,
-		isToolbarHandleDragging,
 		isDragging,
-		floatingHandlePos,
+		frozenTargetPos,
+		currentTargetPos,
 		setActiveDepth,
 		setSelectionNodePos,
 		setHoverNodePos,
-		setIsFloatDragging,
-		setIsToolbarHandleDragging,
+		setIsDragging,
+		setFrozenTargetPos,
 		lockFade,
 		unlockFade,
 	}
