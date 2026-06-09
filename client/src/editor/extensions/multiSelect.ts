@@ -1,6 +1,6 @@
 import { findBlockAtCoords, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import { Fragment } from '@tiptap/pm/model'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { NodeSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state'
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
 
@@ -172,6 +172,18 @@ const multiDragPlugin = new Plugin({
 				? tr.mapping.map(targetPos)
 				: tr.mapping.map(targetPos + targetNode.nodeSize)
 			tr = tr.insert(insertAt, content)
+			// Mirror native single-drag behavior: select the first dropped node so the
+			// toolbar repositions to it.  NodeSelection for selectable nodes (gives the
+			// "node-selected" outline); TextSelection spanning the node for
+			// selectable:false wrappers (NodeSelection.create would throw).
+			const firstInserted = tr.doc.nodeAt(insertAt)
+			if (firstInserted) {
+				const newSelection =
+					firstInserted.type.spec.selectable === false
+						? TextSelection.create(tr.doc, insertAt, insertAt + firstInserted.nodeSize)
+						: NodeSelection.create(tr.doc, insertAt)
+				tr = tr.setSelection(newSelection)
+			}
 			tr = tr.setMeta(multiSelectPluginKey, { action: 'clear' })
 			view.dragging = null
 			view.dispatch(tr)

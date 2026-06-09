@@ -8,14 +8,18 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 	const selectionNodePos = ref<number | null>(null)
 	const hoverNodePos = ref<number | null>(null)
 	const isFading = ref(false)
+	const isDragging = ref(false)
+	// Locked at dragstart so the handle keeps targeting the same node even if
+	// hoverNodePos changes mid-drag.  currentTargetPos returns this while
+	// isDragging is true.
+	const frozenTargetPos = ref<number | null>(null)
 	let fadeTimer: ReturnType<typeof setTimeout> | null = null
 
-	// Hover handle only shows when it would target a different node than the
-	// toolbar's active node — otherwise the toolbar's inline handle already serves.
-	const floatingHandlePos = computed(() =>
-		hoverNodePos.value !== null && hoverNodePos.value !== selectionNodePos.value
-			? hoverNodePos.value
-			: null,
+	// The node the unified drag handle is currently targeting.  Defaults to the
+	// hovered node when one is set; otherwise the selection-driven active node.
+	// Locked to frozenTargetPos for the duration of a drag.
+	const currentTargetPos = computed<number | null>(() =>
+		isDragging.value ? frozenTargetPos.value : (hoverNodePos.value ?? selectionNodePos.value),
 	)
 
 	const lockFade = () => {
@@ -49,15 +53,27 @@ export const useDragHandleStore = defineStore('dragHandle', () => {
 		lockFade()
 	}
 
+	const setIsDragging = (v: boolean) => {
+		isDragging.value = v
+	}
+
+	const setFrozenTargetPos = (pos: number | null) => {
+		frozenTargetPos.value = pos
+	}
+
 	return {
 		activeDepth,
 		selectionNodePos,
 		hoverNodePos,
 		isFading,
-		floatingHandlePos,
+		isDragging,
+		frozenTargetPos,
+		currentTargetPos,
 		setActiveDepth,
 		setSelectionNodePos,
 		setHoverNodePos,
+		setIsDragging,
+		setFrozenTargetPos,
 		lockFade,
 		unlockFade,
 	}

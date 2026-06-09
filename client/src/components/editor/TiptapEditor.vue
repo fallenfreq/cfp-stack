@@ -81,6 +81,10 @@ const editor = useEditor({
 			setHoverPos: (pos) => dragHandleStore.setHoverNodePos(pos),
 			onHoverLost: () => dragHandleStore.unlockFade(),
 			onDrop: (depth) => dragHandleStore.setActiveDepth(depth),
+			onSingleDropConsumed: () => {
+				dragHandleStore.setIsDragging(false)
+				dragHandleStore.setFrozenTargetPos(null)
+			},
 		}),
 		CodeBlockLowlight.extend({
 			addNodeView() {

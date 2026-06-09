@@ -9,12 +9,19 @@
 			'max-width': `${position.maxWidth}px`,
 		}"
 	>
-		<DragHandleBlock
-			v-if="activeNodeContext.nodePos !== null"
-			:editor="editor"
-			:node-pos="activeNodeContext.nodePos"
-			variant="inline"
-		/>
+		<!-- Passive slot for the unified drag handle.  FloatingDragHandle floats
+		     over this with position:fixed; the ghost SVG keeps the toolbar looking
+		     complete when the handle has moved to a hovered node elsewhere. -->
+		<div class="toolbar-slot" aria-hidden="true">
+			<svg width="10" height="16" viewBox="0 0 10 16">
+				<circle cx="2" cy="2" r="1.5" fill="currentColor" />
+				<circle cx="2" cy="8" r="1.5" fill="currentColor" />
+				<circle cx="2" cy="14" r="1.5" fill="currentColor" />
+				<circle cx="8" cy="2" r="1.5" fill="currentColor" />
+				<circle cx="8" cy="8" r="1.5" fill="currentColor" />
+				<circle cx="8" cy="14" r="1.5" fill="currentColor" />
+			</svg>
+		</div>
 		<OverflowRow class="toolbar-overflow" :refresh-key="toolbarRefreshKey">
 			<component
 				:is="item.component"
@@ -42,7 +49,6 @@ import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import { getExtensionOptions } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
-import DragHandleBlock from './DragHandleBlock.vue'
 import OverflowRow from './OverflowRow.vue'
 
 const props = defineProps<{ editor: Editor }>()
@@ -59,8 +65,7 @@ const tick = ref(0)
 
 // Defers to the drag-handle extension's resolver so the toolbar and the drag
 // handle always agree on which node is active for any given selection — same
-// logic the hover plugin uses via posAtCoords, so floating and inline handles
-// behave identically.
+// logic the hover plugin uses via posAtCoords.
 const resolveActive = (): ToolbarItemContext => {
 	const { state } = props.editor
 	const options = getExtensionOptions<DragHandleOptions>(props.editor, 'dragHandle')
@@ -190,6 +195,18 @@ onUnmounted(() => {
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 	z-index: var(--z-toolbar);
 	overflow: hidden;
+}
+
+.toolbar-slot {
+	width: var(--toolbar-height);
+	flex-shrink: 0;
+	align-self: stretch;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-right: 1px solid rgb(var(--backgroundBorder));
+	color: rgba(var(--textPrimary) / 0.15);
+	pointer-events: none;
 }
 
 .toolbar-overflow {

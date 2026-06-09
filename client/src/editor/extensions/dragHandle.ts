@@ -1,9 +1,23 @@
-import type { NodePos } from '@/utils/editor/editorUtils'
+import { findBlockAtCoords, type NodePos } from '@/utils/editor/editorUtils'
 import type { Node as ProseMirrorNode, Slice } from '@tiptap/pm/model'
 import { NodeSelection, Plugin, TextSelection } from '@tiptap/pm/state'
 import { dropPoint } from '@tiptap/pm/transform'
 import { type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
+
+// Source pos of an in-flight single-node drag from the unified drag handle.
+// Set by the handle's onDragstart, consumed (and cleared) by handleDrop when the
+// drop lands inside the editor, or by a window 'dragend' listener if the drop
+// went outside.  Mirrors the pendingMultiDrag pattern in multiSelect.ts.
+let pendingDrag: { pos: number } | null = null
+
+const setPendingDrag = (pos: number): void => {
+	pendingDrag = { pos }
+}
+
+const clearPendingDrag = (): void => {
+	pendingDrag = null
+}
 
 interface DragHandleOptions {
 	shouldShowHandle: (node: ProseMirrorNode, depth: number) => boolean
@@ -19,6 +33,10 @@ interface DragHandleOptions {
 	// dropPoint utility PM uses internally — wire this to setActiveDepth so the
 	// toolbar follows the dragged node when its depth changes on drop.
 	onDrop: (depth: number) => void
+	// Called from the single-drag branch of handleDrop, BEFORE dispatch.  Wires
+	// to clearing isDragging/frozenTargetPos so the handle doesn't render with
+	// a stale frozen pos for the brief window between drop and dragend.
+	onSingleDropConsumed?: () => void
 }
 
 interface DragHandleTarget {
@@ -46,11 +64,6 @@ function findClosestDraggableParent(
 	// and the handle lands on the nearest ancestor that satisfies the cap.
 	// Text nodes are isLeaf(→isAtom) but not draggable; hardBreak has
 	// selectable:false — both excluded by the guards below.
-	//
-	// This branch also covers the drag-handle mousedown path:
-	// selectNodeForDrag dispatches TextSelection(doc, pos, pos+nodeSize) for
-	// selectable:false wrappers, leaving the anchor *before* the wrapper.
-	// $pos.nodeAfter resolves to the wrapper here, keeping the handle on it.
 	const adjacent = $pos.nodeAfter ?? $pos.nodeBefore
 	// !isText excludes text nodes; the second clause keeps hardBreak (inline,
 	// selectable:false) out while allowing our block-level selectable:false
@@ -78,9 +91,8 @@ function findClosestDraggableParent(
 }
 
 // Maps the editor's current selection to the position the drag handle should
-// target.  Used by both hover (via posAtCoords + the same depth/adjacent walk)
-// and selection-driven UI (the floating toolbar's inline handle) so the two
-// always agree on which node owns the handle for any given state.
+// target.  Used by FloatingToolbar so the toolbar resolves to the same node
+// the hover plugin (via posAtCoords + the same depth/adjacent walk) would.
 function resolveDragHandleTargetFromSelection(
 	state: EditorView['state'],
 	options: DragHandleOptions,
@@ -88,8 +100,8 @@ function resolveDragHandleTargetFromSelection(
 	const { selection } = state
 	// Non-leaf NodeSelection's anchor sits before the node at the parent depth;
 	// pushing one step inside lets the depth walk land at the node itself.
-	// Everything else (TextSelection — including the selectNodeForDrag span —
-	// leaf NodeSelection, AllSelection) goes through the adjacent check.
+	// Everything else (TextSelection, leaf NodeSelection, AllSelection) goes
+	// through the adjacent check.
 	const startPos =
 		selection instanceof NodeSelection && !selection.node.isLeaf
 			? selection.from + 1
@@ -103,19 +115,6 @@ function findNodeDOM(view: EditorView, pos: number): HTMLElement | null {
 		return nodeDOM as HTMLElement
 	}
 	return null
-}
-
-// NodeSelection.create throws on selectable:false nodes.  Span the node with a
-// TextSelection instead so view.state.selection.content() still yields a slice
-// containing the node for drag-and-drop.
-function selectNodeForDrag(view: EditorView, pos: number): void {
-	const node = view.state.doc.nodeAt(pos)
-	if (!node) return
-	const selection =
-		node.type.spec.selectable === false
-			? TextSelection.create(view.state.doc, pos, pos + node.nodeSize)
-			: NodeSelection.create(view.state.doc, pos)
-	view.dispatch(view.state.tr.setSelection(selection))
 }
 
 const DragHandle = Extension.create<DragHandleOptions>({
@@ -160,6 +159,22 @@ const DragHandle = Extension.create<DragHandleOptions>({
 
 		return [
 			new Plugin({
+				view() {
+					// Single-drag's source-of-truth is the module-scoped pendingDrag.  If the
+					// browser releases the drag outside the editor, handleDrop never fires; this
+					// window listener guarantees the pending state is cleared.  Mirrors
+					// multiSelect.ts's pendingMultiDrag recovery.
+					const onWindowDragEnd = () => {
+						pendingDrag = null
+					}
+					window.addEventListener('dragend', onWindowDragEnd)
+					return {
+						destroy() {
+							window.removeEventListener('dragend', onWindowDragEnd)
+						},
+					}
+				},
+
 				props: {
 					handleDOMEvents: {
 						mousemove(view, event) {
@@ -186,7 +201,11 @@ const DragHandle = Extension.create<DragHandleOptions>({
 							// itself — both are legitimate places the pointer can land while
 							// still "interacting" with the same node.
 							if (to?.closest('.node-path')) return false
-							if (to?.closest('.floating-drag-handle-wrapper')) return false
+							if (to?.closest('.floating-drag-handle-wrapper')) {
+								clearHoverTimer()
+								pendingCoords = null
+								return false
+							}
 							pendingCoords = null
 							clearHoverTimer()
 							options.onHoverLost()
@@ -194,13 +213,79 @@ const DragHandle = Extension.create<DragHandleOptions>({
 						},
 					},
 
-					// Fires before PM dispatches the drop transaction.  We compute the
-					// dropped node's new depth from the event's coordinates (same path
-					// PM uses internally to position its drop preview line) and call
-					// onDrop synchronously — by the time the drop transaction reaches
-					// FloatingToolbar's listener, activeDepth has already been bumped,
-					// so the toolbar's first re-resolve lands on the dropped node.
+					// Two-branch drop handler.
+					//
+					// Branch 1 — pendingDrag set (drag started from our unified handle):
+					//   we own the entire drop.  Resolve target via findBlockAtCoords,
+					//   delete source, insert slice, set the new selection on the dropped
+					//   node so the toolbar follows it.  PM selection was never mutated
+					//   during the drag, so toolbar items couldn't shrink mid-drag.
+					//
+					// Branch 2 — no pendingDrag (external drop, paste, etc.):
+					//   non-consuming observer.  Compute the dropped node's new depth from
+					//   the drop coords (same path PM uses) and call onDrop synchronously,
+					//   so activeDepth is bumped before PM's drop transaction reaches
+					//   FloatingToolbar's transaction listener.
 					handleDrop(view, event, slice) {
+						if (pendingDrag) {
+							const source = pendingDrag.pos
+							pendingDrag = null
+
+							const doc = view.state.doc
+							const sourceNode = doc.nodeAt(source)
+							const target = findBlockAtCoords(view, event)
+							// Reject drop-on-self AND drop-inside-self (e.g. dragging a list
+							// and dropping inside one of its children).  Without this guard,
+							// the delete would collapse the target position into source's gap
+							// and the subsequent insert/selection would land in undefined territory.
+							if (
+								!target
+								|| !sourceNode
+								|| (target.pos >= source
+									&& target.pos < source + sourceNode.nodeSize)
+							) {
+								view.dragging = null
+								options.onSingleDropConsumed?.()
+								return true
+							}
+
+							const move = view.dragging?.move ?? true
+							let tr = view.state.tr
+							if (move) {
+								tr = tr.delete(source, source + sourceNode.nodeSize)
+							}
+							const insertAt = target.insertBefore
+								? tr.mapping.map(target.pos)
+								: tr.mapping.map(target.pos + target.node.nodeSize)
+							tr = tr.insert(insertAt, sourceNode)
+
+							const inserted = tr.doc.nodeAt(insertAt)
+							if (inserted) {
+								const newSelection =
+									inserted.type.spec.selectable === false
+										? TextSelection.create(
+												tr.doc,
+												insertAt,
+												insertAt + inserted.nodeSize,
+											)
+										: NodeSelection.create(tr.doc, insertAt)
+								tr = tr.setSelection(newSelection)
+							}
+
+							const $insert = tr.doc.resolve(insertAt)
+							const newDepth = $insert.depth + 1
+							if (newDepth > 0) options.onDrop(newDepth)
+
+							// Clear drag state BEFORE dispatch so the transaction listener
+							// (updatePixelPos) sees isDragging=false and resolves the handle's
+							// target from the post-drop selection, not the stale frozen source
+							// pos that no longer exists after the delete.
+							options.onSingleDropConsumed?.()
+							view.dragging = null
+							view.dispatch(tr)
+							return true
+						}
+
 						const coords = view.posAtCoords({
 							left: event.clientX,
 							top: event.clientY,
@@ -208,11 +293,6 @@ const DragHandle = Extension.create<DragHandleOptions>({
 						if (!coords) return false
 						const insertPos = dropPoint(view.state.doc, coords.pos, slice)
 						if (insertPos === null) return false
-						// dropPoint returns the parent position; the slice's top-level
-						// node sits one depth inside it.  Closed slices (which the drag
-						// handle always produces — Fragment.from(node) for non-selectable,
-						// NodeSelection.content() for selectable) put their root node
-						// exactly there.
 						const $insert = view.state.doc.resolve(insertPos)
 						const newDepth = $insert.depth + 1
 						if (newDepth > 0) options.onDrop(newDepth)
@@ -224,5 +304,11 @@ const DragHandle = Extension.create<DragHandleOptions>({
 	},
 })
 
-export { DragHandle, findNodeDOM, resolveDragHandleTargetFromSelection, selectNodeForDrag }
+export {
+	clearPendingDrag,
+	DragHandle,
+	findNodeDOM,
+	resolveDragHandleTargetFromSelection,
+	setPendingDrag,
+}
 export type { DragHandleOptions, DragHandleTarget }
