@@ -29,6 +29,7 @@ import { enumAttr } from '@/editor/enumAttr'
 import Div from '@/editor/extensions/divExtension'
 import { DragHandle } from '@/editor/extensions/dragHandle'
 import Span from '@/editor/extensions/spanExtension'
+import TextColor from '@/editor/extensions/textColorMark'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import Heading, { type Level } from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
@@ -197,6 +198,7 @@ const editor = useEditor({
 		TableHeader,
 		TableRow,
 		Span,
+		TextColor,
 		Div,
 		Placeholder.configure({
 			includeChildren: true,

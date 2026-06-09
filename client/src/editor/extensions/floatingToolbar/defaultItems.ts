@@ -1,4 +1,5 @@
 import ToolbarAttributeEditor from '@/components/editor/toolbar/ToolbarAttributeEditor.vue'
+import ToolbarColorControl from '@/components/editor/toolbar/ToolbarColorControl.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import ToolbarImageUrlControl from '@/components/editor/toolbar/ToolbarImageUrlControl.vue'
 import ToolbarLinkControl from '@/components/editor/toolbar/ToolbarLinkControl.vue'
@@ -812,6 +813,25 @@ export const defaultToolbarItems = [
 				&& !useEditorStore().isCodeView),
 		ToolbarLinkControl,
 		{ tooltip: 'Link' },
+	),
+
+	// --- Text color (mark) / block background (node attr) ---
+	toolbarCustomItem(
+		'text-color',
+		(editor, ctx) => {
+			if (useEditorStore().isCodeView) return false
+			if (useMultiSelectStore().positions.length > 1) return false
+			// Mark mode: cursor in any textblock other than codeBlock
+			if (
+				editor.state.selection.$from.parent.type.isTextblock
+				&& editor.state.selection.$from.parent.type.name !== 'codeBlock'
+			)
+				return true
+			// Node mode: a non-leaf block is active
+			return ctx.activeDepth > 0 && !ctx.activeNode.type.isLeaf
+		},
+		ToolbarColorControl,
+		{ tooltip: 'Text color' },
 	),
 
 	// --- Node attribute editor ---
