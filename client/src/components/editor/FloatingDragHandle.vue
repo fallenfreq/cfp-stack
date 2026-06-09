@@ -135,6 +135,10 @@ const onDragend = () => {
 	// ProseMirror's own dragend listener won't fire.
 	// eslint-disable-next-line vue/no-mutating-props
 	props.editor.view.dragging = null
+	// Browser DnD causes the editor to lose focus during the drag.  Without this,
+	// the mousemove guard (!view.hasFocus()) blocks hover updates until the user
+	// clicks, making the handle appear broken after every drop.
+	props.editor.view.focus()
 }
 </script>
 
