@@ -14,64 +14,36 @@
 </template>
 
 <script setup lang="ts">
+import { useToolbarRect } from '@/composables/editor/useToolbarRect'
 import type { Editor } from '@tiptap/vue-3'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps<{ editor: Editor }>()
 
-const direction = ref<'up' | 'down' | null>(null)
-const hintTop = ref(0)
-
-const hintStyle = computed(() =>
-	direction.value === 'up' ? { top: `${hintTop.value}px` } : { bottom: '16px' },
-)
+const toolbarRect = useToolbarRect(props.editor)
 
 const getNodepathBottom = () => {
 	return document.querySelector<HTMLElement>('.node-path')?.getBoundingClientRect().bottom ?? 0
 }
 
-const update = () => {
-	const toolbar = document.querySelector<HTMLElement>('.floating-toolbar')
-	if (!toolbar) {
-		direction.value = null
-		return
-	}
+const direction = computed<'up' | 'down' | null>(() => {
+	const rect = toolbarRect.value
+	if (!rect) return null
+	if (rect.bottom <= getNodepathBottom()) return 'up'
+	if (rect.top >= window.innerHeight) return 'down'
+	return null
+})
 
-	const toolbarRect = toolbar.getBoundingClientRect()
-	const nodepathBottom = getNodepathBottom()
-
-	if (toolbarRect.bottom <= nodepathBottom) {
-		hintTop.value = nodepathBottom + 8
-		direction.value = 'up'
-	} else if (toolbarRect.top >= window.innerHeight) {
-		direction.value = 'down'
-	} else {
-		direction.value = null
-	}
-}
+const hintStyle = computed(() =>
+	direction.value === 'up' ? { top: `${getNodepathBottom() + 8}px` } : { bottom: '16px' },
+)
 
 const scrollToToolbar = () => {
-	const toolbar = document.querySelector<HTMLElement>('.floating-toolbar')
-	if (!toolbar) return
-
-	const toolbarRect = toolbar.getBoundingClientRect()
-	const nodepathBottom = getNodepathBottom()
-	const delta = toolbarRect.top - (nodepathBottom + 8)
+	const rect = toolbarRect.value
+	if (!rect) return
+	const delta = rect.top - (getNodepathBottom() + 8)
 	window.scrollTo({ top: window.scrollY + delta, behavior: 'smooth' })
 }
-
-onMounted(() => {
-	props.editor.on('transaction', update)
-	window.addEventListener('resize', update)
-	window.addEventListener('scroll', update, { passive: true })
-	update()
-})
-
-onUnmounted(() => {
-	props.editor.off('transaction', update)
-	window.removeEventListener('resize', update)
-	window.removeEventListener('scroll', update)
-})
 </script>
 
 <style>

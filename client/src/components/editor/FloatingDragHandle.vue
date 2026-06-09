@@ -28,6 +28,7 @@
 </template>
 
 <script setup lang="ts">
+import { useToolbarRect } from '@/composables/editor/useToolbarRect'
 import {
 	clearPendingDrag,
 	findNodeDOM,
@@ -38,10 +39,11 @@ import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { getExtensionOptions } from '@/utils/editor/editorUtils'
 import { Fragment, Slice } from '@tiptap/pm/model'
 import type { Editor } from '@tiptap/vue-3'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps<{ editor: Editor }>()
 const store = useDragHandleStore()
+const toolbarRect = useToolbarRect(props.editor)
 
 const HANDLE_GAP = 10
 
@@ -58,68 +60,26 @@ const isOverToolbar = computed(() => {
 	return store.hoverNodePos === null || store.hoverNodePos === store.selectionNodePos
 })
 
-const pixelPos = ref<{ top: number; left: number } | null>(null)
-// MutationObserver on the toolbar's style attribute fires whenever the toolbar's
-// position changes — including the second pass of its two-pass measurement that
-// shifts `left` to fit narrow viewports.  Transaction/scroll/resize listeners
-// alone read the toolbar's rect BEFORE its second pass updates the DOM, leaving
-// the handle parked at the first-pass (= nodeRect.left) position.
-let toolbarMutationObserver: MutationObserver | null = null
-let observedToolbar: HTMLElement | null = null
-
-const updatePixelPos = () => {
+// Reading toolbarRect at the top registers the dep so this computed re-evaluates
+// whenever the composable updates (on transaction/scroll/resize, plus the toolbar's
+// own MutationObserver-tracked second-pass settle).  The not-over-toolbar branch
+// then re-reads the nodeDOM rect on those same events without its own listeners.
+const pixelPos = computed<{ top: number; left: number } | null>(() => {
 	const pos = targetPos.value
-	if (pos === null) {
-		pixelPos.value = null
-		return
-	}
+	if (pos === null) return null
+	const toolbar = toolbarRect.value
 
 	if (isOverToolbar.value) {
-		const toolbarEl = document.querySelector('.floating-toolbar') as HTMLElement | null
-		if (!toolbarEl) {
-			pixelPos.value = null
-			// Toolbar unmounted (no visible items).  Drop the observer so we don't
-			// retain a detached element reference until the next remount.
-			toolbarMutationObserver?.disconnect()
-			toolbarMutationObserver = null
-			observedToolbar = null
-			return
-		}
-		ensureToolbarObserved(toolbarEl)
-		const rect = toolbarEl.getBoundingClientRect()
-		if (rect.width === 0 && rect.height === 0) {
-			pixelPos.value = null
-			return
-		}
-		pixelPos.value = { top: rect.top, left: rect.left }
-		return
+		if (!toolbar || (toolbar.width === 0 && toolbar.height === 0)) return null
+		return { top: toolbar.top, left: toolbar.left }
 	}
 
 	const dom = props.editor.view.nodeDOM(pos) as HTMLElement | null
-	if (!dom) {
-		pixelPos.value = null
-		return
-	}
+	if (!dom) return null
 	const rect = dom.getBoundingClientRect()
-	if (rect.width === 0 && rect.height === 0) {
-		pixelPos.value = null
-		return
-	}
-	pixelPos.value = { top: rect.top - HANDLE_GAP, left: rect.left }
-}
-
-watch([targetPos, isOverToolbar], updatePixelPos, { flush: 'post' })
-
-const ensureToolbarObserved = (toolbarEl: HTMLElement) => {
-	if (observedToolbar === toolbarEl) return
-	toolbarMutationObserver?.disconnect()
-	observedToolbar = toolbarEl
-	toolbarMutationObserver = new MutationObserver(updatePixelPos)
-	toolbarMutationObserver.observe(toolbarEl, {
-		attributes: true,
-		attributeFilter: ['style'],
-	})
-}
+	if (rect.width === 0 && rect.height === 0) return null
+	return { top: rect.top - HANDLE_GAP, left: rect.left }
+})
 
 const onMousedown = () => {
 	const view = props.editor.view
@@ -176,22 +136,6 @@ const onDragend = () => {
 	// eslint-disable-next-line vue/no-mutating-props
 	props.editor.view.dragging = null
 }
-
-onMounted(() => {
-	props.editor.on('transaction', updatePixelPos)
-	window.addEventListener('scroll', updatePixelPos, { capture: true, passive: true })
-	window.addEventListener('resize', updatePixelPos, { passive: true })
-	updatePixelPos()
-})
-
-onUnmounted(() => {
-	props.editor.off('transaction', updatePixelPos)
-	window.removeEventListener('scroll', updatePixelPos, { capture: true })
-	window.removeEventListener('resize', updatePixelPos)
-	toolbarMutationObserver?.disconnect()
-	toolbarMutationObserver = null
-	observedToolbar = null
-})
 </script>
 
 <style scoped>
