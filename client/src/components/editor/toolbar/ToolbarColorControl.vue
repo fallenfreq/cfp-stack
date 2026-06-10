@@ -36,7 +36,7 @@ const mode = computed<'mark' | 'node'>(() => {
 	if (
 		sel instanceof TextSelection
 		&& sel.from !== sel.to
-		&& sel.$from.parent.type.isTextblock
+		&& sel.$from.parent.type.inlineContent
 		&& sel.$from.parent.type.name !== 'codeBlock'
 	)
 		return 'mark'
