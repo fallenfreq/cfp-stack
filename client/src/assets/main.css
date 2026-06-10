@@ -67,6 +67,9 @@ body {
 	word-wrap: normal;
 	white-space: nowrap;
 	direction: ltr;
+	width: 1em;
+	height: 1em;
+	overflow: hidden;
 }
 
 /* self hosting Material icons */
