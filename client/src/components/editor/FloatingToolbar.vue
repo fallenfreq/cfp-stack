@@ -9,10 +9,10 @@
 			'max-width': `${position.maxWidth}px`,
 		}"
 	>
-		<!-- Passive slot for the unified drag handle.  FloatingDragHandle floats
-		     over this with position:fixed; the ghost SVG fades out when the handle
-		     moves to a hovered node elsewhere. -->
-		<div class="toolbar-slot" :class="{ 'handle-away': !isHandleOverToolbar }" aria-hidden="true">
+		<!-- Passive slot for the unified drag handle.  FloatingDragHandle (a separate
+		     fixed-position instance) overlays this exactly when targeting the selected
+		     node; the ghost SVG is always visible as a placeholder behind it. -->
+		<div class="toolbar-slot" aria-hidden="true">
 			<svg width="10" height="16" viewBox="0 0 10 16">
 				<circle cx="2" cy="2" r="1.5" fill="currentColor" />
 				<circle cx="2" cy="8" r="1.5" fill="currentColor" />
@@ -78,18 +78,6 @@ const resolveActive = (): ToolbarItemContext => {
 		nodePos: target.pos,
 	}
 }
-
-// Mirrors isOverToolbar in FloatingDragHandle: false when the handle has
-// floated to a different hovered node, true when it sits in this toolbar slot.
-const isHandleOverToolbar = computed(() => {
-	if (dragHandleStore.isDragging) {
-		return dragHandleStore.frozenTargetPos === dragHandleStore.selectionNodePos
-	}
-	return (
-		dragHandleStore.hoverNodePos === null
-		|| dragHandleStore.hoverNodePos === dragHandleStore.selectionNodePos
-	)
-})
 
 const activeNodeContext = computed((): ToolbarItemContext => {
 	void tick.value
@@ -217,12 +205,8 @@ onUnmounted(() => {
 	align-items: center;
 	justify-content: center;
 	border-right: 1px solid rgb(var(--backgroundBorder));
-	color: rgba(var(--textPrimary) / 0.15);
+	color: rgba(var(--textPrimary) / 0);
 	pointer-events: none;
-}
-
-.toolbar-slot.handle-away {
-	opacity: 0;
 }
 
 .toolbar-overflow {
