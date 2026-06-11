@@ -152,6 +152,7 @@ interface BaseMenuItem {
 	icon: string
 	visible: () => boolean
 	outsideHamburger: boolean
+	active?: () => boolean
 }
 
 type ToMenuItem = BaseMenuItem & {
@@ -177,6 +178,7 @@ function createMenuItem(
 		icon: item.icon ?? '',
 		outsideHamburger: item.outsideHamburger ?? false,
 		visible: item.visible ?? (() => true),
+		...(item.active ? { active: item.active } : {}),
 		...('to' in item ? { to: item.to } : {}),
 		...('command' in item ? { command: item.command } : {}),
 		...('children' in item ? { children: item.children } : {}),
@@ -211,7 +213,8 @@ function getDropdownAnchorButtonProps(item: MenuItem) {
 		preset: 'secondary',
 		'text-color':
 			'children' in item
-			&& item.children.some((child) => 'to' in child && route.path === child.to)
+			&& (item.active?.()
+				|| item.children.some((child) => 'to' in child && route.path === child.to))
 				? 'Primary'
 				: 'TextPrimary',
 	}
@@ -269,6 +272,7 @@ const items = ref<MenuItem[]>([
 	createMenuItem({
 		icon: 'account_circle',
 		outsideHamburger: true,
+		active: () => zitadelAuth.oidcAuth.isAuthenticated,
 		children: [
 			createMenuItem({
 				title: 'Account',
