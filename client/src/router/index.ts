@@ -35,12 +35,12 @@ const router = createRouter({
 			component: () => import('../views/PortfolioWebDesign.vue'),
 		},
 		{
-			path: '/login',
-			name: 'login',
+			path: '/account',
+			name: 'account',
 			meta: {
 				authName: zitadelAuth.oidcAuth.authName,
 			},
-			component: () => import('../views/ProfileView.vue'),
+			component: () => import('../views/AccountView.vue'),
 		},
 		{
 			path: '/admin',
@@ -63,7 +63,7 @@ const router = createRouter({
 			},
 			component: () => {
 				if (zitadelAuth.oidcAuth.isAuthenticated) {
-					return import('../views/ProfileView.vue')
+					return import('../views/AccountView.vue')
 				}
 				return import('../views/NoAccess.vue')
 			},

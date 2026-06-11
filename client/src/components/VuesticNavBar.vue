@@ -291,7 +291,7 @@ const items = ref<MenuItem[]>([
 			createMenuItem({
 				title: 'Login',
 				icon: 'person',
-				to: '/login',
+				to: '/account',
 				visible: () => !zitadelAuth.oidcAuth.isAuthenticated,
 			}),
 		],

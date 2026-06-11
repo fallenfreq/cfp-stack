@@ -22,6 +22,7 @@ const zitadelAuth = createZITADELAuth(
 			'email',
 			'offline_access',
 			`urn:zitadel:iam:org:project:id:${import.meta.env.VITE_API_ZITADEL_PROJECT_RESOURCE_ID}:aud`,
+			'urn:zitadel:iam:org:project:id:zitadel:aud',
 			'urn:zitadel:iam:org:projects:roles',
 			'urn:zitadel:iam:user:metadata',
 		].join(' '),
