@@ -4,7 +4,7 @@ import axios from 'axios'
 import { reactive, ref, watch, type Ref } from 'vue'
 import { type ZitadelProfile } from './useZitadelProfile'
 
-export function useProfileForm(profile: Ref<ZitadelProfile | null>) {
+export function useAccountForm(profile: Ref<ZitadelProfile | null>) {
 	const form = reactive({
 		firstName: '',
 		lastName: '',
@@ -39,7 +39,7 @@ export function useProfileForm(profile: Ref<ZitadelProfile | null>) {
 		saveWarning.value = null
 	})
 
-	async function saveProfile() {
+	async function saveAccount() {
 		saving.value = true
 		saveSuccess.value = false
 		saveError.value = null
@@ -83,5 +83,5 @@ export function useProfileForm(profile: Ref<ZitadelProfile | null>) {
 		}
 	}
 
-	return { form, saving, saveSuccess, saveError, saveWarning, saveProfile }
+	return { form, saving, saveSuccess, saveError, saveWarning, saveAccount }
 }

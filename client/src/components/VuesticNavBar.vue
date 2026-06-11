@@ -271,9 +271,9 @@ const items = ref<MenuItem[]>([
 		outsideHamburger: true,
 		children: [
 			createMenuItem({
-				title: 'Profile',
+				title: 'Account',
 				icon: 'account_circle',
-				to: '/profile',
+				to: '/account',
 				visible: () => zitadelAuth.oidcAuth.isAuthenticated,
 			}),
 			createMenuItem({

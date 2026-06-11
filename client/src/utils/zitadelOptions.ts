@@ -1,3 +1,5 @@
+import { splitFirst } from './stringUtils'
+
 // Zitadel's officially supported UI/email languages — the only values that affect
 // login page and email templates. Fetching the allowed list requires admin auth
 // (GET /admin/v1/languages/allowed or GET /management/v1/languages), so we hardcode
@@ -39,6 +41,6 @@ export const genderOptions = [
 export function normalizeLocale(locale: string): string {
 	const stripped = locale.replace(/-u-.*/i, '')
 	if (languageOptions.some((o) => o.value === stripped)) return stripped
-	const base = stripped.split('-')[0]
+	const base = splitFirst(stripped, '-')
 	return languageOptions.some((o) => o.value === base) ? base : ''
 }
