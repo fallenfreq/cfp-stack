@@ -219,6 +219,9 @@ importers:
             vuestic-ui:
                 specifier: ^1.10.3
                 version: 1.10.3(vue@3.5.21(typescript@6.0.3))
+            zod:
+                specifier: ^3.25.76
+                version: 3.25.76
         devDependencies:
             '@types/google.maps':
                 specifier: ^3.64.1
