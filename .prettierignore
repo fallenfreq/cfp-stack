@@ -3,3 +3,6 @@ dist/
 client_dist/
 functions/
 .wrangler/
+**/package.json
+pnpm-lock.yaml
+**/components.d.ts
