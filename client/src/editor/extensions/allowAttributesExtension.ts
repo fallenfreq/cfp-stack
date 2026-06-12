@@ -59,17 +59,12 @@ const AllowAttributesExtension = Extension.create({
 					},
 				},
 			},
-			// Per-node `radius` lives here so img + codeBlock share one declaration
-			// (different sensible defaults) and the attribute panel auto-surfaces a
-			// dropdown via `extensionManager.attributes`. LayoutCard's existing
-			// `radius` Vue prop is parallel and uses the same RADIUS_OPTIONS list.
+			// Per-node `radius` for image — data-radius drives the CSS rules in main.css.
+			// LayoutCard's `radius` Vue prop is parallel and uses the same RADIUS_OPTIONS list.
+			// The corners panel (Stage 2) will handle radius for all nodes via inline style.
 			{
 				types: ['image'],
 				attributes: { radius: dataAttr('radius', 'none', RADIUS_OPTIONS) },
-			},
-			{
-				types: ['codeBlock'],
-				attributes: { radius: dataAttr('radius', 'md', RADIUS_OPTIONS) },
 			},
 		]
 	},

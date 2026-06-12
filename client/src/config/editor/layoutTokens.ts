@@ -1,17 +1,17 @@
 export const SPACING: Record<string, string> = {
-	none: '0',
-	xs: '0.5rem',
-	sm: '0.75rem',
-	md: '1.25rem',
-	lg: '2rem',
-	xl: '3rem',
+	none: 'var(--spacing-none)',
+	xs: 'var(--spacing-xs)',
+	sm: 'var(--spacing-sm)',
+	md: 'var(--spacing-md)',
+	lg: 'var(--spacing-lg)',
+	xl: 'var(--spacing-xl)',
 }
 
 export const RADIUS: Record<string, string> = {
-	none: '0',
-	sm: '4px',
-	md: '8px',
-	lg: '16px',
+	none: 'var(--radius-none)',
+	sm: 'var(--radius-sm)',
+	md: 'var(--radius-md)',
+	lg: 'var(--radius-lg)',
 }
 
 export const MAX_WIDTH: Record<string, string> = {

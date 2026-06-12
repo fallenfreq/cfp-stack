@@ -247,6 +247,9 @@ watch(editor, (newEditor) => {
 </script>
 
 <style>
+/* Editor-UI only — styles that apply to the editing experience, not rendered content.
+   Content styles (typography, spacing, radius, embeds) live in main.css under .tiptap. */
+
 .tiptap {
 	position: relative;
 }
@@ -263,12 +266,6 @@ watch(editor, (newEditor) => {
 	cursor: default;
 }
 
-.material-symbols-rounded.icon-inline {
-	font-size: 1.1em;
-	vertical-align: -0.2em;
-	opacity: 0.85;
-}
-
 .tiptap p.is-empty::before {
 	color: rgba(var(--textPrimary) / var(--alpha-50));
 	content: attr(data-placeholder);
@@ -277,24 +274,7 @@ watch(editor, (newEditor) => {
 	pointer-events: none;
 }
 
-/* tiptap table style */
-.tiptap-table {
-	border-collapse: collapse;
-	width: 100%;
-	text-align: left;
-}
-
-.tiptap-table th,
-.tiptap-table td {
-	padding: 8px;
-	border: 1px solid;
-}
-
-.tiptap-table p {
-	margin: 0;
-}
-
-/* Styling for drop position */
+/* ProseMirror / drag-handle selection states */
 .ProseMirror-selectednode {
 	outline: 3px solid rgba(var(--primary) / var(--alpha-20));
 }
@@ -305,66 +285,7 @@ watch(editor, (newEditor) => {
 	border-radius: 2px;
 }
 
-/* Youtube video styling in the editor */
-.tiptap [data-youtube-video]:has(> iframe.resp-yt) {
-	position: relative;
-	padding-bottom: 56.25%; /* 16:9 */
-	height: 0;
-	overflow: hidden;
-}
-
-.tiptap [data-youtube-video] > iframe.resp-yt {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	max-width: 100%;
-}
-
-/* Image radius — data-radius is set by the global `radius` attribute and
-   maps to the same RADIUS token sizes used by LayoutCard. Default 'none'
-   renders no attribute. */
-.tiptap img[data-radius='sm'] {
-	border-radius: 4px;
-}
-.tiptap img[data-radius='md'] {
-	border-radius: 8px;
-}
-.tiptap img[data-radius='lg'] {
-	border-radius: 16px;
-}
-
-/* Basic editor styles */
 .tiptap:focus {
 	outline: none;
-}
-
-.tiptap a {
-	color: rgb(var(--primary));
-	text-decoration: underline;
-}
-
-.tiptap :is(p, h1, h2, h3, pre, table, img, ol, ul, blockquote, hr, .code-block):not(:last-child),
-.tiptap > [data-node-view-wrapper]:not(:last-child),
-.tiptap > [data-container]:not(:last-child),
-.tiptap > [data-youtube-video]:not(:last-child) {
-	margin-bottom: 1rem;
-}
-
-.tiptap ul:not([data-type='taskList']),
-.tiptap ol {
-	padding-left: 1.5em; /* em scales with font size so markers stay proportional */
-}
-
-.tiptap li {
-	margin-bottom: 0.5rem;
-}
-.tiptap ul[data-type='taskList'] li label {
-	margin-right: 1em; /* Add space between checkbox and div */
-}
-
-.tiptap [data-youtube-video] > [data-youtube-video] {
-	margin-bottom: 0;
 }
 </style>

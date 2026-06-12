@@ -82,8 +82,8 @@ const createMultiDragPreview = (view: EditorView, sorted: NodePos[]): HTMLElemen
 	const wrap = document.createElement('div')
 	wrap.style.cssText =
 		'position:fixed;top:0;left:0;pointer-events:none;opacity:0.001;'
-		+ 'border-radius:8px;overflow:hidden;'
-		+ 'box-shadow:0 8px 24px rgba(0,0,0,0.15);border:1px solid rgba(var(--textPrimary,0 0 0)/0.1);'
+		+ 'border-radius:var(--radius-md);overflow:hidden;'
+		+ 'box-shadow:var(--shadow-xl) rgba(0,0,0,0.15);border:1px solid rgba(var(--textPrimary,0 0 0)/0.1);'
 		+ 'max-width:480px;'
 
 	const badge = document.createElement('div')

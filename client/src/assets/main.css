@@ -82,3 +82,91 @@ body {
 		'GRAD' 0,
 		'opsz' 48;
 }
+
+/* ─── Content styles ───────────────────────────────────────────────────────────
+   These apply wherever .tiptap is used — both inside the editor and on rendered
+   output pages. Wrap rendered content in <div class="tiptap"> to match the editor.
+   Editor-UI-only styles (cursors, selection outlines, placeholder) stay in
+   TiptapEditor.vue.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.material-symbols-rounded.icon-inline {
+	font-size: 1.1em;
+	vertical-align: -0.2em;
+	opacity: 0.85;
+}
+
+.tiptap a {
+	color: rgb(var(--primary));
+	text-decoration: underline;
+}
+
+.tiptap :is(p, h1, h2, h3, pre, table, img, ol, ul, blockquote, hr, .code-block):not(:last-child),
+.tiptap > [data-node-view-wrapper]:not(:last-child),
+.tiptap > [data-container]:not(:last-child),
+.tiptap > [data-youtube-video]:not(:last-child) {
+	margin-bottom: 1rem;
+}
+
+.tiptap ul:not([data-type='taskList']),
+.tiptap ol {
+	padding-left: 1.5em; /* em scales with font size so markers stay proportional */
+}
+
+.tiptap li {
+	margin-bottom: 0.5rem;
+}
+
+.tiptap ul[data-type='taskList'] li label {
+	margin-right: 1em;
+}
+
+/* Table */
+.tiptap-table {
+	border-collapse: collapse;
+	width: 100%;
+	text-align: left;
+}
+
+.tiptap-table th,
+.tiptap-table td {
+	padding: 8px;
+	border: 1px solid;
+}
+
+.tiptap-table p {
+	margin: 0;
+}
+
+/* YouTube embed — 16:9 responsive */
+.tiptap [data-youtube-video]:has(> iframe.resp-yt) {
+	position: relative;
+	padding-bottom: 56.25%;
+	height: 0;
+	overflow: hidden;
+}
+
+.tiptap [data-youtube-video] > iframe.resp-yt {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	max-width: 100%;
+}
+
+.tiptap [data-youtube-video] > [data-youtube-video] {
+	margin-bottom: 0;
+}
+
+/* Image radius — data-radius set by the radius attribute (none/sm/md/lg).
+   Default 'none' renders no attribute so this CSS has no effect by default. */
+.tiptap img[data-radius='sm'] {
+	border-radius: var(--radius-sm);
+}
+.tiptap img[data-radius='md'] {
+	border-radius: var(--radius-md);
+}
+.tiptap img[data-radius='lg'] {
+	border-radius: var(--radius-lg);
+}
