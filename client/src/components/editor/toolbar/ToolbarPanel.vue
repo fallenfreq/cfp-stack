@@ -1,12 +1,20 @@
 <template>
 	<Teleport to="body">
-		<div v-if="open" ref="panelEl" class="toolbar-panel" :style="panelStyle" @mousedown.stop>
+		<div
+			v-if="open"
+			ref="panelEl"
+			class="toolbar-panel"
+			:class="{ 'is-hidden': awaitingKeyboard }"
+			:style="panelStyle"
+			@mousedown.stop
+		>
 			<slot />
 		</div>
 	</Teleport>
 </template>
 
 <script setup lang="ts">
+import { useVirtualKeyboard } from '@/composables/useVirtualKeyboard'
 import { nextTick, onUnmounted, ref, watch, type CSSProperties } from 'vue'
 
 const props = defineProps<{
@@ -18,9 +26,11 @@ const props = defineProps<{
 
 const emit = defineEmits<{ close: [] }>()
 
+const { dismiss: dismissKeyboard, restore: restoreKeyboard } = useVirtualKeyboard()
+
 const panelEl = ref<HTMLElement | null>(null)
 const panelStyle = ref<CSSProperties>({})
-const blurredEl = ref<HTMLElement | null>(null)
+const awaitingKeyboard = ref(false)
 
 const MARGIN = 4
 
@@ -29,7 +39,10 @@ const reposition = async () => {
 	await nextTick()
 
 	const rect = props.anchorEl.getBoundingClientRect()
-	const viewportHeight = window.innerHeight
+	// visualViewport.height excludes the on-screen keyboard on both iOS and
+	// Android; window.innerHeight is the full layout height on iOS and misreports
+	// available space when the keyboard is up.
+	const viewportHeight = window.visualViewport?.height ?? window.innerHeight
 	const viewportWidth = window.innerWidth
 
 	// Measure the panel for shift-not-shrink horizontal placement.
@@ -83,31 +96,31 @@ const onScrollOptions = { passive: true, capture: true } as const
 
 watch(
 	() => props.open,
-	(isOpen) => {
+	async (isOpen) => {
 		if (isOpen) {
-			// Dismiss the virtual keyboard on mobile — panel doesn't use text
-			// input, and keyboard-up viewport shrinks the available space.
-			// Capture the focused element so focus can be restored on close.
-			// ProseMirror persists selection in state across blur, so re-focusing
-			// the editor DOM node is enough to restore the cursor position.
-			if (navigator.maxTouchPoints > 0 && document.activeElement instanceof HTMLElement) {
-				blurredEl.value = document.activeElement
-				document.activeElement.blur()
-			}
-			reposition()
+			// Add scroll/resize listeners immediately so events aren't missed
+			// while waiting for the keyboard to dismiss. The visualViewport
+			// resize listener is added after settling — the keyboard-drop event
+			// is owned by dismissKeyboard(), adding it early would double-fire.
 			document.addEventListener('mousedown', onDocMousedown)
 			window.addEventListener('resize', reposition)
 			window.addEventListener('scroll', onScroll, onScrollOptions)
+			// Hide the panel, dismiss the keyboard, then reposition against the
+			// settled viewport and reveal. dismiss() resolves immediately when
+			// the keyboard isn't visible, so there's no delay on desktop.
+			awaitingKeyboard.value = true
+			await dismissKeyboard()
+			if (!props.open) return
 			window.visualViewport?.addEventListener('resize', reposition)
+			await reposition() // measure & position while still hidden
+			awaitingKeyboard.value = false // reveal at correct position in same flush
 		} else {
 			document.removeEventListener('mousedown', onDocMousedown)
 			window.removeEventListener('resize', reposition)
 			window.removeEventListener('scroll', onScroll, onScrollOptions)
 			window.visualViewport?.removeEventListener('resize', reposition)
-			if (blurredEl.value?.isConnected) {
-				blurredEl.value.focus()
-			}
-			blurredEl.value = null
+			awaitingKeyboard.value = false
+			restoreKeyboard()
 		}
 	},
 )
@@ -117,6 +130,7 @@ onUnmounted(() => {
 	window.removeEventListener('resize', reposition)
 	window.removeEventListener('scroll', onScroll, onScrollOptions)
 	window.visualViewport?.removeEventListener('resize', reposition)
+	restoreKeyboard()
 })
 </script>
 
@@ -140,5 +154,10 @@ onUnmounted(() => {
 
 .toolbar-panel::-webkit-scrollbar {
 	display: none;
+}
+
+.toolbar-panel.is-hidden {
+	visibility: hidden;
+	pointer-events: none;
 }
 </style>
