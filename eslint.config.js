@@ -14,6 +14,7 @@ export default defineConfig([
 			'**/_demos',
 			'./api/{client_dist,functions}',
 			'**/.wrangler',
+			'**/components.d.ts',
 		],
 		'Global Ignores',
 	),

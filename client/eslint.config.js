@@ -38,10 +38,4 @@ export default defineConfig([
 			],
 		},
 	},
-	{
-		files: ['components.d.ts'],
-		rules: {
-			'@typescript-eslint/ban-ts-comment': 'off',
-		},
-	},
 ])
