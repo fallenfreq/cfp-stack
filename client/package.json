@@ -49,7 +49,8 @@
 		"typescript": "6.0.3",
 		"vue": "^3.5.21",
 		"vue-router": "^4.5.1",
-		"vuestic-ui": "^1.10.3"
+		"vuestic-ui": "^1.10.3",
+		"zod": "^3.25.76"
 	},
 	"devDependencies": {
 		"@types/google.maps": "^3.64.1",

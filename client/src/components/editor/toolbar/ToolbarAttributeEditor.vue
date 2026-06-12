@@ -195,14 +195,14 @@ watch(
 	border-radius: 3px;
 	border: none;
 	background: none;
-	color: rgba(var(--textPrimary) / 0.6);
+	color: rgba(var(--textPrimary) / var(--alpha-60));
 	font-size: 0.8rem;
 	cursor: pointer;
 	text-align: left;
 }
 
 .attr-add-btn:hover {
-	background: rgba(var(--textPrimary) / 0.06);
+	background: rgba(var(--textPrimary) / var(--alpha-10));
 	color: rgb(var(--textPrimary));
 }
 
@@ -213,7 +213,7 @@ watch(
 .attr-empty {
 	padding: 6px 8px;
 	font-size: 0.8rem;
-	color: rgba(var(--textPrimary) / 0.4);
+	color: rgba(var(--textPrimary) / var(--alpha-40));
 	text-align: center;
 }
 </style>

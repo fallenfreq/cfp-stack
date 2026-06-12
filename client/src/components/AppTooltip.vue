@@ -139,7 +139,7 @@ onUnmounted(() => {
 	border-radius: 4px;
 	background: rgb(var(--backgroundPrimary));
 	border: 1px solid rgb(var(--backgroundBorder));
-	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+	box-shadow: 0 2px 6px rgb(0 0 0 / var(--alpha-20));
 	color: rgb(var(--textPrimary));
 }
 </style>

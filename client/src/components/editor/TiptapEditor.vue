@@ -28,6 +28,7 @@ import {
 import { enumAttr } from '@/editor/enumAttr'
 import Div from '@/editor/extensions/divExtension'
 import { DragHandle } from '@/editor/extensions/dragHandle'
+import FontStyle from '@/editor/extensions/fontStyleMark'
 import Span from '@/editor/extensions/spanExtension'
 import TextColor from '@/editor/extensions/textColorMark'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
@@ -199,6 +200,7 @@ const editor = useEditor({
 		TableRow,
 		Span,
 		TextColor,
+		FontStyle,
 		Div,
 		Placeholder.configure({
 			includeChildren: true,
@@ -268,7 +270,7 @@ watch(editor, (newEditor) => {
 }
 
 .tiptap p.is-empty::before {
-	color: rgba(var(--textPrimary) / 0.5);
+	color: rgba(var(--textPrimary) / var(--alpha-50));
 	content: attr(data-placeholder);
 	float: left;
 	height: 0;
@@ -294,7 +296,7 @@ watch(editor, (newEditor) => {
 
 /* Styling for drop position */
 .ProseMirror-selectednode {
-	outline: 3px solid rgba(var(--primary) / 0.2);
+	outline: 3px solid rgba(var(--primary) / var(--alpha-20));
 }
 
 .node-selected {

@@ -115,7 +115,7 @@ onUnmounted(() => {
 	border: 1px solid rgb(var(--backgroundBorder));
 	border-radius: 4px;
 	padding: 4px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	box-shadow: 0 2px 8px rgb(0 0 0 / var(--alpha-20));
 	overflow-y: auto;
 	scrollbar-width: none;
 }

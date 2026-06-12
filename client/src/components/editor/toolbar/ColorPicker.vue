@@ -43,11 +43,11 @@
 				type="range"
 				class="cp-range"
 				min="0"
-				max="1"
-				step="0.01"
-				:value="alpha"
+				:max="ALPHA_STEPS.length - 1"
+				step="1"
+				:value="alphaIndex"
 				@input="onAlphaInput"
-			/>
+			>
 			<span class="cp-alpha-val">{{ Math.round(alpha * 100) }}%</span>
 		</div>
 
@@ -57,13 +57,14 @@
 				class="cp-color-input"
 				:value="freeformHex"
 				@input="onFreeformInput"
-			/>
+			>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { cssVarColor } from '@/utils/cssVarColor'
+import { ALPHA_STEPS, snapToStep } from '@/utils/editor/alphaPalette'
 import {
 	PALETTE_FAMILIES,
 	findShade,
@@ -89,6 +90,11 @@ const familyKey = ref<string>('')
 const shadeIndex = ref(0)
 const alpha = ref(1)
 const freeformHex = ref('#000000')
+
+const alphaIndex = computed(() => {
+	const idx = ALPHA_STEPS.findIndex((s) => s.value === alpha.value)
+	return idx >= 0 ? idx : ALPHA_STEPS.indexOf(snapToStep(alpha.value))
+})
 
 const activeFamily = computed<PaletteFamily | undefined>(() =>
 	PALETTE_FAMILIES.find((f) => f.key === familyKey.value),
@@ -128,13 +134,13 @@ watch(
 			if (found) {
 				familyKey.value = found.family.key
 				shadeIndex.value = found.shadeIndex
-				alpha.value = parsed.alpha
+				alpha.value = snapToStep(parsed.alpha).value
 				mode.value = 'palette'
 			}
 		} else {
 			const hex = (n: number) => n.toString(16).padStart(2, '0')
 			freeformHex.value = `#${hex(parsed.r)}${hex(parsed.g)}${hex(parsed.b)}`
-			alpha.value = parsed.a
+			alpha.value = snapToStep(parsed.a).value
 			mode.value = 'freeform'
 		}
 	},
@@ -155,7 +161,8 @@ const pickShade = (idx: number) => {
 }
 
 const onAlphaInput = (e: Event) => {
-	alpha.value = Number((e.target as HTMLInputElement).value)
+	const idx = Number((e.target as HTMLInputElement).value)
+	alpha.value = ALPHA_STEPS[idx]?.value ?? alpha.value
 	if (mode.value !== 'none') commit()
 }
 
@@ -194,7 +201,7 @@ const commit = () => {
 .cp-header {
 	min-height: 16px;
 	font-size: 0.75rem;
-	color: rgba(var(--textPrimary) / 0.7);
+	color: rgba(var(--textPrimary) / var(--alpha-70));
 }
 
 .cp-row {
@@ -211,7 +218,7 @@ const commit = () => {
 	width: 22px;
 	height: 22px;
 	border-radius: 4px;
-	border: 1px solid rgba(var(--textPrimary) / 0.15);
+	border: 1px solid rgba(var(--textPrimary) / var(--alpha-20));
 	padding: 0;
 	cursor: pointer;
 	transition: transform 0.08s;
@@ -230,8 +237,8 @@ const commit = () => {
 	background-image: linear-gradient(
 		45deg,
 		transparent 45%,
-		rgba(var(--danger) / 0.7) 45%,
-		rgba(var(--danger) / 0.7) 55%,
+		rgba(var(--danger) / var(--alpha-70)) 45%,
+		rgba(var(--danger) / var(--alpha-70)) 55%,
 		transparent 55%
 	);
 }
@@ -245,7 +252,7 @@ const commit = () => {
 .cp-label,
 .cp-alpha-val {
 	font-size: 0.7rem;
-	color: rgba(var(--textPrimary) / 0.6);
+	color: rgba(var(--textPrimary) / var(--alpha-60));
 	min-width: 24px;
 	text-align: center;
 }

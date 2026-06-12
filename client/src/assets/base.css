@@ -163,3 +163,70 @@ and using the cssVariables.js file to resolve the variables.
 
 	--focus: var(--primary);
 }
+
+/* Alpha steps — numeric suffix is percentage × 100.
+   All values used in component styles are defined here so nothing is hardcoded. */
+:root {
+	--alpha-0: 0;
+	--alpha-10: 0.1;
+	--alpha-20: 0.2;
+	--alpha-25: 0.25;
+	--alpha-30: 0.3;
+	--alpha-40: 0.4;
+	--alpha-50: 0.5;
+	--alpha-60: 0.6;
+	--alpha-70: 0.7;
+	--alpha-75: 0.75;
+	--alpha-80: 0.8;
+	--alpha-90: 0.9;
+	--alpha-100: 1;
+
+	--alpha-subtle: var(--alpha-10);
+	--alpha-muted: var(--alpha-30);
+	--alpha-half: var(--alpha-50);
+}
+
+/* Font families — add new families here; the font picker reads --font-* vars automatically. */
+:root {
+	--font-sans: 'Source Sans Pro', Inter, system-ui, sans-serif;
+	--font-serif: 'Lora', Georgia, serif;
+	--font-mono: 'Source Code Pro', 'Fira Code', monospace;
+}
+
+/* Font sizes — Tailwind-compatible names, configured independently of Tailwind.
+   Add or remove entries here; the font picker reads --text-* vars automatically. */
+:root {
+	--text-xs: 0.75rem;
+	--text-sm: 0.875rem;
+	--text-base: 1rem;
+	--text-lg: 1.125rem;
+	--text-xl: 1.25rem;
+	--text-2xl: 1.5rem;
+	--text-3xl: 1.875rem;
+	--text-4xl: 2.25rem;
+	--text-5xl: 3rem;
+	--text-6xl: 3.75rem;
+	--text-7xl: 4.5rem;
+	--text-8xl: 6rem;
+	--text-9xl: 8rem;
+}
+
+/* Line-height (leading) — add or remove entries here; the font picker reads --leading-* vars automatically. */
+:root {
+	--leading-none: 1;
+	--leading-tight: 1.25;
+	--leading-snug: 1.375;
+	--leading-normal: 1.5;
+	--leading-relaxed: 1.625;
+	--leading-loose: 2;
+}
+
+/* Letter-spacing (tracking) — add or remove entries here; the font picker reads --tracking-* vars automatically. */
+:root {
+	--tracking-tighter: -0.05em;
+	--tracking-tight: -0.025em;
+	--tracking-normal: 0em;
+	--tracking-wide: 0.025em;
+	--tracking-wider: 0.05em;
+	--tracking-widest: 0.1em;
+}

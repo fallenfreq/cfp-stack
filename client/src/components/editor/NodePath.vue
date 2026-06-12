@@ -137,7 +137,7 @@ onUnmounted(() => {
 }
 
 .path-sep {
-	color: rgba(var(--textPrimary) / 0.3);
+	color: rgba(var(--textPrimary) / var(--alpha-30));
 	padding: 0 4px;
 	user-select: none;
 }
@@ -148,7 +148,7 @@ onUnmounted(() => {
 	border-radius: 3px;
 	padding: 1px 5px;
 	cursor: pointer;
-	color: rgba(var(--textPrimary) / 0.6);
+	color: rgba(var(--textPrimary) / var(--alpha-60));
 	font-size: 0.75rem;
 	white-space: nowrap;
 	transition:
@@ -157,12 +157,12 @@ onUnmounted(() => {
 }
 .path-node:hover:not(:disabled):not(.is-active) {
 	color: rgb(var(--textPrimary));
-	background: rgba(var(--textPrimary) / 0.06);
+	background: rgba(var(--textPrimary) / var(--alpha-10));
 }
 .path-node.is-active {
 	color: rgb(var(--primary));
-	border-color: rgba(var(--primary) / 0.4);
-	background: rgba(var(--primary) / 0.08);
+	border-color: rgba(var(--primary) / var(--alpha-40));
+	background: rgba(var(--primary) / var(--alpha-10));
 }
 .path-node.is-doc {
 	cursor: default;

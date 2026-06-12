@@ -27,7 +27,7 @@ defineProps<{
 	position: fixed;
 	overflow-y: auto;
 	padding: 30px;
-	box-shadow: 0 2px 50px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 2px 50px rgb(0 0 0 / var(--alpha-50));
 	transition: transform 0.3s ease-in-out;
 	::-webkit-scrollbar {
 		display: none;

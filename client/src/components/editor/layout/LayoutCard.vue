@@ -39,7 +39,7 @@ defineProps({
 .layout-card.variant-elevated {
 	background: rgb(var(--backgroundSecondary));
 	border: 1px solid rgb(var(--backgroundBorder));
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	box-shadow: 0 4px 16px rgb(0 0 0 / var(--alpha-20));
 }
 
 .layout-card.variant-outlined {
@@ -51,7 +51,7 @@ defineProps({
 }
 
 .layout-card.variant-feature {
-	background: rgba(var(--primary) / 0.08);
-	border: 1px solid rgba(var(--primary) / 0.2);
+	background: rgba(var(--primary) / var(--alpha-10));
+	border: 1px solid rgba(var(--primary) / var(--alpha-20));
 }
 </style>

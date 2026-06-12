@@ -120,7 +120,7 @@ onBeforeUnmount(() => {
 .pulsating-circle {
 	width: 30px;
 	height: 30px;
-	background-color: rgba(var(--primary) / 0.3);
+	background-color: rgba(var(--primary) / var(--alpha-30));
 	border-radius: 50%;
 	position: absolute;
 	animation: pulsate 2s infinite ease-in-out;

@@ -91,11 +91,11 @@ const select = (item: NodePickerItem) => {
 }
 
 .picker-item:hover {
-	background: rgba(var(--textPrimary) / 0.08);
+	background: rgba(var(--textPrimary) / var(--alpha-10));
 }
 
 .picker-item.is-active {
-	background: rgba(var(--primary) / 0.12);
+	background: rgba(var(--primary) / var(--alpha-10));
 	color: rgb(var(--primary));
 }
 

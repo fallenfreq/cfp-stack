@@ -1,5 +1,6 @@
 import ToolbarAttributeEditor from '@/components/editor/toolbar/ToolbarAttributeEditor.vue'
 import ToolbarColorControl from '@/components/editor/toolbar/ToolbarColorControl.vue'
+import ToolbarFontControl from '@/components/editor/toolbar/ToolbarFontControl.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import ToolbarImageUrlControl from '@/components/editor/toolbar/ToolbarImageUrlControl.vue'
 import ToolbarLinkControl from '@/components/editor/toolbar/ToolbarLinkControl.vue'
@@ -832,6 +833,23 @@ export const defaultToolbarItems = [
 		},
 		ToolbarColorControl,
 		{ tooltip: 'Text color' },
+	),
+
+	// --- Font family / size (mark or node style) ---
+	toolbarCustomItem(
+		'font-style',
+		(editor, ctx) => {
+			if (useEditorStore().isCodeView) return false
+			if (useMultiSelectStore().positions.length > 1) return false
+			if (
+				editor.state.selection.$from.parent.type.isTextblock
+				&& editor.state.selection.$from.parent.type.name !== 'codeBlock'
+			)
+				return true
+			return ctx.activeDepth > 0 && !ctx.activeNode.type.isLeaf
+		},
+		ToolbarFontControl,
+		{ tooltip: 'Font' },
 	),
 
 	// --- Node attribute editor ---

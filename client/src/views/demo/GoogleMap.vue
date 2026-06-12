@@ -438,7 +438,7 @@ Tags</pre>
 	font-size: 1rem;
 	padding: 0.3rem;
 	border-radius: 4rem;
-	background-color: rgba(var(--backgroundPrimary) / 0.5);
+	background-color: rgba(var(--backgroundPrimary) / var(--alpha-50));
 	transition: background-color 0.3s ease;
 }
 
@@ -448,7 +448,7 @@ Tags</pre>
 
 .tag-add-button:hover,
 .tag-delete-toggle:hover {
-	background-color: rgba(var(--backgroundPrimary) / 0.2);
+	background-color: rgba(var(--backgroundPrimary) / var(--alpha-20));
 }
 
 pre {

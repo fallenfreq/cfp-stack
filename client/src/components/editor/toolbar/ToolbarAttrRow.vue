@@ -30,7 +30,7 @@
 			class="attr-checkbox"
 			:checked="!!value"
 			@change="emit('update', attrKey, ($event.target as HTMLInputElement).checked)"
-		/>
+		>
 		<input
 			v-else-if="typeof specDefault === 'number'"
 			ref="inputEl"
@@ -41,7 +41,7 @@
 				emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
 			"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		/>
+		>
 		<input
 			v-else
 			ref="inputEl"
@@ -51,7 +51,7 @@
 			@input="onTextInput(($event.target as HTMLInputElement).value)"
 			@blur="onTextBlur(($event.target as HTMLInputElement).value)"
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		/>
+		>
 
 		<span v-if="isAtDefault" class="attr-default-badge">default</span>
 
@@ -127,7 +127,7 @@ onUnmounted(() => {
 
 .attr-key {
 	font-size: 0.75rem;
-	color: rgba(var(--textPrimary) / 0.7);
+	color: rgba(var(--textPrimary) / var(--alpha-70));
 	min-width: 36px;
 	flex-shrink: 0;
 }
@@ -162,7 +162,7 @@ onUnmounted(() => {
 
 .attr-default-badge {
 	font-size: 0.65rem;
-	color: rgba(var(--textPrimary) / 0.4);
+	color: rgba(var(--textPrimary) / var(--alpha-40));
 	flex-shrink: 0;
 	white-space: nowrap;
 }
