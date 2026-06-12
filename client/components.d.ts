@@ -49,6 +49,7 @@ declare module 'vue' {
     ToolbarAttrRow: typeof import('./src/components/editor/toolbar/ToolbarAttrRow.vue')['default']
     ToolbarButton: typeof import('./src/components/editor/toolbar/ToolbarButton.vue')['default']
     ToolbarColorControl: typeof import('./src/components/editor/toolbar/ToolbarColorControl.vue')['default']
+    ToolbarCornersControl: typeof import('./src/components/editor/toolbar/ToolbarCornersControl.vue')['default']
     ToolbarFontControl: typeof import('./src/components/editor/toolbar/ToolbarFontControl.vue')['default']
     ToolbarIcon: typeof import('./src/components/editor/toolbar/ToolbarIcon.vue')['default']
     ToolbarImageUrlControl: typeof import('./src/components/editor/toolbar/ToolbarImageUrlControl.vue')['default']

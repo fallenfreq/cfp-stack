@@ -1,5 +1,6 @@
 import ToolbarAttributeEditor from '@/components/editor/toolbar/ToolbarAttributeEditor.vue'
 import ToolbarColorControl from '@/components/editor/toolbar/ToolbarColorControl.vue'
+import ToolbarCornersControl from '@/components/editor/toolbar/ToolbarCornersControl.vue'
 import ToolbarFontControl from '@/components/editor/toolbar/ToolbarFontControl.vue'
 import { useEditorStore } from '@/stores/editorStore'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
@@ -40,6 +41,17 @@ export const styleItems = [
 		},
 		ToolbarFontControl,
 		{ tooltip: 'Font' },
+	),
+
+	// --- Border-radius corners ---
+	toolbarCustomItem(
+		'corners',
+		(_e, ctx) =>
+			ctx.activeDepth > 0
+			&& !useEditorStore().isCodeView
+			&& useMultiSelectStore().positions.length <= 1,
+		ToolbarCornersControl,
+		{ tooltip: 'Corners' },
 	),
 
 	// --- Node attribute editor ---

@@ -47,7 +47,7 @@ defineProps({
 	margin-bottom: 0;
 }
 
-/* breakpoint values match --xs/--sm/--md in src/assets/base.css */
+/* Pixel values must match --breakpoint-* in base.css — var() is not valid in @container conditions. */
 :global(.layout-split.collapse-xs > [data-node-view-content]) {
 	@container (max-width: 380px) {
 		grid-template-columns: 1fr;

@@ -13,41 +13,18 @@ export interface FontStyleAttrs {
 	letterSpacing: string | null
 }
 
-const SIZE_ORDER = [
-	'xs',
-	'sm',
-	'base',
-	'lg',
-	'xl',
-	'2xl',
-	'3xl',
-	'4xl',
-	'5xl',
-	'6xl',
-	'7xl',
-	'8xl',
-	'9xl',
-]
-const LEADING_ORDER = ['none', 'tight', 'snug', 'normal', 'relaxed', 'loose']
-const TRACKING_ORDER = ['tighter', 'tight', 'normal', 'wide', 'wider', 'widest']
-
 const entries = Object.entries(cssVariables.root)
 
-function buildPalette(prefix: string, order: string[]): FontOption[] {
+function buildPalette(prefix: string): FontOption[] {
 	return entries
 		.filter(([k]) => k.startsWith(prefix))
 		.map(([cssVar, value]) => ({ cssVar, value, label: cssVar.slice(prefix.length) }))
-		.sort((a, b) => {
-			const ai = order.indexOf(a.label)
-			const bi = order.indexOf(b.label)
-			return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
-		})
 }
 
-export const FONT_FAMILIES = buildPalette('--font-', [])
-export const FONT_SIZES = buildPalette('--text-', SIZE_ORDER)
-export const LEADING_OPTIONS = buildPalette('--leading-', LEADING_ORDER)
-export const TRACKING_OPTIONS = buildPalette('--tracking-', TRACKING_ORDER)
+export const FONT_FAMILIES = buildPalette('--font-')
+export const FONT_SIZES = buildPalette('--text-')
+export const LEADING_OPTIONS = buildPalette('--leading-')
+export const TRACKING_OPTIONS = buildPalette('--tracking-')
 
 // Auto-pair: when a font size is picked, this leading is applied automatically.
 // User can override with the leading chips afterwards.

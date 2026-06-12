@@ -1,4 +1,5 @@
-import { editorComponents, RADIUS_OPTIONS } from '@/config/editor/editorComponents'
+import { editorComponents } from '@/config/editor/editorComponents'
+import { RADIUS_OPTIONS } from '@/config/editor/layoutTokens'
 import { dataAttr } from '@/editor/enumAttr'
 import { Extension } from '@tiptap/vue-3'
 const componentNodeTypes = Object.keys(editorComponents)

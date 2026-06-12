@@ -259,3 +259,13 @@ and using the cssVariables.js file to resolve the variables.
 	--shadow-lg: 0 4px 16px;
 	--shadow-xl: 0 8px 24px;
 }
+
+/* Container breakpoints — layout module. LayoutColumns and LayoutSplit collapse to
+   single-column below these inline-size thresholds. These are the source of truth;
+   the @container rules in each component must match (var() is not valid inside
+   @container conditions, so the values cannot be referenced directly). */
+:root {
+	--breakpoint-xs: 380px;
+	--breakpoint-sm: 640px;
+	--breakpoint-md: 768px;
+}

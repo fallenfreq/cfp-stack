@@ -1,18 +1,18 @@
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
-import type { NodePos } from '@/utils/editor/editorUtils'
 import { TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
+import { useToolbarNodeControl } from './useToolbarNodeControl'
 
 export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarItemContext }) {
-	const open = ref(false)
-	const buttonEl = ref<HTMLElement | null>(null)
-	const capturedPos = ref<NodePos | null>(null)
+	const { open, buttonEl, capturedPos, onClose: nodeClose } = useToolbarNodeControl(props)
+	// Note: we don't use nodeControl.toggle — the mark variant also captures savedRange.
+	// The watcher inside nodeControl calls nodeClose (not our wrapped onClose), so
+	// savedRange is not cleared on a watcher-triggered close. This is harmless since
+	// commitMark is never called after the panel closes.
+
 	const savedRange = ref<{ from: number; to: number } | null>(null)
 
-	// Mark mode: text range selected in an inline-content non-codeBlock.
-	// Node mode: block node active, no qualifying text selection.
-	// Touch props.context so Vue re-runs this on every toolbar tick (transactions).
 	const mode = computed<'mark' | 'node'>(() => {
 		void props.context
 		const sel = props.editor.state.selection
@@ -38,15 +38,10 @@ export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarI
 	}
 
 	const onClose = () => {
-		open.value = false
-		nextTick(() => {
-			capturedPos.value = null
-			savedRange.value = null
-		})
+		nodeClose()
+		savedRange.value = null
 	}
 
-	// Remove the named mark from the saved range, then re-add it with attrs if provided.
-	// Pass attrs=null to clear the mark entirely.
 	const commitMark = (markName: string, attrs: Record<string, unknown> | null) => {
 		const range = savedRange.value
 		if (!range) return
@@ -58,14 +53,6 @@ export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarI
 		tr = tr.setSelection(TextSelection.create(tr.doc, from, to))
 		props.editor.view.dispatch(tr)
 	}
-
-	watch(
-		() => props.context.nodePos,
-		(nodePos) => {
-			if (!open.value || capturedPos.value === null) return
-			if (nodePos !== capturedPos.value) onClose()
-		},
-	)
 
 	return { open, buttonEl, capturedPos, mode, toggle, onClose, commitMark }
 }
