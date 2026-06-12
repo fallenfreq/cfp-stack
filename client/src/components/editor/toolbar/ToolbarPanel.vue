@@ -20,6 +20,7 @@ const emit = defineEmits<{ close: [] }>()
 
 const panelEl = ref<HTMLElement | null>(null)
 const panelStyle = ref<CSSProperties>({})
+const blurredEl = ref<HTMLElement | null>(null)
 
 const MARGIN = 4
 
@@ -47,8 +48,12 @@ const reposition = async () => {
 	// Vertical: prefer below the anchor; flip above when room below is short
 	// and room above is greater. Cap max-height to whatever room is available
 	// in the chosen direction.
+	// Use the nodepath's bottom edge as the effective top boundary so a
+	// flipped-above panel doesn't slide under the sticky breadcrumb bar.
+	const nodepathEl = document.querySelector('.node-path')
+	const topBoundary = nodepathEl ? nodepathEl.getBoundingClientRect().bottom : 0
 	const spaceBelow = viewportHeight - rect.bottom - MARGIN * 2
-	const spaceAbove = rect.top - MARGIN * 2
+	const spaceAbove = rect.top - topBoundary - MARGIN * 2
 	const flipAbove = spaceBelow < panelHeight && spaceAbove > spaceBelow
 	const maxHeight = Math.max(0, flipAbove ? spaceAbove : spaceBelow)
 
@@ -80,6 +85,15 @@ watch(
 	() => props.open,
 	(isOpen) => {
 		if (isOpen) {
+			// Dismiss the virtual keyboard on mobile — panel doesn't use text
+			// input, and keyboard-up viewport shrinks the available space.
+			// Capture the focused element so focus can be restored on close.
+			// ProseMirror persists selection in state across blur, so re-focusing
+			// the editor DOM node is enough to restore the cursor position.
+			if (navigator.maxTouchPoints > 0 && document.activeElement instanceof HTMLElement) {
+				blurredEl.value = document.activeElement
+				document.activeElement.blur()
+			}
 			reposition()
 			document.addEventListener('mousedown', onDocMousedown)
 			window.addEventListener('resize', reposition)
@@ -90,6 +104,10 @@ watch(
 			window.removeEventListener('resize', reposition)
 			window.removeEventListener('scroll', onScroll, onScrollOptions)
 			window.visualViewport?.removeEventListener('resize', reposition)
+			if (blurredEl.value?.isConnected) {
+				blurredEl.value.focus()
+			}
+			blurredEl.value = null
 		}
 	},
 )
