@@ -10,7 +10,7 @@
 				class="cp-chip cp-chip-clear"
 				title="No color"
 				@mousedown.prevent
-				@click="$emit('commit', null)"
+				@click="$emit('remove')"
 			/>
 			<button
 				v-for="family in PALETTE_FAMILIES"
@@ -83,7 +83,7 @@ const props = withDefaults(
 	{ allowAlpha: true, showRemove: true },
 )
 
-const emit = defineEmits<{ commit: [value: string | null] }>()
+const emit = defineEmits<{ commit: [value: string]; remove: [] }>()
 
 const mode = ref<'palette' | 'freeform' | 'none'>('none')
 const familyKey = ref<string>('')

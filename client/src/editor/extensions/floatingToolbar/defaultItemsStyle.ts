@@ -2,6 +2,7 @@ import ToolbarAttributeEditor from '@/components/editor/toolbar/ToolbarAttribute
 import ToolbarColorControl from '@/components/editor/toolbar/ToolbarColorControl.vue'
 import ToolbarCornersControl from '@/components/editor/toolbar/ToolbarCornersControl.vue'
 import ToolbarFontControl from '@/components/editor/toolbar/ToolbarFontControl.vue'
+import ToolbarShadowControl from '@/components/editor/toolbar/ToolbarShadowControl.vue'
 import { useEditorStore } from '@/stores/editorStore'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import { toolbarCustomItem } from './toolbarItemFactory'
@@ -52,6 +53,17 @@ export const styleItems = [
 			&& useMultiSelectStore().positions.length <= 1,
 		ToolbarCornersControl,
 		{ tooltip: 'Corners' },
+	),
+
+	// --- Box shadow ---
+	toolbarCustomItem(
+		'shadow',
+		(_e, ctx) =>
+			ctx.activeDepth > 0
+			&& !useEditorStore().isCodeView
+			&& useMultiSelectStore().positions.length <= 1,
+		ToolbarShadowControl,
+		{ tooltip: 'Shadow' },
 	),
 
 	// --- Node attribute editor ---

@@ -58,6 +58,7 @@ declare module 'vue' {
     ToolbarPanel: typeof import('./src/components/editor/toolbar/ToolbarPanel.vue')['default']
     ToolbarRevealInput: typeof import('./src/components/editor/toolbar/ToolbarRevealInput.vue')['default']
     ToolbarScrollHint: typeof import('./src/components/editor/ToolbarScrollHint.vue')['default']
+    ToolbarShadowControl: typeof import('./src/components/editor/toolbar/ToolbarShadowControl.vue')['default']
     ToolbarYouTubeUrlControl: typeof import('./src/components/editor/toolbar/ToolbarYouTubeUrlControl.vue')['default']
     TriangleShape: typeof import('./src/components/shapes/TriangleShape.vue')['default']
     VuesticNavBar: typeof import('./src/components/VuesticNavBar.vue')['default']

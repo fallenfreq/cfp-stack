@@ -51,22 +51,29 @@ export type ParsedColor =
 	| { kind: 'rgba'; r: number; g: number; b: number; a: number }
 	| null
 
+// Resolves an alpha string that is either a plain number ("0.2") or a CSS var
+// reference ("var(--alpha-20)") to a 0–1 number.
+const resolveAlpha = (raw: string | undefined): number => {
+	if (raw === undefined) return 1
+	const varName = raw.match(/^var\((--[\w-]+)\)$/)?.[1]
+	if (varName) {
+		const n = Number(cssVariables.root[varName])
+		return isNaN(n) ? 1 : n
+	}
+	return Number(raw)
+}
+
 // Recognises the shapes cssVarColor / formatRgba emit. Anything else returns null.
 export const parseStoredValue = (value: string | null | undefined): ParsedColor => {
 	const trimmed = value?.trim()
 	if (!trimmed) return null
 
 	// rgb(var(--name[, R G B])) | rgba(var(--name[, R G B]) / alpha)
+	// alpha may be a plain number or a CSS var reference (e.g. var(--alpha-20))
 	const rgbVar = trimmed.match(
-		/^rgba?\(\s*var\(\s*(--[\w-]+)\s*(?:,\s*[^)]+)?\)\s*(?:\/\s*([\d.]+))?\s*\)$/i,
+		/^rgba?\(\s*var\(\s*(--[\w-]+)\s*(?:,\s*[^)]+)?\)\s*(?:\/\s*([\d.]+|var\(--[\w-]+\)))?\s*\)$/i,
 	)
-	if (rgbVar) {
-		return {
-			kind: 'token',
-			cssVar: rgbVar[1]!,
-			alpha: rgbVar[2] === undefined ? 1 : Number(rgbVar[2]),
-		}
-	}
+	if (rgbVar) return { kind: 'token', cssVar: rgbVar[1]!, alpha: resolveAlpha(rgbVar[2]) }
 
 	// rgb(r, g, b) | rgba(r, g, b, a) | rgb(r g b / a)
 	const rgba = trimmed.match(

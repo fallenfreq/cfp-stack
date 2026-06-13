@@ -11,6 +11,8 @@ export const RADIUS: Record<string, string> = Object.fromEntries(
 	RADIUS_OPTIONS.map((k) => [k, `var(--radius-${k})`]),
 )
 
+export const SHADOW_OPTIONS = extractTokens('--shadow-').filter((k) => k !== 'opacity')
+
 export const SPACING_OPTIONS = extractTokens('--spacing-')
 export const SPACING: Record<string, string> = Object.fromEntries(
 	SPACING_OPTIONS.map((k) => [k, `var(--spacing-${k})`]),

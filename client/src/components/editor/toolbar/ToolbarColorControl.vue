@@ -4,7 +4,7 @@
 			<span class="color-swatch" :style="swatchStyle" />
 		</ToolbarButton>
 		<ToolbarPanel :open="open" :anchor-el="buttonEl" align="right" @close="onClose">
-			<ColorPicker :value="currentColor" @commit="onCommit" />
+			<ColorPicker :value="currentColor" @commit="onCommit" @remove="onRemove" />
 		</ToolbarPanel>
 	</div>
 </template>
@@ -44,7 +44,7 @@ const swatchStyle = computed<CSSProperties>(() =>
 		: { backgroundImage: NO_COLOR_STRIPE },
 )
 
-const onCommit = (value: string | null) => {
+const applyColor = (value: string | null) => {
 	if (mode.value === 'mark') {
 		commitMark('textColor', value ? { color: value } : null)
 		return
@@ -60,6 +60,9 @@ const onCommit = (value: string | null) => {
 		}),
 	)
 }
+
+const onCommit = (value: string) => applyColor(value)
+const onRemove = () => applyColor(null)
 </script>
 
 <style scoped>
