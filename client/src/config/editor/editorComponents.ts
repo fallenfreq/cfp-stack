@@ -4,7 +4,6 @@ import LayoutColumns from '@/components/editor/layout/LayoutColumns.vue'
 import LayoutSection from '@/components/editor/layout/LayoutSection.vue'
 import LayoutSplit from '@/components/editor/layout/LayoutSplit.vue'
 import TiptapTest from '@/components/editor/TiptapTest.vue'
-import { COLLAPSE_OPTIONS, RADIUS_OPTIONS, SPACING_OPTIONS } from '@/config/editor/layoutTokens'
 import { enumAttr } from '@/editor/enumAttr'
 import { type Component } from 'vue'
 import { VaButton } from 'vuestic-ui'
@@ -50,8 +49,6 @@ const editorComponents = {
 	LayoutSection: {
 		component: LayoutSection,
 		props: {
-			gap: enumAttr('md', SPACING_OPTIONS),
-			padding: enumAttr('none', SPACING_OPTIONS),
 			align: enumAttr('stretch', ALIGN_OPTIONS),
 		},
 		content: 'block*',
@@ -60,8 +57,6 @@ const editorComponents = {
 		component: LayoutColumns,
 		props: {
 			columns: enumAttr('2', ['2', '3', '4'] as const),
-			gap: enumAttr('md', SPACING_OPTIONS),
-			collapse: enumAttr('sm', COLLAPSE_OPTIONS),
 			align: enumAttr('stretch', ALIGN_OPTIONS),
 		},
 		content: 'block*',
@@ -70,8 +65,6 @@ const editorComponents = {
 		component: LayoutSplit,
 		props: {
 			split: enumAttr('1/3', ['1/4', '1/3', '2/5', '1/2', '3/5', '2/3', '3/4'] as const),
-			gap: enumAttr('md', SPACING_OPTIONS),
-			collapse: enumAttr('sm', COLLAPSE_OPTIONS),
 			align: enumAttr('stretch', ALIGN_OPTIONS),
 		},
 		content: 'block*',
@@ -80,15 +73,12 @@ const editorComponents = {
 		component: LayoutCenter,
 		props: {
 			maxWidth: enumAttr('lg', ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', 'full'] as const),
-			padding: enumAttr('lg', SPACING_OPTIONS),
-			gap: enumAttr('md', SPACING_OPTIONS),
 		},
 		content: 'block*',
 	},
 	LayoutCard: {
 		component: LayoutCard,
 		props: {
-			padding: enumAttr('md', SPACING_OPTIONS),
 			variant: enumAttr('elevated', [
 				'elevated',
 				'outlined',
@@ -96,7 +86,6 @@ const editorComponents = {
 				'plain',
 				'feature',
 			] as const),
-			radius: enumAttr('md', RADIUS_OPTIONS),
 		},
 		content: 'block*',
 	},

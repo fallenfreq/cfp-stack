@@ -1,0 +1,675 @@
+/* ========================================================================
+   sf-tokens.css — Design token utility classes
+   Naming rule: sf- + CSS variable name (minus --)
+     Hyphens  = scale / palette tokens  (--radius-md  → sf-radius-md)
+     Underscore = semantic tokens        (--bg_primary → sf-bg_primary)
+   ======================================================================== */
+
+/* ── Radius ──────────────────────────────────────────────────────────── */
+
+.sf-radius-none {
+	border-radius: var(--radius-none);
+}
+.sf-radius-sm {
+	border-radius: var(--radius-sm);
+}
+.sf-radius-md {
+	border-radius: var(--radius-md);
+}
+.sf-radius-lg {
+	border-radius: var(--radius-lg);
+}
+
+/* ── Shadow ──────────────────────────────────────────────────────────── */
+/* --sf-shadow-color is set via inline style; default falls back to shadow token */
+
+.sf-shadow-sm {
+	box-shadow: var(--shadow-sm) var(--sf-shadow-color, rgb(var(--shadow) / var(--alpha-20)));
+}
+.sf-shadow-md {
+	box-shadow: var(--shadow-md) var(--sf-shadow-color, rgb(var(--shadow) / var(--alpha-20)));
+}
+.sf-shadow-lg {
+	box-shadow: var(--shadow-lg) var(--sf-shadow-color, rgb(var(--shadow) / var(--alpha-20)));
+}
+.sf-shadow-xl {
+	box-shadow: var(--shadow-xl) var(--sf-shadow-color, rgb(var(--shadow) / var(--alpha-20)));
+}
+
+/* ── Spacing ─────────────────────────────────────────────────────────── */
+/* Classes set only the CSS custom property; layout components read it    */
+/* via var(--sf-gap) / var(--sf-padding) in their :global content rule.  */
+/*                                                                        */
+/* Reset on every NodeViewWrapper so outer layout nodes cannot inherit    */
+/* their spacing into nested nodes that have no spacing class.           */
+/* Specificity (0,1,0) matches the class rules below — later rule wins,  */
+/* so a present class overrides the reset; absent class gets 0.          */
+[data-node-view-wrapper] {
+	--sf-gap: 0;
+	--sf-padding: 0;
+}
+
+.sf-gap-none {
+	--sf-gap: var(--spacing-none);
+}
+.sf-gap-xs {
+	--sf-gap: var(--spacing-xs);
+}
+.sf-gap-sm {
+	--sf-gap: var(--spacing-sm);
+}
+.sf-gap-md {
+	--sf-gap: var(--spacing-md);
+}
+.sf-gap-lg {
+	--sf-gap: var(--spacing-lg);
+}
+.sf-gap-xl {
+	--sf-gap: var(--spacing-xl);
+}
+
+.sf-padding-none {
+	--sf-padding: var(--spacing-none);
+}
+.sf-padding-xs {
+	--sf-padding: var(--spacing-xs);
+}
+.sf-padding-sm {
+	--sf-padding: var(--spacing-sm);
+}
+.sf-padding-md {
+	--sf-padding: var(--spacing-md);
+}
+.sf-padding-lg {
+	--sf-padding: var(--spacing-lg);
+}
+.sf-padding-xl {
+	--sf-padding: var(--spacing-xl);
+}
+
+/* ── Typography ──────────────────────────────────────────────────────── */
+
+.sf-font-sans {
+	font-family: var(--font-sans);
+}
+.sf-font-serif {
+	font-family: var(--font-serif);
+}
+.sf-font-mono {
+	font-family: var(--font-mono);
+}
+
+.sf-text-xs {
+	font-size: var(--text-xs);
+}
+.sf-text-sm {
+	font-size: var(--text-sm);
+}
+.sf-text-base {
+	font-size: var(--text-base);
+}
+.sf-text-lg {
+	font-size: var(--text-lg);
+}
+.sf-text-xl {
+	font-size: var(--text-xl);
+}
+.sf-text-2xl {
+	font-size: var(--text-2xl);
+}
+.sf-text-3xl {
+	font-size: var(--text-3xl);
+}
+.sf-text-4xl {
+	font-size: var(--text-4xl);
+}
+.sf-text-5xl {
+	font-size: var(--text-5xl);
+}
+.sf-text-6xl {
+	font-size: var(--text-6xl);
+}
+.sf-text-7xl {
+	font-size: var(--text-7xl);
+}
+.sf-text-8xl {
+	font-size: var(--text-8xl);
+}
+.sf-text-9xl {
+	font-size: var(--text-9xl);
+}
+
+.sf-leading-none {
+	line-height: var(--leading-none);
+}
+.sf-leading-tight {
+	line-height: var(--leading-tight);
+}
+.sf-leading-snug {
+	line-height: var(--leading-snug);
+}
+.sf-leading-normal {
+	line-height: var(--leading-normal);
+}
+.sf-leading-relaxed {
+	line-height: var(--leading-relaxed);
+}
+.sf-leading-loose {
+	line-height: var(--leading-loose);
+}
+
+.sf-tracking-tighter {
+	letter-spacing: var(--tracking-tighter);
+}
+.sf-tracking-tight {
+	letter-spacing: var(--tracking-tight);
+}
+.sf-tracking-normal {
+	letter-spacing: var(--tracking-normal);
+}
+.sf-tracking-wide {
+	letter-spacing: var(--tracking-wide);
+}
+.sf-tracking-wider {
+	letter-spacing: var(--tracking-wider);
+}
+.sf-tracking-widest {
+	letter-spacing: var(--tracking-widest);
+}
+
+/* ── Palette backgrounds ─────────────────────────────────────────────── */
+/* Each class resets --sf-bg-alpha: 1 so alpha only applies when an
+   sf-bg-alpha-* class is co-present on the same element.               */
+
+.sf-bg-primary {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-50 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-50) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-100 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-100) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-200 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-200) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-300 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-300) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-400 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-400) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-500 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-500) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-600 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-600) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-700 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-700) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-800 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-800) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-900 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-900) / var(--sf-bg-alpha));
+}
+.sf-bg-primary-950 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--primary-950) / var(--sf-bg-alpha));
+}
+
+.sf-bg-surface-0 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-0) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-50 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-50) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-100 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-100) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-200 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-200) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-300 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-300) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-400 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-400) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-500 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-500) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-600 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-600) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-700 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-700) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-800 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-800) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-900 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-900) / var(--sf-bg-alpha));
+}
+.sf-bg-surface-950 {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--surface-950) / var(--sf-bg-alpha));
+}
+
+.sf-bg-secondary {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--secondary) / var(--sf-bg-alpha));
+}
+.sf-bg-success {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--success) / var(--sf-bg-alpha));
+}
+.sf-bg-info {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--info) / var(--sf-bg-alpha));
+}
+.sf-bg-danger {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--danger) / var(--sf-bg-alpha));
+}
+.sf-bg-warning {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--warning) / var(--sf-bg-alpha));
+}
+.sf-bg-shadow {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--shadow) / var(--sf-bg-alpha));
+}
+.sf-bg-focus {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--focus) / var(--sf-bg-alpha));
+}
+
+/* ── Palette foregrounds ─────────────────────────────────────────────── */
+
+.sf-color-primary {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary) / var(--sf-color-alpha));
+}
+.sf-color-primary-50 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-50) / var(--sf-color-alpha));
+}
+.sf-color-primary-100 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-100) / var(--sf-color-alpha));
+}
+.sf-color-primary-200 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-200) / var(--sf-color-alpha));
+}
+.sf-color-primary-300 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-300) / var(--sf-color-alpha));
+}
+.sf-color-primary-400 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-400) / var(--sf-color-alpha));
+}
+.sf-color-primary-500 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-500) / var(--sf-color-alpha));
+}
+.sf-color-primary-600 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-600) / var(--sf-color-alpha));
+}
+.sf-color-primary-700 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-700) / var(--sf-color-alpha));
+}
+.sf-color-primary-800 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-800) / var(--sf-color-alpha));
+}
+.sf-color-primary-900 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-900) / var(--sf-color-alpha));
+}
+.sf-color-primary-950 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--primary-950) / var(--sf-color-alpha));
+}
+
+.sf-color-surface-0 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-0) / var(--sf-color-alpha));
+}
+.sf-color-surface-50 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-50) / var(--sf-color-alpha));
+}
+.sf-color-surface-100 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-100) / var(--sf-color-alpha));
+}
+.sf-color-surface-200 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-200) / var(--sf-color-alpha));
+}
+.sf-color-surface-300 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-300) / var(--sf-color-alpha));
+}
+.sf-color-surface-400 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-400) / var(--sf-color-alpha));
+}
+.sf-color-surface-500 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-500) / var(--sf-color-alpha));
+}
+.sf-color-surface-600 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-600) / var(--sf-color-alpha));
+}
+.sf-color-surface-700 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-700) / var(--sf-color-alpha));
+}
+.sf-color-surface-800 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-800) / var(--sf-color-alpha));
+}
+.sf-color-surface-900 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-900) / var(--sf-color-alpha));
+}
+.sf-color-surface-950 {
+	--sf-color-alpha: 1;
+	color: rgb(var(--surface-950) / var(--sf-color-alpha));
+}
+
+.sf-color-secondary {
+	--sf-color-alpha: 1;
+	color: rgb(var(--secondary) / var(--sf-color-alpha));
+}
+.sf-color-success {
+	--sf-color-alpha: 1;
+	color: rgb(var(--success) / var(--sf-color-alpha));
+}
+.sf-color-info {
+	--sf-color-alpha: 1;
+	color: rgb(var(--info) / var(--sf-color-alpha));
+}
+.sf-color-danger {
+	--sf-color-alpha: 1;
+	color: rgb(var(--danger) / var(--sf-color-alpha));
+}
+.sf-color-warning {
+	--sf-color-alpha: 1;
+	color: rgb(var(--warning) / var(--sf-color-alpha));
+}
+.sf-color-shadow {
+	--sf-color-alpha: 1;
+	color: rgb(var(--shadow) / var(--sf-color-alpha));
+}
+.sf-color-focus {
+	--sf-color-alpha: 1;
+	color: rgb(var(--focus) / var(--sf-color-alpha));
+}
+
+/* ── Semantic colours ────────────────────────────────────────────────── */
+/* These update correctly when the theme switches (e.g. dark mode).      */
+
+.sf-bg_primary {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--bg_primary) / var(--sf-bg-alpha));
+}
+.sf-bg_secondary {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--bg_secondary) / var(--sf-bg-alpha));
+}
+.sf-bg_element {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--bg_element) / var(--sf-bg-alpha));
+}
+
+.sf-text_primary {
+	--sf-color-alpha: 1;
+	color: rgb(var(--text_primary) / var(--sf-color-alpha));
+}
+.sf-text_inverted {
+	--sf-color-alpha: 1;
+	color: rgb(var(--text_inverted) / var(--sf-color-alpha));
+}
+
+.sf-border_color {
+	--sf-border-alpha: 1;
+	border-color: rgb(var(--border_color) / var(--sf-border-alpha));
+}
+
+/* ── Cross-property semantic colours ────────────────────────────────── */
+/* For cases where a semantic variable is applied to a non-canonical     */
+/* property (e.g. text_primary used as a background, bg_primary as text).*/
+
+.sf-color-text_primary {
+	--sf-color-alpha: 1;
+	color: rgb(var(--text_primary) / var(--sf-color-alpha));
+}
+.sf-color-text_inverted {
+	--sf-color-alpha: 1;
+	color: rgb(var(--text_inverted) / var(--sf-color-alpha));
+}
+.sf-color-bg_primary {
+	--sf-color-alpha: 1;
+	color: rgb(var(--bg_primary) / var(--sf-color-alpha));
+}
+.sf-color-bg_secondary {
+	--sf-color-alpha: 1;
+	color: rgb(var(--bg_secondary) / var(--sf-color-alpha));
+}
+.sf-color-bg_element {
+	--sf-color-alpha: 1;
+	color: rgb(var(--bg_element) / var(--sf-color-alpha));
+}
+.sf-color-border_color {
+	--sf-color-alpha: 1;
+	color: rgb(var(--border_color) / var(--sf-color-alpha));
+}
+
+.sf-bg-text_primary {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--text_primary) / var(--sf-bg-alpha));
+}
+.sf-bg-text_inverted {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--text_inverted) / var(--sf-bg-alpha));
+}
+.sf-bg-bg_primary {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--bg_primary) / var(--sf-bg-alpha));
+}
+.sf-bg-bg_secondary {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--bg_secondary) / var(--sf-bg-alpha));
+}
+.sf-bg-bg_element {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--bg_element) / var(--sf-bg-alpha));
+}
+.sf-bg-border_color {
+	--sf-bg-alpha: 1;
+	background-color: rgb(var(--border_color) / var(--sf-bg-alpha));
+}
+
+/* ── Alpha — MUST come after all colour class sections ───────────────── */
+/* Alpha classes override the --sf-*-alpha reset that every colour class
+   applies to itself. Same-specificity → last declaration wins.
+   On child elements, the child's own colour class resets alpha again,
+   preventing parent alpha from bleeding in.                             */
+
+.sf-bg-alpha-0 {
+	--sf-bg-alpha: var(--alpha-0);
+}
+.sf-bg-alpha-10 {
+	--sf-bg-alpha: var(--alpha-10);
+}
+.sf-bg-alpha-20 {
+	--sf-bg-alpha: var(--alpha-20);
+}
+.sf-bg-alpha-25 {
+	--sf-bg-alpha: var(--alpha-25);
+}
+.sf-bg-alpha-30 {
+	--sf-bg-alpha: var(--alpha-30);
+}
+.sf-bg-alpha-40 {
+	--sf-bg-alpha: var(--alpha-40);
+}
+.sf-bg-alpha-50 {
+	--sf-bg-alpha: var(--alpha-50);
+}
+.sf-bg-alpha-60 {
+	--sf-bg-alpha: var(--alpha-60);
+}
+.sf-bg-alpha-70 {
+	--sf-bg-alpha: var(--alpha-70);
+}
+.sf-bg-alpha-75 {
+	--sf-bg-alpha: var(--alpha-75);
+}
+.sf-bg-alpha-80 {
+	--sf-bg-alpha: var(--alpha-80);
+}
+.sf-bg-alpha-90 {
+	--sf-bg-alpha: var(--alpha-90);
+}
+.sf-bg-alpha-100 {
+	--sf-bg-alpha: var(--alpha-100);
+}
+.sf-bg-alpha-subtle {
+	--sf-bg-alpha: var(--alpha-subtle);
+}
+.sf-bg-alpha-muted {
+	--sf-bg-alpha: var(--alpha-muted);
+}
+.sf-bg-alpha-half {
+	--sf-bg-alpha: var(--alpha-half);
+}
+
+.sf-color-alpha-0 {
+	--sf-color-alpha: var(--alpha-0);
+}
+.sf-color-alpha-10 {
+	--sf-color-alpha: var(--alpha-10);
+}
+.sf-color-alpha-20 {
+	--sf-color-alpha: var(--alpha-20);
+}
+.sf-color-alpha-25 {
+	--sf-color-alpha: var(--alpha-25);
+}
+.sf-color-alpha-30 {
+	--sf-color-alpha: var(--alpha-30);
+}
+.sf-color-alpha-40 {
+	--sf-color-alpha: var(--alpha-40);
+}
+.sf-color-alpha-50 {
+	--sf-color-alpha: var(--alpha-50);
+}
+.sf-color-alpha-60 {
+	--sf-color-alpha: var(--alpha-60);
+}
+.sf-color-alpha-70 {
+	--sf-color-alpha: var(--alpha-70);
+}
+.sf-color-alpha-75 {
+	--sf-color-alpha: var(--alpha-75);
+}
+.sf-color-alpha-80 {
+	--sf-color-alpha: var(--alpha-80);
+}
+.sf-color-alpha-90 {
+	--sf-color-alpha: var(--alpha-90);
+}
+.sf-color-alpha-100 {
+	--sf-color-alpha: var(--alpha-100);
+}
+.sf-color-alpha-subtle {
+	--sf-color-alpha: var(--alpha-subtle);
+}
+.sf-color-alpha-muted {
+	--sf-color-alpha: var(--alpha-muted);
+}
+.sf-color-alpha-half {
+	--sf-color-alpha: var(--alpha-half);
+}
+
+.sf-border-alpha-0 {
+	--sf-border-alpha: var(--alpha-0);
+}
+.sf-border-alpha-10 {
+	--sf-border-alpha: var(--alpha-10);
+}
+.sf-border-alpha-20 {
+	--sf-border-alpha: var(--alpha-20);
+}
+.sf-border-alpha-25 {
+	--sf-border-alpha: var(--alpha-25);
+}
+.sf-border-alpha-30 {
+	--sf-border-alpha: var(--alpha-30);
+}
+.sf-border-alpha-40 {
+	--sf-border-alpha: var(--alpha-40);
+}
+.sf-border-alpha-50 {
+	--sf-border-alpha: var(--alpha-50);
+}
+.sf-border-alpha-60 {
+	--sf-border-alpha: var(--alpha-60);
+}
+.sf-border-alpha-70 {
+	--sf-border-alpha: var(--alpha-70);
+}
+.sf-border-alpha-75 {
+	--sf-border-alpha: var(--alpha-75);
+}
+.sf-border-alpha-80 {
+	--sf-border-alpha: var(--alpha-80);
+}
+.sf-border-alpha-90 {
+	--sf-border-alpha: var(--alpha-90);
+}
+.sf-border-alpha-100 {
+	--sf-border-alpha: var(--alpha-100);
+}
+.sf-border-alpha-subtle {
+	--sf-border-alpha: var(--alpha-subtle);
+}
+.sf-border-alpha-muted {
+	--sf-border-alpha: var(--alpha-muted);
+}
+.sf-border-alpha-half {
+	--sf-border-alpha: var(--alpha-half);
+}

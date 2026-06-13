@@ -171,7 +171,7 @@ onUnmounted(() => {
 <style>
 .sel-count {
 	font-size: 0.75rem;
-	color: rgba(var(--textPrimary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--alpha-60));
 	padding: 0 4px;
 	white-space: nowrap;
 	align-self: center;
@@ -189,8 +189,8 @@ onUnmounted(() => {
 	width: fit-content;
 	height: var(--toolbar-height);
 	transform: translateY(-100%);
-	background: rgba(var(--backgroundSecondary) / var(--alpha-90));
-	border: 1px solid rgb(var(--backgroundBorder));
+	background: rgba(var(--bg_secondary) / var(--alpha-90));
+	border: 1px solid rgb(var(--border_color));
 	border-radius: 4px;
 	box-shadow: 0 2px 5px rgb(0 0 0 / var(--alpha-20));
 	z-index: var(--z-toolbar);
@@ -204,8 +204,8 @@ onUnmounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border-right: 1px solid rgb(var(--backgroundBorder));
-	color: rgba(var(--textPrimary) / 0);
+	border-right: 1px solid rgb(var(--border_color));
+	color: rgba(var(--text_primary) / 0);
 	pointer-events: none;
 }
 

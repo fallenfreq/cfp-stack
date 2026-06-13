@@ -113,7 +113,7 @@ const editor = useEditor({
 			},
 			blockquote: {
 				HTMLAttributes: {
-					class: 'border-l-8 border-primary bg-backgroundSecondary p-4',
+					class: 'border-l-8 border-primary sf-bg_secondary p-4',
 				},
 			},
 			link: {
@@ -267,7 +267,7 @@ watch(editor, (newEditor) => {
 }
 
 .tiptap p.is-empty::before {
-	color: rgba(var(--textPrimary) / var(--alpha-50));
+	color: rgba(var(--text_primary) / var(--alpha-50));
 	content: attr(data-placeholder);
 	float: left;
 	height: 0;

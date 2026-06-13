@@ -128,8 +128,8 @@ onUnmounted(() => {
 	padding: 4px 1.75rem;
 	overflow-x: auto;
 	scrollbar-width: none;
-	background: rgb(var(--backgroundSecondary));
-	border-bottom: 1px solid rgb(var(--backgroundBorder));
+	background: rgb(var(--bg_secondary));
+	border-bottom: 1px solid rgb(var(--border_color));
 	font-size: 0.75rem;
 }
 .node-path::-webkit-scrollbar {
@@ -137,7 +137,7 @@ onUnmounted(() => {
 }
 
 .path-sep {
-	color: rgba(var(--textPrimary) / var(--alpha-30));
+	color: rgba(var(--text_primary) / var(--alpha-30));
 	padding: 0 4px;
 	user-select: none;
 }
@@ -148,7 +148,7 @@ onUnmounted(() => {
 	border-radius: 3px;
 	padding: 1px 5px;
 	cursor: pointer;
-	color: rgba(var(--textPrimary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--alpha-60));
 	font-size: 0.75rem;
 	white-space: nowrap;
 	transition:
@@ -156,8 +156,8 @@ onUnmounted(() => {
 		background 0.1s;
 }
 .path-node:hover:not(:disabled):not(.is-active) {
-	color: rgb(var(--textPrimary));
-	background: rgba(var(--textPrimary) / var(--alpha-10));
+	color: rgb(var(--text_primary));
+	background: rgba(var(--text_primary) / var(--alpha-10));
 }
 .path-node.is-active {
 	color: rgb(var(--primary));

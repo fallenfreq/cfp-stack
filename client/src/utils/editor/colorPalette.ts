@@ -24,15 +24,23 @@ export const PALETTE_FAMILIES: PaletteFamily[] = (() => {
 		const shadeKey = match ? match[2]! : name
 		;(groups[familyKey] ??= []).push({ key: shadeKey, cssVar })
 	}
-	return Object.entries(groups).map(([key, shades]) => {
-		const numericShades = shades.filter((s) => /^\d+$/.test(s.key))
-		return {
-			key,
-			shades: (numericShades.length > 0 ? numericShades : shades).sort(
-				(a, b) => (Number(a.key) || 0) - (Number(b.key) || 0),
-			),
-		}
-	})
+	return Object.entries(groups)
+		.map(([key, shades]) => {
+			const numericShades = shades.filter((s) => /^\d+$/.test(s.key))
+			return {
+				key,
+				shades: (numericShades.length > 0 ? numericShades : shades).sort(
+					(a, b) => (Number(a.key) || 0) - (Number(b.key) || 0),
+				),
+			}
+		})
+		.filter((f) => {
+			// Drop Vuestic internal modifier tokens (e.g. --primary-inverse, --primary-hover,
+			// --primary-highlight-inverse). These have hyphenated family keys but no numeric
+			// shades — they're not meaningful user-facing colour choices and have no sf- CSS class.
+			const hasNumericShades = f.shades.some((s) => /^\d+$/.test(s.key))
+			return hasNumericShades || !f.key.includes('-')
+		})
 })()
 
 export const findShade = (cssVar: string): { family: PaletteFamily; shadeIndex: number } | null => {

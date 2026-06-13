@@ -127,7 +127,7 @@ onUnmounted(() => {
 
 .attr-key {
 	font-size: 0.75rem;
-	color: rgba(var(--textPrimary) / var(--alpha-70));
+	color: rgba(var(--text_primary) / var(--alpha-70));
 	min-width: 36px;
 	flex-shrink: 0;
 }
@@ -138,9 +138,9 @@ onUnmounted(() => {
 	height: 22px;
 	padding: 1px 5px;
 	border-radius: 3px;
-	border: 1px solid rgb(var(--backgroundBorder));
-	background: rgb(var(--backgroundPrimary));
-	color: rgb(var(--textPrimary));
+	border: 1px solid rgb(var(--border_color));
+	background: rgb(var(--bg_primary));
+	color: rgb(var(--text_primary));
 	font-size: 0.75rem;
 	outline: none;
 }
@@ -162,7 +162,7 @@ onUnmounted(() => {
 
 .attr-default-badge {
 	font-size: 0.65rem;
-	color: rgba(var(--textPrimary) / var(--alpha-40));
+	color: rgba(var(--text_primary) / var(--alpha-40));
 	flex-shrink: 0;
 	white-space: nowrap;
 }

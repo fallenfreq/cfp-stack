@@ -1,6 +1,4 @@
 import { editorComponents } from '@/config/editor/editorComponents'
-import { RADIUS_OPTIONS } from '@/config/editor/layoutTokens'
-import { dataAttr } from '@/editor/enumAttr'
 import { Extension } from '@tiptap/vue-3'
 const componentNodeTypes = Object.keys(editorComponents)
 
@@ -59,13 +57,6 @@ const AllowAttributesExtension = Extension.create({
 						},
 					},
 				},
-			},
-			// Per-node `radius` for image — data-radius drives the CSS rules in main.css.
-			// LayoutCard's `radius` Vue prop is parallel and uses the same RADIUS_OPTIONS list.
-			// The corners panel (Stage 2) will handle radius for all nodes via inline style.
-			{
-				types: ['image'],
-				attributes: { radius: dataAttr('radius', 'none', RADIUS_OPTIONS) },
 			},
 		]
 	},

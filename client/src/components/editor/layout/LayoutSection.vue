@@ -1,22 +1,13 @@
 <template>
-	<div
-		class="layout-section"
-		:style="{ '--gap': SPACING[gap], '--padding': SPACING[padding], '--align': align }"
-	>
+	<div class="layout-section" :style="{ '--align': align }">
 		<slot />
 	</div>
 </template>
 
 <script setup lang="ts">
-import { SPACING } from '@/config/editor/layoutTokens'
 import { type PropType } from 'vue'
 
 defineProps({
-	gap: { type: String as PropType<'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'>, default: 'md' },
-	padding: {
-		type: String as PropType<'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'>,
-		default: 'none',
-	},
 	align: { type: String as PropType<'start' | 'center' | 'end' | 'stretch'>, default: 'stretch' },
 })
 </script>
@@ -30,8 +21,8 @@ defineProps({
 :global(.layout-section > [data-node-view-content]) {
 	display: flex;
 	flex-direction: column;
-	gap: var(--gap);
-	padding: var(--padding);
+	gap: var(--sf-gap, 0);
+	padding: var(--sf-padding, 0);
 	align-items: var(--align);
 }
 

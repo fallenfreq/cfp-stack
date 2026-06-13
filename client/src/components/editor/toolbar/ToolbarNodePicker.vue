@@ -86,12 +86,12 @@ const select = (item: NodePickerItem) => {
 	padding: 5px 8px;
 	border-radius: 4px;
 	font-size: 0.85rem;
-	color: rgb(var(--textPrimary));
+	color: rgb(var(--text_primary));
 	user-select: none;
 }
 
 .picker-item:hover {
-	background: rgba(var(--textPrimary) / var(--alpha-10));
+	background: rgba(var(--text_primary) / var(--alpha-10));
 }
 
 .picker-item.is-active {

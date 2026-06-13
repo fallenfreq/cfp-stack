@@ -1,4 +1,5 @@
 @import './base.css';
+@import './sf-tokens.css';
 
 @tailwind base;
 @tailwind components;
@@ -13,7 +14,7 @@ body .va-dropdown__content-wrapper {
 *::before,
 *::after {
 	transition: var(--transition);
-	border-color: rgb(var(--backgroundBorder));
+	border-color: rgb(var(--border_color));
 }
 
 *:focus-visible {
@@ -21,8 +22,8 @@ body .va-dropdown__content-wrapper {
 }
 
 body {
-	background-color: rgb(var(--backgroundPrimary));
-	color: rgb(var(--textPrimary));
+	background-color: rgb(var(--bg_primary));
+	color: rgb(var(--text_primary));
 	min-height: 100vh;
 	line-height: 1.6;
 	font-family:
@@ -157,16 +158,4 @@ body {
 
 .tiptap [data-youtube-video] > [data-youtube-video] {
 	margin-bottom: 0;
-}
-
-/* Image radius — data-radius set by the radius attribute (none/sm/md/lg).
-   Default 'none' renders no attribute so this CSS has no effect by default. */
-.tiptap img[data-radius='sm'] {
-	border-radius: var(--radius-sm);
-}
-.tiptap img[data-radius='md'] {
-	border-radius: var(--radius-md);
-}
-.tiptap img[data-radius='lg'] {
-	border-radius: var(--radius-lg);
 }

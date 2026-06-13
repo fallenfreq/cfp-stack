@@ -152,12 +152,12 @@ const onDragend = () => {
 	align-items: center;
 	justify-content: center;
 	cursor: grab;
-	color: rgba(var(--textPrimary) / var(--alpha-40));
+	color: rgba(var(--text_primary) / var(--alpha-40));
 	user-select: none;
 	box-sizing: border-box;
 	transform: translateY(-100%);
-	background: rgba(var(--backgroundSecondary) / var(--alpha-90));
-	border: 1px solid rgb(var(--backgroundBorder));
+	background: rgba(var(--bg_secondary) / var(--alpha-90));
+	border: 1px solid rgb(var(--border_color));
 	border-radius: 4px;
 	box-shadow: 0 2px 5px rgb(0 0 0 / var(--alpha-20));
 	opacity: 1;
@@ -165,7 +165,7 @@ const onDragend = () => {
 }
 
 .floating-drag-handle-wrapper:hover {
-	background: rgba(var(--backgroundSecondary) / var(--alpha-90));
+	background: rgba(var(--bg_secondary) / var(--alpha-90));
 	border-color: rgb(var(--primary));
 	color: rgb(var(--primary));
 }
@@ -189,21 +189,21 @@ const onDragend = () => {
 	transform: none;
 	background: transparent;
 	border: none;
-	border-right: 1px solid rgb(var(--backgroundBorder));
+	border-right: 1px solid rgb(var(--border_color));
 	border-radius: 0;
 	box-shadow: none;
 }
 
 .floating-drag-handle-wrapper.is-over-toolbar:hover {
-	background: rgba(var(--textPrimary) / var(--alpha-10));
+	background: rgba(var(--text_primary) / var(--alpha-10));
 	border-color: transparent;
-	border-right-color: rgb(var(--backgroundBorder));
+	border-right-color: rgb(var(--border_color));
 	color: rgb(var(--primary));
 }
 
 .floating-drag-handle-wrapper.is-over-toolbar.is-dragging {
 	background: rgba(var(--primary) / var(--alpha-10));
 	border-color: transparent;
-	border-right-color: rgb(var(--backgroundBorder));
+	border-right-color: rgb(var(--border_color));
 }
 </style>

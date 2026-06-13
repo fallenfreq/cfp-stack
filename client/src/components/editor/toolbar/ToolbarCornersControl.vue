@@ -105,6 +105,7 @@ import cssVariables from '@/../cssVariables'
 import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeControl'
 import { RADIUS_OPTIONS } from '@/config/editor/layoutTokens'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
+import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
 import { nodeAt } from '@/utils/editor/editorUtils'
 import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
@@ -123,7 +124,8 @@ const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
 
 const { open, buttonEl, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
 
-const selectedToken = ref<string>('none')
+// null = no radius set; string = token name or 'custom'
+const selectedToken = ref<string | null>(null)
 const customUniform = ref(0)
 const individualized = ref(false)
 const customCorners = ref({ tl: 0, tr: 0, br: 0, bl: 0 })
@@ -131,18 +133,17 @@ const customCorners = ref({ tl: 0, tr: 0, br: 0, bl: 0 })
 watch(open, (isOpen) => {
 	if (!isOpen || capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
+	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
 	const style = typeof node.attrs.style === 'string' ? node.attrs.style : ''
 
-	// Check for a radius token var
-	const br = getStyleProp(style, 'border-radius')
-	const token = br.match(/^var\(--radius-(\w+)\)/)?.[1]
-	if (token && RADIUS_OPTIONS.includes(token)) {
+	const token = getClassToken(cls, 'sf-radius-')
+	if (token !== null) {
 		selectedToken.value = token
 		individualized.value = false
 		return
 	}
 
-	// Check for individualized corners by comparing the four longhand values
+	// Check for individualized corners in inline style
 	const tl = getStyleProp(style, 'border-top-left-radius')
 	const tr = getStyleProp(style, 'border-top-right-radius')
 	const brr = getStyleProp(style, 'border-bottom-right-radius')
@@ -160,15 +161,21 @@ watch(open, (isOpen) => {
 		return
 	}
 
-	// Uniform custom or no radius set
-	selectedToken.value = br && br !== '0px' ? 'custom' : 'none'
-	individualized.value = false
-	customUniform.value = parseInt(br) || 0
+	// Uniform custom or nothing
+	const br = getStyleProp(style, 'border-radius')
+	if (br && br !== '0px') {
+		selectedToken.value = 'custom'
+		individualized.value = false
+		customUniform.value = parseInt(br) || 0
+	} else {
+		selectedToken.value = null
+	}
 })
 
 const selectToken = (token: string) => {
 	if (token === 'custom' && selectedToken.value !== 'custom') {
-		customUniform.value = TOKEN_PX[selectedToken.value] ?? 0
+		customUniform.value =
+			selectedToken.value !== null ? (TOKEN_PX[selectedToken.value] ?? 0) : 0
 	}
 	selectedToken.value = token
 	if (token !== 'custom') {
@@ -194,32 +201,43 @@ const onIndividualizeToggle = () => {
 const commit = () => {
 	if (capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const base = typeof node.attrs.style === 'string' ? node.attrs.style : ''
-	let s = base
+	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	let s = typeof node.attrs.style === 'string' ? node.attrs.style : ''
 
-	if (selectedToken.value !== 'custom') {
+	let newClass = cls
+	if (selectedToken.value === null) {
+		newClass = setClassToken(cls, 'sf-radius-', null)
+		s = setStyleProp(s, 'border-radius', null)
 		s = setStyleProp(s, 'border-top-left-radius', null)
 		s = setStyleProp(s, 'border-top-right-radius', null)
 		s = setStyleProp(s, 'border-bottom-right-radius', null)
 		s = setStyleProp(s, 'border-bottom-left-radius', null)
-		s = setStyleProp(s, 'border-radius', `var(--radius-${selectedToken.value})`)
+	} else if (selectedToken.value !== 'custom') {
+		newClass = setClassToken(cls, 'sf-radius-', selectedToken.value)
+		s = setStyleProp(s, 'border-radius', null)
+		s = setStyleProp(s, 'border-top-left-radius', null)
+		s = setStyleProp(s, 'border-top-right-radius', null)
+		s = setStyleProp(s, 'border-bottom-right-radius', null)
+		s = setStyleProp(s, 'border-bottom-left-radius', null)
 	} else if (!individualized.value) {
+		newClass = setClassToken(cls, 'sf-radius-', null)
 		s = setStyleProp(s, 'border-top-left-radius', null)
 		s = setStyleProp(s, 'border-top-right-radius', null)
 		s = setStyleProp(s, 'border-bottom-right-radius', null)
 		s = setStyleProp(s, 'border-bottom-left-radius', null)
 		s = setStyleProp(s, 'border-radius', `${customUniform.value}px`)
 	} else {
+		newClass = setClassToken(cls, 'sf-radius-', null)
 		s = setStyleProp(s, 'border-radius', null)
 		s = setStyleProp(s, 'border-top-left-radius', `${customCorners.value.tl}px`)
 		s = setStyleProp(s, 'border-top-right-radius', `${customCorners.value.tr}px`)
 		s = setStyleProp(s, 'border-bottom-right-radius', `${customCorners.value.br}px`)
 		s = setStyleProp(s, 'border-bottom-left-radius', `${customCorners.value.bl}px`)
 	}
-
 	props.editor.view.dispatch(
 		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
 			...node.attrs,
+			class: newClass || null,
 			style: s || null,
 		}),
 	)
@@ -247,7 +265,7 @@ const commit = () => {
 
 .cp-label {
 	font-size: 0.7rem;
-	color: rgba(var(--textPrimary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--alpha-60));
 }
 
 .cp-row {
@@ -260,19 +278,19 @@ const commit = () => {
 .cp-chip {
 	height: 26px;
 	border-radius: 4px;
-	border: 1px solid rgba(var(--textPrimary) / var(--alpha-20));
+	border: 1px solid rgba(var(--text_primary) / var(--alpha-20));
 	padding: 0 6px;
 	cursor: pointer;
 	transition: transform 0.08s;
 	font-size: 0.75rem;
 	line-height: 1;
 	background: none;
-	color: rgb(var(--textPrimary));
+	color: rgb(var(--text_primary));
 }
 
 .cp-chip:hover {
 	transform: scale(1.05);
-	background: rgba(var(--textPrimary) / var(--alpha-8));
+	background: rgba(var(--text_primary) / var(--alpha-8));
 }
 
 .cp-chip.is-active {
@@ -285,9 +303,9 @@ const commit = () => {
 	width: 56px;
 	padding: 2px 6px;
 	border-radius: 4px;
-	border: 1px solid rgb(var(--backgroundBorder));
-	background: rgb(var(--backgroundPrimary));
-	color: rgb(var(--textPrimary));
+	border: 1px solid rgb(var(--border_color));
+	background: rgb(var(--bg_primary));
+	color: rgb(var(--text_primary));
 	font-size: 0.8rem;
 	outline: none;
 }
@@ -302,7 +320,7 @@ const commit = () => {
 
 .cp-unit {
 	font-size: 0.75rem;
-	color: rgba(var(--textPrimary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--alpha-60));
 }
 
 .cp-check-label {
@@ -310,7 +328,7 @@ const commit = () => {
 	align-items: center;
 	gap: 6px;
 	font-size: 0.75rem;
-	color: rgb(var(--textPrimary));
+	color: rgb(var(--text_primary));
 	cursor: pointer;
 }
 

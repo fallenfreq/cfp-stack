@@ -12,6 +12,10 @@
 <script setup lang="ts">
 import { useToolbarMarkControl } from '@/composables/editor/useToolbarMarkControl'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
+import { cssVarColor } from '@/utils/cssVarColor'
+import { ALPHA_STEPS, snapToStep } from '@/utils/editor/alphaPalette'
+import { getClassToken } from '@/utils/editor/classTokens'
+import { parseStoredValue } from '@/utils/editor/colorPalette'
 import { nodeAt } from '@/utils/editor/editorUtils'
 import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
@@ -25,14 +29,31 @@ const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
 const { open, buttonEl, capturedPos, mode, toggle, onClose, commitMark } =
 	useToolbarMarkControl(props)
 
+// Read background colour from sf-bg-* class tokens, falling back to inline style.
+const readNodeBg = (node: { attrs: Record<string, unknown> }): string | null => {
+	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	const bgToken =
+		cls
+			.split(/\s+/)
+			.find((c) => c.startsWith('sf-bg-') && !c.startsWith('sf-bg-alpha-'))
+			?.slice('sf-bg-'.length) ?? null
+	if (bgToken) {
+		const alphaName = getClassToken(cls, 'sf-bg-alpha-')
+		const alphaStep = alphaName
+			? ALPHA_STEPS.find((s) => s.cssVar === `--alpha-${alphaName}`)
+			: null
+		return cssVarColor(`--${bgToken}`, alphaStep?.value ?? 1)
+	}
+	const style = typeof node.attrs.style === 'string' ? node.attrs.style : ''
+	return getStyleProp(style, 'background-color') || null
+}
+
 const currentColor = computed<string | null>(() => {
 	if (mode.value === 'mark') {
 		const color = props.editor.getAttributes('textColor').color
 		return typeof color === 'string' ? color : null
 	}
-	const styleAttr = props.context.activeNode.attrs.style
-	if (typeof styleAttr !== 'string') return null
-	return getStyleProp(styleAttr, 'background-color') || null
+	return readNodeBg(props.context.activeNode)
 })
 
 const NO_COLOR_STRIPE =
@@ -51,12 +72,35 @@ const applyColor = (value: string | null) => {
 	}
 	if (capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const currentStyle = typeof node.attrs.style === 'string' ? node.attrs.style : ''
-	const newStyle = setStyleProp(currentStyle, 'background-color', value)
+	let cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	let s = typeof node.attrs.style === 'string' ? node.attrs.style : ''
+
+	// Clear all existing bg colour and alpha classes, and inline background-color.
+	cls = cls
+		.split(/\s+/)
+		.filter((c) => !c.startsWith('sf-bg-'))
+		.join(' ')
+	s = setStyleProp(s, 'background-color', null)
+
+	if (value !== null) {
+		const parsed = parseStoredValue(value)
+		if (parsed?.kind === 'token') {
+			cls = (cls + ` sf-bg-${parsed.cssVar.slice(2)}`).trim()
+			if (parsed.alpha < 1) {
+				const step = snapToStep(parsed.alpha)
+				cls = (cls + ` sf-bg-alpha-${step.cssVar.slice('--alpha-'.length)}`).trim()
+			}
+		} else {
+			// Arbitrary colour: store as inline style
+			s = setStyleProp(s, 'background-color', value)
+		}
+	}
+
 	props.editor.view.dispatch(
 		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
 			...node.attrs,
-			style: newStyle || null,
+			class: cls || null,
+			style: s || null,
 		}),
 	)
 }
@@ -75,6 +119,6 @@ const onRemove = () => applyColor(null)
 	width: 16px;
 	height: 16px;
 	border-radius: 3px;
-	border: 1px solid rgba(var(--textPrimary) / var(--alpha-30));
+	border: 1px solid rgba(var(--text_primary) / var(--alpha-30));
 }
 </style>

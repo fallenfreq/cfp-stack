@@ -55,17 +55,17 @@ const scrollToToolbar = () => {
 	align-items: center;
 	justify-content: center;
 	padding: 4px 12px;
-	background: rgba(var(--backgroundSecondary) / var(--alpha-90));
-	border: 1px solid rgb(var(--backgroundBorder));
+	background: rgba(var(--bg_secondary) / var(--alpha-90));
+	border: 1px solid rgb(var(--border_color));
 	border-radius: 12px;
 	box-shadow: 0 2px 5px rgb(0 0 0 / var(--alpha-20));
 	cursor: pointer;
 	z-index: var(--z-scroll-hint);
-	color: rgb(var(--textPrimary));
+	color: rgb(var(--text_primary));
 }
 
 .toolbar-scroll-hint:hover {
-	background: rgba(var(--backgroundElement) / var(--alpha-90));
+	background: rgba(var(--bg_element) / var(--alpha-90));
 }
 
 .hint-fade-enter-active,

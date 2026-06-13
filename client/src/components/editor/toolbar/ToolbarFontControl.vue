@@ -18,9 +18,10 @@
 <script setup lang="ts">
 import { useToolbarMarkControl } from '@/composables/editor/useToolbarMarkControl'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
+import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
 import { nodeAt } from '@/utils/editor/editorUtils'
-import type { FontStyleAttrs } from '@/utils/editor/fontPalette'
-import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
+import { parseFontVar, type FontStyleAttrs } from '@/utils/editor/fontPalette'
+import { setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
 import { computed } from 'vue'
 import FontPicker from './FontPicker.vue'
@@ -37,10 +38,16 @@ const markAttrs = computed(() =>
 	mode.value === 'mark' ? props.editor.getAttributes('fontStyle') : {},
 )
 
-const nodeStyle = computed(() => {
+// Read node class token and convert to CSS var value for FontPicker
+const classToVar = (cls: string, sfPrefix: string, cssVarPrefix: string): string | null => {
+	const token = getClassToken(cls, sfPrefix)
+	return token ? `var(${cssVarPrefix}${token})` : null
+}
+
+const nodeClass = computed(() => {
 	if (mode.value !== 'node') return null
-	const s = props.context.activeNode.attrs.style
-	return typeof s === 'string' ? s : null
+	const c = props.context.activeNode.attrs.class
+	return typeof c === 'string' ? c : null
 })
 
 const currentFontFamily = computed<string | null>(() =>
@@ -48,8 +55,8 @@ const currentFontFamily = computed<string | null>(() =>
 		? typeof markAttrs.value.fontFamily === 'string'
 			? markAttrs.value.fontFamily
 			: null
-		: nodeStyle.value
-			? getStyleProp(nodeStyle.value, 'font-family') || null
+		: nodeClass.value
+			? classToVar(nodeClass.value, 'sf-font-', '--font-')
 			: null,
 )
 
@@ -58,8 +65,8 @@ const currentFontSize = computed<string | null>(() =>
 		? typeof markAttrs.value.fontSize === 'string'
 			? markAttrs.value.fontSize
 			: null
-		: nodeStyle.value
-			? getStyleProp(nodeStyle.value, 'font-size') || null
+		: nodeClass.value
+			? classToVar(nodeClass.value, 'sf-text-', '--text-')
 			: null,
 )
 
@@ -68,8 +75,8 @@ const currentLineHeight = computed<string | null>(() =>
 		? typeof markAttrs.value.lineHeight === 'string'
 			? markAttrs.value.lineHeight
 			: null
-		: nodeStyle.value
-			? getStyleProp(nodeStyle.value, 'line-height') || null
+		: nodeClass.value
+			? classToVar(nodeClass.value, 'sf-leading-', '--leading-')
 			: null,
 )
 
@@ -78,8 +85,8 @@ const currentLetterSpacing = computed<string | null>(() =>
 		? typeof markAttrs.value.letterSpacing === 'string'
 			? markAttrs.value.letterSpacing
 			: null
-		: nodeStyle.value
-			? getStyleProp(nodeStyle.value, 'letter-spacing') || null
+		: nodeClass.value
+			? classToVar(nodeClass.value, 'sf-tracking-', '--tracking-')
 			: null,
 )
 
@@ -95,15 +102,31 @@ const onCommit = ({ fontFamily, fontSize, lineHeight, letterSpacing }: FontStyle
 	}
 	if (capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const base = typeof node.attrs.style === 'string' ? node.attrs.style : ''
-	let newStyle = setStyleProp(base, 'font-family', fontFamily)
-	newStyle = setStyleProp(newStyle, 'font-size', fontSize)
-	newStyle = setStyleProp(newStyle, 'line-height', lineHeight)
-	newStyle = setStyleProp(newStyle, 'letter-spacing', letterSpacing)
+	let cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	let s = typeof node.attrs.style === 'string' ? node.attrs.style : ''
+
+	cls = setClassToken(cls, 'sf-font-', parseFontVar(fontFamily)?.slice('--font-'.length) ?? null)
+	cls = setClassToken(cls, 'sf-text-', parseFontVar(fontSize)?.slice('--text-'.length) ?? null)
+	cls = setClassToken(
+		cls,
+		'sf-leading-',
+		parseFontVar(lineHeight)?.slice('--leading-'.length) ?? null,
+	)
+	cls = setClassToken(
+		cls,
+		'sf-tracking-',
+		parseFontVar(letterSpacing)?.slice('--tracking-'.length) ?? null,
+	)
+	s = setStyleProp(s, 'font-family', null)
+	s = setStyleProp(s, 'font-size', null)
+	s = setStyleProp(s, 'line-height', null)
+	s = setStyleProp(s, 'letter-spacing', null)
+
 	props.editor.view.dispatch(
 		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
 			...node.attrs,
-			style: newStyle || null,
+			class: cls || null,
+			style: s || null,
 		}),
 	)
 }

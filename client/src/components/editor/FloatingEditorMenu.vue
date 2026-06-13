@@ -99,8 +99,8 @@ onUnmounted(() => {
 }
 .floating-toolbar {
 	position: fixed;
-	background: rgba(var(--backgroundSecondary) / var(--alpha-90));
-	border: 1px solid rgb(var(--backgroundBorder));
+	background: rgba(var(--bg_secondary) / var(--alpha-90));
+	border: 1px solid rgb(var(--border_color));
 	padding: 8px;
 	border-radius: 4px;
 	box-shadow: 0 2px 5px rgb(0 0 0 / var(--alpha-20));

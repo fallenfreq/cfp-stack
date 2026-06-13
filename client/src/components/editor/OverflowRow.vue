@@ -87,14 +87,14 @@ watch(() => props.refreshKey, refreshOverflow)
 	left: 8px;
 	border-top: 4px solid transparent;
 	border-bottom: 4px solid transparent;
-	border-right: 5px solid rgba(var(--textPrimary) / var(--alpha-50));
+	border-right: 5px solid rgba(var(--text_primary) / var(--alpha-50));
 }
 
 .overflow-row::after {
 	right: 8px;
 	border-top: 4px solid transparent;
 	border-bottom: 4px solid transparent;
-	border-left: 5px solid rgba(var(--textPrimary) / var(--alpha-50));
+	border-left: 5px solid rgba(var(--text_primary) / var(--alpha-50));
 }
 
 .overflow-row.has-overflow-left::before {

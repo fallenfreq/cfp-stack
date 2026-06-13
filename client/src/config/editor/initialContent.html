@@ -1,6 +1,6 @@
 <img src="https://placehold.co/1200x300" style="width: 100%" />
 
-<layoutCenter maxWidth="3xl" padding="lg">
+<layoutCenter maxWidth="3xl" class="sf-gap-md sf-padding-lg">
 	<div data-container="">
 		<h1>Block Builder</h1>
 		<p>
@@ -11,9 +11,9 @@
 		</p>
 	</div>
 
-	<layoutCard variant="feature" padding="md" radius="md">
+	<layoutCard variant="feature" class="sf-padding-md sf-radius-md">
 		<h3>Quick Reference</h3>
-		<layoutColumns columns="2" gap="md" collapse="xs">
+		<layoutColumns columns="2" class="sf-gap-md sf-collapse-xs">
 			<ul>
 				<li>
 					<p>Type <code>/</code> to open the command palette</p>
@@ -45,7 +45,7 @@
 		</p>
 	</div>
 
-	<layoutCard variant="filled" padding="md" radius="md">
+	<layoutCard variant="filled" class="sf-padding-md sf-radius-md">
 		<h3>LayoutSection</h3>
 		<p>
 			A <strong>flex-column container</strong> with configurable <em>gap</em>,
@@ -53,7 +53,7 @@
 			spacing. The three paragraphs below are inside a LayoutSection with
 			<code>gap="sm"</code> and <code>align="start"</code>.
 		</p>
-		<layoutSection gap="sm" align="start">
+		<layoutSection class="sf-gap-sm" align="start">
 			<p>First item in the LayoutSection.</p>
 			<p>Second item — the gap between these is controlled by the <code>gap</code> prop.</p>
 			<p>
@@ -69,22 +69,22 @@
 			Creates a <strong>two-column asymmetric grid</strong>. The <code>split</code> prop sets
 			the ratio: 1/4, 1/3, 2/5, 1/2, 3/5, 2/3, or 3/4. The two cards below are the two direct
 			children of this LayoutSplit — each becomes one grid cell. The
-			<code>collapse</code> prop controls the container-query breakpoint at which it stacks to
-			a single column.
+			<code>sf-collapse-sm</code> class sets the container-query breakpoint at which it stacks
+			to a single column.
 		</p>
 	</div>
-	<layoutSplit split="1/2" gap="md">
-		<layoutCard variant="outlined" padding="md" radius="md">
+	<layoutSplit split="1/2" class="sf-gap-md sf-collapse-sm">
+		<layoutCard variant="outlined" class="sf-padding-md sf-radius-md">
 			<h3>Left column</h3>
 			<p>
 				Any block content can go inside — paragraphs, lists, nested layout components,
 				images, code blocks. This is a <code>split="1/2"</code> (equal width) layout.
 			</p>
 		</layoutCard>
-		<layoutCard variant="outlined" padding="md" radius="md">
+		<layoutCard variant="outlined" class="sf-padding-md sf-radius-md">
 			<h3>Right column</h3>
 			<p>
-				The <code>gap</code> prop sets the gutter. Try the attribute editor on the
+				The <code>sf-gap-*</code> class sets the gutter. Try the attribute editor on the
 				LayoutSplit wrapper to change the split ratio or gap live.
 			</p>
 		</layoutCard>
@@ -97,34 +97,36 @@
 			one cell. The three cards below are in a <code>columns="3"</code> grid.
 		</p>
 	</div>
-	<layoutColumns columns="3" gap="md">
-		<layoutCard variant="elevated" padding="md" radius="md">
+	<layoutColumns columns="3" class="sf-gap-md sf-collapse-sm">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>Column 1</h3>
 			<p>2, 3, or 4 equal columns. Each direct child is one cell.</p>
 		</layoutCard>
-		<layoutCard variant="elevated" padding="md" radius="md">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>Column 2</h3>
 			<p>The <code>gap</code> prop controls the gutter between columns.</p>
 		</layoutCard>
-		<layoutCard variant="elevated" padding="md" radius="md">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>Column 3</h3>
 			<p>
-				The <code>collapse</code> prop sets the breakpoint at which it stacks to one column.
+				The <code>sf-collapse-sm</code> class sets the breakpoint at which it stacks to one
+				column.
 			</p>
 		</layoutCard>
 	</layoutColumns>
 
-	<layoutSplit split="2/3" gap="md">
-		<layoutCard variant="elevated" padding="md" radius="md">
+	<layoutSplit split="2/3" class="sf-gap-md sf-collapse-sm">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>LayoutCard</h3>
 			<p>
 				A styled container with five <strong>variants</strong>: <em>elevated</em> (box
 				shadow, the default), <em>outlined</em> (border only), <em>filled</em> (secondary
 				background), <em>feature</em> (primary-tinted), and <em>plain</em> (no decoration).
-				Also accepts <code>padding</code> and <code>radius</code> props.
+				Padding and radius are set via <code>sf-padding-*</code> and
+				<code>sf-radius-*</code> classes.
 			</p>
 		</layoutCard>
-		<layoutCard variant="elevated" padding="md" radius="md">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>LayoutCenter</h3>
 			<p>
 				Constrains children to a max-width and centres them horizontally. Options: xs
@@ -166,8 +168,8 @@
 		</p>
 	</div>
 
-	<layoutColumns columns="3" gap="md">
-		<layoutSection gap="sm">
+	<layoutColumns columns="3" class="sf-gap-md sf-collapse-sm">
+		<layoutSection class="sf-gap-sm">
 			<h3>Lists</h3>
 			<ul>
 				<li>
@@ -187,7 +189,7 @@
 			</ul>
 		</layoutSection>
 
-		<layoutSection gap="sm">
+		<layoutSection class="sf-gap-sm">
 			<h3>Images</h3>
 			<p>
 				Insert via <code>/image</code>. Select to reveal the
@@ -196,7 +198,7 @@
 			<img src="https://placehold.co/400x360" style="width: 100%" />
 		</layoutSection>
 
-		<layoutSection gap="sm">
+		<layoutSection class="sf-gap-sm">
 			<h3>Tables</h3>
 			<p>Insert via <code>/table</code>. Click any cell for row and column controls.</p>
 			<table>
@@ -237,7 +239,9 @@
 	</div>
 </layoutCenter>
 
-<pre data-radius="none"><code class="language-typescript">import { useEditor } from '@tiptap/vue-3'
+<pre
+	class="sf-radius-none"
+><code class="language-typescript">import { useEditor } from '@tiptap/vue-3'
 import { blockBuilderExtensions } from '@/editor/extensions'
 
 const editor = useEditor({
@@ -249,7 +253,7 @@ const editor = useEditor({
   content: initialContent,
 })</code></pre>
 
-<layoutCenter maxWidth="3xl" padding="lg">
+<layoutCenter maxWidth="3xl" class="sf-gap-md sf-padding-lg">
 	<hr />
 
 	<div data-container="">
@@ -261,8 +265,8 @@ const editor = useEditor({
 		</p>
 	</div>
 
-	<layoutColumns columns="3" gap="md">
-		<layoutCard variant="elevated" padding="md" radius="md">
+	<layoutColumns columns="3" class="sf-gap-md sf-collapse-sm">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>Block Conversion</h3>
 			<p>Available on most block nodes:</p>
 			<ul>
@@ -295,7 +299,7 @@ const editor = useEditor({
 			</ul>
 		</layoutCard>
 
-		<layoutCard variant="elevated" padding="md" radius="md">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>Inline Formatting</h3>
 			<p>Shown when cursor is in a text block:</p>
 			<ul>
@@ -335,7 +339,7 @@ const editor = useEditor({
 			</ul>
 		</layoutCard>
 
-		<layoutCard variant="elevated" padding="md" radius="md">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>Attribute Editor</h3>
 			<p>
 				Available on every node at depth &gt; 0.
@@ -362,8 +366,8 @@ const editor = useEditor({
 		</layoutCard>
 	</layoutColumns>
 
-	<layoutColumns columns="3" gap="md">
-		<layoutCard variant="elevated" padding="md" radius="md">
+	<layoutColumns columns="3" class="sf-gap-md sf-collapse-sm">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>Table Controls</h3>
 			<p>Appear only when the cursor is inside a table cell:</p>
 			<ul>
@@ -382,7 +386,7 @@ const editor = useEditor({
 			</ul>
 		</layoutCard>
 
-		<layoutCard variant="elevated" padding="md" radius="md">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>List Controls</h3>
 			<p>Appear when the active node is a list wrapper:</p>
 			<ul>
@@ -414,7 +418,7 @@ const editor = useEditor({
 			</ul>
 		</layoutCard>
 
-		<layoutCard variant="elevated" padding="md" radius="md">
+		<layoutCard variant="elevated" class="sf-padding-md sf-radius-md">
 			<h3>Media &amp; Code Controls</h3>
 			<ul>
 				<li>
@@ -442,7 +446,7 @@ const editor = useEditor({
 		</layoutCard>
 	</layoutColumns>
 
-	<layoutCard variant="filled" padding="md" radius="md">
+	<layoutCard variant="filled" class="sf-padding-md sf-radius-md">
 		<h3>Code View</h3>
 		<p>
 			The <code>&lt; &gt;</code> button at the bottom-right of the editor toggles between the
@@ -455,8 +459,8 @@ const editor = useEditor({
 
 	<h2>Node Path &amp; Depth Control</h2>
 
-	<layoutSplit split="1/2" gap="md">
-		<layoutCard variant="outlined" padding="md" radius="md">
+	<layoutSplit split="1/2" class="sf-gap-md sf-collapse-sm">
+		<layoutCard variant="outlined" class="sf-padding-md sf-radius-md">
 			<h3>The Node Path Breadcrumb</h3>
 			<p>
 				At the top of the editor a breadcrumb shows the full ancestor path of the cursor —
@@ -481,7 +485,7 @@ const editor = useEditor({
 			</ul>
 		</layoutCard>
 
-		<layoutCard variant="outlined" padding="md" radius="md">
+		<layoutCard variant="outlined" class="sf-padding-md sf-radius-md">
 			<h3>How the Depth Ceiling Works</h3>
 			<p>
 				Active depth is a <em>ceiling</em>, not an exact level. At active depth 2, blocks at
@@ -514,8 +518,8 @@ const editor = useEditor({
 
 	<h2>Drag Handle &amp; Multi-select</h2>
 
-	<layoutSplit split="1/2" gap="md">
-		<layoutCard variant="outlined" padding="md" radius="md">
+	<layoutSplit split="1/2" class="sf-gap-md sf-collapse-sm">
+		<layoutCard variant="outlined" class="sf-padding-md sf-radius-md">
 			<h3>Drag Handle</h3>
 			<p>
 				A ⠿ handle appears to the left of any draggable block when you hover near it. Drag
@@ -529,7 +533,7 @@ const editor = useEditor({
 			</p>
 		</layoutCard>
 
-		<layoutCard variant="outlined" padding="md" radius="md">
+		<layoutCard variant="outlined" class="sf-padding-md sf-radius-md">
 			<h3>Multi-select (Virtual Selection)</h3>
 			<p>When a selection is active the toolbar switches to virtual-selection mode:</p>
 			<ul>
@@ -599,7 +603,7 @@ const editor = useEditor({
 		</p>
 	</div>
 
-	<tiptapTest class="bg-backgroundSecondary">
+	<tiptapTest class="sf-bg_secondary">
 		<p>This is the editable slot — select it, format it, or delete it.</p>
 	</tiptapTest>
 
@@ -621,13 +625,13 @@ const editor = useEditor({
 	<hr />
 </layoutCenter>
 
-<layoutCenter maxWidth="xl">
+<layoutCenter maxWidth="xl" class="sf-gap-md">
 	<div data-youtube-video="">
 		<iframe src="https://www.youtube.com/embed/3lTUAWOgoHs" resp="36rem"></iframe>
 	</div>
 </layoutCenter>
 
-<layoutCenter maxWidth="3xl" padding="lg">
+<layoutCenter maxWidth="3xl" class="sf-gap-md sf-padding-lg">
 	<p>
 		This embed has <code>resp="36rem"</code> set — select it and open
 		<span class="material-symbols-rounded icon-inline">tune</span> the attribute editor to
@@ -636,7 +640,7 @@ const editor = useEditor({
 
 	<hr />
 
-	<layoutCard variant="filled" padding="lg" radius="md">
+	<layoutCard variant="filled" class="sf-padding-lg sf-radius-md">
 		<h3>What's Shipped</h3>
 		<ul data-type="taskList">
 			<li data-checked data-type="taskItem">

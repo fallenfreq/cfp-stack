@@ -10,9 +10,9 @@
 					<div class="sp-row">
 						<button
 							class="sp-chip"
-							:class="{ 'is-active': selectedToken === 'none' }"
+							:class="{ 'is-active': selectedToken === null }"
 							@mousedown.prevent
-							@click="selectToken('none')"
+							@click="selectToken(null)"
 						>
 							none
 						</button>
@@ -29,7 +29,7 @@
 					</div>
 				</div>
 
-				<template v-if="selectedToken !== 'none'">
+				<template v-if="selectedToken !== null">
 					<div class="sp-divider" />
 					<ColorPicker
 						:value="shadowColor"
@@ -46,6 +46,7 @@
 import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeControl'
 import { SHADOW_OPTIONS } from '@/config/editor/layoutTokens'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
+import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
 import { nodeAt } from '@/utils/editor/editorUtils'
 import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
@@ -61,25 +62,27 @@ const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
 
 const { open, buttonEl, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
 
-const selectedToken = ref<string>('none')
+// null = no shadow; string = token name from SHADOW_OPTIONS
+const selectedToken = ref<string | null>(null)
 const shadowColor = ref<string>(DEFAULT_SHADOW_COLOR)
 
 watch(open, (isOpen) => {
 	if (!isOpen || capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
+	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
 	const style = typeof node.attrs.style === 'string' ? node.attrs.style : ''
-	const shadow = getStyleProp(style, 'box-shadow')
-	const match = shadow.match(/^var\(--shadow-(\w+)\)\s+(.+)$/)
-	if (match && SHADOW_OPTIONS.includes(match[1]!)) {
-		selectedToken.value = match[1]!
-		shadowColor.value = match[2]!
+
+	const token = getClassToken(cls, 'sf-shadow-')
+	if (token !== null && SHADOW_OPTIONS.includes(token)) {
+		selectedToken.value = token
+		shadowColor.value = getStyleProp(style, '--sf-shadow-color') || DEFAULT_SHADOW_COLOR
 	} else {
-		selectedToken.value = 'none'
+		selectedToken.value = null
 		shadowColor.value = DEFAULT_SHADOW_COLOR
 	}
 })
 
-const selectToken = (token: string) => {
+const selectToken = (token: string | null) => {
 	selectedToken.value = token
 	commit()
 }
@@ -92,25 +95,30 @@ const onColorCommit = (color: string) => {
 const commit = () => {
 	if (capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const base = typeof node.attrs.style === 'string' ? node.attrs.style : ''
-	let s = base
+	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	let s = typeof node.attrs.style === 'string' ? node.attrs.style : ''
 
-	if (selectedToken.value === 'none') {
-		s = setStyleProp(s, 'box-shadow', null)
+	if (selectedToken.value === null) {
+		const newClass = setClassToken(cls, 'sf-shadow-', null)
+		s = setStyleProp(s, '--sf-shadow-color', null)
+		props.editor.view.dispatch(
+			props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
+				...node.attrs,
+				class: newClass || null,
+				style: s || null,
+			}),
+		)
 	} else {
-		s = setStyleProp(
-			s,
-			'box-shadow',
-			`var(--shadow-${selectedToken.value}) ${shadowColor.value}`,
+		const newClass = setClassToken(cls, 'sf-shadow-', selectedToken.value)
+		s = setStyleProp(s, '--sf-shadow-color', shadowColor.value)
+		props.editor.view.dispatch(
+			props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
+				...node.attrs,
+				class: newClass || null,
+				style: s || null,
+			}),
 		)
 	}
-
-	props.editor.view.dispatch(
-		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
-			...node.attrs,
-			style: s || null,
-		}),
-	)
 }
 </script>
 
@@ -134,7 +142,7 @@ const commit = () => {
 
 .sp-label {
 	font-size: 0.7rem;
-	color: rgba(var(--textPrimary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--alpha-60));
 }
 
 .sp-row {
@@ -147,19 +155,19 @@ const commit = () => {
 .sp-chip {
 	height: 26px;
 	border-radius: 4px;
-	border: 1px solid rgba(var(--textPrimary) / var(--alpha-20));
+	border: 1px solid rgba(var(--text_primary) / var(--alpha-20));
 	padding: 0 6px;
 	cursor: pointer;
 	transition: transform 0.08s;
 	font-size: 0.75rem;
 	line-height: 1;
 	background: none;
-	color: rgb(var(--textPrimary));
+	color: rgb(var(--text_primary));
 }
 
 .sp-chip:hover {
 	transform: scale(1.05);
-	background: rgba(var(--textPrimary) / var(--alpha-8));
+	background: rgba(var(--text_primary) / var(--alpha-8));
 }
 
 .sp-chip.is-active {
@@ -169,7 +177,7 @@ const commit = () => {
 
 .sp-divider {
 	height: 1px;
-	background: rgba(var(--textPrimary) / var(--alpha-10));
+	background: rgba(var(--text_primary) / var(--alpha-10));
 	margin: 0 -4px;
 }
 </style>

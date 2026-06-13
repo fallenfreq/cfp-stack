@@ -83,7 +83,7 @@ const createMultiDragPreview = (view: EditorView, sorted: NodePos[]): HTMLElemen
 	wrap.style.cssText =
 		'position:fixed;top:0;left:0;pointer-events:none;opacity:0.001;'
 		+ 'border-radius:var(--radius-md);overflow:hidden;'
-		+ 'box-shadow:var(--shadow-xl) rgba(0,0,0,0.15);border:1px solid rgba(var(--textPrimary,0 0 0)/0.1);'
+		+ 'box-shadow:var(--shadow-xl) rgba(0,0,0,0.15);border:1px solid rgba(var(--text_primary,0 0 0)/0.1);'
 		+ 'max-width:480px;'
 
 	const badge = document.createElement('div')
@@ -96,7 +96,7 @@ const createMultiDragPreview = (view: EditorView, sorted: NodePos[]): HTMLElemen
 	const content = document.createElement('div')
 	content.className = 'tiptap'
 	content.style.cssText =
-		'padding:8px 12px;pointer-events:none;background:rgb(var(--backgroundPrimary,255 255 255));'
+		'padding:8px 12px;pointer-events:none;background:rgb(var(--bg_primary,255 255 255));'
 	for (const pos of sorted.slice(0, 3)) {
 		const dom = view.nodeDOM(pos) as HTMLElement | null
 		if (!dom) continue

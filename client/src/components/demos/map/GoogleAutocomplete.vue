@@ -100,7 +100,7 @@ onMounted(() => {
 			placeholder="Go to a place..."
 			class="input-field"
 			@input="makeAcRequest"
-		/>
+		>
 		<ul v-if="showDropdown" class="dropdown-menu">
 			<li
 				v-for="(result, index) in results"
@@ -119,8 +119,8 @@ onMounted(() => {
 	width: 100%;
 	padding: 8px;
 	font-size: 1rem;
-	border: 1px solid rgb(var(--backgroundBorder));
-	background-color: rgb(var(--backgroundPrimary));
+	border: 1px solid rgb(var(--border_color));
+	background-color: rgb(var(--bg_primary));
 	border-radius: 4px;
 }
 
@@ -128,9 +128,9 @@ onMounted(() => {
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
-	border: 1px solid rgb(var(--backgroundBorder));
+	border: 1px solid rgb(var(--border_color));
 	border-radius: 4px;
-	background: rgb(var(--backgroundPrimary));
+	background: rgb(var(--bg_primary));
 	position: absolute;
 	width: 100%;
 	z-index: 1000;
@@ -142,6 +142,6 @@ onMounted(() => {
 }
 
 .dropdown-item:hover {
-	background: rgb(var(--backgroundSecondary));
+	background: rgb(var(--bg_secondary));
 }
 </style>

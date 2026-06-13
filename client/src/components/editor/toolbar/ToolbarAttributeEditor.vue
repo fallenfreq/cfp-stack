@@ -6,6 +6,18 @@
 		<ToolbarPanel :open="open" :anchor-el="buttonEl" align="right" @close="onClose">
 			<div class="attr-content">
 				<ToolbarAttrRow
+					v-for="row in classTokenRows"
+					:key="row.key"
+					:attr-key="row.key"
+					:value="row.value"
+					:spec-default="null"
+					:spec-options="row.options"
+					:is-at-default="false"
+					:pending="justAddedKey === row.key"
+					@update="onUpdate"
+					@remove="onRemove"
+				/>
+				<ToolbarAttrRow
 					v-for="row in attrRows"
 					:key="row.key"
 					:attr-key="row.key"
@@ -18,12 +30,21 @@
 					@remove="onRemove"
 				/>
 
-				<div v-if="!attrRows.length && !addableKeys.length" class="attr-empty">
+				<div v-if="!allRowCount && !allAddableCount" class="attr-empty">
 					No attributes set
 				</div>
 
-				<template v-if="addableKeys.length">
-					<div v-if="attrRows.length" class="attr-divider" />
+				<template v-if="allAddableCount">
+					<div v-if="allRowCount" class="attr-divider" />
+					<button
+						v-for="key in classAddableKeys"
+						:key="key"
+						class="attr-add-btn"
+						@mousedown.prevent="startAdd(key)"
+					>
+						<span class="material-symbols-rounded">add</span>
+						{{ key }}
+					</button>
 					<button
 						v-for="key in addableKeys"
 						:key="key"
@@ -40,8 +61,10 @@
 </template>
 
 <script setup lang="ts">
+import { nodeClassTokens } from '@/config/editor/nodeClassTokens'
 import type { EnumExtensionAttribute } from '@/editor/enumAttr'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
+import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
 import { filterNonDefaultAttrs, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, nextTick, ref, watch } from 'vue'
@@ -81,9 +104,12 @@ const nonDefaultAttrs = computed(() =>
 	filterNonDefaultAttrs(capturedNode.value.attrs, specAttrs.value),
 )
 
+// Regular node attribute rows — 'class' is excluded because class tokens cover it.
 const attrRows = computed(() =>
 	Object.keys(specAttrs.value)
-		.filter((k) => k in nonDefaultAttrs.value || explicitlyAdded.value.has(k))
+		.filter(
+			(k) => k !== 'class' && (k in nonDefaultAttrs.value || explicitlyAdded.value.has(k)),
+		)
 		.sort()
 		.map((k) => {
 			const specDefault = specAttrs.value[k]?.default ?? null
@@ -94,9 +120,41 @@ const attrRows = computed(() =>
 
 const addableKeys = computed(() =>
 	Object.keys(specAttrs.value)
-		.filter((k) => !(k in nonDefaultAttrs.value) && !explicitlyAdded.value.has(k))
+		.filter(
+			(k) => k !== 'class' && !(k in nonDefaultAttrs.value) && !explicitlyAdded.value.has(k),
+		)
 		.sort(),
 )
+
+const classTokenSpecs = computed(() => nodeClassTokens[capturedNode.value.type.name] ?? [])
+
+const currentClass = computed(() =>
+	typeof capturedNode.value.attrs.class === 'string' ? capturedNode.value.attrs.class : '',
+)
+
+const classTokenRows = computed(() =>
+	classTokenSpecs.value
+		.map((spec) => ({
+			key: spec.key,
+			prefix: spec.prefix,
+			value: getClassToken(currentClass.value, spec.prefix),
+			options: spec.options,
+		}))
+		.filter((r) => r.value !== null || explicitlyAdded.value.has(r.key)),
+)
+
+const classAddableKeys = computed(() =>
+	classTokenSpecs.value
+		.filter(
+			(spec) =>
+				getClassToken(currentClass.value, spec.prefix) === null
+				&& !explicitlyAdded.value.has(spec.key),
+		)
+		.map((spec) => spec.key),
+)
+
+const allRowCount = computed(() => attrRows.value.length + classTokenRows.value.length)
+const allAddableCount = computed(() => addableKeys.value.length + classAddableKeys.value.length)
 
 const dispatch = (newAttrs: Record<string, unknown>) => {
 	if (capturedPos.value === null) return
@@ -105,8 +163,19 @@ const dispatch = (newAttrs: Record<string, unknown>) => {
 	)
 }
 
+const dispatchClass = (newClass: string) => {
+	if (capturedPos.value === null) return
+	const node = nodeAt(props.editor.state.doc, capturedPos.value)
+	dispatch({ ...node.attrs, class: newClass || null })
+}
+
 const onUpdate = (key: string, value: unknown) => {
 	if (capturedPos.value === null) return
+	const spec = classTokenSpecs.value.find((s) => s.key === key)
+	if (spec) {
+		dispatchClass(setClassToken(currentClass.value, spec.prefix, value as string))
+		return
+	}
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
 	dispatch({ ...node.attrs, [key]: value })
 }
@@ -114,6 +183,11 @@ const onUpdate = (key: string, value: unknown) => {
 const onRemove = (key: string) => {
 	explicitlyAdded.value = new Set([...explicitlyAdded.value].filter((k) => k !== key))
 	if (capturedPos.value === null) return
+	const spec = classTokenSpecs.value.find((s) => s.key === key)
+	if (spec) {
+		dispatchClass(setClassToken(currentClass.value, spec.prefix, null))
+		return
+	}
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
 	const specDefault = node.type.spec.attrs?.[key]?.default ?? null
 	dispatch({ ...node.attrs, [key]: specDefault })
@@ -122,8 +196,12 @@ const onRemove = (key: string) => {
 const startAdd = (key: string) => {
 	explicitlyAdded.value = new Set([...explicitlyAdded.value, key])
 	justAddedKey.value = key
-	// No dispatch needed — addable keys are already at their default in the node.
-	// Dispatching the default would create a spurious undo history entry.
+	const spec = classTokenSpecs.value.find((s) => s.key === key)
+	if (spec && spec.options.length > 0) {
+		// Commit the first option immediately so the select has a valid value.
+		dispatchClass(setClassToken(currentClass.value, spec.prefix, spec.options[0] as string))
+	}
+	// Regular attrs are already at their default in the node — no dispatch needed.
 	nextTick(() => {
 		justAddedKey.value = null
 	})
@@ -182,7 +260,7 @@ watch(
 
 .attr-divider {
 	height: 1px;
-	background: rgb(var(--backgroundBorder));
+	background: rgb(var(--border_color));
 	margin: 4px 0;
 }
 
@@ -195,15 +273,15 @@ watch(
 	border-radius: 3px;
 	border: none;
 	background: none;
-	color: rgba(var(--textPrimary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--alpha-60));
 	font-size: 0.8rem;
 	cursor: pointer;
 	text-align: left;
 }
 
 .attr-add-btn:hover {
-	background: rgba(var(--textPrimary) / var(--alpha-10));
-	color: rgb(var(--textPrimary));
+	background: rgba(var(--text_primary) / var(--alpha-10));
+	color: rgb(var(--text_primary));
 }
 
 .attr-add-btn .material-symbols-rounded {
@@ -213,7 +291,7 @@ watch(
 .attr-empty {
 	padding: 6px 8px;
 	font-size: 0.8rem;
-	color: rgba(var(--textPrimary) / var(--alpha-40));
+	color: rgba(var(--text_primary) / var(--alpha-40));
 	text-align: center;
 }
 </style>

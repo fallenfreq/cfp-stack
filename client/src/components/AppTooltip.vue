@@ -137,9 +137,9 @@ onUnmounted(() => {
 	font-size: 11px;
 	padding: 3px 7px;
 	border-radius: 4px;
-	background: rgb(var(--backgroundPrimary));
-	border: 1px solid rgb(var(--backgroundBorder));
+	background: rgb(var(--bg_primary));
+	border: 1px solid rgb(var(--border_color));
 	box-shadow: 0 2px 6px rgb(0 0 0 / var(--alpha-20));
-	color: rgb(var(--textPrimary));
+	color: rgb(var(--text_primary));
 }
 </style>

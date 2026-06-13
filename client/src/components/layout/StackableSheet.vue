@@ -1,6 +1,6 @@
 <template>
 	<Transition appear name="slide">
-		<div v-if="sheetStore.isSheetOpen" class="sheet z-20 bg-backgroundSecondary">
+		<div v-if="sheetStore.isSheetOpen" class="sheet z-20 sf-bg_secondary">
 			<div class="close-button">
 				<FontAwesomeIcon size="sm" :icon="faXmark" @click="sheetStore.closeSheet" />
 			</div>

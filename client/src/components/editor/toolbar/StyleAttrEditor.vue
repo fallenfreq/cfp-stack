@@ -166,8 +166,8 @@ onUnmounted(() => {
 .style-editor-frame--fs {
 	position: relative;
 	width: min(80vw, 800px);
-	background: rgb(var(--backgroundSecondary));
-	border: 1px solid rgb(var(--backgroundBorder));
+	background: rgb(var(--bg_secondary));
+	border: 1px solid rgb(var(--border_color));
 	border-radius: 8px;
 	padding: 8px;
 	display: flex;
@@ -178,7 +178,7 @@ onUnmounted(() => {
 	flex: 1;
 	min-width: 0;
 	border-radius: 3px;
-	border: 1px solid rgb(var(--backgroundBorder));
+	border: 1px solid rgb(var(--border_color));
 	overflow: hidden;
 	transition: border-color 0.1s;
 }
@@ -191,7 +191,7 @@ onUnmounted(() => {
 	min-height: 44px;
 	max-height: 150px;
 	overflow-y: auto;
-	background: rgb(var(--backgroundPrimary));
+	background: rgb(var(--bg_primary));
 }
 
 .style-editor-frame--fs :deep(.cm-editor) {
@@ -222,14 +222,14 @@ onUnmounted(() => {
 	background: none;
 	border: none;
 	border-radius: 3px;
-	color: rgba(var(--textPrimary) / var(--alpha-30));
+	color: rgba(var(--text_primary) / var(--alpha-30));
 	cursor: pointer;
 	padding: 0;
 }
 
 .style-fs-open:hover {
-	color: rgb(var(--textPrimary));
-	background: rgba(var(--backgroundPrimary) / var(--alpha-90));
+	color: rgb(var(--text_primary));
+	background: rgba(var(--bg_primary) / var(--alpha-90));
 }
 
 .style-fs-open .material-symbols-rounded {
@@ -248,13 +248,13 @@ onUnmounted(() => {
 	background: none;
 	border: none;
 	border-radius: 4px;
-	color: rgba(var(--textPrimary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--alpha-60));
 	cursor: pointer;
 }
 
 .style-fs-close:hover {
-	background: rgba(var(--textPrimary) / var(--alpha-10));
-	color: rgb(var(--textPrimary));
+	background: rgba(var(--text_primary) / var(--alpha-10));
+	color: rgb(var(--text_primary));
 }
 
 .style-fs-close .material-symbols-rounded {

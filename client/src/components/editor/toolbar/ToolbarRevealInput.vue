@@ -12,7 +12,7 @@
 				:placeholder="placeholder ?? 'https://'"
 				@keydown.enter.prevent="apply"
 				@keydown.escape.prevent="collapse"
-			/>
+			>
 			<ToolbarButton @click="apply">
 				<ToolbarIcon>check</ToolbarIcon>
 			</ToolbarButton>
@@ -86,9 +86,9 @@ const remove = () => {
 	height: 26px;
 	padding: 2px 6px;
 	border-radius: 4px;
-	border: 1px solid rgb(var(--backgroundBorder));
-	background: rgb(var(--backgroundPrimary));
-	color: rgb(var(--textPrimary));
+	border: 1px solid rgb(var(--border_color));
+	background: rgb(var(--bg_primary));
+	color: rgb(var(--text_primary));
 	font-size: 0.8rem;
 	width: 180px;
 	outline: none;

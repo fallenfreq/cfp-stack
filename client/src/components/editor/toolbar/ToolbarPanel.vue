@@ -143,8 +143,8 @@ onUnmounted(() => {
 	 * left edge on the first open. */
 	position: fixed;
 	z-index: var(--z-panel);
-	background: rgb(var(--backgroundSecondary));
-	border: 1px solid rgb(var(--backgroundBorder));
+	background: rgb(var(--bg_secondary));
+	border: 1px solid rgb(var(--border_color));
 	border-radius: var(--radius-sm);
 	padding: 4px;
 	box-shadow: var(--shadow-md) rgb(var(--shadow) / var(--alpha-20));

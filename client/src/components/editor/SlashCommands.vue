@@ -59,8 +59,8 @@ defineExpose({ onKeyDown })
 
 <style>
 .dropdown-menu {
-	background: rgb(var(--backgroundSecondary));
-	border: 1px solid rgb(var(--backgroundBorder));
+	background: rgb(var(--bg_secondary));
+	border: 1px solid rgb(var(--border_color));
 	border-radius: 4px;
 	padding: 4px;
 	overflow-y: auto;
@@ -81,7 +81,7 @@ defineExpose({ onKeyDown })
 }
 
 .is-selected {
-	background-color: rgb(var(--backgroundPrimary));
+	background-color: rgb(var(--bg_primary));
 }
 
 .no-commands {

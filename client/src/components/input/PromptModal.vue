@@ -70,7 +70,7 @@ const close = () => {
 }
 
 .prompt-content {
-	background: rgb(var(--backgroundSecondary));
+	background: rgb(var(--bg_secondary));
 	padding: 20px;
 	width: 100%;
 	max-width: 600px;
@@ -83,7 +83,7 @@ const close = () => {
 
 .prompt-content input {
 	width: 100%;
-	background: rgb(var(--backgroundPrimary));
+	background: rgb(var(--bg_primary));
 	padding: 5px;
 	margin: 10px 0;
 	border-radius: 5px;
