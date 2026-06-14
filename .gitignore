@@ -40,3 +40,6 @@ client/cssVariables.js
 .tsbuildinfo
 TODO.md
 *.code-workspace
+
+# editor swap/temp files
+*.tmp.*

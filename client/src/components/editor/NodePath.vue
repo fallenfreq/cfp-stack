@@ -20,6 +20,7 @@
 
 <script setup lang="ts">
 import { useDragHandleStore } from '@/stores/dragHandleStore'
+import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -53,7 +54,7 @@ const path = computed((): PathSegment[] => {
 
 	for (let depth = 0; depth <= $pos.depth; depth++) {
 		segments.push({
-			name: $pos.node(depth).type.name,
+			name: getNodeAlias($pos.node(depth).type.name),
 			depth,
 			start: $pos.start(depth),
 		})
@@ -63,7 +64,7 @@ const path = computed((): PathSegment[] => {
 	// Append them at parentDepth + 1 so they appear in the path.
 	if (selection instanceof NodeSelection && selection.node.isLeaf) {
 		segments.push({
-			name: selection.node.type.name,
+			name: getNodeAlias(selection.node.type.name),
 			depth: $pos.depth + 1,
 			start: -1,
 		})
@@ -120,16 +121,12 @@ onUnmounted(() => {
 
 <style>
 .node-path {
-	position: sticky;
-	top: 0;
-	z-index: var(--z-nodepath);
 	display: flex;
 	align-items: center;
-	padding: 4px 1.75rem;
+	flex: 1;
+	min-width: 0;
 	overflow-x: auto;
 	scrollbar-width: none;
-	background: rgb(var(--bg_secondary));
-	border-bottom: 1px solid rgb(var(--border_color));
 	font-size: 0.75rem;
 }
 .node-path::-webkit-scrollbar {
@@ -140,6 +137,7 @@ onUnmounted(() => {
 	color: rgba(var(--text_primary) / var(--alpha-30));
 	padding: 0 4px;
 	user-select: none;
+	flex-shrink: 0;
 }
 
 .path-node {

@@ -40,7 +40,7 @@
 		"superjson": "2.2.1"
 	},
 	"lint-staged": {
-		"*.{js,mjs,cjs,ts,vue}": "eslint --flag v10_config_lookup_from_file --fix",
+		"*.{js,mjs,cjs,ts,vue}": "eslint --flag v10_config_lookup_from_file --no-warn-ignored --fix",
 		"*": "prettier --write --ignore-unknown"
 	},
 	"devDependencies": {
