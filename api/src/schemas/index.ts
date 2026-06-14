@@ -1,6 +1,7 @@
 import * as collectionEntry from './collectionEntry.js'
 import * as mapMarker from './mapMarker.js'
+import * as page from './page.js'
 import * as user from './user.js'
 
-const schemas = { ...user, ...mapMarker, ...collectionEntry }
+const schemas = { ...user, ...mapMarker, ...collectionEntry, ...page }
 export { schemas }

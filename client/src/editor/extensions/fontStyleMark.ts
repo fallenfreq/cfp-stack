@@ -60,12 +60,12 @@ const FontStyle = Mark.create({
 		]
 	},
 
-	renderHTML({ attrs }) {
+	renderHTML({ mark }) {
 		const classes = [
-			varToClass(attrs.fontFamily),
-			varToClass(attrs.fontSize),
-			varToClass(attrs.lineHeight),
-			varToClass(attrs.letterSpacing),
+			varToClass(mark.attrs.fontFamily),
+			varToClass(mark.attrs.fontSize),
+			varToClass(mark.attrs.lineHeight),
+			varToClass(mark.attrs.letterSpacing),
 		]
 			.filter(Boolean)
 			.join(' ')

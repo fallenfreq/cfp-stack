@@ -35,37 +35,35 @@ const secure = t.middleware(async ({ next, ctx }) => {
 	if (!authHeader) {
 		throw new TRPCError({
 			code: 'UNAUTHORIZED',
-			message: 'No authorization header provided',
+			message: 'Please log in to continue',
 		})
 	}
 
 	const token = authHeader.split(' ')[1]
 	try {
 		const response = await axios.post(ZITADEL_INTROSPECTION_ENDPOINT, `token=${token}`, {
+			adapter: 'fetch',
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			auth: {
-				username: ZITADEL_CLIENT_ID,
-				password: ZITADEL_CLIENT_SECRET,
+				Authorization: `Basic ${btoa(`${ZITADEL_CLIENT_ID}:${ZITADEL_CLIENT_SECRET}`)}`,
 			},
 		})
-
 		if (!response.data.active) {
 			throw new TRPCError({
-				code: 'FORBIDDEN',
-				message: 'Inactive token',
+				code: 'UNAUTHORIZED',
+				message: 'Session expired, please log in again',
 			})
 		}
 		return next({ ctx: { secure: true } })
 	} catch (error: any) {
-		const message = error.response ? error.response.data : error.message
+		if (error instanceof TRPCError) throw error
+		// Network or Zitadel HTTP error — server-side problem, not a client auth failure.
+		// onError in [[trpc]].ts logs this and replaces the message before sending to client.
+		const message = error.response ? JSON.stringify(error.response.data) : error.message
 		console.error('Introspection error:', message)
-
 		throw new TRPCError({
 			code: 'INTERNAL_SERVER_ERROR',
-			message: `Failed to introspect token: ${message}`,
-			cause: error,
+			message: `Introspection failed: ${message}`,
 		})
 	}
 })

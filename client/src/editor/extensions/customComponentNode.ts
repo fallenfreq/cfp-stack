@@ -10,20 +10,19 @@ import {
 import { defineComponent, h, onUnmounted, ref } from 'vue'
 
 // Utility function to create a Tiptap node for Vue components
-export function createVueNode(
-	componentName: string,
-	{
-		component,
-		content,
-		props,
-		contentAs,
-		contenteditable = true,
-		atom = false,
-		decorative = false,
-	}: ComponentData,
-) {
+export function createVueNode({
+	uuid,
+	alias,
+	component,
+	content,
+	props,
+	contentAs,
+	contenteditable = true,
+	atom = false,
+	decorative = false,
+}: ComponentData) {
 	return Node.create({
-		name: componentName,
+		name: uuid,
 		group: 'block',
 		content,
 		selectable: false,
@@ -37,13 +36,13 @@ export function createVueNode(
 
 		// Parse HTML to convert it into the node with attributes
 		parseHTML() {
-			return [{ tag: componentName }]
+			return [{ tag: alias }]
 		},
 
 		// Render HTML and allow content inside the component
 		renderHTML({ HTMLAttributes }) {
 			// '0' means content goes inside
-			return [componentName, mergeAttributes(HTMLAttributes), 0]
+			return [alias, mergeAttributes(HTMLAttributes), 0]
 		},
 
 		// Add node view for rendering Vue components inside the editor

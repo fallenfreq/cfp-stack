@@ -56,9 +56,18 @@ const router = createRouter({
 			},
 		},
 		{
-			path: '/demo/editor',
+			path: '/editor/:slug?',
 			name: 'editor',
 			component: () => import('../views/TiptapEditorDemo.vue'),
+		},
+		{
+			path: '/demo/editor',
+			redirect: { name: 'editor' },
+		},
+		{
+			path: '/preview/:slug',
+			name: 'page-preview',
+			component: () => import('../views/PagePreview.vue'),
 		},
 		{
 			path: '/demo/map',

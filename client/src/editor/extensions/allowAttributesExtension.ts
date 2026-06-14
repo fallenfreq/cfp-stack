@@ -1,6 +1,6 @@
 import { editorComponents } from '@/config/editor/editorComponents'
 import { Extension } from '@tiptap/vue-3'
-const componentNodeTypes = Object.keys(editorComponents)
+const componentNodeTypes = Object.values(editorComponents).map((c) => c.uuid)
 
 // List the nodes that you want to extend with global attributes support
 const nodesWithStyle = [

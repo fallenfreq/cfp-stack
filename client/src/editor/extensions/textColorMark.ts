@@ -57,8 +57,8 @@ const TextColor = Mark.create({
 		]
 	},
 
-	renderHTML({ attrs }) {
-		const parsed = parseStoredValue(attrs.color)
+	renderHTML({ mark }) {
+		const parsed = parseStoredValue(mark.attrs.color)
 		if (parsed?.kind === 'token') {
 			const colorClass = `sf-color-${parsed.cssVar.slice(2)}`
 			const classes = [colorClass]
@@ -69,7 +69,11 @@ const TextColor = Mark.create({
 			return ['span', mergeAttributes({ class: classes.join(' ') }), 0]
 		}
 		// Arbitrary colour: inline style
-		return ['span', mergeAttributes(attrs.color ? { style: `color: ${attrs.color}` } : {}), 0]
+		return [
+			'span',
+			mergeAttributes(mark.attrs.color ? { style: `color: ${mark.attrs.color}` } : {}),
+			0,
+		]
 	},
 })
 

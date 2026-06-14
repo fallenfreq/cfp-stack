@@ -8,7 +8,7 @@
 import { type PropType } from 'vue'
 
 defineProps({
-	columns: { type: String as PropType<'2' | '3' | '4'>, default: '2' },
+	columns: { type: Number as PropType<2 | 3 | 4>, default: 2 },
 	align: {
 		type: String as PropType<'start' | 'center' | 'end' | 'stretch'>,
 		default: 'stretch',

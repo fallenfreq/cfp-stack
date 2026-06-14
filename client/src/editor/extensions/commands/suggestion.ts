@@ -9,13 +9,13 @@ interface Item {
 	command: Command
 }
 
-const editorComponentItems: Item[] = Object.entries(editorComponents).map(([key, value]) => ({
-	title: key,
+const editorComponentItems: Item[] = Object.values(editorComponents).map((value) => ({
+	title: value.alias,
 	command: ({ editor, range }) => {
 		if (value.content.startsWith('inline')) {
-			editor.chain().focus().deleteRange(range).setNode(key).run()
+			editor.chain().focus().deleteRange(range).setNode(value.uuid).run()
 		} else {
-			editor.chain().focus().deleteRange(range).wrapIn(key).run()
+			editor.chain().focus().deleteRange(range).wrapIn(value.uuid).run()
 		}
 	},
 }))
