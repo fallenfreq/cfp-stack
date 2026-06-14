@@ -46,7 +46,15 @@ export const useEditorStore = defineStore('editor', () => {
 
 	const loadPage = async (slug: string) => {
 		const page = await trpc.sitePages.get.query({ slug })
-		if (!page) return
+		if (!page) {
+			useToast().notify({
+				duration: 5000,
+				color: 'warning',
+				position: 'bottom-right',
+				message: `Page "${slug}" not found`,
+			})
+			return
+		}
 		const applyContent = () => {
 			try {
 				editor.value!.commands.setContent(JSON.parse(page.contentJson), {
