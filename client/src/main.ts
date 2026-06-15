@@ -27,16 +27,32 @@ declare module 'vue' {
 import globalKeyPlugin from './plugins/globalKeyPlugin'
 
 zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
-	if (ok) {
-		const app = createApp(App)
-		app.config.globalProperties.$zitadel = zitadelAuth
-		app.use(globalKeyPlugin)
-		app.use(createPinia())
-		app.use(VueQueryPlugin, { queryClient })
-		app.use(router)
-		app.use(vuestic)
-		app.mount('#app')
-	} else {
-		console.error('Startup was not ok')
+	if (!ok) {
+		// ok=false means this window is a callback page (silent renew iframe or popup); don't mount.
+		return
 	}
+
+	// Purge stale PKCE state entries on every startup. They accumulate with each
+	// login attempt and are never needed after the flow completes. The user token
+	// key ('user:https://...') has no 'oidc.' prefix so it is always preserved.
+	Object.keys(localStorage)
+		.filter((k) => k.startsWith('oidc.'))
+		.forEach((k) => localStorage.removeItem(k))
+
+	if (!zitadelAuth.oidcAuth.isAuthenticated) {
+		// Fire-and-forget: uses the Zitadel SSO cookie to restore tokens without
+		// a new login. user.value is reactive so the UI updates when it resolves.
+		zitadelAuth.oidcAuth.mgr.signinSilent().catch(() => {
+			// Zitadel session also expired; user must log in manually.
+		})
+	}
+
+	const app = createApp(App)
+	app.config.globalProperties.$zitadel = zitadelAuth
+	app.use(globalKeyPlugin)
+	app.use(createPinia())
+	app.use(VueQueryPlugin, { queryClient })
+	app.use(router)
+	app.use(vuestic)
+	app.mount('#app')
 })

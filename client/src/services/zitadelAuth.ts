@@ -26,6 +26,23 @@ const zitadelAuth = createZITADELAuth(
 			'urn:zitadel:iam:org:projects:roles',
 			'urn:zitadel:iam:user:metadata',
 		].join(' '),
+		// In dev, persist tokens to localStorage so they survive dev server restarts.
+		// In prod, the default sessionStorage is used and signinSilent handles renewal.
+		...(import.meta.env.MODE === 'development' && {
+			userStore: {
+				set: (key: string, value: string) => {
+					localStorage.setItem(key, value)
+					return Promise.resolve()
+				},
+				get: (key: string) => Promise.resolve(localStorage.getItem(key)),
+				remove: (key: string) => {
+					const v = localStorage.getItem(key)
+					localStorage.removeItem(key)
+					return Promise.resolve(v)
+				},
+				getAllKeys: () => Promise.resolve(Object.keys(localStorage)),
+			},
+		}),
 	},
 )
 
