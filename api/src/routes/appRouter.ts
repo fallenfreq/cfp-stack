@@ -2,9 +2,10 @@ import { z } from 'zod'
 import { publicProcedure, router } from '../config/trpc.js'
 import { keysRouter } from './keys/router.js'
 import { markersRouter } from './markers/router.js'
-import { sitePagesRouter } from './pages/router.js'
+import { adminPagesRouter, publicPagesRouter } from './pages/router.js'
 import { portfolioRouter } from './portfolio/router.js'
 import { secureRouter } from './secure/router.js'
+import { adminTagsRouter, publicTagsRouter } from './tags/router.js'
 import { userRouter } from './user/router.js'
 
 const appRouter = router({
@@ -18,7 +19,13 @@ const appRouter = router({
 
 	portfolio: portfolioRouter,
 
-	sitePages: sitePagesRouter,
+	publicPages: publicPagesRouter,
+
+	adminPages: adminPagesRouter,
+
+	publicTags: publicTagsRouter,
+
+	adminTags: adminTagsRouter,
 
 	test: publicProcedure.query(async () => {
 		return 'Some stuff'

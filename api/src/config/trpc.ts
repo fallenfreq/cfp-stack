@@ -17,20 +17,18 @@ import * as collection from '../schemas/collectionEntry.js'
 const schemas = { ...user, ...collection }
 
 const { ZITADEL_INTROSPECTION_ENDPOINT, ZITADEL_CLIENT_ID, ZITADEL_CLIENT_SECRET } = getAllEnvs()
-// type appDb = DrizzleD1Database<typeof schemas>
-// Define the type for the context
+
 interface Context {
 	db: DrizzleD1Database<typeof schemas>
 	req: Request
+	roles?: string[]
 }
 
-// Initialize tRPC with the correct context type
 const t = initTRPC.context<Context>().create({
 	transformer: superjson,
 })
 
 const secure = t.middleware(async ({ next, ctx }) => {
-	// test if get Authorization works
 	const authHeader = ctx.req.headers.get('Authorization')
 	if (!authHeader) {
 		throw new TRPCError({
@@ -41,7 +39,11 @@ const secure = t.middleware(async ({ next, ctx }) => {
 
 	const token = authHeader.split(' ')[1]
 	try {
-		const response = await axios.post(ZITADEL_INTROSPECTION_ENDPOINT, `token=${token}`, {
+		const response = await axios.post<{
+			active: boolean
+			// Zitadel project roles: { [roleKey]: { [orgId]: orgDomain } }
+			'urn:zitadel:iam:org:project:roles'?: Record<string, Record<string, string>>
+		}>(ZITADEL_INTROSPECTION_ENDPOINT, `token=${token}`, {
 			adapter: 'fetch',
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
@@ -54,7 +56,9 @@ const secure = t.middleware(async ({ next, ctx }) => {
 				message: 'Session expired, please log in again',
 			})
 		}
-		return next({ ctx: { secure: true } })
+		const rolesObj = response.data['urn:zitadel:iam:org:project:roles']
+		const roles = rolesObj ? Object.keys(rolesObj) : []
+		return next({ ctx: { secure: true, roles } })
 	} catch (error: any) {
 		if (error instanceof TRPCError) throw error
 		// Network or Zitadel HTTP error — server-side problem, not a client auth failure.
@@ -68,8 +72,16 @@ const secure = t.middleware(async ({ next, ctx }) => {
 	}
 })
 
+const adminMiddleware = t.middleware(({ next, ctx }) => {
+	if (!ctx.roles?.includes('admin')) {
+		throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' })
+	}
+	return next()
+})
+
 const router = t.router
 const publicProcedure = t.procedure
 const secureProcedure = t.procedure.use(secure)
+const adminProcedure = t.procedure.use(secure).use(adminMiddleware)
 
-export { publicProcedure, router, secureProcedure, type Context, type schemas }
+export { adminProcedure, publicProcedure, router, secureProcedure, type Context, type schemas }

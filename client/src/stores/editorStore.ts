@@ -1,11 +1,12 @@
 import router from '@/router'
+import { initPromptModal } from '@/services/promptModal'
 import { trpc } from '@/trpc'
 import { prettifyCode } from '@/utils/codeFormatting'
 import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
 import { escapeHTML } from '@/utils/stringUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { defineStore } from 'pinia'
-import { ref, shallowRef, watch, watchEffect, type ShallowRef } from 'vue'
+import { getCurrentInstance, ref, shallowRef, watch, watchEffect, type ShallowRef } from 'vue'
 import { useToast } from 'vuestic-ui'
 
 export const useEditorStore = defineStore('editor', () => {
@@ -17,6 +18,9 @@ export const useEditorStore = defineStore('editor', () => {
 	const saveStatus = ref<'idle' | 'saving' | 'saved' | 'error'>('idle')
 	const currentPageId = ref<number | null>(null)
 	const currentSlug = ref<string | null>(null)
+	const currentName = ref<string | null>(null)
+	const currentPublished = ref(false)
+	const pendingAutoTag = ref<number | null>(null)
 
 	watchEffect(() => {
 		if (editor.value && !generateBlueprintHTML) {
@@ -45,7 +49,7 @@ export const useEditorStore = defineStore('editor', () => {
 	}
 
 	const loadPage = async (slug: string) => {
-		const page = await trpc.sitePages.get.query({ slug })
+		const page = await trpc.adminPages.getBySlug.query({ slug })
 		if (!page) {
 			useToast().notify({
 				duration: 5000,
@@ -71,6 +75,8 @@ export const useEditorStore = defineStore('editor', () => {
 			}
 			currentPageId.value = page.pageId
 			currentSlug.value = slug
+			currentName.value = page.name || null
+			currentPublished.value = page.published
 		}
 		if (editor.value) {
 			applyContent()
@@ -87,17 +93,36 @@ export const useEditorStore = defineStore('editor', () => {
 	const save = async () => {
 		if (!editor.value) return
 		saveStatus.value = 'saving'
-		const contentJson = JSON.stringify(editor.value.getJSON())
+		const json = editor.value.getJSON()
+		const contentJson = JSON.stringify(
+			json.content?.length ? json : { type: 'doc', content: [{ type: 'paragraph' }] },
+		)
 		try {
 			if (currentPageId.value !== null) {
-				await trpc.sitePages.update.mutate({ pageId: currentPageId.value, contentJson })
+				await trpc.adminPages.update.mutate({ pageId: currentPageId.value, contentJson })
 			} else {
-				const slug = crypto.randomUUID()
-				const result = await trpc.sitePages.create.mutate({ slug, contentJson })
+				let name = currentName.value?.trim() || null
+				if (!name) {
+					const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
+					name = await showPrompt('Page name')
+					if (name === null) {
+						saveStatus.value = 'idle'
+						return
+					}
+				}
+				const result = await trpc.adminPages.create.mutate({ name, contentJson })
 				if (!result?.pageId) throw new Error('Failed to create page: no ID returned')
 				currentPageId.value = result.pageId
-				currentSlug.value = slug
-				router.replace({ name: 'editor', params: { slug } })
+				currentSlug.value = result.slug
+				currentName.value = name
+				if (pendingAutoTag.value !== null) {
+					await trpc.adminPages.update.mutate({
+						pageId: result.pageId,
+						tagIds: [pendingAutoTag.value],
+					})
+					pendingAutoTag.value = null
+				}
+				router.replace({ name: 'editor', params: { slug: result.slug } })
 			}
 			saveStatus.value = 'saved'
 			setTimeout(() => {
@@ -124,6 +149,13 @@ export const useEditorStore = defineStore('editor', () => {
 		}
 	}
 
+	const renamePage = async (newName: string) => {
+		if (!newName.trim()) return
+		currentName.value = newName.trim()
+		if (!currentPageId.value) return
+		await trpc.adminPages.update.mutate({ pageId: currentPageId.value, name: newName.trim() })
+	}
+
 	return {
 		editor,
 		setEditor,
@@ -132,7 +164,11 @@ export const useEditorStore = defineStore('editor', () => {
 		saveStatus,
 		currentPageId,
 		currentSlug,
+		currentName,
+		currentPublished,
+		pendingAutoTag,
 		loadPage,
 		save,
+		renamePage,
 	}
 })
