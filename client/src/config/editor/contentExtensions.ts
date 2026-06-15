@@ -10,15 +10,19 @@ import Image from '@tiptap/extension-image'
 import { TaskList } from '@tiptap/extension-list'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
 import StarterKit from '@tiptap/starter-kit'
-import { mergeAttributes, type Extensions } from '@tiptap/vue-3'
+import { mergeAttributes, type Extensions, type NodeViewRenderer } from '@tiptap/vue-3'
+import { CodeBlockExtension } from './codeBlockExtension'
 import { registerCustomNodes } from './registerCustomNodes'
+import { YoutubeExtension } from './youtubeExtension'
 
 interface ContentExtensionOptions {
 	tableNodeSelection?: boolean
+	codeBlockNodeView?: () => NodeViewRenderer
 }
 
 export function getContentExtensions({
 	tableNodeSelection = false,
+	codeBlockNodeView,
 }: ContentExtensionOptions = {}): Extensions {
 	return [
 		StarterKit.configure({
@@ -83,5 +87,9 @@ export function getContentExtensions({
 			HTMLAttributes: { class: 'flex items-start' },
 			nested: true,
 		}),
+		codeBlockNodeView
+			? CodeBlockExtension.extend({ addNodeView: codeBlockNodeView })
+			: CodeBlockExtension,
+		YoutubeExtension,
 	]
 }

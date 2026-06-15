@@ -14,8 +14,6 @@
 import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
 import { useNodeViewInteractions } from '@/composables/editor/useNodeViewInteractions'
 import { getContentExtensions } from '@/config/editor/contentExtensions'
-import initialContent from '@/config/editor/initialContent.html?raw'
-import { lowlight } from '@/config/editor/lowlight'
 import Commands from '@/editor/extensions/commands/commands.js'
 import suggestion from '@/editor/extensions/commands/suggestion.js'
 import { DragHandle } from '@/editor/extensions/dragHandle'
@@ -29,9 +27,7 @@ import {
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore.js'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Placeholder from '@tiptap/extension-placeholder'
-import Youtube from '@tiptap/extension-youtube'
 import { EditorContent, useEditor, VueNodeViewRenderer, type NodeViewProps } from '@tiptap/vue-3'
 import { watch, type Component } from 'vue'
 import CodeViewToggle from './CodeViewToggle.vue'
@@ -64,41 +60,10 @@ const editor = useEditor({
 				dragHandleStore.setFrozenTargetPos(null)
 			},
 		}),
-		CodeBlockLowlight.extend({
-			addNodeView() {
-				return VueNodeViewRenderer(TiptapCodeBlock as Component<NodeViewProps>)
-			},
-		}).configure({ lowlight }),
-		...getContentExtensions({ tableNodeSelection: true }),
-		Youtube.extend({
-			renderHTML({ node, HTMLAttributes }) {
-				const { resp } = node.attrs
-				const maxWidthStyle = resp ? `max-width: ${resp};` : null
-				// Use this.parent?.() to get the original DomOutputSpec from the Youtube extension
-				const domOutputSpec = this.parent?.({ node, HTMLAttributes })
-				if (!domOutputSpec) throw new Error('No parent DomOutputSpec found')
-				return resp === '' || resp
-					? ['div', { class: 'max-w-xl', style: maxWidthStyle }, domOutputSpec]
-					: domOutputSpec
-			},
-			addAttributes() {
-				const existingAttributes = this.parent?.() || {}
-				return {
-					...existingAttributes,
-					resp: {
-						default: '',
-						renderHTML: (attributes) => {
-							return attributes.resp === '' || attributes.resp
-								? {
-										width: 'auto',
-										height: 'auto',
-										class: (attributes.class || '' + ' resp-yt').trim(),
-									}
-								: {}
-						},
-					},
-				}
-			},
+		...getContentExtensions({
+			tableNodeSelection: true,
+			codeBlockNodeView: () =>
+				VueNodeViewRenderer(TiptapCodeBlock as Component<NodeViewProps>),
 		}),
 		Placeholder.configure({
 			includeChildren: true,
@@ -111,7 +76,7 @@ const editor = useEditor({
 		// Renamed to avoid: Duplicate extension names found: ['commands']
 		Commands.extend({ name: 'slashCommands' }).configure({ suggestion }),
 	],
-	content: initialContent,
+	content: '',
 	autofocus: true,
 	parseOptions: {
 		// preserveWhitespace: 'full'

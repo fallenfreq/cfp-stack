@@ -56,13 +56,44 @@ const router = createRouter({
 			},
 		},
 		{
+			path: '/c/:collectionSlug',
+			name: 'collection',
+			component: () => import('../views/CollectionView.vue'),
+		},
+		{
+			path: '/admin/pages',
+			name: 'admin-pages',
+			meta: {
+				authName: zitadelAuth.oidcAuth.authName,
+			},
+			component: () => {
+				if (zitadelAuth.hasRole('admin')) {
+					return import('../views/admin/AdminPagesView.vue')
+				}
+				return import('../views/NoAccess.vue')
+			},
+		},
+		{
+			path: '/admin/collections',
+			name: 'admin-collections',
+			meta: {
+				authName: zitadelAuth.oidcAuth.authName,
+			},
+			component: () => {
+				if (zitadelAuth.hasRole('admin')) {
+					return import('../views/admin/AdminCollectionsView.vue')
+				}
+				return import('../views/NoAccess.vue')
+			},
+		},
+		{
 			path: '/editor/:slug?',
 			name: 'editor',
 			component: () => import('../views/TiptapEditorDemo.vue'),
 		},
 		{
 			path: '/demo/editor',
-			redirect: { name: 'editor' },
+			redirect: { name: 'editor', params: { slug: 'demo' } },
 		},
 		{
 			path: '/preview/:slug',

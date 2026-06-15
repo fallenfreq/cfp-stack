@@ -1,5 +1,4 @@
-// utils/createPlaceholders.ts
-import type { CollectionEntry } from '@/../../api/src/schemas/collectionEntry'
+export type GridItem = { imageUrl: string; title: string } & Record<string, unknown>
 
 export interface Breakpoints {
 	default: number
@@ -45,19 +44,11 @@ function createPlaceholders(
 	title: string,
 	classMap: Partial<Record<keyof Breakpoints, string>> = {},
 ) {
-	const placeholders: CollectionEntry[] = []
-	const visibilityMap = new Map<CollectionEntry, string[]>()
+	const placeholders: GridItem[] = []
+	const visibilityMap = new Map<GridItem, string[]>()
 
 	for (let i = 0; i < getMaxItemsCount(0, placeholdersNeeded); i++) {
-		const placeholder: CollectionEntry = {
-			collectionEntryId: 0,
-			type: 'placeholder',
-			title,
-			description: '',
-			imageUrl: '',
-			link: '',
-			content: '',
-		}
+		const placeholder: GridItem = { imageUrl: '', title }
 
 		const classes: string[] = ['hidden']
 

@@ -10,6 +10,8 @@ declare module 'vue' {
   export interface GlobalComponents {
     AccountHeader: typeof import('./src/components/account/AccountHeader.vue')['default']
     AddMarkerSwitch: typeof import('./src/components/demos/map/AddMarkerSwitch.vue')['default']
+    AdminList: typeof import('./src/components/admin/AdminList.vue')['default']
+    AdminListItem: typeof import('./src/components/admin/AdminListItem.vue')['default']
     AppTooltip: typeof import('./src/components/AppTooltip.vue')['default']
     BasicCard: typeof import('./src/components/BasicCard.vue')['default']
     BasicFooter: typeof import('./src/components/BasicFooter.vue')['default']

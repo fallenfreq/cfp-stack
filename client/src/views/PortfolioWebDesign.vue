@@ -1,11 +1,22 @@
 <script setup lang="ts">
+import type { CollectionEntry } from '@/../../api/src/schemas/collectionEntry'
+import { getPortfolioEntries } from '@/services/portfolio'
 import zitadelAuth from '@/services/zitadelAuth'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
+import type { GridItem } from '@/utils/collectionPlaceholders'
 import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
 
 const sheetStore = useStackableSheetStore()
 const { sheetContent } = storeToRefs(sheetStore)
 const { closeSheet, openSheet } = sheetStore
+
+const { data, isPending } = getPortfolioEntries(['webDesignPortfolio'])
+const items = computed(() => (data.value ?? []).map((e) => ({ ...e })))
+
+const onSelectItem = (item: GridItem) => {
+	openSheet({ id: 'collectionEntry', content: item as CollectionEntry })
+}
 </script>
 
 <template>
@@ -22,8 +33,9 @@ const { closeSheet, openSheet } = sheetStore
 			<CollectionNav v-if="zitadelAuth.oidcAuth.isAuthenticated" />
 		</div>
 		<CollectionGrid
-			:name="['webDesignPortfolio']"
-			@select-item="(portfolio) => openSheet({ id: 'collectionEntry', content: portfolio })"
+			:items="items"
+			:placeholder-title="isPending ? 'Loading...' : 'Coming Soon!'"
+			@select-item="onSelectItem"
 		/>
 	</div>
 </template>
