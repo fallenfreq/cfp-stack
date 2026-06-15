@@ -1,15 +1,16 @@
 import router from '@/router'
-import { initPromptModal } from '@/services/promptModal'
+import { showPrompt } from '@/services/promptModal'
 import { trpc } from '@/trpc'
 import { prettifyCode } from '@/utils/codeFormatting'
 import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
 import { escapeHTML } from '@/utils/stringUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { defineStore } from 'pinia'
-import { getCurrentInstance, ref, shallowRef, watch, watchEffect, type ShallowRef } from 'vue'
+import { ref, shallowRef, watch, watchEffect, type ShallowRef } from 'vue'
 import { useToast } from 'vuestic-ui'
 
 export const useEditorStore = defineStore('editor', () => {
+	const { notify } = useToast()
 	const codeViewDefault = false
 	const isCodeView = ref(codeViewDefault)
 	const editor: ShallowRef<Editor | null> = shallowRef(null)
@@ -51,7 +52,7 @@ export const useEditorStore = defineStore('editor', () => {
 	const loadPage = async (slug: string) => {
 		const page = await trpc.adminPages.getBySlug.query({ slug })
 		if (!page) {
-			useToast().notify({
+			notify({
 				duration: 5000,
 				color: 'warning',
 				position: 'bottom-right',
@@ -65,7 +66,7 @@ export const useEditorStore = defineStore('editor', () => {
 					errorOnInvalidContent: true,
 				})
 			} catch (err) {
-				useToast().notify({
+				notify({
 					duration: 8000,
 					color: 'danger',
 					position: 'bottom-right',
@@ -103,8 +104,7 @@ export const useEditorStore = defineStore('editor', () => {
 			} else {
 				let name = currentName.value?.trim() || null
 				if (!name) {
-					const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
-					name = await showPrompt('Page name')
+					name = await showPrompt!('Page name')
 					if (name === null) {
 						saveStatus.value = 'idle'
 						return
@@ -128,7 +128,7 @@ export const useEditorStore = defineStore('editor', () => {
 			setTimeout(() => {
 				if (saveStatus.value === 'saved') saveStatus.value = 'idle'
 			}, 2000)
-			useToast().notify({
+			notify({
 				duration: 2000,
 				color: 'success',
 				position: 'bottom-right',
@@ -140,7 +140,7 @@ export const useEditorStore = defineStore('editor', () => {
 				if (saveStatus.value === 'error') saveStatus.value = 'idle'
 			}, 5000)
 			const message = error instanceof Error ? error.message : 'Save failed'
-			useToast().notify({
+			notify({
 				duration: 8000,
 				color: 'danger',
 				position: 'bottom-right',

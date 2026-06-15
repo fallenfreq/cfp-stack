@@ -9,6 +9,7 @@ export const vuestic = createVuestic({ config })
 
 import './assets/main.css'
 
+import { initPromptModal } from '@/services/promptModal'
 import zitadelAuth from '@/services/zitadelAuth'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
@@ -54,5 +55,6 @@ zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
 	app.use(VueQueryPlugin, { queryClient })
 	app.use(router)
 	app.use(vuestic)
+	initPromptModal(app._context)
 	app.mount('#app')
 })

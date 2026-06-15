@@ -109,11 +109,11 @@
 import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
 import { useAllPages } from '@/services/pages'
-import { initPromptModal } from '@/services/promptModal'
+import { showPrompt } from '@/services/promptModal'
 import { useAllTags } from '@/services/tags'
 import { trpc } from '@/trpc'
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
-import { computed, getCurrentInstance, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useModal } from 'vuestic-ui'
 
@@ -122,7 +122,6 @@ type PageRow = Awaited<ReturnType<typeof trpc.adminPages.list.query>>[number]
 const router = useRouter()
 const { confirm } = useModal()
 const queryClient = useQueryClient()
-const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
 
 const { data: pages, isPending } = useAllPages()
 const { data: allTags } = useAllTags()

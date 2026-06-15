@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import initialContent from '@/config/editor/initialContent.html?raw'
 import { useEditorStore } from '@/stores/editorStore'
-import { onMounted, watch } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const store = useEditorStore()
+
+let stopSeedWatch: (() => void) | null = null
 
 onMounted(async () => {
 	const slug = route.params.slug
@@ -14,11 +16,12 @@ onMounted(async () => {
 		if (store.editor) {
 			applyInitial()
 		} else {
-			const stop = watch(
+			stopSeedWatch = watch(
 				() => store.editor,
 				(e) => {
 					if (e) {
-						stop()
+						stopSeedWatch?.()
+						stopSeedWatch = null
 						applyInitial()
 					}
 				},
@@ -29,10 +32,15 @@ onMounted(async () => {
 	if (slug && typeof slug === 'string') {
 		await store.loadPage(slug)
 	}
-	const autoTagId = route.query.autoTag ? Number(route.query.autoTag) : null
+	const raw = Number(route.query.autoTag)
+	const autoTagId = Number.isInteger(raw) && raw > 0 ? raw : null
 	if (autoTagId) {
 		store.pendingAutoTag = autoTagId
 	}
+})
+
+onUnmounted(() => {
+	stopSeedWatch?.()
 })
 </script>
 

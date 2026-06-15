@@ -4,7 +4,7 @@
 import AddMarkerSwitch from '@/components/demos/map/AddMarkerSwitch.vue'
 import GoogleAutocomplete from '@/components/demos/map/GoogleAutocomplete.vue'
 import CurrentLocationMarker from '@/components/demos/map/currentLocation.vue'
-import { initPromptModal } from '@/services/promptModal'
+import { showPrompt } from '@/services/promptModal'
 import { useDarkModeStore } from '@/stores/darkModeStore'
 import { useMapStore } from '@/stores/mapStore'
 import { useMarkerStore } from '@/stores/markerStore'
@@ -14,10 +14,8 @@ import { faMinus, faPen, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
 import { storeToRefs } from 'pinia'
-import { computed, getCurrentInstance, nextTick, onMounted, ref, useCssModule, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, useCssModule, watch } from 'vue'
 import { useToast } from 'vuestic-ui'
-
-const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
 
 // import zitadelAuth from '@/services/zitadelAuth'
 // const user = computed(() => zitadelAuth.oidcAuth.userProfile)

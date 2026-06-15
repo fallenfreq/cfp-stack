@@ -84,10 +84,11 @@ const editor = useEditor({
 })
 
 useNodeViewInteractions()
+const editorStore = useEditorStore()
 // editor.value should be undefined at this point until the next tick
 watch(editor, (newEditor) => {
 	if (newEditor) {
-		useEditorStore().setEditor(newEditor)
+		editorStore.setEditor(newEditor)
 		newEditor.on('transaction', () => {
 			const state = multiSelectPluginKey.getState(newEditor.state)
 			multiSelectStore.sync(state?.positions ?? [])

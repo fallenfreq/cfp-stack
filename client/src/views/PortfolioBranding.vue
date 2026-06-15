@@ -13,5 +13,5 @@ import { getPortfolioEntries } from '@/services/portfolio'
 import { computed } from 'vue'
 
 const { data, isPending } = getPortfolioEntries(['brandPortfolio'])
-const items = computed(() => (data.value ?? []).map((e) => ({ ...e })))
+const items = computed(() => data.value ?? [])
 </script>

@@ -12,7 +12,7 @@ const { sheetContent } = storeToRefs(sheetStore)
 const { closeSheet, openSheet } = sheetStore
 
 const { data, isPending } = getPortfolioEntries(['webDesignPortfolio'])
-const items = computed(() => (data.value ?? []).map((e) => ({ ...e })))
+const items = computed(() => data.value ?? [])
 
 const onSelectItem = (item: GridItem) => {
 	openSheet({ id: 'collectionEntry', content: item as CollectionEntry })

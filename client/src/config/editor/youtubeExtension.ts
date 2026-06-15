@@ -21,7 +21,7 @@ export const YoutubeExtension = Youtube.extend({
 						? {
 								width: 'auto',
 								height: 'auto',
-								class: (attributes.class || '' + ' resp-yt').trim(),
+								class: ((attributes.class || '') + ' resp-yt').trim(),
 							}
 						: {}
 				},

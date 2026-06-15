@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { initPromptModal } from '@/services/promptModal'
+import { showPrompt } from '@/services/promptModal'
 import { useMapStore } from '@/stores/mapStore'
 import { useMarkerStore } from '@/stores/markerStore'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
@@ -7,7 +7,7 @@ import { trpc } from '@/trpc'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useQuery } from '@tanstack/vue-query'
-import { getCurrentInstance, onMounted, ref, toRaw, watch } from 'vue'
+import { onMounted, ref, toRaw, watch } from 'vue'
 import { useToast } from 'vuestic-ui'
 
 export interface MapMarkerItem {
@@ -18,8 +18,6 @@ export interface MapMarkerItem {
 	tags: string[]
 	markerInstance: google.maps.marker.AdvancedMarkerElement
 }
-
-const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
 
 const mapStore = useMapStore()
 if (!mapStore.map) {

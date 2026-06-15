@@ -62,18 +62,16 @@
 <script setup lang="ts">
 import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
-import { initPromptModal } from '@/services/promptModal'
+import { showPrompt } from '@/services/promptModal'
 import { useAllTags } from '@/services/tags'
 import { trpc } from '@/trpc'
 import { useQueryClient } from '@tanstack/vue-query'
-import { getCurrentInstance } from 'vue'
 import { useModal } from 'vuestic-ui'
 
 type TagRow = Awaited<ReturnType<typeof trpc.adminTags.list.query>>[number]
 
 const { confirm } = useModal()
 const queryClient = useQueryClient()
-const showPrompt = initPromptModal(getCurrentInstance()?.appContext)
 
 const { data: tags, isPending } = useAllTags()
 
