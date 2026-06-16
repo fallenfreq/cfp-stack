@@ -1,20 +1,8 @@
 <template>
-	<div class="mx-5 pt-5">
-		<div class="flex justify-between items-center mb-5">
-			<h1 class="text-4xl">Pages</h1>
-			<div class="flex items-center gap-2">
-				<button class="admin-icon-btn" title="New page" @click="onNewPage">
-					<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-						<path
-							d="M8 2v12M2 8h12"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-						/>
-					</svg>
-				</button>
-			</div>
-		</div>
+	<SfPageShell title="Pages">
+		<template #actions>
+			<SfIconButton icon="plus" tooltip="New page" @click="onNewPage" />
+		</template>
 
 		<VaInput
 			v-model="search"
@@ -112,7 +100,7 @@
 				</template>
 			</AdminListItem>
 		</AdminList>
-	</div>
+	</SfPageShell>
 </template>
 
 <script setup lang="ts">

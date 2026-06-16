@@ -1,6 +1,6 @@
 <template>
-	<div v-if="notFound" class="p-7">Page not found.</div>
-	<div v-else-if="!ready || !editor" class="p-7">Loading…</div>
+	<SfStatusDisplay v-if="notFound" state="error" message="Page not found." />
+	<SfStatusDisplay v-else-if="!ready || !editor" state="loading" />
 	<div v-else class="relative">
 		<div v-if="isAdmin" class="preview-edit-bar">
 			<VaButton

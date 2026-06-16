@@ -17,11 +17,7 @@
 			title="Editor actions"
 			@click="actionsOpen = !actionsOpen"
 		>
-			<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-				<circle cx="2.5" cy="7" r="1.25" fill="currentColor" />
-				<circle cx="7" cy="7" r="1.25" fill="currentColor" />
-				<circle cx="11.5" cy="7" r="1.25" fill="currentColor" />
-			</svg>
+			<SfIcon name="three-dot" />
 		</button>
 		<Transition name="top-bar-actions">
 			<div v-if="actionsOpen" class="top-bar__actions">
@@ -36,58 +32,12 @@
 					title="Save"
 					@click="store.save()"
 				>
-					<svg
-						v-if="saveStatus === 'saving'"
-						class="spin"
-						width="14"
-						height="14"
-						viewBox="0 0 14 14"
-						fill="none"
-					>
-						<circle
-							cx="7"
-							cy="7"
-							r="5.5"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-dasharray="8 26"
-							stroke-linecap="round"
-						/>
-					</svg>
-					<svg
-						v-else-if="saveStatus === 'error'"
-						width="14"
-						height="14"
-						viewBox="0 0 14 14"
-						fill="none"
-					>
-						<path
-							d="M3 3l8 8M11 3l-8 8"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-						/>
-					</svg>
-					<svg v-else width="14" height="14" viewBox="0 0 14 14" fill="none">
-						<path
-							d="M2.5 7.5l3 3 6-6"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-					</svg>
+					<SfIcon v-if="saveStatus === 'saving'" name="spinner" spin />
+					<SfIcon v-else-if="saveStatus === 'error'" name="x" />
+					<SfIcon v-else name="check" />
 				</button>
 				<button class="top-bar__action" title="Editor settings" disabled>
-					<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-						<circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.5" />
-						<path
-							d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-linecap="round"
-						/>
-					</svg>
+					<SfIcon name="settings" />
 				</button>
 			</div>
 		</Transition>
@@ -268,15 +218,6 @@ const cancelRename = () => {
 }
 .top-bar__action.is-error {
 	color: rgb(var(--danger, 239 68 68));
-}
-
-@keyframes spin {
-	to {
-		transform: rotate(360deg);
-	}
-}
-.spin {
-	animation: spin 0.8s linear infinite;
 }
 
 .top-bar-actions-enter-active,

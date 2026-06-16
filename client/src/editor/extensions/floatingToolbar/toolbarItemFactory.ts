@@ -1,4 +1,4 @@
-import AppTooltip from '@/components/AppTooltip.vue'
+import SfTooltip from '@/components/SfTooltip.vue'
 import ToolbarButton from '@/components/editor/toolbar/ToolbarButton.vue'
 import type { Editor } from '@tiptap/vue-3'
 import type { Component, VNodeChild } from 'vue'
@@ -6,7 +6,7 @@ import { defineComponent, h } from 'vue'
 import type { ToolbarItem, ToolbarItemContext } from './types'
 
 const withTooltip = (node: VNodeChild, tooltip?: string): VNodeChild =>
-	tooltip ? h(AppTooltip, { text: tooltip, placement: 'top' }, () => node) : node
+	tooltip ? h(SfTooltip, { text: tooltip, placement: 'top' }, () => node) : node
 
 function toolbarItem(
 	id: string,

@@ -1,23 +1,12 @@
 <template>
-	<div class="mx-5 pt-5">
-		<div class="flex justify-between items-center mb-5">
-			<h1 class="text-4xl">Tags</h1>
-			<button class="admin-icon-btn" title="New tag" @click="onNewTag">
-				<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-					<path
-						d="M8 2v12M2 8h12"
-						stroke="currentColor"
-						stroke-width="1.5"
-						stroke-linecap="round"
-					/>
-				</svg>
-			</button>
-		</div>
+	<SfPageShell title="Tags">
+		<template #actions>
+			<SfIconButton icon="plus" tooltip="New tag" @click="onNewTag" />
+		</template>
 		<p class="text-sm opacity-50 mb-5">
 			Published tags are browseable as collections at <code>/c/:slug</code>. Unpublished tags
 			work as internal labels only.
 		</p>
-
 		<AdminList :loading="isPending" :empty="!tags?.length">
 			<template #header>
 				<th>Name</th>
@@ -63,7 +52,7 @@
 				</template>
 			</AdminListItem>
 		</AdminList>
-	</div>
+	</SfPageShell>
 </template>
 
 <script setup lang="ts">

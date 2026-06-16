@@ -19,7 +19,7 @@
 					v-if="!item.visible || item.visible()"
 					:class="{ 'hidden sm:block': !item.outsideHamburger }"
 				>
-					<AppTooltip :text="item.title" placement="bottom">
+					<SfTooltip :text="item.title" placement="bottom">
 						<VaButton v-if="!('children' in item)" v-bind="getNavButtonProps(item)">
 							{{ item.title }}
 						</VaButton>
@@ -46,7 +46,7 @@
 								</template>
 							</VaDropdownContent>
 						</VaDropdown>
-					</AppTooltip>
+					</SfTooltip>
 				</VaNavbarItem>
 			</template>
 			<VaNavbarItem>
@@ -143,7 +143,7 @@
 import zitadelAuth from '@/services/zitadelAuth'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import AppTooltip from './AppTooltip.vue'
+import SfTooltip from './SfTooltip.vue'
 import MothLogo from './brand/MothLogo.vue'
 import MothWordmark from './brand/MothWordmark.vue'
 

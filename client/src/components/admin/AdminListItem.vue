@@ -17,22 +17,9 @@
 			/>
 		</td>
 		<td class="admin-cell admin-cell--narrow admin-cell--sticky">
-			<VaDropdown placement="bottom-end" :close-on-content-click="true">
-				<template #anchor>
-					<button class="admin-more" title="Actions">
-						<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-							<circle cx="2.5" cy="7" r="1.25" fill="currentColor" />
-							<circle cx="7" cy="7" r="1.25" fill="currentColor" />
-							<circle cx="11.5" cy="7" r="1.25" fill="currentColor" />
-						</svg>
-					</button>
-				</template>
-				<VaDropdownContent>
-					<div class="admin-menu">
-						<slot name="actions" />
-					</div>
-				</VaDropdownContent>
-			</VaDropdown>
+			<SfOverflowMenu tooltip="Actions">
+				<slot name="actions" />
+			</SfOverflowMenu>
 		</td>
 	</tr>
 </template>
@@ -82,35 +69,6 @@ defineEmits<{ 'update:published': [value: boolean] }>()
 	white-space: nowrap;
 }
 
-.admin-more {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	background: none;
-	border: 1px solid transparent;
-	border-radius: 4px;
-	cursor: pointer;
-	color: rgba(var(--text_primary) / 0.6);
-	transition:
-		color 0.1s,
-		background 0.1s,
-		border-color 0.1s;
-}
-.admin-more:hover {
-	color: rgb(var(--text_primary));
-	background: rgba(var(--text_primary) / 0.08);
-	border-color: rgba(var(--text_primary) / 0.2);
-}
-
-.admin-menu {
-	display: flex;
-	flex-direction: column;
-	padding: 4px;
-	min-width: 130px;
-}
-
 /* Slot content API — non-scoped so it applies inside action slots */
 .admin-action {
 	display: block;
@@ -130,29 +88,5 @@ defineEmits<{ 'update:published': [value: boolean] }>()
 }
 .admin-action--danger {
 	color: rgb(var(--danger));
-}
-
-/* Icon button — used in view headers */
-.admin-icon-btn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 30px;
-	height: 30px;
-	background: none;
-	border: 1px solid rgba(var(--text_primary) / 0.2);
-	border-radius: 4px;
-	cursor: pointer;
-	color: rgba(var(--text_primary) / 0.7);
-	transition:
-		color 0.1s,
-		background 0.1s,
-		border-color 0.1s;
-	flex-shrink: 0;
-}
-.admin-icon-btn:hover {
-	color: rgb(var(--text_primary));
-	background: rgba(var(--text_primary) / 0.06);
-	border-color: rgba(var(--text_primary) / 0.35);
 }
 </style>

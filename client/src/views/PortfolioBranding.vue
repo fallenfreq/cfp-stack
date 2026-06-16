@@ -1,11 +1,10 @@
 <template>
-	<div class="mx-5 pt-5">
-		<h1 class="text-4xl mb-5">Branding portfolio</h1>
+	<SfPageShell title="Branding portfolio">
 		<CollectionGrid
 			:items="items"
 			:placeholder-title="isPending ? 'Loading...' : 'Coming Soon!'"
 		/>
-	</div>
+	</SfPageShell>
 </template>
 
 <script lang="ts" setup>

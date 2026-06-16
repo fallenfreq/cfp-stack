@@ -1,16 +1,11 @@
 <template>
 	<div class="mx-5 pt-5">
-		<div v-if="tagPending">
-			<p class="opacity-50">Loading…</p>
-		</div>
-		<div v-else-if="!tag">
-			<h1 class="text-4xl mb-2">Not found</h1>
-			<p class="opacity-50">This collection does not exist.</p>
-		</div>
-		<div v-else-if="!tag.published && !isAdmin">
-			<h1 class="text-4xl mb-2">Not found</h1>
-			<p class="opacity-50">This collection does not exist.</p>
-		</div>
+		<SfStatusDisplay v-if="tagPending" state="loading" />
+		<SfStatusDisplay
+			v-else-if="!tag || (!tag.published && !isAdmin)"
+			state="error"
+			message="This collection does not exist."
+		/>
 		<div v-else>
 			<div class="flex justify-between items-center mb-5">
 				<div>

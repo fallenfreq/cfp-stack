@@ -1,5 +1,5 @@
 <template>
-	<div v-if="!editor" class="p-7">Loading editor...</div>
+	<SfStatusDisplay v-if="!editor" state="loading" message="Loading editor…" />
 	<div v-else>
 		<EditorTopBar :editor="editor" />
 		<FloatingToolbar :editor="editor" />
