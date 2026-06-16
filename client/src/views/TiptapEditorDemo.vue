@@ -1,34 +1,20 @@
 <script setup lang="ts">
+import { useEditorReady } from '@/composables/editor/useEditorReady'
 import initialContent from '@/config/editor/initialContent.html?raw'
 import { useEditorStore } from '@/stores/editorStore'
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const store = useEditorStore()
 
-let stopSeedWatch: (() => void) | null = null
+if (route.query.seed === 'true') {
+	useEditorReady((editor) => editor.commands.setContent(initialContent))
+}
 
 onMounted(async () => {
+	if (route.query.seed === 'true') return
 	const slug = route.params.slug
-	if (route.query.seed === 'true') {
-		const applyInitial = () => store.editor?.commands.setContent(initialContent)
-		if (store.editor) {
-			applyInitial()
-		} else {
-			stopSeedWatch = watch(
-				() => store.editor,
-				(e) => {
-					if (e) {
-						stopSeedWatch?.()
-						stopSeedWatch = null
-						applyInitial()
-					}
-				},
-			)
-		}
-		return
-	}
 	if (slug && typeof slug === 'string') {
 		await store.loadPage(slug)
 	}
@@ -37,10 +23,6 @@ onMounted(async () => {
 	if (autoTagId) {
 		store.pendingAutoTag = autoTagId
 	}
-})
-
-onUnmounted(() => {
-	stopSeedWatch?.()
 })
 </script>
 

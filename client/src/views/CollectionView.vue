@@ -42,8 +42,8 @@
 </template>
 
 <script setup lang="ts">
+import { useIsAdmin } from '@/composables/useIsAdmin'
 import { usePagesByCollection, usePagesByCollectionAdmin } from '@/services/pages'
-import zitadelAuth from '@/services/zitadelAuth'
 import { trpc } from '@/trpc'
 import type { GridItem } from '@/utils/collectionPlaceholders'
 import { paramString } from '@/utils/router'
@@ -54,7 +54,7 @@ import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 const collectionSlug = computed(() => paramString(route.params.collectionSlug))
-const isAdmin = computed(() => zitadelAuth.hasRole('admin'))
+const isAdmin = useIsAdmin()
 
 const { data: tag, isPending: tagPending } = useQuery({
 	queryKey: computed(() => ['tags', 'slug', collectionSlug.value]),

@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import type { Theme } from '@/constants/theme'
 import { safeApplyPreset } from '@/utils/theme'
-import { ref, watch, type Ref } from 'vue'
+import { computed, nextTick, ref, watch, type Ref } from 'vue'
 
 // refs are normally unwrapped when passed to components
 // However this is loaded via createComponent which seem to pass the Ref
@@ -32,6 +32,7 @@ const props = defineProps<{
 	message: Ref<string>
 	isVisible: Ref<boolean>
 	rootCurrentPresetName: Ref<Theme>
+	transform: Ref<((v: string) => string) | undefined>
 }>()
 
 safeApplyPreset(props.rootCurrentPresetName.value)
@@ -41,17 +42,34 @@ watch(props.rootCurrentPresetName, () => {
 
 const emit = defineEmits<(e: 'submit', value: string | null) => void>()
 
-const userInput = ref('')
+const rawInput = ref('')
+const userInput = computed({
+	get: () => rawInput.value,
+	set: (value) => {
+		rawInput.value = props.transform?.value ? props.transform.value(value) : value
+	},
+})
 
 const input = ref<HTMLInputElement | null>(null)
 
+watch(
+	() => props.isVisible.value,
+	(visible) => {
+		if (visible) {
+			rawInput.value = ''
+			nextTick(() => input.value?.focus())
+		}
+	},
+)
+
 const submit = () => {
-	emit('submit', userInput.value)
-	if (input.value) userInput.value = ''
+	emit('submit', rawInput.value)
+	rawInput.value = ''
 }
 
 const close = () => {
 	emit('submit', null)
+	rawInput.value = ''
 }
 </script>
 

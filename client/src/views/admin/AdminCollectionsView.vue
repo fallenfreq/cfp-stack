@@ -48,9 +48,16 @@
 					>
 						View collection
 					</RouterLink>
-					<button class="admin-action" @click="onRename(tag)">Rename</button>
-					<button class="admin-action" @click="onChangeSlug(tag)">Change slug</button>
-					<button class="admin-action admin-action--danger" @click="onDelete(tag)">
+					<button class="admin-action" @click="crud.onRename(tag.tagId, tag.name)">
+						Rename
+					</button>
+					<button class="admin-action" @click="crud.onChangeSlug(tag.tagId, tag.slug)">
+						Change slug
+					</button>
+					<button
+						class="admin-action admin-action--danger"
+						@click="crud.onDelete(tag.tagId, tag.name)"
+					>
 						Delete
 					</button>
 				</template>
@@ -62,58 +69,36 @@
 <script setup lang="ts">
 import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
+import { useListItemActions } from '@/composables/useListItemActions'
 import { showPrompt } from '@/services/promptModal'
 import { useAllTags } from '@/services/tags'
 import { trpc } from '@/trpc'
-import { useQueryClient } from '@tanstack/vue-query'
-import { useModal } from 'vuestic-ui'
-
-type TagRow = Awaited<ReturnType<typeof trpc.adminTags.list.query>>[number]
-
-const { confirm } = useModal()
-const queryClient = useQueryClient()
 
 const { data: tags, isPending } = useAllTags()
 
-const invalidate = () => queryClient.invalidateQueries({ queryKey: ['tags'] })
+const crud = useListItemActions({
+	queryKey: ['tags'],
+	rename: (id, name) => trpc.adminTags.update.mutate({ tagId: id, name }),
+	changeSlug: (id, slug) => trpc.adminTags.update.mutate({ tagId: id, slug }),
+	delete: (id) => trpc.adminTags.delete.mutate({ tagId: id }),
+	slugMessage: (current) =>
+		`New slug for "${current}"\n⚠ Changing this will break /c/${current} links.`,
+	deleteMessage: (id, name) => {
+		const tag = tags.value?.find((t) => t.tagId === id)
+		return `Delete "${name}"? It is used by ${tag?.pageCount ?? '?'} page(s). Pages will not be deleted, only the tag association.`
+	},
+})
 
 const togglePublished = async (tagId: number, published: boolean) => {
 	await trpc.adminTags.update.mutate({ tagId, published })
-	await invalidate()
+	await crud.invalidate()
 }
 
 const onNewTag = async () => {
 	const name = await showPrompt('Tag name')
 	if (!name) return
 	await trpc.adminTags.create.mutate({ name })
-	await invalidate()
-}
-
-const onRename = async (tag: TagRow) => {
-	const name = await showPrompt(`New name for "${tag.name}"`)
-	if (!name) return
-	await trpc.adminTags.update.mutate({ tagId: tag.tagId, name })
-	await invalidate()
-}
-
-const onChangeSlug = async (tag: TagRow) => {
-	const newSlug = await showPrompt(
-		`New slug for "${tag.name}"\n⚠ Changing slug will break /c/${tag.slug} links.`,
-	)
-	if (!newSlug) return
-	await trpc.adminTags.update.mutate({ tagId: tag.tagId, slug: newSlug })
-	await invalidate()
-}
-
-const onDelete = async (tag: TagRow) => {
-	const ok = await confirm({
-		message: `Delete tag "${tag.name}"? It is used by ${tag.pageCount} page(s). Pages will not be deleted, only the tag association.`,
-		okText: 'Delete',
-		cancelText: 'Cancel',
-	})
-	if (!ok) return
-	await trpc.adminTags.delete.mutate({ tagId: tag.tagId })
-	await invalidate()
+	await crud.invalidate()
 }
 </script>
 

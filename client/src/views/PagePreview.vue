@@ -16,18 +16,18 @@
 </template>
 
 <script setup lang="ts">
+import { useIsAdmin } from '@/composables/useIsAdmin'
 import { getContentExtensions } from '@/config/editor/contentExtensions'
-import zitadelAuth from '@/services/zitadelAuth'
 import { trpc } from '@/trpc'
 import { paramString } from '@/utils/router'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const notFound = ref(false)
 const ready = ref(false)
-const isAdmin = computed(() => zitadelAuth.hasRole('admin'))
+const isAdmin = useIsAdmin()
 
 const editor = useEditor({
 	editable: false,

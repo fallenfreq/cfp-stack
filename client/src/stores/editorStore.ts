@@ -82,9 +82,9 @@ export const useEditorStore = defineStore('editor', () => {
 		if (editor.value) {
 			applyContent()
 		} else {
-			const unwatch = watch(editor, (e) => {
+			const stop = watch(editor, (e) => {
 				if (e) {
-					unwatch()
+					stop()
 					applyContent()
 				}
 			})
@@ -104,7 +104,7 @@ export const useEditorStore = defineStore('editor', () => {
 			} else {
 				let name = currentName.value?.trim() || null
 				if (!name) {
-					name = await showPrompt!('Page name')
+					name = await showPrompt('Page name')
 					if (name === null) {
 						saveStatus.value = 'idle'
 						return

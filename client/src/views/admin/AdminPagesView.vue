@@ -94,9 +94,19 @@
 					>
 						Preview
 					</RouterLink>
-					<button class="admin-action" @click="onRename(page)">Rename</button>
-					<button class="admin-action" @click="onChangeSlug(page)">Change slug</button>
-					<button class="admin-action admin-action--danger" @click="onDelete(page)">
+					<button
+						class="admin-action"
+						@click="crud.onRename(page.pageId, page.name || page.slug)"
+					>
+						Rename
+					</button>
+					<button class="admin-action" @click="crud.onChangeSlug(page.pageId, page.slug)">
+						Change slug
+					</button>
+					<button
+						class="admin-action admin-action--danger"
+						@click="crud.onDelete(page.pageId, page.name || page.slug)"
+					>
 						Delete
 					</button>
 				</template>
@@ -108,20 +118,16 @@
 <script setup lang="ts">
 import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
+import { useListItemActions } from '@/composables/useListItemActions'
 import { useAllPages } from '@/services/pages'
 import { showPrompt } from '@/services/promptModal'
 import { useAllTags } from '@/services/tags'
 import { trpc } from '@/trpc'
-import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useModal } from 'vuestic-ui'
-
-type PageRow = Awaited<ReturnType<typeof trpc.adminPages.list.query>>[number]
 
 const router = useRouter()
-const { confirm } = useModal()
-const queryClient = useQueryClient()
 
 const { data: pages, isPending } = useAllPages()
 const { data: allTags } = useAllTags()
@@ -150,16 +156,22 @@ const pageTags = computed(() => {
 	return map
 })
 
-const invalidate = () => queryClient.invalidateQueries({ queryKey: ['pages'] })
+const crud = useListItemActions({
+	queryKey: ['pages'],
+	rename: (id, name) => trpc.adminPages.update.mutate({ pageId: id, name }),
+	changeSlug: (id, slug) => trpc.adminPages.update.mutate({ pageId: id, slug }),
+	delete: (id) => trpc.adminPages.delete.mutate({ pageId: id }),
+	deleteMessage: (_id, name) => `Delete "${name}"? This cannot be undone.`,
+})
 
 const togglePublished = async (pageId: number, published: boolean) => {
 	await trpc.adminPages.update.mutate({ pageId, published })
-	await invalidate()
+	await crud.invalidate()
 }
 
 const onTagsChange = async (pageId: number, tagIds: number[]) => {
 	await trpc.adminPages.update.mutate({ pageId, tagIds })
-	await invalidate()
+	await crud.invalidate()
 }
 
 const onNewPage = async () => {
@@ -172,33 +184,6 @@ const onNewPage = async () => {
 	if (result?.slug) {
 		router.push({ name: 'editor', params: { slug: result.slug } })
 	}
-}
-
-const onRename = async (page: PageRow) => {
-	const name = await showPrompt(`New name for "${page.name || page.slug}"`)
-	if (!name) return
-	await trpc.adminPages.update.mutate({ pageId: page.pageId, name })
-	await invalidate()
-}
-
-const onChangeSlug = async (page: PageRow) => {
-	const newSlug = await showPrompt(
-		`New slug for "${page.name || page.slug}"\n⚠ Changing the slug will break existing links.`,
-	)
-	if (!newSlug) return
-	await trpc.adminPages.update.mutate({ pageId: page.pageId, slug: newSlug })
-	await invalidate()
-}
-
-const onDelete = async (page: PageRow) => {
-	const ok = await confirm({
-		message: `Delete "${page.name || page.slug}"? This cannot be undone.`,
-		okText: 'Delete',
-		cancelText: 'Cancel',
-	})
-	if (!ok) return
-	await trpc.adminPages.delete.mutate({ pageId: page.pageId })
-	await invalidate()
 }
 </script>
 
