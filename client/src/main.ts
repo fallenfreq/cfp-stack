@@ -33,12 +33,12 @@ zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
 		return
 	}
 
-	// Purge stale PKCE state entries on every startup. They accumulate with each
-	// login attempt and are never needed after the flow completes. The user token
-	// key ('user:https://...') has no 'oidc.' prefix so it is always preserved.
-	Object.keys(localStorage)
-		.filter((k) => k.startsWith('oidc.'))
-		.forEach((k) => localStorage.removeItem(k))
+	// Prune stale PKCE state entries (abandoned login attempts). Using
+	// clearStaleState instead of a manual wipe preserves any active state
+	// entry needed by an in-flight redirect callback — the manual approach
+	// deleted the code verifier before the router's signinRedirectCallback
+	// could read it, breaking every fresh login via redirect.
+	zitadelAuth.oidcAuth.mgr.clearStaleState()
 
 	if (!zitadelAuth.oidcAuth.isAuthenticated) {
 		// Fire-and-forget: uses the Zitadel SSO cookie to restore tokens without
