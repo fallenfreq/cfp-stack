@@ -51,6 +51,9 @@ INSERT INTO theme_tokens (theme_slug, name, value, kind) VALUES
 	('root', '--sf-shadow-lg', '0 4px 16px', 'shadow-shape'),
 	('root', '--sf-shadow-xl', '0 8px 24px', 'shadow-shape'),
 
+	-- Shadow opacity (theme-level character; one value per theme, not a range)
+	('root', '--sf-shadow-opacity', '0.12', 'number'),
+
 	-- Container breakpoints
 	('root', '--sf-breakpoint-xs', '380px', 'length'),
 	('root', '--sf-breakpoint-sm', '640px', 'length'),

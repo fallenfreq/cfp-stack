@@ -5,28 +5,54 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
-DB-driven token pipeline is live. The new `--sf-*` token vocabulary is stored in D1
-(`themes` + `theme_tokens` tables) and emitted to
-`client/src/assets/generated-tokens.css` by `pnpm generate:css` (script at
-`api/scripts/generate-css.mjs`). `main.css` imports the generated file after `base.css`,
-so new tokens coexist with the legacy unprefixed names that Vuestic still consumes.
+DB-driven token + class pipeline is live. The generator now emits three files from D1:
+
+- `generated-tokens.css` — `:root` + `.theme-*` token declarations (unlayered)
+- `generated-classes.css` — core sf classes: semantic canonicals (`sf-fg_primary`,
+  `sf-fg_inverted`, `sf-border_color`) in `@layer sf-semantic`; value-linked utilities
+  (typography, radius, spacing, shadow) in `@layer sf-utility`
+- `generated-editor-classes.css` — editor-pairing classes (palette picks
+  `sf-{bg|color|border}-{token}` + the `sf-{bg|color|border}-alpha-{1..9}` siblings)
+  in `@layer sf-utility`
+
+Run with `pnpm generate:css`. All three files are in `.prettierignore`. `main.css`
+imports them in order after `base.css`, before legacy `sf-tokens.css`.
 
 Done so far:
 
-- Spec finalised (slot-label principle, semantic vocabulary, range tokens) — see
-  `sf-system.md` and recent commits.
-- DB schema for themes + tokens + rich-class tables (rich-class tables are empty;
-  see "Schema notes" below).
-- Seed data for `root`, `dark`, `pink` themes with the new spec names.
-- Generator script + `.prettierignore` entry for the generated CSS.
+- Spec finalised (slot-label principle, semantic vocabulary, range tokens, alpha
+  pairing rationale) — see `sf-system.md`.
+- DB schema for themes + tokens + rich-class tables (rich-class tables still empty).
+- Seed data for `root`, `dark`, `pink` themes — includes the new
+  `--sf-shadow-opacity` token (theme-character knob; `0.12` at root).
+- Three-file generator with property-mapping rules in code (no rich-class table reads
+  yet — those come with the bundle work).
 - Cascade layer declaration in `main.css`.
 - `.dark` / `.pink` → `.theme-dark` / `.theme-pink` across CSS, JS, Tailwind config,
   and the OS-preference preload script.
 - `sf-collapse-*` → `sl-collapse-*` rename (collapse is arrangement, not appearance).
 
-What's pending: see sections below. Biggest remaining work is the consumer migration
-(token renames flowing through `tailwind.config.js`, `sf-tokens.css` class bodies,
-component CSS) and implementing the rich class families (bundles, variants, states).
+### Known coexistence with legacy `sf-tokens.css`
+
+The legacy file is intentionally kept while the editor still emits legacy class names
+(`sf-bg-primary-500`, `sf-bg-alpha-50`, etc.). Where class names collide between
+generated and legacy (typography, radius, spacing, shadow, `.sf-border_color`,
+`.sf-bg-primary`), legacy wins because it's unlayered. Values are visually equivalent
+in current themes, so collisions are silent. Cleanup is tied to the editor migration —
+see "Next slice" below.
+
+What's pending — the migration crystallises into three threads:
+
+1. **Editor alpha-step rename** (next slice) — `textColorMark.ts`, `ToolbarColorControl.vue`,
+   `alphaPalette.ts`, `colorPalette.ts`. Switch emission from `sf-bg-primary-500` /
+   `sf-bg-alpha-50` to `sf-bg-primary-5` / `sf-bg-alpha-3` (or whichever step), reading
+   from `--sf-*` palette tokens instead of legacy `--primary-500`. Once editor is on
+   the new vocabulary, the legacy palette + alpha sections of `sf-tokens.css` can be
+   deleted along with the typography/radius/spacing/shadow sections.
+2. **Tailwind config + component CSS migration** to the new tokens (still TODO; see
+   "Pipeline + consumer updates" below).
+3. **Rich classes** — bundles (`sf-depth-*`, `sf-heading-*`), variants, states. These
+   need `class_vocabulary` + `class_properties` rows and generator support.
 
 ## Schema notes
 
@@ -50,15 +76,15 @@ classes; query `class_vocabulary` for the rich ones.
 - [x] Declare cascade layers in CSS:
       `@layer sf-bundle, sf-variant, sf-semantic, sf-utility, sf-state;`
       Done in `main.css`.
-- [ ] Wrap all class definitions — including theme overrides — in their matching
-      `@layer` block. Unlayered CSS beats layered CSS regardless of specificity, so any
-      bare `.theme-x .sf-depth-1 { ... }` would silently break the override order.
-      Token declarations on the theme class itself (`.theme-x { --sf-X: ... }`) stay
-      unlayered.
+- [x] Generator emits all auto-derived classes (semantic canonicals, value-linked
+      utilities, editor palette + alpha pairings) inside their matching `@layer`
+      blocks. The remaining "wrap in @layer" work is for the **legacy** hand-written
+      `sf-tokens.css` sections — those go away with the editor migration rather than
+      being wrapped, so no separate layer-wrapping pass is needed.
 - [ ] Apply the token rename pass — prefix, renumber, and rename per the spec
       contract (see "Token renames" below). The new tokens already exist in
-      `generated-tokens.css`; the work is migrating consumers (tailwind config,
-      sf-tokens.css class bodies, component CSS) off the legacy unprefixed names.
+      `generated-tokens.css`; the work is migrating remaining consumers (tailwind
+      config, editor code, component CSS) off the legacy unprefixed names.
 - [x] Rename `.dark` theme class to `.theme-dark` to match the spec's theme activation
       convention. Done across `base.css`, `darkModeStore.ts`, `index.html`,
       `tailwind.config.js`; `.pink` → `.theme-pink` same pass.
@@ -86,28 +112,44 @@ values (interim until DB-generated CSS lands).
       `surface-0` keeps the "canvas" meaning)
 - [ ] `--font-{sans, serif, mono}` → `--sf-font-{1, 2, mono}` (sans → 1, serif → 2,
       mono stays as functional slot; font-3 reserved)
-- [ ] Add `--sf-weight-{1..4}` definitions in `base.css` (no current code) and
-      `sf-weight-*` utility classes in `sf-tokens.css`
+- [x] Add `--sf-weight-{1..4}` definitions (in DB seed) and `sf-weight-*` utility
+      classes (auto-generated).
+
+Added in this slice:
+
+- [x] `--sf-shadow-opacity` theme-character token (one value per theme; root = 0.12).
+      Consumed by the auto-generated `sf-shadow-*` utilities inside the shadow's
+      `box-shadow` composition. Themes can override per-theme for stronger/softer
+      shadow character.
 
 ### Semantic tokens — rename to sf canonical; Vuestic-side duplicates the value
 
-- [ ] `--text_primary` → `--sf-fg_primary` (canonical). Keep `--text_primary` in the
-      Vuestic block with duplicated value.
-- [ ] Add `--sf-fg_inverted` (new sf semantic token). `--text_inverted` keeps its
-      current name with duplicated value.
-- [ ] `--border_color` → `--sf-border_color`. Vuestic shim duplicates value.
-- [ ] `--primary` → `--sf-primary` (single-word brand semantic; distinct from the
-      palette renumber). Vuestic shim duplicates value.
-- [ ] `--shadow` → `--sf-shadow`. Vuestic shim duplicates value.
+The new `--sf-*` semantic tokens already exist in `generated-tokens.css`. The work
+below is the Vuestic-side shim — keeping legacy names defined in `base.css` with
+duplicated values so Vuestic's `processTailwindColors` keeps working.
+
+- [ ] Keep `--text_primary` in `base.css`'s Vuestic block with value duplicated from
+      the new `--sf-fg_primary`.
+- [ ] Keep `--text_inverted` (legacy) duplicated from `--sf-fg_inverted`.
+- [ ] Keep `--border_color` (legacy) duplicated from `--sf-border_color`.
+- [ ] Keep `--primary` (legacy) duplicated from `--sf-primary` (the brand semantic).
+- [ ] Keep `--shadow` (legacy) duplicated from `--sf-shadow`.
 
 ### Pipeline + consumer updates
 
 - [ ] `tailwind.config.js` — update palette refs (`var(--primary-500)` etc.) to the
       renumbered/prefixed names (`var(--sf-primary-5)` etc.)
-- [ ] All `sf-tokens.css` utility class bodies — update to reference renamed tokens
+- [x] ~~All `sf-tokens.css` utility class bodies — update to reference renamed tokens~~
+      Superseded by the generator. Legacy `sf-tokens.css` sections are kept while the
+      editor still emits legacy class names; they will be deleted with the editor
+      alpha-step rename slice rather than rewritten.
+- [ ] Editor alpha-step rename (next slice): `textColorMark.ts`,
+      `ToolbarColorControl.vue`, `alphaPalette.ts`, `colorPalette.ts`. Read from
+      `--sf-*` palette tokens and emit new-step class names (`sf-bg-primary-5`,
+      `sf-bg-alpha-3`, etc.).
 - [ ] `LayoutCard.vue`, `main.css`, and any other consumer of `--text_primary`,
       `--border_color`, `--bg_*` etc. — update to either the sf canonical name or
-      the Vuestic shim name (decide per consumer)
+      the Vuestic shim name (decide per consumer).
 
 ## Token cleanup
 

@@ -1,0 +1,66 @@
+/* Generated from D1 — do not edit. Run: pnpm generate:css */
+
+@layer sf-semantic {
+	.sf-border_color { border-color: rgb(var(--sf-border_color)); }
+	.sf-fg_inverted { color: rgb(var(--sf-fg_inverted)); }
+	.sf-fg_primary { color: rgb(var(--sf-fg_primary)); }
+}
+
+@layer sf-utility {
+	/* ── Typography ─────────────────────────────────────────── */
+	.sf-font-1 { font-family: var(--sf-font-1); }
+	.sf-font-2 { font-family: var(--sf-font-2); }
+	.sf-font-mono { font-family: var(--sf-font-mono); }
+	.sf-weight-1 { font-weight: var(--sf-weight-1); }
+	.sf-weight-2 { font-weight: var(--sf-weight-2); }
+	.sf-weight-3 { font-weight: var(--sf-weight-3); }
+	.sf-weight-4 { font-weight: var(--sf-weight-4); }
+	.sf-text-2xl { font-size: var(--sf-text-2xl); }
+	.sf-text-3xl { font-size: var(--sf-text-3xl); }
+	.sf-text-4xl { font-size: var(--sf-text-4xl); }
+	.sf-text-5xl { font-size: var(--sf-text-5xl); }
+	.sf-text-6xl { font-size: var(--sf-text-6xl); }
+	.sf-text-7xl { font-size: var(--sf-text-7xl); }
+	.sf-text-8xl { font-size: var(--sf-text-8xl); }
+	.sf-text-9xl { font-size: var(--sf-text-9xl); }
+	.sf-text-base { font-size: var(--sf-text-base); }
+	.sf-text-lg { font-size: var(--sf-text-lg); }
+	.sf-text-sm { font-size: var(--sf-text-sm); }
+	.sf-text-xl { font-size: var(--sf-text-xl); }
+	.sf-text-xs { font-size: var(--sf-text-xs); }
+	.sf-leading-loose { line-height: var(--sf-leading-loose); }
+	.sf-leading-none { line-height: var(--sf-leading-none); }
+	.sf-leading-normal { line-height: var(--sf-leading-normal); }
+	.sf-leading-relaxed { line-height: var(--sf-leading-relaxed); }
+	.sf-leading-snug { line-height: var(--sf-leading-snug); }
+	.sf-leading-tight { line-height: var(--sf-leading-tight); }
+	.sf-tracking-normal { letter-spacing: var(--sf-tracking-normal); }
+	.sf-tracking-tight { letter-spacing: var(--sf-tracking-tight); }
+	.sf-tracking-wide { letter-spacing: var(--sf-tracking-wide); }
+
+	/* ── Radius ─────────────────────────────────────────── */
+	.sf-radius-0 { border-radius: var(--sf-radius-0); }
+	.sf-radius-1 { border-radius: var(--sf-radius-1); }
+	.sf-radius-2 { border-radius: var(--sf-radius-2); }
+	.sf-radius-3 { border-radius: var(--sf-radius-3); }
+
+	/* ── Spacing — sets runtime --sf-gap / --sf-padding for layout primitives ─────────────────────────────────────────── */
+	.sf-gap-lg { --sf-gap: var(--sf-spacing-lg); }
+	.sf-gap-md { --sf-gap: var(--sf-spacing-md); }
+	.sf-gap-none { --sf-gap: var(--sf-spacing-none); }
+	.sf-gap-sm { --sf-gap: var(--sf-spacing-sm); }
+	.sf-gap-xl { --sf-gap: var(--sf-spacing-xl); }
+	.sf-gap-xs { --sf-gap: var(--sf-spacing-xs); }
+	.sf-padding-lg { --sf-padding: var(--sf-spacing-lg); }
+	.sf-padding-md { --sf-padding: var(--sf-spacing-md); }
+	.sf-padding-none { --sf-padding: var(--sf-spacing-none); }
+	.sf-padding-sm { --sf-padding: var(--sf-spacing-sm); }
+	.sf-padding-xl { --sf-padding: var(--sf-spacing-xl); }
+	.sf-padding-xs { --sf-padding: var(--sf-spacing-xs); }
+
+	/* ── Shadow — composes shape token with --sf-shadow colour at theme opacity ─────────────────────────────────────────── */
+	.sf-shadow-lg { box-shadow: var(--sf-shadow-lg) rgb(var(--sf-shadow) / var(--sf-shadow-opacity)); }
+	.sf-shadow-md { box-shadow: var(--sf-shadow-md) rgb(var(--sf-shadow) / var(--sf-shadow-opacity)); }
+	.sf-shadow-sm { box-shadow: var(--sf-shadow-sm) rgb(var(--sf-shadow) / var(--sf-shadow-opacity)); }
+	.sf-shadow-xl { box-shadow: var(--sf-shadow-xl) rgb(var(--sf-shadow) / var(--sf-shadow-opacity)); }
+}

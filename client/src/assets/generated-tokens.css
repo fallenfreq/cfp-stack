@@ -42,6 +42,7 @@
 	--sf-shadow: 0 0 0;
 	--sf-shadow-lg: 0 4px 16px;
 	--sf-shadow-md: 0 2px 8px;
+	--sf-shadow-opacity: 0.12;
 	--sf-shadow-sm: 0 1px 4px;
 	--sf-shadow-xl: 0 8px 24px;
 	--sf-spacing-lg: 2rem;

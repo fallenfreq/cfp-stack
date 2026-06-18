@@ -7,3 +7,5 @@ functions/
 pnpm-lock.yaml
 **/components.d.ts
 client/src/assets/generated-tokens.css
+client/src/assets/generated-classes.css
+client/src/assets/generated-editor-classes.css

@@ -1,5 +1,7 @@
 @import './base.css';
 @import './generated-tokens.css';
+@import './generated-classes.css';
+@import './generated-editor-classes.css';
 @import './sf-tokens.css';
 
 @layer sf-bundle, sf-variant, sf-semantic, sf-utility, sf-state;

@@ -156,14 +156,21 @@ background: rgb(var(--sf-primary-5) / var(--sf-alpha-3)); /* range token */
 One colour token serves all opacities — the class count stays linear instead of
 multiplicative.
 
-Classes can also set runtime alpha modifiers (`--sf-bg-alpha`, `--sf-color-alpha`,
-`--sf-border-alpha`) that paired classes read — a utility binding a palette step to
-background composes against `--sf-bg-alpha`, which a co-present `sf-bg-alpha-*` class
-can set.
+**Use-site composition is the rule for the design system.** Component CSS, bundles, and
+theme overrides all compose opacity at the use site against `--sf-alpha-N` tokens.
+Recurring tinted values that warrant theme tracking get their own semantic token.
 
-A theme override of a single-property colour class must keep the composing form —
-writing `rgb(var(--sf-X))` instead of `rgb(var(--sf-X) / var(--sf-bg-alpha))` silently
-disables co-present `sf-bg-alpha-*` classes. Bundles paint solid and don't participate.
+**Editor-pairing classes are the one exception.** A picker UI emits a class pair
+(`sf-bg-primary-5` + `sf-bg-alpha-3`) instead of inline `style` so cascade specificity
+stays well-behaved — inline style outranks every layer, which would block state classes
+(`sf-on-hover`, etc.) from overriding the picked colour. The class pair works because
+the colour utility sets a runtime modifier var (`--sf-bg-alpha`) reset to `1`, and the
+alpha class overrides it. The reset is required to fence the cascade against itself.
+
+This pattern lives entirely in the editor-pairing surface (`sf-{bg|color|border}-*`
+palette utilities and their `sf-{bg|color|border}-alpha-*` siblings). Component authors
+should not reach for it; they pick the colour token whose value already encodes the
+opacity they want, or compose at the use site. Bundles paint solid and don't participate.
 
 ### When a token belongs
 

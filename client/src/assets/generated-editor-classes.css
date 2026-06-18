@@ -1,0 +1,117 @@
+/* Generated from D1 — do not edit. Run: pnpm generate:css */
+/* Editor-pairing classes — see sf-system.md "Colours and alpha". */
+
+@layer sf-utility {
+	/* ── Primary palette ───────────────────────── */
+	.sf-bg-primary { --sf-bg-alpha: 1; background-color: rgb(var(--sf-primary) / var(--sf-bg-alpha)); }
+	.sf-bg-primary-1 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-primary-1) / var(--sf-bg-alpha)); }
+	.sf-bg-primary-2 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-primary-2) / var(--sf-bg-alpha)); }
+	.sf-bg-primary-3 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-primary-3) / var(--sf-bg-alpha)); }
+	.sf-bg-primary-4 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-primary-4) / var(--sf-bg-alpha)); }
+	.sf-bg-primary-5 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-primary-5) / var(--sf-bg-alpha)); }
+	.sf-bg-primary-6 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-primary-6) / var(--sf-bg-alpha)); }
+	.sf-bg-primary-7 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-primary-7) / var(--sf-bg-alpha)); }
+	.sf-bg-primary-8 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-primary-8) / var(--sf-bg-alpha)); }
+	.sf-bg-primary-9 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-primary-9) / var(--sf-bg-alpha)); }
+	.sf-color-primary { --sf-color-alpha: 1; color: rgb(var(--sf-primary) / var(--sf-color-alpha)); }
+	.sf-color-primary-1 { --sf-color-alpha: 1; color: rgb(var(--sf-primary-1) / var(--sf-color-alpha)); }
+	.sf-color-primary-2 { --sf-color-alpha: 1; color: rgb(var(--sf-primary-2) / var(--sf-color-alpha)); }
+	.sf-color-primary-3 { --sf-color-alpha: 1; color: rgb(var(--sf-primary-3) / var(--sf-color-alpha)); }
+	.sf-color-primary-4 { --sf-color-alpha: 1; color: rgb(var(--sf-primary-4) / var(--sf-color-alpha)); }
+	.sf-color-primary-5 { --sf-color-alpha: 1; color: rgb(var(--sf-primary-5) / var(--sf-color-alpha)); }
+	.sf-color-primary-6 { --sf-color-alpha: 1; color: rgb(var(--sf-primary-6) / var(--sf-color-alpha)); }
+	.sf-color-primary-7 { --sf-color-alpha: 1; color: rgb(var(--sf-primary-7) / var(--sf-color-alpha)); }
+	.sf-color-primary-8 { --sf-color-alpha: 1; color: rgb(var(--sf-primary-8) / var(--sf-color-alpha)); }
+	.sf-color-primary-9 { --sf-color-alpha: 1; color: rgb(var(--sf-primary-9) / var(--sf-color-alpha)); }
+	.sf-border-primary { --sf-border-alpha: 1; border-color: rgb(var(--sf-primary) / var(--sf-border-alpha)); }
+	.sf-border-primary-1 { --sf-border-alpha: 1; border-color: rgb(var(--sf-primary-1) / var(--sf-border-alpha)); }
+	.sf-border-primary-2 { --sf-border-alpha: 1; border-color: rgb(var(--sf-primary-2) / var(--sf-border-alpha)); }
+	.sf-border-primary-3 { --sf-border-alpha: 1; border-color: rgb(var(--sf-primary-3) / var(--sf-border-alpha)); }
+	.sf-border-primary-4 { --sf-border-alpha: 1; border-color: rgb(var(--sf-primary-4) / var(--sf-border-alpha)); }
+	.sf-border-primary-5 { --sf-border-alpha: 1; border-color: rgb(var(--sf-primary-5) / var(--sf-border-alpha)); }
+	.sf-border-primary-6 { --sf-border-alpha: 1; border-color: rgb(var(--sf-primary-6) / var(--sf-border-alpha)); }
+	.sf-border-primary-7 { --sf-border-alpha: 1; border-color: rgb(var(--sf-primary-7) / var(--sf-border-alpha)); }
+	.sf-border-primary-8 { --sf-border-alpha: 1; border-color: rgb(var(--sf-primary-8) / var(--sf-border-alpha)); }
+	.sf-border-primary-9 { --sf-border-alpha: 1; border-color: rgb(var(--sf-primary-9) / var(--sf-border-alpha)); }
+
+	/* ── Surface palette ───────────────────────── */
+	.sf-bg-surface-0 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-surface-0) / var(--sf-bg-alpha)); }
+	.sf-bg-surface-1 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-surface-1) / var(--sf-bg-alpha)); }
+	.sf-bg-surface-2 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-surface-2) / var(--sf-bg-alpha)); }
+	.sf-bg-surface-3 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-surface-3) / var(--sf-bg-alpha)); }
+	.sf-bg-surface-4 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-surface-4) / var(--sf-bg-alpha)); }
+	.sf-bg-surface-5 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-surface-5) / var(--sf-bg-alpha)); }
+	.sf-bg-surface-6 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-surface-6) / var(--sf-bg-alpha)); }
+	.sf-bg-surface-7 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-surface-7) / var(--sf-bg-alpha)); }
+	.sf-bg-surface-8 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-surface-8) / var(--sf-bg-alpha)); }
+	.sf-bg-surface-9 { --sf-bg-alpha: 1; background-color: rgb(var(--sf-surface-9) / var(--sf-bg-alpha)); }
+	.sf-color-surface-0 { --sf-color-alpha: 1; color: rgb(var(--sf-surface-0) / var(--sf-color-alpha)); }
+	.sf-color-surface-1 { --sf-color-alpha: 1; color: rgb(var(--sf-surface-1) / var(--sf-color-alpha)); }
+	.sf-color-surface-2 { --sf-color-alpha: 1; color: rgb(var(--sf-surface-2) / var(--sf-color-alpha)); }
+	.sf-color-surface-3 { --sf-color-alpha: 1; color: rgb(var(--sf-surface-3) / var(--sf-color-alpha)); }
+	.sf-color-surface-4 { --sf-color-alpha: 1; color: rgb(var(--sf-surface-4) / var(--sf-color-alpha)); }
+	.sf-color-surface-5 { --sf-color-alpha: 1; color: rgb(var(--sf-surface-5) / var(--sf-color-alpha)); }
+	.sf-color-surface-6 { --sf-color-alpha: 1; color: rgb(var(--sf-surface-6) / var(--sf-color-alpha)); }
+	.sf-color-surface-7 { --sf-color-alpha: 1; color: rgb(var(--sf-surface-7) / var(--sf-color-alpha)); }
+	.sf-color-surface-8 { --sf-color-alpha: 1; color: rgb(var(--sf-surface-8) / var(--sf-color-alpha)); }
+	.sf-color-surface-9 { --sf-color-alpha: 1; color: rgb(var(--sf-surface-9) / var(--sf-color-alpha)); }
+	.sf-border-surface-0 { --sf-border-alpha: 1; border-color: rgb(var(--sf-surface-0) / var(--sf-border-alpha)); }
+	.sf-border-surface-1 { --sf-border-alpha: 1; border-color: rgb(var(--sf-surface-1) / var(--sf-border-alpha)); }
+	.sf-border-surface-2 { --sf-border-alpha: 1; border-color: rgb(var(--sf-surface-2) / var(--sf-border-alpha)); }
+	.sf-border-surface-3 { --sf-border-alpha: 1; border-color: rgb(var(--sf-surface-3) / var(--sf-border-alpha)); }
+	.sf-border-surface-4 { --sf-border-alpha: 1; border-color: rgb(var(--sf-surface-4) / var(--sf-border-alpha)); }
+	.sf-border-surface-5 { --sf-border-alpha: 1; border-color: rgb(var(--sf-surface-5) / var(--sf-border-alpha)); }
+	.sf-border-surface-6 { --sf-border-alpha: 1; border-color: rgb(var(--sf-surface-6) / var(--sf-border-alpha)); }
+	.sf-border-surface-7 { --sf-border-alpha: 1; border-color: rgb(var(--sf-surface-7) / var(--sf-border-alpha)); }
+	.sf-border-surface-8 { --sf-border-alpha: 1; border-color: rgb(var(--sf-surface-8) / var(--sf-border-alpha)); }
+	.sf-border-surface-9 { --sf-border-alpha: 1; border-color: rgb(var(--sf-surface-9) / var(--sf-border-alpha)); }
+
+	/* ── Semantic — fg_primary ───────────────────────── */
+	.sf-bg-fg_primary { --sf-bg-alpha: 1; background-color: rgb(var(--sf-fg_primary) / var(--sf-bg-alpha)); }
+	.sf-color-fg_primary { --sf-color-alpha: 1; color: rgb(var(--sf-fg_primary) / var(--sf-color-alpha)); }
+	.sf-border-fg_primary { --sf-border-alpha: 1; border-color: rgb(var(--sf-fg_primary) / var(--sf-border-alpha)); }
+
+	/* ── Semantic — fg_inverted ───────────────────────── */
+	.sf-bg-fg_inverted { --sf-bg-alpha: 1; background-color: rgb(var(--sf-fg_inverted) / var(--sf-bg-alpha)); }
+	.sf-color-fg_inverted { --sf-color-alpha: 1; color: rgb(var(--sf-fg_inverted) / var(--sf-color-alpha)); }
+	.sf-border-fg_inverted { --sf-border-alpha: 1; border-color: rgb(var(--sf-fg_inverted) / var(--sf-border-alpha)); }
+
+	/* ── Semantic — border_color ───────────────────────── */
+	.sf-bg-border_color { --sf-bg-alpha: 1; background-color: rgb(var(--sf-border_color) / var(--sf-bg-alpha)); }
+	.sf-color-border_color { --sf-color-alpha: 1; color: rgb(var(--sf-border_color) / var(--sf-color-alpha)); }
+	.sf-border-border_color { --sf-border-alpha: 1; border-color: rgb(var(--sf-border_color) / var(--sf-border-alpha)); }
+
+	/* ── Semantic — shadow ───────────────────────── */
+	.sf-bg-shadow { --sf-bg-alpha: 1; background-color: rgb(var(--sf-shadow) / var(--sf-bg-alpha)); }
+	.sf-color-shadow { --sf-color-alpha: 1; color: rgb(var(--sf-shadow) / var(--sf-color-alpha)); }
+	.sf-border-shadow { --sf-border-alpha: 1; border-color: rgb(var(--sf-shadow) / var(--sf-border-alpha)); }
+
+	/* ── Alpha pairings — last so they override the reset ───── */
+	.sf-bg-alpha-1 { --sf-bg-alpha: var(--sf-alpha-1); }
+	.sf-bg-alpha-2 { --sf-bg-alpha: var(--sf-alpha-2); }
+	.sf-bg-alpha-3 { --sf-bg-alpha: var(--sf-alpha-3); }
+	.sf-bg-alpha-4 { --sf-bg-alpha: var(--sf-alpha-4); }
+	.sf-bg-alpha-5 { --sf-bg-alpha: var(--sf-alpha-5); }
+	.sf-bg-alpha-6 { --sf-bg-alpha: var(--sf-alpha-6); }
+	.sf-bg-alpha-7 { --sf-bg-alpha: var(--sf-alpha-7); }
+	.sf-bg-alpha-8 { --sf-bg-alpha: var(--sf-alpha-8); }
+	.sf-bg-alpha-9 { --sf-bg-alpha: var(--sf-alpha-9); }
+	.sf-color-alpha-1 { --sf-color-alpha: var(--sf-alpha-1); }
+	.sf-color-alpha-2 { --sf-color-alpha: var(--sf-alpha-2); }
+	.sf-color-alpha-3 { --sf-color-alpha: var(--sf-alpha-3); }
+	.sf-color-alpha-4 { --sf-color-alpha: var(--sf-alpha-4); }
+	.sf-color-alpha-5 { --sf-color-alpha: var(--sf-alpha-5); }
+	.sf-color-alpha-6 { --sf-color-alpha: var(--sf-alpha-6); }
+	.sf-color-alpha-7 { --sf-color-alpha: var(--sf-alpha-7); }
+	.sf-color-alpha-8 { --sf-color-alpha: var(--sf-alpha-8); }
+	.sf-color-alpha-9 { --sf-color-alpha: var(--sf-alpha-9); }
+	.sf-border-alpha-1 { --sf-border-alpha: var(--sf-alpha-1); }
+	.sf-border-alpha-2 { --sf-border-alpha: var(--sf-alpha-2); }
+	.sf-border-alpha-3 { --sf-border-alpha: var(--sf-alpha-3); }
+	.sf-border-alpha-4 { --sf-border-alpha: var(--sf-alpha-4); }
+	.sf-border-alpha-5 { --sf-border-alpha: var(--sf-alpha-5); }
+	.sf-border-alpha-6 { --sf-border-alpha: var(--sf-alpha-6); }
+	.sf-border-alpha-7 { --sf-border-alpha: var(--sf-alpha-7); }
+	.sf-border-alpha-8 { --sf-border-alpha: var(--sf-alpha-8); }
+	.sf-border-alpha-9 { --sf-border-alpha: var(--sf-alpha-9); }
+}
