@@ -32,6 +32,7 @@
 		"migrate:custom": "pnpm --filter @somefreq-app/api migrate:custom",
 		"migrate:push:api": "pnpm --filter @somefreq-app/api migrate:push",
 		"migrate:push:local:api": "pnpm --filter @somefreq-app/api migrate:push:local",
+		"generate:css": "pnpm --filter @somefreq-app/api generate:css",
 		"logging:api": "pnpm --filter @somefreq-app/api logging"
 	},
 	"dependencies": {

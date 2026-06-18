@@ -1,4 +1,5 @@
 @import './base.css';
+@import './generated-tokens.css';
 @import './sf-tokens.css';
 
 @tailwind base;
