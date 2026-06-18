@@ -17,11 +17,11 @@ const readColorToken = (classList: string): string | null => {
 const classesToColor = (classList: string): string | null => {
 	const token = readColorToken(classList)
 	if (!token) return null
-	const cssVar = `--${token}`
+	const cssVar = `--sf-${token}`
 	const alphaClass = classList.split(/\s+/).find((c) => c.startsWith('sf-color-alpha-'))
 	const alphaName = alphaClass?.slice('sf-color-alpha-'.length) ?? null
 	const alphaStep = alphaName
-		? ALPHA_STEPS.find((s) => s.cssVar === `--alpha-${alphaName}`)
+		? ALPHA_STEPS.find((s) => s.cssVar === `--sf-alpha-${alphaName}`)
 		: null
 	return cssVarColor(cssVar, alphaStep?.value ?? 1)
 }
@@ -60,11 +60,11 @@ const TextColor = Mark.create({
 	renderHTML({ mark }) {
 		const parsed = parseStoredValue(mark.attrs.color)
 		if (parsed?.kind === 'token') {
-			const colorClass = `sf-color-${parsed.cssVar.slice(2)}`
+			const colorClass = `sf-color-${parsed.cssVar.slice('--sf-'.length)}`
 			const classes = [colorClass]
 			if (parsed.alpha < 1) {
 				const step = snapToStep(parsed.alpha)
-				classes.push(`sf-color-alpha-${step.cssVar.slice('--alpha-'.length)}`)
+				if (step) classes.push(`sf-color-alpha-${step.cssVar.slice('--sf-alpha-'.length)}`)
 			}
 			return ['span', mergeAttributes({ class: classes.join(' ') }), 0]
 		}

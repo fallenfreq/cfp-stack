@@ -150,7 +150,7 @@ onUnmounted(() => {
 	position: fixed;
 	inset: 0;
 	z-index: var(--z-modal);
-	background: rgb(0 0 0 / var(--alpha-50));
+	background: rgb(0 0 0 / var(--sf-alpha-5));
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -222,14 +222,14 @@ onUnmounted(() => {
 	background: none;
 	border: none;
 	border-radius: 3px;
-	color: rgba(var(--text_primary) / var(--alpha-30));
+	color: rgba(var(--text_primary) / var(--sf-alpha-3));
 	cursor: pointer;
 	padding: 0;
 }
 
 .style-fs-open:hover {
 	color: rgb(var(--text_primary));
-	background: rgba(var(--bg_primary) / var(--alpha-90));
+	background: rgba(var(--bg_primary) / var(--sf-alpha-9));
 }
 
 .style-fs-open .material-symbols-rounded {
@@ -248,12 +248,12 @@ onUnmounted(() => {
 	background: none;
 	border: none;
 	border-radius: 4px;
-	color: rgba(var(--text_primary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	cursor: pointer;
 }
 
 .style-fs-close:hover {
-	background: rgba(var(--text_primary) / var(--alpha-10));
+	background: rgba(var(--text_primary) / var(--sf-alpha-1));
 	color: rgb(var(--text_primary));
 }
 

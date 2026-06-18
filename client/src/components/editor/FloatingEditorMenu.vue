@@ -99,11 +99,11 @@ onUnmounted(() => {
 }
 .floating-toolbar {
 	position: fixed;
-	background: rgba(var(--bg_secondary) / var(--alpha-90));
+	background: rgba(var(--bg_secondary) / var(--sf-alpha-9));
 	border: 1px solid rgb(var(--border_color));
 	padding: 8px;
 	border-radius: 4px;
-	box-shadow: 0 2px 5px rgb(0 0 0 / var(--alpha-20));
+	box-shadow: 0 2px 5px rgb(0 0 0 / var(--sf-alpha-2));
 	z-index: var(--z-toolbar);
 	transition:
 		transform 0.15s ease-in-out,

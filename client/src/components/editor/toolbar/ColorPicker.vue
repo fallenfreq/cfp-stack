@@ -201,7 +201,7 @@ const commit = () => {
 .cp-header {
 	min-height: 16px;
 	font-size: 0.75rem;
-	color: rgba(var(--text_primary) / var(--alpha-70));
+	color: rgba(var(--text_primary) / var(--sf-alpha-7));
 }
 
 .cp-row {
@@ -218,7 +218,7 @@ const commit = () => {
 	width: 22px;
 	height: 22px;
 	border-radius: 4px;
-	border: 1px solid rgba(var(--text_primary) / var(--alpha-20));
+	border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
 	padding: 0;
 	cursor: pointer;
 	transition: transform 0.08s;
@@ -237,8 +237,8 @@ const commit = () => {
 	background-image: linear-gradient(
 		45deg,
 		transparent 45%,
-		rgba(var(--danger) / var(--alpha-70)) 45%,
-		rgba(var(--danger) / var(--alpha-70)) 55%,
+		rgba(var(--danger) / var(--sf-alpha-7)) 45%,
+		rgba(var(--danger) / var(--sf-alpha-7)) 55%,
 		transparent 55%
 	);
 }
@@ -252,7 +252,7 @@ const commit = () => {
 .cp-label,
 .cp-alpha-val {
 	font-size: 0.7rem;
-	color: rgba(var(--text_primary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	min-width: 24px;
 	text-align: center;
 }

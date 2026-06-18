@@ -36,20 +36,26 @@ const resolveAllVars = (variables: Variables, lookupVariables: Variables) => {
 	return resolvedVars
 }
 
-const run = async (cssFilePath: string, saveLocation: string) => {
-	const cssString = await fs.readFileSync(cssFilePath)
-	const cssAst = await postcss().process(cssString, {
-		from: cssFilePath,
-		parser: safe,
-	})
-	const darkVariables = extractVars('.dark', cssAst)
-	const rootVariables = extractVars(':root', cssAst)
-	const pinkVariables = extractVars('.pink', cssAst)
+const run = async (cssFilePaths: string | string[], saveLocation: string) => {
+	const paths = Array.isArray(cssFilePaths) ? cssFilePaths : [cssFilePaths]
+
+	// Merge vars across files; later files override earlier on conflict (last write wins).
+	const merged = { root: {} as Variables, dark: {} as Variables, pink: {} as Variables }
+	for (const cssFilePath of paths) {
+		const cssString = await fs.readFileSync(cssFilePath)
+		const cssAst = await postcss().process(cssString, {
+			from: cssFilePath,
+			parser: safe,
+		})
+		Object.assign(merged.root, extractVars(':root', cssAst))
+		Object.assign(merged.dark, extractVars('.theme-dark', cssAst))
+		Object.assign(merged.pink, extractVars('.theme-pink', cssAst))
+	}
 
 	const jsonContent = {
-		root: resolveAllVars(rootVariables, rootVariables),
-		dark: resolveAllVars(darkVariables, { ...rootVariables, ...darkVariables }),
-		pink: resolveAllVars(pinkVariables, { ...rootVariables, ...pinkVariables }),
+		root: resolveAllVars(merged.root, merged.root),
+		dark: resolveAllVars(merged.dark, { ...merged.root, ...merged.dark }),
+		pink: resolveAllVars(merged.pink, { ...merged.root, ...merged.pink }),
 	}
 
 	fs.writeFileSync(

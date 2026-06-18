@@ -118,7 +118,7 @@ const cancelRename = () => {
 	border-radius: 3px;
 	padding: 1px 5px;
 	cursor: pointer;
-	color: rgba(var(--text_primary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	font-size: 0.75rem;
 	transition:
 		max-width 0.15s,
@@ -129,7 +129,7 @@ const cancelRename = () => {
 }
 .top-bar__name:hover {
 	color: rgb(var(--text_primary));
-	border-color: rgba(var(--text_primary) / var(--alpha-20));
+	border-color: rgba(var(--text_primary) / var(--sf-alpha-2));
 }
 
 /* ── Renaming: name grows, NodePath shrinks away ── */
@@ -140,8 +140,8 @@ const cancelRename = () => {
 	white-space: normal;
 	cursor: text;
 	color: rgb(var(--text_primary));
-	background: rgba(var(--text_primary) / var(--alpha-10));
-	border-color: rgba(var(--text_primary) / var(--alpha-20));
+	background: rgba(var(--text_primary) / var(--sf-alpha-1));
+	border-color: rgba(var(--text_primary) / var(--sf-alpha-2));
 }
 .editor-top-bar.is-renaming .node-path {
 	flex: 0;
@@ -167,7 +167,7 @@ const cancelRename = () => {
 	border: 1px solid transparent;
 	border-radius: 3px;
 	cursor: pointer;
-	color: rgba(var(--text_primary) / var(--alpha-40));
+	color: rgba(var(--text_primary) / var(--sf-alpha-4));
 	transition:
 		color 0.1s,
 		background 0.1s,
@@ -176,8 +176,8 @@ const cancelRename = () => {
 .top-bar__toggle:hover,
 .top-bar__toggle.is-open {
 	color: rgb(var(--text_primary));
-	background: rgba(var(--text_primary) / var(--alpha-10));
-	border-color: rgba(var(--text_primary) / var(--alpha-20));
+	background: rgba(var(--text_primary) / var(--sf-alpha-1));
+	border-color: rgba(var(--text_primary) / var(--sf-alpha-2));
 }
 
 /* ── Actions panel ── */
@@ -198,7 +198,7 @@ const cancelRename = () => {
 	border: 1px solid transparent;
 	border-radius: 3px;
 	cursor: pointer;
-	color: rgba(var(--text_primary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	transition:
 		color 0.1s,
 		background 0.1s,
@@ -206,8 +206,8 @@ const cancelRename = () => {
 }
 .top-bar__action:hover:not(:disabled) {
 	color: rgb(var(--text_primary));
-	background: rgba(var(--text_primary) / var(--alpha-10));
-	border-color: rgba(var(--text_primary) / var(--alpha-20));
+	background: rgba(var(--text_primary) / var(--sf-alpha-1));
+	border-color: rgba(var(--text_primary) / var(--sf-alpha-2));
 }
 .top-bar__action:disabled {
 	opacity: 0.3;

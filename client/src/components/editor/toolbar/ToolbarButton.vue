@@ -37,11 +37,11 @@ defineEmits<{ click: [] }>()
 		border-color 0.1s;
 }
 .toolbar-btn:hover:not(:disabled) {
-	background: rgba(var(--text_primary) / var(--alpha-10));
+	background: rgba(var(--text_primary) / var(--sf-alpha-1));
 }
 .toolbar-btn.is-active {
-	background: rgba(var(--primary) / var(--alpha-10));
-	border-color: rgba(var(--primary) / var(--alpha-40));
+	background: rgba(var(--primary) / var(--sf-alpha-1));
+	border-color: rgba(var(--primary) / var(--sf-alpha-4));
 	color: rgb(var(--primary));
 }
 .toolbar-btn:disabled {

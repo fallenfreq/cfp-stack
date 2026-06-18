@@ -41,7 +41,7 @@ const languagesName = languages.map((language) => {
 const codeRadius = computed(() => {
 	const cls = typeof props.node.attrs.class === 'string' ? props.node.attrs.class : ''
 	const token = getClassToken(cls, 'sf-radius-')
-	return token ? `var(--radius-${token})` : 'var(--radius-md)'
+	return token ? `var(--sf-radius-${token})` : 'var(--sf-radius-2)'
 })
 
 const selectedLanguage = computed({

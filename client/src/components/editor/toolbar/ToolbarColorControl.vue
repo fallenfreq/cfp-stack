@@ -40,9 +40,9 @@ const readNodeBg = (node: { attrs: Record<string, unknown> }): string | null => 
 	if (bgToken) {
 		const alphaName = getClassToken(cls, 'sf-bg-alpha-')
 		const alphaStep = alphaName
-			? ALPHA_STEPS.find((s) => s.cssVar === `--alpha-${alphaName}`)
+			? ALPHA_STEPS.find((s) => s.cssVar === `--sf-alpha-${alphaName}`)
 			: null
-		return cssVarColor(`--${bgToken}`, alphaStep?.value ?? 1)
+		return cssVarColor(`--sf-${bgToken}`, alphaStep?.value ?? 1)
 	}
 	const style = typeof node.attrs.style === 'string' ? node.attrs.style : ''
 	return getStyleProp(style, 'background-color') || null
@@ -57,7 +57,7 @@ const currentColor = computed<string | null>(() => {
 })
 
 const NO_COLOR_STRIPE =
-	'linear-gradient(45deg, transparent 45%, rgba(var(--danger) / var(--alpha-60)) 45%, rgba(var(--danger) / var(--alpha-60)) 55%, transparent 55%)'
+	'linear-gradient(45deg, transparent 45%, rgba(var(--danger) / var(--sf-alpha-6)) 45%, rgba(var(--danger) / var(--sf-alpha-6)) 55%, transparent 55%)'
 
 const swatchStyle = computed<CSSProperties>(() =>
 	currentColor.value
@@ -85,10 +85,12 @@ const applyColor = (value: string | null) => {
 	if (value !== null) {
 		const parsed = parseStoredValue(value)
 		if (parsed?.kind === 'token') {
-			cls = (cls + ` sf-bg-${parsed.cssVar.slice(2)}`).trim()
+			cls = (cls + ` sf-bg-${parsed.cssVar.slice('--sf-'.length)}`).trim()
 			if (parsed.alpha < 1) {
 				const step = snapToStep(parsed.alpha)
-				cls = (cls + ` sf-bg-alpha-${step.cssVar.slice('--alpha-'.length)}`).trim()
+				if (step) {
+					cls = (cls + ` sf-bg-alpha-${step.cssVar.slice('--sf-alpha-'.length)}`).trim()
+				}
 			}
 		} else {
 			// Arbitrary colour: store as inline style
@@ -119,6 +121,6 @@ const onRemove = () => applyColor(null)
 	width: 16px;
 	height: 16px;
 	border-radius: 3px;
-	border: 1px solid rgba(var(--text_primary) / var(--alpha-30));
+	border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-3));
 }
 </style>

@@ -56,7 +56,7 @@ import ToolbarButton from './ToolbarButton.vue'
 import ToolbarIcon from './ToolbarIcon.vue'
 import ToolbarPanel from './ToolbarPanel.vue'
 
-const DEFAULT_SHADOW_COLOR = 'rgb(var(--shadow) / var(--alpha-20))'
+const DEFAULT_SHADOW_COLOR = 'rgb(var(--shadow) / var(--sf-alpha-2))'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
 
@@ -142,7 +142,7 @@ const commit = () => {
 
 .sp-label {
 	font-size: 0.7rem;
-	color: rgba(var(--text_primary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 }
 
 .sp-row {
@@ -155,7 +155,7 @@ const commit = () => {
 .sp-chip {
 	height: 26px;
 	border-radius: 4px;
-	border: 1px solid rgba(var(--text_primary) / var(--alpha-20));
+	border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
 	padding: 0 6px;
 	cursor: pointer;
 	transition: transform 0.08s;
@@ -167,7 +167,7 @@ const commit = () => {
 
 .sp-chip:hover {
 	transform: scale(1.05);
-	background: rgba(var(--text_primary) / var(--alpha-8));
+	background: rgba(var(--text_primary) / var(--sf-alpha-1));
 }
 
 .sp-chip.is-active {
@@ -177,7 +177,7 @@ const commit = () => {
 
 .sp-divider {
 	height: 1px;
-	background: rgba(var(--text_primary) / var(--alpha-10));
+	background: rgba(var(--text_primary) / var(--sf-alpha-1));
 	margin: 0 -4px;
 }
 </style>

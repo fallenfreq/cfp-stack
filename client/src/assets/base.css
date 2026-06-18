@@ -1,7 +1,12 @@
 /*
-If this file is changed, the dev server needs to be restarted for 
+If this file is changed, the dev server needs to be restarted for
 ./plugins/extractCssVars.ts to re-calculate the cssVariables.js file.
 You can just save a file that will trigger a restart.
+
+DESIGN SYSTEM TOKENS LIVE IN D1, not here. Run `pnpm generate:css` to
+emit generated-tokens.css / generated-classes.css / generated-editor-classes.css.
+What remains below is Vuestic-compatibility + app-level vars only; everything in
+this file goes away when Vuestic is removed (except the app-level :root block).
 */
 
 :root {
@@ -25,10 +30,13 @@ You can just save a file that will trigger a restart.
 	--xxl: 1536;
 }
 
-/*
-css based on primevue originally
-primevue is no longer used
-*/
+/* ─── Vuestic compatibility ───────────────────────────────────────────────
+   These tokens exist for Vuestic's processTailwindColors pipeline + the
+   tailwind config that feeds it. The values mirror the legacy design system
+   that Vuestic was built against. The sf-system equivalents live in D1 and
+   are emitted to generated-tokens.css — when Vuestic is removed, this whole
+   block plus tailwind.config palette refs go too. */
+
 :root {
 	--primary-50: 236 253 245;
 	--primary-100: 209 250 229;
@@ -64,26 +72,7 @@ primevue is no longer used
 	--primary-highlight-hover-opacity: 0.2;
 
 	--section-gap: 160px;
-}
-.theme-dark {
-	--primary: var(--primary-400);
-	--primary-inverse: var(--surface-900);
-	--primary-hover: var(--primary-300);
-	--primary-active-color: var(--primary-300);
 
-	--primary-highlight-opacity: 0.2;
-	--primary-highlight-inverse: var(--surface-0);
-	--primary-highlight-hover-opacity: 0.3;
-}
-
-/*
-Vuestic presets as vars.
-The var primary which is a Vuestic colour is already set by PrimeVue.
-We are passing Vuestic it's colours by processing the Tailwind colours
-and using the cssVariables.js file to resolve the variables.
-*/
-
-:root {
 	--secondary: 102 110 117;
 	--success: 61 146 9;
 	--info: 21 141 227;
@@ -101,6 +90,15 @@ and using the cssVariables.js file to resolve the variables.
 }
 
 .theme-dark {
+	--primary: var(--primary-400);
+	--primary-inverse: var(--surface-900);
+	--primary-hover: var(--primary-300);
+	--primary-active-color: var(--primary-300);
+
+	--primary-highlight-opacity: 0.2;
+	--primary-highlight-inverse: var(--surface-0);
+	--primary-highlight-hover-opacity: 0.3;
+
 	--secondary: 129 137 146;
 	--success: 102 190 51;
 	--info: 62 170 248;
@@ -162,110 +160,4 @@ and using the cssVariables.js file to resolve the variables.
 	--primary-highlight-hover-opacity: 0.2;
 
 	--focus: var(--primary);
-}
-
-/* Alpha steps — numeric suffix is percentage × 100.
-   All values used in component styles are defined here so nothing is hardcoded. */
-:root {
-	--alpha-0: 0;
-	--alpha-10: 0.1;
-	--alpha-20: 0.2;
-	--alpha-25: 0.25;
-	--alpha-30: 0.3;
-	--alpha-40: 0.4;
-	--alpha-50: 0.5;
-	--alpha-60: 0.6;
-	--alpha-70: 0.7;
-	--alpha-75: 0.75;
-	--alpha-80: 0.8;
-	--alpha-90: 0.9;
-	--alpha-100: 1;
-
-	--alpha-subtle: var(--alpha-10);
-	--alpha-muted: var(--alpha-30);
-	--alpha-half: var(--alpha-50);
-}
-
-/* Font families — add new families here; the font picker reads --font-* vars automatically. */
-:root {
-	--font-sans: 'Source Sans Pro', Inter, system-ui, sans-serif;
-	--font-serif: 'Lora', Georgia, serif;
-	--font-mono: 'Source Code Pro', 'Fira Code', monospace;
-}
-
-/* Font sizes — Tailwind-compatible names, configured independently of Tailwind.
-   Add or remove entries here; the font picker reads --text-* vars automatically. */
-:root {
-	--text-xs: 0.75rem;
-	--text-sm: 0.875rem;
-	--text-base: 1rem;
-	--text-lg: 1.125rem;
-	--text-xl: 1.25rem;
-	--text-2xl: 1.5rem;
-	--text-3xl: 1.875rem;
-	--text-4xl: 2.25rem;
-	--text-5xl: 3rem;
-	--text-6xl: 3.75rem;
-	--text-7xl: 4.5rem;
-	--text-8xl: 6rem;
-	--text-9xl: 8rem;
-}
-
-/* Line-height (leading) — add or remove entries here; the font picker reads --leading-* vars automatically. */
-:root {
-	--leading-none: 1;
-	--leading-tight: 1.25;
-	--leading-snug: 1.375;
-	--leading-normal: 1.5;
-	--leading-relaxed: 1.625;
-	--leading-loose: 2;
-}
-
-/* Letter-spacing (tracking) — add or remove entries here; the font picker reads --tracking-* vars automatically. */
-:root {
-	--tracking-tighter: -0.05em;
-	--tracking-tight: -0.025em;
-	--tracking-normal: 0em;
-	--tracking-wide: 0.025em;
-	--tracking-wider: 0.05em;
-	--tracking-widest: 0.1em;
-}
-
-/* Border-radius scale — shape module. Components reference var(--radius-sm) etc.
-   Theme authors override these to change the overall roundness feel. */
-:root {
-	--radius-none: 0px;
-	--radius-sm: 4px;
-	--radius-md: 8px;
-	--radius-lg: 16px;
-}
-
-/* Spacing scale — spacing module. Layout components use var(--spacing-xs) etc.
-   Theme authors can override for denser or more spacious feels. */
-:root {
-	--spacing-none: 0px;
-	--spacing-xs: 0.5rem;
-	--spacing-sm: 0.75rem;
-	--spacing-md: 1.25rem;
-	--spacing-lg: 2rem;
-	--spacing-xl: 3rem;
-}
-
-/* Elevation — shadow offset+blur tokens. Usage: box-shadow: var(--shadow-md) rgb(var(--shadow) / var(--alpha-20))
-   Do not use standalone — must be followed by a color value. */
-:root {
-	--shadow-sm: 0 1px 4px;
-	--shadow-md: 0 2px 8px;
-	--shadow-lg: 0 4px 16px;
-	--shadow-xl: 0 8px 24px;
-}
-
-/* Container breakpoints — layout module. LayoutColumns and LayoutSplit collapse to
-   single-column below these inline-size thresholds. These are the source of truth;
-   the @container rules in each component must match (var() is not valid inside
-   @container conditions, so the values cannot be referenced directly). */
-:root {
-	--breakpoint-xs: 380px;
-	--breakpoint-sm: 640px;
-	--breakpoint-md: 768px;
 }

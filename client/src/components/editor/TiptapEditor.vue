@@ -118,7 +118,7 @@ watch(editor, (newEditor) => {
 }
 
 .tiptap p.is-empty::before {
-	color: rgba(var(--text_primary) / var(--alpha-50));
+	color: rgba(var(--text_primary) / var(--sf-alpha-5));
 	content: attr(data-placeholder);
 	float: left;
 	height: 0;
@@ -127,7 +127,7 @@ watch(editor, (newEditor) => {
 
 /* ProseMirror / drag-handle selection states */
 .ProseMirror-selectednode {
-	outline: 3px solid rgba(var(--primary) / var(--alpha-20));
+	outline: 3px solid rgba(var(--primary) / var(--sf-alpha-2));
 }
 
 .node-selected {

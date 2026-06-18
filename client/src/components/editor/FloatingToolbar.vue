@@ -164,7 +164,7 @@ onUnmounted(() => {
 <style>
 .sel-count {
 	font-size: 0.75rem;
-	color: rgba(var(--text_primary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	padding: 0 4px;
 	white-space: nowrap;
 	align-self: center;
@@ -182,10 +182,10 @@ onUnmounted(() => {
 	width: fit-content;
 	height: var(--toolbar-height);
 	transform: translateY(-100%);
-	background: rgba(var(--bg_secondary) / var(--alpha-90));
+	background: rgba(var(--bg_secondary) / var(--sf-alpha-9));
 	border: 1px solid rgb(var(--border_color));
 	border-radius: 4px;
-	box-shadow: 0 2px 5px rgb(0 0 0 / var(--alpha-20));
+	box-shadow: 0 2px 5px rgb(0 0 0 / var(--sf-alpha-2));
 	z-index: var(--z-toolbar);
 	overflow: hidden;
 }

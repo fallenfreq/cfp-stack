@@ -32,27 +32,52 @@ Done so far:
   and the OS-preference preload script.
 - `sf-collapse-*` → `sl-collapse-*` rename (collapse is arrangement, not appearance).
 
-### Known coexistence with legacy `sf-tokens.css`
+Done in the editor + cleanup slice:
 
-The legacy file is intentionally kept while the editor still emits legacy class names
-(`sf-bg-primary-500`, `sf-bg-alpha-50`, etc.). Where class names collide between
-generated and legacy (typography, radius, spacing, shadow, `.sf-border_color`,
-`.sf-bg-primary`), legacy wins because it's unlayered. Values are visually equivalent
-in current themes, so collisions are silent. Cleanup is tied to the editor migration —
-see "Next slice" below.
+- Editor migrated to `--sf-*` vocabulary end-to-end: `extractCssVars` reads both
+  `base.css` and `generated-tokens.css`, fixes the stale `.dark` / `.pink` selectors
+  (Vuestic dark/pink presets were silently empty since the rename — now restored).
+- `colorPalette.ts`, `alphaPalette.ts`, `fontPalette.ts`, `layoutTokens.ts`,
+  `textColorMark.ts`, `fontStyleMark.ts`, `ToolbarColorControl.vue`,
+  `ToolbarFontControl.vue`, `ToolbarCornersControl.vue` all use `--sf-*` prefixes.
+  `snapToStep` returns `AlphaStep | null` — the fallback was making up an arbitrary
+  "closest to opaque" step that doesn't exist in the new range.
+- Component CSS rename: 128 `var(--alpha-N)` references migrated to `var(--sf-alpha-N)`
+  across ~25 files. Legacy `--alpha-{0..100}`, `--shadow-{sm..xl}`, `--radius-*`,
+  `--text-*`, `--leading-*`, `--tracking-*`, `--spacing-*`, `--font-{sans,serif,mono}`,
+  `--breakpoint-*` deleted from `base.css`.
+- `sf-tokens.css` reduced from 675 lines to ~25: TipTap reset + the one `sf-bg_secondary`
+  class that has live consumers (others were speculative).
+- Generator's `sf-shadow-*` classes now respect inline `--sf-shadow-color` override
+  (preserves the picker's per-element colour pick capability).
+- `initialContent.html` migrated: `sf-radius-md` → `sf-radius-2`, `sf-radius-none` →
+  `sf-radius-0`.
 
-What's pending — the migration crystallises into three threads:
+### What's intentionally still legacy
 
-1. **Editor alpha-step rename** (next slice) — `textColorMark.ts`, `ToolbarColorControl.vue`,
-   `alphaPalette.ts`, `colorPalette.ts`. Switch emission from `sf-bg-primary-500` /
-   `sf-bg-alpha-50` to `sf-bg-primary-5` / `sf-bg-alpha-3` (or whichever step), reading
-   from `--sf-*` palette tokens instead of legacy `--primary-500`. Once editor is on
-   the new vocabulary, the legacy palette + alpha sections of `sf-tokens.css` can be
-   deleted along with the typography/radius/spacing/shadow sections.
-2. **Tailwind config + component CSS migration** to the new tokens (still TODO; see
-   "Pipeline + consumer updates" below).
-3. **Rich classes** — bundles (`sf-depth-*`, `sf-heading-*`), variants, states. These
-   need `class_vocabulary` + `class_properties` rows and generator support.
+- **`base.css`** keeps the Vuestic-compat block: `--primary-{50..950}`, `--surface-*`,
+  semantic Vuestic colours (`--bg_primary`, `--text_primary`, `--secondary`, etc.),
+  `--shadow`, `--shadow-opacity`. Tailwind config references these via `processTailwind`
+  Colors. Whole block goes when Vuestic is removed.
+- **`sf-tokens.css`** keeps `.sf-bg_secondary` for 4 known consumers (`BasicCard.vue`,
+  `StackableSheet.vue`, `contentExtensions.ts`, `initialContent.html`). When
+  `sf-depth-*` bundles land each consumer should pick the right depth instead — at
+  that point this class and `--bg_secondary` go together.
+
+What's pending:
+
+1. **Rich classes** — bundles (`sf-depth-*`, `sf-heading-*`), variants
+   (`sf-variant-*`), states (`sf-on-*`), layout primitives (`sl-*`). These need
+   `class_vocabulary` + `class_properties` rows and generator support beyond the
+   property-mapping rules. Likely the next slice — see "Implement missing class
+   families" below.
+2. **`tailwind.config.js`** palette refs (`var(--primary-500)` etc.) — can stay until
+   Vuestic is removed; renaming them to `var(--sf-primary-5)` is a no-op since both
+   tokens carry the same value.
+3. **Vuestic shim** — duplicating values: keep `--text_primary` etc. but source values
+   from the corresponding `--sf-*` tokens via the seed (so theme authors only edit one
+   place). Currently the Vuestic-compat values in `base.css` are hand-written, not
+   driven from the DB.
 
 ## Schema notes
 

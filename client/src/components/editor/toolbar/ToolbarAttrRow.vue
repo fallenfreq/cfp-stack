@@ -127,7 +127,7 @@ onUnmounted(() => {
 
 .attr-key {
 	font-size: 0.75rem;
-	color: rgba(var(--text_primary) / var(--alpha-70));
+	color: rgba(var(--text_primary) / var(--sf-alpha-7));
 	min-width: 36px;
 	flex-shrink: 0;
 }
@@ -162,7 +162,7 @@ onUnmounted(() => {
 
 .attr-default-badge {
 	font-size: 0.65rem;
-	color: rgba(var(--text_primary) / var(--alpha-40));
+	color: rgba(var(--text_primary) / var(--sf-alpha-4));
 	flex-shrink: 0;
 	white-space: nowrap;
 }

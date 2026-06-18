@@ -30,8 +30,21 @@ export default defineConfig({
 			{
 				file: './src/assets/base.css',
 				onChange: () => {
-					console.log('Compiling css variables for Vuestic')
-					extractCssVars('./src/assets/base.css', './cssVariables')
+					console.log('Compiling css variables for Vuestic + editor')
+					extractCssVars(
+						['./src/assets/base.css', './src/assets/generated-tokens.css'],
+						'./cssVariables',
+					)
+				},
+			},
+			{
+				file: './src/assets/generated-tokens.css',
+				onChange: () => {
+					console.log('Compiling css variables for Vuestic + editor')
+					extractCssVars(
+						['./src/assets/base.css', './src/assets/generated-tokens.css'],
+						'./cssVariables',
+					)
 				},
 			},
 		]),

@@ -6,19 +6,19 @@ function extractTokens(prefix: string): readonly string[] {
 		.map((k) => k.slice(prefix.length))
 }
 
-export const RADIUS_OPTIONS = extractTokens('--radius-')
+export const RADIUS_OPTIONS = extractTokens('--sf-radius-')
 export const RADIUS: Record<string, string> = Object.fromEntries(
-	RADIUS_OPTIONS.map((k) => [k, `var(--radius-${k})`]),
+	RADIUS_OPTIONS.map((k) => [k, `var(--sf-radius-${k})`]),
 )
 
-export const SHADOW_OPTIONS = extractTokens('--shadow-').filter((k) => k !== 'opacity')
+export const SHADOW_OPTIONS = extractTokens('--sf-shadow-').filter((k) => k !== 'opacity')
 
-export const SPACING_OPTIONS = extractTokens('--spacing-')
+export const SPACING_OPTIONS = extractTokens('--sf-spacing-')
 export const SPACING: Record<string, string> = Object.fromEntries(
-	SPACING_OPTIONS.map((k) => [k, `var(--spacing-${k})`]),
+	SPACING_OPTIONS.map((k) => [k, `var(--sf-spacing-${k})`]),
 )
 
-export const BREAKPOINT_OPTIONS = extractTokens('--breakpoint-')
+export const BREAKPOINT_OPTIONS = extractTokens('--sf-breakpoint-')
 // 'never' is a sentinel meaning do not collapse; CSS breakpoints follow in base.css order.
 export const COLLAPSE_OPTIONS: readonly string[] = ['never', ...BREAKPOINT_OPTIONS]
 

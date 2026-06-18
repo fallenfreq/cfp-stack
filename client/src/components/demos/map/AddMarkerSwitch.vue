@@ -204,6 +204,6 @@ onMounted(async () => {
 }
 
 .add-marker-button:hover {
-	background-color: rgba(var(--primary) / var(--alpha-10));
+	background-color: rgba(var(--primary) / var(--sf-alpha-1));
 }
 </style>

@@ -56,7 +56,7 @@ const currentFontFamily = computed<string | null>(() =>
 			? markAttrs.value.fontFamily
 			: null
 		: nodeClass.value
-			? classToVar(nodeClass.value, 'sf-font-', '--font-')
+			? classToVar(nodeClass.value, 'sf-font-', '--sf-font-')
 			: null,
 )
 
@@ -66,7 +66,7 @@ const currentFontSize = computed<string | null>(() =>
 			? markAttrs.value.fontSize
 			: null
 		: nodeClass.value
-			? classToVar(nodeClass.value, 'sf-text-', '--text-')
+			? classToVar(nodeClass.value, 'sf-text-', '--sf-text-')
 			: null,
 )
 
@@ -76,7 +76,7 @@ const currentLineHeight = computed<string | null>(() =>
 			? markAttrs.value.lineHeight
 			: null
 		: nodeClass.value
-			? classToVar(nodeClass.value, 'sf-leading-', '--leading-')
+			? classToVar(nodeClass.value, 'sf-leading-', '--sf-leading-')
 			: null,
 )
 
@@ -86,7 +86,7 @@ const currentLetterSpacing = computed<string | null>(() =>
 			? markAttrs.value.letterSpacing
 			: null
 		: nodeClass.value
-			? classToVar(nodeClass.value, 'sf-tracking-', '--tracking-')
+			? classToVar(nodeClass.value, 'sf-tracking-', '--sf-tracking-')
 			: null,
 )
 
@@ -105,17 +105,21 @@ const onCommit = ({ fontFamily, fontSize, lineHeight, letterSpacing }: FontStyle
 	let cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
 	let s = typeof node.attrs.style === 'string' ? node.attrs.style : ''
 
-	cls = setClassToken(cls, 'sf-font-', parseFontVar(fontFamily)?.slice('--font-'.length) ?? null)
-	cls = setClassToken(cls, 'sf-text-', parseFontVar(fontSize)?.slice('--text-'.length) ?? null)
+	cls = setClassToken(
+		cls,
+		'sf-font-',
+		parseFontVar(fontFamily)?.slice('--sf-font-'.length) ?? null,
+	)
+	cls = setClassToken(cls, 'sf-text-', parseFontVar(fontSize)?.slice('--sf-text-'.length) ?? null)
 	cls = setClassToken(
 		cls,
 		'sf-leading-',
-		parseFontVar(lineHeight)?.slice('--leading-'.length) ?? null,
+		parseFontVar(lineHeight)?.slice('--sf-leading-'.length) ?? null,
 	)
 	cls = setClassToken(
 		cls,
 		'sf-tracking-',
-		parseFontVar(letterSpacing)?.slice('--tracking-'.length) ?? null,
+		parseFontVar(letterSpacing)?.slice('--sf-tracking-'.length) ?? null,
 	)
 	s = setStyleProp(s, 'font-family', null)
 	s = setStyleProp(s, 'font-size', null)

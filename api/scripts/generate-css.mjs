@@ -154,9 +154,11 @@ if (buckets.spacing.length) {
 }
 
 if (buckets.shadow.length) {
-	classesCss += section('Shadow — composes shape token with --sf-shadow colour at theme opacity')
+	classesCss += section(
+		'Shadow — shape × theme colour at theme opacity; inline --sf-shadow-color overrides',
+	)
 	for (const { suffix, name } of buckets.shadow) {
-		classesCss += `\t.sf-${suffix} { box-shadow: var(${name}) rgb(var(--sf-shadow) / var(--sf-shadow-opacity)); }\n`
+		classesCss += `\t.sf-${suffix} { box-shadow: var(${name}) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity))); }\n`
 	}
 }
 

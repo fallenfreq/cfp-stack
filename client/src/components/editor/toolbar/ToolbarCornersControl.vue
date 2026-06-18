@@ -116,8 +116,8 @@ import ToolbarPanel from './ToolbarPanel.vue'
 
 const TOKEN_PX: Record<string, number> = Object.fromEntries(
 	Object.entries(cssVariables.root as Record<string, string>)
-		.filter(([k]) => k.startsWith('--radius-'))
-		.map(([k, v]) => [k.slice('--radius-'.length), parseInt(v) || 0]),
+		.filter(([k]) => k.startsWith('--sf-radius-'))
+		.map(([k, v]) => [k.slice('--sf-radius-'.length), parseInt(v) || 0]),
 )
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
@@ -265,7 +265,7 @@ const commit = () => {
 
 .cp-label {
 	font-size: 0.7rem;
-	color: rgba(var(--text_primary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 }
 
 .cp-row {
@@ -278,7 +278,7 @@ const commit = () => {
 .cp-chip {
 	height: 26px;
 	border-radius: 4px;
-	border: 1px solid rgba(var(--text_primary) / var(--alpha-20));
+	border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
 	padding: 0 6px;
 	cursor: pointer;
 	transition: transform 0.08s;
@@ -290,7 +290,7 @@ const commit = () => {
 
 .cp-chip:hover {
 	transform: scale(1.05);
-	background: rgba(var(--text_primary) / var(--alpha-8));
+	background: rgba(var(--text_primary) / var(--sf-alpha-1));
 }
 
 .cp-chip.is-active {
@@ -320,7 +320,7 @@ const commit = () => {
 
 .cp-unit {
 	font-size: 0.75rem;
-	color: rgba(var(--text_primary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 }
 
 .cp-check-label {

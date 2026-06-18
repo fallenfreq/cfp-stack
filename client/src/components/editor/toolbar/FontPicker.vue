@@ -192,7 +192,7 @@ const pickTracking = (cssVar: string | null) => {
 
 .fp-label {
 	font-size: 0.7rem;
-	color: rgba(var(--text_primary) / var(--alpha-60));
+	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 }
 
 .fp-row {
@@ -205,7 +205,7 @@ const pickTracking = (cssVar: string | null) => {
 .fp-chip {
 	height: 26px;
 	border-radius: 4px;
-	border: 1px solid rgba(var(--text_primary) / var(--alpha-20));
+	border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
 	padding: 0 6px;
 	cursor: pointer;
 	transition: transform 0.08s;
@@ -217,7 +217,7 @@ const pickTracking = (cssVar: string | null) => {
 
 .fp-chip:hover {
 	transform: scale(1.05);
-	background: rgba(var(--text_primary) / var(--alpha-8));
+	background: rgba(var(--text_primary) / var(--sf-alpha-1));
 }
 
 .fp-chip.is-active {
@@ -229,7 +229,7 @@ const pickTracking = (cssVar: string | null) => {
 	width: 26px;
 	padding: 0;
 	text-align: center;
-	color: rgba(var(--text_primary) / var(--alpha-40));
+	color: rgba(var(--text_primary) / var(--sf-alpha-4));
 }
 
 .fp-chip-family {

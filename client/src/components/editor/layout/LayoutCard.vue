@@ -31,7 +31,7 @@ defineProps({
 .layout-card.variant-elevated {
 	background: rgb(var(--bg_secondary));
 	border: 1px solid rgb(var(--border_color));
-	box-shadow: var(--shadow-lg) rgb(var(--shadow) / var(--alpha-20));
+	box-shadow: var(--sf-shadow-lg) rgb(var(--sf-shadow) / var(--sf-shadow-opacity));
 }
 
 .layout-card.variant-outlined {
@@ -43,7 +43,7 @@ defineProps({
 }
 
 .layout-card.variant-feature {
-	background: rgba(var(--primary) / var(--alpha-10));
-	border: 1px solid rgba(var(--primary) / var(--alpha-20));
+	background: rgba(var(--primary) / var(--sf-alpha-1));
+	border: 1px solid rgba(var(--primary) / var(--sf-alpha-2));
 }
 </style>

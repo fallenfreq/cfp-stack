@@ -145,9 +145,9 @@ onUnmounted(() => {
 	z-index: var(--z-panel);
 	background: rgb(var(--bg_secondary));
 	border: 1px solid rgb(var(--border_color));
-	border-radius: var(--radius-sm);
+	border-radius: var(--sf-radius-1);
 	padding: 4px;
-	box-shadow: var(--shadow-md) rgb(var(--shadow) / var(--alpha-20));
+	box-shadow: var(--sf-shadow-md) rgb(var(--sf-shadow) / var(--sf-shadow-opacity));
 	overflow-y: auto;
 	scrollbar-width: none;
 }

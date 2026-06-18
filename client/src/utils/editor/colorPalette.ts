@@ -12,35 +12,26 @@ export interface PaletteFamily {
 
 const TRIPLET = /^\s*\d+\s+\d+\s+\d+\s*$/
 
-// Every key in cssVariables.root is a real CSS variable — pre-resolved at build.
-// We filter to colors (RGB-triplet values) and group by family.
+// Build palette from --sf-* tokens only. Vuestic-compat duplicates (legacy --primary-N
+// etc.) coexist in cssVariables.root for processTailwindColors; the editor ignores them.
+// Family/shade extraction strips the --sf- prefix and splits trailing -N (e.g.
+// --sf-primary-5 → family "primary", shade "5"). Semantic tokens with no -N
+// (--sf-fg_primary) form their own single-shade family.
 export const PALETTE_FAMILIES: PaletteFamily[] = (() => {
 	const groups: Record<string, PaletteShade[]> = {}
 	for (const [cssVar, value] of Object.entries(cssVariables.root)) {
+		if (!cssVar.startsWith('--sf-')) continue
 		if (!TRIPLET.test(value)) continue
-		const name = cssVar.slice(2)
+		const name = cssVar.slice('--sf-'.length)
 		const match = name.match(/^(.+)-(\d+)$/)
 		const familyKey = match ? match[1]! : name
 		const shadeKey = match ? match[2]! : name
 		;(groups[familyKey] ??= []).push({ key: shadeKey, cssVar })
 	}
-	return Object.entries(groups)
-		.map(([key, shades]) => {
-			const numericShades = shades.filter((s) => /^\d+$/.test(s.key))
-			return {
-				key,
-				shades: (numericShades.length > 0 ? numericShades : shades).sort(
-					(a, b) => (Number(a.key) || 0) - (Number(b.key) || 0),
-				),
-			}
-		})
-		.filter((f) => {
-			// Drop Vuestic internal modifier tokens (e.g. --primary-inverse, --primary-hover,
-			// --primary-highlight-inverse). These have hyphenated family keys but no numeric
-			// shades — they're not meaningful user-facing colour choices and have no sf- CSS class.
-			const hasNumericShades = f.shades.some((s) => /^\d+$/.test(s.key))
-			return hasNumericShades || !f.key.includes('-')
-		})
+	return Object.entries(groups).map(([key, shades]) => ({
+		key,
+		shades: shades.sort((a, b) => (Number(a.key) || 0) - (Number(b.key) || 0)),
+	}))
 })()
 
 export const findShade = (cssVar: string): { family: PaletteFamily; shadeIndex: number } | null => {
@@ -60,7 +51,7 @@ export type ParsedColor =
 	| null
 
 // Resolves an alpha string that is either a plain number ("0.2") or a CSS var
-// reference ("var(--alpha-20)") to a 0–1 number.
+// reference ("var(--sf-alpha-3)") to a 0–1 number.
 const resolveAlpha = (raw: string | undefined): number => {
 	if (raw === undefined) return 1
 	const varName = raw.match(/^var\((--[\w-]+)\)$/)?.[1]
@@ -77,7 +68,7 @@ export const parseStoredValue = (value: string | null | undefined): ParsedColor 
 	if (!trimmed) return null
 
 	// rgb(var(--name[, R G B])) | rgba(var(--name[, R G B]) / alpha)
-	// alpha may be a plain number or a CSS var reference (e.g. var(--alpha-20))
+	// alpha may be a plain number or a CSS var reference (e.g. var(--sf-alpha-3))
 	const rgbVar = trimmed.match(
 		/^rgba?\(\s*var\(\s*(--[\w-]+)\s*(?:,\s*[^)]+)?\)\s*(?:\/\s*([\d.]+|var\(--[\w-]+\)))?\s*\)$/i,
 	)

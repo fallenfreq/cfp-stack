@@ -87,7 +87,7 @@ const close = () => {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background: rgb(0 0 0 / var(--alpha-50));
+	background: rgb(0 0 0 / var(--sf-alpha-5));
 	display: flex;
 	justify-content: center;
 	align-items: center;

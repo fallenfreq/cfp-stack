@@ -58,9 +58,9 @@
 	.sf-padding-xl { --sf-padding: var(--sf-spacing-xl); }
 	.sf-padding-xs { --sf-padding: var(--sf-spacing-xs); }
 
-	/* ── Shadow — composes shape token with --sf-shadow colour at theme opacity ─────────────────────────────────────────── */
-	.sf-shadow-lg { box-shadow: var(--sf-shadow-lg) rgb(var(--sf-shadow) / var(--sf-shadow-opacity)); }
-	.sf-shadow-md { box-shadow: var(--sf-shadow-md) rgb(var(--sf-shadow) / var(--sf-shadow-opacity)); }
-	.sf-shadow-sm { box-shadow: var(--sf-shadow-sm) rgb(var(--sf-shadow) / var(--sf-shadow-opacity)); }
-	.sf-shadow-xl { box-shadow: var(--sf-shadow-xl) rgb(var(--sf-shadow) / var(--sf-shadow-opacity)); }
+	/* ── Shadow — shape × theme colour at theme opacity; inline --sf-shadow-color overrides ─────────────────────────────────────────── */
+	.sf-shadow-lg { box-shadow: var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity))); }
+	.sf-shadow-md { box-shadow: var(--sf-shadow-md) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity))); }
+	.sf-shadow-sm { box-shadow: var(--sf-shadow-sm) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity))); }
+	.sf-shadow-xl { box-shadow: var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity))); }
 }
