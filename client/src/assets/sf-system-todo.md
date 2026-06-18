@@ -3,23 +3,65 @@
 Tracks gaps between `sf-system.md` (the spec) and the current codebase. The spec
 describes the target design; this file enumerates what needs to change in code to match.
 
+## Current state (resume here)
+
+DB-driven token pipeline is live. The new `--sf-*` token vocabulary is stored in D1
+(`themes` + `theme_tokens` tables) and emitted to
+`client/src/assets/generated-tokens.css` by `pnpm generate:css` (script at
+`api/scripts/generate-css.mjs`). `main.css` imports the generated file after `base.css`,
+so new tokens coexist with the legacy unprefixed names that Vuestic still consumes.
+
+Done so far:
+
+- Spec finalised (slot-label principle, semantic vocabulary, range tokens) — see
+  `sf-system.md` and recent commits.
+- DB schema for themes + tokens + rich-class tables (rich-class tables are empty;
+  see "Schema notes" below).
+- Seed data for `root`, `dark`, `pink` themes with the new spec names.
+- Generator script + `.prettierignore` entry for the generated CSS.
+- Cascade layer declaration in `main.css`.
+- `.dark` / `.pink` → `.theme-dark` / `.theme-pink` across CSS, JS, Tailwind config,
+  and the OS-preference preload script.
+- `sf-collapse-*` → `sl-collapse-*` rename (collapse is arrangement, not appearance).
+
+What's pending: see sections below. Biggest remaining work is the consumer migration
+(token renames flowing through `tailwind.config.js`, `sf-tokens.css` class bodies,
+component CSS) and implementing the rich class families (bundles, variants, states).
+
+## Schema notes
+
+Three concepts in the DB:
+
+- `themes` (PK: slug). Activation class for non-root themes.
+- `theme_tokens` (PK: theme_slug + name). The token vocabulary; `kind` column for
+  editor introspection (`color-triplet`, `length`, `number`, `text`, `shadow-shape`).
+- `class_vocabulary` + `class_properties` (empty; PK: theme_slug + class_name +
+  css_property). Hold rich classes only (bundles, variants, states). Thin-wrapper
+  classes (semantic single-property, scale utility, palette utility, alpha pairing)
+  are NOT stored — they're derived by the generator from `theme_tokens` + a
+  property-mapping list that lives in code.
+
+This split keeps the DB small and makes the editor source-of-truth for "what classes
+exist" clean: query `theme_tokens` + apply mapping rules to get the auto-generated
+classes; query `class_vocabulary` for the rich ones.
+
 ## Foundational
 
-- [ ] Declare cascade layers in CSS:
+- [x] Declare cascade layers in CSS:
       `@layer sf-bundle, sf-variant, sf-semantic, sf-utility, sf-state;`
-      (`sf-state` must be highest so hover/focus win over utility-set properties.)
+      Done in `main.css`.
 - [ ] Wrap all class definitions — including theme overrides — in their matching
       `@layer` block. Unlayered CSS beats layered CSS regardless of specificity, so any
       bare `.theme-x .sf-depth-1 { ... }` would silently break the override order.
       Token declarations on the theme class itself (`.theme-x { --sf-X: ... }`) stay
       unlayered.
 - [ ] Apply the token rename pass — prefix, renumber, and rename per the spec
-      contract (see "Token renames" below). Currently only runtime-state vars carry
-      the `--sf-` prefix (`--sf-gap`, `--sf-padding`, `--sf-bg-alpha`,
-      `--sf-shadow-color`).
-- [ ] Rename `.dark` theme class to `.theme-dark` to match the spec's theme activation
-      convention. `base.css:68, 103` define it; references elsewhere in code need
-      updating too.
+      contract (see "Token renames" below). The new tokens already exist in
+      `generated-tokens.css`; the work is migrating consumers (tailwind config,
+      sf-tokens.css class bodies, component CSS) off the legacy unprefixed names.
+- [x] Rename `.dark` theme class to `.theme-dark` to match the spec's theme activation
+      convention. Done across `base.css`, `darkModeStore.ts`, `index.html`,
+      `tailwind.config.js`; `.pink` → `.theme-pink` same pass.
 
 ## Token renames
 
