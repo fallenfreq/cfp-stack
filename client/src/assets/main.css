@@ -2,6 +2,8 @@
 @import './generated-tokens.css';
 @import './sf-tokens.css';
 
+@layer sf-bundle, sf-variant, sf-semantic, sf-utility, sf-state;
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

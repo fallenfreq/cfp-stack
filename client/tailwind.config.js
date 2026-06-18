@@ -15,7 +15,7 @@ export default {
 		'text-6xl',
 		'text-7xl',
 	],
-	darkMode: 'selector',
+	darkMode: ['selector', '.theme-dark'],
 	theme: {
 		// larger screens should be added in extend
 		screens: {

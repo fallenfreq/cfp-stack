@@ -16,16 +16,16 @@ export const useDarkModeStore = defineStore('darkMode', () => {
 	// if (window.matchMedia('(prefers-color-scheme: dark)').matches)
 	safeApplyPreset(osTheme.value)
 
-	const isDarkMode: Ref<boolean> = ref(document.documentElement.classList.contains('dark'))
+	const isDarkMode: Ref<boolean> = ref(document.documentElement.classList.contains('theme-dark'))
 	const isPinkMode = ref(false)
 
 	function toggleDarkMode(event: any) {
 		if (event.target['checked']) {
 			safeApplyPreset('dark')
-			document.documentElement.classList.add('dark')
+			document.documentElement.classList.add('theme-dark')
 		} else {
 			safeApplyPreset('light')
-			document.documentElement.classList.remove('dark')
+			document.documentElement.classList.remove('theme-dark')
 		}
 	}
 
@@ -35,18 +35,18 @@ export const useDarkModeStore = defineStore('darkMode', () => {
 	function togglePinkMode(): void {
 		if (safeCurrentPresetName.value === 'pink') {
 			safeApplyPreset(previousMode)
-			document.documentElement.classList.remove('pink')
-			document.documentElement.classList.add(previousMode)
+			document.documentElement.classList.remove('theme-pink')
+			document.documentElement.classList.add(`theme-${previousMode}`)
 			isPinkMode.value = false
-			isDarkMode.value = document.documentElement.classList.contains('dark')
+			isDarkMode.value = document.documentElement.classList.contains('theme-dark')
 			console.log('Secret pink mode deactivated')
 		} else {
 			previousMode = safeCurrentPresetName.value
 			safeApplyPreset('pink')
-			document.documentElement.classList.add('pink')
+			document.documentElement.classList.add('theme-pink')
 			isPinkMode.value = true
 			isDarkMode.value = false
-			document.documentElement.classList.remove(previousMode)
+			document.documentElement.classList.remove(`theme-${previousMode}`)
 			console.log('Secret pink mode activated')
 		}
 	}

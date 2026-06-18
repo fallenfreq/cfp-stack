@@ -65,7 +65,7 @@ primevue is no longer used
 
 	--section-gap: 160px;
 }
-.dark {
+.theme-dark {
 	--primary: var(--primary-400);
 	--primary-inverse: var(--surface-900);
 	--primary-hover: var(--primary-300);
@@ -100,7 +100,7 @@ and using the cssVariables.js file to resolve the variables.
 	--focus: var(--primary);
 }
 
-.dark {
+.theme-dark {
 	--secondary: 129 137 146;
 	--success: 102 190 51;
 	--info: 62 170 248;
@@ -117,7 +117,7 @@ and using the cssVariables.js file to resolve the variables.
 
 /* Secret pink mode test colours. Press cmd+k to toggle */
 
-.pink {
+.theme-pink {
 	--primary-50: 255 230 242;
 	--primary-100: 255 204 230;
 	--primary-200: 255 179 218;
