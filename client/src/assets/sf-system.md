@@ -4,7 +4,7 @@ A small vocabulary of CSS classes stored on content nodes. The active theme inte
 them, so the same content renders differently under different themes without migration.
 
 ```json
-{ "class": ["sl-columns", "sf-surface-1", "sf-variant-featured", "sf-gap-lg"] }
+{ "class": ["sl-columns", "sf-depth-1", "sf-variant-featured", "sf-gap-lg"] }
 ```
 
 Two prefixes:
@@ -21,7 +21,7 @@ resolve. Sets scale tokens, and overrides class definitions when the look needs 
 CSS properties — not just different values.
 
 **Component author** bakes classes into a component's structure. A `Card` might already
-wear `sf-surface-1`; a `Dialog`, `sf-surface-3`. These decisions live in code.
+wear `sf-depth-1`; a `Dialog`, `sf-depth-3`. These decisions live in code.
 
 **Content author** writes the content. Mostly that's text and images; beyond that they
 can wrap content in a pre-built component (whose classes are baked in) or wrap it in a
@@ -45,7 +45,7 @@ The vocabulary must remain small and stable. Growth is the primary failure mode.
 | ------------------- | -------- | --------------------------------------- |
 | `sf-variant-danger` | Yes      | Danger is intent                        |
 | `sf-on-hover`       | Yes      | Hover is a state                        |
-| `sf-surface-1`      | Yes      | Elevation is relational                 |
+| `sf-depth-1`        | Yes      | Elevation is relational                 |
 | `sl-columns`        | Yes      | Columns is structure                    |
 | `sf-text_primary`   | Yes      | Shared semantic value                   |
 | `sf-variant-glass`  | No       | Glass is a visual treatment, not intent |
@@ -54,6 +54,9 @@ The vocabulary must remain small and stable. Growth is the primary failure mode.
 
 If understanding the class requires knowing what the theme looks like or what the
 content is, it does not belong.
+
+The classes shown here are the current vocabulary; new bundle families, variants, and
+states join through the same admission test.
 
 ---
 
@@ -69,11 +72,14 @@ Layers are declared lowest to highest priority; inline styles override all of th
 
 | Layer         | Holds                                                                         |
 | ------------- | ----------------------------------------------------------------------------- |
-| `sf-bundle`   | Multi-property bundles like `sf-surface-*`, `sf-heading-*`                    |
+| `sf-bundle`   | Multi-property bundles like `sf-depth-*`, `sf-heading-*`                      |
 | `sf-variant`  | `sf-variant-*` — modifiers overlaid on a bundle                               |
 | `sf-semantic` | Single-property bindings to a shared semantic token (e.g. `sf-text_primary`)  |
 | `sf-utility`  | Single-property bindings to a scale step (e.g. `sf-text-xl`)                  |
 | `sf-state`    | `sf-on-*` — interaction modifiers (highest so hover/focus win over utilities) |
+
+Single-property classes (semantic, utility) outrank variant: explicit per-property
+overrides win over intent-level modifiers.
 
 `sl-` layout classes sit outside this order. They govern arrangement and do not compete
 with `sf-` classes for the same properties.
@@ -145,6 +151,10 @@ Classes can also set runtime alpha modifiers (`--sf-bg-alpha`, `--sf-color-alpha
 background composes against `--sf-bg-alpha`, which a co-present `sf-bg-alpha-*` class
 can set.
 
+A theme override of a single-property colour class must keep the composing form —
+writing `rgb(var(--sf-X))` instead of `rgb(var(--sf-X) / var(--sf-bg-alpha))` silently
+disables co-present `sf-bg-alpha-*` classes. Bundles paint solid and don't participate.
+
 ### When a token belongs
 
 Two rules:
@@ -172,14 +182,14 @@ and theme overrides both live inside the matching `@layer` block:
 ```css
 @layer sf-bundle {
 	/* default — uses tokens for values */
-	.sf-surface-1 {
+	.sf-depth-1 {
 		background: rgb(var(--sf-surface-50));
 		box-shadow: var(--sf-shadow-md);
 		border-radius: var(--sf-radius-md);
 	}
 
 	/* theme override — same layer, higher specificity wins */
-	.theme-flat .sf-surface-1 {
+	.theme-flat .sf-depth-1 {
 		box-shadow: none;
 		border: 1px solid rgb(var(--sf-border_color));
 	}
@@ -193,13 +203,13 @@ entirely within the shared token vocabulary — no class-specific intermediate t
 
 Multi-property classes that establish a coherent set of CSS properties as a unit.
 
-**Surfaces** — depth in the visual stack:
+**Depth** — position in the visual stack:
 
 ```
-sf-surface-0   canvas / page
-sf-surface-1   one level above — cards, wells
-sf-surface-2   further raised — dropdowns, popovers
-sf-surface-3   topmost — modals
+sf-depth-0   canvas / page
+sf-depth-1   one level above — cards, wells
+sf-depth-2   further raised — dropdowns, popovers
+sf-depth-3   topmost — modals
 ```
 
 **Headings** — typographic prominence:
@@ -209,6 +219,9 @@ sf-heading-1   most prominent
 sf-heading-2   secondary
 sf-heading-3   tertiary
 ```
+
+Bundle values can be extracted into named tokens (e.g. `--sf-depth-0-background`) so
+application chrome and authors can reference them without re-applying the bundle.
 
 More bundle families join this layer when added.
 
@@ -287,8 +300,11 @@ Arrangement has its own prefix because it's a separate concern from appearance. 
 prefixes coexist on the same node:
 
 ```html
-<div class="sl-columns sf-surface-1 sf-variant-featured sf-gap-lg"></div>
+<div class="sl-columns sf-depth-1 sf-variant-featured sf-gap-lg"></div>
 ```
+
+`sf-*` utilities set runtime variables that `sl-*` primitives read; the reverse is not
+a pattern.
 
 ### Layout primitives
 
@@ -342,7 +358,7 @@ activation class on an ancestor (typically `<html>`).
 
 /* class overrides — must live in the matching layer */
 @layer sf-bundle {
-	.theme-editorial .sf-surface-1 {
+	.theme-editorial .sf-depth-1 {
 		box-shadow: none;
 		border-left: 4px solid rgb(var(--sf-primary));
 	}
@@ -358,14 +374,14 @@ Storage and generation are application concerns.
 
 ## Naming convention
 
-| Class                 | Kind     | Example                        | Meaning                           |
-| --------------------- | -------- | ------------------------------ | --------------------------------- |
-| `sf-{family}-*`       | Bundle   | `sf-surface-1`, `sf-heading-2` | Multi-property bundle             |
-| `sf-variant-*`        | Variant  | `sf-variant-featured`          | Bundle modifier expressing intent |
-| `sf-on-*`             | State    | `sf-on-hover`                  | Interaction modifier              |
-| `sf-*_*` (underscore) | Semantic | `sf-text_primary`              | One property, theme-controlled    |
-| `sf-*-*` (hyphen)     | Utility  | `sf-text-xl`                   | One property, explicit scale step |
-| `sl-*`                | Layout   | `sl-columns`                   | Structural arrangement            |
+| Class                 | Kind     | Example                      | Meaning                           |
+| --------------------- | -------- | ---------------------------- | --------------------------------- |
+| `sf-{family}-*`       | Bundle   | `sf-depth-1`, `sf-heading-2` | Multi-property bundle             |
+| `sf-variant-*`        | Variant  | `sf-variant-featured`        | Bundle modifier expressing intent |
+| `sf-on-*`             | State    | `sf-on-hover`                | Interaction modifier              |
+| `sf-*_*` (underscore) | Semantic | `sf-text_primary`            | One property, theme-controlled    |
+| `sf-*-*` (hyphen)     | Utility  | `sf-text-xl`                 | One property, explicit scale step |
+| `sl-*`                | Layout   | `sl-columns`                 | Structural arrangement            |
 
 ---
 
@@ -381,6 +397,9 @@ outside the editor.
 
 - **Tailwind** — scale values without meaning. No surface depth, no semantic intent, no
   theming through content.
+- **Open Props** — design tokens as CSS custom properties without a class vocabulary on
+  top. sf/sl uses similar tokens but adds the class contract that lets content carry
+  styling intent.
 - **BEM** — semantic class names with hardcoded values; CSS custom properties make the
   old pattern viable.
 - **PrimeVue / shadcn / Material Design** — token vocabularies bound to fixed component

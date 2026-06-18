@@ -10,13 +10,16 @@ describes the target design; this file enumerates what needs to change in code t
       (`sf-state` must be highest so hover/focus win over utility-set properties.)
 - [ ] Wrap all class definitions — including theme overrides — in their matching
       `@layer` block. Unlayered CSS beats layered CSS regardless of specificity, so any
-      bare `.theme-x .sf-surface-1 { ... }` would silently break the override order.
+      bare `.theme-x .sf-depth-1 { ... }` would silently break the override order.
       Token declarations on the theme class itself (`.theme-x { --sf-X: ... }`) stay
       unlayered.
 - [ ] Prefix all system tokens with `--sf-`. Currently unprefixed in `base.css` and
       `sf-tokens.css` (e.g. `--text-xl`, `--primary-500`, `--text_primary`). Only
       runtime-state vars carry the prefix today (`--sf-gap`, `--sf-padding`,
       `--sf-bg-alpha`, `--sf-shadow-color`).
+- [ ] Rename `.dark` theme class to `.theme-dark` to match the spec's theme activation
+      convention. `base.css:68, 103` define it; references elsewhere in code need
+      updating too.
 
 ## Token cleanup
 
@@ -24,12 +27,16 @@ describes the target design; this file enumerates what needs to change in code t
       `--alpha-muted`, `--alpha-half`). Per the spec's "aliases only for theme-level
       decisions" rule, "subtle"/"muted"/"half" are styling opinions baked into names,
       not theme decisions. Callers should use the `--sf-alpha-*` range directly.
+- [ ] When removing those aliases, also remove the
+      `sf-{bg|color|border}-alpha-{subtle|muted|half}` utility classes in
+      `sf-tokens.css:569-577, 618-626, 667-675` — they reference the aliases and
+      would silently break otherwise.
 
 ## Implement missing class families
 
 None of these exist in the codebase yet:
 
-- [ ] `sf-surface-*` bundles (`-0`, `-1`, `-2`, `-3`)
+- [ ] `sf-depth-*` bundles (`-0`, `-1`, `-2`, `-3`)
 - [ ] `sf-heading-*` bundles (`-1`, `-2`, `-3`)
 - [ ] `sf-variant-*` classes (`featured`, `subtle`, `danger`)
 - [ ] `sf-on-*` state classes (`hover`, `focus`, `active`, `disabled`)
@@ -40,10 +47,10 @@ None of these exist in the codebase yet:
 
 - [ ] `nodeClassTokens.ts:21` uses prefix `sf-collapse-`. Collapse is arrangement →
       should be `sl-collapse-`.
-- [ ] Vue layout components currently use bare class names that predate the system: - `LayoutCard.vue` — `layout-card`, `variant-elevated`/`outlined`/`filled`/`plain`/`feature` - Other components in `client/src/components/editor/layout/` likely similar
+- [ ] Vue layout components currently use bare class names that predate the system: - `LayoutCard.vue` — `layout-card`, `variant-elevated`/`outlined`/`filled`/`plain`/`feature` - `LayoutSection.vue` — `layout-section` - `LayoutColumns.vue` — `layout-columns` - `LayoutSplit.vue` — `layout-split` - `LayoutCenter.vue` — `layout-center`
       Migrate to apply `sl-*` for arrangement and `sf-*` for appearance/variant.
-- [ ] `LayoutCard.vue:32` references `--bg_secondary` directly. Once `sf-surface-*`
-      bundles exist, the card should wear `sf-surface-1` and inherit its background
+- [ ] `LayoutCard.vue:32` references `--bg_secondary` directly. Once `sf-depth-*`
+      bundles exist, the card should wear `sf-depth-1` and inherit its background
       from there.
 
 ## Vuestic compatibility (temporary)
@@ -71,7 +78,7 @@ the spec. Until Vuestic is removed:
   legitimate system semantic tokens (broadly applicable, not Vuestic-specific). The
   underscore form on `text_primary` / `border_color` is the convention for composite
   semantic names per the spec.
-- Typography bundles now in spec as `sf-heading-*` (parallel family to `sf-surface-*`
+- Typography bundles now in spec as `sf-heading-*` (parallel family to `sf-depth-*`
   inside `sf-bundle` layer). Implementation tracked under "Implement missing class
   families" above. Other typography families (`sf-body-*`, `sf-caption-*`, etc.) can
   join later as new families inside the bundle layer.
