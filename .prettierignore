@@ -6,3 +6,4 @@ functions/
 **/package.json
 pnpm-lock.yaml
 **/components.d.ts
+client/src/assets/generated-tokens.css

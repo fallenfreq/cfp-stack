@@ -41,19 +41,19 @@ defineProps({
 }
 
 /* Pixel values must match --breakpoint-* in base.css — var() is not valid in @container conditions. */
-:global(.layout-split.sf-collapse-xs > [data-node-view-content]) {
+:global(.layout-split.sl-collapse-xs > [data-node-view-content]) {
 	@container (max-width: 380px) {
 		grid-template-columns: 1fr;
 	}
 }
 
-:global(.layout-split.sf-collapse-sm > [data-node-view-content]) {
+:global(.layout-split.sl-collapse-sm > [data-node-view-content]) {
 	@container (max-width: 640px) {
 		grid-template-columns: 1fr;
 	}
 }
 
-:global(.layout-split.sf-collapse-md > [data-node-view-content]) {
+:global(.layout-split.sl-collapse-md > [data-node-view-content]) {
 	@container (max-width: 768px) {
 		grid-template-columns: 1fr;
 	}

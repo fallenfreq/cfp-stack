@@ -18,7 +18,7 @@ export const nodeClassTokens: Record<string, ClassTokenSpec[]> = {
 	],
 	LayoutColumns: [
 		{ key: 'gap', prefix: 'sf-gap-', options: SPACING_OPTIONS, default: null },
-		{ key: 'collapse', prefix: 'sf-collapse-', options: BREAKPOINT_OPTIONS, default: null },
+		{ key: 'collapse', prefix: 'sl-collapse-', options: BREAKPOINT_OPTIONS, default: null },
 	],
 	LayoutCenter: [
 		{ key: 'gap', prefix: 'sf-gap-', options: SPACING_OPTIONS, default: null },
@@ -26,7 +26,7 @@ export const nodeClassTokens: Record<string, ClassTokenSpec[]> = {
 	],
 	LayoutSplit: [
 		{ key: 'gap', prefix: 'sf-gap-', options: SPACING_OPTIONS, default: null },
-		{ key: 'collapse', prefix: 'sf-collapse-', options: BREAKPOINT_OPTIONS, default: null },
+		{ key: 'collapse', prefix: 'sl-collapse-', options: BREAKPOINT_OPTIONS, default: null },
 	],
 	image: [
 		{ key: 'radius', prefix: 'sf-radius-', options: RADIUS_OPTIONS, default: null },

@@ -16,9 +16,9 @@
 	--sf-breakpoint-xs: 380px;
 	--sf-fg_inverted: 255 255 255;
 	--sf-fg_primary: 38 40 36;
-	--sf-font-1: 'Source Sans Pro', Inter, system-ui, sans-serif;
-	--sf-font-2: 'Lora', Georgia, serif;
-	--sf-font-mono: 'Source Code Pro', 'Fira Code', monospace;
+	--sf-font-1: "Source Sans Pro", Inter, system-ui, sans-serif;
+	--sf-font-2: "Lora", Georgia, serif;
+	--sf-font-mono: "Source Code Pro", "Fira Code", monospace;
 	--sf-leading-loose: 2;
 	--sf-leading-none: 1;
 	--sf-leading-normal: 1.5;
@@ -112,3 +112,4 @@
 	--sf-surface-8: 255 100 175;
 	--sf-surface-9: 255 80 165;
 }
+

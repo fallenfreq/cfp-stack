@@ -91,8 +91,9 @@ None of these exist in the codebase yet:
 
 ## Editor + Vue components
 
-- [ ] `nodeClassTokens.ts:21` uses prefix `sf-collapse-`. Collapse is arrangement →
-      should be `sl-collapse-`.
+- [x] ~~`nodeClassTokens.ts:21` uses prefix `sf-collapse-`. Collapse is arrangement →
+      should be `sl-collapse-`.~~ Done — also updated `LayoutColumns.vue`,
+      `LayoutSplit.vue`, and `initialContent.html`.
 - [ ] Vue layout components currently use bare class names that predate the system: - `LayoutCard.vue` — `layout-card`, `variant-elevated`/`outlined`/`filled`/`plain`/`feature` - `LayoutSection.vue` — `layout-section` - `LayoutColumns.vue` — `layout-columns` - `LayoutSplit.vue` — `layout-split` - `LayoutCenter.vue` — `layout-center`
       Migrate to apply `sl-*` for arrangement and `sf-*` for appearance/variant.
 - [ ] `LayoutCard.vue:32` references `--bg_secondary` directly. Once `sf-depth-*`
