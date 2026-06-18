@@ -13,13 +13,59 @@ describes the target design; this file enumerates what needs to change in code t
       bare `.theme-x .sf-depth-1 { ... }` would silently break the override order.
       Token declarations on the theme class itself (`.theme-x { --sf-X: ... }`) stay
       unlayered.
-- [ ] Prefix all system tokens with `--sf-`. Currently unprefixed in `base.css` and
-      `sf-tokens.css` (e.g. `--text-xl`, `--primary-500`, `--text_primary`). Only
-      runtime-state vars carry the prefix today (`--sf-gap`, `--sf-padding`,
-      `--sf-bg-alpha`, `--sf-shadow-color`).
+- [ ] Apply the token rename pass — prefix, renumber, and rename per the spec
+      contract (see "Token renames" below). Currently only runtime-state vars carry
+      the `--sf-` prefix (`--sf-gap`, `--sf-padding`, `--sf-bg-alpha`,
+      `--sf-shadow-color`).
 - [ ] Rename `.dark` theme class to `.theme-dark` to match the spec's theme activation
       convention. `base.css:68, 103` define it; references elsewhere in code need
       updating too.
+
+## Token renames
+
+All current CSS variables need to be renamed to match the spec contract. Mechanical
+but large. Vuestic-side variables keep their current names and duplicate the new sf
+values (interim until DB-generated CSS lands).
+
+### Range tokens — prefix; renumber families where shape changed
+
+- [ ] `--text-{xs..9xl}` → `--sf-text-*`
+- [ ] `--spacing-{none, xs..xl}` → `--sf-spacing-*`
+- [ ] `--leading-*` → `--sf-leading-*`
+- [ ] `--tracking-*` → `--sf-tracking-*`
+- [ ] `--shadow-{sm..xl}` → `--sf-shadow-*`
+- [ ] `--breakpoint-{xs, sm, md}` → `--sf-breakpoint-*` (new to spec)
+- [ ] `--radius-{none, sm, md, lg}` → `--sf-radius-{0..3}` (named → numbered; update
+      all `sf-radius-*` utility classes too)
+- [ ] `--alpha-{0, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100}` →
+      `--sf-alpha-{1..9}` (drop 25/75 oddballs; renumber)
+- [ ] `--primary-{50..950}` → `--sf-primary-{1..9}` (drop 50/950 bookends; renumber)
+- [ ] `--surface-{0..950}` → `--sf-surface-{0..9}` (drop bookends; renumber;
+      `surface-0` keeps the "canvas" meaning)
+- [ ] `--font-{sans, serif, mono}` → `--sf-font-{1, 2, mono}` (sans → 1, serif → 2,
+      mono stays as functional slot; font-3 reserved)
+- [ ] Add `--sf-weight-{1..4}` definitions in `base.css` (no current code) and
+      `sf-weight-*` utility classes in `sf-tokens.css`
+
+### Semantic tokens — rename to sf canonical; Vuestic-side duplicates the value
+
+- [ ] `--text_primary` → `--sf-fg_primary` (canonical). Keep `--text_primary` in the
+      Vuestic block with duplicated value.
+- [ ] Add `--sf-fg_inverted` (new sf semantic token). `--text_inverted` keeps its
+      current name with duplicated value.
+- [ ] `--border_color` → `--sf-border_color`. Vuestic shim duplicates value.
+- [ ] `--primary` → `--sf-primary` (single-word brand semantic; distinct from the
+      palette renumber). Vuestic shim duplicates value.
+- [ ] `--shadow` → `--sf-shadow`. Vuestic shim duplicates value.
+
+### Pipeline + consumer updates
+
+- [ ] `tailwind.config.js` — update palette refs (`var(--primary-500)` etc.) to the
+      renumbered/prefixed names (`var(--sf-primary-5)` etc.)
+- [ ] All `sf-tokens.css` utility class bodies — update to reference renamed tokens
+- [ ] `LayoutCard.vue`, `main.css`, and any other consumer of `--text_primary`,
+      `--border_color`, `--bg_*` etc. — update to either the sf canonical name or
+      the Vuestic shim name (decide per consumer)
 
 ## Token cleanup
 
@@ -74,10 +120,10 @@ the spec. Until Vuestic is removed:
 
 ## Deferred (decided in spec review, not done)
 
-- `--sf-text_primary`, `--sf-border_color`, `--sf-primary`, `--sf-shadow` retained as
-  legitimate system semantic tokens (broadly applicable, not Vuestic-specific). The
-  underscore form on `text_primary` / `border_color` is the convention for composite
-  semantic names per the spec.
+- `--sf-fg_primary`, `--sf-fg_inverted`, `--sf-border_color`, `--sf-primary`,
+  `--sf-shadow` retained as legitimate system semantic tokens (broadly applicable,
+  not Vuestic-specific). The underscore form on composite names (`fg_primary`,
+  `fg_inverted`, `border_color`) follows the spec convention.
 - Typography bundles now in spec as `sf-heading-*` (parallel family to `sf-depth-*`
   inside `sf-bundle` layer). Implementation tracked under "Implement missing class
   families" above. Other typography families (`sf-body-*`, `sf-caption-*`, etc.) can

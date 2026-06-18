@@ -47,7 +47,7 @@ The vocabulary must remain small and stable. Growth is the primary failure mode.
 | `sf-on-hover`       | Yes      | Hover is a state                        |
 | `sf-depth-1`        | Yes      | Elevation is relational                 |
 | `sl-columns`        | Yes      | Columns is structure                    |
-| `sf-text_primary`   | Yes      | Shared semantic value                   |
+| `sf-fg_primary`     | Yes      | Shared semantic value                   |
 | `sf-variant-glass`  | No       | Glass is a visual treatment, not intent |
 | `sf-variant-card`   | No       | Card is an implementation concept       |
 | `sl-sidebar`        | No       | Sidebar names content, not structure    |
@@ -57,6 +57,13 @@ content is, it does not belong.
 
 The classes shown here are the current vocabulary; new bundle families, variants, and
 states join through the same admission test.
+
+Slot labels come in three kinds. **Named** (`xs/sm/md/lg`, `tight/normal/wide`) encode
+intrinsic magnitudes — themes scale values; ordering is locked by the name's physical
+meaning. **Numbered, semantically positioned** (`depth-0..3`, `heading-1..3`) encode an
+external concept (z-stack position, document hierarchy); the ordering is meaningful by
+what it maps to. **Numbered, arbitrary** (`primary-1..N`, `alpha-1..N`, `weight-1..N`)
+are pure slot positions — the theme decides values; adjacent slots imply no ordering.
 
 ---
 
@@ -74,7 +81,7 @@ Layers are declared lowest to highest priority; inline styles override all of th
 | ------------- | ----------------------------------------------------------------------------- |
 | `sf-bundle`   | Multi-property bundles like `sf-depth-*`, `sf-heading-*`                      |
 | `sf-variant`  | `sf-variant-*` — modifiers overlaid on a bundle                               |
-| `sf-semantic` | Single-property bindings to a shared semantic token (e.g. `sf-text_primary`)  |
+| `sf-semantic` | Single-property bindings to a shared semantic token (e.g. `sf-fg_primary`)    |
 | `sf-utility`  | Single-property bindings to a scale step (e.g. `sf-text-xl`)                  |
 | `sf-state`    | `sf-on-*` — interaction modifiers (highest so hover/focus win over utilities) |
 
@@ -97,28 +104,31 @@ per-property by specificity and don't need to live in a layer.
 Tokens are CSS custom properties — the raw values everything else draws from. All system
 tokens are prefixed `--sf-`. Two kinds, distinguished by separator:
 
-**Range tokens** (hyphen): ordinal steps in a scale.
+**Range tokens** (hyphen): a fixed scale of slots.
 
 ```
---sf-text-*       font size        (xs through 9xl)
---sf-weight-*     font weight      (100 through 900)
+--sf-text-*       font size        (xs..9xl)
+--sf-spacing-*    spacing scale    (none, xs..xl)
 --sf-leading-*    line height      (none, tight, snug, normal, relaxed, loose)
 --sf-tracking-*   letter spacing   (tight, normal, wide)
---sf-radius-*     border radius    (none, sm, md, lg)
---sf-spacing-*    spacing scale    (xs through xl)
---sf-primary-*    primary palette  (50 through 950)
---sf-surface-*    neutral palette  (0 through 950)
---sf-shadow-*     shadow elevation (sm through xl)
---sf-alpha-*      alpha values     (0 through 100)
+--sf-shadow-*     shadow elevation (sm..xl)
+--sf-breakpoint-* container width  (xs, sm, md)
+--sf-primary-*    primary palette  (1..9)
+--sf-surface-*    neutral palette  (0..9)
+--sf-alpha-*      alpha values     (1..9)
+--sf-weight-*     font weight      (1..4)
+--sf-radius-*     border radius    (0..3)
+--sf-font-*       font family      (1, 2, 3, mono)
 ```
 
-Steps are ordinal and fixed. A theme sets the values; the steps themselves do not change.
+A theme sets the values; the slot set itself is fixed.
 
 **Semantic tokens**: single shared values with a named meaning. Composite names use
-underscores (`--sf-text_primary`); single-word names don't (`--sf-primary`).
+underscores (`--sf-fg_primary`); single-word names don't (`--sf-primary`).
 
 ```
---sf-text_primary    foreground colour
+--sf-fg_primary      default foreground
+--sf-fg_inverted     foreground on brand/inverse surfaces
 --sf-primary         brand colour
 --sf-border_color    border colour
 --sf-shadow          shadow colour
@@ -131,16 +141,16 @@ A theme changes the value; every reference picks it up.
 Colours are stored as RGB triplets — three space-separated values, no `rgb()` wrapper:
 
 ```css
---sf-primary-500: 16 185 129;
---sf-text_primary: 38 40 36;
+--sf-primary-5: 16 185 129;
+--sf-fg_primary: 38 40 36;
 ```
 
 Composed at the use site:
 
 ```css
-background: rgb(var(--sf-primary-500)); /* solid */
-background: rgb(var(--sf-primary-500) / 0.5); /* literal */
-background: rgb(var(--sf-primary-500) / var(--sf-alpha-10)); /* range token */
+background: rgb(var(--sf-primary-5)); /* solid */
+background: rgb(var(--sf-primary-5) / 0.5); /* literal */
+background: rgb(var(--sf-primary-5) / var(--sf-alpha-3)); /* range token */
 ```
 
 One colour token serves all opacities — the class count stays linear instead of
@@ -164,12 +174,12 @@ than one place. A token used in exactly one class is an indirection — replace 
 primitive it points to.
 
 - `--sf-shadow` ✓ — every shadow references it
-- `--sf-card-radius` ✗ if it only appears in `.sf-card`; use `var(--sf-radius-md)` directly
+- `--sf-card-radius` ✗ if it only appears in `.sf-card`; use `var(--sf-radius-2)` directly
 
 **Aliases only for theme-level decisions.** A semantic alias over a scale step is
-legitimate only when it represents a theme-level choice. `--sf-primary` = `--sf-primary-500`
+legitimate only when it represents a theme-level choice. `--sf-primary` = `--sf-primary-5`
 is valid because the theme decides which palette step is the brand. `--sf-alpha-subtle` =
-`--sf-alpha-10` is not — "subtle" is a styling opinion, not a theme decision. Use the
+`--sf-alpha-3` is not — "subtle" is a styling opinion, not a theme decision. Use the
 scale step directly.
 
 ---
@@ -183,9 +193,9 @@ and theme overrides both live inside the matching `@layer` block:
 @layer sf-bundle {
 	/* default — uses tokens for values */
 	.sf-depth-1 {
-		background: rgb(var(--sf-surface-50));
+		background: rgb(var(--sf-surface-1));
 		box-shadow: var(--sf-shadow-md);
-		border-radius: var(--sf-radius-md);
+		border-radius: var(--sf-radius-2);
 	}
 
 	/* theme override — same layer, higher specificity wins */
@@ -252,7 +262,7 @@ sf-on-disabled
 @layer sf-state {
 	/* default */
 	.sf-on-hover:hover {
-		background: rgb(var(--sf-text_primary) / 0.05);
+		background: rgb(var(--sf-fg_primary) / 0.05);
 	}
 
 	/* specialised for featured */
@@ -268,7 +278,7 @@ Single-property classes that bind one CSS property to a shared semantic token (u
 naming, mirroring the token name).
 
 ```
-sf-text_primary    color:        rgb(var(--sf-text_primary))
+sf-fg_primary    color:        rgb(var(--sf-fg_primary))
 sf-border_color    border-color: rgb(var(--sf-border_color))
 ```
 
@@ -281,7 +291,7 @@ Single-property classes that bind one CSS property to a specific scale step (hyp
 naming, mirroring the token name).
 
 ```
-sf-radius-lg       border-radius: var(--sf-radius-lg)
+sf-radius-3       border-radius: var(--sf-radius-3)
 sf-shadow-md       box-shadow:    var(--sf-shadow-md)
 sf-text-xl         font-size:     var(--sf-text-xl)
 sf-gap-md          --sf-gap:      var(--sf-spacing-md)
@@ -353,7 +363,7 @@ activation class on an ancestor (typically `<html>`).
 ```css
 /* token settings — no layer needed (custom properties cascade per-property) */
 .theme-editorial {
-	--sf-primary-500: 30 64 175;
+	--sf-primary-5: 30 64 175;
 }
 
 /* class overrides — must live in the matching layer */
@@ -379,7 +389,7 @@ Storage and generation are application concerns.
 | `sf-{family}-*`       | Bundle   | `sf-depth-1`, `sf-heading-2` | Multi-property bundle             |
 | `sf-variant-*`        | Variant  | `sf-variant-featured`        | Bundle modifier expressing intent |
 | `sf-on-*`             | State    | `sf-on-hover`                | Interaction modifier              |
-| `sf-*_*` (underscore) | Semantic | `sf-text_primary`            | One property, theme-controlled    |
+| `sf-*_*` (underscore) | Semantic | `sf-fg_primary`              | One property, theme-controlled    |
 | `sf-*-*` (hyphen)     | Utility  | `sf-text-xl`                 | One property, explicit scale step |
 | `sl-*`                | Layout   | `sl-columns`                 | Structural arrangement            |
 
