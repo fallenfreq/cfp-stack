@@ -22,15 +22,20 @@ Done so far:
 
 - Spec finalised (slot-label principle, semantic vocabulary, range tokens, alpha
   pairing rationale) — see `sf-system.md`.
-- DB schema for themes + tokens + rich-class tables (rich-class tables still empty).
+- DB schema for themes + tokens + rich-class tables (`class_vocabulary` and
+  `class_properties` now hold the `sf-depth-*` family; variants/states still empty).
 - Seed data for `root`, `dark`, `pink` themes — includes the new
   `--sf-shadow-opacity` token (theme-character knob; `0.12` at root).
-- Three-file generator with property-mapping rules in code (no rich-class table reads
-  yet — those come with the bundle work).
+- Three-file generator with property-mapping rules in code, plus rich-class layer
+  emission from `class_vocabulary` + `class_properties` (one `@layer` block per
+  layer; root defaults + `.theme-X` override rows).
 - Cascade layer declaration in `main.css`.
 - `.dark` / `.pink` → `.theme-dark` / `.theme-pink` across CSS, JS, Tailwind config,
   and the OS-preference preload script.
 - `sf-collapse-*` → `sl-collapse-*` rename (collapse is arrangement, not appearance).
+- `sf-depth-{0..3}` bundles — background-only at root (each binds to its matching
+  `--sf-surface-N`). Theme colour shifts cascade through the token; no per-theme
+  override rows needed.
 
 Done in the editor + cleanup slice:
 
@@ -59,10 +64,12 @@ Done in the editor + cleanup slice:
   semantic Vuestic colours (`--bg_primary`, `--text_primary`, `--secondary`, etc.),
   `--shadow`, `--shadow-opacity`. Tailwind config references these via `processTailwind`
   Colors. Whole block goes when Vuestic is removed.
-- **`sf-tokens.css`** keeps `.sf-bg_secondary` for 4 known consumers (`BasicCard.vue`,
-  `StackableSheet.vue`, `contentExtensions.ts`, `initialContent.html`). When
-  `sf-depth-*` bundles land each consumer should pick the right depth instead — at
-  that point this class and `--bg_secondary` go together.
+- **`sf-tokens.css`** keeps `.sf-bg_secondary` for the consumers it still has
+  (`BasicCard.vue`, `StackableSheet.vue`, `contentExtensions.ts`,
+  `initialContent.html`, plus ~18 component files that reference `--bg_secondary`
+  directly via `rgb(var(--bg_secondary))` or `rgba(... / var(--sf-alpha-9))`).
+  `sf-depth-{0..3}` now exists — the consumer migration is its own slice and
+  removes this class plus `--bg_secondary` from `base.css`.
 
 What's pending:
 
@@ -189,14 +196,23 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
 
 ## Implement missing class families
 
-None of these exist in the codebase yet:
-
-- [ ] `sf-depth-*` bundles (`-0`, `-1`, `-2`, `-3`)
+- [x] `sf-depth-*` bundles (`-0`, `-1`, `-2`, `-3`) — background only; bundle
+      properties beyond background (shadow, radius) intentionally deferred so the
+      classes are drop-in replacements for `--bg_secondary` consumers that already
+      carry their own radius / shadow. Add more properties when a consumer's needs
+      argue for them.
 - [ ] `sf-heading-*` bundles (`-1`, `-2`, `-3`)
 - [ ] `sf-variant-*` classes (`featured`, `subtle`, `danger`)
 - [ ] `sf-on-*` state classes (`hover`, `focus`, `active`, `disabled`)
 - [ ] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`)
 - [ ] `sl-collapse-*` container-responsive collapse classes
+- [ ] **Migrate `--bg_secondary` consumers to `sf-depth-1`** — ~22 files. The
+      solid-background uses (`rgb(var(--bg_secondary))`) become the `sf-depth-1`
+      class directly. Translucent uses (`rgba(var(--bg_secondary) / var(--sf-alpha-9))`
+      on floating UI like FloatingToolbar, FloatingDragHandle, ToolbarScrollHint,
+      FloatingEditorMenu) need a per-element decision — those want depth + alpha at
+      the use site, not the bundle. Removing `.sf-bg_secondary` from
+      `sf-tokens.css` and `--bg_secondary` from `base.css` falls out of this slice.
 
 ## Editor + Vue components
 

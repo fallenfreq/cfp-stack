@@ -1,5 +1,20 @@
 /* Generated from D1 — do not edit. Run: pnpm generate:css */
 
+@layer sf-bundle {
+	.sf-depth-0 {
+		background: rgb(var(--sf-surface-0));
+	}
+	.sf-depth-1 {
+		background: rgb(var(--sf-surface-1));
+	}
+	.sf-depth-2 {
+		background: rgb(var(--sf-surface-2));
+	}
+	.sf-depth-3 {
+		background: rgb(var(--sf-surface-3));
+	}
+}
+
 @layer sf-semantic {
 	.sf-border_color { border-color: rgb(var(--sf-border_color)); }
 	.sf-fg_inverted { color: rgb(var(--sf-fg_inverted)); }
@@ -64,3 +79,4 @@
 	.sf-shadow-sm { box-shadow: var(--sf-shadow-sm) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity))); }
 	.sf-shadow-xl { box-shadow: var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity))); }
 }
+

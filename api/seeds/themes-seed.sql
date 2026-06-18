@@ -154,3 +154,25 @@ INSERT INTO theme_tokens (theme_slug, name, value, kind) VALUES
 	-- Semantic
 	('pink', '--sf-fg_primary',  '102 0 51',    'color-triplet'),
 	('pink', '--sf-fg_inverted', '255 230 240', 'color-triplet');
+
+-- ─── Rich classes — vocabulary ───────────────────────────────────────────
+-- Only bundles, variants, states live here. Single-property semantic /
+-- utility / palette classes are auto-derived by the generator from
+-- theme_tokens + property-mapping rules.
+
+INSERT INTO class_vocabulary (name, kind, layer, description) VALUES
+	('sf-depth-0', 'bundle', 'sf-bundle', 'Canvas / page — bottommost surface'),
+	('sf-depth-1', 'bundle', 'sf-bundle', 'One level above canvas — cards, wells'),
+	('sf-depth-2', 'bundle', 'sf-bundle', 'Further raised — dropdowns, popovers'),
+	('sf-depth-3', 'bundle', 'sf-bundle', 'Topmost — modals');
+
+-- ─── Rich classes — root property assignments ───────────────────────────
+-- Themes can override per (theme_slug, class_name, css_property); when a
+-- theme just shifts the underlying token, no override row is needed —
+-- the bundle inherits the new value through the token cascade.
+
+INSERT INTO class_properties (theme_slug, class_name, css_property, value) VALUES
+	('root', 'sf-depth-0', 'background', 'rgb(var(--sf-surface-0))'),
+	('root', 'sf-depth-1', 'background', 'rgb(var(--sf-surface-1))'),
+	('root', 'sf-depth-2', 'background', 'rgb(var(--sf-surface-2))'),
+	('root', 'sf-depth-3', 'background', 'rgb(var(--sf-surface-3))');

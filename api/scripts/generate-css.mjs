@@ -24,6 +24,11 @@ const themes = query(
 const tokens = query(
 	'SELECT theme_slug, name, value, kind FROM theme_tokens ORDER BY theme_slug, name',
 )
+const vocabulary = query('SELECT name, kind, layer FROM class_vocabulary ORDER BY layer, name')
+const classProps = query(
+	'SELECT theme_slug, class_name, css_property, value FROM class_properties'
+		+ ' ORDER BY theme_slug, class_name, css_property',
+)
 
 // ─── generated-tokens.css ─────────────────────────────────────────────────
 
@@ -94,9 +99,52 @@ for (const tk of rootTokens) {
 	else if (tk.kind === 'shadow-shape') buckets.shadow.push({ suffix, name: tk.name })
 }
 
+// ─── Rich classes (bundles, variants, states) ─────────────────────────────
+
+const vocabByLayer = new Map()
+for (const v of vocabulary) {
+	if (!vocabByLayer.has(v.layer)) vocabByLayer.set(v.layer, [])
+	vocabByLayer.get(v.layer).push(v.name)
+}
+
+const propsByKey = new Map()
+for (const p of classProps) {
+	const key = `${p.theme_slug}|${p.class_name}`
+	if (!propsByKey.has(key)) propsByKey.set(key, [])
+	propsByKey.get(key).push({ property: p.css_property, value: p.value })
+}
+
+const richLayerCss = (layer) => {
+	const classNames = vocabByLayer.get(layer)
+	if (!classNames?.length) return ''
+
+	const emitBlock = (selector, props) => {
+		let block = `\t${selector} {\n`
+		for (const { property, value } of props) block += `\t\t${property}: ${value};\n`
+		return block + '\t}\n'
+	}
+
+	let out = `@layer ${layer} {\n`
+	for (const name of classNames) {
+		const props = propsByKey.get(`root|${name}`)
+		if (props) out += emitBlock(`.${name}`, props)
+	}
+	for (const theme of themes) {
+		if (theme.is_root) continue
+		for (const name of classNames) {
+			const props = propsByKey.get(`${theme.slug}|${name}`)
+			if (props) out += emitBlock(`.${theme.activation_class} .${name}`, props)
+		}
+	}
+	return out + '}\n\n'
+}
+
 // ─── generated-classes.css (core sf — semantic + value-linked utilities) ──
 
 let classesCss = '/* Generated from D1 — do not edit. Run: pnpm generate:css */\n\n'
+
+classesCss += richLayerCss('sf-bundle')
+classesCss += richLayerCss('sf-variant')
 
 if (buckets.semantic.length) {
 	classesCss += '@layer sf-semantic {\n'
@@ -162,7 +210,9 @@ if (buckets.shadow.length) {
 	}
 }
 
-classesCss += '}\n'
+classesCss += '}\n\n'
+
+classesCss += richLayerCss('sf-state')
 
 // ─── generated-editor-classes.css (palette picks + alpha pairings) ────────
 
