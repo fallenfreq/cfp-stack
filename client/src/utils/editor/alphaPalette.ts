@@ -1,4 +1,5 @@
-import cssVariables from '@/../cssVariables'
+import { useThemeTokensStore } from '@/stores/themeTokensStore'
+import { computed } from 'vue'
 
 export interface AlphaStep {
 	cssVar: string // e.g. '--sf-alpha-3'
@@ -8,22 +9,28 @@ export interface AlphaStep {
 
 const SF_ALPHA = /^--sf-alpha-(\d+)$/
 
-export const ALPHA_STEPS: AlphaStep[] = (() => {
-	const steps: AlphaStep[] = []
-	for (const [cssVar, raw] of Object.entries(cssVariables.root)) {
-		if (!SF_ALPHA.test(cssVar)) continue
-		const value = Number(raw)
-		if (isNaN(value)) continue
-		steps.push({ cssVar, value, label: `${Math.round(value * 100)}%` })
-	}
-	return steps.sort((a, b) => a.value - b.value)
-})()
+export function useAlphaPalette() {
+	const store = useThemeTokensStore()
 
-// Returns the nearest step to the given alpha, or null if no steps exist
-// (degenerate build — caller should skip emitting an alpha class).
-export const snapToStep = (alpha: number): AlphaStep | null =>
-	ALPHA_STEPS.length === 0
-		? null
-		: ALPHA_STEPS.reduce((best, s) =>
-				Math.abs(s.value - alpha) < Math.abs(best.value - alpha) ? s : best,
-			)
+	const steps = computed<AlphaStep[]>(() => {
+		const out: AlphaStep[] = []
+		for (const tk of store.rootTokens) {
+			if (!SF_ALPHA.test(tk.name)) continue
+			const value = Number(tk.value)
+			if (isNaN(value)) continue
+			out.push({ cssVar: tk.name, value, label: `${Math.round(value * 100)}%` })
+		}
+		return out.sort((a, b) => a.value - b.value)
+	})
+
+	// Nearest step to `alpha`, or null when no steps exist (degenerate theme).
+	function snapToStep(alpha: number): AlphaStep | null {
+		const list = steps.value
+		if (list.length === 0) return null
+		return list.reduce((best, s) =>
+			Math.abs(s.value - alpha) < Math.abs(best.value - alpha) ? s : best,
+		)
+	}
+
+	return { steps, snapToStep }
+}

@@ -11,6 +11,14 @@ import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+	// In dev, /styles/sf-system lives on the wrangler server (8788) — proxy
+	// from vite (5173) so the runtime <link> resolves under the same origin
+	// in both modes. Prod: cloudflare pages serves both on one origin.
+	server: {
+		proxy: {
+			'/styles': 'http://localhost:8788',
+		},
+	},
 	build: {
 		outDir: '../api/client_dist',
 		// Esbuild's CSS minifier rewrites `(max-width: X)` to range syntax
@@ -36,21 +44,8 @@ export default defineConfig({
 			{
 				file: './src/assets/base.css',
 				onChange: () => {
-					console.log('Compiling css variables for Vuestic + editor')
-					extractCssVars(
-						['./src/assets/base.css', './src/assets/generated-tokens.css'],
-						'./cssVariables',
-					)
-				},
-			},
-			{
-				file: './src/assets/generated-tokens.css',
-				onChange: () => {
-					console.log('Compiling css variables for Vuestic + editor')
-					extractCssVars(
-						['./src/assets/base.css', './src/assets/generated-tokens.css'],
-						'./cssVariables',
-					)
+					console.log('Compiling Vuestic-compat CSS variables')
+					extractCssVars('./src/assets/base.css', './cssVariables')
 				},
 			},
 		]),

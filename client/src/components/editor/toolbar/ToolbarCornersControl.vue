@@ -9,7 +9,7 @@
 					<span class="cp-label">Corners</span>
 					<div class="cp-row">
 						<button
-							v-for="t in RADIUS_OPTIONS"
+							v-for="t in radiusOptions"
 							:key="t"
 							class="cp-chip"
 							:class="{ 'is-active': selectedToken === t }"
@@ -101,23 +101,30 @@
 </template>
 
 <script setup lang="ts">
-import cssVariables from '@/../cssVariables'
 import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeControl'
-import { RADIUS_OPTIONS } from '@/config/editor/layoutTokens'
+import { useLayoutTokens } from '@/config/editor/layoutTokens'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
+import { useThemeTokensStore } from '@/stores/themeTokensStore'
 import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
 import { nodeAt } from '@/utils/editor/editorUtils'
 import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import ToolbarButton from './ToolbarButton.vue'
 import ToolbarIcon from './ToolbarIcon.vue'
 import ToolbarPanel from './ToolbarPanel.vue'
 
-const TOKEN_PX: Record<string, number> = Object.fromEntries(
-	Object.entries(cssVariables.root as Record<string, string>)
-		.filter(([k]) => k.startsWith('--sf-radius-'))
-		.map(([k, v]) => [k.slice('--sf-radius-'.length), parseInt(v) || 0]),
+const { radiusOptions } = useLayoutTokens()
+const store = useThemeTokensStore()
+
+// Token name → integer px. Theme can override --sf-radius-* values; this map
+// tracks current root resolutions.
+const tokenPx = computed<Record<string, number>>(() =>
+	Object.fromEntries(
+		store.rootTokens
+			.filter((t) => t.name.startsWith('--sf-radius-'))
+			.map((t) => [t.name.slice('--sf-radius-'.length), parseInt(t.value) || 0]),
+	),
 )
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
@@ -175,7 +182,7 @@ watch(open, (isOpen) => {
 const selectToken = (token: string) => {
 	if (token === 'custom' && selectedToken.value !== 'custom') {
 		customUniform.value =
-			selectedToken.value !== null ? (TOKEN_PX[selectedToken.value] ?? 0) : 0
+			selectedToken.value !== null ? (tokenPx.value[selectedToken.value] ?? 0) : 0
 	}
 	selectedToken.value = token
 	if (token !== 'custom') {

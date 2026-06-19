@@ -6,10 +6,10 @@
 @layer reset, sf-bundle, sf-variant, sf-semantic, sf-utility, sf-state;
 
 @import './base.css';
-@import './generated-tokens.css';
-@import './generated-classes.css';
-@import './generated-editor-classes.css';
 @import './sf-tokens.css';
+/* sf-system stylesheet (tokens + classes + editor pairings) is served at
+   runtime from /styles/sf-system; <link> in index.html loads it after this
+   file so the @layer declaration above is in scope. */
 
 @layer reset {
 	@tailwind base;

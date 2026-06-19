@@ -17,7 +17,7 @@
 							none
 						</button>
 						<button
-							v-for="t in SHADOW_OPTIONS"
+							v-for="t in shadowOptions"
 							:key="t"
 							class="sp-chip"
 							:class="{ 'is-active': selectedToken === t }"
@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeControl'
-import { SHADOW_OPTIONS } from '@/config/editor/layoutTokens'
+import { useLayoutTokens } from '@/config/editor/layoutTokens'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
 import { nodeAt } from '@/utils/editor/editorUtils'
@@ -61,8 +61,9 @@ const DEFAULT_SHADOW_COLOR = 'rgb(var(--shadow) / var(--sf-alpha-2))'
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
 
 const { open, buttonEl, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
+const { shadowOptions } = useLayoutTokens()
 
-// null = no shadow; string = token name from SHADOW_OPTIONS
+// null = no shadow; string = token name from shadowOptions
 const selectedToken = ref<string | null>(null)
 const shadowColor = ref<string>(DEFAULT_SHADOW_COLOR)
 
@@ -73,7 +74,7 @@ watch(open, (isOpen) => {
 	const style = typeof node.attrs.style === 'string' ? node.attrs.style : ''
 
 	const token = getClassToken(cls, 'sf-shadow-')
-	if (token !== null && SHADOW_OPTIONS.includes(token)) {
+	if (token !== null && shadowOptions.value.includes(token)) {
 		selectedToken.value = token
 		shadowColor.value = getStyleProp(style, '--sf-shadow-color') || DEFAULT_SHADOW_COLOR
 	} else {

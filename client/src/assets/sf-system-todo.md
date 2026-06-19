@@ -5,18 +5,71 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
-DB-driven token + class pipeline is live. The generator now emits three files from D1:
+**Schema + domain layer + runtime generator done. Next: apply migration, seed, verify `/styles/sf-system` output.**
 
-- `generated-tokens.css` — `:root` + `.theme-*` token declarations (unlayered)
-- `generated-classes.css` — core sf classes: semantic canonicals (`sf-fg_primary`,
-  `sf-fg_inverted`, `sf-border_color`) in `@layer sf-semantic`; value-linked utilities
-  (typography, radius, spacing, shadow) in `@layer sf-utility`
-- `generated-editor-classes.css` — editor-pairing classes (palette picks
-  `sf-{bg|color|border}-{token}` + the `sf-{bg|color|border}-alpha-{1..9}` siblings)
-  in `@layer sf-utility`
+Schema (`api/src/schemas/theme.ts`) reshaped end-to-end:
 
-Run with `pnpm generate:css`. All three files are in `.prettierignore`. `main.css`
-imports them in order after `base.css`, before legacy `sf-tokens.css`.
+- `themes` UUID-keyed with `version` (semver) + `name` + `activation_class` (UNIQUE) +
+  `is_root` + `created_by` (FK users). One-root invariant enforced in domain.
+- `theme_tokens` FK to `theme_id`.
+- `class_vocabulary` lost `layer`, gained `pseudo` (`:hover` on state classes etc.).
+  Kind ∈ `'bundle'|'variant'|'state'|'layout'`; layer derived from kind at emit.
+- New `class_rules` + `class_rule_classes` junction replace `class_properties`. A rule's
+  selector is the canonical join of its classes (sorted by kind: bundle < variant < state)
+  plus any pseudo from state classes. Junction FK on `class_name` enforces vocabulary
+  membership at the DB level.
+- New `user_theme_aliases(user_id, theme_id, local_name)` registry — per-user local
+  naming, UNIQUE (user_id, local_name). Doesn't affect global identity.
+
+Migration: `api/migrations/0007_silky_grim_reaper.sql` hand-rewritten as a clean
+drop+recreate (drizzle's auto-generated version hit SQLite ALTER limits and was full of
+unrunnable comment blocks). Snapshot from drizzle matches the end state; the next
+`pnpm migrate:api` produces no diff.
+
+Domain layer (`api/src/domain/`) is the single writer; seed + API both go through it:
+
+- `errors.ts`, `types.ts`, `themes.ts`, `themeTokens.ts`, `classRules.ts`, `seed.ts`
+- `createClassRule` validates: ≥1 class, no dupes within rule, valid CSS property,
+  theme exists, all classes in vocab, ≤1 class per kind, no duplicate
+  (theme, class-set, property).
+- Seed orchestrator: `ensureBrandUser('michael@somefreq.com' / 'somefreq')` →
+  `wipeDesignSystem` (deletes themes, cascades to tokens/rules/junction/aliases;
+  then deletes vocabulary) → recreate Root/Dark/Pink with hardcoded UUIDs →
+  set tokens → add vocabulary (depth, heading, **variants**) → create rules
+  (depth backgrounds, heading sizes, **variant defaults**).
+
+Seed runs via admin tRPC mutation `seed.run`
+(`api/src/routes/seed/router.ts` → wired into `appRouter`).
+
+**Variant slice — data is in:** `--sf-danger` semantic token (root only; themes can
+override later), `sf-variant-{featured,subtle,danger}` vocabulary entries + root rules
+(featured: bg primary + fg inverted; subtle: fg primary at alpha-6; danger: bg danger +
+fg inverted). **CSS not yet generated** — generator still reads the old schema.
+
+### To resume here, in order:
+
+1. `pnpm migrate:push:local:api` — apply 0007 (drops existing seed data; expected).
+2. `pnpm dev:api`; hit `POST /trpc/seed.run` with an admin token — populates DB
+   through the domain layer.
+3. Open `http://localhost:8788/styles/sf-system` — verify token blocks, bundle/variant
+   layer blocks, and editor-pairing classes are all present.
+
+Done (generator slice):
+
+- `api/scripts/generate-css.mjs` deleted; replaced by `api/src/domain/generateCss.ts`
+  (TypeScript, runs at request time).
+- CSS served at `/styles/sf-system` via Pages Function
+  `api/functions_src/styles/sf-system.ts`. Two-layer cache: in-isolate signature cache
+    - Cloudflare Cache API (survives cold-starts; `waitUntil` put so first request isn't
+      penalised). ETag + `Cache-Control: public, max-age=60` for browser/CDN.
+- `generated-tokens.css`, `generated-classes.css`, `generated-editor-classes.css`
+  deleted; `<link href="/styles/sf-system">` in `index.html` replaces them. Vite dev
+  server proxies `/styles` → wrangler (`:8788`).
+- `themeTokensStore` (Pinia) hydrates `themes.list` + `themes.listTokens` at startup
+  (fire-and-forget from `main.ts`). Editor palettes derive reactively from `rootTokens`.
+- `colorPalette.ts` + generator `classifyTokens`: `var()` semantic aliases (e.g.
+  `--sf-primary`) excluded from palette bucket via TRIPLET guard — they are not numbered
+  steps and would create phantom shades in the colour picker.
 
 Done so far:
 
@@ -133,6 +186,10 @@ What's pending:
    from the corresponding `--sf-*` tokens via the seed (so theme authors only edit one
    place). Currently the Vuestic-compat values in `base.css` are hand-written, not
    driven from the DB.
+4. **Seed batching** — `seed.ts` loops with individual `await` per token/rule upsert
+   (~160 round-trips to D1). D1's `db.batch()` or Drizzle's batch API would collapse
+   this to a handful of requests. Not a correctness issue; only matters if seed time
+   becomes noticeable (e.g. when running against production D1 over HTTP).
 
 ## Schema notes
 

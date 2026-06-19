@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { nodeClassTokens } from '@/config/editor/nodeClassTokens'
+import { useNodeClassTokens } from '@/config/editor/nodeClassTokens'
 import type { EnumExtensionAttribute } from '@/editor/enumAttr'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
@@ -121,7 +121,8 @@ const addableKeys = computed(() =>
 		.sort(),
 )
 
-const classTokenSpecs = computed(() => nodeClassTokens[capturedNode.value.type.name] ?? [])
+const { specs: nodeClassTokens } = useNodeClassTokens()
+const classTokenSpecs = computed(() => nodeClassTokens.value[capturedNode.value.type.name] ?? [])
 
 const currentClass = computed(() =>
 	typeof capturedNode.value.attrs.class === 'string' ? capturedNode.value.attrs.class : '',

@@ -1,27 +1,7 @@
-import cssVariables from '@/../cssVariables'
+import { useThemeTokensStore } from '@/stores/themeTokensStore'
+import { computed } from 'vue'
 
-function extractTokens(prefix: string): readonly string[] {
-	return Object.keys(cssVariables.root)
-		.filter((k) => k.startsWith(prefix))
-		.map((k) => k.slice(prefix.length))
-}
-
-export const RADIUS_OPTIONS = extractTokens('--sf-radius-')
-export const RADIUS: Record<string, string> = Object.fromEntries(
-	RADIUS_OPTIONS.map((k) => [k, `var(--sf-radius-${k})`]),
-)
-
-export const SHADOW_OPTIONS = extractTokens('--sf-shadow-').filter((k) => k !== 'opacity')
-
-export const SPACING_OPTIONS = extractTokens('--sf-spacing-')
-export const SPACING: Record<string, string> = Object.fromEntries(
-	SPACING_OPTIONS.map((k) => [k, `var(--sf-spacing-${k})`]),
-)
-
-export const BREAKPOINT_OPTIONS = extractTokens('--sf-breakpoint-')
-// 'never' is a sentinel meaning do not collapse; CSS breakpoints follow in base.css order.
-export const COLLAPSE_OPTIONS: readonly string[] = ['never', ...BREAKPOINT_OPTIONS]
-
+// Hard-coded — no DB equivalent, layout-only opinions.
 export const MAX_WIDTH: Record<string, string> = {
 	xs: '20rem',
 	sm: '24rem',
@@ -41,4 +21,44 @@ export const SPLIT_TEMPLATES: Record<string, string> = {
 	'3/5': '3fr 2fr',
 	'2/3': '2fr 1fr',
 	'3/4': '3fr 1fr',
+}
+
+// Reactive options derived from the token store — change when themes do.
+export function useLayoutTokens() {
+	const store = useThemeTokensStore()
+
+	const keysWithPrefix = (prefix: string): string[] =>
+		store.rootTokens
+			.filter((t) => t.name.startsWith(prefix))
+			.map((t) => t.name.slice(prefix.length))
+
+	const radiusOptions = computed(() => keysWithPrefix('--sf-radius-'))
+	const radius = computed<Record<string, string>>(() =>
+		Object.fromEntries(radiusOptions.value.map((k) => [k, `var(--sf-radius-${k})`])),
+	)
+
+	// '--sf-shadow-opacity' is a theme-character knob, not a shape — exclude.
+	const shadowOptions = computed(() =>
+		keysWithPrefix('--sf-shadow-').filter((k) => k !== 'opacity'),
+	)
+
+	const spacingOptions = computed(() => keysWithPrefix('--sf-spacing-'))
+	const spacing = computed<Record<string, string>>(() =>
+		Object.fromEntries(spacingOptions.value.map((k) => [k, `var(--sf-spacing-${k})`])),
+	)
+
+	const breakpointOptions = computed(() => keysWithPrefix('--sf-breakpoint-'))
+	// 'never' is a sentinel meaning do not collapse; followed by breakpoints
+	// in token order (which the seed emits ascending).
+	const collapseOptions = computed(() => ['never', ...breakpointOptions.value])
+
+	return {
+		radiusOptions,
+		radius,
+		shadowOptions,
+		spacingOptions,
+		spacing,
+		breakpointOptions,
+		collapseOptions,
+	}
 }

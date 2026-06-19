@@ -13,7 +13,7 @@
 					×
 				</button>
 				<button
-					v-for="f in FONT_FAMILIES"
+					v-for="f in families"
 					:key="f.cssVar"
 					class="fp-chip fp-chip-family"
 					:class="{ 'is-active': activeFamilyVar === f.cssVar }"
@@ -40,7 +40,7 @@
 					×
 				</button>
 				<button
-					v-for="s in FONT_SIZES"
+					v-for="s in sizes"
 					:key="s.cssVar"
 					class="fp-chip"
 					:class="{ 'is-active': activeSizeVar === s.cssVar }"
@@ -66,7 +66,7 @@
 					×
 				</button>
 				<button
-					v-for="l in LEADING_OPTIONS"
+					v-for="l in leading"
 					:key="l.cssVar"
 					class="fp-chip"
 					:class="{ 'is-active': activeLeadingVar === l.cssVar }"
@@ -92,7 +92,7 @@
 					×
 				</button>
 				<button
-					v-for="t in TRACKING_OPTIONS"
+					v-for="t in tracking"
 					:key="t.cssVar"
 					class="fp-chip"
 					:class="{ 'is-active': activeTrackingVar === t.cssVar }"
@@ -109,15 +109,14 @@
 
 <script setup lang="ts">
 import {
-	FONT_FAMILIES,
-	FONT_SIZES,
-	LEADING_OPTIONS,
 	SIZE_TO_LEADING,
-	TRACKING_OPTIONS,
 	parseFontVar,
+	useFontPalette,
 	type FontStyleAttrs,
 } from '@/utils/editor/fontPalette'
 import { ref, watch } from 'vue'
+
+const { families, sizes, leading, tracking } = useFontPalette()
 
 const props = defineProps<{
 	fontFamily: string | null

@@ -26,6 +26,7 @@ declare module 'vue' {
 }
 
 import globalKeyPlugin from './plugins/globalKeyPlugin'
+import { useThemeTokensStore } from './stores/themeTokensStore'
 
 zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
 	if (!ok) {
@@ -56,5 +57,10 @@ zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
 	app.use(router)
 	app.use(vuestic)
 	initPromptModal(app._context)
+
+	// Fire-and-forget — palette computed refs update reactively when tokens arrive.
+	// /styles/sf-system CSS is served from edge cache so the stylesheet itself is instant.
+	useThemeTokensStore().hydrate().catch(console.error)
+
 	app.mount('#app')
 })

@@ -5,7 +5,9 @@ import { markersRouter } from './markers/router.js'
 import { adminPagesRouter, publicPagesRouter } from './pages/router.js'
 import { portfolioRouter } from './portfolio/router.js'
 import { secureRouter } from './secure/router.js'
+import { seedRouter } from './seed/router.js'
 import { adminTagsRouter, publicTagsRouter } from './tags/router.js'
+import { themesRouter } from './themes/router.js'
 import { userRouter } from './user/router.js'
 
 const appRouter = router({
@@ -26,6 +28,10 @@ const appRouter = router({
 	publicTags: publicTagsRouter,
 
 	adminTags: adminTagsRouter,
+
+	seed: seedRouter,
+
+	themes: themesRouter,
 
 	test: publicProcedure.query(async () => {
 		return 'Some stuff'

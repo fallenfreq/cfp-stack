@@ -1,12 +1,12 @@
 /*
-If this file is changed, the dev server needs to be restarted for
-./plugins/extractCssVars.ts to re-calculate the cssVariables.js file.
-You can just save a file that will trigger a restart.
+If this file is changed, the dev server picks it up and re-runs
+./plugins/extractCssVars.ts to refresh cssVariables.js (Vuestic-compat
+values only).
 
-DESIGN SYSTEM TOKENS LIVE IN D1, not here. Run `pnpm generate:css` to
-emit generated-tokens.css / generated-classes.css / generated-editor-classes.css.
-What remains below is Vuestic-compatibility + app-level vars only; everything in
-this file goes away when Vuestic is removed (except the app-level :root block).
+DESIGN SYSTEM TOKENS LIVE IN D1, served at runtime by /styles/sf-system.
+What remains below is Vuestic-compatibility + app-level vars only;
+everything in this file goes away when Vuestic is removed (except the
+app-level :root block).
 */
 
 :root {
@@ -34,7 +34,7 @@ this file goes away when Vuestic is removed (except the app-level :root block).
    These tokens exist for Vuestic's processTailwindColors pipeline + the
    tailwind config that feeds it. The values mirror the legacy design system
    that Vuestic was built against. The sf-system equivalents live in D1 and
-   are emitted to generated-tokens.css — when Vuestic is removed, this whole
+   are served from /styles/sf-system — when Vuestic is removed, this whole
    block plus tailwind.config palette refs go too. */
 
 :root {

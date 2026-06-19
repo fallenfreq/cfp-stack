@@ -1,6 +1,6 @@
 import { cssVarColor } from '@/utils/cssVarColor'
-import { ALPHA_STEPS, snapToStep } from '@/utils/editor/alphaPalette'
-import { parseStoredValue } from '@/utils/editor/colorPalette'
+import { useAlphaPalette } from '@/utils/editor/alphaPalette'
+import { useColorPalette } from '@/utils/editor/colorPalette'
 import { Mark, mergeAttributes } from '@tiptap/vue-3'
 
 // Extract sf-color-{token} (not sf-color-alpha-*) from a class list.
@@ -20,8 +20,9 @@ const classesToColor = (classList: string): string | null => {
 	const cssVar = `--sf-${token}`
 	const alphaClass = classList.split(/\s+/).find((c) => c.startsWith('sf-color-alpha-'))
 	const alphaName = alphaClass?.slice('sf-color-alpha-'.length) ?? null
+	const { steps } = useAlphaPalette()
 	const alphaStep = alphaName
-		? ALPHA_STEPS.find((s) => s.cssVar === `--sf-alpha-${alphaName}`)
+		? steps.value.find((s) => s.cssVar === `--sf-alpha-${alphaName}`)
 		: null
 	return cssVarColor(cssVar, alphaStep?.value ?? 1)
 }
@@ -58,6 +59,8 @@ const TextColor = Mark.create({
 	},
 
 	renderHTML({ mark }) {
+		const { parseStoredValue } = useColorPalette()
+		const { snapToStep } = useAlphaPalette()
 		const parsed = parseStoredValue(mark.attrs.color)
 		if (parsed?.kind === 'token') {
 			const colorClass = `sf-color-${parsed.cssVar.slice('--sf-'.length)}`

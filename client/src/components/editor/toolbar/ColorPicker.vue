@@ -13,7 +13,7 @@
 				@click="$emit('remove')"
 			/>
 			<button
-				v-for="family in PALETTE_FAMILIES"
+				v-for="family in families"
 				:key="family.key"
 				class="cp-chip"
 				:class="{ 'is-active': mode === 'palette' && familyKey === family.key }"
@@ -43,7 +43,7 @@
 				type="range"
 				class="cp-range"
 				min="0"
-				:max="ALPHA_STEPS.length - 1"
+				:max="alphaSteps.length - 1"
 				step="1"
 				:value="alphaIndex"
 				@input="onAlphaInput"
@@ -64,15 +64,12 @@
 
 <script setup lang="ts">
 import { cssVarColor } from '@/utils/cssVarColor'
-import { ALPHA_STEPS, snapToStep } from '@/utils/editor/alphaPalette'
-import {
-	PALETTE_FAMILIES,
-	findShade,
-	formatRgba,
-	parseStoredValue,
-	type PaletteFamily,
-} from '@/utils/editor/colorPalette'
+import { useAlphaPalette } from '@/utils/editor/alphaPalette'
+import { formatRgba, useColorPalette, type PaletteFamily } from '@/utils/editor/colorPalette'
 import { computed, ref, watch } from 'vue'
+
+const { families, findShade, parseStoredValue } = useColorPalette()
+const { steps: alphaSteps, snapToStep } = useAlphaPalette()
 
 const props = withDefaults(
 	defineProps<{
@@ -92,14 +89,14 @@ const alpha = ref(1)
 const freeformHex = ref('#000000')
 
 const alphaIndex = computed(() => {
-	const idx = ALPHA_STEPS.findIndex((s) => s.value === alpha.value)
+	const idx = alphaSteps.value.findIndex((s) => s.value === alpha.value)
 	if (idx >= 0) return idx
 	const snapped = snapToStep(alpha.value)
-	return snapped ? ALPHA_STEPS.indexOf(snapped) : -1
+	return snapped ? alphaSteps.value.indexOf(snapped) : -1
 })
 
 const activeFamily = computed<PaletteFamily | undefined>(() =>
-	PALETTE_FAMILIES.find((f) => f.key === familyKey.value),
+	families.value.find((f) => f.key === familyKey.value),
 )
 
 const activeShade = computed(() => activeFamily.value?.shades[shadeIndex.value] ?? null)
@@ -154,7 +151,7 @@ watch(
 const pickFamily = (key: string) => {
 	familyKey.value = key
 	mode.value = 'palette'
-	const family = PALETTE_FAMILIES.find((f) => f.key === key)
+	const family = families.value.find((f) => f.key === key)
 	if (family && shadeIndex.value >= family.shades.length) shadeIndex.value = 0
 	commit()
 }
@@ -166,7 +163,7 @@ const pickShade = (idx: number) => {
 
 const onAlphaInput = (e: Event) => {
 	const idx = Number((e.target as HTMLInputElement).value)
-	alpha.value = ALPHA_STEPS[idx]?.value ?? alpha.value
+	alpha.value = alphaSteps.value[idx]?.value ?? alpha.value
 	if (mode.value !== 'none') commit()
 }
 

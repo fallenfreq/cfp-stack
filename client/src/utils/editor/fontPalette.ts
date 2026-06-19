@@ -1,4 +1,5 @@
-import cssVariables from '@/../cssVariables'
+import { useThemeTokensStore } from '@/stores/themeTokensStore'
+import { computed } from 'vue'
 
 export interface FontOption {
 	cssVar: string // e.g. '--sf-font-1'
@@ -12,19 +13,6 @@ export interface FontStyleAttrs {
 	lineHeight: string | null
 	letterSpacing: string | null
 }
-
-const entries = Object.entries(cssVariables.root)
-
-function buildPalette(prefix: string): FontOption[] {
-	return entries
-		.filter(([k]) => k.startsWith(prefix))
-		.map(([cssVar, value]) => ({ cssVar, value, label: cssVar.slice(prefix.length) }))
-}
-
-export const FONT_FAMILIES = buildPalette('--sf-font-')
-export const FONT_SIZES = buildPalette('--sf-text-')
-export const LEADING_OPTIONS = buildPalette('--sf-leading-')
-export const TRACKING_OPTIONS = buildPalette('--sf-tracking-')
 
 // Auto-pair: when a font size is picked, this leading is applied automatically.
 // User can override with the leading chips afterwards.
@@ -48,4 +36,25 @@ export const SIZE_TO_LEADING: Record<string, string> = {
 export const parseFontVar = (value: string | null | undefined): string | null => {
 	const m = value?.trim().match(/^var\(\s*(--[\w-]+)\s*\)$/)
 	return m ? m[1]! : null
+}
+
+export function useFontPalette() {
+	const store = useThemeTokensStore()
+
+	function buildPalette(prefix: string): FontOption[] {
+		return store.rootTokens
+			.filter((t) => t.name.startsWith(prefix))
+			.map((t) => ({
+				cssVar: t.name,
+				value: t.value,
+				label: t.name.slice(prefix.length),
+			}))
+	}
+
+	const families = computed(() => buildPalette('--sf-font-'))
+	const sizes = computed(() => buildPalette('--sf-text-'))
+	const leading = computed(() => buildPalette('--sf-leading-'))
+	const tracking = computed(() => buildPalette('--sf-tracking-'))
+
+	return { families, sizes, leading, tracking }
 }

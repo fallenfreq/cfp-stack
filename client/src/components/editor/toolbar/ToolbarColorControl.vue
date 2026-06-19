@@ -13,9 +13,9 @@
 import { useToolbarMarkControl } from '@/composables/editor/useToolbarMarkControl'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { cssVarColor } from '@/utils/cssVarColor'
-import { ALPHA_STEPS, snapToStep } from '@/utils/editor/alphaPalette'
+import { useAlphaPalette } from '@/utils/editor/alphaPalette'
 import { getClassToken } from '@/utils/editor/classTokens'
-import { parseStoredValue } from '@/utils/editor/colorPalette'
+import { useColorPalette } from '@/utils/editor/colorPalette'
 import { nodeAt } from '@/utils/editor/editorUtils'
 import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
@@ -28,6 +28,8 @@ const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
 
 const { open, buttonEl, capturedPos, mode, toggle, onClose, commitMark } =
 	useToolbarMarkControl(props)
+const { steps: alphaSteps, snapToStep } = useAlphaPalette()
+const { parseStoredValue } = useColorPalette()
 
 // Read background colour from sf-bg-* class tokens, falling back to inline style.
 const readNodeBg = (node: { attrs: Record<string, unknown> }): string | null => {
@@ -40,7 +42,7 @@ const readNodeBg = (node: { attrs: Record<string, unknown> }): string | null => 
 	if (bgToken) {
 		const alphaName = getClassToken(cls, 'sf-bg-alpha-')
 		const alphaStep = alphaName
-			? ALPHA_STEPS.find((s) => s.cssVar === `--sf-alpha-${alphaName}`)
+			? alphaSteps.value.find((s) => s.cssVar === `--sf-alpha-${alphaName}`)
 			: null
 		return cssVarColor(`--sf-${bgToken}`, alphaStep?.value ?? 1)
 	}

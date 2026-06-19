@@ -1,4 +1,5 @@
-import { BREAKPOINT_OPTIONS, RADIUS_OPTIONS, SPACING_OPTIONS } from '@/config/editor/layoutTokens'
+import { useLayoutTokens } from '@/config/editor/layoutTokens'
+import { computed } from 'vue'
 
 export interface ClassTokenSpec {
 	key: string
@@ -7,28 +8,44 @@ export interface ClassTokenSpec {
 	default: string | null
 }
 
-export const nodeClassTokens: Record<string, ClassTokenSpec[]> = {
-	LayoutCard: [
-		{ key: 'radius', prefix: 'sf-radius-', options: RADIUS_OPTIONS, default: null },
-		{ key: 'padding', prefix: 'sf-padding-', options: SPACING_OPTIONS, default: null },
-	],
-	LayoutSection: [
-		{ key: 'gap', prefix: 'sf-gap-', options: SPACING_OPTIONS, default: null },
-		{ key: 'padding', prefix: 'sf-padding-', options: SPACING_OPTIONS, default: null },
-	],
-	LayoutColumns: [
-		{ key: 'gap', prefix: 'sf-gap-', options: SPACING_OPTIONS, default: null },
-		{ key: 'collapse', prefix: 'sl-collapse-', options: BREAKPOINT_OPTIONS, default: null },
-	],
-	LayoutCenter: [
-		{ key: 'gap', prefix: 'sf-gap-', options: SPACING_OPTIONS, default: null },
-		{ key: 'padding', prefix: 'sf-padding-', options: SPACING_OPTIONS, default: null },
-	],
-	LayoutSplit: [
-		{ key: 'gap', prefix: 'sf-gap-', options: SPACING_OPTIONS, default: null },
-		{ key: 'collapse', prefix: 'sl-collapse-', options: BREAKPOINT_OPTIONS, default: null },
-	],
-	image: [
-		{ key: 'radius', prefix: 'sf-radius-', options: RADIUS_OPTIONS, default: null },
-	],
+export function useNodeClassTokens() {
+	const { radiusOptions, spacingOptions, breakpointOptions } = useLayoutTokens()
+
+	const specs = computed<Record<string, ClassTokenSpec[]>>(() => ({
+		LayoutCard: [
+			{ key: 'radius', prefix: 'sf-radius-', options: radiusOptions.value, default: null },
+			{ key: 'padding', prefix: 'sf-padding-', options: spacingOptions.value, default: null },
+		],
+		LayoutSection: [
+			{ key: 'gap', prefix: 'sf-gap-', options: spacingOptions.value, default: null },
+			{ key: 'padding', prefix: 'sf-padding-', options: spacingOptions.value, default: null },
+		],
+		LayoutColumns: [
+			{ key: 'gap', prefix: 'sf-gap-', options: spacingOptions.value, default: null },
+			{
+				key: 'collapse',
+				prefix: 'sl-collapse-',
+				options: breakpointOptions.value,
+				default: null,
+			},
+		],
+		LayoutCenter: [
+			{ key: 'gap', prefix: 'sf-gap-', options: spacingOptions.value, default: null },
+			{ key: 'padding', prefix: 'sf-padding-', options: spacingOptions.value, default: null },
+		],
+		LayoutSplit: [
+			{ key: 'gap', prefix: 'sf-gap-', options: spacingOptions.value, default: null },
+			{
+				key: 'collapse',
+				prefix: 'sl-collapse-',
+				options: breakpointOptions.value,
+				default: null,
+			},
+		],
+		image: [
+			{ key: 'radius', prefix: 'sf-radius-', options: radiusOptions.value, default: null },
+		],
+	}))
+
+	return { specs }
 }
