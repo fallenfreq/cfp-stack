@@ -1,7 +1,9 @@
 /* Layer order must be declared before any @layer block runs, otherwise the
    first imported block establishes the order implicitly and the explicit
-   declaration becomes a no-op for layers it tries to put earlier. */
-@layer sf-bundle, sf-variant, sf-semantic, sf-utility, sf-state;
+   declaration becomes a no-op for layers it tries to put earlier.
+   `reset` holds Tailwind preflight so its `h1,h2,h3 { font-size: inherit }`
+   reset doesn't beat sf-bundle (unlayered rules win over any layer). */
+@layer reset, sf-bundle, sf-variant, sf-semantic, sf-utility, sf-state;
 
 @import './base.css';
 @import './generated-tokens.css';
@@ -9,7 +11,9 @@
 @import './generated-editor-classes.css';
 @import './sf-tokens.css';
 
-@tailwind base;
+@layer reset {
+	@tailwind base;
+}
 @tailwind components;
 @tailwind utilities;
 

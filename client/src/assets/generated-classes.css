@@ -13,6 +13,18 @@
 	.sf-depth-3 {
 		background: rgb(var(--sf-surface-3));
 	}
+	.sf-heading-1 {
+		font-size: var(--sf-text-4xl);
+		line-height: var(--sf-leading-tight);
+	}
+	.sf-heading-2 {
+		font-size: var(--sf-text-2xl);
+		line-height: var(--sf-leading-snug);
+	}
+	.sf-heading-3 {
+		font-size: var(--sf-text-xl);
+		line-height: var(--sf-leading-snug);
+	}
 }
 
 @layer sf-semantic {

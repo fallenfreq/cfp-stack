@@ -161,10 +161,13 @@ INSERT INTO theme_tokens (theme_slug, name, value, kind) VALUES
 -- theme_tokens + property-mapping rules.
 
 INSERT INTO class_vocabulary (name, kind, layer, description) VALUES
-	('sf-depth-0', 'bundle', 'sf-bundle', 'Canvas / page — bottommost surface'),
-	('sf-depth-1', 'bundle', 'sf-bundle', 'One level above canvas — cards, wells'),
-	('sf-depth-2', 'bundle', 'sf-bundle', 'Further raised — dropdowns, popovers'),
-	('sf-depth-3', 'bundle', 'sf-bundle', 'Topmost — modals');
+	('sf-depth-0',   'bundle', 'sf-bundle', 'Canvas / page — bottommost surface'),
+	('sf-depth-1',   'bundle', 'sf-bundle', 'One level above canvas — cards, wells'),
+	('sf-depth-2',   'bundle', 'sf-bundle', 'Further raised — dropdowns, popovers'),
+	('sf-depth-3',   'bundle', 'sf-bundle', 'Topmost — modals'),
+	('sf-heading-1', 'bundle', 'sf-bundle', 'Most prominent heading'),
+	('sf-heading-2', 'bundle', 'sf-bundle', 'Secondary heading'),
+	('sf-heading-3', 'bundle', 'sf-bundle', 'Tertiary heading');
 
 -- ─── Rich classes — root property assignments ───────────────────────────
 -- Themes can override per (theme_slug, class_name, css_property); when a
@@ -172,7 +175,13 @@ INSERT INTO class_vocabulary (name, kind, layer, description) VALUES
 -- the bundle inherits the new value through the token cascade.
 
 INSERT INTO class_properties (theme_slug, class_name, css_property, value) VALUES
-	('root', 'sf-depth-0', 'background', 'rgb(var(--sf-surface-0))'),
-	('root', 'sf-depth-1', 'background', 'rgb(var(--sf-surface-1))'),
-	('root', 'sf-depth-2', 'background', 'rgb(var(--sf-surface-2))'),
-	('root', 'sf-depth-3', 'background', 'rgb(var(--sf-surface-3))');
+	('root', 'sf-depth-0',   'background',  'rgb(var(--sf-surface-0))'),
+	('root', 'sf-depth-1',   'background',  'rgb(var(--sf-surface-1))'),
+	('root', 'sf-depth-2',   'background',  'rgb(var(--sf-surface-2))'),
+	('root', 'sf-depth-3',   'background',  'rgb(var(--sf-surface-3))'),
+	('root', 'sf-heading-1', 'font-size',   'var(--sf-text-4xl)'),
+	('root', 'sf-heading-1', 'line-height', 'var(--sf-leading-tight)'),
+	('root', 'sf-heading-2', 'font-size',   'var(--sf-text-2xl)'),
+	('root', 'sf-heading-2', 'line-height', 'var(--sf-leading-snug)'),
+	('root', 'sf-heading-3', 'font-size',   'var(--sf-text-xl)'),
+	('root', 'sf-heading-3', 'line-height', 'var(--sf-leading-snug)');

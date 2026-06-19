@@ -1,7 +1,7 @@
+import { SfHeading } from '@/config/editor/contentExtensions'
 import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExtension'
 import { filterNonDefaultAttrs } from '@/utils/editor/editorUtils'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import Heading from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
 import { TaskItem } from '@tiptap/extension-list'
 import Youtube from '@tiptap/extension-youtube'
@@ -19,9 +19,10 @@ function parseSelector(selector: string): {
 	requiredAttribute: string | null
 	value: string | null
 } {
-	// Match the tag name and optional attribute selector
+	// Match the tag name and optional attribute selector. Custom-element tags
+	// like `va-button` contain hyphens (HTML custom element spec requires it).
 	const match = selector.match(
-		/^(?<tag>\w+)(?:\[(?<attribute>[^\]=]+)(?:=(?<value>[^\]]+))?\])?$/,
+		/^(?<tag>[\w-]+)(?:\[(?<attribute>[^\]=]+)(?:=(?<value>[^\]]+))?\])?$/,
 	)
 
 	if (!match || !match.groups) {
@@ -120,7 +121,7 @@ function initGenerateBlueprintHTML(editor: Editor) {
 				codeBlock: false,
 				heading: false,
 			}),
-			Heading,
+			SfHeading,
 			Image,
 			// TaskItem converts data-checked to checked so we can not access the data attribute
 			// using our generic implementation that is used above for nodeViews and a few other extensions

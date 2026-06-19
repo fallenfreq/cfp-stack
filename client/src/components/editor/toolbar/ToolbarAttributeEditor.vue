@@ -104,12 +104,9 @@ const nonDefaultAttrs = computed(() =>
 	filterNonDefaultAttrs(capturedNode.value.attrs, specAttrs.value),
 )
 
-// Regular node attribute rows — 'class' is excluded because class tokens cover it.
 const attrRows = computed(() =>
 	Object.keys(specAttrs.value)
-		.filter(
-			(k) => k !== 'class' && (k in nonDefaultAttrs.value || explicitlyAdded.value.has(k)),
-		)
+		.filter((k) => k in nonDefaultAttrs.value || explicitlyAdded.value.has(k))
 		.sort()
 		.map((k) => {
 			const specDefault = specAttrs.value[k]?.default ?? null
@@ -120,9 +117,7 @@ const attrRows = computed(() =>
 
 const addableKeys = computed(() =>
 	Object.keys(specAttrs.value)
-		.filter(
-			(k) => k !== 'class' && !(k in nonDefaultAttrs.value) && !explicitlyAdded.value.has(k),
-		)
+		.filter((k) => !(k in nonDefaultAttrs.value) && !explicitlyAdded.value.has(k))
 		.sort(),
 )
 

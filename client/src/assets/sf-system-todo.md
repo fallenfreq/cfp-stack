@@ -36,6 +36,31 @@ Done so far:
 - `sf-depth-{0..3}` bundles — background-only at root (each binds to its matching
   `--sf-surface-N`). Theme colour shifts cascade through the token; no per-theme
   override rows needed.
+- `sf-heading-{1..3}` bundles — `font-size` + `line-height` at root
+  (1 → `text-4xl`/`leading-tight`, 2 → `text-2xl`/`leading-snug`,
+  3 → `text-xl`/`leading-snug`). Same posture as depth: minimal property set,
+  add weight/tracking when a consumer argues for them.
+
+Pipeline fixes uncovered while wiring sf-heading:
+
+- **Tailwind preflight was beating `sf-bundle`** — `@tailwind base` was
+  unlayered, and unlayered rules always win over any cascade layer. Preflight's
+  `h1,h2,h3 { font-size: inherit }` was silently nullifying the bundle. Fix in
+  `main.css`: wrap `@tailwind base` in a new `reset` layer declared first in
+  the layer order. Tailwind components/utilities stay unlayered so utility
+  classes still override sf-\* (intended).
+- **`htmlBlueprint.ts` `parseSelector` regex was rejecting hyphenated tags**
+  (`va-button`, etc.). Custom-element tags MUST contain a hyphen per the HTML
+  spec, but the regex used `\w+`. The code-view toggle was silently failing
+  because `initGenerateBlueprintHTML` threw during dynamic-node setup and the
+  store's watchEffect swallowed it. Two fixes: regex now `[\w-]+`, and the
+  store lazy-inits on first toggle with a try/catch that surfaces errors as
+  Vuestic toasts (mobile-friendly — no console needed).
+- **Attribute panel was filtering out `class`** (`ToolbarAttributeEditor.vue`).
+  The filter was added speculatively ("class tokens cover it") but nodes
+  without a `nodeClassTokens` entry lost the ability to edit `class` at all.
+  Filter removed — `class` is now editable alongside `style` and `id` for any
+  node that has `AllowAttributesExtension` global attrs.
 
 CSS pipeline tightening (f0949af):
 
@@ -224,7 +249,12 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
       classes are drop-in replacements for `--bg_secondary` consumers that already
       carry their own radius / shadow. Add more properties when a consumer's needs
       argue for them.
-- [ ] `sf-heading-*` bundles (`-1`, `-2`, `-3`)
+- [x] `sf-heading-*` bundles (`-1`, `-2`, `-3`) — `font-size` + `line-height` at
+      root. Wired via `SfHeading.addProseMirrorPlugins` appendTransaction in
+      `contentExtensions.ts`: keeps `attrs.class` in sync with `attrs.level`
+      (preserving other classes). `class` is the single source of truth — DOM,
+      attribute panel, and code-view roundtrip all agree. `SfHeading` is shared
+      with `htmlBlueprint.ts` so the code-view serializer matches the live editor.
 - [ ] `sf-variant-*` classes (`featured`, `subtle`, `danger`)
 - [ ] `sf-on-*` state classes (`hover`, `focus`, `active`, `disabled`)
 - [ ] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`)

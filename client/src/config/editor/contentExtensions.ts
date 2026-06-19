@@ -9,8 +9,9 @@ import Heading, { type Level } from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
 import { TaskList } from '@tiptap/extension-list'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
+import { Plugin } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
-import { mergeAttributes, type Extensions, type NodeViewRenderer } from '@tiptap/vue-3'
+import type { Extensions, NodeViewRenderer } from '@tiptap/vue-3'
 import { CodeBlockExtension } from './codeBlockExtension'
 import { registerCustomNodes } from './registerCustomNodes'
 import { YoutubeExtension } from './youtubeExtension'
@@ -19,6 +20,59 @@ interface ContentExtensionOptions {
 	tableNodeSelection?: boolean
 	codeBlockNodeView?: () => NodeViewRenderer
 }
+
+// `class` is the source of truth: an appendTransaction plugin keeps any heading
+// node's `class` attr containing exactly `sf-heading-{level}` (preserving other
+// classes the author set). This means renderHTML can stay vanilla — no computed
+// class injection — so the attribute panel, the live DOM, and code-view
+// roundtrips all see the same value.
+const SF_HEADING_CLASS_RE = /^sf-heading-\d+$/
+
+export const SfHeading = Heading.extend({
+	addOptions() {
+		return { ...this.parent?.(), levels: [1, 2, 3] as Level[] }
+	},
+	addAttributes() {
+		const parent = (this.parent?.() ?? {}) as Record<string, unknown>
+		return {
+			...parent,
+			level: {
+				...(parent.level as object),
+				...enumAttr(this.options.levels[0], this.options.levels),
+			},
+		}
+	},
+	addProseMirrorPlugins() {
+		return [
+			new Plugin({
+				appendTransaction: (_transactions, _oldState, newState) => {
+					let tr = newState.tr
+					let changed = false
+					newState.doc.descendants((node, pos) => {
+						const classAttr = node.attrs.class
+						if (typeof classAttr !== 'string') return
+						const isHeading = node.type.name === 'heading'
+						const otherClasses = classAttr
+							.split(/\s+/)
+							.filter((c) => c && !SF_HEADING_CLASS_RE.test(c))
+						const expected = isHeading
+							? [...otherClasses, `sf-heading-${node.attrs.level}`]
+							: otherClasses
+						const newClass = expected.join(' ')
+						if (newClass !== classAttr) {
+							tr = tr.setNodeMarkup(pos, undefined, {
+								...node.attrs,
+								class: newClass,
+							})
+							changed = true
+						}
+					})
+					return changed ? tr : null
+				},
+			}),
+		]
+	},
+}).configure({ levels: [1, 2, 3] })
 
 export function getContentExtensions({
 	tableNodeSelection = false,
@@ -36,38 +90,7 @@ export function getContentExtensions({
 			},
 			link: { openOnClick: 'whenNotEditable' },
 		}),
-		Heading.extend({
-			addOptions() {
-				return { ...this.parent?.(), levels: [1, 2, 3] as Level[] }
-			},
-			addAttributes() {
-				const parent = (this.parent?.() ?? {}) as Record<string, unknown>
-				return {
-					...parent,
-					level: {
-						...(parent.level as object),
-						...enumAttr(this.options.levels[0], this.options.levels),
-					},
-				}
-			},
-			renderHTML({ node, HTMLAttributes }) {
-				const level = this.options.levels.includes(node.attrs.level)
-					? node.attrs.level
-					: this.options.levels[0]
-				const classes: Record<number, string> = {
-					1: 'text-4xl',
-					2: 'text-2xl',
-					3: 'text-xl',
-				}
-				return [
-					`h${level}`,
-					mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
-						class: classes[level],
-					}),
-					0,
-				]
-			},
-		}).configure({ levels: [1, 2, 3] }),
+		SfHeading,
 		Image,
 		Table.configure({
 			allowTableNodeSelection: tableNodeSelection,
