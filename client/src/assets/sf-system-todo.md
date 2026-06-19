@@ -37,6 +37,29 @@ Done so far:
   `--sf-surface-N`). Theme colour shifts cascade through the token; no per-theme
   override rows needed.
 
+CSS pipeline tightening (f0949af):
+
+- `@layer` declaration hoisted to the top of `main.css` (before the `@imports`).
+  The minifier had been reconciling source order, but the source is now spec-correct.
+- `vite.config.ts` pins `build.cssTarget` to chrome87/edge88/firefox78/safari14 so
+  esbuild keeps `(max-width: …)` syntax in `@media`. `@container` queries still
+  emit range syntax `(width<=…)` — esbuild doesn't downgrade those, but Chrome 105+
+  is required for container queries either way so it's a non-issue.
+- `ColorPicker.vue` null-guards `snapToStep` (returns `AlphaStep | null` since
+  a278e15). The missing guard was breaking type-check, which killed the build
+  watch; wrangler kept serving the previous good chunks (pre-rename CSS with
+  stale `var(--radius-*)` refs that resolved to nothing). When debugging visual
+  regressions, always check that `pnpm dev`'s build half hasn't silently failed.
+
+Known gap not in this slice:
+
+- **Saved page content in D1 still carries pre-rename class tokens**
+  (`sf-radius-md`, `sf-collapse-xs`, etc.). The CSS no longer defines those
+  rules, so existing saved pages render unstyled when loaded by slug. Workaround:
+  load with `?seed=true` to bypass `store.loadPage()` and re-parse
+  `initialContent.html` instead. Per-user decision whether to write a migration
+  or just reseed.
+
 Done in the editor + cleanup slice:
 
 - Editor migrated to `--sf-*` vocabulary end-to-end: `extractCssVars` reads both
