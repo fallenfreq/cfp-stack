@@ -93,7 +93,9 @@ const freeformHex = ref('#000000')
 
 const alphaIndex = computed(() => {
 	const idx = ALPHA_STEPS.findIndex((s) => s.value === alpha.value)
-	return idx >= 0 ? idx : ALPHA_STEPS.indexOf(snapToStep(alpha.value))
+	if (idx >= 0) return idx
+	const snapped = snapToStep(alpha.value)
+	return snapped ? ALPHA_STEPS.indexOf(snapped) : -1
 })
 
 const activeFamily = computed<PaletteFamily | undefined>(() =>
@@ -134,13 +136,15 @@ watch(
 			if (found) {
 				familyKey.value = found.family.key
 				shadeIndex.value = found.shadeIndex
-				alpha.value = snapToStep(parsed.alpha).value
+				const snapped = snapToStep(parsed.alpha)
+				if (snapped) alpha.value = snapped.value
 				mode.value = 'palette'
 			}
 		} else {
 			const hex = (n: number) => n.toString(16).padStart(2, '0')
 			freeformHex.value = `#${hex(parsed.r)}${hex(parsed.g)}${hex(parsed.b)}`
-			alpha.value = snapToStep(parsed.a).value
+			const snapped = snapToStep(parsed.a)
+			if (snapped) alpha.value = snapped.value
 			mode.value = 'freeform'
 		}
 	},

@@ -13,6 +13,12 @@ import { defineConfig } from 'vite'
 export default defineConfig({
 	build: {
 		outDir: '../api/client_dist',
+		// Esbuild's CSS minifier rewrites `(max-width: X)` to range syntax
+		// `(width <= X)` when the target supports it. Range syntax landed in
+		// Chrome 104 / Safari 16.4 / Firefox 110; older browsers silently
+		// drop the rule. Pinning cssTarget below those versions keeps the
+		// traditional media-feature syntax in the bundle.
+		cssTarget: ['chrome87', 'edge88', 'firefox78', 'safari14'],
 	},
 	css: {
 		preprocessorOptions: {

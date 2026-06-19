@@ -1,10 +1,13 @@
+/* Layer order must be declared before any @layer block runs, otherwise the
+   first imported block establishes the order implicitly and the explicit
+   declaration becomes a no-op for layers it tries to put earlier. */
+@layer sf-bundle, sf-variant, sf-semantic, sf-utility, sf-state;
+
 @import './base.css';
 @import './generated-tokens.css';
 @import './generated-classes.css';
 @import './generated-editor-classes.css';
 @import './sf-tokens.css';
-
-@layer sf-bundle, sf-variant, sf-semantic, sf-utility, sf-state;
 
 @tailwind base;
 @tailwind components;
