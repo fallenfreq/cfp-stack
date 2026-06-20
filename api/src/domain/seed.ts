@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { classVocabulary, themes } from '../schemas/theme.js'
 import { users } from '../schemas/user.js'
 import { addVocabularyEntry, createClassRule } from './classRules.js'
+import { setCollapseThreshold } from './collapseThresholds.js'
 import { createTheme } from './themes.js'
 import { setToken } from './themeTokens.js'
 import { type ClassKind, type Db, type TokenKind } from './types.js'
@@ -19,7 +20,11 @@ const PINK_ID = '01000000-0000-7000-8000-000000000002'
 
 // ─── Token data ──────────────────────────────────────────────────────────
 
-interface TokenSpec { name: string; value: string; kind: TokenKind }
+interface TokenSpec {
+	name: string
+	value: string
+	kind: TokenKind
+}
 
 const ROOT_TOKENS: TokenSpec[] = [
 	// Text sizes
@@ -66,11 +71,6 @@ const ROOT_TOKENS: TokenSpec[] = [
 
 	// Shadow opacity (theme-character knob)
 	{ name: '--sf-shadow-opacity', value: '0.12', kind: 'number' },
-
-	// Container breakpoints
-	{ name: '--sf-breakpoint-xs', value: '380px', kind: 'length' },
-	{ name: '--sf-breakpoint-sm', value: '640px', kind: 'length' },
-	{ name: '--sf-breakpoint-md', value: '768px', kind: 'length' },
 
 	// Primary palette
 	{ name: '--sf-primary-1', value: '209 250 229', kind: 'color-triplet' },
@@ -205,6 +205,52 @@ const VOCABULARY: VocabSpec[] = [
 	},
 	{ name: 'sf-variant-subtle', kind: 'variant', description: 'Deemphasised, secondary' },
 	{ name: 'sf-variant-danger', kind: 'variant', description: 'Destructive or warning' },
+
+	// State classes — vocabulary only; rules are compound (depth/variant × state) added per-theme
+	{
+		name: 'sf-on-hover',
+		kind: 'state',
+		pseudo: ':hover',
+		description: 'Hover interaction modifier',
+	},
+	{
+		name: 'sf-on-focus',
+		kind: 'state',
+		pseudo: ':focus-visible',
+		description: 'Keyboard-focus interaction modifier',
+	},
+	{
+		name: 'sf-on-active',
+		kind: 'state',
+		pseudo: ':active',
+		description: 'Active/pressed interaction modifier',
+	},
+	{ name: 'sf-on-disabled', kind: 'state', pseudo: null, description: 'Disabled state modifier' },
+
+	// Layout primitives
+	{ name: 'sl-stack', kind: 'layout', description: 'Vertical flex stack' },
+	{ name: 'sl-cluster', kind: 'layout', description: 'Horizontal flex wrap' },
+	{ name: 'sl-columns', kind: 'layout', description: 'Equal or custom-ratio grid columns' },
+	{ name: 'sl-split', kind: 'layout', description: 'Fixed + flexible two-column split' },
+	{ name: 'sl-center', kind: 'layout', description: 'Centered max-width block' },
+	{ name: 'sl-grid', kind: 'layout', description: 'Auto-responsive grid' },
+
+	// Collapse modifiers — vocabulary only; CSS is generated from breakpoint token values (no var() in @container)
+	{
+		name: 'sl-collapse-xs',
+		kind: 'layout',
+		description: 'Collapse to single column below xs breakpoint',
+	},
+	{
+		name: 'sl-collapse-sm',
+		kind: 'layout',
+		description: 'Collapse to single column below sm breakpoint',
+	},
+	{
+		name: 'sl-collapse-md',
+		kind: 'layout',
+		description: 'Collapse to single column below md breakpoint',
+	},
 ]
 
 // ─── Rules (root theme defaults) ─────────────────────────────────────────
@@ -212,7 +258,11 @@ const VOCABULARY: VocabSpec[] = [
 // property set. Compound rules (e.g., per-bundle variant specialisation)
 // can be added per-theme without touching these.
 
-interface RuleSpec { classNames: string[]; cssProperty: string; value: string }
+interface RuleSpec {
+	classNames: string[]
+	cssProperty: string
+	value: string
+}
 
 const ROOT_RULES: RuleSpec[] = [
 	// Depth — background only; consumers carry their own radius/shadow
@@ -232,6 +282,64 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-heading-2'], cssProperty: 'line-height', value: 'var(--sf-leading-snug)' },
 	{ classNames: ['sf-heading-3'], cssProperty: 'font-size', value: 'var(--sf-text-xl)' },
 	{ classNames: ['sf-heading-3'], cssProperty: 'line-height', value: 'var(--sf-leading-snug)' },
+
+	// sl-stack
+	{ classNames: ['sl-stack'], cssProperty: 'display', value: 'flex' },
+	{ classNames: ['sl-stack'], cssProperty: 'flex-direction', value: 'column' },
+	{ classNames: ['sl-stack'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
+	{ classNames: ['sl-stack'], cssProperty: 'container-type', value: 'inline-size' },
+
+	// sl-cluster
+	{ classNames: ['sl-cluster'], cssProperty: 'display', value: 'flex' },
+	{ classNames: ['sl-cluster'], cssProperty: 'flex-wrap', value: 'wrap' },
+	{
+		classNames: ['sl-cluster'],
+		cssProperty: 'gap',
+		value: 'var(--sf-gap, var(--sf-spacing-md))',
+	},
+	{ classNames: ['sl-cluster'], cssProperty: 'align-items', value: 'center' },
+	{ classNames: ['sl-cluster'], cssProperty: 'container-type', value: 'inline-size' },
+
+	// sl-columns
+	{ classNames: ['sl-columns'], cssProperty: 'display', value: 'grid' },
+	{
+		classNames: ['sl-columns'],
+		cssProperty: 'grid-template-columns',
+		value: 'var(--sl-cols, repeat(auto-fit, minmax(0, 1fr)))',
+	},
+	{
+		classNames: ['sl-columns'],
+		cssProperty: 'gap',
+		value: 'var(--sf-gap, var(--sf-spacing-md))',
+	},
+	{ classNames: ['sl-columns'], cssProperty: 'container-type', value: 'inline-size' },
+
+	// sl-split
+	{ classNames: ['sl-split'], cssProperty: 'display', value: 'grid' },
+	{ classNames: ['sl-split'], cssProperty: 'grid-template-columns', value: 'auto 1fr' },
+	{ classNames: ['sl-split'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
+	{ classNames: ['sl-split'], cssProperty: 'align-items', value: 'start' },
+	{ classNames: ['sl-split'], cssProperty: 'container-type', value: 'inline-size' },
+
+	// sl-center
+	{ classNames: ['sl-center'], cssProperty: 'max-width', value: 'var(--sl-measure, 65ch)' },
+	{ classNames: ['sl-center'], cssProperty: 'margin-inline', value: 'auto' },
+	{
+		classNames: ['sl-center'],
+		cssProperty: 'padding-inline',
+		value: 'var(--sf-padding, var(--sf-spacing-md))',
+	},
+	{ classNames: ['sl-center'], cssProperty: 'container-type', value: 'inline-size' },
+
+	// sl-grid
+	{ classNames: ['sl-grid'], cssProperty: 'display', value: 'grid' },
+	{
+		classNames: ['sl-grid'],
+		cssProperty: 'grid-template-columns',
+		value: 'repeat(auto-fit, minmax(var(--sl-min, 250px), 1fr))',
+	},
+	{ classNames: ['sl-grid'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
+	{ classNames: ['sl-grid'], cssProperty: 'container-type', value: 'inline-size' },
 
 	// Variants — minimal property set; themes can extend per-bundle compound rules
 	{
@@ -260,6 +368,16 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
 ]
+
+// ─── Collapse thresholds ─────────────────────────────────────────────────
+// System config — not theme data. Seeded idempotently (upsert); not wiped
+// by wipeDesignSystem so user edits survive a theme reseed.
+
+const COLLAPSE_THRESHOLDS = [
+	{ name: 'xs', value: '380px' },
+	{ name: 'sm', value: '640px' },
+	{ name: 'md', value: '768px' },
+] as const
 
 // ─── Orchestrator ────────────────────────────────────────────────────────
 
@@ -291,6 +409,7 @@ export interface SeedSummary {
 	tokensSet: number
 	vocabularyEntries: number
 	rulesCreated: number
+	collapseStepsSeeded: number
 }
 
 export async function seed(db: Db): Promise<SeedSummary> {
@@ -346,11 +465,16 @@ export async function seed(db: Db): Promise<SeedSummary> {
 		rulesCreated++
 	}
 
+	for (const t of COLLAPSE_THRESHOLDS) {
+		await setCollapseThreshold(db, t.name, t.value)
+	}
+
 	return {
 		brandUserId,
 		themesCreated: 3,
 		tokensSet,
 		vocabularyEntries: VOCABULARY.length,
 		rulesCreated,
+		collapseStepsSeeded: COLLAPSE_THRESHOLDS.length,
 	}
 }

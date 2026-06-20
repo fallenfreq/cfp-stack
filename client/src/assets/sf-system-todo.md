@@ -5,54 +5,31 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
-**Schema + domain layer + runtime generator done. Next: apply migration, seed, verify `/styles/sf-system` output.**
+**Everything through `sl-*` layout + collapse is done. Next: reseed local DB, verify `/styles/sf-system` output.**
 
-Schema (`api/src/schemas/theme.ts`) reshaped end-to-end:
+What's in place (migration 0008):
 
-- `themes` UUID-keyed with `version` (semver) + `name` + `activation_class` (UNIQUE) +
-  `is_root` + `created_by` (FK users). One-root invariant enforced in domain.
-- `theme_tokens` FK to `theme_id`.
-- `class_vocabulary` lost `layer`, gained `pseudo` (`:hover` on state classes etc.).
-  Kind ∈ `'bundle'|'variant'|'state'|'layout'`; layer derived from kind at emit.
-- New `class_rules` + `class_rule_classes` junction replace `class_properties`. A rule's
-  selector is the canonical join of its classes (sorted by kind: bundle < variant < state)
-  plus any pseudo from state classes. Junction FK on `class_name` enforces vocabulary
-  membership at the DB level.
-- New `user_theme_aliases(user_id, theme_id, local_name)` registry — per-user local
-  naming, UNIQUE (user_id, local_name). Doesn't affect global identity.
+- Theme schema (`api/src/schemas/theme.ts`): `themes`, `theme_tokens`, `class_vocabulary`,
+  `class_rules`, `class_rule_classes`, `user_theme_aliases` — all done.
+- Layout schema (`api/src/schemas/layout.ts`): `collapse_thresholds(name, value, updated_at)` —
+  system config separate from theme tables; user-editable, not wiped on reseed.
+- Domain layer (`api/src/domain/`): `themes`, `themeTokens`, `classRules`,
+  `collapseThresholds`, `seed` — all done.
+- Runtime CSS generator (`api/src/domain/generateCss.ts`): reads all tables at request time,
+  emits full stylesheet. Cached in-isolate by `themeSignature` (covers all tables incl.
+  `collapse_thresholds`). ETag + `Cache-Control: public, max-age=60`.
+- Seed (`seed.run` admin tRPC): Root/Dark/Pink themes + all tokens + full vocabulary
+  (depth, heading, variants, state classes, layout primitives, collapse modifiers) +
+  rules for depth/heading/variants/layout. Collapse thresholds seeded idempotently.
+- `--sf-breakpoint-*` removed from tokens entirely; "breakpoint" term dropped.
+  Collapse thresholds live in `collapse_thresholds` table; generator embeds pixel
+  values directly in `@container` conditions.
 
-Migration: `api/migrations/0007_silky_grim_reaper.sql` hand-rewritten as a clean
-drop+recreate (drizzle's auto-generated version hit SQLite ALTER limits and was full of
-unrunnable comment blocks). Snapshot from drizzle matches the end state; the next
-`pnpm migrate:api` produces no diff.
+### To resume here:
 
-Domain layer (`api/src/domain/`) is the single writer; seed + API both go through it:
-
-- `errors.ts`, `types.ts`, `themes.ts`, `themeTokens.ts`, `classRules.ts`, `seed.ts`
-- `createClassRule` validates: ≥1 class, no dupes within rule, valid CSS property,
-  theme exists, all classes in vocab, ≤1 class per kind, no duplicate
-  (theme, class-set, property).
-- Seed orchestrator: `ensureBrandUser('michael@somefreq.com' / 'somefreq')` →
-  `wipeDesignSystem` (deletes themes, cascades to tokens/rules/junction/aliases;
-  then deletes vocabulary) → recreate Root/Dark/Pink with hardcoded UUIDs →
-  set tokens → add vocabulary (depth, heading, **variants**) → create rules
-  (depth backgrounds, heading sizes, **variant defaults**).
-
-Seed runs via admin tRPC mutation `seed.run`
-(`api/src/routes/seed/router.ts` → wired into `appRouter`).
-
-**Variant slice — data is in:** `--sf-danger` semantic token (root only; themes can
-override later), `sf-variant-{featured,subtle,danger}` vocabulary entries + root rules
-(featured: bg primary + fg inverted; subtle: fg primary at alpha-6; danger: bg danger +
-fg inverted). **CSS not yet generated** — generator still reads the old schema.
-
-### To resume here, in order:
-
-1. `pnpm migrate:push:local:api` — apply 0007 (drops existing seed data; expected).
-2. `pnpm dev:api`; hit `POST /trpc/seed.run` with an admin token — populates DB
-   through the domain layer.
-3. Open `http://localhost:8788/styles/sf-system` — verify token blocks, bundle/variant
-   layer blocks, and editor-pairing classes are all present.
+1. `pnpm dev:api`; hit `POST /trpc/seed.run` with an admin token — populates DB.
+2. Open `http://localhost:8788/styles/sf-system` — verify token blocks, bundle/variant/
+   layout layer blocks, collapse `@container` blocks, and editor-pairing classes.
 
 Done (generator slice):
 
@@ -312,10 +289,13 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
       (preserving other classes). `class` is the single source of truth — DOM,
       attribute panel, and code-view roundtrip all agree. `SfHeading` is shared
       with `htmlBlueprint.ts` so the code-view serializer matches the live editor.
-- [ ] `sf-variant-*` classes (`featured`, `subtle`, `danger`)
-- [ ] `sf-on-*` state classes (`hover`, `focus`, `active`, `disabled`)
-- [ ] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`)
-- [ ] `sl-collapse-*` container-responsive collapse classes
+- [x] `sf-variant-*` classes (`featured`, `subtle`, `danger`) — seeded in prior slice
+- [ ] `sf-on-*` state classes (`hover`, `focus`, `active`, `disabled`) — vocabulary added;
+      rules are deliberately deferred (state rules must be compound: depth/variant × state)
+- [x] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`) — vocabulary + rules in seed
+- [x] `sl-collapse-*` container-responsive collapse classes — vocabulary in seed;
+      CSS generated from `collapse_steps` table (DB-stored px values, not theme tokens;
+      `var()` is not valid in `@container` conditions so values are read at emit time)
 - [ ] **Migrate `--bg_secondary` consumers to `sf-depth-1`** — ~22 files. The
       solid-background uses (`rgb(var(--bg_secondary))`) become the `sf-depth-1`
       class directly. Translucent uses (`rgba(var(--bg_secondary) / var(--sf-alpha-9))`

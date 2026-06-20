@@ -1,4 +1,5 @@
 import { count, max } from 'drizzle-orm'
+import { collapseThresholds } from '../schemas/layout.js'
 import {
 	type Theme,
 	type ThemeToken,
@@ -8,6 +9,7 @@ import {
 	themes,
 } from '../schemas/theme.js'
 import { type ClassRuleWithClasses, listAllRules } from './classRules.js'
+import { type CollapseThreshold, listCollapseThresholds } from './collapseThresholds.js'
 import { ValidationError } from './errors.js'
 import { listAllTokens } from './themeTokens.js'
 import { getRootThemeOrThrow, listThemes } from './themes.js'
@@ -20,10 +22,11 @@ import { type ClassKind, type Db, KIND_SORT_ORDER, KIND_TO_LAYER, type Layer } f
 
 export async function emitStylesheet(db: Db): Promise<string> {
 	const rootTheme = await getRootThemeOrThrow(db)
-	const [themesList, allTokens, allRules] = await Promise.all([
+	const [themesList, allTokens, allRules, collapseThresholds] = await Promise.all([
 		listThemes(db),
 		listAllTokens(db),
 		listAllRules(db),
+		listCollapseThresholds(db),
 	])
 
 	const tokensByTheme = groupTokensByTheme(allTokens)
@@ -43,12 +46,16 @@ export async function emitStylesheet(db: Db): Promise<string> {
 		emitUtilityLayer(buckets),
 		emitRichLayer('sf-state', themesList, rootTheme, rulesByLayer),
 		emitRichLayer('sl-layout', themesList, rootTheme, rulesByLayer),
+		emitCollapseLayer(collapseThresholds),
 		emitEditorLayer(buckets),
 	]
 	return sections.filter((s) => s.length > 0).join('\n')
 }
 
-export interface CachedCss { css: string; etag: string }
+export interface CachedCss {
+	css: string
+	etag: string
+}
 
 let cache: { signature: string; result: CachedCss } | null = null
 
@@ -67,7 +74,7 @@ export async function getStylesheet(db: Db): Promise<CachedCss> {
 // (vocabCount), and any theme-scoped value edit (themeMax — bumped by
 // `touchTheme` from token/rule mutators).
 export async function themeSignature(db: Db): Promise<string> {
-	const [themeAgg, tokenAgg, vocabAgg, ruleAgg] = await Promise.all([
+	const [themeAgg, tokenAgg, vocabAgg, ruleAgg, collapseThresholdAgg] = await Promise.all([
 		db
 			.select({ max: max(themes.updatedAt), count: count() })
 			.from(themes)
@@ -75,14 +82,19 @@ export async function themeSignature(db: Db): Promise<string> {
 		db.select({ count: count() }).from(themeTokens).get(),
 		db.select({ count: count() }).from(classVocabulary).get(),
 		db.select({ count: count() }).from(classRules).get(),
+		db
+			.select({ max: max(collapseThresholds.updatedAt), count: count() })
+			.from(collapseThresholds)
+			.get(),
 	])
 	// Drizzle types `.get()` as `T | undefined`, but aggregate queries
 	// always return exactly one row. Narrow with a throw.
-	if (!themeAgg || !tokenAgg || !vocabAgg || !ruleAgg)
+	if (!themeAgg || !tokenAgg || !vocabAgg || !ruleAgg || !collapseThresholdAgg)
 		throw new Error('themeSignature: aggregate query returned no row')
 
 	const maxMs = themeAgg.max === null ? 0 : themeAgg.max.getTime()
-	return `${maxMs}.${themeAgg.count}.${tokenAgg.count}.${vocabAgg.count}.${ruleAgg.count}`
+	const collapseMs = collapseThresholdAgg.max === null ? 0 : collapseThresholdAgg.max.getTime()
+	return `${maxMs}.${themeAgg.count}.${tokenAgg.count}.${vocabAgg.count}.${ruleAgg.count}.${collapseMs}.${collapseThresholdAgg.count}`
 }
 
 // ─── Header ─────────────────────────────────────────────────────────────
@@ -117,7 +129,10 @@ function emitTokenBlocks(themesList: Theme[], tokensByTheme: Map<string, ThemeTo
 
 // ─── Token classification (drives auto-derived classes) ──────────────────
 
-interface BucketEntry { suffix: string; name: string }
+interface BucketEntry {
+	suffix: string
+	name: string
+}
 interface Buckets {
 	palette: BucketEntry[]
 	semantic: BucketEntry[]
@@ -142,7 +157,7 @@ function stepOf(suffix: string): string {
 
 function familyOf(suffix: string): string {
 	const m = suffix.match(/^([a-z]+(?:_[a-z]+)?)(?:[-_].*)?$/)
-	return m ? m[1] : suffix
+	return m?.[1] ?? suffix
 }
 
 const TRIPLET = /^\s*\d+\s+\d+\s+\d+\s*$/
@@ -163,8 +178,6 @@ function classifyTokens(rootTokens: ThemeToken[]): Buckets {
 	}
 	for (const tk of rootTokens) {
 		const suffix = suffixOf(tk.name)
-		// Editor/component introspection tokens that emit no class.
-		if (suffix.startsWith('breakpoint-')) continue
 		if (suffix === 'shadow-opacity') continue
 
 		const entry: BucketEntry = { suffix, name: tk.name }
@@ -193,7 +206,10 @@ function classifyTokens(rootTokens: ThemeToken[]): Buckets {
 
 // ─── Rule grouping (for rich-class emission) ─────────────────────────────
 
-interface CssProp { property: string; value: string }
+interface CssProp {
+	property: string
+	value: string
+}
 type LayerRules = Map<string, Map<string, CssProp[]>>
 // themeId → selector → properties
 
@@ -359,6 +375,30 @@ const util = (e: BucketEntry, property: string): string =>
 
 const section = (title: string): string =>
 	`\t/* ── ${title} ─────────────────────────────────────────── */\n`
+
+// ─── Collapse layer ──────────────────────────────────────────────────────
+// sl-collapse-* is vocabulary-only in the DB (var() is not valid in @container
+// conditions). CSS is generated here from the resolved breakpoint token values
+// so the pixel widths can be embedded directly in @container conditions.
+// Each collapsible layout primitive gets a compound selector per breakpoint.
+
+const COLLAPSE_GRID = ['.sl-columns', '.sl-split', '.sl-grid']
+const COLLAPSE_FLEX = ['.sl-cluster']
+
+function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
+	if (collapseThresholds.length === 0) return ''
+
+	let body = ''
+	for (const { name, value } of collapseThresholds) {
+		const gridSels = COLLAPSE_GRID.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')
+		const flexSels = COLLAPSE_FLEX.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')
+		body += `\t@container (width <= ${value}) {\n`
+		body += `${gridSels} { grid-template-columns: 1fr; }\n`
+		body += `${flexSels} { flex-direction: column; align-items: stretch; }\n`
+		body += '\t}\n'
+	}
+	return `@layer sl-layout {\n${body}}\n`
+}
 
 function emitEditorLayer(b: Buckets): string {
 	if (b.palette.length === 0 && b.alpha.length === 0) return ''
