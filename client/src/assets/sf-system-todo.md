@@ -5,7 +5,7 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
-**Everything through `sl-*` layout + collapse is done. Next: reseed local DB, verify `/styles/sf-system` output.**
+**Layout component migration in progress. Next: reseed local DB, verify `/styles/sf-system` output, then work through the pending items below.**
 
 What's in place (migration 0008):
 
@@ -278,11 +278,10 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
 
 ## Implement missing class families
 
-- [x] `sf-depth-*` bundles (`-0`, `-1`, `-2`, `-3`) — background only; bundle
-      properties beyond background (shadow, radius) intentionally deferred so the
-      classes are drop-in replacements for `--bg_secondary` consumers that already
-      carry their own radius / shadow. Add more properties when a consumer's needs
-      argue for them.
+- [x] `sf-depth-*` bundles (`-0`, `-1`, `-2`, `-3`) — depth-0 is background only (canvas,
+      no elevation). depth-1..3 carry background + shadow + radius; shadow escalates
+      (md → lg → xl) and depth-3 gets a larger radius. Dark theme overrides the full
+      surface palette (surface-0..9) so elevated surfaces lighten against the dark canvas.
 - [x] `sf-heading-*` bundles (`-1`, `-2`, `-3`) — `font-size` + `line-height` at
       root. Wired via `SfHeading.addProseMirrorPlugins` appendTransaction in
       `contentExtensions.ts`: keeps `attrs.class` in sync with `attrs.level`
@@ -290,8 +289,27 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
       attribute panel, and code-view roundtrip all agree. `SfHeading` is shared
       with `htmlBlueprint.ts` so the code-view serializer matches the live editor.
 - [x] `sf-variant-*` classes (`featured`, `subtle`, `danger`) — seeded in prior slice
-- [ ] `sf-on-*` state classes (`hover`, `focus`, `active`, `disabled`) — vocabulary added;
-      rules are deliberately deferred (state rules must be compound: depth/variant × state)
+- [ ] `sf-size-*` bundles (`xs`, `sm`, `md`, `lg`, `xl`) — intended form factor; sets
+      proportional visual properties (padding, border-radius, etc.). Seed vocabulary +
+      rules; design pass needed to decide which properties each step sets.
+- [ ] `sf-rank-*` bundles (`-1`, `-2`, `-3`) — absolute attention-weight scale; no relative-to-siblings
+      assumption. Theme decides which CSS properties express each level (scale, padding, type weight,
+      contrast, or a combination). Start with a minimal property set and add per consumer need, same
+      posture as `sf-depth-*`. Seed vocabulary + rules; no editor wiring needed until a content-author
+      picker is designed.
+- [ ] `sf-edge-*` / `sf-divide-*` boundary classes — `sf-edge-{top,bottom,left,right,x,y,edge}` on
+      the element itself; `sf-divide-{x,y}` on the parent targeting `> * + *`. Both in `sf-semantic`
+      layer; theme decides full treatment (line, shadow, tint, spacing increase). Seed vocabulary +
+      rules.
+- [x] `sf-context` kind + `sf-is-overflow-start`/`sf-is-overflow-end` — ClassKind,
+      Layer, sort order, and generator support added. Vocabulary + rules seeded (mask-image
+      gradients; compound rule for both-edges case). `OverflowRow.vue` migrated from
+      inline `maskStyle` computed to `sf-is-*` classes on the scroller element.
+- [ ] `sf-on-*` state class rules — vocabulary is seeded, but rules require compound selectors.
+      There are **no bare defaults**: a hover rule without depth/variant context doesn't know which
+      surface it's modifying. The full matrix must be seeded explicitly: - `sf-depth-{0..3}` × `sf-on-{hover,focus,active,disabled}` (16 selector groups) - `sf-variant-{featured,subtle,danger}` × `sf-on-{hover,focus,active,disabled}` (12 selector groups) - Triple compounds (`sf-depth-N` + `sf-variant-X` + `sf-on-*`) only if the theme needs them.
+      Each group carries a design decision: what CSS property changes for hover on surface-1 vs surface-3?
+      A design pass is needed before touching code — see spec example in `sf-system.md` for the pattern.
 - [x] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`) — vocabulary + rules in seed
 - [x] `sl-collapse-*` container-responsive collapse classes — vocabulary in seed;
       CSS generated from `collapse_steps` table (DB-stored px values, not theme tokens;
@@ -304,13 +322,43 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
       the use site, not the bundle. Removing `.sf-bg_secondary` from
       `sf-tokens.css` and `--bg_secondary` from `base.css` falls out of this slice.
 
+## System design gaps (known, intentional for now)
+
+These are not bugs but unresolved tensions in the current design:
+
+- **Raw token refs in component CSS** — many components still reference `--border_color`,
+  `--primary`, `--bg_secondary` etc. directly in their CSS. The correct approach is for
+  components to use the class system (`sf-variant-*`, `sf-on-*`, depth bundles) rather than
+  raw tokens, so themes can change the class definitions without touching component code.
+  However, the class system doesn't yet have equivalents for everything (e.g. no "add a
+  themed border" class, no "floating-surface at 90% opacity" class). These components must
+  stay on raw tokens until the right higher-level class exists.
+- **`--bg_secondary` migration** — cannot be replaced with a raw `--sf-surface-*` token
+  because surface-N is just a numbered color slot, not a semantic "secondary surface" token.
+  The right migration is to add the appropriate `sf-depth-N` bundle class to elements that
+  match that depth level, and remove their explicit background CSS. Elements that need
+  translucency (floating toolbars, drag handles) have no sf class equivalent yet.
+- **Variant rules overriding bundle properties** — `sf-variant-outlined` and `sf-variant-plain`
+  on LayoutCard use temporary in-component CSS to reset `box-shadow`/`background` that
+  `sf-depth-1` sets. Once these enter the DB as proper variant rules, the in-component CSS
+  can be removed.
+
 ## Editor + Vue components
 
 - [x] ~~`nodeClassTokens.ts:21` uses prefix `sf-collapse-`. Collapse is arrangement →
       should be `sl-collapse-`.~~ Done — also updated `LayoutColumns.vue`,
       `LayoutSplit.vue`, and `initialContent.html`.
-- [ ] Vue layout components currently use bare class names that predate the system: - `LayoutCard.vue` — `layout-card`, `variant-elevated`/`outlined`/`filled`/`plain`/`feature` - `LayoutSection.vue` — `layout-section` - `LayoutColumns.vue` — `layout-columns` - `LayoutSplit.vue` — `layout-split` - `LayoutCenter.vue` — `layout-center`
-      Migrate to apply `sl-*` for arrangement and `sf-*` for appearance/variant.
+- [x] `LayoutCard.vue` — `sf-depth-1` added to root; variant prop now applies `sf-variant-${variant}`
+      class; `feature` → `featured` rename; in-component CSS for `sf-variant-featured` removed
+      (DB handles it); remaining variants (`elevated`, `outlined`, `filled`) keep temporary
+      in-component CSS until their depth/variant rules enter the DB.
+- [x] Layout components now carry `sl-*` identity class alongside `layout-*` (which stays as
+      the `:global` CSS hook): `LayoutSection` → `sl-stack`, `LayoutColumns` → `sl-columns`,
+      `LayoutSplit` → `sl-split`, `LayoutCenter` → `sl-center`. The DB-generated `sl-*` CSS
+      applies to the root div (harmless — root has one child so flex/grid has no visual effect
+      there); the real layout CSS targets `> [data-node-view-content]` via `:global`.
+      Full migration (removing `layout-*` class and `:global` CSS) requires restructuring
+      the content-wrapper pattern so `sl-*` classes can be applied directly to the layout div.
 - [ ] `LayoutCard.vue:32` references `--bg_secondary` directly. Once `sf-depth-*`
       bundles exist, the card should wear `sf-depth-1` and inherit its background
       from there.
