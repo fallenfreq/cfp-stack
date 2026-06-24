@@ -1,15 +1,12 @@
 <template>
-	<div
-		class="overflow-row"
-		:class="{
-			'has-overflow-left': overflow.left,
-			'has-overflow-right': overflow.right,
-		}"
-	>
+	<div class="overflow-row">
 		<div
 			ref="scrollerEl"
 			class="overflow-row__scroller"
-			:style="maskStyle"
+			:class="{
+				'sf-is-overflow-start': overflow.start,
+				'sf-is-overflow-end': overflow.end,
+			}"
 			@scroll.passive="syncOverflow"
 		>
 			<slot />
@@ -18,14 +15,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
 	refreshKey?: unknown
 }>()
 
 const scrollerEl = ref<HTMLElement | null>(null)
-const overflow = ref({ left: false, right: false })
+const overflow = ref({ start: false, end: false })
 
 const OVERFLOW_EPSILON = 2
 
@@ -35,8 +32,8 @@ const syncOverflow = () => {
 
 	const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth
 	overflow.value = {
-		left: scroller.scrollLeft > OVERFLOW_EPSILON,
-		right: maxScrollLeft - scroller.scrollLeft > OVERFLOW_EPSILON,
+		start: scroller.scrollLeft > OVERFLOW_EPSILON,
+		end: maxScrollLeft - scroller.scrollLeft > OVERFLOW_EPSILON,
 	}
 }
 
@@ -44,18 +41,6 @@ const refreshOverflow = async () => {
 	await nextTick()
 	syncOverflow()
 }
-
-const maskStyle = computed(() => {
-	const { left, right } = overflow.value
-	if (left && right)
-		return {
-			maskImage:
-				'linear-gradient(to right, transparent, black 60px, black calc(100% - 60px), transparent)',
-		}
-	if (left) return { maskImage: 'linear-gradient(to right, transparent, black 60px)' }
-	if (right) return { maskImage: 'linear-gradient(to left, transparent, black 60px)' }
-	return {}
-})
 
 onMounted(refreshOverflow)
 
@@ -87,21 +72,21 @@ watch(() => props.refreshKey, refreshOverflow)
 	left: 8px;
 	border-top: 4px solid transparent;
 	border-bottom: 4px solid transparent;
-	border-right: 5px solid rgba(var(--text_primary) / var(--sf-alpha-5));
+	border-right: 5px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-5));
 }
 
 .overflow-row::after {
 	right: 8px;
 	border-top: 4px solid transparent;
 	border-bottom: 4px solid transparent;
-	border-left: 5px solid rgba(var(--text_primary) / var(--sf-alpha-5));
+	border-left: 5px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-5));
 }
 
-.overflow-row.has-overflow-left::before {
+.overflow-row:has(.sf-is-overflow-start)::before {
 	opacity: 1;
 }
 
-.overflow-row.has-overflow-right::after {
+.overflow-row:has(.sf-is-overflow-end)::after {
 	opacity: 1;
 }
 

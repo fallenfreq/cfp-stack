@@ -95,6 +95,7 @@ export interface CreateClassRuleInput {
 	classNames: string[]
 	cssProperty: string
 	value: string
+	pseudo?: string | null
 }
 
 const CSS_PROPERTY_RE = /^[a-z][a-z0-9-]*$/
@@ -135,6 +136,9 @@ function assertAllClassesExist(vocab: ClassVocabulary[], classNames: string[]): 
 function assertAtMostOneClassPerKind(vocab: ClassVocabulary[]): void {
 	const seen = new Map<string, string>()
 	for (const v of vocab) {
+		// State and context classes may be compounded freely — rules can require
+		// multiple simultaneous conditions (e.g. sf-is-overflow-start + sf-is-overflow-end).
+		if (v.kind === 'state' || v.kind === 'context') continue
 		const prev = seen.get(v.kind)
 		if (prev)
 			throw new ValidationError(
@@ -149,27 +153,32 @@ async function assertNoDuplicateRule(
 	themeId: string,
 	classNames: string[],
 	cssProperty: string,
+	pseudo: string | null,
 ): Promise<void> {
 	const rows = await db
-		.select({ ruleId: classRules.id, className: classRuleClasses.className })
+		.select({
+			ruleId: classRules.id,
+			className: classRuleClasses.className,
+			rulePseudo: classRules.pseudo,
+		})
 		.from(classRules)
 		.innerJoin(classRuleClasses, eq(classRuleClasses.ruleId, classRules.id))
 		.where(and(eq(classRules.themeId, themeId), eq(classRules.cssProperty, cssProperty)))
 
 	if (rows.length === 0) return
 
-	const byRule = new Map<number, string[]>()
-	for (const { ruleId, className } of rows) {
-		const list = byRule.get(ruleId)
-		if (list) list.push(className)
-		else byRule.set(ruleId, [className])
+	const byRule = new Map<number, { classes: string[]; pseudo: string | null }>()
+	for (const { ruleId, className, rulePseudo } of rows) {
+		const entry = byRule.get(ruleId)
+		if (entry) entry.classes.push(className)
+		else byRule.set(ruleId, { classes: [className], pseudo: rulePseudo })
 	}
 
 	const target = [...classNames].sort().join('|')
-	for (const classes of byRule.values()) {
-		if (classes.sort().join('|') === target)
+	for (const { classes, pseudo: existingPseudo } of byRule.values()) {
+		if (classes.sort().join('|') === target && existingPseudo === pseudo)
 			throw new ConflictError(
-				`A rule already exists for theme ${themeId} with classes [${classNames.join(', ')}] and property ${cssProperty}`,
+				`A rule already exists for theme ${themeId} with classes [${classNames.join(', ')}], property ${cssProperty}, and pseudo ${pseudo ?? 'none'}`,
 			)
 	}
 }
@@ -189,7 +198,8 @@ export async function createClassRule(
 	assertAllClassesExist(vocab, input.classNames)
 	assertAtMostOneClassPerKind(vocab)
 
-	await assertNoDuplicateRule(db, input.themeId, input.classNames, input.cssProperty)
+	const pseudo = input.pseudo ?? null
+	await assertNoDuplicateRule(db, input.themeId, input.classNames, input.cssProperty, pseudo)
 
 	const rule = await db
 		.insert(classRules)
@@ -197,6 +207,7 @@ export async function createClassRule(
 			themeId: input.themeId,
 			cssProperty: input.cssProperty,
 			value: input.value.trim(),
+			pseudo,
 		})
 		.returning({ id: classRules.id })
 		.get()
@@ -230,6 +241,7 @@ function ruleJoinQuery(db: Db) {
 			themeId: classRules.themeId,
 			cssProperty: classRules.cssProperty,
 			value: classRules.value,
+			rulePseudo: classRules.pseudo,
 			createdAt: classRules.createdAt,
 			className: classVocabulary.name,
 			classKind: classVocabulary.kind,
@@ -245,6 +257,7 @@ interface RuleJoinRow {
 	themeId: string
 	cssProperty: string
 	value: string
+	rulePseudo: string | null
 	createdAt: Date
 	className: string
 	classKind: string
@@ -261,6 +274,7 @@ function groupRulesFromRows(rows: RuleJoinRow[]): ClassRuleWithClasses[] {
 				themeId: r.themeId,
 				cssProperty: r.cssProperty,
 				value: r.value,
+				pseudo: r.rulePseudo,
 				createdAt: r.createdAt,
 				classes: [],
 			}

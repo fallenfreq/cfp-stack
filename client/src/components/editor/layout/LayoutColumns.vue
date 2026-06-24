@@ -1,5 +1,5 @@
 <template>
-	<div class="layout-columns" :style="{ '--cols': columns, '--align': align }">
+	<div class="layout-columns sl-columns" :style="{ '--cols': columns, '--align': align }">
 		<slot />
 	</div>
 </template>

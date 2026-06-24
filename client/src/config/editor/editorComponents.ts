@@ -100,7 +100,7 @@ const editorComponents = {
 				'outlined',
 				'filled',
 				'plain',
-				'feature',
+				'featured',
 			] as const),
 		},
 		content: 'block*',

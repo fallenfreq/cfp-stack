@@ -8,9 +8,15 @@ export type Db = DrizzleD1Database<Record<string, unknown>>
 // sf-class kinds. `bundle`/`variant`/`state` live in the sf cascade
 // layers. `layout` is for sl-* primitives (outside the sf layer order;
 // not currently used in class_rules but allowed for future).
-export type ClassKind = 'bundle' | 'variant' | 'state' | 'layout'
+export type ClassKind = 'bundle' | 'variant' | 'context' | 'state' | 'layout'
 
-export const CLASS_KINDS: readonly ClassKind[] = ['bundle', 'variant', 'state', 'layout'] as const
+export const CLASS_KINDS: readonly ClassKind[] = [
+	'bundle',
+	'variant',
+	'context',
+	'state',
+	'layout',
+] as const
 
 // Token kinds — drive editor introspection (what control to show for
 // each token type) and generator emission rules.
@@ -30,17 +36,19 @@ export const TOKEN_KINDS: readonly TokenKind[] = [
 export const KIND_SORT_ORDER: Record<ClassKind, number> = {
 	bundle: 0,
 	variant: 1,
-	state: 2,
-	layout: 3,
+	context: 2,
+	state: 3,
+	layout: 4,
 }
 
 // A rule's @layer derives from the highest-kind class involved.
 // State outranks variant outranks bundle — matches the spec's cascade.
-export type Layer = 'sf-bundle' | 'sf-variant' | 'sf-state' | 'sl-layout'
+export type Layer = 'sf-bundle' | 'sf-variant' | 'sf-context' | 'sf-state' | 'sl-layout'
 
 export const KIND_TO_LAYER: Record<ClassKind, Layer> = {
 	bundle: 'sf-bundle',
 	variant: 'sf-variant',
+	context: 'sf-context',
 	state: 'sf-state',
 	layout: 'sl-layout',
 }

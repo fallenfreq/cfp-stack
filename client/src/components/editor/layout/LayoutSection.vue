@@ -1,5 +1,5 @@
 <template>
-	<div class="layout-section" :style="{ '--align': align }">
+	<div class="layout-section sl-stack" :style="{ '--align': align }">
 		<slot />
 	</div>
 </template>

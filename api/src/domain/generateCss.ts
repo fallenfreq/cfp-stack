@@ -42,6 +42,7 @@ export async function emitStylesheet(db: Db): Promise<string> {
 		emitTokenBlocks(themesList, tokensByTheme),
 		emitRichLayer('sf-bundle', themesList, rootTheme, rulesByLayer),
 		emitRichLayer('sf-variant', themesList, rootTheme, rulesByLayer),
+		emitRichLayer('sf-context', themesList, rootTheme, rulesByLayer),
 		emitSemanticLayer(buckets.semantic),
 		emitUtilityLayer(buckets),
 		emitRichLayer('sf-state', themesList, rootTheme, rulesByLayer),
@@ -217,7 +218,7 @@ function groupRulesByLayer(rules: ClassRuleWithClasses[]): Map<Layer, LayerRules
 	const out = new Map<Layer, LayerRules>()
 	for (const rule of rules) {
 		const sorted = [...rule.classes].sort(compareClasses)
-		const selector = buildSelector(sorted)
+		const selector = buildSelector(sorted, rule.pseudo ?? null)
 		const layer = ruleLayerFor(sorted)
 
 		let layerMap = out.get(layer)
@@ -255,6 +256,7 @@ function compareClasses(
 
 function buildSelector(
 	sortedClasses: readonly { name: string; kind: string; pseudo: string | null }[],
+	rulePseudo: string | null = null,
 ): string {
 	let base = ''
 	let pseudos = ''
@@ -262,7 +264,8 @@ function buildSelector(
 		base += `.${c.name}`
 		if (c.kind === 'state' && c.pseudo) pseudos += c.pseudo
 	}
-	return base + pseudos
+	// Vocab pseudo-classes (:hover etc.) come before rule pseudo-elements (::after etc.)
+	return base + pseudos + (rulePseudo ?? '')
 }
 
 // Highest kind's layer. Classes are already sorted bundle → layout, so the

@@ -145,6 +145,17 @@ const DARK_TOKEN_OVERRIDES: TokenSpec[] = [
 	{ name: '--sf-fg_inverted', value: '11 18 26', kind: 'color-triplet' },
 	{ name: '--sf-border_color', value: '61 76 88', kind: 'color-triplet' },
 	{ name: '--sf-primary', value: 'var(--sf-primary-4)', kind: 'color-triplet' },
+	// Surface palette — dark mode inverts the scale: 0 is the darkest canvas, higher = more elevated
+	{ name: '--sf-surface-0', value: '5 10 16', kind: 'color-triplet' },
+	{ name: '--sf-surface-1', value: '31 38 47', kind: 'color-triplet' },
+	{ name: '--sf-surface-2', value: '42 52 63', kind: 'color-triplet' },
+	{ name: '--sf-surface-3', value: '55 66 78', kind: 'color-triplet' },
+	{ name: '--sf-surface-4', value: '72 84 98', kind: 'color-triplet' },
+	{ name: '--sf-surface-5', value: '93 107 122', kind: 'color-triplet' },
+	{ name: '--sf-surface-6', value: '118 133 148', kind: 'color-triplet' },
+	{ name: '--sf-surface-7', value: '148 163 177', kind: 'color-triplet' },
+	{ name: '--sf-surface-8', value: '183 195 206', kind: 'color-triplet' },
+	{ name: '--sf-surface-9', value: '218 226 234', kind: 'color-triplet' },
 ]
 
 const PINK_TOKEN_OVERRIDES: TokenSpec[] = [
@@ -227,6 +238,18 @@ const VOCABULARY: VocabSpec[] = [
 	},
 	{ name: 'sf-on-disabled', kind: 'state', pseudo: null, description: 'Disabled state modifier' },
 
+	// Context — JS-detected content conditions; sits above variant, below state
+	{
+		name: 'sf-is-overflow-start',
+		kind: 'context',
+		description: 'Content is clipped at the leading edge',
+	},
+	{
+		name: 'sf-is-overflow-end',
+		kind: 'context',
+		description: 'Content is clipped at the trailing edge',
+	},
+
 	// Layout primitives
 	{ name: 'sl-stack', kind: 'layout', description: 'Vertical flex stack' },
 	{ name: 'sl-cluster', kind: 'layout', description: 'Horizontal flex wrap' },
@@ -262,14 +285,42 @@ interface RuleSpec {
 	classNames: string[]
 	cssProperty: string
 	value: string
+	pseudo?: string | null
 }
 
 const ROOT_RULES: RuleSpec[] = [
-	// Depth — background only; consumers carry their own radius/shadow
+	// Depth bundles — background + elevation cues
+	// depth-0: canvas, no elevation
 	{ classNames: ['sf-depth-0'], cssProperty: 'background', value: 'rgb(var(--sf-surface-0))' },
+
+	// depth-1: cards, wells — background + shadow + radius
+	// Border is intentionally absent at the default level; flat themes add one by overriding
+	// box-shadow to none and adding border: 1px solid rgb(var(--sf-border_color)) instead.
 	{ classNames: ['sf-depth-1'], cssProperty: 'background', value: 'rgb(var(--sf-surface-1))' },
+	{
+		classNames: ['sf-depth-1'],
+		cssProperty: 'box-shadow',
+		value: 'var(--sf-shadow-md) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+	},
+	{ classNames: ['sf-depth-1'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+
+	// depth-2: dropdowns, popovers — stronger shadow
 	{ classNames: ['sf-depth-2'], cssProperty: 'background', value: 'rgb(var(--sf-surface-2))' },
+	{
+		classNames: ['sf-depth-2'],
+		cssProperty: 'box-shadow',
+		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+	},
+	{ classNames: ['sf-depth-2'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+
+	// depth-3: modals — strongest shadow
 	{ classNames: ['sf-depth-3'], cssProperty: 'background', value: 'rgb(var(--sf-surface-3))' },
+	{
+		classNames: ['sf-depth-3'],
+		cssProperty: 'box-shadow',
+		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+	},
+	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
 
 	// Heading — font-size + line-height
 	{ classNames: ['sf-heading-1'], cssProperty: 'font-size', value: 'var(--sf-text-4xl)' },
@@ -341,6 +392,25 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sl-grid'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
 	{ classNames: ['sl-grid'], cssProperty: 'container-type', value: 'inline-size' },
 
+	// Overflow context — mask-image applied to the scrolling element.
+	// Arrows are component-level; ::before/::after rules can be added per-theme via the DB.
+	// Compound rule (both active) has higher specificity and handles the both-edges case.
+	{
+		classNames: ['sf-is-overflow-start'],
+		cssProperty: 'mask-image',
+		value: 'linear-gradient(to right, transparent, black 60px)',
+	},
+	{
+		classNames: ['sf-is-overflow-end'],
+		cssProperty: 'mask-image',
+		value: 'linear-gradient(to left, transparent, black 60px)',
+	},
+	{
+		classNames: ['sf-is-overflow-start', 'sf-is-overflow-end'],
+		cssProperty: 'mask-image',
+		value: 'linear-gradient(to right, transparent, black 60px, black calc(100% - 60px), transparent)',
+	},
+
 	// Variants — minimal property set; themes can extend per-bundle compound rules
 	{
 		classNames: ['sf-variant-featured'],
@@ -378,6 +448,16 @@ const COLLAPSE_THRESHOLDS = [
 	{ name: 'sm', value: '640px' },
 	{ name: 'md', value: '768px' },
 ] as const
+
+function applyRule(db: Db, themeId: string, r: RuleSpec) {
+	return createClassRule(db, {
+		themeId,
+		classNames: r.classNames,
+		cssProperty: r.cssProperty,
+		value: r.value,
+		pseudo: r.pseudo ?? null,
+	})
+}
 
 // ─── Orchestrator ────────────────────────────────────────────────────────
 
@@ -456,12 +536,7 @@ export async function seed(db: Db): Promise<SeedSummary> {
 
 	let rulesCreated = 0
 	for (const r of ROOT_RULES) {
-		await createClassRule(db, {
-			themeId: ROOT_ID,
-			classNames: r.classNames,
-			cssProperty: r.cssProperty,
-			value: r.value,
-		})
+		await applyRule(db, ROOT_ID, r)
 		rulesCreated++
 	}
 

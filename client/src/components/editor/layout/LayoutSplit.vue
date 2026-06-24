@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="layout-split"
+		class="layout-split sl-split"
 		:style="{ '--split-template': SPLIT_TEMPLATES[split], '--align': align }"
 	>
 		<slot />

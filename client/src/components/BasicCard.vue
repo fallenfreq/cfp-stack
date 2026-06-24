@@ -1,7 +1,7 @@
 <template>
 	<div class="w-full h-auto">
 		<div
-			class="sf-bg_secondary rounded-lg overflow-hidden relative w-full aspect-[4/3] flex items-center justify-center"
+			class="sf-depth-1 rounded-lg overflow-hidden relative w-full aspect-[4/3] flex items-center justify-center"
 		>
 			<MothLogo v-if="imageUrl == ''" class="w-1/2 h-1/2 opacity-5" />
 			<img v-else class="w-full h-full object-cover" :src="imageUrl" alt="Portfolio Image">

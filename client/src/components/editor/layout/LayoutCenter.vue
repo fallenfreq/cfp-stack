@@ -1,5 +1,5 @@
 <template>
-	<div class="layout-center" :style="{ '--max-width': MAX_WIDTH[maxWidth] }">
+	<div class="layout-center sl-center" :style="{ '--max-width': MAX_WIDTH[maxWidth] }">
 		<slot />
 	</div>
 </template>

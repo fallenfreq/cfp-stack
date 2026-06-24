@@ -63,6 +63,11 @@ export const classRules = sqliteTable('class_rules', {
 		.references(() => themes.id, { onDelete: 'cascade' }),
 	cssProperty: text('css_property', { length: 64 }).notNull(),
 	value: text('value', { length: 512 }).notNull(),
+	// Pseudo-element target for this rule (e.g. '::before', '::after').
+	// Distinct from classVocabulary.pseudo which carries state pseudo-classes
+	// (:hover etc.) intrinsic to a class's meaning. Rule-level pseudo controls
+	// WHERE the CSS applies; vocabulary pseudo controls WHEN.
+	pseudo: text('pseudo', { length: 64 }),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date()),
