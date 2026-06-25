@@ -1,5 +1,5 @@
 <template>
-	<div class="layout-center sl-center" :style="{ '--max-width': MAX_WIDTH[maxWidth] }">
+	<div class="layout-center sl-center" :style="{ '--sl-measure': MAX_WIDTH[maxWidth] }">
 		<slot />
 	</div>
 </template>
@@ -26,9 +26,6 @@ defineProps({
 	display: flex;
 	flex-direction: column;
 	gap: var(--sf-gap, 0);
-	max-width: var(--max-width);
-	margin-inline: auto;
-	padding-inline: var(--sf-padding, 0);
 }
 
 :global(.layout-center > [data-node-view-content] > *) {

@@ -16,6 +16,7 @@
 [data-node-view-wrapper] {
 	--sf-gap: 0;
 	--sf-padding: 0;
+	container-type: inline-size;
 }
 
 @layer sf-semantic {

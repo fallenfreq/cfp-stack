@@ -1,7 +1,7 @@
 <template>
 	<div
 		class="layout-split sl-split"
-		:style="{ '--split-template': SPLIT_TEMPLATES[split], '--align': align }"
+		:style="{ '--sl-template': SPLIT_TEMPLATES[split], '--align': align }"
 	>
 		<slot />
 	</div>
@@ -27,35 +27,14 @@ defineProps({
 .layout-split {
 	container-type: inline-size;
 	width: 100%;
+	align-items: var(--align, stretch);
 }
 
 :global(.layout-split > [data-node-view-content]) {
-	display: grid;
-	grid-template-columns: var(--split-template);
-	gap: var(--sf-gap, 0);
-	align-items: var(--align, stretch);
+	display: contents;
 }
 
 :global(.layout-split > [data-node-view-content] > *) {
 	margin-bottom: 0;
-}
-
-/* Pixel values must match --breakpoint-* in base.css — var() is not valid in @container conditions. */
-:global(.layout-split.sl-collapse-xs > [data-node-view-content]) {
-	@container (max-width: 380px) {
-		grid-template-columns: 1fr;
-	}
-}
-
-:global(.layout-split.sl-collapse-sm > [data-node-view-content]) {
-	@container (max-width: 640px) {
-		grid-template-columns: 1fr;
-	}
-}
-
-:global(.layout-split.sl-collapse-md > [data-node-view-content]) {
-	@container (max-width: 768px) {
-		grid-template-columns: 1fr;
-	}
 }
 </style>

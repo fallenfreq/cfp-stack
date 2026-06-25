@@ -10,7 +10,8 @@ import {
 } from '../schemas/theme.js'
 import { type ClassRuleWithClasses, listAllRules } from './classRules.js'
 import { type CollapseThreshold, listCollapseThresholds } from './collapseThresholds.js'
-import { ValidationError } from './errors.js'
+import { NotFoundError, ValidationError } from './errors.js'
+import { SEED_VERSION } from './seedVersion.js'
 import { listAllTokens } from './themeTokens.js'
 import { getRootThemeOrThrow, listThemes } from './themes.js'
 import { type ClassKind, type Db, KIND_SORT_ORDER, KIND_TO_LAYER, type Layer } from './types.js'
@@ -22,6 +23,10 @@ import { type ClassKind, type Db, KIND_SORT_ORDER, KIND_TO_LAYER, type Layer } f
 
 export async function emitStylesheet(db: Db): Promise<string> {
 	const rootTheme = await getRootThemeOrThrow(db)
+	if (rootTheme.version !== SEED_VERSION)
+		throw new NotFoundError(
+			`Seed version mismatch: DB has ${rootTheme.version}, expected ${SEED_VERSION}`,
+		)
 	const [themesList, allTokens, allRules, collapseThresholds] = await Promise.all([
 		listThemes(db),
 		listAllTokens(db),
@@ -100,7 +105,8 @@ export async function themeSignature(db: Db): Promise<string> {
 
 // ─── Header ─────────────────────────────────────────────────────────────
 
-const HEADER = '/* Generated from D1 — runtime-emitted, do not cache stale. */'
+const HEADER = `/* Generated from D1 — runtime-emitted, do not cache stale. */
+@layer reset, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
 
 // ─── Tokens ─────────────────────────────────────────────────────────────
 

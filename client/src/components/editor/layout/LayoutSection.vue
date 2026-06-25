@@ -14,16 +14,13 @@ defineProps({
 
 <style scoped>
 .layout-section {
-	container-type: inline-size;
 	width: 100%;
+	padding: var(--sf-padding, 0);
+	align-items: var(--align, stretch);
 }
 
 :global(.layout-section > [data-node-view-content]) {
-	display: flex;
-	flex-direction: column;
-	gap: var(--sf-gap, 0);
-	padding: var(--sf-padding, 0);
-	align-items: var(--align);
+	display: contents;
 }
 
 :global(.layout-section > [data-node-view-content] > *) {

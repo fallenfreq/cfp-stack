@@ -5,9 +5,9 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
-**Layout component migration in progress. Next: reseed local DB, verify `/styles/sf-system` output, then work through the pending items below.**
+**Layout component migration complete. Pending items are the new class families and the Vuestic/bg_secondary migration.**
 
-What's in place (migration 0008):
+What's in place:
 
 - Theme schema (`api/src/schemas/theme.ts`): `themes`, `theme_tokens`, `class_vocabulary`,
   `class_rules`, `class_rule_classes`, `user_theme_aliases` — all done.
@@ -16,20 +16,22 @@ What's in place (migration 0008):
 - Domain layer (`api/src/domain/`): `themes`, `themeTokens`, `classRules`,
   `collapseThresholds`, `seed` — all done.
 - Runtime CSS generator (`api/src/domain/generateCss.ts`): reads all tables at request time,
-  emits full stylesheet. Cached in-isolate by `themeSignature` (covers all tables incl.
-  `collapse_thresholds`). ETag + `Cache-Control: public, max-age=60`.
-- Seed (`seed.run` admin tRPC): Root/Dark/Pink themes + all tokens + full vocabulary
-  (depth, heading, variants, state classes, layout primitives, collapse modifiers) +
-  rules for depth/heading/variants/layout. Collapse thresholds seeded idempotently.
+  emits full stylesheet. Cached in-isolate by `themeSignature`. ETag + `Cache-Control: public, max-age=60`.
+  `@layer` order declaration is the first rule emitted (in the HEADER constant) — the
+  `<link rel="stylesheet" href="/styles/sf-system">` is synchronous so the declaration fires
+  before Vite injects `main.css`.
+- Seed (`api/src/domain/seed.ts`): Root/Dark/Pink themes + all tokens + full vocabulary +
+  rules for depth/heading/variants/layout/overflow-context. Collapse thresholds seeded idempotently.
+- Auto-reseed system: `api/src/domain/seedVersion.ts` exports `SEED_VERSION`; `generateCss.ts`
+  checks `rootTheme.version` against it and throws `NotFoundError` on mismatch (auto-reseeds).
+  Dev endpoint `POST /dev/seed` (bearer-auth, absent in prod) + `pnpm seed:local` script for
+  on-demand forced reseeds.
 - `--sf-breakpoint-*` removed from tokens entirely; "breakpoint" term dropped.
   Collapse thresholds live in `collapse_thresholds` table; generator embeds pixel
   values directly in `@container` conditions.
-
-### To resume here:
-
-1. `pnpm dev:api`; hit `POST /trpc/seed.run` with an admin token — populates DB.
-2. Open `http://localhost:8788/styles/sf-system` — verify token blocks, bundle/variant/
-   layout layer blocks, collapse `@container` blocks, and editor-pairing classes.
+- `sl-split`: `grid-template-columns` removed from scoped CSS — now fully in DB as
+  `var(--sl-template, auto 1fr)` so the `@layer sl-layout` collapse rule can override it
+  (same pattern as `sl-columns`). Collapse now works on both.
 
 Done (generator slice):
 
@@ -188,8 +190,10 @@ classes; query `class_vocabulary` for the rich ones.
 ## Foundational
 
 - [x] Declare cascade layers in CSS:
-      `@layer sf-bundle, sf-variant, sf-semantic, sf-utility, sf-state;`
-      Done in `main.css`.
+      `@layer reset, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
+      Now the first rule emitted by `generateCss.ts` (in the HEADER constant). The
+      `<link href="/styles/sf-system">` loads synchronously before Vite's JS injection,
+      so the declaration fires at the right moment in both dev and prod.
 - [x] Generator emits all auto-derived classes (semantic canonicals, value-linked
       utilities, editor palette + alpha pairings) inside their matching `@layer`
       blocks. The remaining "wrap in @layer" work is for the **legacy** hand-written
@@ -356,9 +360,12 @@ These are not bugs but unresolved tensions in the current design:
       should be `sl-collapse-`.~~ Done — also updated `LayoutColumns.vue`,
       `LayoutSplit.vue`, and `initialContent.html`.
 - [x] `LayoutCard.vue` — `sf-depth-1` added to root; variant prop now applies `sf-variant-${variant}`
-      class; `feature` → `featured` rename; in-component CSS for `sf-variant-featured` removed
-      (DB handles it); remaining variants (`elevated`, `outlined`, `filled`) keep temporary
-      in-component CSS until their depth/variant rules enter the DB.
+      class; `feature` → `featured` rename. `sf-variant-featured` keeps in-component CSS that
+      overrides the DB's minimal rule (solid primary bg) with a card-appropriate treatment:
+      transparent primary tint + primary border + no shadow. This is intentional — the DB rule
+      is the content-author surface; the card component adds its structural opinion on top.
+      Remaining variants (`elevated`, `outlined`, `filled`) also keep temporary in-component CSS
+      until their depth/variant rules enter the DB.
 - [x] Layout components now carry `sl-*` identity class alongside `layout-*` (which stays as
       the `:global` CSS hook): `LayoutSection` → `sl-stack`, `LayoutColumns` → `sl-columns`,
       `LayoutSplit` → `sl-split`, `LayoutCenter` → `sl-center`. The DB-generated `sl-*` CSS

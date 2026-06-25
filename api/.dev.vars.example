@@ -17,3 +17,7 @@ ZITADEL_INTROSPECTION_ENDPOINT = ""
 GOOGLE_MAPS_API_KEY = ""
 
 SMTP_PASSWORD = ""
+
+# Dev-only seed endpoint (POST /dev/seed). Set any value here and use the
+# same value in seed:local. Leave absent in production to disable the route.
+DEV_SEED_SECRET = "cfp-dev-seed"

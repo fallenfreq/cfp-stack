@@ -53,4 +53,12 @@ defineProps({
 	box-shadow: none;
 	border-radius: 0;
 }
+
+/* featured: transparent primary tint + primary border, no depth shadow */
+.layout-card.sf-variant-featured {
+	background: rgb(var(--sf-primary) / var(--sf-alpha-2, 0.2));
+	border: 1px solid rgb(var(--sf-primary) / var(--sf-alpha-5, 0.5));
+	box-shadow: none;
+	color: inherit;
+}
 </style>

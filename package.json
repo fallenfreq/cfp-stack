@@ -32,7 +32,8 @@
 		"migrate:custom": "pnpm --filter @somefreq-app/api migrate:custom",
 		"migrate:push:api": "pnpm --filter @somefreq-app/api migrate:push",
 		"migrate:push:local:api": "pnpm --filter @somefreq-app/api migrate:push:local",
-		"logging:api": "pnpm --filter @somefreq-app/api logging"
+		"logging:api": "pnpm --filter @somefreq-app/api logging",
+		"seed:local": "pnpm --filter @somefreq-app/api seed:local"
 	},
 	"dependencies": {
 		"axios": "^1.9.0",

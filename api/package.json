@@ -21,7 +21,8 @@
 		"migrate:custom": "pnpm drizzle-kit generate:sqlite --custom",
 		"migrate:push:local": "npx wrangler d1 migrations apply somefreq-db --local",
 		"migrate:push": "npx wrangler d1 migrations apply somefreq-db --remote",
-		"logging": "npx wrangler pages deployment tail"
+		"logging": "npx wrangler pages deployment tail",
+		"seed:local": "curl -sf -X POST http://localhost:8788/dev/seed -H \"Authorization: Bearer cfp-dev-seed\" | cat"
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20240821.1",

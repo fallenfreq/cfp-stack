@@ -3,6 +3,7 @@ import { classVocabulary, themes } from '../schemas/theme.js'
 import { users } from '../schemas/user.js'
 import { addVocabularyEntry, createClassRule } from './classRules.js'
 import { setCollapseThreshold } from './collapseThresholds.js'
+import { SEED_VERSION } from './seedVersion.js'
 import { createTheme } from './themes.js'
 import { setToken } from './themeTokens.js'
 import { type ClassKind, type Db, type TokenKind } from './types.js'
@@ -367,7 +368,11 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// sl-split
 	{ classNames: ['sl-split'], cssProperty: 'display', value: 'grid' },
-	{ classNames: ['sl-split'], cssProperty: 'grid-template-columns', value: 'auto 1fr' },
+	{
+		classNames: ['sl-split'],
+		cssProperty: 'grid-template-columns',
+		value: 'var(--sl-template, auto 1fr)',
+	},
 	{ classNames: ['sl-split'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
 	{ classNames: ['sl-split'], cssProperty: 'align-items', value: 'start' },
 	{ classNames: ['sl-split'], cssProperty: 'container-type', value: 'inline-size' },
@@ -501,6 +506,7 @@ export async function seed(db: Db): Promise<SeedSummary> {
 		id: ROOT_ID,
 		name: 'Root',
 		isRoot: true,
+		version: SEED_VERSION,
 		createdBy: brandUserId,
 	})
 	await createTheme(db, {

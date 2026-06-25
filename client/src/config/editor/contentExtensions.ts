@@ -49,17 +49,18 @@ export const SfHeading = Heading.extend({
 					let tr = newState.tr
 					let changed = false
 					newState.doc.descendants((node, pos) => {
-						const classAttr = node.attrs.class
-						if (typeof classAttr !== 'string') return
 						const isHeading = node.type.name === 'heading'
-						const otherClasses = classAttr
+						const classAttr = node.attrs.class
+						if (typeof classAttr !== 'string' && !isHeading) return
+						const currentClass = typeof classAttr === 'string' ? classAttr : ''
+						const otherClasses = currentClass
 							.split(/\s+/)
 							.filter((c) => c && !SF_HEADING_CLASS_RE.test(c))
 						const expected = isHeading
 							? [...otherClasses, `sf-heading-${node.attrs.level}`]
 							: otherClasses
 						const newClass = expected.join(' ')
-						if (newClass !== classAttr) {
+						if (newClass !== currentClass) {
 							tr = tr.setNodeMarkup(pos, undefined, {
 								...node.attrs,
 								class: newClass,

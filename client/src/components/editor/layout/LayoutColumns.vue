@@ -1,5 +1,8 @@
 <template>
-	<div class="layout-columns sl-columns" :style="{ '--cols': columns, '--align': align }">
+	<div
+		class="layout-columns sl-columns"
+		:style="{ '--sl-cols': `repeat(${columns}, 1fr)`, '--align': align }"
+	>
 		<slot />
 	</div>
 </template>
@@ -20,35 +23,14 @@ defineProps({
 .layout-columns {
 	container-type: inline-size;
 	width: 100%;
+	align-items: var(--align, stretch);
 }
 
 :global(.layout-columns > [data-node-view-content]) {
-	display: grid;
-	grid-template-columns: repeat(var(--cols), 1fr);
-	gap: var(--sf-gap, 0);
-	align-items: var(--align, stretch);
+	display: contents;
 }
 
 :global(.layout-columns > [data-node-view-content] > *) {
 	margin-bottom: 0;
-}
-
-/* Pixel values must match --breakpoint-* in base.css — var() is not valid in @container conditions. */
-:global(.layout-columns.sl-collapse-xs > [data-node-view-content]) {
-	@container (max-width: 380px) {
-		grid-template-columns: 1fr;
-	}
-}
-
-:global(.layout-columns.sl-collapse-sm > [data-node-view-content]) {
-	@container (max-width: 640px) {
-		grid-template-columns: 1fr;
-	}
-}
-
-:global(.layout-columns.sl-collapse-md > [data-node-view-content]) {
-	@container (max-width: 768px) {
-		grid-template-columns: 1fr;
-	}
 }
 </style>
