@@ -289,6 +289,7 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
       attribute panel, and code-view roundtrip all agree. `SfHeading` is shared
       with `htmlBlueprint.ts` so the code-view serializer matches the live editor.
 - [x] `sf-variant-*` classes (`featured`, `subtle`, `danger`) — seeded in prior slice
+- [ ] `sf-variant-warning` + `sf-variant-success` — added to spec; seed vocabulary + rules.
 - [ ] `sf-size-*` bundles (`xs`, `sm`, `md`, `lg`, `xl`) — intended form factor; sets
       proportional visual properties (padding, border-radius, etc.). Seed vocabulary +
       rules; design pass needed to decide which properties each step sets.
@@ -305,12 +306,18 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
       Layer, sort order, and generator support added. Vocabulary + rules seeded (mask-image
       gradients; compound rule for both-edges case). `OverflowRow.vue` migrated from
       inline `maskStyle` computed to `sf-is-*` classes on the scroller element.
-- [ ] `sf-on-*` state class rules — vocabulary is seeded, but rules require compound selectors.
-      There are **no bare defaults**: a hover rule without depth/variant context doesn't know which
-      surface it's modifying. The full matrix must be seeded explicitly: - `sf-depth-{0..3}` × `sf-on-{hover,focus,active,disabled}` (16 selector groups) - `sf-variant-{featured,subtle,danger}` × `sf-on-{hover,focus,active,disabled}` (12 selector groups) - Triple compounds (`sf-depth-N` + `sf-variant-X` + `sf-on-*`) only if the theme needs them.
-      Each group carries a design decision: what CSS property changes for hover on surface-1 vs surface-3?
-      A design pass is needed before touching code — see spec example in `sf-system.md` for the pattern.
+- [ ] `sf-is-loading` / `sf-is-sticky` / `sf-is-error` — added to spec; seed vocabulary +
+      rules. Loading: skeleton shimmer or opacity reduction. Sticky: shadow or border on
+      the pinned element. Error: border-color + optional background tint on the field.
+- [ ] `sf-on-*` state class rules — vocabulary is seeded; `sf-on-selected` added to spec
+      and needs seeding too. Pattern (per spec): seed one bare fallback rule per state,
+      then compound overrides only for combinations that need different treatment. A design
+      pass is still needed — what CSS properties change for hover/focus/active/selected/disabled
+      at the root theme? Bare rules go in first; depth × variant compounds are additive only
+      where the bare rule falls short.
 - [x] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`) — vocabulary + rules in seed
+- [ ] `sl-aspect` — added to spec; seed vocabulary + rules. Aspect ratio set via
+      `--sl-aspect` custom property on the element.
 - [x] `sl-collapse-*` container-responsive collapse classes — vocabulary in seed;
       CSS generated from `collapse_steps` table (DB-stored px values, not theme tokens;
       `var()` is not valid in `@container` conditions so values are read at emit time)
