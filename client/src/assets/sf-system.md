@@ -60,6 +60,14 @@ The vocabulary must remain small and stable. Growth is the primary failure mode.
 If understanding the class requires knowing what the theme looks like or what the
 content is, it does not belong.
 
+A second boundary: HTML element selectors are a valid and intended theming surface.
+Where the element type already encodes both semantic role and styling surface —
+`<button>`, `<table>`, `<input>` — the theme targets the element directly and no class
+is needed. The sf vocabulary fills the gap where element type alone is insufficient:
+`sf-heading-*` exists because h1–h6 encode document outline position, not visual
+prominence, and the two can diverge. `sf-variant-danger` exists because a `<button>`
+alone does not encode destructive intent.
+
 The classes shown here are the current vocabulary; new bundle families, variants, and
 states join through the same admission test.
 
@@ -239,7 +247,9 @@ sf-depth-2   dropdowns, popovers
 sf-depth-3   modals
 ```
 
-**Headings** — typographic prominence:
+**Headings** — typographic prominence. h1–h6 encode document outline position; these
+classes carry visual prominence, which does not always align — a deeply nested section's
+h1 may need heading-2 treatment:
 
 ```
 sf-heading-1   most prominent
@@ -295,7 +305,9 @@ whatever fits.
 
 ```
 sf-variant-featured   editorially selected or promoted — a featured product, a highlight
-sf-variant-danger     destructive or warning action
+sf-variant-danger     destructive action — delete, remove, irreversible
+sf-variant-warning    cautionary — something needs attention but is not destructive
+sf-variant-success    positive outcome — confirmation, completion, approval
 ```
 
 Variants are not about visual weight — that is rank's job. `sf-variant-featured` on a
@@ -310,6 +322,9 @@ the current state of the DOM — measurements or conditions that CSS alone canno
 ```
 sf-is-overflow-start   content is clipped at the leading edge
 sf-is-overflow-end     content is clipped at the trailing edge
+sf-is-loading          element is in a loading / pending state
+sf-is-sticky           a sticky element is currently in its pinned position
+sf-is-error            element or field is in a validation / error state
 ```
 
 `sf-is-*` classes differ from `sf-on-*` in source and meaning:
@@ -326,24 +341,27 @@ both-edges case at higher specificity than either alone.
 
 ### States — `sf-state`
 
-Interaction modifiers. Composable: combined with a variant, the theme can specialise via
-a more specific selector.
+Interaction modifiers. A bare rule applies everywhere the class appears; a compound
+selector overrides it at higher specificity. Write one bare fallback, then only the
+combinations that need a different treatment — the full depth × variant matrix does
+not need to be specified explicitly.
 
 ```
 sf-on-hover
 sf-on-focus
 sf-on-active
+sf-on-selected
 sf-on-disabled
 ```
 
 ```css
 @layer sf-state {
-	/* default */
+	/* bare rule — fallback for all contexts */
 	.sf-on-hover:hover {
 		background: rgb(var(--sf-fg_primary) / 0.05);
 	}
 
-	/* specialised for featured */
+	/* compound — overrides only where featured needs different treatment */
 	.sf-variant-featured.sf-on-hover:hover {
 		background: rgb(var(--sf-primary) / 0.05);
 	}
@@ -397,11 +415,15 @@ Single-property classes that bind one CSS property to a specific scale step (hyp
 naming, mirroring the token name).
 
 ```
-sf-radius-3       border-radius: var(--sf-radius-3)
-sf-shadow-md       box-shadow:    var(--sf-shadow-md)
-sf-text-xl         font-size:     var(--sf-text-xl)
-sf-gap-md          --sf-gap:      var(--sf-spacing-md)
-sf-padding-lg      --sf-padding:  var(--sf-spacing-lg)
+sf-radius-3        border-radius:   var(--sf-radius-3)
+sf-shadow-md       box-shadow:      var(--sf-shadow-md)
+sf-text-xl         font-size:       var(--sf-text-xl)
+sf-leading-snug    line-height:     var(--sf-leading-snug)
+sf-tracking-wide   letter-spacing:  var(--sf-tracking-wide)
+sf-font-1          font-family:     var(--sf-font-1)
+sf-weight-3        font-weight:     var(--sf-weight-3)
+sf-gap-md          --sf-gap:        var(--sf-spacing-md)
+sf-padding-lg      --sf-padding:    var(--sf-spacing-lg)
 ```
 
 `sf-gap-*` and `sf-padding-*` set runtime-state custom properties (`--sf-gap`,
@@ -433,6 +455,7 @@ sl-columns    grid — equal or custom ratio via --sl-cols
 sl-split      one fixed-width side, one flexible side
 sl-center     max-width centering
 sl-grid       auto-responsive — fills with as many columns as fit at a minimum width
+sl-aspect     aspect-ratio container — ratio configured via --sl-aspect
 ```
 
 `sl-columns` and `sl-split` are not variants of each other. Columns is proportional
