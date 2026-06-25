@@ -1,6 +1,8 @@
 import { drizzle } from 'drizzle-orm/d1'
 import { initEnvs, type Envs } from '../../dist/config/envs.js'
+import { NotFoundError } from '../../dist/domain/errors.js'
 import { getStylesheet } from '../../dist/domain/generateCss.js'
+import { seed } from '../../dist/domain/seed.js'
 
 // GET /styles/sf-system — DB-driven sf/sl stylesheet.
 // Two-layer cache:
@@ -26,7 +28,13 @@ export const onRequest: PagesFunction<Envs> = async ({ request, env, waitUntil }
 		}
 
 		const db = drizzle(env.DB)
-		const { css, etag } = await getStylesheet(db)
+		const { css, etag } = await getStylesheet(db).catch(async (err) => {
+			if (err instanceof NotFoundError) {
+				await seed(db)
+				return getStylesheet(db)
+			}
+			throw err
+		})
 
 		if (request.headers.get('If-None-Match') === etag)
 			return new Response(null, { status: 304, headers: { ETag: etag } })
