@@ -95,13 +95,9 @@ const editorComponents = {
 		alias: 'layout-card',
 		component: LayoutCard,
 		props: {
-			variant: enumAttr('elevated', [
-				'elevated',
-				'outlined',
-				'filled',
-				'plain',
-				'featured',
-			] as const),
+			// No validate — old values (elevated/outlined/filled/plain) are accepted without
+			// crashing; the component only responds to 'featured', everything else is a no-op.
+			variant: { default: 'none', options: ['none', 'featured'] },
 		},
 		content: 'block*',
 	},

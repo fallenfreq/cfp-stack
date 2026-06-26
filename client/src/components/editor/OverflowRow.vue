@@ -4,8 +4,8 @@
 			ref="scrollerEl"
 			class="overflow-row__scroller"
 			:class="{
-				'sf-is-overflow-start': overflow.start,
-				'sf-is-overflow-end': overflow.end,
+				'sf-is-overflow-left': overflow.left,
+				'sf-is-overflow-right': overflow.right,
 			}"
 			@scroll.passive="syncOverflow"
 		>
@@ -22,7 +22,7 @@ const props = defineProps<{
 }>()
 
 const scrollerEl = ref<HTMLElement | null>(null)
-const overflow = ref({ start: false, end: false })
+const overflow = ref({ left: false, right: false })
 
 const OVERFLOW_EPSILON = 2
 
@@ -32,8 +32,8 @@ const syncOverflow = () => {
 
 	const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth
 	overflow.value = {
-		start: scroller.scrollLeft > OVERFLOW_EPSILON,
-		end: maxScrollLeft - scroller.scrollLeft > OVERFLOW_EPSILON,
+		left: scroller.scrollLeft > OVERFLOW_EPSILON,
+		right: maxScrollLeft - scroller.scrollLeft > OVERFLOW_EPSILON,
 	}
 }
 
@@ -82,11 +82,11 @@ watch(() => props.refreshKey, refreshOverflow)
 	border-left: 5px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-5));
 }
 
-.overflow-row:has(.sf-is-overflow-start)::before {
+.overflow-row:has(.sf-is-overflow-left)::before {
 	opacity: 1;
 }
 
-.overflow-row:has(.sf-is-overflow-end)::after {
+.overflow-row:has(.sf-is-overflow-right)::after {
 	opacity: 1;
 }
 

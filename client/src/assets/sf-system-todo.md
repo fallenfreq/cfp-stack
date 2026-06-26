@@ -136,7 +136,7 @@ Done in the editor + cleanup slice:
 - Generator's `sf-shadow-*` classes now respect inline `--sf-shadow-color` override
   (preserves the picker's per-element colour pick capability).
 - `initialContent.html` migrated: `sf-radius-md` → `sf-radius-2`, `sf-radius-none` →
-  `sf-radius-0`.
+  `sf-radius-0`, then `sf-radius-0` on the full-bleed code block → `sf-is-edge-left sf-is-edge-right`.
 
 ### What's intentionally still legacy
 
@@ -297,19 +297,21 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
 - [ ] `sf-size-*` bundles (`xs`, `sm`, `md`, `lg`, `xl`) — intended form factor; sets
       proportional visual properties (padding, border-radius, etc.). Seed vocabulary +
       rules; design pass needed to decide which properties each step sets.
-- [ ] `sf-rank-*` bundles (`-1`, `-2`, `-3`) — absolute attention-weight scale; no relative-to-siblings
+- [ ] `sf-loudness-*` bundles (`-1`, `-2`, `-3`) — absolute attention-weight scale; no relative-to-siblings
       assumption. Theme decides which CSS properties express each level (scale, padding, type weight,
       contrast, or a combination). Start with a minimal property set and add per consumer need, same
       posture as `sf-depth-*`. Seed vocabulary + rules; no editor wiring needed until a content-author
       picker is designed.
-- [ ] `sf-edge-*` / `sf-divide-*` boundary classes — `sf-edge-{top,bottom,left,right,x,y,edge}` on
+- [ ] `sf-boundary-*` / `sf-divide-*` boundary classes — `sf-boundary-{top,bottom,left,right,x,y,boundary}` on
       the element itself; `sf-divide-{x,y}` on the parent targeting `> * + *`. Both in `sf-semantic`
       layer; theme decides full treatment (line, shadow, tint, spacing increase). Seed vocabulary +
       rules.
-- [x] `sf-context` kind + `sf-is-overflow-start`/`sf-is-overflow-end` — ClassKind,
+- [x] `sf-context` kind + `sf-is-overflow-{left,right,top,bottom}` — ClassKind,
       Layer, sort order, and generator support added. Vocabulary + rules seeded (mask-image
-      gradients; compound rule for both-edges case). `OverflowRow.vue` migrated from
+      gradients; same-axis compound rules for both-edges case). `OverflowRow.vue` migrated from
       inline `maskStyle` computed to `sf-is-*` classes on the scroller element.
+- [x] `sf-is-edge-{top,right,bottom,left}` — viewport-flush context; vocabulary + rules seeded
+      (zeros the two corners that touch the boundary). Author-applied (not JS-toggled).
 - [ ] `sf-is-loading` / `sf-is-sticky` / `sf-is-error` — added to spec; seed vocabulary +
       rules. Loading: skeleton shimmer or opacity reduction. Sticky: shadow or border on
       the pinned element. Error: border-color + optional background tint on the field.

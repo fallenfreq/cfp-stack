@@ -41,21 +41,22 @@ The vocabulary must remain small and stable. Growth is the primary failure mode.
 
 **The test:** does the meaning survive theme changes?
 
-| Class                | Belongs? | Why                                                       |
-| -------------------- | -------- | --------------------------------------------------------- |
-| `sf-variant-danger`  | Yes      | Danger is intent                                          |
-| `sf-on-hover`        | Yes      | Hover is a state                                          |
-| `sf-depth-1`         | Yes      | Visual layer position coordinates perceived hierarchy     |
-| `sf-variant-subtle`  | No       | Redundant — rank covers attention weight                  |
-| `sl-columns`         | Yes      | Columns is structure                                      |
-| `sf-fg_primary`      | Yes      | Shared semantic value                                     |
-| `sf-rank-1`          | Yes      | Attention hierarchy is relational, not a visual treatment |
-| `sf-is-overflow-end` | Yes      | Runtime condition set by JS, not authored intent          |
-| `sf-edge-top`        | Yes      | Edge signals boundary intent, not a CSS property          |
-| `sf-divide-y`        | Yes      | Divide signals separation between children                |
-| `sf-variant-glass`   | No       | Glass is a visual treatment, not intent                   |
-| `sf-variant-card`    | No       | Card is an implementation concept                         |
-| `sl-sidebar`         | No       | Sidebar names content, not structure                      |
+| Class                  | Belongs? | Why                                                        |
+| ---------------------- | -------- | ---------------------------------------------------------- |
+| `sf-variant-danger`    | Yes      | Danger is intent                                           |
+| `sf-on-hover`          | Yes      | Hover is a state                                           |
+| `sf-depth-1`           | Yes      | Visual layer position coordinates perceived hierarchy      |
+| `sf-variant-subtle`    | No       | Redundant — loudness covers attention weight               |
+| `sl-columns`           | Yes      | Columns is structure                                       |
+| `sf-fg_primary`        | Yes      | Shared semantic value                                      |
+| `sf-loudness-1`        | Yes      | Attention hierarchy is relational, not a visual treatment  |
+| `sf-is-overflow-right` | Yes      | Runtime condition set by JS, not authored intent           |
+| `sf-is-edge-top`       | Yes      | Viewport-flush context — theme decides corner treatment    |
+| `sf-boundary-top`      | Yes      | Boundary signals edge-treatment intent, not a CSS property |
+| `sf-divide-y`          | Yes      | Divide signals separation between children                 |
+| `sf-variant-glass`     | No       | Glass is a visual treatment, not intent                    |
+| `sf-variant-card`      | No       | Card is an implementation concept                          |
+| `sl-sidebar`           | No       | Sidebar names content, not structure                       |
 
 If understanding the class requires knowing what the theme looks like or what the
 content is, it does not belong.
@@ -73,7 +74,7 @@ states join through the same admission test.
 
 Slot labels come in three kinds. **Named** (`xs/sm/md/lg`, `tight/normal/wide`) encode
 intrinsic magnitudes — themes scale values; ordering is locked by the name's physical
-meaning. **Numbered, semantically positioned** (`depth-0..3`, `heading-1..3`, `rank-1..3`)
+meaning. **Numbered, semantically positioned** (`depth-0..3`, `heading-1..3`, `loudness-1..3`)
 encode an external concept (z-stack position, document hierarchy, attention hierarchy);
 the ordering is meaningful by what it maps to. **Numbered, arbitrary** (`primary-1..N`,
 `alpha-1..N`, `weight-1..N`) are pure slot positions — the theme decides values; adjacent
@@ -257,23 +258,23 @@ sf-heading-2   secondary
 sf-heading-3   tertiary
 ```
 
-**Rank** — attention hierarchy among sibling content blocks:
+**Loudness** — attention hierarchy among sibling content blocks:
 
 ```
-sf-rank-1   highest attention — most visual weight, spacing, prominence
-sf-rank-2   moderate attention
-sf-rank-3   lowest attention — de-emphasised, supporting content
+sf-loudness-1   highest attention — most visual weight, spacing, prominence
+sf-loudness-2   moderate attention
+sf-loudness-3   lowest attention — de-emphasised, supporting content
 ```
 
-Rank is an absolute scale of attention weight, not a claim about neighbours. A block set
-to `sf-rank-1` carries maximum visual weight on every page it appears, whether or not
-any `sf-rank-2` or `sf-rank-3` blocks are present. The theme applies the same treatment
-consistently — like a loudness dial where the block declares its level and the theme
-decides what each level sounds like.
+Loudness is an absolute scale of attention weight, not a claim about neighbours. A block
+set to `sf-loudness-1` carries maximum visual weight on every page it appears, whether or
+not any `sf-loudness-2` or `sf-loudness-3` blocks are present. The theme applies the same
+treatment consistently — the block declares its level and the theme decides what each level
+looks like.
 
 The theme decides which CSS properties express each level — scale, padding, type weight,
-contrast, or a combination. Depth coordinates layering relationships; rank is independent
-of that — a depth-2 dropdown can be any rank.
+contrast, or a combination. Depth coordinates layering relationships; loudness is
+independent of that — a depth-2 dropdown can be any loudness.
 
 **Size** — intended form factor. Declares what an element is meant to be, so the theme
 applies proportional visual properties — padding, border-radius, and similar. A container
@@ -289,7 +290,7 @@ sf-size-lg   large button, featured tile
 sf-size-xl   hero scale
 ```
 
-Size is independent of depth and rank. A small pill can be `sf-depth-2 sf-rank-1
+Size is independent of depth and loudness. A small pill can be `sf-depth-2 sf-loudness-1
 sf-variant-featured sf-size-xs`; the four axes do not constrain each other.
 
 Bundle values can be extracted into named tokens (e.g. `--sf-depth-0-background`) so
@@ -310,7 +311,7 @@ sf-variant-warning    cautionary — something needs attention but is not destru
 sf-variant-success    positive outcome — confirmation, completion, approval
 ```
 
-Variants are not about visual weight — that is rank's job. `sf-variant-featured` on a
+Variants are not about visual weight — that is loudness's job. `sf-variant-featured` on a
 small pill and on a full-width hero section both signal the same intent; the theme decides
 how to express it at each size.
 
@@ -320,8 +321,14 @@ Runtime conditions detected by JavaScript and applied as classes. They reflect f
 the current state of the DOM — measurements or conditions that CSS alone cannot know.
 
 ```
-sf-is-overflow-start   content is clipped at the leading edge
-sf-is-overflow-end     content is clipped at the trailing edge
+sf-is-edge-top         element is flush with the top viewport edge (author-applied)
+sf-is-edge-right       element is flush with the right viewport edge
+sf-is-edge-bottom      element is flush with the bottom viewport edge
+sf-is-edge-left        element is flush with the left viewport edge
+sf-is-overflow-top     content is clipped at the top (JS-toggled)
+sf-is-overflow-right   content is clipped at the right (JS-toggled)
+sf-is-overflow-bottom  content is clipped at the bottom (JS-toggled)
+sf-is-overflow-left    content is clipped at the left (JS-toggled)
 sf-is-loading          element is in a loading / pending state
 sf-is-sticky           a sticky element is currently in its pinned position
 sf-is-error            element or field is in a validation / error state
@@ -333,10 +340,10 @@ sf-is-error            element or field is in a validation / error state
 | ------- | -------------------------------------- | ---------------------------------- |
 | Set by  | Author intent                          | JavaScript measurement             |
 | Meaning | "this element should respond to hover" | "this condition is currently true" |
-| Example | `sf-on-hover`                          | `sf-is-overflow-end`               |
+| Example | `sf-on-hover`                          | `sf-is-overflow-right`             |
 
 Multiple `sf-is-*` classes may be present simultaneously and can be compounded in rules
-— a rule requiring both `sf-is-overflow-start` and `sf-is-overflow-end` handles the
+— a rule requiring both `sf-is-overflow-left` and `sf-is-overflow-right` handles the
 both-edges case at higher specificity than either alone.
 
 ### States — `sf-state`
@@ -387,16 +394,16 @@ Two families that signal visual separation intent. The theme decides the full tr
 line weight, style, colour, spacing increase, or any multi-property composition. No scale
 step is involved; the hyphen here is a positional qualifier, not a scale selector.
 
-**Edge — visual boundary on the element's own sides:**
+**Boundary — visual treatment on the element's own sides:**
 
 ```
-sf-edge-top
-sf-edge-bottom
-sf-edge-left
-sf-edge-right
-sf-edge-x      left and right
-sf-edge-y      top and bottom
-sf-edge        all four
+sf-boundary-top
+sf-boundary-bottom
+sf-boundary-left
+sf-boundary-right
+sf-boundary-x      left and right
+sf-boundary-y      top and bottom
+sf-boundary        all four
 ```
 
 **Divide — visual boundary between an element's children (applied to the parent):**
@@ -513,16 +520,16 @@ Storage and generation are application concerns.
 
 ## Naming convention
 
-| Class                         | Kind     | Example                      | Meaning                                          |
-| ----------------------------- | -------- | ---------------------------- | ------------------------------------------------ |
-| `sf-{family}-*`               | Bundle   | `sf-depth-1`, `sf-heading-2` | Multi-property bundle                            |
-| `sf-variant-*`                | Variant  | `sf-variant-featured`        | Bundle modifier expressing intent                |
-| `sf-on-*`                     | State    | `sf-on-hover`                | Interaction modifier                             |
-| `sf-is-*`                     | Context  | `sf-is-overflow-end`         | JS-detected runtime condition                    |
-| `sf-*_*` (underscore)         | Semantic | `sf-fg_primary`              | One property, mirrors a composite token name     |
-| `sf-*-*` (hyphen, scale step) | Utility  | `sf-text-xl`                 | One property, explicit scale step                |
-| `sf-edge-*` / `sf-divide-*`   | Boundary | `sf-edge-top`, `sf-divide-y` | Boundary intent on own edges or between children |
-| `sl-*`                        | Layout   | `sl-columns`                 | Structural arrangement                           |
+| Class                           | Kind     | Example                          | Meaning                                          |
+| ------------------------------- | -------- | -------------------------------- | ------------------------------------------------ |
+| `sf-{family}-*`                 | Bundle   | `sf-depth-1`, `sf-heading-2`     | Multi-property bundle                            |
+| `sf-variant-*`                  | Variant  | `sf-variant-featured`            | Bundle modifier expressing intent                |
+| `sf-on-*`                       | State    | `sf-on-hover`                    | Interaction modifier                             |
+| `sf-is-*`                       | Context  | `sf-is-overflow-right`           | JS-detected or author-declared condition         |
+| `sf-*_*` (underscore)           | Semantic | `sf-fg_primary`                  | One property, mirrors a composite token name     |
+| `sf-*-*` (hyphen, scale step)   | Utility  | `sf-text-xl`                     | One property, explicit scale step                |
+| `sf-boundary-*` / `sf-divide-*` | Boundary | `sf-boundary-top`, `sf-divide-y` | Boundary intent on own sides or between children |
+| `sl-*`                          | Layout   | `sl-columns`                     | Structural arrangement                           |
 
 ---
 

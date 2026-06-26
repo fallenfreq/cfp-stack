@@ -98,11 +98,13 @@ export interface CreateClassRuleInput {
 	pseudo?: string | null
 }
 
-const CSS_PROPERTY_RE = /^[a-z][a-z0-9-]*$/
+const CSS_PROPERTY_RE = /^--[a-z][a-z0-9-]*$|^[a-z][a-z0-9-]*$/
 
 function assertValidCssProperty(property: string): void {
 	if (!CSS_PROPERTY_RE.test(property))
-		throw new ValidationError(`CSS property must match ${CSS_PROPERTY_RE} — got "${property}"`)
+		throw new ValidationError(
+			`CSS property must be a standard property or custom property (--*) — got "${property}"`,
+		)
 }
 
 function assertAtLeastOneClass(classNames: string[]): void {
@@ -136,9 +138,11 @@ function assertAllClassesExist(vocab: ClassVocabulary[], classNames: string[]): 
 function assertAtMostOneClassPerKind(vocab: ClassVocabulary[]): void {
 	const seen = new Map<string, string>()
 	for (const v of vocab) {
-		// State and context classes may be compounded freely — rules can require
-		// multiple simultaneous conditions (e.g. sf-is-overflow-start + sf-is-overflow-end).
-		if (v.kind === 'state' || v.kind === 'context') continue
+		// State, context, and bundle classes may be compounded freely.
+		// Bundles from different families (sf-depth-* × sf-loudness-*) compose
+		// intentionally via compound selectors — the cascade composition pattern
+		// depends on this. Same for state/context (sf-is-overflow-left + -right).
+		if (v.kind === 'state' || v.kind === 'context' || v.kind === 'bundle') continue
 		const prev = seen.get(v.kind)
 		if (prev)
 			throw new ValidationError(

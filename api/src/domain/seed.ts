@@ -209,6 +209,22 @@ const VOCABULARY: VocabSpec[] = [
 	{ name: 'sf-heading-2', kind: 'bundle', description: 'Secondary heading' },
 	{ name: 'sf-heading-3', kind: 'bundle', description: 'Tertiary heading' },
 
+	// Loudness bundles — attention hierarchy among sibling content blocks; theme decides expression
+	{
+		name: 'sf-loudness-1',
+		kind: 'bundle',
+		description: 'Highest attention — most visual weight',
+	},
+	{ name: 'sf-loudness-2', kind: 'bundle', description: 'Moderate attention — default weight' },
+	{ name: 'sf-loudness-3', kind: 'bundle', description: 'Lowest attention — de-emphasised' },
+
+	// Size bundles — form factor; theme decides padding and radius per step
+	{ name: 'sf-size-xs', kind: 'bundle', description: 'Pill, badge, icon button' },
+	{ name: 'sf-size-sm', kind: 'bundle', description: 'Compact — small button, tag' },
+	{ name: 'sf-size-md', kind: 'bundle', description: 'Standard form factor' },
+	{ name: 'sf-size-lg', kind: 'bundle', description: 'Large — featured tile' },
+	{ name: 'sf-size-xl', kind: 'bundle', description: 'Hero scale' },
+
 	// Variants
 	{
 		name: 'sf-variant-featured',
@@ -239,16 +255,46 @@ const VOCABULARY: VocabSpec[] = [
 	},
 	{ name: 'sf-on-disabled', kind: 'state', pseudo: null, description: 'Disabled state modifier' },
 
-	// Context — JS-detected content conditions; sits above variant, below state
+	// Context — JS-detected or author-declared conditions; sits above variant, below state
 	{
-		name: 'sf-is-overflow-start',
+		name: 'sf-is-edge-top',
 		kind: 'context',
-		description: 'Content is clipped at the leading edge',
+		description: 'Element is flush with the top viewport edge',
 	},
 	{
-		name: 'sf-is-overflow-end',
+		name: 'sf-is-edge-right',
 		kind: 'context',
-		description: 'Content is clipped at the trailing edge',
+		description: 'Element is flush with the right viewport edge',
+	},
+	{
+		name: 'sf-is-edge-bottom',
+		kind: 'context',
+		description: 'Element is flush with the bottom viewport edge',
+	},
+	{
+		name: 'sf-is-edge-left',
+		kind: 'context',
+		description: 'Element is flush with the left viewport edge',
+	},
+	{
+		name: 'sf-is-overflow-top',
+		kind: 'context',
+		description: 'Content is clipped at the top edge (JS-toggled)',
+	},
+	{
+		name: 'sf-is-overflow-right',
+		kind: 'context',
+		description: 'Content is clipped at the right edge (JS-toggled)',
+	},
+	{
+		name: 'sf-is-overflow-bottom',
+		kind: 'context',
+		description: 'Content is clipped at the bottom edge (JS-toggled)',
+	},
+	{
+		name: 'sf-is-overflow-left',
+		kind: 'context',
+		description: 'Content is clipped at the left edge (JS-toggled)',
 	},
 
 	// Layout primitives
@@ -322,6 +368,52 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
+
+	// Rank × depth-1 compounds — express attention difference through elevation cues.
+	// loudness-2 is the default depth-1 treatment (shadow-md, no border); no rule needed.
+	{
+		classNames: ['sf-depth-1', 'sf-loudness-1'],
+		cssProperty: 'box-shadow',
+		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+	},
+	{
+		classNames: ['sf-depth-1', 'sf-loudness-1'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{ classNames: ['sf-depth-1', 'sf-loudness-3'], cssProperty: 'box-shadow', value: 'none' },
+	{
+		classNames: ['sf-depth-1', 'sf-loudness-3'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+
+	// Depth-1 × variant-featured — tinted card; overrides the bare featured solid-primary
+	// background in sf-variant layer via higher specificity (compound beats bare rule).
+	{
+		classNames: ['sf-depth-1', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary) / var(--sf-alpha-2))',
+	},
+	{
+		classNames: ['sf-depth-1', 'sf-variant-featured'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-primary) / var(--sf-alpha-5))',
+	},
+	{ classNames: ['sf-depth-1', 'sf-variant-featured'], cssProperty: 'box-shadow', value: 'none' },
+	{ classNames: ['sf-depth-1', 'sf-variant-featured'], cssProperty: 'color', value: 'inherit' },
+
+	// Size bundles — sets --sf-padding (inheritable, read by layout primitives) + border-radius
+	{ classNames: ['sf-size-xs'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xs)' },
+	{ classNames: ['sf-size-xs'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
+	{ classNames: ['sf-size-sm'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-sm)' },
+	{ classNames: ['sf-size-sm'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+	{ classNames: ['sf-size-md'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-md)' },
+	{ classNames: ['sf-size-md'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+	{ classNames: ['sf-size-lg'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-lg)' },
+	{ classNames: ['sf-size-lg'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+	{ classNames: ['sf-size-xl'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xl)' },
+	{ classNames: ['sf-size-xl'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
 
 	// Heading — font-size + line-height
 	{ classNames: ['sf-heading-1'], cssProperty: 'font-size', value: 'var(--sf-text-4xl)' },
@@ -399,22 +491,47 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// Overflow context — mask-image applied to the scrolling element.
 	// Arrows are component-level; ::before/::after rules can be added per-theme via the DB.
-	// Compound rule (both active) has higher specificity and handles the both-edges case.
+	// Same-axis compound rules handle both-edges case at higher specificity.
 	{
-		classNames: ['sf-is-overflow-start'],
+		classNames: ['sf-is-overflow-left'],
 		cssProperty: 'mask-image',
 		value: 'linear-gradient(to right, transparent, black 60px)',
 	},
 	{
-		classNames: ['sf-is-overflow-end'],
+		classNames: ['sf-is-overflow-right'],
 		cssProperty: 'mask-image',
 		value: 'linear-gradient(to left, transparent, black 60px)',
 	},
 	{
-		classNames: ['sf-is-overflow-start', 'sf-is-overflow-end'],
+		classNames: ['sf-is-overflow-left', 'sf-is-overflow-right'],
 		cssProperty: 'mask-image',
 		value: 'linear-gradient(to right, transparent, black 60px, black calc(100% - 60px), transparent)',
 	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		cssProperty: 'mask-image',
+		value: 'linear-gradient(to bottom, transparent, black 60px)',
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		cssProperty: 'mask-image',
+		value: 'linear-gradient(to top, transparent, black 60px)',
+	},
+	{
+		classNames: ['sf-is-overflow-top', 'sf-is-overflow-bottom'],
+		cssProperty: 'mask-image',
+		value: 'linear-gradient(to bottom, transparent, black 60px, black calc(100% - 60px), transparent)',
+	},
+
+	// Viewport-edge context — zero the corners that touch the boundary; theme may override per-corner.
+	{ classNames: ['sf-is-edge-top'], cssProperty: 'border-top-left-radius', value: '0' },
+	{ classNames: ['sf-is-edge-top'], cssProperty: 'border-top-right-radius', value: '0' },
+	{ classNames: ['sf-is-edge-right'], cssProperty: 'border-top-right-radius', value: '0' },
+	{ classNames: ['sf-is-edge-right'], cssProperty: 'border-bottom-right-radius', value: '0' },
+	{ classNames: ['sf-is-edge-bottom'], cssProperty: 'border-bottom-right-radius', value: '0' },
+	{ classNames: ['sf-is-edge-bottom'], cssProperty: 'border-bottom-left-radius', value: '0' },
+	{ classNames: ['sf-is-edge-left'], cssProperty: 'border-top-left-radius', value: '0' },
+	{ classNames: ['sf-is-edge-left'], cssProperty: 'border-bottom-left-radius', value: '0' },
 
 	// Variants — minimal property set; themes can extend per-bundle compound rules
 	{
