@@ -53,6 +53,7 @@
 		"zod": "^3.25.76"
 	},
 	"devDependencies": {
+		"@trpc/server": "11.0.0-rc.402",
 		"@types/google.maps": "^3.64.1",
 		"@types/postcss-safe-parser": "^5.0.4",
 		"@vitejs/plugin-vue": "^6.0.5",

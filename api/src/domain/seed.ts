@@ -605,16 +605,7 @@ async function wipeDesignSystem(db: Db): Promise<void> {
 	await db.delete(classVocabulary)
 }
 
-export interface SeedSummary {
-	brandUserId: number
-	themesCreated: number
-	tokensSet: number
-	vocabularyEntries: number
-	rulesCreated: number
-	collapseStepsSeeded: number
-}
-
-export async function seed(db: Db): Promise<SeedSummary> {
+export async function seed(db: Db) {
 	const brandUserId = await ensureBrandUser(db)
 
 	await wipeDesignSystem(db)

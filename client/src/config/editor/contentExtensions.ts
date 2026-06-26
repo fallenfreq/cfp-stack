@@ -30,14 +30,12 @@ const SF_HEADING_CLASS_RE = /^sf-heading-\d+$/
 
 export const SfHeading = Heading.extend({
 	addOptions() {
-		return { ...this.parent?.(), levels: [1, 2, 3] as Level[] }
+		return { HTMLAttributes: {}, levels: [1, 2, 3] as Level[] }
 	},
 	addAttributes() {
-		const parent = (this.parent?.() ?? {}) as Record<string, unknown>
 		return {
-			...parent,
 			level: {
-				...(parent.level as object),
+				rendered: false,
 				...enumAttr(this.options.levels[0], this.options.levels),
 			},
 		}
