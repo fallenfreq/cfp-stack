@@ -63,8 +63,15 @@ content is, it does not belong.
 
 A second boundary: HTML element selectors are a valid and intended theming surface.
 Where the element type already encodes both semantic role and styling surface —
-`<button>`, `<table>`, `<input>` — the theme targets the element directly and no class
-is needed. The sf vocabulary fills the gap where element type alone is insufficient:
+`<button>`, `<table>`, `<input>` — the theme targets the element directly. Element
+types AND-chain with sf classes exactly as classes AND-chain with each other —
+`button.sf-variant-danger` is a button carrying danger intent, the same pattern as
+`.sf-depth-1.sf-variant-featured`. All go in `sf-bundle`; element selectors (0-0-1)
+lose to class selectors (0-1-0) in the same layer, so bare element rules naturally
+sit below class bundles. With classes present, the layer follows the highest-kind
+class as normal.
+
+The sf vocabulary fills the gap where element type alone is insufficient:
 `sf-heading-*` exists because h1–h6 encode document outline position, not visual
 prominence, and the two can diverge. `sf-variant-danger` exists because a `<button>`
 alone does not encode destructive intent.
@@ -94,7 +101,7 @@ Layers are declared lowest to highest priority; inline styles override all of th
 
 | Layer         | Holds                                                                         |
 | ------------- | ----------------------------------------------------------------------------- |
-| `sf-bundle`   | Multi-property bundles like `sf-depth-*`, `sf-heading-*`                      |
+| `sf-bundle`   | Multi-property bundles (`sf-depth-*`, `sf-heading-*`) and bare element rules  |
 | `sf-variant`  | `sf-variant-*` — modifiers overlaid on a bundle                               |
 | `sf-context`  | `sf-is-*` — JS-detected runtime conditions (overflow, selection, etc.)        |
 | `sf-semantic` | Single-property bindings to a shared semantic token (e.g. `sf-fg_primary`)    |

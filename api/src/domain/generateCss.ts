@@ -224,8 +224,8 @@ function groupRulesByLayer(rules: ClassRuleWithClasses[]): Map<Layer, LayerRules
 	const out = new Map<Layer, LayerRules>()
 	for (const rule of rules) {
 		const sorted = [...rule.classes].sort(compareClasses)
-		const selector = buildSelector(sorted, rule.pseudo ?? null)
-		const layer = ruleLayerFor(sorted)
+		const selector = buildSelector(sorted, rule.pseudo ?? null, rule.elementSelector ?? null)
+		const layer = ruleLayerFor(sorted, rule.elementSelector ?? null)
 
 		let layerMap = out.get(layer)
 		if (!layerMap) {
@@ -263,8 +263,9 @@ function compareClasses(
 function buildSelector(
 	sortedClasses: readonly { name: string; kind: string; pseudo: string | null }[],
 	rulePseudo: string | null = null,
+	elementSelector: string | null = null,
 ): string {
-	let base = ''
+	let base = elementSelector ?? ''
 	let pseudos = ''
 	for (const c of sortedClasses) {
 		base += `.${c.name}`
@@ -274,11 +275,20 @@ function buildSelector(
 	return base + pseudos + (rulePseudo ?? '')
 }
 
-// Highest kind's layer. Classes are already sorted bundle → layout, so the
-// last entry wins. Domain guarantees ≥1 class per rule.
-function ruleLayerFor(sortedClasses: readonly { kind: string }[]): Layer {
+// Highest kind's layer. Classes are sorted bundle → layout so the last entry wins.
+// Bare element rules (no classes) go in sf-bundle — element specificity (0-0-1)
+// naturally loses to class selectors (0-1-0) within the same layer.
+function ruleLayerFor(
+	sortedClasses: readonly { kind: string }[],
+	elementSelector: string | null = null,
+): Layer {
 	const last = sortedClasses[sortedClasses.length - 1]
-	if (!last) throw new Error('rule with zero classes — domain invariant violated')
+	if (!last) {
+		if (elementSelector) return 'sf-bundle'
+		throw new Error(
+			'rule with zero classes and no element selector — domain invariant violated',
+		)
+	}
 	return KIND_TO_LAYER[last.kind as ClassKind]
 }
 

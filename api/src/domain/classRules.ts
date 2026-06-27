@@ -13,7 +13,66 @@ import { CLASS_KINDS, type ClassKind, type Db } from './types.js'
 // ─── Vocabulary admin ────────────────────────────────────────────────────
 
 const CLASS_NAME_RE = /^(sf|sl)-[a-z][a-z0-9_-]*$/
-const PSEUDO_RE = /^:[a-z][a-z-]*$/
+const PSEUDO_RE = /^::?[a-z][a-z-]*$/
+
+// Interactive + structural elements only. Heading/text-scale elements (h1-h6, p) are
+// intentionally excluded — those are handled by sf-heading-* bundles and token utilities.
+const HTML_ELEMENTS = new Set([
+	// Interactive
+	'a',
+	'button',
+	// Form
+	'fieldset',
+	'form',
+	'input',
+	'label',
+	'legend',
+	'output',
+	'progress',
+	'select',
+	'textarea',
+	// Layout landmarks
+	'aside',
+	'footer',
+	'header',
+	'main',
+	'nav',
+	'section',
+	'article',
+	// Disclosure / modal
+	'details',
+	'dialog',
+	'summary',
+	// Tables
+	'caption',
+	'table',
+	'tbody',
+	'td',
+	'tfoot',
+	'th',
+	'thead',
+	'tr',
+	// Lists
+	'dd',
+	'dl',
+	'dt',
+	'li',
+	'ol',
+	'ul',
+	// Media
+	'audio',
+	'canvas',
+	'figure',
+	'figcaption',
+	'img',
+	'picture',
+	'video',
+	// Content blocks (theme-styleable)
+	'blockquote',
+	'code',
+	'kbd',
+	'pre',
+])
 
 function assertValidClassName(name: string): void {
 	if (!CLASS_NAME_RE.test(name))
@@ -32,6 +91,13 @@ function assertValidPseudo(value: string | null | undefined): void {
 	if (!PSEUDO_RE.test(value))
 		throw new ValidationError(
 			`Pseudo must start with ':' and use lowercase letters — got "${value}"`,
+		)
+}
+
+function assertValidElementSelector(element: string): void {
+	if (!HTML_ELEMENTS.has(element))
+		throw new ValidationError(
+			`Element selector must be a known HTML element — got "${element}"`,
 		)
 }
 
@@ -82,21 +148,28 @@ export async function listVocabulary(db: Db): Promise<ClassVocabulary[]> {
 }
 
 // ─── Class rules ─────────────────────────────────────────────────────────
-// A rule binds a set of classes (1+) to a single CSS property on a theme.
-// The generator joins the junction at emit time to build canonical selectors;
-// pseudos come from the involved state classes' vocabulary entries.
+// A rule binds a CSS property to a selector on a theme. The selector is built
+// from an optional element type AND-chained with zero or more vocabulary classes.
+// At least one of elementSelector or classNames must be provided.
+// The generator left-joins the junction at emit time; pseudos come from the
+// involved state classes' vocabulary entries.
 
 export type ClassRuleWithClasses = ClassRule & {
 	classes: { name: string; kind: ClassKind; pseudo: string | null }[]
 }
 
-export interface CreateClassRuleInput {
+interface ClassRuleBase {
 	themeId: string
-	classNames: string[]
 	cssProperty: string
 	value: string
 	pseudo?: string | null
 }
+
+export type CreateClassRuleInput =
+	// Class-first: one or more vocabulary classes required; element is optional narrowing
+	| (ClassRuleBase & { classNames: [string, ...string[]]; elementSelector?: string | null })
+	// Element-first: element required; classes are optional narrowing
+	| (ClassRuleBase & { elementSelector: string; classNames?: string[] })
 
 const CSS_PROPERTY_RE = /^--[a-z][a-z0-9-]*$|^[a-z][a-z0-9-]*$/
 
@@ -105,11 +178,6 @@ function assertValidCssProperty(property: string): void {
 		throw new ValidationError(
 			`CSS property must be a standard property or custom property (--*) — got "${property}"`,
 		)
-}
-
-function assertAtLeastOneClass(classNames: string[]): void {
-	if (classNames.length === 0)
-		throw new ValidationError('A rule must reference at least one class')
 }
 
 function assertUniqueClassNames(classNames: string[]): void {
@@ -158,31 +226,47 @@ async function assertNoDuplicateRule(
 	classNames: string[],
 	cssProperty: string,
 	pseudo: string | null,
+	elementSelector: string | null,
 ): Promise<void> {
 	const rows = await db
 		.select({
 			ruleId: classRules.id,
 			className: classRuleClasses.className,
 			rulePseudo: classRules.pseudo,
+			ruleElement: classRules.elementSelector,
 		})
 		.from(classRules)
-		.innerJoin(classRuleClasses, eq(classRuleClasses.ruleId, classRules.id))
+		.leftJoin(classRuleClasses, eq(classRuleClasses.ruleId, classRules.id))
 		.where(and(eq(classRules.themeId, themeId), eq(classRules.cssProperty, cssProperty)))
 
 	if (rows.length === 0) return
 
-	const byRule = new Map<number, { classes: string[]; pseudo: string | null }>()
-	for (const { ruleId, className, rulePseudo } of rows) {
+	const byRule = new Map<
+		number,
+		{ classes: string[]; pseudo: string | null; element: string | null }
+	>()
+	for (const { ruleId, className, rulePseudo, ruleElement } of rows) {
 		const entry = byRule.get(ruleId)
-		if (entry) entry.classes.push(className)
-		else byRule.set(ruleId, { classes: [className], pseudo: rulePseudo })
+		if (entry) {
+			if (className) entry.classes.push(className)
+		} else {
+			byRule.set(ruleId, {
+				classes: className ? [className] : [],
+				pseudo: rulePseudo,
+				element: ruleElement,
+			})
+		}
 	}
 
 	const target = [...classNames].sort().join('|')
-	for (const { classes, pseudo: existingPseudo } of byRule.values()) {
-		if (classes.sort().join('|') === target && existingPseudo === pseudo)
+	for (const { classes, pseudo: existingPseudo, element } of byRule.values()) {
+		if (
+			classes.sort().join('|') === target
+			&& existingPseudo === pseudo
+			&& element === elementSelector
+		)
 			throw new ConflictError(
-				`A rule already exists for theme ${themeId} with classes [${classNames.join(', ')}], property ${cssProperty}, and pseudo ${pseudo ?? 'none'}`,
+				`A rule already exists for theme ${themeId} with element ${elementSelector ?? 'none'}, classes [${classNames.join(', ')}], property ${cssProperty}, and pseudo ${pseudo ?? 'none'}`,
 			)
 	}
 }
@@ -191,19 +275,33 @@ export async function createClassRule(
 	db: Db,
 	input: CreateClassRuleInput,
 ): Promise<{ id: number }> {
-	assertAtLeastOneClass(input.classNames)
-	assertUniqueClassNames(input.classNames)
+	const elementSelector = input.elementSelector ?? null
+	const classNames = input.classNames ?? []
+
+	if (elementSelector) assertValidElementSelector(elementSelector)
+	if (classNames.length > 0) assertUniqueClassNames(classNames)
 	assertValidCssProperty(input.cssProperty)
 	if (!input.value.trim()) throw new ValidationError('Rule value is required')
 
+	const pseudo = input.pseudo ?? null
+	if (pseudo) assertValidPseudo(pseudo)
+
 	await getThemeOrThrow(db, input.themeId)
 
-	const vocab = await fetchVocabForClasses(db, input.classNames)
-	assertAllClassesExist(vocab, input.classNames)
-	assertAtMostOneClassPerKind(vocab)
+	if (classNames.length > 0) {
+		const vocab = await fetchVocabForClasses(db, classNames)
+		assertAllClassesExist(vocab, classNames)
+		assertAtMostOneClassPerKind(vocab)
+	}
 
-	const pseudo = input.pseudo ?? null
-	await assertNoDuplicateRule(db, input.themeId, input.classNames, input.cssProperty, pseudo)
+	await assertNoDuplicateRule(
+		db,
+		input.themeId,
+		classNames,
+		input.cssProperty,
+		pseudo,
+		elementSelector,
+	)
 
 	const rule = await db
 		.insert(classRules)
@@ -212,13 +310,16 @@ export async function createClassRule(
 			cssProperty: input.cssProperty,
 			value: input.value.trim(),
 			pseudo,
+			elementSelector,
 		})
 		.returning({ id: classRules.id })
 		.get()
 
-	await db
-		.insert(classRuleClasses)
-		.values(input.classNames.map((className) => ({ ruleId: rule.id, className })))
+	if (classNames.length > 0) {
+		await db
+			.insert(classRuleClasses)
+			.values(classNames.map((className) => ({ ruleId: rule.id, className })))
+	}
 
 	await touchTheme(db, input.themeId)
 
@@ -238,6 +339,8 @@ export async function deleteClassRule(db: Db, ruleId: number): Promise<void> {
 
 // Shared shape for the rules + junction + vocabulary join. Each public
 // reader appends its own WHERE (or none) before awaiting.
+// leftJoin is required: bare element rules have no junction rows and would
+// disappear under an innerJoin.
 function ruleJoinQuery(db: Db) {
 	return db
 		.select({
@@ -246,14 +349,15 @@ function ruleJoinQuery(db: Db) {
 			cssProperty: classRules.cssProperty,
 			value: classRules.value,
 			rulePseudo: classRules.pseudo,
+			ruleElement: classRules.elementSelector,
 			createdAt: classRules.createdAt,
 			className: classVocabulary.name,
 			classKind: classVocabulary.kind,
 			classPseudo: classVocabulary.pseudo,
 		})
 		.from(classRules)
-		.innerJoin(classRuleClasses, eq(classRuleClasses.ruleId, classRules.id))
-		.innerJoin(classVocabulary, eq(classVocabulary.name, classRuleClasses.className))
+		.leftJoin(classRuleClasses, eq(classRuleClasses.ruleId, classRules.id))
+		.leftJoin(classVocabulary, eq(classVocabulary.name, classRuleClasses.className))
 }
 
 interface RuleJoinRow {
@@ -262,9 +366,10 @@ interface RuleJoinRow {
 	cssProperty: string
 	value: string
 	rulePseudo: string | null
+	ruleElement: string | null
 	createdAt: Date
-	className: string
-	classKind: string
+	className: string | null
+	classKind: string | null
 	classPseudo: string | null
 }
 
@@ -279,16 +384,19 @@ function groupRulesFromRows(rows: RuleJoinRow[]): ClassRuleWithClasses[] {
 				cssProperty: r.cssProperty,
 				value: r.value,
 				pseudo: r.rulePseudo,
+				elementSelector: r.ruleElement,
 				createdAt: r.createdAt,
 				classes: [],
 			}
 			byId.set(r.ruleId, rule)
 		}
-		rule.classes.push({
-			name: r.className,
-			kind: r.classKind as ClassKind,
-			pseudo: r.classPseudo,
-		})
+		if (r.className && r.classKind) {
+			rule.classes.push({
+				name: r.className,
+				kind: r.classKind as ClassKind,
+				pseudo: r.classPseudo,
+			})
+		}
 	}
 	return [...byId.values()]
 }

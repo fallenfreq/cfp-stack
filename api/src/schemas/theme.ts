@@ -63,11 +63,16 @@ export const classRules = sqliteTable('class_rules', {
 		.references(() => themes.id, { onDelete: 'cascade' }),
 	cssProperty: text('css_property', { length: 64 }).notNull(),
 	value: text('value', { length: 512 }).notNull(),
-	// Pseudo-element target for this rule (e.g. '::before', '::after').
-	// Distinct from classVocabulary.pseudo which carries state pseudo-classes
-	// (:hover etc.) intrinsic to a class's meaning. Rule-level pseudo controls
-	// WHERE the CSS applies; vocabulary pseudo controls WHEN.
+	// Pseudo-class or pseudo-element appended to the final selector (e.g. ':hover', '::before').
+	// Distinct from classVocabulary.pseudo which carries state pseudo-classes intrinsic to a
+	// class's meaning. Rule-level pseudo controls WHEN/WHERE the CSS applies.
 	pseudo: text('pseudo', { length: 64 }),
+	// HTML element type that AND-chains with the vocabulary classes, placed first in the
+	// compound selector: element='button' + classes=[sf-variant-danger] → button.sf-variant-danger
+	// Analogous to .sf-depth-1.sf-variant-featured but with an element type as the leading part.
+	// All rules go in sf-bundle; bare element selectors (0-0-1) naturally lose to class
+	// selectors (0-1-0) in the same layer. Validated against HTML_ELEMENTS allowlist in code.
+	elementSelector: text('element_selector', { length: 64 }),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date()),

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { classVocabulary, themes } from '../schemas/theme.js'
 import { users } from '../schemas/user.js'
-import { addVocabularyEntry, createClassRule } from './classRules.js'
+import { type CreateClassRuleInput, addVocabularyEntry, createClassRule } from './classRules.js'
 import { setCollapseThreshold } from './collapseThresholds.js'
 import { SEED_VERSION } from './seedVersion.js'
 import { createTheme } from './themes.js'
@@ -328,12 +328,7 @@ const VOCABULARY: VocabSpec[] = [
 // property set. Compound rules (e.g., per-bundle variant specialisation)
 // can be added per-theme without touching these.
 
-interface RuleSpec {
-	classNames: string[]
-	cssProperty: string
-	value: string
-	pseudo?: string | null
-}
+type RuleSpec = Omit<CreateClassRuleInput, 'themeId'>
 
 const ROOT_RULES: RuleSpec[] = [
 	// Depth bundles — background + elevation cues
@@ -572,13 +567,7 @@ const COLLAPSE_THRESHOLDS = [
 ] as const
 
 function applyRule(db: Db, themeId: string, r: RuleSpec) {
-	return createClassRule(db, {
-		themeId,
-		classNames: r.classNames,
-		cssProperty: r.cssProperty,
-		value: r.value,
-		pseudo: r.pseudo ?? null,
-	})
+	return createClassRule(db, { themeId, ...r })
 }
 
 // ─── Orchestrator ────────────────────────────────────────────────────────
