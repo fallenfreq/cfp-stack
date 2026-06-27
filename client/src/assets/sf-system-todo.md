@@ -297,11 +297,13 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
 - [ ] `sf-size-*` bundles (`xs`, `sm`, `md`, `lg`, `xl`) — intended form factor; sets
       proportional visual properties (padding, border-radius, etc.). Seed vocabulary +
       rules; design pass needed to decide which properties each step sets.
-- [ ] `sf-loudness-*` bundles (`-1`, `-2`, `-3`) — absolute attention-weight scale; no relative-to-siblings
-      assumption. Theme decides which CSS properties express each level (scale, padding, type weight,
-      contrast, or a combination). Start with a minimal property set and add per consumer need, same
-      posture as `sf-depth-*`. Seed vocabulary + rules; no editor wiring needed until a content-author
-      picker is designed.
+- [x] `sf-loudness-*` bundles (`-1`, `-2`, `-3`) — vocabulary seeded; direction fixed to higher = more
+      attention (consistent with all other numbered scales; heading-\* is the only exception, forced by
+      HTML convention). Compound rules seeded for `sf-depth-1 × sf-loudness-1/3`. No editor wiring
+      needed until a content-author picker is designed.
+- [x] `sf-variant-alt-1` — vocabulary + compound rule seeded (`sf-size-xs.sf-variant-alt-1` → pill
+      corners). Numbered from the start so alt-2 etc. are additive. The "alt" is relative to the
+      default rendering of the full class combination, not just depth or loudness.
 - [ ] `sf-boundary-*` / `sf-divide-*` boundary classes — `sf-boundary-{top,bottom,left,right,x,y,boundary}` on
       the element itself; `sf-divide-{x,y}` on the parent targeting `> * + *`. Both in `sf-semantic`
       layer; theme decides full treatment (line, shadow, tint, spacing increase). Seed vocabulary +
@@ -312,6 +314,9 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
       inline `maskStyle` computed to `sf-is-*` classes on the scroller element.
 - [x] `sf-is-edge-{top,right,bottom,left}` — viewport-flush context; vocabulary + rules seeded
       (zeros the two corners that touch the boundary). Author-applied (not JS-toggled).
+- [x] `sf-is-overlay` — vocabulary + bare rule seeded. Reads `--sf-surface-color` (bridge variable
+      set by `sf-depth-*` bundles) so one rule covers all depths without duplicating colour
+      knowledge. Establishes the internal bridge variable convention — documented in spec.
 - [ ] `sf-is-loading` / `sf-is-sticky` / `sf-is-error` — added to spec; seed vocabulary +
       rules. Loading: skeleton shimmer or opacity reduction. Sticky: shadow or border on
       the pinned element. Error: border-color + optional background tint on the field.

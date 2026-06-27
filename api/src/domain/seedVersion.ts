@@ -2,4 +2,4 @@
 // The sf-system CSS endpoint compares this against the stored root theme version
 // and auto-reseeds on mismatch, so the local DB self-heals without manual steps.
 // Must be valid semver (MAJOR.MINOR.PATCH).
-export const SEED_VERSION = '1.5.0'
+export const SEED_VERSION = '1.7.0'

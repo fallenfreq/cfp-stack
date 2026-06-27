@@ -41,22 +41,23 @@ The vocabulary must remain small and stable. Growth is the primary failure mode.
 
 **The test:** does the meaning survive theme changes?
 
-| Class                  | Belongs? | Why                                                        |
-| ---------------------- | -------- | ---------------------------------------------------------- |
-| `sf-variant-danger`    | Yes      | Danger is intent                                           |
-| `sf-on-hover`          | Yes      | Hover is a state                                           |
-| `sf-depth-1`           | Yes      | Visual layer position coordinates perceived hierarchy      |
-| `sf-variant-subtle`    | No       | Redundant — loudness covers attention weight               |
-| `sl-columns`           | Yes      | Columns is structure                                       |
-| `sf-fg_primary`        | Yes      | Shared semantic value                                      |
-| `sf-loudness-1`        | Yes      | Attention hierarchy is intent, not a visual treatment      |
-| `sf-is-overflow-right` | Yes      | Runtime condition set by JS, not authored intent           |
-| `sf-is-edge-top`       | Yes      | Viewport-flush context — theme decides corner treatment    |
-| `sf-boundary-top`      | Yes      | Boundary signals edge-treatment intent, not a CSS property |
-| `sf-divide-y`          | Yes      | Divide signals separation between children                 |
-| `sf-variant-glass`     | No       | Glass is a visual treatment, not intent                    |
-| `sf-variant-card`      | No       | Card is an implementation concept                          |
-| `sl-sidebar`           | No       | Sidebar names content, not structure                       |
+| Class                  | Belongs? | Why                                                                    |
+| ---------------------- | -------- | ---------------------------------------------------------------------- |
+| `sf-variant-danger`    | Yes      | Danger is intent                                                       |
+| `sf-on-hover`          | Yes      | Hover is a state                                                       |
+| `sf-depth-1`           | Yes      | Visual layer position coordinates perceived hierarchy                  |
+| `sf-variant-subtle`    | No       | Redundant — loudness covers attention weight                           |
+| `sl-columns`           | Yes      | Columns is structure                                                   |
+| `sf-fg_primary`        | Yes      | Shared semantic value                                                  |
+| `sf-loudness-1`        | Yes      | Attention hierarchy is intent, not a visual treatment                  |
+| `sf-is-overflow-right` | Yes      | Runtime condition set by JS, not authored intent                       |
+| `sf-is-edge-top`       | Yes      | Viewport-flush context — theme decides corner treatment                |
+| `sf-boundary-top`      | Yes      | Boundary signals edge-treatment intent, not a CSS property             |
+| `sf-divide-y`          | Yes      | Divide signals separation between children                             |
+| `sf-variant-alt-1`     | Yes      | "Look distinct from the default" is portable intent; theme decides how |
+| `sf-variant-glass`     | No       | Glass is a visual treatment, not intent                                |
+| `sf-variant-card`      | No       | Card is an implementation concept                                      |
+| `sl-sidebar`           | No       | Sidebar names content, not structure                                   |
 
 If understanding the class requires knowing what the theme looks like or what the
 content is, it does not belong.
@@ -120,6 +121,24 @@ matching `@layer` block. **Unlayered CSS beats all layered CSS** regardless of
 specificity, so an override written outside a layer would silently destroy the order.
 Token declarations (`.theme-x { --sf-X: ... }`) are exempt — custom properties cascade
 per-property by specificity and don't need to live in a layer.
+
+### Internal bridge variables
+
+Where a context or state rule needs to reference a value set by a bundle rule, the bundle
+exposes it as a `--sf-*` custom property alongside the main declaration. The higher-priority
+layer reads the variable rather than duplicating the token reference.
+
+Current bridge variables:
+
+| Variable             | Set by                          | Read by                 |
+| -------------------- | ------------------------------- | ----------------------- |
+| `--sf-surface-color` | `sf-depth-*`                    | `sf-is-overlay`         |
+| `--sf-shadow-color`  | caller (inline or context rule) | `sf-shadow-*` utilities |
+
+These are not theme-level tokens. Theme authors set them through class composition or
+compound rules, not directly. When adding a new context rule that needs a bundle value,
+expose the value as a bridge variable in the bundle rule rather than writing per-depth
+compound rules.
 
 ---
 
@@ -266,12 +285,13 @@ sf-heading-2   secondary
 sf-heading-3   tertiary
 ```
 
-**Loudness** — attention hierarchy among sibling content blocks:
+**Loudness** — attention hierarchy among sibling content blocks. Higher number = more
+attention, consistent with the rest of the numbered scales in the system:
 
 ```
-sf-loudness-1   highest attention — most visual weight, spacing, prominence
+sf-loudness-1   lowest attention — de-emphasised, supporting content
 sf-loudness-2   moderate attention
-sf-loudness-3   lowest attention — de-emphasised, supporting content
+sf-loudness-3   highest attention — most visual weight, spacing, prominence
 ```
 
 Loudness is an absolute scale of attention weight, not a claim about neighbours. A block
@@ -317,6 +337,8 @@ sf-variant-featured   editorially selected or promoted — a featured product, a
 sf-variant-danger     destructive action — delete, remove, irreversible
 sf-variant-warning    cautionary — something needs attention but is not destructive
 sf-variant-success    positive outcome — confirmation, completion, approval
+sf-variant-alt-1      alternative visual form — distinct rendering of the same class combination,
+                      no semantic intent beyond looking different from the default
 ```
 
 Variants are not about visual weight — that is loudness's job. `sf-variant-featured` on a
@@ -338,6 +360,7 @@ sf-is-overflow-top     content is clipped at the top
 sf-is-overflow-right   content is clipped at the right
 sf-is-overflow-bottom  content is clipped at the bottom
 sf-is-overflow-left    content is clipped at the left
+sf-is-overlay          element is physically positioned over other content
 sf-is-loading          element is in a loading / pending state
 sf-is-sticky           a sticky element is currently in its pinned position
 sf-is-error            element or field is in a validation / error state

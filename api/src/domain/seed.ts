@@ -214,14 +214,20 @@ const VOCABULARY: VocabSpec[] = [
 	{ name: 'sf-heading-2', kind: 'bundle', description: 'Secondary heading' },
 	{ name: 'sf-heading-3', kind: 'bundle', description: 'Tertiary heading' },
 
-	// Loudness bundles — attention hierarchy among sibling content blocks; theme decides expression
+	// Loudness bundles — attention hierarchy; higher number = more attention. Theme decides
+	// expression (scale, padding, type weight, contrast, or combination). loudness-2 is the
+	// implied default when no loudness class is present.
 	{
 		name: 'sf-loudness-1',
 		kind: 'bundle',
-		description: 'Highest attention — most visual weight',
+		description: 'Lowest attention — de-emphasised, supporting content',
 	},
 	{ name: 'sf-loudness-2', kind: 'bundle', description: 'Moderate attention — default weight' },
-	{ name: 'sf-loudness-3', kind: 'bundle', description: 'Lowest attention — de-emphasised' },
+	{
+		name: 'sf-loudness-3',
+		kind: 'bundle',
+		description: 'Highest attention — most visual weight',
+	},
 
 	// Size bundles — form factor; theme decides padding and radius per step
 	{ name: 'sf-size-xs', kind: 'bundle', description: 'Pill, badge, icon button' },
@@ -238,6 +244,15 @@ const VOCABULARY: VocabSpec[] = [
 	},
 	{ name: 'sf-variant-subtle', kind: 'variant', description: 'Deemphasised, secondary' },
 	{ name: 'sf-variant-danger', kind: 'variant', description: 'Destructive or warning' },
+	// alt-1 = alternative visual presentation of the same class combination; no semantic intent
+	// beyond "look distinct from the default rendering". The theme compounds against whatever
+	// other classes are present (depth, size, loudness) to decide the treatment.
+	// Numbered from the start so alt-2 etc. can be added without breaking existing content.
+	{
+		name: 'sf-variant-alt-1',
+		kind: 'variant',
+		description: 'Alternative visual form — distinct rendering of the same class combination',
+	},
 
 	// State classes — vocabulary only; rules are compound (depth/variant × state) added per-theme
 	{
@@ -301,6 +316,12 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'context',
 		description: 'Content is clipped at the left edge (JS-toggled)',
 	},
+	{
+		name: 'sf-is-overlay',
+		kind: 'context',
+		description:
+			'Element is physically positioned over other content — author-declared; theme decides treatment (translucency, blur, etc.)',
+	},
 
 	// Layout primitives
 	{ name: 'sl-stack', kind: 'layout', description: 'Vertical flex stack' },
@@ -336,13 +357,17 @@ const VOCABULARY: VocabSpec[] = [
 type RuleSpec = ClassOnlyRuleInput | ElementRuleInput
 
 const ROOT_RULES: RuleSpec[] = [
-	// Depth bundles — background + elevation cues
+	// Depth bundles — background + elevation cues.
+	// --sf-surface-color is set alongside background so sf-is-overlay can add alpha without
+	// needing to know which surface token the depth chose.
 	// depth-0: canvas, no elevation
+	{ classNames: ['sf-depth-0'], cssProperty: '--sf-surface-color', value: 'var(--sf-surface-0)' },
 	{ classNames: ['sf-depth-0'], cssProperty: 'background', value: 'rgb(var(--sf-surface-0))' },
 
 	// depth-1: cards, wells — background + shadow + radius
 	// Border is intentionally absent at the default level; flat themes add one by overriding
 	// box-shadow to none and adding border: 1px solid rgb(var(--sf-border_color)) instead.
+	{ classNames: ['sf-depth-1'], cssProperty: '--sf-surface-color', value: 'var(--sf-surface-1)' },
 	{ classNames: ['sf-depth-1'], cssProperty: 'background', value: 'rgb(var(--sf-surface-1))' },
 	{
 		classNames: ['sf-depth-1'],
@@ -352,6 +377,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-1'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 
 	// depth-2: dropdowns, popovers — stronger shadow
+	{ classNames: ['sf-depth-2'], cssProperty: '--sf-surface-color', value: 'var(--sf-surface-2)' },
 	{ classNames: ['sf-depth-2'], cssProperty: 'background', value: 'rgb(var(--sf-surface-2))' },
 	{
 		classNames: ['sf-depth-2'],
@@ -361,6 +387,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-2'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 
 	// depth-3: modals — strongest shadow
+	{ classNames: ['sf-depth-3'], cssProperty: '--sf-surface-color', value: 'var(--sf-surface-3)' },
 	{ classNames: ['sf-depth-3'], cssProperty: 'background', value: 'rgb(var(--sf-surface-3))' },
 	{
 		classNames: ['sf-depth-3'],
@@ -369,21 +396,20 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
 
-	// Rank × depth-1 compounds — express attention difference through elevation cues.
-	// loudness-2 is the default depth-1 treatment (shadow-md, no border); no rule needed.
+	// Loudness × depth-1 compounds — loudness-2 is the default (shadow-md, no border); no rule needed.
 	{
-		classNames: ['sf-depth-1', 'sf-loudness-1'],
+		classNames: ['sf-depth-1', 'sf-loudness-3'],
 		cssProperty: 'box-shadow',
 		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{
-		classNames: ['sf-depth-1', 'sf-loudness-1'],
+		classNames: ['sf-depth-1', 'sf-loudness-3'],
 		cssProperty: 'border',
 		value: '1px solid rgb(var(--sf-border_color))',
 	},
-	{ classNames: ['sf-depth-1', 'sf-loudness-3'], cssProperty: 'box-shadow', value: 'none' },
+	{ classNames: ['sf-depth-1', 'sf-loudness-1'], cssProperty: 'box-shadow', value: 'none' },
 	{
-		classNames: ['sf-depth-1', 'sf-loudness-3'],
+		classNames: ['sf-depth-1', 'sf-loudness-1'],
 		cssProperty: 'border',
 		value: '1px solid rgb(var(--sf-border_color))',
 	},
@@ -405,7 +431,13 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// Size bundles — sets --sf-padding (inheritable, read by layout primitives) + border-radius
 	{ classNames: ['sf-size-xs'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xs)' },
-	{ classNames: ['sf-size-xs'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
+	{ classNames: ['sf-size-xs'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+	// alt-1 at xs = pill; the compound wins over the bare xs rule within sf-bundle.
+	{
+		classNames: ['sf-size-xs', 'sf-variant-alt-1'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-3)',
+	},
 	{ classNames: ['sf-size-sm'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-sm)' },
 	{ classNames: ['sf-size-sm'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	{ classNames: ['sf-size-md'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-md)' },
@@ -521,6 +553,15 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overflow-top', 'sf-is-overflow-bottom'],
 		cssProperty: 'mask-image',
 		value: 'linear-gradient(to bottom, transparent, black 60px, black calc(100% - 60px), transparent)',
+	},
+
+	// Overlay context — reads --sf-surface-color (bridge variable set by each depth bundle) so one
+	// bare rule works at any depth without duplicating colour knowledge. Theme can compound
+	// (e.g. sf-depth-3.sf-is-overlay) to override for specific depths where different treatment is needed.
+	{
+		classNames: ['sf-is-overlay'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-surface-color, var(--sf-surface-0)) / var(--sf-alpha-9))',
 	},
 
 	// Viewport-edge context — zero the corners that touch the boundary; theme may override per-corner.
