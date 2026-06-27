@@ -158,18 +158,25 @@ export type ClassRuleWithClasses = ClassRule & {
 	classes: { name: string; kind: ClassKind; pseudo: string | null }[]
 }
 
-interface ClassRuleBase {
-	themeId: string
+export interface ClassOnlyRuleInput {
+	elementSelector?: null
+	classNames: [string, ...string[]]
+	cssProperty: string
+	value: string
+	pseudo?: string | null
+}
+
+export interface ElementRuleInput {
+	elementSelector: string
+	classNames?: string[]
 	cssProperty: string
 	value: string
 	pseudo?: string | null
 }
 
 export type CreateClassRuleInput =
-	// Class-first: one or more vocabulary classes required; element is optional narrowing
-	| (ClassRuleBase & { classNames: [string, ...string[]]; elementSelector?: string | null })
-	// Element-first: element required; classes are optional narrowing
-	| (ClassRuleBase & { elementSelector: string; classNames?: string[] })
+	| (ClassOnlyRuleInput & { themeId: string })
+	| (ElementRuleInput & { themeId: string })
 
 const CSS_PROPERTY_RE = /^--[a-z][a-z0-9-]*$|^[a-z][a-z0-9-]*$/
 
