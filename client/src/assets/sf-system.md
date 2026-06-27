@@ -49,7 +49,7 @@ The vocabulary must remain small and stable. Growth is the primary failure mode.
 | `sf-variant-subtle`    | No       | Redundant — loudness covers attention weight               |
 | `sl-columns`           | Yes      | Columns is structure                                       |
 | `sf-fg_primary`        | Yes      | Shared semantic value                                      |
-| `sf-loudness-1`        | Yes      | Attention hierarchy is relational, not a visual treatment  |
+| `sf-loudness-1`        | Yes      | Attention hierarchy is intent, not a visual treatment      |
 | `sf-is-overflow-right` | Yes      | Runtime condition set by JS, not authored intent           |
 | `sf-is-edge-top`       | Yes      | Viewport-flush context — theme decides corner treatment    |
 | `sf-boundary-top`      | Yes      | Boundary signals edge-treatment intent, not a CSS property |
@@ -61,7 +61,7 @@ The vocabulary must remain small and stable. Growth is the primary failure mode.
 If understanding the class requires knowing what the theme looks like or what the
 content is, it does not belong.
 
-A second boundary: HTML element selectors are a valid and intended theming surface.
+A further constraint: HTML element selectors are a valid and intended theming surface.
 Where the element type already encodes both semantic role and styling surface —
 `<button>`, `<table>`, `<input>` — the theme targets the element directly. Element
 types AND-chain with sf classes exactly as classes AND-chain with each other —
@@ -99,17 +99,18 @@ CSS cascade layers fix the override order regardless of source order:
 
 Layers are declared lowest to highest priority; inline styles override all of them.
 
-| Layer         | Holds                                                                         |
-| ------------- | ----------------------------------------------------------------------------- |
-| `sf-bundle`   | Multi-property bundles (`sf-depth-*`, `sf-heading-*`) and bare element rules  |
-| `sf-variant`  | `sf-variant-*` — modifiers overlaid on a bundle                               |
-| `sf-context`  | `sf-is-*` — JS-detected runtime conditions (overflow, selection, etc.)        |
-| `sf-semantic` | Single-property bindings to a shared semantic token (e.g. `sf-fg_primary`)    |
-| `sf-utility`  | Single-property bindings to a scale step (e.g. `sf-text-xl`)                  |
-| `sf-state`    | `sf-on-*` — interaction modifiers (highest so hover/focus win over utilities) |
+| Layer         | Holds                                                                                        |
+| ------------- | -------------------------------------------------------------------------------------------- |
+| `sf-bundle`   | Multi-property bundles (`sf-depth-*`, `sf-heading-*`) and bare element rules                 |
+| `sf-variant`  | `sf-variant-*` — modifiers overlaid on a bundle                                              |
+| `sf-context`  | `sf-is-*` — JS-detected runtime conditions (overflow, selection, etc.)                       |
+| `sf-semantic` | Single-property semantic token bindings (e.g. `sf-fg_primary`); boundary and divide families |
+| `sf-utility`  | Single-property bindings to a scale step (e.g. `sf-text-xl`)                                 |
+| `sf-state`    | `sf-on-*` — interaction modifiers (highest so hover/focus win over utilities)                |
 
-Single-property classes (semantic, utility) outrank variant: explicit per-property
-overrides win over intent-level modifiers.
+Bundles are the authoring baseline. Single-property classes (semantic, utility) are
+per-property overrides — they outrank variant because explicit property intent beats
+bundle-level meaning.
 
 `sl-` layout classes sit outside this order. They govern arrangement and do not compete
 with `sf-` classes for the same properties.
@@ -216,7 +217,7 @@ scale step directly.
 
 ## sf- classes
 
-Five layers in cascade order. The same authoring pattern applies everywhere — defaults
+Six layers in cascade order. The same authoring pattern applies everywhere — defaults
 and theme overrides both live inside the matching `@layer` block:
 
 ```css
@@ -324,18 +325,19 @@ how to express it at each size.
 
 ### Context — `sf-context`
 
-Runtime conditions detected by JavaScript and applied as classes. They reflect facts about
-the current state of the DOM — measurements or conditions that CSS alone cannot know.
+Runtime conditions applied as classes — either by JavaScript measuring the DOM or by the
+author declaring a known context. They reflect facts about the current state of the
+environment, not authored intent.
 
 ```
-sf-is-edge-top         element is flush with the top viewport edge (author-applied)
+sf-is-edge-top         element is flush with the top viewport edge
 sf-is-edge-right       element is flush with the right viewport edge
 sf-is-edge-bottom      element is flush with the bottom viewport edge
 sf-is-edge-left        element is flush with the left viewport edge
-sf-is-overflow-top     content is clipped at the top (JS-toggled)
-sf-is-overflow-right   content is clipped at the right (JS-toggled)
-sf-is-overflow-bottom  content is clipped at the bottom (JS-toggled)
-sf-is-overflow-left    content is clipped at the left (JS-toggled)
+sf-is-overflow-top     content is clipped at the top
+sf-is-overflow-right   content is clipped at the right
+sf-is-overflow-bottom  content is clipped at the bottom
+sf-is-overflow-left    content is clipped at the left
 sf-is-loading          element is in a loading / pending state
 sf-is-sticky           a sticky element is currently in its pinned position
 sf-is-error            element or field is in a validation / error state
@@ -460,7 +462,7 @@ a pattern.
 
 ### Layout primitives
 
-Six structural patterns:
+Seven structural patterns:
 
 ```
 sl-stack      vertical stack
