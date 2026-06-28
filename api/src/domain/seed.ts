@@ -242,7 +242,6 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'variant',
 		description: 'Prominent, calls for attention',
 	},
-	{ name: 'sf-variant-subtle', kind: 'variant', description: 'Deemphasised, secondary' },
 	{ name: 'sf-variant-danger', kind: 'variant', description: 'Destructive or warning' },
 	// alt-1 = alternative visual presentation of the same class combination; no semantic intent
 	// beyond "look distinct from the default rendering". The theme compounds against whatever
@@ -401,6 +400,15 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
+
+	// Loudness bare rules — apply at any depth; compounds below refine per-surface behaviour.
+	// loudness-1: muted foreground (low-attention text/element). Pairs with sf-on-hover to
+	// create the dim-at-rest, full-on-hover interactive pattern.
+	{
+		classNames: ['sf-loudness-1'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-6))',
+	},
 
 	// Loudness × depth-1 compounds — loudness-2 is the default (shadow-md, no border); no rule needed.
 	{
@@ -596,11 +604,6 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
 	{
-		classNames: ['sf-variant-subtle'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-6))',
-	},
-	{
 		classNames: ['sf-variant-danger'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-danger))',
@@ -609,6 +612,15 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-variant-danger'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_inverted))',
+	},
+
+	// Hover state — bare rules restore full-opacity foreground and add a subtle fill.
+	// Compounds (e.g. sf-on-hover × sf-variant-featured) override per variant where needed.
+	{ classNames: ['sf-on-hover'], cssProperty: 'color', value: 'rgb(var(--sf-fg_primary))' },
+	{
+		classNames: ['sf-on-hover'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-1))',
 	},
 ]
 
