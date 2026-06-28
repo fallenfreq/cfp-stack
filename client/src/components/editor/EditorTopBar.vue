@@ -1,5 +1,8 @@
 <template>
-	<div class="editor-top-bar sf-depth-1 sf-is-sticky" :class="{ 'is-renaming': renamingName }">
+	<div
+		class="editor-top-bar sf-depth-1 sf-is-sticky sf-is-edge-left sf-is-edge-right"
+		:class="{ 'is-renaming': renamingName }"
+	>
 		<input
 			ref="nameInput"
 			v-model="nameInputValue"

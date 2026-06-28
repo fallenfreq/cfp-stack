@@ -4,7 +4,15 @@
 		<div v-else-if="empty" class="admin-list__state">
 			<slot name="empty">Nothing here yet.</slot>
 		</div>
-		<div v-else class="admin-table-wrap sf-depth-1">
+		<div
+			v-else
+			class="admin-table-wrap sf-depth-1"
+			:class="
+				isBelowThreshold
+					? ['sf-is-edge-left', 'sf-is-edge-right', 'admin-table-wrap--full-bleed']
+					: []
+			"
+		>
 			<table class="admin-table">
 				<thead>
 					<tr class="admin-table__head">
@@ -20,7 +28,9 @@
 </template>
 
 <script setup lang="ts">
+import { useCollapseBreakpoint } from '@/composables/useCollapseBreakpoint'
 defineProps<{ loading?: boolean; empty?: boolean }>()
+const { isBelowThreshold } = useCollapseBreakpoint('sm')
 </script>
 
 <style>
@@ -38,10 +48,8 @@ defineProps<{ loading?: boolean; empty?: boolean }>()
 	display: none;
 }
 
-@media (max-width: 639px) {
-	.admin-table-wrap {
-		margin: 0 -1.25rem;
-	}
+.admin-table-wrap--full-bleed {
+	margin: 0 -1.25rem;
 }
 
 /*

@@ -1,9 +1,14 @@
 <template>
 	<Transition appear name="slide">
-		<!-- TODO: sf-is-edge-* needs JS viewport detection — mobile needs sf-is-edge-bottom,
-		     desktop needs sf-is-edge-top sf-is-edge-right sf-is-edge-bottom (all corners zeroed).
-		     Static class only covers mobile correctly; add a useBreakpoint composable to drive this. -->
-		<div v-if="sheetStore.isSheetOpen" class="sheet z-20 sf-depth-3 sf-is-edge-bottom">
+		<div
+			v-if="sheetStore.isSheetOpen"
+			class="sheet z-20 sf-depth-3"
+			:class="
+				isBelowThreshold
+					? ['sheet--mobile', 'sf-is-edge-bottom']
+					: ['sheet--desktop', 'sf-is-edge-top', 'sf-is-edge-right', 'sf-is-edge-bottom']
+			"
+		>
 			<div class="close-button">
 				<FontAwesomeIcon size="sm" :icon="faXmark" @click="sheetStore.closeSheet" />
 			</div>
@@ -14,10 +19,12 @@
 </template>
 
 <script setup lang="ts">
+import { useCollapseBreakpoint } from '@/composables/useCollapseBreakpoint'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 const sheetStore = useStackableSheetStore()
+const { isBelowThreshold } = useCollapseBreakpoint('md')
 
 defineProps<{
 	mobileHeight: string
@@ -37,7 +44,6 @@ defineProps<{
 	}
 }
 
-/* Close button styling */
 .close-button {
 	position: absolute;
 	top: 15px;
@@ -48,37 +54,26 @@ defineProps<{
 	cursor: pointer;
 }
 
-/* Media query for mobile */
-@media (max-width: 768px) {
-	.sheet {
-		bottom: 0;
-		left: 0;
-		right: 0;
-		height: v-bind(mobileHeight);
-		border-top-left-radius: 16px;
-		border-top-right-radius: 16px;
-	}
-	/* Slide transition for mobile */
-	.slide-enter-from,
-	.slide-leave-to {
-		transform: translateY(100%);
-	}
+/* Layout driven by isBelowThreshold (md collapse threshold from DB) — no hardcoded breakpoints */
+.sheet--mobile {
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: v-bind(mobileHeight);
+}
+.slide-enter-from:is(.sheet--mobile),
+.slide-leave-to:is(.sheet--mobile) {
+	transform: translateY(100%);
 }
 
-/* Media query for desktop */
-@media (min-width: 769px) {
-	.sheet {
-		top: 0;
-		right: 0;
-		bottom: 0;
-		width: v-bind(desktopWidth);
-		border-top-left-radius: 16px;
-		border-bottom-left-radius: 16px;
-	}
-	/* Slide transition for desktop */
-	.slide-enter-from,
-	.slide-leave-to {
-		transform: translateX(100%);
-	}
+.sheet--desktop {
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: v-bind(desktopWidth);
+}
+.slide-enter-from:is(.sheet--desktop),
+.slide-leave-to:is(.sheet--desktop) {
+	transform: translateX(100%);
 }
 </style>

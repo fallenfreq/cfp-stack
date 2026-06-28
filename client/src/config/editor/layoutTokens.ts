@@ -47,9 +47,9 @@ export function useLayoutTokens() {
 		Object.fromEntries(spacingOptions.value.map((k) => [k, `var(--sf-spacing-${k})`])),
 	)
 
-	const breakpointOptions = computed(() => keysWithPrefix('--sf-breakpoint-'))
-	// 'never' is a sentinel meaning do not collapse; followed by breakpoints
-	// in token order (which the seed emits ascending).
+	const breakpointOptions = computed(() => store.collapseThresholds.map((t) => t.name))
+	// 'never' is a sentinel meaning do not collapse; followed by collapse threshold names
+	// in DB order (which the seed inserts ascending).
 	const collapseOptions = computed(() => ['never', ...breakpointOptions.value])
 
 	return {
