@@ -322,6 +322,12 @@ const VOCABULARY: VocabSpec[] = [
 		description:
 			'Element is physically positioned over other content — author-declared; theme decides treatment (translucency, blur, etc.)',
 	},
+	{
+		name: 'sf-is-sticky',
+		kind: 'context',
+		description:
+			'Element is currently in its sticky/pinned position — JS-toggled; theme decides edge treatment (border, shadow, etc.)',
+	},
 
 	// Layout primitives
 	{ name: 'sl-stack', kind: 'layout', description: 'Vertical flex stack' },
@@ -431,13 +437,7 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// Size bundles — sets --sf-padding (inheritable, read by layout primitives) + border-radius
 	{ classNames: ['sf-size-xs'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xs)' },
-	{ classNames: ['sf-size-xs'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
-	// alt-1 at xs = pill; the compound wins over the bare xs rule within sf-bundle.
-	{
-		classNames: ['sf-size-xs', 'sf-variant-alt-1'],
-		cssProperty: 'border-radius',
-		value: 'var(--sf-radius-3)',
-	},
+	{ classNames: ['sf-size-xs'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
 	{ classNames: ['sf-size-sm'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-sm)' },
 	{ classNames: ['sf-size-sm'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	{ classNames: ['sf-size-md'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-md)' },
@@ -562,6 +562,16 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overlay'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-surface-color, var(--sf-surface-0)) / var(--sf-alpha-9))',
+	},
+
+	// Sticky context — clear the all-sides elevation shadow the depth bundle adds; edge treatment
+	// (border-bottom, directional shadow) is theme territory — a bare border is the fallback so sticky
+	// bars have a visible boundary without bleeding elevation into the page.
+	{ classNames: ['sf-is-sticky'], cssProperty: 'box-shadow', value: 'none' },
+	{
+		classNames: ['sf-is-sticky'],
+		cssProperty: 'border-bottom',
+		value: '1px solid rgb(var(--sf-border_color))',
 	},
 
 	// Viewport-edge context — zero the corners that touch the boundary; theme may override per-corner.
