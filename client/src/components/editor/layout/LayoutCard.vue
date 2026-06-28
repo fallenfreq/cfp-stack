@@ -1,20 +1,8 @@
 <template>
-	<div
-		class="layout-card sf-depth-1"
-		:class="variant === 'featured' ? 'sf-variant-featured' : ''"
-	>
+	<div class="layout-card sf-depth-1">
 		<slot />
 	</div>
 </template>
-
-<script setup lang="ts">
-defineProps({
-	variant: {
-		type: String,
-		default: 'none',
-	},
-})
-</script>
 
 <style scoped>
 .layout-card {

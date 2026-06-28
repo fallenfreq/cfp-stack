@@ -94,11 +94,7 @@ const editorComponents = {
 		uuid: '1e4d245a-16ac-4e60-96e9-1cf4ff6e2b93',
 		alias: 'layout-card',
 		component: LayoutCard,
-		props: {
-			// No validate — old values (elevated/outlined/filled/plain) are accepted without
-			// crashing; the component only responds to 'featured', everything else is a no-op.
-			variant: { default: 'none', options: ['none', 'featured'] },
-		},
+		props: {},
 		content: 'block*',
 	},
 } satisfies Record<string, ComponentData>
