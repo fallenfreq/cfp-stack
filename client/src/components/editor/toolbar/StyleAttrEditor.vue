@@ -7,7 +7,10 @@
 				@mousedown.stop
 				@mousedown.self="closeFullscreen"
 			>
-				<div class="style-editor-frame" :class="{ 'style-editor-frame--fs': fullscreen }">
+				<div
+					class="style-editor-frame"
+					:class="{ 'style-editor-frame--fs': fullscreen, 'sf-depth-2': fullscreen }"
+				>
 					<div ref="editorEl" class="style-attr-editor" />
 					<button
 						v-if="!fullscreen"
@@ -166,9 +169,7 @@ onUnmounted(() => {
 .style-editor-frame--fs {
 	position: relative;
 	width: min(80vw, 800px);
-	background: rgb(var(--bg_secondary));
 	border: 1px solid rgb(var(--border_color));
-	border-radius: 8px;
 	padding: 8px;
 	display: flex;
 	flex-direction: column;

@@ -1,5 +1,5 @@
 <template>
-	<div class="dropdown-menu">
+	<div class="dropdown-menu sf-depth-2">
 		<template v-if="items.length">
 			<div
 				v-for="(item, index) in items"
@@ -59,9 +59,7 @@ defineExpose({ onKeyDown })
 
 <style>
 .dropdown-menu {
-	background: rgb(var(--bg_secondary));
 	border: 1px solid rgb(var(--border_color));
-	border-radius: 4px;
 	padding: 4px;
 	overflow-y: auto;
 	min-width: 200px;

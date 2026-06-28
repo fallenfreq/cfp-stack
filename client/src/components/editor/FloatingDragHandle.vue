@@ -1,7 +1,7 @@
 <template>
 	<div
 		v-if="targetPos !== null && pixelPos"
-		class="floating-drag-handle-wrapper"
+		class="floating-drag-handle-wrapper sf-depth-2 sf-is-overlay"
 		:class="{
 			'is-fading': store.isFading,
 			'is-dragging': isDragging,
@@ -149,16 +149,12 @@ const onDragend = () => {
 	user-select: none;
 	box-sizing: border-box;
 	transform: translateY(-100%);
-	background: rgba(var(--bg_secondary) / var(--sf-alpha-9));
 	border: 1px solid rgb(var(--border_color));
-	border-radius: 4px;
-	box-shadow: 0 2px 5px rgb(0 0 0 / var(--sf-alpha-2));
 	opacity: 1;
 	transition: opacity 1s ease 1s;
 }
 
 .floating-drag-handle-wrapper:hover {
-	background: rgba(var(--bg_secondary) / var(--sf-alpha-9));
 	border-color: rgb(var(--primary));
 	color: rgb(var(--primary));
 }

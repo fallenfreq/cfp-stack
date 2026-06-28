@@ -85,7 +85,7 @@ export function getContentExtensions({
 			orderedList: { HTMLAttributes: { class: 'list-decimal' } },
 			listItem: { HTMLAttributes: { class: '' } },
 			blockquote: {
-				HTMLAttributes: { class: 'border-l-8 border-primary sf-bg_secondary p-4' },
+				HTMLAttributes: { class: 'border-l-8 border-primary sf-depth-1 p-4' },
 			},
 			link: { openOnClick: 'whenNotEditable' },
 		}),

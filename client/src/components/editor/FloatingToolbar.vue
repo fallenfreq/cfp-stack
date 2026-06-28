@@ -2,7 +2,7 @@
 	<div
 		v-if="visibleItems.length"
 		ref="toolbarEl"
-		class="floating-toolbar"
+		class="floating-toolbar sf-depth-2 sf-is-overlay"
 		:style="{
 			top: `${position.top}px`,
 			left: `${position.left}px`,
@@ -182,10 +182,7 @@ onUnmounted(() => {
 	width: fit-content;
 	height: var(--toolbar-height);
 	transform: translateY(-100%);
-	background: rgba(var(--bg_secondary) / var(--sf-alpha-9));
 	border: 1px solid rgb(var(--border_color));
-	border-radius: 4px;
-	box-shadow: 0 2px 5px rgb(0 0 0 / var(--sf-alpha-2));
 	z-index: var(--z-toolbar);
 	overflow: hidden;
 }

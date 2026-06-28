@@ -31,7 +31,6 @@ defineEmits<{ 'update:published': [value: boolean] }>()
 
 <style>
 .admin-row {
-	background: rgb(var(--bg_secondary));
 }
 .admin-row td {
 	border-bottom: 1px solid rgba(var(--border_color));

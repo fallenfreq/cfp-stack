@@ -1,6 +1,9 @@
 <template>
 	<Transition appear name="slide">
-		<div v-if="sheetStore.isSheetOpen" class="sheet z-20 sf-bg_secondary">
+		<!-- TODO: sf-is-edge-* needs JS viewport detection — mobile needs sf-is-edge-bottom,
+		     desktop needs sf-is-edge-top sf-is-edge-right sf-is-edge-bottom (all corners zeroed).
+		     Static class only covers mobile correctly; add a useBreakpoint composable to drive this. -->
+		<div v-if="sheetStore.isSheetOpen" class="sheet z-20 sf-depth-3 sf-is-edge-bottom">
 			<div class="close-button">
 				<FontAwesomeIcon size="sm" :icon="faXmark" @click="sheetStore.closeSheet" />
 			</div>

@@ -1,5 +1,5 @@
 <template>
-	<div class="editor-top-bar" :class="{ 'is-renaming': renamingName }">
+	<div class="editor-top-bar sf-depth-1 sf-is-sticky" :class="{ 'is-renaming': renamingName }">
 		<input
 			ref="nameInput"
 			v-model="nameInputValue"
@@ -100,8 +100,6 @@ const cancelRename = () => {
 	align-items: center;
 	padding: 4px 1.75rem;
 	gap: 4px;
-	background: rgb(var(--bg_secondary));
-	border-bottom: 1px solid rgb(var(--border_color));
 	font-size: 0.75rem;
 }
 

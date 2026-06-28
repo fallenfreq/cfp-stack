@@ -3,7 +3,7 @@
 		<div
 			v-if="open"
 			ref="panelEl"
-			class="toolbar-panel"
+			class="toolbar-panel sf-depth-2"
 			:class="{ 'is-hidden': awaitingKeyboard }"
 			:style="panelStyle"
 			@mousedown.stop
@@ -143,11 +143,8 @@ onUnmounted(() => {
 	 * left edge on the first open. */
 	position: fixed;
 	z-index: var(--z-panel);
-	background: rgb(var(--bg_secondary));
 	border: 1px solid rgb(var(--border_color));
-	border-radius: var(--sf-radius-1);
 	padding: 4px;
-	box-shadow: var(--sf-shadow-md) rgb(var(--sf-shadow) / var(--sf-shadow-opacity));
 	overflow-y: auto;
 	scrollbar-width: none;
 }

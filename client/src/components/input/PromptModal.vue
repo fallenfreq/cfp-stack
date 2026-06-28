@@ -1,6 +1,6 @@
 <template>
 	<div v-if="props.isVisible.value" class="prompt-modal">
-		<div class="prompt-content">
+		<div class="prompt-content sf-depth-3">
 			<h3 class="message text-2xl">
 				{{ message }}
 			</h3>
@@ -95,13 +95,9 @@ const close = () => {
 }
 
 .prompt-content {
-	background: rgb(var(--bg_secondary));
 	padding: 20px;
 	width: 100%;
-	max-width: 600px;
-	border-radius: 5px;
 	text-align: left;
-	border-radius: 20px;
 	margin: 0 20px;
 	max-width: 500px;
 }

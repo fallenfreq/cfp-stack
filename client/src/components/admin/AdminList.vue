@@ -4,7 +4,7 @@
 		<div v-else-if="empty" class="admin-list__state">
 			<slot name="empty">Nothing here yet.</slot>
 		</div>
-		<div v-else class="admin-table-wrap">
+		<div v-else class="admin-table-wrap sf-depth-1">
 			<table class="admin-table">
 				<thead>
 					<tr class="admin-table__head">
@@ -68,7 +68,6 @@ defineProps<{ loading?: boolean; empty?: boolean }>()
 	border-bottom: 1px solid rgba(var(--border_color));
 	white-space: nowrap;
 	user-select: none;
-	background: rgb(var(--bg_secondary));
 }
 
 .admin-table__head th:last-child {
