@@ -199,86 +199,34 @@ classes; query `class_vocabulary` for the rich ones.
       blocks. The remaining "wrap in @layer" work is for the **legacy** hand-written
       `sf-tokens.css` sections — those go away with the editor migration rather than
       being wrapped, so no separate layer-wrapping pass is needed.
-- [ ] Apply the token rename pass — prefix, renumber, and rename per the spec
-      contract (see "Token renames" below). The new tokens already exist in
-      `generated-tokens.css`; the work is migrating remaining consumers (tailwind
-      config, editor code, component CSS) off the legacy unprefixed names.
+- [x] Token names — `--sf-*` names are already correct in the DB seed and generated
+      at runtime. Legacy unprefixed names (`--text-*`, `--alpha-*`, etc.) survive in
+      `base.css` as Vuestic compat and stay there until Vuestic is removed. No rename
+      pass is needed or correct.
 - [x] Rename `.dark` theme class to `.theme-dark` to match the spec's theme activation
       convention. Done across `base.css`, `darkModeStore.ts`, `index.html`,
       `tailwind.config.js`; `.pink` → `.theme-pink` same pass.
 
-## Token renames
+## Token notes
 
-All current CSS variables need to be renamed to match the spec contract. Mechanical
-but large. Vuestic-side variables keep their current names and duplicate the new sf
-values (interim until DB-generated CSS lands).
+The `--sf-*` token names are already correct in the DB seed and generated at runtime.
+Legacy unprefixed names (`--text-*`, `--alpha-*`, `--primary-*`, etc.) in `base.css`
+are Vuestic compat — they stay until Vuestic is removed. No bulk rename pass is needed.
 
-### Range tokens — prefix; renumber families where shape changed
+Component CSS that reaches for raw tokens directly is using the escape hatch. The right
+migration is to the class system (per-component decision), not renaming the token reference.
 
-- [ ] `--text-{xs..9xl}` → `--sf-text-*`
-- [ ] `--spacing-{none, xs..xl}` → `--sf-spacing-*`
-- [ ] `--leading-*` → `--sf-leading-*`
-- [ ] `--tracking-*` → `--sf-tracking-*`
-- [ ] `--shadow-{sm..xl}` → `--sf-shadow-*`
-- [ ] `--breakpoint-{xs, sm, md}` → `--sf-breakpoint-*` (new to spec)
-- [ ] `--radius-{none, sm, md, lg}` → `--sf-radius-{0..3}` (named → numbered; update
-      all `sf-radius-*` utility classes too)
-- [ ] `--alpha-{0, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100}` →
-      `--sf-alpha-{1..9}` (drop 25/75 oddballs; renumber)
-- [ ] `--primary-{50..950}` → `--sf-primary-{1..9}` (drop 50/950 bookends; renumber)
-- [ ] `--surface-{0..950}` → `--sf-surface-{0..9}` (drop bookends; renumber;
-      `surface-0` keeps the "canvas" meaning)
-- [ ] `--font-{sans, serif, mono}` → `--sf-font-{1, 2, mono}` (sans → 1, serif → 2,
-      mono stays as functional slot; font-3 reserved)
-- [x] Add `--sf-weight-{1..4}` definitions (in DB seed) and `sf-weight-*` utility
-      classes (auto-generated).
+### Editor alpha-step rename (real work, separate slice)
 
-Added in this slice:
+The editor currently emits legacy class names for palette picks. This needs updating:
 
-- [x] `--sf-shadow-opacity` theme-character token (one value per theme; root = 0.12).
-      Consumed by the auto-generated `sf-shadow-*` utilities inside the shadow's
-      `box-shadow` composition. Themes can override per-theme for stronger/softer
-      shadow character.
-
-### Semantic tokens — rename to sf canonical; Vuestic-side duplicates the value
-
-The new `--sf-*` semantic tokens already exist in `generated-tokens.css`. The work
-below is the Vuestic-side shim — keeping legacy names defined in `base.css` with
-duplicated values so Vuestic's `processTailwindColors` keeps working.
-
-- [ ] Keep `--text_primary` in `base.css`'s Vuestic block with value duplicated from
-      the new `--sf-fg_primary`.
-- [ ] Keep `--text_inverted` (legacy) duplicated from `--sf-fg_inverted`.
-- [ ] Keep `--border_color` (legacy) duplicated from `--sf-border_color`.
-- [ ] Keep `--primary` (legacy) duplicated from `--sf-primary` (the brand semantic).
-- [ ] Keep `--shadow` (legacy) duplicated from `--sf-shadow`.
-
-### Pipeline + consumer updates
-
-- [ ] `tailwind.config.js` — update palette refs (`var(--primary-500)` etc.) to the
-      renumbered/prefixed names (`var(--sf-primary-5)` etc.)
-- [x] ~~All `sf-tokens.css` utility class bodies — update to reference renamed tokens~~
-      Superseded by the generator. Legacy `sf-tokens.css` sections are kept while the
-      editor still emits legacy class names; they will be deleted with the editor
-      alpha-step rename slice rather than rewritten.
-- [ ] Editor alpha-step rename (next slice): `textColorMark.ts`,
-      `ToolbarColorControl.vue`, `alphaPalette.ts`, `colorPalette.ts`. Read from
-      `--sf-*` palette tokens and emit new-step class names (`sf-bg-primary-5`,
-      `sf-bg-alpha-3`, etc.).
-- [ ] `LayoutCard.vue`, `main.css`, and any other consumer of `--text_primary`,
-      `--border_color`, `--bg_*` etc. — update to either the sf canonical name or
-      the Vuestic shim name (decide per consumer).
-
-## Token cleanup
-
-- [ ] Remove the alpha semantic aliases from `base.css:184-186` (`--alpha-subtle`,
-      `--alpha-muted`, `--alpha-half`). Per the spec's "aliases only for theme-level
-      decisions" rule, "subtle"/"muted"/"half" are styling opinions baked into names,
-      not theme decisions. Callers should use the `--sf-alpha-*` range directly.
-- [ ] When removing those aliases, also remove the
-      `sf-{bg|color|border}-alpha-{subtle|muted|half}` utility classes in
-      `sf-tokens.css:569-577, 618-626, 667-675` — they reference the aliases and
-      would silently break otherwise.
+- [ ] `textColorMark.ts`, `ToolbarColorControl.vue`, `alphaPalette.ts`, `colorPalette.ts`
+      — read from `--sf-*` palette tokens and emit new-step class names
+      (`sf-bg-primary-5`, `sf-bg-alpha-3`, etc.).
+- [ ] Delete the legacy `sf-{bg|color|border}-alpha-{subtle|muted|half}` utility classes
+      from `sf-tokens.css` and `--alpha-subtle/muted/half` aliases from `base.css` once
+      the editor no longer emits them. These are styling opinions baked into names, not
+      theme decisions — callers should use `--sf-alpha-*` range steps directly.
 
 ## Implement missing class families
 
@@ -317,9 +265,9 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
 - [x] `sf-is-overlay` — vocabulary + bare rule seeded. Reads `--sf-surface-color` (bridge variable
       set by `sf-depth-*` bundles) so one rule covers all depths without duplicating colour
       knowledge. Establishes the internal bridge variable convention — documented in spec.
-- [ ] `sf-is-loading` / `sf-is-sticky` / `sf-is-error` — added to spec; seed vocabulary +
-      rules. Loading: skeleton shimmer or opacity reduction. Sticky: shadow or border on
-      the pinned element. Error: border-color + optional background tint on the field.
+- [x] `sf-is-sticky` — vocabulary + bare rule seeded (border-bottom, done in 280e9fc).
+- [ ] `sf-is-loading` / `sf-is-error` — vocabulary + rules still needed. Loading:
+      skeleton shimmer or opacity reduction. Error: border-color + optional background tint.
 - [ ] `sf-on-*` state class rules — vocabulary is seeded; `sf-on-selected` added to spec
       and needs seeding too. Pattern (per spec): seed one bare fallback rule per state,
       then compound overrides only for combinations that need different treatment. A design
@@ -332,13 +280,9 @@ duplicated values so Vuestic's `processTailwindColors` keeps working.
 - [x] `sl-collapse-*` container-responsive collapse classes — vocabulary in seed;
       CSS generated from `collapse_steps` table (DB-stored px values, not theme tokens;
       `var()` is not valid in `@container` conditions so values are read at emit time)
-- [ ] **Migrate `--bg_secondary` consumers to `sf-depth-1`** — ~22 files. The
-      solid-background uses (`rgb(var(--bg_secondary))`) become the `sf-depth-1`
-      class directly. Translucent uses (`rgba(var(--bg_secondary) / var(--sf-alpha-9))`
-      on floating UI like FloatingToolbar, FloatingDragHandle, ToolbarScrollHint,
-      FloatingEditorMenu) need a per-element decision — those want depth + alpha at
-      the use site, not the bundle. Removing `.sf-bg_secondary` from
-      `sf-tokens.css` and `--bg_secondary` from `base.css` falls out of this slice.
+- [x] Migrate `--bg_secondary` consumers to `sf-depth-1` — done in commit 5a95dfe.
+      Translucent floating-UI consumers (FloatingToolbar, FloatingDragHandle, etc.)
+      still hold raw token refs; no sf class equivalent exists yet for depth + alpha.
 
 ## System design gaps (known, intentional for now)
 
@@ -380,9 +324,7 @@ These are not bugs but unresolved tensions in the current design:
       there); the real layout CSS targets `> [data-node-view-content]` via `:global`.
       Full migration (removing `layout-*` class and `:global` CSS) requires restructuring
       the content-wrapper pattern so `sl-*` classes can be applied directly to the layout div.
-- [ ] `LayoutCard.vue:32` references `--bg_secondary` directly. Once `sf-depth-*`
-      bundles exist, the card should wear `sf-depth-1` and inherit its background
-      from there.
+- [x] `LayoutCard.vue` — wears `sf-depth-1`; background inherited from bundle (5a95dfe).
 
 ## Vuestic compatibility (temporary)
 
