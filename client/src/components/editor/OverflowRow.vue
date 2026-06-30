@@ -7,7 +7,6 @@
 				'sf-is-overflow-left': overflow.left,
 				'sf-is-overflow-right': overflow.right,
 			}"
-			@scroll.passive="syncOverflow"
 		>
 			<slot />
 		</div>
@@ -15,36 +14,15 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { useScrollOverflow } from '@/composables/useScrollOverflow'
+import { ref, toRef } from 'vue'
 
 const props = defineProps<{
 	refreshKey?: unknown
 }>()
 
 const scrollerEl = ref<HTMLElement | null>(null)
-const overflow = ref({ left: false, right: false })
-
-const OVERFLOW_EPSILON = 2
-
-const syncOverflow = () => {
-	const scroller = scrollerEl.value
-	if (!scroller) return
-
-	const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth
-	overflow.value = {
-		left: scroller.scrollLeft > OVERFLOW_EPSILON,
-		right: maxScrollLeft - scroller.scrollLeft > OVERFLOW_EPSILON,
-	}
-}
-
-const refreshOverflow = async () => {
-	await nextTick()
-	syncOverflow()
-}
-
-onMounted(refreshOverflow)
-
-watch(() => props.refreshKey, refreshOverflow)
+const overflow = useScrollOverflow(scrollerEl, toRef(props, 'refreshKey'))
 </script>
 
 <style scoped>

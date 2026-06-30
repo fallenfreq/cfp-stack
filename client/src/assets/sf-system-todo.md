@@ -252,10 +252,19 @@ The editor currently emits legacy class names for palette picks. This needs upda
 - [x] `sf-variant-alt-1` — vocabulary + compound rule seeded (`sf-size-xs.sf-variant-alt-1` → pill
       corners). Numbered from the start so alt-2 etc. are additive. The "alt" is relative to the
       default rendering of the full class combination, not just depth or loudness.
-- [ ] `sf-boundary-*` / `sf-divide-*` boundary classes — `sf-boundary-{top,bottom,left,right,x,y,boundary}` on
-      the element itself; `sf-divide-{x,y}` on the parent targeting `> * + *`. Both in `sf-semantic`
-      layer; theme decides full treatment (line, shadow, tint, spacing increase). Seed vocabulary +
-      rules.
+- [ ] `sf-boundary-*` / `sf-divide-*` — seed vocabulary + rules.
+      `sf-boundary-{top,bottom,left,right,x,y}` declares that the content changes
+      character at that edge — not a decoration decision but a placement fact. The theme
+      decides how to express the separation (border, shadow, tint, whitespace, or nothing).
+      Concrete example: the sticky actions column in AdminList needs `sf-boundary-left`
+      on the last `<th>`/`<td>` — data columns are to the left, action buttons here.
+      Currently hacked with a hardcoded `box-shadow` in component CSS. The theme rule
+      should express this as border-left + shadow (border = permanent boundary;
+      shadow = overflow/depth cue for content scrolling behind the sticky column).
+      Longer term the shadow belongs on `sf-is-overflow-left` (JS-toggled on scroll),
+      but until scroll detection exists on the wrapper, both live in the boundary rule.
+      `sf-divide-{x,y}` is applied to a parent to signal separation between its children
+      (targets `> * + *`). Both in `sf-semantic` layer.
 - [x] `sf-context` kind + `sf-is-overflow-{left,right,top,bottom}` — ClassKind,
       Layer, sort order, and generator support added. Vocabulary + rules seeded (mask-image
       gradients; same-axis compound rules for both-edges case). `OverflowRow.vue` migrated from
