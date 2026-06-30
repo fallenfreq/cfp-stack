@@ -44,6 +44,7 @@ export async function emitStylesheet(db: Db): Promise<string> {
 
 	const sections = [
 		HEADER,
+		RESET,
 		emitTokenBlocks(themesList, tokensByTheme),
 		emitRichLayer('sf-bundle', themesList, rootTheme, rulesByLayer),
 		emitRichLayer('sf-variant', themesList, rootTheme, rulesByLayer),
@@ -106,7 +107,15 @@ export async function themeSignature(db: Db): Promise<string> {
 // ─── Header ─────────────────────────────────────────────────────────────
 
 const HEADER = `/* Generated from D1 — runtime-emitted, do not cache stale. */
-@layer reset, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
+@layer reset, components, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
+
+// Static resets — no theme dependency, never stored in DB.
+// Lowest cascade priority (reset layer declared first).
+const RESET = `@layer reset {
+\t/* Remove trailing margin from the last child of any table cell */
+\ttd > *:last-child,
+\tth > *:last-child { margin-bottom: 0; }
+}`
 
 // ─── Tokens ─────────────────────────────────────────────────────────────
 

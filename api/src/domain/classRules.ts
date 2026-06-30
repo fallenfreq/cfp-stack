@@ -13,7 +13,11 @@ import { CLASS_KINDS, type ClassKind, type Db } from './types.js'
 // ─── Vocabulary admin ────────────────────────────────────────────────────
 
 const CLASS_NAME_RE = /^(sf|sl)-[a-z][a-z0-9_-]*$/
-const PSEUDO_RE = /^::?[a-z][a-z-]*$/
+// Vocabulary pseudo (state classes): strict — only :pseudo-class or ::pseudo-element
+const VOCAB_PSEUDO_RE = /^::?[a-z][a-z-]*$/
+// Rule-level pseudo: also allows combinator suffixes (' > * + *', ':last-child td', etc.)
+// Blocks { } ; to prevent CSS injection.
+const RULE_PSEUDO_RE = /^[: >+~][^{};]*$/
 
 // Interactive + structural elements only. Heading/text-scale elements (h1-h6, p) are
 // intentionally excluded — those are handled by sf-heading-* bundles and token utilities.
@@ -88,9 +92,17 @@ function assertValidClassKind(kind: string): asserts kind is ClassKind {
 
 function assertValidPseudo(value: string | null | undefined): void {
 	if (value == null) return
-	if (!PSEUDO_RE.test(value))
+	if (!VOCAB_PSEUDO_RE.test(value))
 		throw new ValidationError(
 			`Pseudo must start with ':' and use lowercase letters — got "${value}"`,
+		)
+}
+
+function assertValidRulePseudo(value: string | null | undefined): void {
+	if (value == null) return
+	if (!RULE_PSEUDO_RE.test(value))
+		throw new ValidationError(
+			`Rule pseudo must start with ':', '::', or a combinator character — got "${value}"`,
 		)
 }
 
@@ -291,7 +303,7 @@ export async function createClassRule(
 	if (!input.value.trim()) throw new ValidationError('Rule value is required')
 
 	const pseudo = input.pseudo ?? null
-	if (pseudo) assertValidPseudo(pseudo)
+	if (pseudo) assertValidRulePseudo(pseudo)
 
 	await getThemeOrThrow(db, input.themeId)
 

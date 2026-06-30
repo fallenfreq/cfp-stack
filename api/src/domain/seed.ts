@@ -144,6 +144,8 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-border_color', value: '222 229 242', kind: 'color-triplet' },
 	{ name: '--sf-shadow', value: '0 0 0', kind: 'color-triplet' },
 	{ name: '--sf-danger', value: '239 68 68', kind: 'color-triplet' },
+	{ name: '--sf-warning', value: '245 158 11', kind: 'color-triplet' },
+	{ name: '--sf-success', value: '34 197 94', kind: 'color-triplet' },
 ]
 
 const DARK_TOKEN_OVERRIDES: TokenSpec[] = [
@@ -242,7 +244,17 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'variant',
 		description: 'Prominent, calls for attention',
 	},
-	{ name: 'sf-variant-danger', kind: 'variant', description: 'Destructive or warning' },
+	{ name: 'sf-variant-danger', kind: 'variant', description: 'Destructive intent' },
+	{
+		name: 'sf-variant-warning',
+		kind: 'variant',
+		description: 'Cautionary intent — needs attention, not destructive',
+	},
+	{
+		name: 'sf-variant-success',
+		kind: 'variant',
+		description: 'Positive outcome — confirmation, completion, approval',
+	},
 	// alt-1 = alternative visual presentation of the same class combination; no semantic intent
 	// beyond "look distinct from the default rendering". The theme compounds against whatever
 	// other classes are present (depth, size, loudness) to decide the treatment.
@@ -326,6 +338,33 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'context',
 		description:
 			'Element is currently in its sticky/pinned position — JS-toggled; theme decides edge treatment (border, shadow, etc.)',
+	},
+
+	// Boundary / divide — content separation signal; theme decides treatment
+	{ name: 'sf-boundary-top', kind: 'context', description: 'Content boundary on top edge' },
+	{ name: 'sf-boundary-bottom', kind: 'context', description: 'Content boundary on bottom edge' },
+	{ name: 'sf-boundary-left', kind: 'context', description: 'Content boundary on left edge' },
+	{ name: 'sf-boundary-right', kind: 'context', description: 'Content boundary on right edge' },
+	{
+		name: 'sf-boundary-x',
+		kind: 'context',
+		description: 'Content boundary on left and right edges',
+	},
+	{
+		name: 'sf-boundary-y',
+		kind: 'context',
+		description: 'Content boundary on top and bottom edges',
+	},
+	{ name: 'sf-boundary', kind: 'context', description: 'Content boundary on all edges' },
+	{
+		name: 'sf-divide-x',
+		kind: 'context',
+		description: 'Visual separation between horizontally arranged children',
+	},
+	{
+		name: 'sf-divide-y',
+		kind: 'context',
+		description: 'Visual separation between vertically arranged children',
 	},
 
 	// Layout primitives
@@ -631,15 +670,98 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
+	{ classNames: ['sf-variant-danger'], cssProperty: 'color', value: 'rgb(var(--sf-danger))' },
+	// Full danger button — solid fill + inverted text when combined with a depth surface.
 	{
-		classNames: ['sf-variant-danger'],
+		classNames: ['sf-depth-1', 'sf-variant-danger'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-danger))',
 	},
 	{
-		classNames: ['sf-variant-danger'],
+		classNames: ['sf-depth-1', 'sf-variant-danger'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_inverted))',
+	},
+	{
+		classNames: ['sf-variant-warning'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-warning))',
+	},
+	{
+		classNames: ['sf-variant-warning'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_inverted))',
+	},
+	{
+		classNames: ['sf-variant-success'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-success))',
+	},
+	{
+		classNames: ['sf-variant-success'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_inverted))',
+	},
+
+	// Boundary — content separation signal; one rule per edge + shorthand composites.
+	// Theme decides the full treatment; default is a 1px themed border.
+	// sf-divide-* targets children via the pseudo field (> * + *).
+	{
+		classNames: ['sf-boundary-top'],
+		cssProperty: 'border-top',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-boundary-bottom'],
+		cssProperty: 'border-bottom',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-boundary-left'],
+		cssProperty: 'border-left',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-boundary-right'],
+		cssProperty: 'border-right',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-boundary-x'],
+		cssProperty: 'border-left',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-boundary-x'],
+		cssProperty: 'border-right',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-boundary-y'],
+		cssProperty: 'border-top',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-boundary-y'],
+		cssProperty: 'border-bottom',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-boundary'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-divide-y'],
+		pseudo: ' > * + *',
+		cssProperty: 'border-top',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-divide-x'],
+		pseudo: ' > * + *',
+		cssProperty: 'border-left',
+		value: '1px solid rgb(var(--sf-border_color))',
 	},
 
 	// Hover state — bare rules restore full-opacity foreground and add a subtle fill.
@@ -650,6 +772,85 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-1))',
 	},
+	// Hover × danger — override generic on-hover; keep danger colour; tinted danger fill.
+	{
+		classNames: ['sf-on-hover', 'sf-variant-danger'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-danger))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-variant-danger'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-danger) / var(--sf-alpha-1))',
+	},
+
+	// ─── Table elements ───────────────────────────────────────────────────────
+	// Theme-wide defaults for data tables. border-collapse:separate + border-spacing:0 is
+	// required so that box-shadow works on sticky <td> cells (collapse merges cell paint layers
+	// which clips overflow; separate gives each cell its own box).
+	// depth controls surface colour and corners; sf-is-overflow-left drives the sticky-column
+	// shadow; border-bottom on tr:last-child td removes the orphan bottom edge.
+	{ elementSelector: 'table', cssProperty: 'border-collapse', value: 'separate' },
+	{ elementSelector: 'table', cssProperty: 'border-spacing', value: '0' },
+	{
+		elementSelector: 'td',
+		cssProperty: 'border-bottom',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{ elementSelector: 'td', cssProperty: 'vertical-align', value: 'middle' },
+	{
+		elementSelector: 'td',
+		cssProperty: 'padding',
+		value: 'var(--sf-spacing-xs) var(--sf-spacing-sm)',
+	},
+	{
+		elementSelector: 'tr',
+		pseudo: ':last-child td',
+		cssProperty: 'border-bottom',
+		value: 'none',
+	},
+	{
+		elementSelector: 'th',
+		cssProperty: 'border-bottom',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+	{ elementSelector: 'th', cssProperty: 'text-align', value: 'left' },
+	{ elementSelector: 'th', cssProperty: 'vertical-align', value: 'middle' },
+	{ elementSelector: 'th', cssProperty: 'font-weight', value: '600' },
+	{
+		elementSelector: 'th',
+		cssProperty: 'padding',
+		value: 'var(--sf-spacing-xs) var(--sf-spacing-sm)',
+	},
+
+	// depth-1 × th — compact admin/data-table header treatment.
+	// Specificity 0-1-1 beats bare th (0-0-1); content tables outside a depth surface are unaffected.
+	{
+		classNames: ['sf-depth-1'],
+		pseudo: ' th',
+		cssProperty: 'font-size',
+		value: 'var(--sf-text-xs)',
+	},
+	{
+		classNames: ['sf-depth-1'],
+		pseudo: ' th',
+		cssProperty: 'text-transform',
+		value: 'uppercase',
+	},
+	{
+		classNames: ['sf-depth-1'],
+		pseudo: ' th',
+		cssProperty: 'letter-spacing',
+		value: 'var(--sf-tracking-wide)',
+	},
+	{
+		classNames: ['sf-depth-1'],
+		pseudo: ' th',
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-5))',
+	},
+	{ classNames: ['sf-depth-1'], pseudo: ' th', cssProperty: 'user-select', value: 'none' },
+	{ classNames: ['sf-depth-1'], pseudo: ' th', cssProperty: 'white-space', value: 'nowrap' },
 ]
 
 // ─── Collapse thresholds ─────────────────────────────────────────────────
