@@ -5,7 +5,7 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
-**Layout component migration complete. Pending items are the new class families and the Vuestic/bg_secondary migration.**
+**Admin table migrated to sf-system. Pending items are remaining class families, the Vuestic/bg_secondary migration, and the editor alpha-step rename.**
 
 What's in place:
 
@@ -190,10 +190,13 @@ classes; query `class_vocabulary` for the rich ones.
 ## Foundational
 
 - [x] Declare cascade layers in CSS:
-      `@layer reset, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
-      Now the first rule emitted by `generateCss.ts` (in the HEADER constant). The
-      `<link href="/styles/sf-system">` loads synchronously before Vite's JS injection,
-      so the declaration fires at the right moment in both dev and prod.
+      `@layer reset, components, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
+      `components` sits between `reset` and `sf-bundle` so component default CSS can be
+      overridden by any sf layer. Component `<style>` blocks should be wrapped in
+      `@layer components { }`.
+- [x] Static `RESET` block — `generateCss.ts` emits a hardcoded `@layer reset { }` for
+      normalizations with no theme dependency (`td > *:last-child { margin-bottom: 0 }`).
+      Add new reset rules here; no seed bump needed.
 - [x] Generator emits all auto-derived classes (semantic canonicals, value-linked
       utilities, editor palette + alpha pairings) inside their matching `@layer`
       blocks. The remaining "wrap in @layer" work is for the **legacy** hand-written
@@ -214,7 +217,13 @@ Legacy unprefixed names (`--text-*`, `--alpha-*`, `--primary-*`, etc.) in `base.
 are Vuestic compat — they stay until Vuestic is removed. No bulk rename pass is needed.
 
 Component CSS that reaches for raw tokens directly is using the escape hatch. The right
-migration is to the class system (per-component decision), not renaming the token reference.
+migration is to the vocabulary class system (per-component decision), not renaming the
+token reference.
+
+**Utility/semantic classes (`sf-color-*`, `sf-bg-*`, etc.) are for content authors in the
+editor — not for component code.** Replacing a raw token ref with a utility class is the
+same coupling problem. Components migrate to vocabulary classes (`sf-variant-*`, `sf-depth-*`,
+`sf-on-*`) so the theme owns the output through the seed.
 
 ### Editor alpha-step rename (real work, separate slice)
 
@@ -240,8 +249,9 @@ The editor currently emits legacy class names for palette picks. This needs upda
       (preserving other classes). `class` is the single source of truth — DOM,
       attribute panel, and code-view roundtrip all agree. `SfHeading` is shared
       with `htmlBlueprint.ts` so the code-view serializer matches the live editor.
-- [x] `sf-variant-*` classes (`featured`, `subtle`, `danger`) — seeded in prior slice
-- [ ] `sf-variant-warning` + `sf-variant-success` — added to spec; seed vocabulary + rules.
+- [x] `sf-variant-*` classes — `featured`, `danger`, `warning`, `success`, `alt-1` seeded.
+      `sf-variant-danger` bare = text colour only; `sf-depth-1 × sf-variant-danger` = full
+      solid button. Depth context determines the treatment, not a separate class.
 - [ ] `sf-size-*` bundles (`xs`, `sm`, `md`, `lg`, `xl`) — intended form factor; sets
       proportional visual properties (padding, border-radius, etc.). Seed vocabulary +
       rules; design pass needed to decide which properties each step sets.
@@ -252,19 +262,9 @@ The editor currently emits legacy class names for palette picks. This needs upda
 - [x] `sf-variant-alt-1` — vocabulary + compound rule seeded (`sf-size-xs.sf-variant-alt-1` → pill
       corners). Numbered from the start so alt-2 etc. are additive. The "alt" is relative to the
       default rendering of the full class combination, not just depth or loudness.
-- [ ] `sf-boundary-*` / `sf-divide-*` — seed vocabulary + rules.
-      `sf-boundary-{top,bottom,left,right,x,y}` declares that the content changes
-      character at that edge — not a decoration decision but a placement fact. The theme
-      decides how to express the separation (border, shadow, tint, whitespace, or nothing).
-      Concrete example: the sticky actions column in AdminList needs `sf-boundary-left`
-      on the last `<th>`/`<td>` — data columns are to the left, action buttons here.
-      Currently hacked with a hardcoded `box-shadow` in component CSS. The theme rule
-      should express this as border-left + shadow (border = permanent boundary;
-      shadow = overflow/depth cue for content scrolling behind the sticky column).
-      Longer term the shadow belongs on `sf-is-overflow-left` (JS-toggled on scroll),
-      but until scroll detection exists on the wrapper, both live in the boundary rule.
-      `sf-divide-{x,y}` is applied to a parent to signal separation between its children
-      (targets `> * + *`). Both in `sf-semantic` layer.
+- [x] `sf-boundary-*` / `sf-divide-*` — vocabulary + rules seeded (`sf-context` layer).
+      Remaining: AdminList sticky-column `box-shadow` still in component CSS — should move
+      to `sf-is-overflow-left` seed rule once we decide if it's a boundary or overflow signal.
 - [x] `sf-context` kind + `sf-is-overflow-{left,right,top,bottom}` — ClassKind,
       Layer, sort order, and generator support added. Vocabulary + rules seeded (mask-image
       gradients; same-axis compound rules for both-edges case). `OverflowRow.vue` migrated from
@@ -275,14 +275,23 @@ The editor currently emits legacy class names for palette picks. This needs upda
       set by `sf-depth-*` bundles) so one rule covers all depths without duplicating colour
       knowledge. Establishes the internal bridge variable convention — documented in spec.
 - [x] `sf-is-sticky` — vocabulary + bare rule seeded (border-bottom, done in 280e9fc).
+- [x] Bare table element rules — seeded in `sf-bundle` (bare element selectors, specificity
+      0-0-1). `table`: `border-collapse: separate; border-spacing: 0` (separate required for
+      `box-shadow` on sticky cells). `td`: `border-bottom`, `vertical-align: middle`,
+      `padding: --sf-spacing-xs --sf-spacing-sm`. `th`: same border + padding + `text-align: left`,
+      `vertical-align: middle`, `font-weight: 600`. `tr:last-child td`: removes orphan bottom border.
+      Depth compounds: `sf-depth-1 th` gets compact admin header treatment (xs font, uppercase,
+      tracked, muted, nowrap) — specificity 0-1-1 beats bare th without extra classes on cells.
+      Table padding lives in the seed (sf-bundle layer) so `@layer components` cell padding
+      cannot override it — component-level padding differences must become seed compound rules.
 - [ ] `sf-is-loading` / `sf-is-error` — vocabulary + rules still needed. Loading:
       skeleton shimmer or opacity reduction. Error: border-color + optional background tint.
-- [ ] `sf-on-*` state class rules — vocabulary is seeded; `sf-on-selected` added to spec
-      and needs seeding too. Pattern (per spec): seed one bare fallback rule per state,
-      then compound overrides only for combinations that need different treatment. A design
-      pass is still needed — what CSS properties change for hover/focus/active/selected/disabled
-      at the root theme? Bare rules go in first; depth × variant compounds are additive only
-      where the bare rule falls short.
+- [ ] `sf-on-*` state class rules — vocabulary seeded for all states. Bare rules done for
+      `sf-on-hover` (restores full-opacity fg + subtle fill). Compound done for
+      `sf-on-hover × sf-variant-danger` (danger colour + danger-tinted fill overrides the
+      generic hover). Still needed: `sf-on-focus`, `sf-on-active`, `sf-on-disabled`, and
+      `sf-on-selected` (add to vocabulary + seed). Same pattern: bare fallback first, then
+      depth/variant compounds where the bare rule falls short.
 - [x] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`) — vocabulary + rules in seed
 - [ ] `sl-aspect` — added to spec; seed vocabulary + rules. Aspect ratio set via
       `--sl-aspect` custom property on the element.
