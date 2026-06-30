@@ -6,12 +6,14 @@
 		</div>
 		<div
 			v-else
+			ref="tableWrap"
 			class="admin-table-wrap sf-depth-1"
-			:class="
-				isBelowThreshold
-					? ['sf-is-edge-left', 'sf-is-edge-right', 'admin-table-wrap--full-bleed']
-					: []
-			"
+			:class="{
+				'sf-is-edge-left': isBelowThreshold,
+				'sf-is-edge-right': isBelowThreshold,
+				'admin-table-wrap--full-bleed': isBelowThreshold,
+				'sf-is-overflow-left': isOverflowLeft,
+			}"
 		>
 			<table class="admin-table">
 				<thead>
@@ -29,59 +31,51 @@
 
 <script setup lang="ts">
 import { useCollapseBreakpoint } from '@/composables/useCollapseBreakpoint'
+import { useScrollOverflow } from '@/composables/useScrollOverflow'
+import { ref } from 'vue'
+
 defineProps<{ loading?: boolean; empty?: boolean }>()
 const { isBelowThreshold } = useCollapseBreakpoint('sm')
+
+const tableWrap = ref<HTMLElement | null>(null)
+const { left: isOverflowLeft } = useScrollOverflow(tableWrap)
 </script>
 
 <style>
-.admin-list__state {
-	opacity: 0.5;
-	padding: 12px 4px;
-	font-size: 0.875rem;
-}
+@layer components {
+	.admin-list__state {
+		opacity: 0.5;
+		padding: 12px 4px;
+		font-size: 0.875rem;
+	}
 
-.admin-table-wrap {
-	overflow-x: auto;
-	scrollbar-width: none;
-}
-.admin-table-wrap::-webkit-scrollbar {
-	display: none;
-}
+	.admin-table-wrap {
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.admin-table-wrap::-webkit-scrollbar {
+		display: none;
+	}
 
-.admin-table-wrap--full-bleed {
-	margin: 0 -1.25rem;
-}
+	.admin-table-wrap--full-bleed {
+		margin: 0 -1.25rem;
+	}
 
-/*
- * border-collapse: separate + border-spacing: 0 is required for box-shadow on
- * sticky cells to work — collapse merges cell borders into the table's paint
- * layer which clips overflow. With separate, each cell is its own box.
- * border-bottom is applied manually on each cell to compensate.
- */
-.admin-table {
-	width: 100%;
-	border-collapse: separate;
-	border-spacing: 0;
-	font-size: 0.875rem;
-}
+	.admin-table {
+		width: 100%;
+		font-size: 0.875rem;
+	}
 
-.admin-table__head th {
-	text-align: left;
-	padding: 6px 10px;
-	font-size: 0.7rem;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.07em;
-	color: rgba(var(--text_primary) / 0.45);
-	border-bottom: 1px solid rgba(var(--border_color));
-	white-space: nowrap;
-	user-select: none;
-}
+	.admin-table__head th:last-child {
+		position: sticky;
+		right: 0;
+		z-index: 2;
+		background: inherit;
+	}
 
-.admin-table__head th:last-child {
-	position: sticky;
-	right: 0;
-	z-index: 2;
-	box-shadow: -6px 0 10px rgba(0, 0, 0, 0.2);
+	.admin-table-wrap.sf-is-overflow-left .admin-table__head th:last-child,
+	.admin-table-wrap.sf-is-overflow-left .admin-cell--sticky {
+		box-shadow: -6px 0 10px rgb(var(--sf-shadow) / var(--sf-shadow-opacity));
+	}
 }
 </style>

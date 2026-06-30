@@ -134,23 +134,6 @@ body {
 	margin-right: 1em;
 }
 
-/* Table */
-.tiptap-table {
-	border-collapse: collapse;
-	width: 100%;
-	text-align: left;
-}
-
-.tiptap-table th,
-.tiptap-table td {
-	padding: 8px;
-	border: 1px solid;
-}
-
-.tiptap-table p {
-	margin: 0;
-}
-
 /* YouTube embed — 16:9 responsive */
 .tiptap [data-youtube-video]:has(> iframe.resp-yt) {
 	position: relative;

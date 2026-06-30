@@ -71,28 +71,31 @@
 				</template>
 				<template #actions>
 					<RouterLink
-						class="admin-action"
+						class="admin-action sf-on-hover"
 						:to="{ name: 'editor', params: { slug: page.slug } }"
 					>
 						Edit
 					</RouterLink>
 					<RouterLink
-						class="admin-action"
+						class="admin-action sf-on-hover"
 						:to="{ name: 'page-preview', params: { slug: page.slug } }"
 					>
 						Preview
 					</RouterLink>
 					<button
-						class="admin-action"
+						class="admin-action sf-on-hover"
 						@click="crud.onRename(page.pageId, page.name || page.slug)"
 					>
 						Rename
 					</button>
-					<button class="admin-action" @click="crud.onChangeSlug(page.pageId, page.slug)">
+					<button
+						class="admin-action sf-on-hover"
+						@click="crud.onChangeSlug(page.pageId, page.slug)"
+					>
 						Change slug
 					</button>
 					<button
-						class="admin-action admin-action--danger"
+						class="admin-action sf-on-hover sf-variant-danger"
 						@click="crud.onDelete(page.pageId, page.name || page.slug)"
 					>
 						Delete

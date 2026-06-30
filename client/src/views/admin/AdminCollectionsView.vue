@@ -32,19 +32,25 @@
 				<template #actions>
 					<RouterLink
 						v-if="tag.published"
-						class="admin-action"
+						class="admin-action sf-on-hover"
 						:to="{ name: 'collection', params: { collectionSlug: tag.slug } }"
 					>
 						View collection
 					</RouterLink>
-					<button class="admin-action" @click="crud.onRename(tag.tagId, tag.name)">
+					<button
+						class="admin-action sf-on-hover"
+						@click="crud.onRename(tag.tagId, tag.name)"
+					>
 						Rename
 					</button>
-					<button class="admin-action" @click="crud.onChangeSlug(tag.tagId, tag.slug)">
+					<button
+						class="admin-action sf-on-hover"
+						@click="crud.onChangeSlug(tag.tagId, tag.slug)"
+					>
 						Change slug
 					</button>
 					<button
-						class="admin-action admin-action--danger"
+						class="admin-action sf-on-hover sf-variant-danger"
 						@click="crud.onDelete(tag.tagId, tag.name)"
 					>
 						Delete
