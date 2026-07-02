@@ -473,6 +473,8 @@ function emitEditorLayer(b: Buckets): string {
 			s += `\t.sf-color-${e.suffix} { --sf-color-alpha: 1; color: rgb(var(${e.name}) / var(--sf-color-alpha)); }\n`
 		for (const e of items)
 			s += `\t.sf-border-${e.suffix} { --sf-border-alpha: 1; border-color: rgb(var(${e.name}) / var(--sf-border-alpha)); }\n`
+		for (const e of items)
+			s += `\t.sf-shadow-color-${e.suffix} { --sf-shadow-alpha: 1; --sf-shadow-color: rgb(var(${e.name}) / var(--sf-shadow-alpha)); }\n`
 		sections.push(s)
 	}
 
@@ -484,6 +486,8 @@ function emitEditorLayer(b: Buckets): string {
 			s += `\t.sf-color-alpha-${stepOf(e.suffix)} { --sf-color-alpha: var(${e.name}); }\n`
 		for (const e of b.alpha)
 			s += `\t.sf-border-alpha-${stepOf(e.suffix)} { --sf-border-alpha: var(${e.name}); }\n`
+		for (const e of b.alpha)
+			s += `\t.sf-shadow-alpha-${stepOf(e.suffix)} { --sf-shadow-alpha: var(${e.name}); }\n`
 		sections.push(s)
 	}
 

@@ -133,8 +133,14 @@ Done in the editor + cleanup slice:
   `--breakpoint-*` deleted from `base.css`.
 - `sf-tokens.css` reduced from 675 lines to ~25: TipTap reset + the one `sf-bg_secondary`
   class that has live consumers (others were speculative).
-- Generator's `sf-shadow-*` classes now respect inline `--sf-shadow-color` override
-  (preserves the picker's per-element colour pick capability).
+- Shadow colour migrated to the class-pair + inline-escape-hatch pattern (matches
+  bg/text/border). Generator auto-emits `sf-shadow-color-*` + `sf-shadow-alpha-*`
+  alongside the existing colour palette classes. `ToolbarShadowControl.vue` parses
+  the picker's output — palette pick → class pair, freeform hex → inline
+  `--sf-shadow-color`. Same var name for both paths; inline still beats layered
+  classes so the escape hatch survives on top of a palette pick. Existing D1
+  content with inline `--sf-shadow-color` (rgb string) continues to render
+  correctly — no content migration required.
 - `initialContent.html` migrated: `sf-radius-md` → `sf-radius-2`, `sf-radius-none` →
   `sf-radius-0`, then `sf-radius-0` on the full-bleed code block → `sf-is-edge-left sf-is-edge-right`.
 
@@ -262,18 +268,20 @@ The editor currently emits legacy class names for palette picks. This needs upda
 - [x] `sf-variant-alt-1` — vocabulary + compound rule seeded (`sf-size-xs.sf-variant-alt-1` → pill
       corners). Numbered from the start so alt-2 etc. are additive. The "alt" is relative to the
       default rendering of the full class combination, not just depth or loudness.
-- [x] `sf-boundary-*` / `sf-divide-*` — vocabulary + rules seeded (`sf-context` layer).
-      Remaining: AdminList sticky-column `box-shadow` still in component CSS — should move
-      to `sf-is-overflow-left` seed rule once we decide if it's a boundary or overflow signal.
+- [x] `sf-boundary-*` / `sf-divide-*` — vocabulary + rules seeded as `bundle` kind
+      (`sf-bundle` layer). Multi-property theme compositions belong here, not in the
+      auto-derived semantic layer. Remaining: AdminList sticky-column left edge should
+      compose `sf-boundary-left` (author intent — a real edge between fixed and scrolling
+      regions) alongside `sf-is-overflow-left` (runtime — content extends past visible).
 - [x] `sf-context` kind + `sf-is-overflow-{left,right,top,bottom}` — ClassKind,
       Layer, sort order, and generator support added. Vocabulary + rules seeded (mask-image
       gradients; same-axis compound rules for both-edges case). `OverflowRow.vue` migrated from
       inline `maskStyle` computed to `sf-is-*` classes on the scroller element.
 - [x] `sf-is-edge-{top,right,bottom,left}` — viewport-flush context; vocabulary + rules seeded
       (zeros the two corners that touch the boundary). Author-applied (not JS-toggled).
-- [x] `sf-is-overlay` — vocabulary + bare rule seeded. Reads `--sf-surface-color` (bridge variable
+- [x] `sf-is-overlay` — vocabulary + bare rule seeded. Reads `--sfx-surface-color` (bridge variable
       set by `sf-depth-*` bundles) so one rule covers all depths without duplicating colour
-      knowledge. Establishes the internal bridge variable convention — documented in spec.
+      knowledge. Establishes the `--sfx-*` bridge variable convention — documented in spec.
 - [x] `sf-is-sticky` — vocabulary + bare rule seeded (border-bottom, done in 280e9fc).
 - [x] Bare table element rules — seeded in `sf-bundle` (bare element selectors, specificity
       0-0-1). `table`: `border-collapse: separate; border-spacing: 0` (separate required for

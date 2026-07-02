@@ -80,6 +80,12 @@ alone does not encode destructive intent.
 The classes shown here are the current vocabulary; new bundle families, variants, and
 states join through the same admission test.
 
+**Second-level test for bundle families:** does the semantic role and the visual
+treatment ever need to diverge? `sf-heading-*` exists because they do — a nested h1
+may need heading-2 treatment. Body text has no such split; a `<p>` is prose, and its
+visual weight is a utility question (`sf-text-lg` for a lead paragraph), not a bundle.
+Add a bundle family only when the divergence is real.
+
 Slot labels come in three kinds. **Named** (`xs/sm/md/lg`, `tight/normal/wide`) encode
 intrinsic magnitudes — themes scale values; ordering is locked by the name's physical
 meaning. **Numbered, semantically positioned** (`depth-0..3`, `heading-1..3`, `loudness-1..3`)
@@ -87,6 +93,13 @@ encode an external concept (z-stack position, document hierarchy, attention hier
 the ordering is meaningful by what it maps to. **Numbered, arbitrary** (`primary-1..N`,
 `alpha-1..N`, `weight-1..N`) are pure slot positions — the theme decides values; adjacent
 slots imply no ordering.
+
+The rule for new numbered scales: if the direction comes from outside the system (HTML
+convention, z-stack intuition), number it and let the external ordering carry the
+meaning. If the direction is native to the concept, name it — a name makes the direction
+explicit and doesn't invite the "why does 5 mean more than 3" question. Existing scales
+(loudness) predate this principle and stay numbered; the cost of renaming stored
+content outweighs the nomenclature purity.
 
 ---
 
@@ -100,18 +113,23 @@ CSS cascade layers fix the override order regardless of source order:
 
 Layers are declared lowest to highest priority; inline styles override all of them.
 
-| Layer         | Holds                                                                                        |
-| ------------- | -------------------------------------------------------------------------------------------- |
-| `sf-bundle`   | Multi-property bundles (`sf-depth-*`, `sf-heading-*`) and bare element rules                 |
-| `sf-variant`  | `sf-variant-*` — modifiers overlaid on a bundle                                              |
-| `sf-context`  | `sf-is-*` — JS-detected runtime conditions (overflow, selection, etc.)                       |
-| `sf-semantic` | Single-property semantic token bindings (e.g. `sf-fg_primary`); boundary and divide families |
-| `sf-utility`  | Single-property bindings to a scale step (e.g. `sf-text-xl`)                                 |
-| `sf-state`    | `sf-on-*` — interaction modifiers (highest so hover/focus win over utilities)                |
+| Layer         | Holds                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| `sf-bundle`   | Multi-property bundles (depth, heading, loudness, size, boundary, divide, etc.) and bare element rules |
+| `sf-variant`  | `sf-variant-*` — override selected bundle properties to express intent                                 |
+| `sf-context`  | `sf-is-*` — JS-detected or author-declared runtime conditions (overflow, sticky, edge, etc.)           |
+| `sf-semantic` | Single-property semantic token bindings, auto-derived from tokens (e.g. `sf-fg_primary`)               |
+| `sf-utility`  | Single-property bindings to a scale step (e.g. `sf-text-xl`), plus editor palette pairings             |
+| `sf-state`    | `sf-on-*` — interaction modifiers (highest so hover/focus win over utilities)                          |
 
 Bundles are the authoring baseline. Single-property classes (semantic, utility) are
 per-property overrides — they outrank variant because explicit property intent beats
-bundle-level meaning.
+bundle-level meaning. A variant modifies only the properties it touches; every other
+bundle property survives.
+
+`sf-utility` holds two sublayers: scale utilities (`sf-text-xl`) and editor palette +
+alpha pairings (`sf-bg-primary-5` + `sf-bg-alpha-3`). Both emit as `@layer sf-utility`
+blocks and share cascade order.
 
 `sl-` layout classes sit outside this order. They govern arrangement and do not compete
 with `sf-` classes for the same properties.
@@ -122,23 +140,93 @@ specificity, so an override written outside a layer would silently destroy the o
 Token declarations (`.theme-x { --sf-X: ... }`) are exempt — custom properties cascade
 per-property by specificity and don't need to live in a layer.
 
-### Internal bridge variables
+---
 
-Where a context or state rule needs to reference a value set by a bundle rule, the bundle
-exposes it as a `--sf-*` custom property alongside the main declaration. The higher-priority
-layer reads the variable rather than duplicating the token reference.
+## Custom property conventions
 
-Current bridge variables:
+Four kinds of CSS custom properties appear across the system. They look alike but play
+different roles. The prefix rule:
 
-| Variable             | Set by                          | Read by                 |
-| -------------------- | ------------------------------- | ----------------------- |
-| `--sf-surface-color` | `sf-depth-*`                    | `sf-is-overlay`         |
-| `--sf-shadow-color`  | caller (inline or context rule) | `sf-shadow-*` utilities |
+> `--sf-*` — a value an author could reasonably write inline.
+> `--sfx-*` — only rules write this; internal rule-to-rule contract.
 
-These are not theme-level tokens. Theme authors set them through class composition or
-compound rules, not directly. When adding a new context rule that needs a bundle value,
-expose the value as a bridge variable in the bundle rule rather than writing per-depth
-compound rules.
+| Kind             | Example                                     | Set by                                                          | Read by                            |
+| ---------------- | ------------------------------------------- | --------------------------------------------------------------- | ---------------------------------- |
+| Theme token      | `--sf-primary-5`, `--sf-fg_primary`         | Theme class (`.theme-x { --sf-X: ... }`)                        | Rules across every layer           |
+| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); inline as escape hatch              | Carrier class in the same family   |
+| Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*`; reset to `0` per node-view-wrapper | `sl-*` primitive at inner selector |
+| Bridge           | `--sfx-surface-color`, `--sfx-depth-radius` | Bundle rule                                                     | Context / state / utility rule     |
+
+### Theme tokens
+
+The vocabulary a theme owns. Semantic (underscore: `--sf-fg_primary`) or scale (hyphen:
+`--sf-primary-5`, `--sf-radius-2`). Full details in [Tokens](#tokens).
+
+### Composition slots
+
+Let two classes compose a single CSS property without inline style. The carrier class
+declares the property with a slot; a sibling class fills the slot.
+
+```css
+@layer sf-utility {
+	.sf-bg-primary-5 {
+		--sf-bg-alpha: 1; /* reset */
+		background-color: rgb(var(--sf-primary-5) / var(--sf-bg-alpha));
+	}
+	.sf-bg-alpha-3 {
+		--sf-bg-alpha: var(--sf-alpha-3); /* fills slot */
+	}
+}
+```
+
+The reset on the carrier is required — otherwise removing the alpha class leaves
+whichever alpha value last cascaded in.
+
+Same-family pairs: `sf-bg-*` + `sf-bg-alpha-*`, `sf-color-*` + `sf-color-alpha-*`,
+`sf-border-*` + `sf-border-alpha-*`, `sf-shadow-color-*` + `sf-shadow-alpha-*`.
+
+The shadow family is a two-hop: `sf-shadow-<size>` reads `--sf-shadow-color`;
+`sf-shadow-color-*` writes `--sf-shadow-color` as an expression that itself reads
+`--sf-shadow-alpha`; `sf-shadow-alpha-*` fills that inner slot. Because `--sf-shadow-color`
+is a composition slot (not a bridge), inline `style="--sf-shadow-color: ..."` beats every
+layer and is the escape hatch for freeform shadow colours.
+
+### Layout channels
+
+Cross the `sf-` / `sl-` subsystem boundary. `sf-gap-md` sets `--sf-gap` on the wrapper;
+`sl-stack`'s inner content selector reads it. Every `[data-node-view-wrapper]` resets
+`--sf-gap` and `--sf-padding` to `0` — this prevents a parent layout primitive's spacing
+from cascading into a nested primitive that has no channel class of its own.
+
+Channels look like tokens because they share the `--sf-*` prefix, but they are runtime
+slots filled by utility classes, not theme values. A theme cannot meaningfully set
+`--sf-gap` in a theme class — the per-wrapper reset overwrites it at every node-view
+boundary.
+
+### Bridges
+
+Rule-to-rule contract when a context/state/utility rule needs a value a bundle owns.
+The bundle publishes it as `--sfx-*` alongside its main declaration; the higher-priority
+layer reads it. Neither theme authors nor content authors touch these.
+
+| Variable              | Set by       | Read by                  |
+| --------------------- | ------------ | ------------------------ |
+| `--sfx-surface-color` | `sf-depth-*` | `sf-is-overlay`          |
+| `--sfx-depth-radius`  | `sf-depth-*` | `sf-is-edge-*` compounds |
+
+Two authoring rules keep the surface honest:
+
+- **Publishing** — when writing a bundle rule, publish any value a consumer might
+  plausibly want to read as `--sfx-*` alongside the main declaration. Cheap to add
+  up-front; awkward to add retroactively once themes have shipped without it.
+- **Reading** — consumers reach for the bridge with a CSS-level fallback,
+  `var(--sfx-X, safe-default)`. If a theme drops the property from the bundle (and
+  therefore stops publishing the bridge), the consumer degrades to the fallback
+  rather than picking up a stale value.
+
+The alternative — hardcoding the underlying token (`var(--sf-radius-2)`) or writing
+per-bundle compound rules — couples the consumer to the current theme's choice and
+breaks under any theme that expresses the bundle differently.
 
 ---
 
@@ -155,7 +243,6 @@ tokens are prefixed `--sf-`. Two kinds, distinguished by separator:
 --sf-leading-*    line height      (none, tight, snug, normal, relaxed, loose)
 --sf-tracking-*   letter spacing   (tight, normal, wide)
 --sf-shadow-*     shadow elevation (sm..xl)
---sf-breakpoint-* container width  (xs, sm, md)
 --sf-primary-*    primary palette  (1..9)
 --sf-surface-*    neutral palette  (0..9)
 --sf-alpha-*      alpha values     (1..9)
@@ -203,17 +290,19 @@ multiplicative.
 theme overrides all compose opacity at the use site against `--sf-alpha-N` tokens.
 Recurring tinted values that warrant theme tracking get their own semantic token.
 
-**Editor-pairing classes are the one exception.** A picker UI emits a class pair
-(`sf-bg-primary-5` + `sf-bg-alpha-3`) instead of inline `style` so cascade specificity
-stays well-behaved — inline style outranks every layer, which would block state classes
-(`sf-on-hover`, etc.) from overriding the picked colour. The class pair works because
-the colour utility sets a runtime modifier var (`--sf-bg-alpha`) reset to `1`, and the
-alpha class overrides it. The reset is required to fence the cascade against itself.
+**Picker-driven colour picks land in the class layer, not inline.** A picker UI emits a
+class pair (`sf-bg-primary-5` + `sf-bg-alpha-3`) so cascade specificity stays well-behaved
+— inline style outranks every layer, which would block state classes (`sf-on-hover`,
+etc.) from overriding the picked colour. The class pair works because the colour utility
+sets a runtime modifier var (`--sf-bg-alpha`) reset to `1`, and the alpha class overrides
+it. The reset is required to fence the cascade against itself.
 
-This pattern lives entirely in the editor-pairing surface (`sf-{bg|color|border}-*`
-palette utilities and their `sf-{bg|color|border}-alpha-*` siblings). Component authors
-should not reach for it; they pick the colour token whose value already encodes the
+This pattern applies uniformly to every picker-driven colour surface: `sf-{bg|color|border|shadow-color}-*`
+palette utilities and their `sf-{bg|color|border|shadow}-alpha-*` siblings. Component
+authors don't reach for it — they pick the colour token whose value already encodes the
 opacity they want, or compose at the use site. Bundles paint solid and don't participate.
+Freeform values (arbitrary hex, custom lengths) use inline `style` as the escape hatch
+when no palette token fits.
 
 ### When a token belongs
 
@@ -258,6 +347,12 @@ and theme overrides both live inside the matching `@layer` block:
 
 Tokens for values. Class overrides for which properties to use. Theme authors work
 entirely within the shared token vocabulary — no class-specific intermediate tokens.
+
+**The vocabulary is the contract; the CSS properties a class expresses are the theme's
+choice.** A `sf-depth-1` may set `background + shadow + radius` in one theme and
+`background + border` in another. Consumers outside the class don't reach for specific
+properties — they either wear the class or read a bridge variable (`--sfx-*`) the class
+sets by contract.
 
 ### Bundles — `sf-bundle`
 
@@ -321,16 +416,38 @@ sf-size-xl   hero scale
 Size is independent of depth and loudness. A small pill can be `sf-depth-2 sf-loudness-1
 sf-variant-featured sf-size-xs`; the four axes do not constrain each other.
 
-Bundle values can be extracted into named tokens (e.g. `--sf-depth-0-background`) so
-application chrome and authors can reference them without re-applying the bundle.
+**Boundary** — visual separation on the element's own sides. The theme decides the full
+treatment; the default is a themed border, but themes may compose multi-property (line
+weight, style, colour, spacing increase). No scale step is involved; the hyphen is a
+positional qualifier, not a scale selector.
 
-More bundle families join this layer when added.
+```
+sf-boundary-top
+sf-boundary-bottom
+sf-boundary-left
+sf-boundary-right
+sf-boundary-x      left and right
+sf-boundary-y      top and bottom
+sf-boundary        all four
+```
+
+**Divide** — visual separation between an element's children (applied to the parent).
+Targets `> * + *`. `sf-divide-y` pairs naturally with `sl-stack`; `sf-divide-x` with
+`sl-cluster` or `sl-columns`.
+
+```
+sf-divide-x    between horizontally arranged children
+sf-divide-y    between vertically arranged children
+```
+
+New bundle families join this layer through the second-level admission test in
+Vocabulary Governance.
 
 ### Variants — `sf-variant`
 
-Semantic intent modifiers. The bundle still applies; the variant tells the theme what role
-this element plays so it can be expressed appropriately — a star, a colour, a badge,
-whatever fits.
+Semantic intent modifiers. The variant overrides only the bundle properties it touches;
+every other bundle property survives. The variant tells the theme what role this element
+plays so it can be expressed appropriately — a star, a colour, a badge, whatever fits.
 
 ```
 sf-variant-featured   editorially selected or promoted — a featured product, a highlight
@@ -378,6 +495,52 @@ Multiple `sf-is-*` classes may be present simultaneously and can be compounded i
 — a rule requiring both `sf-is-overflow-left` and `sf-is-overflow-right` handles the
 both-edges case at higher specificity than either alone.
 
+### Semantic — `sf-semantic`
+
+Single-property classes that bind one CSS property to a shared semantic token (underscore
+naming, mirroring the token name).
+
+```
+sf-fg_primary    color:        rgb(var(--sf-fg_primary))
+sf-border_color    border-color: rgb(var(--sf-border_color))
+```
+
+The author signals "this property should track a theme value"; the theme controls the
+value.
+
+### Utility — `sf-utility`
+
+Single-property classes that bind one CSS property to a specific scale step (hyphen
+naming, mirroring the token name).
+
+```
+sf-radius-3        border-radius:   var(--sf-radius-3)
+sf-shadow-md       box-shadow:      var(--sf-shadow-md)
+sf-text-xl         font-size:       var(--sf-text-xl)
+sf-leading-snug    line-height:     var(--sf-leading-snug)
+sf-tracking-wide   letter-spacing:  var(--sf-tracking-wide)
+sf-font-1          font-family:     var(--sf-font-1)
+sf-weight-3        font-weight:     var(--sf-weight-3)
+sf-gap-md          --sf-gap:        var(--sf-spacing-md)
+sf-padding-lg      --sf-padding:    var(--sf-spacing-lg)
+```
+
+`sf-gap-*` and `sf-padding-*` set runtime-state custom properties (`--sf-gap`,
+`--sf-padding`) that layout primitives read — this is how the styling system feeds
+spacing into the layout system without compromising layout's structural fixity.
+
+In the editor context, every `[data-node-view-wrapper]` resets `--sf-gap` and
+`--sf-padding` to `0`. This prevents a parent layout primitive's spacing from
+cascading into a nested layout primitive that has no spacing class of its own —
+the reset breaks CSS custom property inheritance at each node boundary.
+
+`sf-shadow-*` uses `rgb(var(--sf-shadow) / var(--sf-shadow-opacity))` as its default
+colour composition, both theme-controlled. Colour picks follow the same class-pair +
+freeform-hex-escape-hatch pattern as bg/text/border: palette picks emit
+`sf-shadow-color-*` + `sf-shadow-alpha-*` (in `sf-utility`); arbitrary hex picks emit
+inline `style="--sf-shadow-color: ..."`. Same var name for both paths — inline still
+beats layered classes so the escape hatch works cleanly on top of a palette pick.
+
 ### States — `sf-state`
 
 Interaction modifiers. A bare rule applies everywhere the class appears; a compound
@@ -406,68 +569,6 @@ sf-on-disabled
 	}
 }
 ```
-
-### Semantic — `sf-semantic`
-
-Single-property classes that bind one CSS property to a shared semantic token (underscore
-naming, mirroring the token name).
-
-```
-sf-fg_primary    color:        rgb(var(--sf-fg_primary))
-sf-border_color    border-color: rgb(var(--sf-border_color))
-```
-
-The author signals "this property should track a theme value"; the theme controls the
-value.
-
-### Boundaries — `sf-semantic`
-
-Two families that signal visual separation intent. The theme decides the full treatment —
-line weight, style, colour, spacing increase, or any multi-property composition. No scale
-step is involved; the hyphen here is a positional qualifier, not a scale selector.
-
-**Boundary — visual treatment on the element's own sides:**
-
-```
-sf-boundary-top
-sf-boundary-bottom
-sf-boundary-left
-sf-boundary-right
-sf-boundary-x      left and right
-sf-boundary-y      top and bottom
-sf-boundary        all four
-```
-
-**Divide — visual boundary between an element's children (applied to the parent):**
-
-```
-sf-divide-x    between horizontally arranged children
-sf-divide-y    between vertically arranged children
-```
-
-Divide targets `> * + *`. `sf-divide-y` pairs naturally with `sl-stack`; `sf-divide-x`
-with `sl-cluster` or `sl-columns`.
-
-### Utility — `sf-utility`
-
-Single-property classes that bind one CSS property to a specific scale step (hyphen
-naming, mirroring the token name).
-
-```
-sf-radius-3        border-radius:   var(--sf-radius-3)
-sf-shadow-md       box-shadow:      var(--sf-shadow-md)
-sf-text-xl         font-size:       var(--sf-text-xl)
-sf-leading-snug    line-height:     var(--sf-leading-snug)
-sf-tracking-wide   letter-spacing:  var(--sf-tracking-wide)
-sf-font-1          font-family:     var(--sf-font-1)
-sf-weight-3        font-weight:     var(--sf-weight-3)
-sf-gap-md          --sf-gap:        var(--sf-spacing-md)
-sf-padding-lg      --sf-padding:    var(--sf-spacing-lg)
-```
-
-`sf-gap-*` and `sf-padding-*` set runtime-state custom properties (`--sf-gap`,
-`--sf-padding`) that layout primitives read — this is how the styling system feeds
-spacing into the layout system without compromising layout's structural fixity.
 
 ---
 
@@ -552,16 +653,16 @@ Storage and generation are application concerns.
 
 ## Naming convention
 
-| Class                           | Kind     | Example                          | Meaning                                          |
-| ------------------------------- | -------- | -------------------------------- | ------------------------------------------------ |
-| `sf-{family}-*`                 | Bundle   | `sf-depth-1`, `sf-heading-2`     | Multi-property bundle                            |
-| `sf-variant-*`                  | Variant  | `sf-variant-featured`            | Bundle modifier expressing intent                |
-| `sf-on-*`                       | State    | `sf-on-hover`                    | Interaction modifier                             |
-| `sf-is-*`                       | Context  | `sf-is-overflow-right`           | JS-detected or author-declared condition         |
-| `sf-*_*` (underscore)           | Semantic | `sf-fg_primary`                  | One property, mirrors a composite token name     |
-| `sf-*-*` (hyphen, scale step)   | Utility  | `sf-text-xl`                     | One property, explicit scale step                |
-| `sf-boundary-*` / `sf-divide-*` | Boundary | `sf-boundary-top`, `sf-divide-y` | Boundary intent on own sides or between children |
-| `sl-*`                          | Layout   | `sl-columns`                     | Structural arrangement                           |
+| Class                           | Kind     | Example                          | Meaning                                            |
+| ------------------------------- | -------- | -------------------------------- | -------------------------------------------------- |
+| `sf-{family}-*`                 | Bundle   | `sf-depth-1`, `sf-heading-2`     | Multi-property bundle                              |
+| `sf-variant-*`                  | Variant  | `sf-variant-featured`            | Bundle modifier expressing intent                  |
+| `sf-on-*`                       | State    | `sf-on-hover`                    | Interaction modifier                               |
+| `sf-is-*`                       | Context  | `sf-is-overflow-right`           | JS-detected or author-declared condition           |
+| `sf-*_*` (underscore)           | Semantic | `sf-fg_primary`                  | One property, mirrors a composite token name       |
+| `sf-*-*` (hyphen, scale step)   | Utility  | `sf-text-xl`                     | One property, explicit scale step                  |
+| `sf-boundary-*` / `sf-divide-*` | Bundle   | `sf-boundary-top`, `sf-divide-y` | Separation intent on own sides or between children |
+| `sl-*`                          | Layout   | `sl-columns`                     | Structural arrangement                             |
 
 ---
 
@@ -570,6 +671,18 @@ Storage and generation are application concerns.
 The editor exposes the content-author surface — picker controls translate to `sf-` and
 `sl-` classes on `node.attrs.class`. Component-author and theme-author surfaces live
 outside the editor.
+
+Picker choices land in storage by a uniform pattern:
+
+- **Palette pick** → class pair on `node.attrs.class` (`sf-bg-primary-5` + `sf-bg-alpha-3`,
+  same shape for `sf-color-*`, `sf-border-*`, `sf-shadow-color-*`). Stays in the cascade
+  layer system; state classes and compound rules can still intercept.
+- **Freeform value** (arbitrary hex, custom px, etc.) → inline `node.attrs.style`. Inline
+  beats every layer, so this is the escape hatch — sacrifices cascade participation for
+  arbitrary-value flexibility.
+- **Shape/scale token pick** (`sf-shadow-md`, `sf-radius-2`, `sf-text-xl`) → single class
+  on `node.attrs.class`; the utility rule composes with any accompanying runtime state
+  vars.
 
 ---
 
