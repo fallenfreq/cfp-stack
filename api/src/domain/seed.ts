@@ -340,30 +340,33 @@ const VOCABULARY: VocabSpec[] = [
 			'Element is currently in its sticky/pinned position — JS-toggled; theme decides edge treatment (border, shadow, etc.)',
 	},
 
-	// Boundary / divide — content separation signal; theme decides treatment
-	{ name: 'sf-boundary-top', kind: 'context', description: 'Content boundary on top edge' },
-	{ name: 'sf-boundary-bottom', kind: 'context', description: 'Content boundary on bottom edge' },
-	{ name: 'sf-boundary-left', kind: 'context', description: 'Content boundary on left edge' },
-	{ name: 'sf-boundary-right', kind: 'context', description: 'Content boundary on right edge' },
+	// Boundary / divide — content separation signal; theme decides the full treatment.
+	// Bundle kind because themes may compose multi-property expressions (border + padding +
+	// margin adjustment). Default rules below are single-property; the layer still allows
+	// richer compositions via compound rules or per-theme overrides.
+	{ name: 'sf-boundary-top', kind: 'bundle', description: 'Content boundary on top edge' },
+	{ name: 'sf-boundary-bottom', kind: 'bundle', description: 'Content boundary on bottom edge' },
+	{ name: 'sf-boundary-left', kind: 'bundle', description: 'Content boundary on left edge' },
+	{ name: 'sf-boundary-right', kind: 'bundle', description: 'Content boundary on right edge' },
 	{
 		name: 'sf-boundary-x',
-		kind: 'context',
+		kind: 'bundle',
 		description: 'Content boundary on left and right edges',
 	},
 	{
 		name: 'sf-boundary-y',
-		kind: 'context',
+		kind: 'bundle',
 		description: 'Content boundary on top and bottom edges',
 	},
-	{ name: 'sf-boundary', kind: 'context', description: 'Content boundary on all edges' },
+	{ name: 'sf-boundary', kind: 'bundle', description: 'Content boundary on all edges' },
 	{
 		name: 'sf-divide-x',
-		kind: 'context',
+		kind: 'bundle',
 		description: 'Visual separation between horizontally arranged children',
 	},
 	{
 		name: 'sf-divide-y',
-		kind: 'context',
+		kind: 'bundle',
 		description: 'Visual separation between vertically arranged children',
 	},
 
@@ -402,17 +405,25 @@ type RuleSpec = ClassOnlyRuleInput | ElementRuleInput
 
 const ROOT_RULES: RuleSpec[] = [
 	// Depth bundles — background + elevation cues.
-	// --sf-surface-color is set alongside background so sf-is-overlay can add alpha without
+	// --sfx-surface-color is set alongside background so sf-is-overlay can add alpha without
 	// needing to know which surface token the depth chose.
 	// depth-0: canvas, no elevation
-	{ classNames: ['sf-depth-0'], cssProperty: '--sf-surface-color', value: 'var(--sf-surface-0)' },
+	{
+		classNames: ['sf-depth-0'],
+		cssProperty: '--sfx-surface-color',
+		value: 'var(--sf-surface-0)',
+	},
 	{ classNames: ['sf-depth-0'], cssProperty: 'background', value: 'rgb(var(--sf-surface-0))' },
 
 	// depth-1: cards, wells — background + shadow + radius
 	// Border is intentionally absent at the default level; flat themes add one by overriding
 	// box-shadow to none and adding border: 1px solid rgb(var(--sf-border_color)) instead.
-	{ classNames: ['sf-depth-1'], cssProperty: '--sf-surface-color', value: 'var(--sf-surface-1)' },
-	{ classNames: ['sf-depth-1'], cssProperty: '--sf-depth-radius', value: 'var(--sf-radius-2)' },
+	{
+		classNames: ['sf-depth-1'],
+		cssProperty: '--sfx-surface-color',
+		value: 'var(--sf-surface-1)',
+	},
+	{ classNames: ['sf-depth-1'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
 	{ classNames: ['sf-depth-1'], cssProperty: 'background', value: 'rgb(var(--sf-surface-1))' },
 	{
 		classNames: ['sf-depth-1'],
@@ -422,8 +433,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-1'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 
 	// depth-2: dropdowns, popovers — stronger shadow
-	{ classNames: ['sf-depth-2'], cssProperty: '--sf-surface-color', value: 'var(--sf-surface-2)' },
-	{ classNames: ['sf-depth-2'], cssProperty: '--sf-depth-radius', value: 'var(--sf-radius-2)' },
+	{
+		classNames: ['sf-depth-2'],
+		cssProperty: '--sfx-surface-color',
+		value: 'var(--sf-surface-2)',
+	},
+	{ classNames: ['sf-depth-2'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
 	{ classNames: ['sf-depth-2'], cssProperty: 'background', value: 'rgb(var(--sf-surface-2))' },
 	{
 		classNames: ['sf-depth-2'],
@@ -433,8 +448,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-2'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 
 	// depth-3: modals — strongest shadow
-	{ classNames: ['sf-depth-3'], cssProperty: '--sf-surface-color', value: 'var(--sf-surface-3)' },
-	{ classNames: ['sf-depth-3'], cssProperty: '--sf-depth-radius', value: 'var(--sf-radius-3)' },
+	{
+		classNames: ['sf-depth-3'],
+		cssProperty: '--sfx-surface-color',
+		value: 'var(--sf-surface-3)',
+	},
+	{ classNames: ['sf-depth-3'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-3)' },
 	{ classNames: ['sf-depth-3'], cssProperty: 'background', value: 'rgb(var(--sf-surface-3))' },
 	{
 		classNames: ['sf-depth-3'],
@@ -605,13 +624,13 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'linear-gradient(to bottom, transparent, black 60px, black calc(100% - 60px), transparent)',
 	},
 
-	// Overlay context — reads --sf-surface-color (bridge variable set by each depth bundle) so one
+	// Overlay context — reads --sfx-surface-color (bridge variable set by each depth bundle) so one
 	// bare rule works at any depth without duplicating colour knowledge. Theme can compound
 	// (e.g. sf-depth-3.sf-is-overlay) to override for specific depths where different treatment is needed.
 	{
 		classNames: ['sf-is-overlay'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-surface-color, var(--sf-surface-0)) / var(--sf-alpha-9))',
+		value: 'rgb(var(--sfx-surface-color, var(--sf-surface-0)) / var(--sf-alpha-9))',
 	},
 
 	// Sticky context — clear the all-sides elevation shadow the depth bundle adds; edge treatment
@@ -626,7 +645,7 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// Viewport-edge context — zero the corners that touch the boundary (specificity 0-1-0).
 	// Three-side panel patterns restore the open-side corners via compound rules (0-3-0)
-	// that read --sf-depth-radius so they don't need to know which depth the element carries.
+	// that read --sfx-depth-radius so they don't need to know which depth the element carries.
 	{ classNames: ['sf-is-edge-top'], cssProperty: 'border-top-left-radius', value: '0' },
 	{ classNames: ['sf-is-edge-top'], cssProperty: 'border-top-right-radius', value: '0' },
 	{ classNames: ['sf-is-edge-right'], cssProperty: 'border-top-right-radius', value: '0' },
@@ -640,23 +659,23 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-is-edge-top', 'sf-is-edge-right', 'sf-is-edge-bottom'],
 		cssProperty: 'border-top-left-radius',
-		value: 'var(--sf-depth-radius, 0)',
+		value: 'var(--sfx-depth-radius, 0)',
 	},
 	{
 		classNames: ['sf-is-edge-top', 'sf-is-edge-right', 'sf-is-edge-bottom'],
 		cssProperty: 'border-bottom-left-radius',
-		value: 'var(--sf-depth-radius, 0)',
+		value: 'var(--sfx-depth-radius, 0)',
 	},
 	// Left panel (flush top+left+bottom): mirror — restore right corners.
 	{
 		classNames: ['sf-is-edge-top', 'sf-is-edge-left', 'sf-is-edge-bottom'],
 		cssProperty: 'border-top-right-radius',
-		value: 'var(--sf-depth-radius, 0)',
+		value: 'var(--sfx-depth-radius, 0)',
 	},
 	{
 		classNames: ['sf-is-edge-top', 'sf-is-edge-left', 'sf-is-edge-bottom'],
 		cssProperty: 'border-bottom-right-radius',
-		value: 'var(--sf-depth-radius, 0)',
+		value: 'var(--sfx-depth-radius, 0)',
 	},
 
 	// Variants — minimal property set; themes can extend per-bundle compound rules
