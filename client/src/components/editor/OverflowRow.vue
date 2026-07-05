@@ -1,5 +1,11 @@
 <template>
-	<div class="overflow-row">
+	<div
+		class="overflow-row"
+		:class="{
+			'has-overflow-left': overflow.left,
+			'has-overflow-right': overflow.right,
+		}"
+	>
 		<div
 			ref="scrollerEl"
 			class="overflow-row__scroller"
@@ -7,6 +13,7 @@
 				'sf-is-overflow-left': overflow.left,
 				'sf-is-overflow-right': overflow.right,
 			}"
+			@scroll.passive="syncOverflow"
 		>
 			<slot />
 		</div>
@@ -14,15 +21,34 @@
 </template>
 
 <script setup lang="ts">
-import { useScrollOverflow } from '@/composables/useScrollOverflow'
-import { ref, toRef } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
 	refreshKey?: unknown
 }>()
 
 const scrollerEl = ref<HTMLElement | null>(null)
-const overflow = useScrollOverflow(scrollerEl, toRef(props, 'refreshKey'))
+const overflow = ref({ left: false, right: false })
+
+const OVERFLOW_EPSILON = 2
+
+const syncOverflow = () => {
+	const scroller = scrollerEl.value
+	if (!scroller) return
+	const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth
+	overflow.value = {
+		left: scroller.scrollLeft > OVERFLOW_EPSILON,
+		right: maxScrollLeft - scroller.scrollLeft > OVERFLOW_EPSILON,
+	}
+}
+
+const refreshOverflow = async () => {
+	await nextTick()
+	syncOverflow()
+}
+
+onMounted(refreshOverflow)
+watch(() => props.refreshKey, refreshOverflow)
 </script>
 
 <style scoped>
@@ -60,11 +86,11 @@ const overflow = useScrollOverflow(scrollerEl, toRef(props, 'refreshKey'))
 	border-left: 5px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-5));
 }
 
-.overflow-row:has(.sf-is-overflow-left)::before {
+.overflow-row.has-overflow-left::before {
 	opacity: 1;
 }
 
-.overflow-row:has(.sf-is-overflow-right)::after {
+.overflow-row.has-overflow-right::after {
 	opacity: 1;
 }
 
