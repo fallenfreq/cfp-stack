@@ -70,8 +70,9 @@ export const classRules = sqliteTable('class_rules', {
 	// HTML element type that AND-chains with the vocabulary classes, placed first in the
 	// compound selector: element='button' + classes=[sf-variant-danger] → button.sf-variant-danger
 	// Analogous to .sf-depth-1.sf-variant-featured but with an element type as the leading part.
-	// All rules go in sf-bundle; bare element selectors (0-0-1) naturally lose to class
-	// selectors (0-1-0) in the same layer. Validated against HTML_ELEMENTS allowlist in code.
+	// Bare element rules (no classes) emit to sf-element — a baseline layer below sf-bundle,
+	// so any bundle/variant/state layered on top wins predictably. Compound rules take the
+	// layer of their highest-kind class. Validated against HTML_ELEMENTS allowlist in code.
 	elementSelector: text('element_selector', { length: 64 }),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()

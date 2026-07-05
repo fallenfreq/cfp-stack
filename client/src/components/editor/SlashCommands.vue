@@ -1,16 +1,17 @@
 <template>
-	<div class="dropdown-menu sf-depth-2">
+	<div class="dropdown-menu sf-depth-2 sf-size-2xs">
 		<template v-if="items.length">
 			<div
 				v-for="(item, index) in items"
 				:key="index"
-				:class="['menu-item', { 'is-selected': index === selectedIndex }]"
+				class="menu-item sf-on-hover sf-size-2xs"
+				:class="{ 'sf-on-current': index === selectedIndex }"
 				@click="selectItem(index)"
 			>
 				{{ item.title }}
 			</div>
 		</template>
-		<div v-else class="menu-item no-commands">No Commands</div>
+		<div v-else class="menu-item no-commands sf-loudness-1 sf-size-2xs">No Commands</div>
 	</div>
 </template>
 
@@ -58,33 +59,25 @@ defineExpose({ onKeyDown })
 </script>
 
 <style>
-.dropdown-menu {
-	border: 1px solid rgb(var(--border_color));
-	padding: 4px;
-	overflow-y: auto;
-	min-width: 200px;
-	scrollbar-width: none; /* For Firefox */
-}
+@layer ui {
+	.dropdown-menu {
+		padding: var(--sf-padding);
+		overflow-y: auto;
+		min-width: 200px;
+		scrollbar-width: none;
+	}
+	.dropdown-menu::-webkit-scrollbar {
+		display: none;
+	}
 
-.dropdown-menu::-webkit-scrollbar {
-	display: none; /* For Chrome, Safari, and Opera */
-	display: flex;
-	flex-direction: column;
-}
+	.menu-item {
+		cursor: pointer;
+		padding: var(--sf-padding);
+	}
 
-.menu-item {
-	cursor: pointer;
-	padding: 4px 6px;
-	border-radius: 4px;
-}
-
-.is-selected {
-	background-color: rgb(var(--bg_primary));
-}
-
-.no-commands {
-	text-align: center;
-	padding: 8px;
-	color: gray;
+	.no-commands {
+		text-align: center;
+		cursor: default;
+	}
 }
 </style>

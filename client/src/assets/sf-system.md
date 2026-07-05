@@ -399,22 +399,26 @@ The theme decides which CSS properties express each level — scale, padding, ty
 contrast, or a combination. Depth coordinates layering relationships; loudness is
 independent of that — a depth-2 dropdown can be any loudness.
 
-**Size** — intended form factor. Declares what an element is meant to be, so the theme
-applies proportional visual properties — padding, border-radius, and similar. A container
-query fires on measured width, which means overfilled content would change the element's
-style as it grows — a pill that looks like a pill until it gets too wide is wrong. The
-size class stays fixed to the intent.
+**Size** — form-factor scale. Declares how large or tight the block reads. The theme
+picks which properties express each step — padding, border weight, gap, or a
+combination. This theme happens to spend size on `--sf-padding` (any layout primitive
+or component style reads it), but that's a theme choice, not the axis's contract.
+Shape stays _out_ of size: a compact breadcrumb and a compact pill both want the same
+scale but different radii, so `border-radius` comes from the element's own rule (bare
+`<button>`, `<input>`) or an explicit `sf-radius-*` utility. Decoupling lets an author
+pick scale and shape independently rather than getting one when they wanted the other.
 
 ```
-sf-size-xs   pill, badge, icon button
-sf-size-sm   compact — small button, tag
-sf-size-md   standard form factor
-sf-size-lg   large button, featured tile
+sf-size-2xs  very tight — breadcrumb, dense chip
+sf-size-xs   compact — icon button, small tag
+sf-size-sm   small — small button
+sf-size-md   standard density
+sf-size-lg   large — featured tile
 sf-size-xl   hero scale
 ```
 
 Size is independent of depth and loudness. A small pill can be `sf-depth-2 sf-loudness-1
-sf-variant-featured sf-size-xs`; the four axes do not constrain each other.
+sf-variant-featured sf-size-xs sf-radius-3`; the axes do not constrain each other.
 
 **Boundary** — visual separation on the element's own sides. The theme decides the full
 treatment; the default is a themed border, but themes may compose multi-property (line
@@ -442,6 +446,43 @@ sf-divide-y    between vertically arranged children
 
 New bundle families join this layer through the second-level admission test in
 Vocabulary Governance.
+
+### Element markers — `sf-element`
+
+Class analog of a bare HTML element rule. HTML has some element categories baked in —
+`<button>`, `<nav>`, `<table>`, `<mark>` — that themes decorate via bare element rules.
+Real UI categories HTML forgot (chip, badge, tag) need class markers to give themes
+something to decorate. Markers sit in their own cascade layer (`sf-element`, below
+`sf-bundle`) so they behave the way HTML elements do — a baseline that bundles, variants
+and states override predictably, without depending on source order to break ties.
+
+```
+sf-chip    compact representation of a discrete data unit — tag, filter,
+           selection, status
+```
+
+**A marker only declares what's unique to the category.** Everything a chip and a card
+have in common with any other element — background, elevation, density, hover, focus,
+muted attention — already comes from depth, loudness, size, variants, states. The marker
+carries only the _residual_ the composable axes can't express: a shape convention the
+theme prefers for chips (square edges when the theme's default is round, or the reverse),
+a colour treatment specific to badges, whatever the category demands after the axes have
+done their work.
+
+**Admission test:** after depth + loudness + size + variant + state have applied, is there
+anything left that's specific to this category?
+
+- **`sf-card` — rejected.** `sf-depth-1 sf-loudness-*` already produces card. Nothing
+  category-specific remains, so a marker would just be an alias for a class combination
+  authors can write directly. Categorising for its own sake earns nothing.
+- **`sf-chip` — accepted.** Chips typically want a shape distinct from whatever the theme
+  gives bare buttons (pill when buttons are square, or square when buttons are pill) —
+  a category-specific choice not derivable from depth/loudness/size. Same shape as
+  bare `<button>`'s rule setting `border-radius: var(--sf-radius-2)`: a residual the
+  composable axes can't express.
+
+If a marker ends up with zero rules after the axes cover the general case, the marker
+isn't earning its keep — collapse it back into the axes.
 
 ### Variants — `sf-variant`
 
@@ -481,7 +522,24 @@ sf-is-overlay          element is physically positioned over other content
 sf-is-loading          element is in a loading / pending state
 sf-is-sticky           a sticky element is currently in its pinned position
 sf-is-error            element or field is in a validation / error state
+sf-is-contained        element sits inside a container that already provides
+                       visual boundary
 ```
+
+`sf-is-contained` is author-declared (like `sf-is-edge-*`) — the DOM structure is
+static, no JS detection needed. The class only _declares_ the condition; the theme
+decides how to express it. The default expression is to drop the element's own
+chrome (background, border) since the parent already delineates, but a theme is
+free to soften it differently — reduced padding, muted colour, no change at all.
+Element-agnostic: applies equally to a `<button>` inside a card, a nested
+card-shaped `<div>`, or anything else that would otherwise draw its own container.
+
+Every `sf-is-*` class declares _intent_, never appearance. `sf-is-overlay` means
+"this element is floating over content" — not "this element is pill-shaped." The
+theme reads the intent and picks the expression: a compound like `button.sf-is-overlay`
+setting a pill radius is the theme's opinion that floating action buttons read as
+chip-shaped tokens. Component authors declare intent (`sf-is-overlay`); shape,
+colour, elevation are the theme's calls.
 
 `sf-is-*` classes differ from `sf-on-*` in source and meaning:
 

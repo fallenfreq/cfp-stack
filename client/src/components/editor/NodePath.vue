@@ -1,13 +1,10 @@
 <template>
-	<div class="node-path">
+	<div class="node-path sf-text-xs">
 		<template v-for="(segment, i) in path" :key="segment.depth">
 			<span v-if="i > 0" class="path-sep">›</span>
 			<button
-				class="path-node"
-				:class="{
-					'is-active': segment.depth === effectiveActiveDepth,
-					'is-doc': segment.depth === 0,
-				}"
+				class="path-node sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-2xs"
+				:class="{ 'sf-on-current': segment.depth === effectiveActiveDepth }"
 				:disabled="segment.depth === 0"
 				@mousedown.prevent
 				@click="handleDepthClick(segment)"
@@ -120,50 +117,28 @@ onUnmounted(() => {
 </script>
 
 <style>
-.node-path {
-	display: flex;
-	align-items: center;
-	flex: 1;
-	min-width: 0;
-	overflow-x: auto;
-	scrollbar-width: none;
-	font-size: 0.75rem;
-}
-.node-path::-webkit-scrollbar {
-	display: none;
-}
+@layer ui {
+	.node-path {
+		display: flex;
+		align-items: center;
+		flex: 1;
+		min-width: 0;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.node-path::-webkit-scrollbar {
+		display: none;
+	}
 
-.path-sep {
-	color: rgba(var(--text_primary) / var(--sf-alpha-3));
-	padding: 0 4px;
-	user-select: none;
-	flex-shrink: 0;
-}
+	.path-sep {
+		color: rgba(var(--text_primary) / var(--sf-alpha-3));
+		padding: 0 4px;
+		user-select: none;
+		flex-shrink: 0;
+	}
 
-.path-node {
-	background: none;
-	border: 1px solid transparent;
-	border-radius: 3px;
-	padding: 1px 5px;
-	cursor: pointer;
-	color: rgba(var(--text_primary) / var(--sf-alpha-6));
-	font-size: 0.75rem;
-	white-space: nowrap;
-	transition:
-		color 0.1s,
-		background 0.1s;
-}
-.path-node:hover:not(:disabled):not(.is-active) {
-	color: rgb(var(--text_primary));
-	background: rgba(var(--text_primary) / var(--sf-alpha-1));
-}
-.path-node.is-active {
-	color: rgb(var(--primary));
-	border-color: rgba(var(--primary) / var(--sf-alpha-4));
-	background: rgba(var(--primary) / var(--sf-alpha-1));
-}
-.path-node.is-doc {
-	cursor: default;
-	opacity: 0.4;
+	.path-node {
+		white-space: nowrap;
+	}
 }
 </style>

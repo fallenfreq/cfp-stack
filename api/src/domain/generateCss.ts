@@ -46,6 +46,7 @@ export async function emitStylesheet(db: Db): Promise<string> {
 		HEADER,
 		RESET,
 		emitTokenBlocks(themesList, tokensByTheme),
+		emitRichLayer('sf-element', themesList, rootTheme, rulesByLayer),
 		emitRichLayer('sf-bundle', themesList, rootTheme, rulesByLayer),
 		emitRichLayer('sf-variant', themesList, rootTheme, rulesByLayer),
 		emitRichLayer('sf-context', themesList, rootTheme, rulesByLayer),
@@ -107,7 +108,7 @@ export async function themeSignature(db: Db): Promise<string> {
 // ─── Header ─────────────────────────────────────────────────────────────
 
 const HEADER = `/* Generated from D1 — runtime-emitted, do not cache stale. */
-@layer reset, components, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
+@layer reset, ui, sf-element, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
 
 // Static resets — no theme dependency, never stored in DB.
 // Lowest cascade priority (reset layer declared first).
@@ -285,15 +286,17 @@ function buildSelector(
 }
 
 // Highest kind's layer. Classes are sorted bundle → layout so the last entry wins.
-// Bare element rules (no classes) go in sf-bundle — element specificity (0-0-1)
-// naturally loses to class selectors (0-1-0) within the same layer.
+// Bare element rules (no classes) go in sf-element — baseline layer, ordered
+// before sf-bundle so any bundle/variant/state layered on top wins predictably.
+// The element analog for class-based markers (sf-chip etc.) lives here too via
+// KIND_TO_LAYER, keeping structural/identity rules in one layer.
 function ruleLayerFor(
 	sortedClasses: readonly { kind: string }[],
 	elementSelector: string | null = null,
 ): Layer {
 	const last = sortedClasses[sortedClasses.length - 1]
 	if (!last) {
-		if (elementSelector) return 'sf-bundle'
+		if (elementSelector) return 'sf-element'
 		throw new Error(
 			'rule with zero classes and no element selector — domain invariant violated',
 		)

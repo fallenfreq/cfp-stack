@@ -42,7 +42,7 @@ const { left: isOverflowLeft } = useScrollOverflow(tableWrap)
 </script>
 
 <style>
-@layer components {
+@layer ui {
 	.admin-list__state {
 		opacity: 0.5;
 		padding: 12px 4px;

@@ -1,7 +1,7 @@
 <template>
 	<button
-		class="toolbar-btn"
-		:class="{ 'is-active': active }"
+		class="toolbar-btn sf-is-contained sf-on-hover sf-on-disabled sf-size-xs"
+		:class="{ 'sf-on-current': active }"
 		:disabled="disabled"
 		@mousedown.prevent
 		@click="$emit('click')"
@@ -20,32 +20,12 @@ defineEmits<{ click: [] }>()
 </script>
 
 <style scoped>
-.toolbar-btn {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 3px 8px;
-	border-radius: 4px;
-	border: 1px solid transparent;
-	background: transparent;
-	color: rgb(var(--text_primary));
-	font-size: 0.8rem;
-	cursor: pointer;
-	white-space: nowrap;
-	transition:
-		background 0.1s,
-		border-color 0.1s;
-}
-.toolbar-btn:hover:not(:disabled) {
-	background: rgba(var(--text_primary) / var(--sf-alpha-1));
-}
-.toolbar-btn.is-active {
-	background: rgba(var(--primary) / var(--sf-alpha-1));
-	border-color: rgba(var(--primary) / var(--sf-alpha-4));
-	color: rgb(var(--primary));
-}
-.toolbar-btn:disabled {
-	opacity: 0.4;
-	cursor: not-allowed;
+@layer ui {
+	.toolbar-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		white-space: nowrap;
+	}
 }
 </style>

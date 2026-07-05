@@ -8,7 +8,7 @@
 				ref="inputEl"
 				v-model="localUrl"
 				type="url"
-				class="toolbar-url-input"
+				class="toolbar-url-input sf-on-focus"
 				:placeholder="placeholder ?? 'https://'"
 				@keydown.enter.prevent="apply"
 				@keydown.escape.prevent="collapse"
@@ -78,23 +78,21 @@ const remove = () => {
 </script>
 
 <style scoped>
-.toolbar-reveal {
-	display: contents;
-}
+@layer ui {
+	.toolbar-reveal {
+		display: contents;
+	}
 
-.toolbar-url-input {
-	height: 26px;
-	padding: 2px 6px;
-	border-radius: 4px;
-	border: 1px solid rgb(var(--border_color));
-	background: rgb(var(--bg_primary));
-	color: rgb(var(--text_primary));
-	font-size: 0.8rem;
-	width: 180px;
-	outline: none;
-}
-
-.toolbar-url-input:focus {
-	border-color: rgb(var(--primary));
+	.toolbar-url-input {
+		height: 26px;
+		padding: 2px 6px;
+		border-radius: 4px;
+		border: 1px solid rgb(var(--border_color));
+		background: rgb(var(--bg_primary));
+		color: rgb(var(--text_primary));
+		font-size: 0.8rem;
+		width: 180px;
+		outline: none;
+	}
 }
 </style>

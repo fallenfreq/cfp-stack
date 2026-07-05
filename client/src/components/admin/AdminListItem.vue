@@ -30,7 +30,7 @@ defineEmits<{ 'update:published': [value: boolean] }>()
 </script>
 
 <style>
-@layer components {
+@layer ui {
 	.admin-cell--narrow {
 		width: 1px;
 		white-space: nowrap;

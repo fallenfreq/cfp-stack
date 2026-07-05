@@ -6,7 +6,7 @@
 				<button
 					class="fp-chip fp-chip-clear"
 					title="Default family"
-					:class="{ 'is-active': !activeFamilyVar }"
+					:class="{ 'sf-on-selected': !activeFamilyVar }"
 					@mousedown.prevent
 					@click="pickFamily(null)"
 				>
@@ -16,7 +16,7 @@
 					v-for="f in families"
 					:key="f.cssVar"
 					class="fp-chip fp-chip-family"
-					:class="{ 'is-active': activeFamilyVar === f.cssVar }"
+					:class="{ 'sf-on-selected': activeFamilyVar === f.cssVar }"
 					:style="{ fontFamily: f.value }"
 					:title="f.label"
 					@mousedown.prevent
@@ -33,7 +33,7 @@
 				<button
 					class="fp-chip fp-chip-clear"
 					title="Default size"
-					:class="{ 'is-active': !activeSizeVar }"
+					:class="{ 'sf-on-selected': !activeSizeVar }"
 					@mousedown.prevent
 					@click="pickSize(null)"
 				>
@@ -43,7 +43,7 @@
 					v-for="s in sizes"
 					:key="s.cssVar"
 					class="fp-chip"
-					:class="{ 'is-active': activeSizeVar === s.cssVar }"
+					:class="{ 'sf-on-selected': activeSizeVar === s.cssVar }"
 					:title="s.value"
 					@mousedown.prevent
 					@click="pickSize(s.cssVar)"
@@ -59,7 +59,7 @@
 				<button
 					class="fp-chip fp-chip-clear"
 					title="Default line height"
-					:class="{ 'is-active': !activeLeadingVar }"
+					:class="{ 'sf-on-selected': !activeLeadingVar }"
 					@mousedown.prevent
 					@click="pickLeading(null)"
 				>
@@ -69,7 +69,7 @@
 					v-for="l in leading"
 					:key="l.cssVar"
 					class="fp-chip"
-					:class="{ 'is-active': activeLeadingVar === l.cssVar }"
+					:class="{ 'sf-on-selected': activeLeadingVar === l.cssVar }"
 					:title="`line-height: ${l.value}`"
 					@mousedown.prevent
 					@click="pickLeading(l.cssVar)"
@@ -85,7 +85,7 @@
 				<button
 					class="fp-chip fp-chip-clear"
 					title="Default letter spacing"
-					:class="{ 'is-active': !activeTrackingVar }"
+					:class="{ 'sf-on-selected': !activeTrackingVar }"
 					@mousedown.prevent
 					@click="pickTracking(null)"
 				>
@@ -95,7 +95,7 @@
 					v-for="t in tracking"
 					:key="t.cssVar"
 					class="fp-chip"
-					:class="{ 'is-active': activeTrackingVar === t.cssVar }"
+					:class="{ 'sf-on-selected': activeTrackingVar === t.cssVar }"
 					:title="`letter-spacing: ${t.value}`"
 					@mousedown.prevent
 					@click="pickTracking(t.cssVar)"
@@ -175,64 +175,61 @@ const pickTracking = (cssVar: string | null) => {
 </script>
 
 <style scoped>
-.font-picker {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	min-width: 240px;
-	padding: 4px;
-}
+@layer ui {
+	.font-picker {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		min-width: 240px;
+		padding: 4px;
+	}
 
-.fp-section {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-}
+	.fp-section {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
 
-.fp-label {
-	font-size: 0.7rem;
-	color: rgba(var(--text_primary) / var(--sf-alpha-6));
-}
+	.fp-label {
+		font-size: 0.7rem;
+		color: rgba(var(--text_primary) / var(--sf-alpha-6));
+	}
 
-.fp-row {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	flex-wrap: wrap;
-}
+	.fp-row {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		flex-wrap: wrap;
+	}
 
-.fp-chip {
-	height: 26px;
-	border-radius: 4px;
-	border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
-	padding: 0 6px;
-	cursor: pointer;
-	transition: transform 0.08s;
-	font-size: 0.75rem;
-	line-height: 1;
-	background: none;
-	color: rgb(var(--text_primary));
-}
+	.fp-chip {
+		height: 26px;
+		border-radius: 4px;
+		border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
+		padding: 0 6px;
+		cursor: pointer;
+		transition: transform 0.08s;
+		font-size: 0.75rem;
+		line-height: 1;
+		background: none;
+		color: rgb(var(--text_primary));
+	}
 
-.fp-chip:hover {
-	transform: scale(1.05);
-	background: rgba(var(--text_primary) / var(--sf-alpha-1));
-}
+	.fp-chip:hover {
+		transform: scale(1.05);
+		background: rgba(var(--text_primary) / var(--sf-alpha-1));
+	}
 
-.fp-chip.is-active {
-	outline: 2px solid rgb(var(--primary));
-	outline-offset: 1px;
-}
+	.fp-chip-clear {
+		width: 26px;
+		padding: 0;
+		text-align: center;
+		color: rgba(var(--text_primary) / var(--sf-alpha-4));
+	}
 
-.fp-chip-clear {
-	width: 26px;
-	padding: 0;
-	text-align: center;
-	color: rgba(var(--text_primary) / var(--sf-alpha-4));
-}
-
-.fp-chip-family {
-	font-size: 0.9rem;
-	min-width: 36px;
+	.fp-chip-family {
+		font-size: 0.9rem;
+		min-width: 36px;
+	}
 }
 </style>

@@ -16,7 +16,7 @@
 				v-for="family in families"
 				:key="family.key"
 				class="cp-chip"
-				:class="{ 'is-active': mode === 'palette' && familyKey === family.key }"
+				:class="{ 'sf-on-selected': mode === 'palette' && familyKey === family.key }"
 				:style="chipStyle(family)"
 				:title="family.key"
 				@mousedown.prevent
@@ -29,7 +29,7 @@
 				v-for="(shade, idx) in activeFamily.shades"
 				:key="shade.key"
 				class="cp-chip"
-				:class="{ 'is-active': mode === 'palette' && shadeIndex === idx }"
+				:class="{ 'sf-on-selected': mode === 'palette' && shadeIndex === idx }"
 				:style="{ background: cssVarColor(shade.cssVar) }"
 				:title="shade.key"
 				@mousedown.prevent
@@ -191,80 +191,77 @@ const commit = () => {
 </script>
 
 <style scoped>
-.color-picker {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	min-width: 240px;
-	padding: 4px;
-}
+@layer ui {
+	.color-picker {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		min-width: 240px;
+		padding: 4px;
+	}
 
-.cp-header {
-	min-height: 16px;
-	font-size: 0.75rem;
-	color: rgba(var(--text_primary) / var(--sf-alpha-7));
-}
+	.cp-header {
+		min-height: 16px;
+		font-size: 0.75rem;
+		color: rgba(var(--text_primary) / var(--sf-alpha-7));
+	}
 
-.cp-row {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-}
+	.cp-row {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
 
-.cp-families {
-	flex-wrap: wrap;
-}
+	.cp-families {
+		flex-wrap: wrap;
+	}
 
-.cp-chip {
-	width: 22px;
-	height: 22px;
-	border-radius: 4px;
-	border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
-	padding: 0;
-	cursor: pointer;
-	transition: transform 0.08s;
-}
+	.cp-chip {
+		width: 22px;
+		height: 22px;
+		border-radius: 4px;
+		border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
+		padding: 0;
+		cursor: pointer;
+		transition: transform 0.08s;
+	}
 
-.cp-chip:hover {
-	transform: scale(1.1);
-}
+	.cp-chip:hover {
+		transform: scale(1.1);
+	}
 
-.cp-chip.is-active {
-	outline: 2px solid rgb(var(--primary));
-	outline-offset: 1px;
-}
+	.cp-chip-clear {
+		background-image: linear-gradient(
+			45deg,
+			transparent 45%,
+			rgba(var(--danger) / var(--sf-alpha-7)) 45%,
+			rgba(var(--danger) / var(--sf-alpha-7)) 55%,
+			transparent 55%
+		);
+	}
 
-.cp-chip-clear {
-	background-image: linear-gradient(
-		45deg,
-		transparent 45%,
-		rgba(var(--danger) / var(--sf-alpha-7)) 45%,
-		rgba(var(--danger) / var(--sf-alpha-7)) 55%,
-		transparent 55%
-	);
-}
+	.cp-range {
+		flex: 1;
+		min-width: 0;
+		accent-color: rgb(var(--primary));
+	}
 
-.cp-range {
-	flex: 1;
-	min-width: 0;
-	accent-color: rgb(var(--primary));
-}
+	.cp-label,
+	.cp-alpha-val {
+		font-size: 0.7rem;
+		color: rgba(var(--text_primary) / var(--sf-alpha-6));
+		min-width: 24px;
+		text-align: center;
+	}
 
-.cp-label,
-.cp-alpha-val {
-	font-size: 0.7rem;
-	color: rgba(var(--text_primary) / var(--sf-alpha-6));
-	min-width: 24px;
-	text-align: center;
-}
-
-.cp-color-input {
-	width: 30px;
-	height: 24px;
-	border: 1px solid rgb(var(--border_color));
-	border-radius: 3px;
-	padding: 0;
-	background: none;
-	cursor: pointer;
+	.cp-color-input {
+		width: 30px;
+		height: 24px;
+		border: 1px solid rgb(var(--border_color));
+		border-radius: 3px;
+		padding: 0;
+		background: none;
+		cursor: pointer;
+	}
 }
 </style>

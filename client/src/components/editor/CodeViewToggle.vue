@@ -1,6 +1,10 @@
 <template>
 	<div class="bottom-right-nav">
-		<ToolbarButton :active="editorStore.isCodeView" @click="editorStore.toggleCodeView">
+		<ToolbarButton
+			class="sf-depth-2 sf-is-overlay"
+			:active="editorStore.isCodeView"
+			@click="editorStore.toggleCodeView"
+		>
 			{{ editorStore.isCodeView ? 'Aa' : '< >' }}
 		</ToolbarButton>
 	</div>

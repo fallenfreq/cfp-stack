@@ -50,6 +50,7 @@ const ROOT_TOKENS: TokenSpec[] = [
 
 	// Spacing
 	{ name: '--sf-spacing-none', value: '0px', kind: 'length' },
+	{ name: '--sf-spacing-2xs', value: '0.25rem', kind: 'length' },
 	{ name: '--sf-spacing-xs', value: '0.5rem', kind: 'length' },
 	{ name: '--sf-spacing-sm', value: '0.75rem', kind: 'length' },
 	{ name: '--sf-spacing-md', value: '1.25rem', kind: 'length' },
@@ -231,12 +232,26 @@ const VOCABULARY: VocabSpec[] = [
 		description: 'Highest attention — most visual weight',
 	},
 
-	// Size bundles — form factor; theme decides padding and radius per step
-	{ name: 'sf-size-xs', kind: 'bundle', description: 'Pill, badge, icon button' },
-	{ name: 'sf-size-sm', kind: 'bundle', description: 'Compact — small button, tag' },
-	{ name: 'sf-size-md', kind: 'bundle', description: 'Standard form factor' },
+	// Size bundles — form-factor scale. Theme picks which properties express each step;
+	// this theme spends size on --sf-padding. Shape stays out — border-radius comes from
+	// the element's own rule (bare <button>) or an explicit sf-radius-* utility.
+	{ name: 'sf-size-2xs', kind: 'bundle', description: 'Very tight — breadcrumb, dense chip' },
+	{ name: 'sf-size-xs', kind: 'bundle', description: 'Compact — icon button, small tag' },
+	{ name: 'sf-size-sm', kind: 'bundle', description: 'Small — small button' },
+	{ name: 'sf-size-md', kind: 'bundle', description: 'Standard density' },
 	{ name: 'sf-size-lg', kind: 'bundle', description: 'Large — featured tile' },
 	{ name: 'sf-size-xl', kind: 'bundle', description: 'Hero scale' },
+
+	// Element markers — class analog of a bare HTML element rule. The class itself
+	// sets nothing; the theme decorates it the same way it decorates <button> or <nav>.
+	// Emits to sf-element layer (below sf-bundle) so bundles/variants/states layered
+	// on top override predictably — the same baseline behaviour HTML elements get for free.
+	{
+		name: 'sf-chip',
+		kind: 'element',
+		description:
+			'Compact representation of a discrete data unit — tag, filter, selection, status. Theme decides shape, colour, hover.',
+	},
 
 	// Variants
 	{
@@ -284,7 +299,28 @@ const VOCABULARY: VocabSpec[] = [
 		pseudo: ':active',
 		description: 'Active/pressed interaction modifier',
 	},
-	{ name: 'sf-on-disabled', kind: 'state', pseudo: null, description: 'Disabled state modifier' },
+	{
+		name: 'sf-on-disabled',
+		kind: 'state',
+		pseudo: ':disabled',
+		description: 'Disabled state modifier',
+	},
+	{
+		name: 'sf-on-selected',
+		kind: 'state',
+		description: 'Persistent chosen/selected state (author/JS-toggled, no pseudo)',
+	},
+	{
+		name: 'sf-on-current',
+		kind: 'state',
+		description:
+			'This option is currently on/active — the one that will fire on Enter or the mark currently applied',
+	},
+	{
+		name: 'sf-on-ancestor',
+		kind: 'state',
+		description: 'On the path to sf-on-current but not it (nav parent, breadcrumb non-leaf)',
+	},
 
 	// Context — JS-detected or author-declared conditions; sits above variant, below state
 	{
@@ -338,6 +374,12 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'context',
 		description:
 			'Element is currently in its sticky/pinned position — JS-toggled; theme decides edge treatment (border, shadow, etc.)',
+	},
+	{
+		name: 'sf-is-contained',
+		kind: 'context',
+		description:
+			'Element sits inside a container that already provides visual boundary — author-declared; theme decides how to soften (default: drop own chrome)',
 	},
 
 	// Boundary / divide — content separation signal; theme decides the full treatment.
@@ -504,17 +546,17 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-1', 'sf-variant-featured'], cssProperty: 'box-shadow', value: 'none' },
 	{ classNames: ['sf-depth-1', 'sf-variant-featured'], cssProperty: 'color', value: 'inherit' },
 
-	// Size bundles — sets --sf-padding (inheritable, read by layout primitives) + border-radius
+	// Size bundles — this theme spends size on --sf-padding (inheritable, read by layout
+	// primitives). Another theme could just as validly express size via border weight or
+	// gap. Shape stays out of size — border-radius comes from the element's own rule (bare
+	// <button>, <input>) or an explicit sf-radius-* utility, so a compact breadcrumb button
+	// stays square while a pill icon-button opts in via sf-radius-3.
+	{ classNames: ['sf-size-2xs'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-2xs)' },
 	{ classNames: ['sf-size-xs'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xs)' },
-	{ classNames: ['sf-size-xs'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
 	{ classNames: ['sf-size-sm'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-sm)' },
-	{ classNames: ['sf-size-sm'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	{ classNames: ['sf-size-md'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-md)' },
-	{ classNames: ['sf-size-md'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	{ classNames: ['sf-size-lg'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-lg)' },
-	{ classNames: ['sf-size-lg'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	{ classNames: ['sf-size-xl'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xl)' },
-	{ classNames: ['sf-size-xl'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
 
 	// Heading — font-size + line-height
 	{ classNames: ['sf-heading-1'], cssProperty: 'font-size', value: 'var(--sf-text-4xl)' },
@@ -642,6 +684,13 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-bottom',
 		value: '1px solid rgb(var(--sf-border_color))',
 	},
+
+	// Contained context — element sits inside a container that already delineates it.
+	// Default treatment: drop own chrome (background, border). Theme is free to override
+	// with a subtler treatment (reduced padding, muted colour, etc.). Element-agnostic — fires
+	// on any tag that would otherwise draw its own container.
+	{ classNames: ['sf-is-contained'], cssProperty: 'background', value: 'none' },
+	{ classNames: ['sf-is-contained'], cssProperty: 'border-color', value: 'transparent' },
 
 	// Viewport-edge context — zero the corners that touch the boundary (specificity 0-1-0).
 	// Three-side panel patterns restore the open-side corners via compound rules (0-3-0)
@@ -801,6 +850,89 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-on-hover', 'sf-variant-danger'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-danger) / var(--sf-alpha-1))',
+	},
+
+	// Focus state — bordered inputs pick up a primary border on keyboard/click focus.
+	// Vocabulary pseudo is :focus-visible; UAs treat form controls as always focus-visible.
+	{
+		classNames: ['sf-on-focus'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-primary))',
+	},
+
+	// Disabled state — dim + not-allowed cursor for interactive controls.
+	// Vocabulary pseudo is :disabled so the class only fires on form elements
+	// in their native disabled state (matches how sf-on-hover fires on :hover).
+	{ classNames: ['sf-on-disabled'], cssProperty: 'opacity', value: '0.4' },
+	{ classNames: ['sf-on-disabled'], cssProperty: 'cursor', value: 'not-allowed' },
+
+	// Selected state — outline chip pattern (swatches, size/shadow picker chips).
+	// No pseudo: this is a persistent stateful class, applied while the option is chosen.
+	{
+		classNames: ['sf-on-selected'],
+		cssProperty: 'outline',
+		value: '2px solid rgb(var(--sf-primary))',
+	},
+	{ classNames: ['sf-on-selected'], cssProperty: 'outline-offset', value: '1px' },
+
+	// Current state — tinted-primary fill (toolbar toggles, breadcrumb leaf, keyboard-highlighted menu item).
+	// Reads as "this option is on right now" — distinct from sf-on-selected's outline chip.
+	{
+		classNames: ['sf-on-current'],
+		cssProperty: 'background',
+		value: 'rgba(var(--sf-primary) / var(--sf-alpha-1))',
+	},
+	{
+		classNames: ['sf-on-current'],
+		cssProperty: 'border-color',
+		value: 'rgba(var(--sf-primary) / var(--sf-alpha-4))',
+	},
+	{ classNames: ['sf-on-current'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
+
+	// Ancestor state — muted primary text, no fill. Reads as "on the trail to current".
+	// Nav sidebars, breadcrumb non-leaf segments.
+	{
+		classNames: ['sf-on-ancestor'],
+		cssProperty: 'color',
+		value: 'rgba(var(--sf-primary) / var(--sf-alpha-7))',
+	},
+
+	// ─── Button element ───────────────────────────────────────────────────────
+	// Baseline for interactive buttons. Emits to sf-element (below sf-bundle) so any
+	// bundle/variant/state layered on top wins predictably. `padding: var(--sf-padding, 0)`
+	// consumes the size axis here so components only need `sf-size-*` classes — no local
+	// `padding: var(--sf-padding)` boilerplate. `font: inherit` lets buttons pick up the
+	// container's font (matches container-driven type scale like `sf-text-xs` on a wrapper).
+	// Compound with sf-is-overlay bumps to pill — the theme's opinion that floating actions
+	// read as chip-shaped tokens.
+	{ elementSelector: 'button', cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+	{ elementSelector: 'button', cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
+	{ elementSelector: 'button', cssProperty: 'font', value: 'inherit' },
+	{
+		elementSelector: 'button',
+		classNames: ['sf-is-overlay'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-3)',
+	},
+
+	// ─── Input element ────────────────────────────────────────────────────────
+	// Baseline for text inputs — same shape/scale contract as buttons. `font: inherit` so
+	// inputs match their container's type scale. `:focus-visible` expresses the "being
+	// edited" look — theme's call, not the component's.
+	{ elementSelector: 'input', cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+	{ elementSelector: 'input', cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
+	{ elementSelector: 'input', cssProperty: 'font', value: 'inherit' },
+	{
+		elementSelector: 'input',
+		pseudo: ':focus-visible',
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_primary))',
+	},
+	{
+		elementSelector: 'input',
+		pseudo: ':focus-visible',
+		cssProperty: 'background',
+		value: 'rgba(var(--sf-fg_primary) / var(--sf-alpha-1))',
 	},
 
 	// ─── Table elements ───────────────────────────────────────────────────────

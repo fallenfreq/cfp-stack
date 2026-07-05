@@ -12,7 +12,7 @@
 							v-for="t in radiusOptions"
 							:key="t"
 							class="cp-chip"
-							:class="{ 'is-active': selectedToken === t }"
+							:class="{ 'sf-on-selected': selectedToken === t }"
 							@mousedown.prevent
 							@click="selectToken(t)"
 						>
@@ -20,7 +20,7 @@
 						</button>
 						<button
 							class="cp-chip"
-							:class="{ 'is-active': selectedToken === 'custom' }"
+							:class="{ 'sf-on-selected': selectedToken === 'custom' }"
 							@mousedown.prevent
 							@click="selectToken('custom')"
 						>
@@ -36,7 +36,7 @@
 								v-model.number="customUniform"
 								type="number"
 								min="0"
-								class="cp-input"
+								class="cp-input sf-on-focus sf-on-disabled"
 								:disabled="individualized"
 								@change="commit"
 							>
@@ -59,7 +59,7 @@
 								v-model.number="customCorners.tl"
 								type="number"
 								min="0"
-								class="cp-input"
+								class="cp-input sf-on-focus sf-on-disabled"
 								@change="commit"
 							>
 						</div>
@@ -69,7 +69,7 @@
 								v-model.number="customCorners.tr"
 								type="number"
 								min="0"
-								class="cp-input"
+								class="cp-input sf-on-focus sf-on-disabled"
 								@change="commit"
 							>
 						</div>
@@ -79,7 +79,7 @@
 								v-model.number="customCorners.bl"
 								type="number"
 								min="0"
-								class="cp-input"
+								class="cp-input sf-on-focus sf-on-disabled"
 								@change="commit"
 							>
 						</div>
@@ -89,7 +89,7 @@
 								v-model.number="customCorners.br"
 								type="number"
 								min="0"
-								class="cp-input"
+								class="cp-input sf-on-focus sf-on-disabled"
 								@change="commit"
 							>
 						</div>
@@ -252,102 +252,91 @@ const commit = () => {
 </script>
 
 <style scoped>
-.corners-control {
-	position: relative;
-}
+@layer ui {
+	.corners-control {
+		position: relative;
+	}
 
-.corners-picker {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	min-width: 200px;
-	padding: 4px;
-}
+	.corners-picker {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		min-width: 200px;
+		padding: 4px;
+	}
 
-.cp-section {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-}
+	.cp-section {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
 
-.cp-label {
-	font-size: 0.7rem;
-	color: rgba(var(--text_primary) / var(--sf-alpha-6));
-}
+	.cp-label {
+		font-size: 0.7rem;
+		color: rgba(var(--text_primary) / var(--sf-alpha-6));
+	}
 
-.cp-row {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	flex-wrap: wrap;
-}
+	.cp-row {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		flex-wrap: wrap;
+	}
 
-.cp-chip {
-	height: 26px;
-	border-radius: 4px;
-	border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
-	padding: 0 6px;
-	cursor: pointer;
-	transition: transform 0.08s;
-	font-size: 0.75rem;
-	line-height: 1;
-	background: none;
-	color: rgb(var(--text_primary));
-}
+	.cp-chip {
+		height: 26px;
+		border-radius: 4px;
+		border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
+		padding: 0 6px;
+		cursor: pointer;
+		transition: transform 0.08s;
+		font-size: 0.75rem;
+		line-height: 1;
+		background: none;
+		color: rgb(var(--text_primary));
+	}
 
-.cp-chip:hover {
-	transform: scale(1.05);
-	background: rgba(var(--text_primary) / var(--sf-alpha-1));
-}
+	.cp-chip:hover {
+		transform: scale(1.05);
+		background: rgba(var(--text_primary) / var(--sf-alpha-1));
+	}
 
-.cp-chip.is-active {
-	outline: 2px solid rgb(var(--primary));
-	outline-offset: 1px;
-}
+	.cp-input {
+		height: 26px;
+		width: 56px;
+		padding: 2px 6px;
+		border-radius: 4px;
+		border: 1px solid rgb(var(--border_color));
+		background: rgb(var(--bg_primary));
+		color: rgb(var(--text_primary));
+		font-size: 0.8rem;
+		outline: none;
+	}
 
-.cp-input {
-	height: 26px;
-	width: 56px;
-	padding: 2px 6px;
-	border-radius: 4px;
-	border: 1px solid rgb(var(--border_color));
-	background: rgb(var(--bg_primary));
-	color: rgb(var(--text_primary));
-	font-size: 0.8rem;
-	outline: none;
-}
+	.cp-unit {
+		font-size: 0.75rem;
+		color: rgba(var(--text_primary) / var(--sf-alpha-6));
+	}
 
-.cp-input:focus {
-	border-color: rgb(var(--primary));
-}
+	.cp-check-label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 0.75rem;
+		color: rgb(var(--text_primary));
+		cursor: pointer;
+	}
 
-.cp-input:disabled {
-	opacity: 0.4;
-}
+	.cp-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 8px;
+	}
 
-.cp-unit {
-	font-size: 0.75rem;
-	color: rgba(var(--text_primary) / var(--sf-alpha-6));
-}
-
-.cp-check-label {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	font-size: 0.75rem;
-	color: rgb(var(--text_primary));
-	cursor: pointer;
-}
-
-.cp-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 8px;
-}
-
-.cp-corner {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
+	.cp-corner {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
 }
 </style>

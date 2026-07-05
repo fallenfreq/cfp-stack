@@ -3,7 +3,7 @@
    declaration becomes a no-op for layers it tries to put earlier.
    `reset` holds Tailwind preflight so its `h1,h2,h3 { font-size: inherit }`
    reset doesn't beat sf-bundle (unlayered rules win over any layer). */
-@layer reset, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;
+@layer reset, ui, sf-element, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;
 
 @import './base.css';
 @import './sf-tokens.css';
@@ -22,15 +22,17 @@ body .va-dropdown__content-wrapper {
 	z-index: var(--va-z-index-teleport-overlay) !important;
 }
 
-*,
-*::before,
-*::after {
-	transition: var(--transition);
-	border-color: rgb(var(--border_color));
-}
+@layer reset {
+	*,
+	*::before,
+	*::after {
+		transition: var(--transition);
+		border-color: rgb(var(--border_color));
+	}
 
-*:focus-visible {
-	outline: 2px solid rgb(var(--focus));
+	*:focus-visible {
+		outline: 2px solid rgb(var(--focus));
+	}
 }
 
 body {

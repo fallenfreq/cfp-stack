@@ -8,7 +8,12 @@ export type Db = DrizzleD1Database<Record<string, unknown>>
 // sf-class kinds. `bundle`/`variant`/`state` live in the sf cascade
 // layers. `layout` is for sl-* primitives (outside the sf layer order;
 // not currently used in class_rules but allowed for future).
-export type ClassKind = 'bundle' | 'variant' | 'context' | 'state' | 'layout'
+// `element` names a UI category HTML forgot (chip, badge, tag) — the class
+// itself sets nothing; the theme decorates it the same way it decorates a
+// bare `<button>` or `<nav>`. Rules emit to sf-element (below sf-bundle)
+// alongside bare element rules, so bundles/variants/states layered on top
+// override predictably.
+export type ClassKind = 'bundle' | 'variant' | 'context' | 'state' | 'layout' | 'element'
 
 export const CLASS_KINDS: readonly ClassKind[] = [
 	'bundle',
@@ -16,6 +21,7 @@ export const CLASS_KINDS: readonly ClassKind[] = [
 	'context',
 	'state',
 	'layout',
+	'element',
 ] as const
 
 // Token kinds — drive editor introspection (what control to show for
@@ -34,18 +40,29 @@ export const TOKEN_KINDS: readonly TokenKind[] = [
 // (CSS specificity ignores class order inside an intersection) but
 // keeps generated output deterministic.
 export const KIND_SORT_ORDER: Record<ClassKind, number> = {
-	bundle: 0,
-	variant: 1,
-	context: 2,
-	state: 3,
-	layout: 4,
+	element: 0,
+	bundle: 1,
+	variant: 2,
+	context: 3,
+	state: 4,
+	layout: 5,
 }
 
 // A rule's @layer derives from the highest-kind class involved.
 // State outranks variant outranks bundle — matches the spec's cascade.
-export type Layer = 'sf-bundle' | 'sf-variant' | 'sf-context' | 'sf-state' | 'sl-layout'
+// sf-element sits below sf-bundle so element markers act as baselines that
+// bundles/variants/states override — the class analog of how HTML element
+// rules are a floor that classes stack on top of.
+export type Layer =
+	| 'sf-element'
+	| 'sf-bundle'
+	| 'sf-variant'
+	| 'sf-context'
+	| 'sf-state'
+	| 'sl-layout'
 
 export const KIND_TO_LAYER: Record<ClassKind, Layer> = {
+	element: 'sf-element',
 	bundle: 'sf-bundle',
 	variant: 'sf-variant',
 	context: 'sf-context',

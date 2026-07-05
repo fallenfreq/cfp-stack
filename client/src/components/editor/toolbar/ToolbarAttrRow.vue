@@ -9,7 +9,7 @@
 		/>
 		<select
 			v-else-if="specOptions"
-			class="attr-input attr-select"
+			class="attr-input attr-select sf-on-focus"
 			:value="String(specOptions.indexOf(value))"
 			@change="
 				emit(
@@ -35,7 +35,7 @@
 			v-else-if="typeof specDefault === 'number'"
 			ref="inputEl"
 			type="number"
-			class="attr-input"
+			class="attr-input sf-on-focus"
 			:value="value as number"
 			@change="
 				emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
@@ -46,7 +46,7 @@
 			v-else
 			ref="inputEl"
 			type="text"
-			class="attr-input"
+			class="attr-input sf-on-focus"
 			:value="value as string"
 			@input="onTextInput(($event.target as HTMLInputElement).value)"
 			@blur="onTextBlur(($event.target as HTMLInputElement).value)"
@@ -118,52 +118,50 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.attr-row {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 4px;
-}
+@layer ui {
+	.attr-row {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px 4px;
+	}
 
-.attr-key {
-	font-size: 0.75rem;
-	color: rgba(var(--text_primary) / var(--sf-alpha-7));
-	min-width: 36px;
-	flex-shrink: 0;
-}
+	.attr-key {
+		font-size: 0.75rem;
+		color: rgba(var(--text_primary) / var(--sf-alpha-7));
+		min-width: 36px;
+		flex-shrink: 0;
+	}
 
-.attr-input {
-	flex: 1;
-	min-width: 0;
-	height: 22px;
-	padding: 1px 5px;
-	border-radius: 3px;
-	border: 1px solid rgb(var(--border_color));
-	background: rgb(var(--bg_primary));
-	color: rgb(var(--text_primary));
-	font-size: 0.75rem;
-	outline: none;
-}
+	.attr-input {
+		flex: 1;
+		min-width: 0;
+		height: 22px;
+		padding: 1px 5px;
+		border-radius: 3px;
+		border: 1px solid rgb(var(--border_color));
+		background: rgb(var(--bg_primary));
+		color: rgb(var(--text_primary));
+		font-size: 0.75rem;
+		outline: none;
+	}
 
-.attr-input:focus {
-	border-color: rgb(var(--primary));
-}
+	.attr-checkbox {
+		width: 14px;
+		height: 14px;
+		flex-shrink: 0;
+		accent-color: rgb(var(--primary));
+	}
 
-.attr-checkbox {
-	width: 14px;
-	height: 14px;
-	flex-shrink: 0;
-	accent-color: rgb(var(--primary));
-}
+	.attr-select {
+		cursor: pointer;
+	}
 
-.attr-select {
-	cursor: pointer;
-}
-
-.attr-default-badge {
-	font-size: 0.65rem;
-	color: rgba(var(--text_primary) / var(--sf-alpha-4));
-	flex-shrink: 0;
-	white-space: nowrap;
+	.attr-default-badge {
+		font-size: 0.65rem;
+		color: rgba(var(--text_primary) / var(--sf-alpha-4));
+		flex-shrink: 0;
+		white-space: nowrap;
+	}
 }
 </style>

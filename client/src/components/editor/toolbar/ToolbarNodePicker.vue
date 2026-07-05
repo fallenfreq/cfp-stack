@@ -10,7 +10,7 @@
 						v-for="item in computedItems"
 						:key="item.label"
 						class="picker-item"
-						:class="{ 'is-active': item.active }"
+						:class="{ 'sf-on-current': item.active }"
 						@mousedown.prevent="select(item)"
 					>
 						<span class="material-symbols-rounded picker-item-icon">{{
@@ -67,47 +67,44 @@ const select = (item: NodePickerItem) => {
 </script>
 
 <style scoped>
-.picker-list {
-	min-width: 160px;
-	max-height: 240px;
-	overflow-y: auto;
-	scrollbar-width: none;
-}
+@layer ui {
+	.picker-list {
+		min-width: 160px;
+		max-height: 240px;
+		overflow-y: auto;
+		scrollbar-width: none;
+	}
 
-.picker-list::-webkit-scrollbar {
-	display: none;
-}
+	.picker-list::-webkit-scrollbar {
+		display: none;
+	}
 
-.picker-item {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	cursor: pointer;
-	padding: 5px 8px;
-	border-radius: 4px;
-	font-size: 0.85rem;
-	color: rgb(var(--text_primary));
-	user-select: none;
-}
+	.picker-item {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		cursor: pointer;
+		padding: 5px 8px;
+		border-radius: 4px;
+		font-size: 0.85rem;
+		color: rgb(var(--text_primary));
+		user-select: none;
+	}
 
-.picker-item:hover {
-	background: rgba(var(--text_primary) / var(--sf-alpha-1));
-}
+	.picker-item:hover {
+		background: rgba(var(--text_primary) / var(--sf-alpha-1));
+	}
 
-.picker-item.is-active {
-	background: rgba(var(--primary) / var(--sf-alpha-1));
-	color: rgb(var(--primary));
-}
+	.picker-item-icon {
+		font-size: 16px;
+		line-height: 1;
+	}
 
-.picker-item-icon {
-	font-size: 16px;
-	line-height: 1;
-}
-
-.picker-empty {
-	color: gray;
-	text-align: center;
-	cursor: default;
-	justify-content: center;
+	.picker-empty {
+		color: gray;
+		text-align: center;
+		cursor: default;
+		justify-content: center;
+	}
 }
 </style>

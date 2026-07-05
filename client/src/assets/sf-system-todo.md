@@ -5,7 +5,7 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
-**Admin table migrated to sf-system. Pending items are remaining class families, the Vuestic/bg_secondary migration, and the editor alpha-step rename.**
+**Editor chrome (top bar, breadcrumb, toolbar buttons, slash menu) is mid-migration to intent-only class composition. Density spec reframed as form-factor scale (theme picks the channel); bare `button` and `input` element rules now consume `--sf-padding` so components no longer write `padding: var(--sf-padding)` themselves. Pending items are the migration-touched-but-not-finished consumers (see "Editor chrome migration" below), remaining class families, the Vuestic/bg_secondary migration, and the editor alpha-step rename.**
 
 What's in place:
 
@@ -196,10 +196,12 @@ classes; query `class_vocabulary` for the rich ones.
 ## Foundational
 
 - [x] Declare cascade layers in CSS:
-      `@layer reset, components, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
-      `components` sits between `reset` and `sf-bundle` so component default CSS can be
+      `@layer reset, ui, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
+      `ui` sits between `reset` and `sf-bundle` so component default CSS can be
       overridden by any sf layer. Component `<style>` blocks should be wrapped in
-      `@layer components { }`.
+      `@layer ui { }`. The name is `ui` (not `components`) because Tailwind's PostCSS
+      plugin hijacks `@layer components` and requires a matching `@tailwind components`
+      directive in the same file — using our own name sidesteps that entirely.
 - [x] Static `RESET` block — `generateCss.ts` emits a hardcoded `@layer reset { }` for
       normalizations with no theme dependency (`td > *:last-child { margin-bottom: 0 }`).
       Add new reset rules here; no seed bump needed.
@@ -258,9 +260,13 @@ The editor currently emits legacy class names for palette picks. This needs upda
 - [x] `sf-variant-*` classes — `featured`, `danger`, `warning`, `success`, `alt-1` seeded.
       `sf-variant-danger` bare = text colour only; `sf-depth-1 × sf-variant-danger` = full
       solid button. Depth context determines the treatment, not a separate class.
-- [ ] `sf-size-*` bundles (`xs`, `sm`, `md`, `lg`, `xl`) — intended form factor; sets
-      proportional visual properties (padding, border-radius, etc.). Seed vocabulary +
-      rules; design pass needed to decide which properties each step sets.
+- [x] `sf-size-*` bundles (`2xs`, `xs`, `sm`, `md`, `lg`, `xl`) — form-factor scale; theme
+      picks which properties express each step. This theme spends size on `--sf-padding`;
+      bare `button` and `input` element rules in the seed consume it as `padding`, so any
+      element carrying `sf-size-*` without local CSS gets scale-appropriate padding for free.
+      Shape (`border-radius`) is deliberately not on this axis — comes from the element's
+      own rule or an explicit `sf-radius-*` utility. `2xs` (0.25rem) added for breadcrumb /
+      dense chip density.
 - [x] `sf-loudness-*` bundles (`-1`, `-2`, `-3`) — vocabulary seeded; direction fixed to higher = more
       attention (consistent with all other numbered scales; heading-\* is the only exception, forced by
       HTML convention). Compound rules seeded for `sf-depth-1 × sf-loudness-1/3`. No editor wiring
@@ -283,23 +289,57 @@ The editor currently emits legacy class names for palette picks. This needs upda
       set by `sf-depth-*` bundles) so one rule covers all depths without duplicating colour
       knowledge. Establishes the `--sfx-*` bridge variable convention — documented in spec.
 - [x] `sf-is-sticky` — vocabulary + bare rule seeded (border-bottom, done in 280e9fc).
-- [x] Bare table element rules — seeded in `sf-bundle` (bare element selectors, specificity
+- [x] `sf-element` layer + element markers — new `element` class kind + `sf-element`
+      layer (declared below `sf-bundle` in the cascade order). Bare element rules
+      (`button`, `input`, `table`, `td`, `th`, `tr`) now emit into this layer rather than
+      `sf-bundle`, so any bundle/variant/state layered on top wins predictably — same
+      baseline behaviour HTML elements get for free. `sf-chip` marker seeded as
+      vocabulary (no rules yet — held to the spec's admission test: add rules when a
+      consumer needs shape/colour distinct from bare `<button>`).
+- [x] Bare `button` element rule — seeded in `sf-element`. `border-radius:
+    var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
+      components with `sf-size-*` get scale-appropriate padding without writing
+      `padding: var(--sf-padding)` locally; `font: inherit` so nested buttons pick up
+      their container's type scale (e.g. `sf-text-xs` on a wrapper). Compound with
+      `sf-is-overlay` bumps to pill.
+- [x] Bare `input` element rule — seeded in `sf-element`. Same padding/font contract as
+      `button`. `input:focus-visible` sets `color: rgb(var(--sf-fg_primary))` +
+      `background: rgba(var(--sf-fg_primary) / var(--sf-alpha-1))` — the "being edited"
+      look. Any input in the app that gains focus now picks this up; components no
+      longer need per-instance chrome for the editing state.
+- [x] `sf-is-contained` context — vocabulary + rule seeded. Author-declared "this
+      element sits inside a container that already provides visual boundary". Default
+      expression drops the element's own chrome (`background: none`,
+      `border-color: transparent`); theme can swap for reduced padding or muted colour.
+      Consumers: NodePath breadcrumb button, EditorTopBar name/toggle/action buttons,
+      ToolbarButton, SfOverflowMenu anchor.
+- [x] Bare table element rules — seeded in `sf-element` (bare element selectors, specificity
       0-0-1). `table`: `border-collapse: separate; border-spacing: 0` (separate required for
       `box-shadow` on sticky cells). `td`: `border-bottom`, `vertical-align: middle`,
       `padding: --sf-spacing-xs --sf-spacing-sm`. `th`: same border + padding + `text-align: left`,
       `vertical-align: middle`, `font-weight: 600`. `tr:last-child td`: removes orphan bottom border.
       Depth compounds: `sf-depth-1 th` gets compact admin header treatment (xs font, uppercase,
       tracked, muted, nowrap) — specificity 0-1-1 beats bare th without extra classes on cells.
-      Table padding lives in the seed (sf-bundle layer) so `@layer components` cell padding
-      cannot override it — component-level padding differences must become seed compound rules.
+      Table padding lives in the seed (sf-element / sf-bundle layers) so `@layer ui`
+      cell padding cannot override it — component-level padding differences must become
+      seed compound rules.
 - [ ] `sf-is-loading` / `sf-is-error` — vocabulary + rules still needed. Loading:
       skeleton shimmer or opacity reduction. Error: border-color + optional background tint.
 - [ ] `sf-on-*` state class rules — vocabulary seeded for all states. Bare rules done for
-      `sf-on-hover` (restores full-opacity fg + subtle fill). Compound done for
-      `sf-on-hover × sf-variant-danger` (danger colour + danger-tinted fill overrides the
-      generic hover). Still needed: `sf-on-focus`, `sf-on-active`, `sf-on-disabled`, and
-      `sf-on-selected` (add to vocabulary + seed). Same pattern: bare fallback first, then
-      depth/variant compounds where the bare rule falls short.
+      `sf-on-hover` (fg + subtle fill; no border channel yet — see hover-border
+      investigation above), `sf-on-focus` (primary border-color; see also bare
+      `input:focus-visible` in `sf-element` for the "being edited" look),
+      `sf-on-disabled` (opacity 0.4 + not-allowed; vocab pseudo `:disabled`),
+      `sf-on-selected` (2px primary outline; stateful, no pseudo — outline chip pattern:
+      ColorPicker, ToolbarShadowControl, ToolbarCornersControl, FontPicker),
+      `sf-on-current` (primary bg tint + border-color + text; stateful, no pseudo — "this
+      option is on right now": ToolbarButton, NodePath leaf, ToolbarNodePicker, SlashCommands
+      keyboard-highlighted item, EditorTopBar toggle when actions open. Border-color-only
+      is invisible on bare buttons — see investigation above),
+      `sf-on-ancestor` (muted primary text; stateful, no pseudo — reserved for
+      nav/breadcrumb ancestors, no consumers yet). Compound done for
+      `sf-on-hover × sf-variant-danger`. Still available for future work: `sf-on-active`
+      (currently pseudo `:active`; no consumers yet — mousedown-flash treatment).
 - [x] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`) — vocabulary + rules in seed
 - [ ] `sl-aspect` — added to spec; seed vocabulary + rules. Aspect ratio set via
       `--sl-aspect` custom property on the element.
@@ -309,6 +349,102 @@ The editor currently emits legacy class names for palette picks. This needs upda
 - [x] Migrate `--bg_secondary` consumers to `sf-depth-1` — done in commit 5a95dfe.
       Translucent floating-UI consumers (FloatingToolbar, FloatingDragHandle, etc.)
       still hold raw token refs; no sf class equivalent exists yet for depth + alpha.
+
+## Editor chrome migration (in progress)
+
+Composing intent-only class combos instead of hand-written chrome. The pattern is:
+component declares axes (`sf-is-contained`, `sf-loudness-*`, `sf-on-hover`,
+`sf-size-*`, etc.) + carries only layout/positioning locally; theme owns colour,
+background, border, radius, focus/hover expression via seed rules.
+
+Done:
+
+- [x] `ToolbarButton.vue` — `sf-is-contained sf-on-hover sf-on-disabled sf-size-xs` + conditional `sf-on-current`; local rule reduced to `display: inline-flex`,
+      `align-items`, `gap`, `white-space`. All chrome removed.
+- [x] `NodePath.vue` — `.path-node` gets `sf-is-contained sf-loudness-1 sf-on-hover
+    sf-on-disabled sf-size-2xs` + conditional `sf-on-current`; container gets
+      `sf-text-xs` (buttons inherit via bare `button { font: inherit }`); local
+      rules are layout only. Previous asymmetric `padding: 1px 5px` replaced by
+      the size axis feeding the bare button rule.
+- [x] `EditorTopBar.vue` — top-bar container gets `sf-text-xs` (drops local
+      `font-size`); `.top-bar__name` input, `.top-bar__toggle` and `.top-bar__action`
+      buttons all carry `sf-is-contained sf-loudness-1 sf-on-hover sf-size-2xs` +
+      appropriate `sf-on-disabled` / `sf-on-current`. `.is-renaming` compound
+      reduced to layout (flex grow / max-width / overflow / cursor); the editing
+      look (fg-primary + subtle bg tint) now comes from bare `input:focus-visible`
+      in the seed, driven by the input's own focus/blur.
+- [x] `SlashCommands.vue` — `.dropdown-menu` gets `sf-depth-2 sf-size-2xs`; menu
+      items get `sf-on-hover sf-size-2xs` (+ conditional `sf-on-current`);
+      `.no-commands` placeholder gets `sf-loudness-1 sf-size-2xs`. Border and
+      border-radius dropped locally — chrome is depth-2's call.
+- [x] `SfIconButton.vue` — dropped `variant` prop (outlined/ghost) and explicit
+      width/height; size prop expanded to full `xs..xl` scale; classes are
+      `sf-on-hover sf-on-disabled sf-size-${size}`. Button size now derives from
+      icon + `--sf-padding` via the bare button rule.
+- [x] `SfOverflowMenu.vue` — anchor carries `sf-is-contained sf-loudness-1`;
+      dropdown container passes `sf-size-${size}` through to `sf-overflow-menu`.
+- [x] `CodeViewToggle.vue` — floating toggle now composes `sf-depth-2 sf-is-overlay`
+      on top of ToolbarButton. See "To investigate" — ToolbarButton's hardwired
+      `sf-is-contained` may be stripping depth-2's chrome here.
+- [x] `ToolbarScrollHint.vue` — `sf-size-xs` → `sf-size-2xs`; hardcoded
+      `padding: 4px 12px` replaced by `var(--sf-padding)` fed by the size class.
+- [x] Toolbar-picker state classes migrated from legacy `is-active`:
+      `ColorPicker.vue`, `FontPicker.vue`, `ToolbarCornersControl.vue`,
+      `ToolbarShadowControl.vue` chips → `sf-on-selected` (outline-chip pattern);
+      `ToolbarNodePicker.vue` items and `SlashCommands.vue` keyboard-highlighted
+      item → `sf-on-current` (tinted-fill pattern). Legacy local `.is-active`
+      rules removed; expression comes from the seed.
+- [x] Form-input focus/disabled expression migrated from local `:focus` CSS to
+      state classes: `ToolbarAttrRow.vue`, `ToolbarRevealInput.vue`,
+      `ToolbarCornersControl.vue` inputs carry `sf-on-focus` (+ `sf-on-disabled`
+      on the corners inputs). Local `:focus { border-color: … }` blocks removed.
+- [x] `@layer components` → `@layer ui` bulk rename across component `<style>`
+      blocks touched in this slice (~13 files). Mechanical rename to match the
+      Foundational cascade order; no per-component tracking needed going forward.
+
+To investigate (behaviour changes from the migration that belong to the theme, not
+the component):
+
+- [ ] **Hover-border on top-bar chrome buttons** — old `.top-bar__name`,
+      `.top-bar__toggle`, `.top-bar__action` transitioned a subtle 1px border on
+      hover (`border-color: rgba(var(--text_primary) / var(--sf-alpha-2))`).
+      `sf-on-hover` in the seed sets only `color` + `background`; no border
+      channel. Decide whether to (a) enhance `sf-on-hover` with a border-color
+      rule (needs a baseline `border-style`/`width` on the bare element for it to
+      be visible), (b) live without the hover border, or (c) add a subtler
+      hover-border variant to the seed.
+- [ ] **`sf-on-current` border invisible on bare buttons** — the seed rule sets
+      `border-color: rgba(var(--sf-primary) / var(--sf-alpha-4))` but the bare
+      `button` element rule has no `border-style` / `border-width`, so the colour
+      change paints nothing. Old ToolbarButton reserved
+      `border: 1px solid transparent` locally for exactly this reason. Options:
+      add `border: 1px solid transparent` to the bare button rule (reserves 1px
+      of layout space universally), or change `sf-on-current` to set the full
+      `border` shorthand (visible-only-when-current, no reserved space so layout
+      shifts on state change).
+- [ ] **`sf-on-current` on menu-items no longer rounds corners** — old
+      `.menu-item` had `border-radius: 4px` so the highlighted-item background
+      tint from `sf-on-current` was rounded. Menu items are `<div>`, so the bare
+      button rule doesn't apply. Either add a radius to `sf-on-current` in the
+      seed (universal — affects every current element), refactor menu-items to
+      `<button>` (semantic win + inherits button radius), or add a bare
+      element/marker for menu items.
+- [ ] **Dropdown container border gone under `sf-depth-2`** — old
+      `.dropdown-menu` had `border: 1px solid rgb(var(--border_color))`. `sf-depth-2`
+      currently elevates via `background` + `box-shadow` + `border-radius` only,
+      no border. Decide whether depth-2 dropdowns should carry a border (add to
+      `sf-depth-2` in seed) or the shadow-only elevation is the design.
+- [ ] **`CodeViewToggle` floating button loses depth-2 chrome** — `ToolbarButton`
+      unconditionally carries `sf-is-contained`. Composing
+      `<ToolbarButton class="sf-depth-2 sf-is-overlay">` in `CodeViewToggle.vue`
+      means `sf-is-contained` (context layer) strips depth-2's background and
+      border (bundle layer), leaving the floating toggle chrome-less. Options:
+      (a) drop `sf-is-contained` from ToolbarButton and require callers to add
+      it when actually inside a toolbar (breaks the "chrome comes from the class
+      combo" contract for all current consumers), (b) don't reuse ToolbarButton
+      for floating overlays — use a bare `<button class="sf-depth-2 sf-is-overlay
+    sf-on-hover sf-size-xs">` in CodeViewToggle, (c) add a compound rule that
+      lets `sf-is-overlay` re-enable chrome even under `sf-is-contained`.
 
 ## System design gaps (known, intentional for now)
 

@@ -19,7 +19,7 @@
 	"scripts": {
 		"prepare": "husky",
 		"dev": "pnpm --filter @somefreq-app/* --parallel dev",
-		"build": "pnpm --filter @somefreq-app/* --parallel build",
+		"build": "pnpm --filter @somefreq-app/* build",
 		"dev:client": "pnpm --filter @somefreq-app/client dev",
 		"dev:vite:client": "pnpm --filter @somefreq-app/client dev:vite",
 		"dev:api": "pnpm --filter @somefreq-app/api dev",
