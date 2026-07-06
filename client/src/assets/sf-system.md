@@ -457,8 +457,14 @@ something to decorate. Markers sit in their own cascade layer (`sf-element`, bel
 and states override predictably, without depending on source order to break ties.
 
 ```
-sf-chip    compact representation of a discrete data unit — tag, filter,
-           selection, status
+sf-chip          compact representation of a discrete data unit — tag, filter,
+                 selection, status
+sf-icon          content is a single icon — font icon or SVG. line-height:1 removes
+                 leading so padding drives vertical spacing; theme sets font-size if
+                 a specific scale is wanted (default: inherits context)
+sf-single-line   content is a single line of text. line-height:1 removes the
+                 half-leading that would otherwise inflate apparent vertical spacing
+                 beyond the authored padding
 ```
 
 **A marker only declares what's unique to the category.** Everything a chip and a card

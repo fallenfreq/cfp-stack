@@ -74,7 +74,6 @@ body {
 	font-family: 'Material Symbols Rounded';
 	font-weight: normal;
 	font-style: normal;
-	font-size: 24px; /* Preferred icon size */
 	display: inline-block;
 	line-height: 1;
 	text-transform: none;
@@ -86,8 +85,6 @@ body {
 	height: 1em;
 	overflow: hidden;
 }
-
-/* self hosting Material icons */
 
 /* This should be kept even if using cloud hosted */
 .material-symbols-rounded {

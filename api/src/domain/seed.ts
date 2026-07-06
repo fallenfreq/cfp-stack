@@ -252,6 +252,18 @@ const VOCABULARY: VocabSpec[] = [
 		description:
 			'Compact representation of a discrete data unit — tag, filter, selection, status. Theme decides shape, colour, hover.',
 	},
+	{
+		name: 'sf-icon',
+		kind: 'element',
+		description:
+			'Content is a single icon. Scales with context font-size (1em); no line-height bleed. Theme can override size or add colour treatment.',
+	},
+	{
+		name: 'sf-single-line',
+		kind: 'element',
+		description:
+			'Content is a single line of text. Normalises line-height to 1 so tight padding is not inflated by leading.',
+	},
 
 	// Variants
 	{
@@ -896,6 +908,17 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'color',
 		value: 'rgba(var(--sf-primary) / var(--sf-alpha-7))',
 	},
+
+	// ─── Content-type markers ─────────────────────────────────────────────────
+	// sf-icon: line-height:1 removes bleed so padding drives vertical spacing.
+	// font-size inherits from context (no explicit rule); theme sets font-size on sf-icon
+	// if a specific scale is wanted.
+	{ classNames: ['sf-icon'], cssProperty: 'line-height', value: '1' },
+
+	// sf-single-line: removes the half-leading that inflates apparent vertical spacing
+	// when padding is tight. Applied to any element whose content is definitionally one
+	// line — breadcrumb segments, inline labels, count chips.
+	{ classNames: ['sf-single-line'], cssProperty: 'line-height', value: '1' },
 
 	// ─── Button element ───────────────────────────────────────────────────────
 	// Baseline for interactive buttons. Emits to sf-element (below sf-bundle) so any
