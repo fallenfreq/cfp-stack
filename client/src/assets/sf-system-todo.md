@@ -297,7 +297,7 @@ The editor currently emits legacy class names for palette picks. This needs upda
       vocabulary (no rules yet — held to the spec's admission test: add rules when a
       consumer needs shape/colour distinct from bare `<button>`).
 - [x] Bare `button` element rule — seeded in `sf-element`. `border-radius:
-  var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
+var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
       components with `sf-size-*` get scale-appropriate padding without writing
       `padding: var(--sf-padding)` locally; `font: inherit` so nested buttons pick up
       their container's type scale (e.g. `sf-text-xs` on a wrapper). Compound with
@@ -362,7 +362,7 @@ Done:
 - [x] `ToolbarButton.vue` — `sf-is-contained sf-on-hover sf-on-disabled sf-size-xs` + conditional `sf-on-current`; local rule reduced to `display: inline-flex`,
       `align-items`, `gap`, `white-space`. All chrome removed.
 - [x] `NodePath.vue` — `.path-node` gets `sf-is-contained sf-loudness-1 sf-on-hover
-  sf-on-disabled sf-size-2xs` + conditional `sf-on-current`; container gets
+sf-on-disabled sf-size-2xs` + conditional `sf-on-current`; container gets
       `sf-text-xs` (buttons inherit via bare `button { font: inherit }`); local
       rules are layout only. Previous asymmetric `padding: 1px 5px` replaced by
       the size axis feeding the bare button rule.
@@ -401,50 +401,6 @@ Done:
 - [x] `@layer components` → `@layer ui` bulk rename across component `<style>`
       blocks touched in this slice (~13 files). Mechanical rename to match the
       Foundational cascade order; no per-component tracking needed going forward.
-
-To investigate (behaviour changes from the migration that belong to the theme, not
-the component):
-
-- [ ] **Hover-border on top-bar chrome buttons** — old `.top-bar__name`,
-      `.top-bar__toggle`, `.top-bar__action` transitioned a subtle 1px border on
-      hover (`border-color: rgba(var(--text_primary) / var(--sf-alpha-2))`).
-      `sf-on-hover` in the seed sets only `color` + `background`; no border
-      channel. Decide whether to (a) enhance `sf-on-hover` with a border-color
-      rule (needs a baseline `border-style`/`width` on the bare element for it to
-      be visible), (b) live without the hover border, or (c) add a subtler
-      hover-border variant to the seed.
-- [ ] **`sf-on-current` border invisible on bare buttons** — the seed rule sets
-      `border-color: rgba(var(--sf-primary) / var(--sf-alpha-4))` but the bare
-      `button` element rule has no `border-style` / `border-width`, so the colour
-      change paints nothing. Old ToolbarButton reserved
-      `border: 1px solid transparent` locally for exactly this reason. Options:
-      add `border: 1px solid transparent` to the bare button rule (reserves 1px
-      of layout space universally), or change `sf-on-current` to set the full
-      `border` shorthand (visible-only-when-current, no reserved space so layout
-      shifts on state change).
-- [ ] **`sf-on-current` on menu-items no longer rounds corners** — old
-      `.menu-item` had `border-radius: 4px` so the highlighted-item background
-      tint from `sf-on-current` was rounded. Menu items are `<div>`, so the bare
-      button rule doesn't apply. Either add a radius to `sf-on-current` in the
-      seed (universal — affects every current element), refactor menu-items to
-      `<button>` (semantic win + inherits button radius), or add a bare
-      element/marker for menu items.
-- [ ] **Dropdown container border gone under `sf-depth-2`** — old
-      `.dropdown-menu` had `border: 1px solid rgb(var(--border_color))`. `sf-depth-2`
-      currently elevates via `background` + `box-shadow` + `border-radius` only,
-      no border. Decide whether depth-2 dropdowns should carry a border (add to
-      `sf-depth-2` in seed) or the shadow-only elevation is the design.
-- [ ] **`CodeViewToggle` floating button loses depth-2 chrome** — `ToolbarButton`
-      unconditionally carries `sf-is-contained`. Composing
-      `<ToolbarButton class="sf-depth-2 sf-is-overlay">` in `CodeViewToggle.vue`
-      means `sf-is-contained` (context layer) strips depth-2's background and
-      border (bundle layer), leaving the floating toggle chrome-less. Options:
-      (a) drop `sf-is-contained` from ToolbarButton and require callers to add
-      it when actually inside a toolbar (breaks the "chrome comes from the class
-      combo" contract for all current consumers), (b) don't reuse ToolbarButton
-      for floating overlays — use a bare `<button class="sf-depth-2 sf-is-overlay
-  sf-on-hover sf-size-xs">` in CodeViewToggle, (c) add a compound rule that
-      lets `sf-is-overlay` re-enable chrome even under `sf-is-contained`.
 
 ## System design gaps (known, intentional for now)
 
