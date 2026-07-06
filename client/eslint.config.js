@@ -25,6 +25,7 @@ export default defineConfig([
 			globals: { google: 'readonly' },
 		},
 		rules: {
+			'vue/multi-word-component-names': ['error', { ignores: ['Button', 'Tooltip'] }],
 			'vue/html-indent': 'off',
 			'vue/max-attributes-per-line': 'off',
 			'vue/singleline-html-element-content-newline': 'off',
