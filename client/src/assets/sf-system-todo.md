@@ -233,18 +233,6 @@ editor — not for component code.** Replacing a raw token ref with a utility cl
 same coupling problem. Components migrate to vocabulary classes (`sf-variant-*`, `sf-depth-*`,
 `sf-on-*`) so the theme owns the output through the seed.
 
-### Editor alpha-step rename (real work, separate slice)
-
-The editor currently emits legacy class names for palette picks. This needs updating:
-
-- [ ] `textColorMark.ts`, `ToolbarColorControl.vue`, `alphaPalette.ts`, `colorPalette.ts`
-      — read from `--sf-*` palette tokens and emit new-step class names
-      (`sf-bg-primary-5`, `sf-bg-alpha-3`, etc.).
-- [ ] Delete the legacy `sf-{bg|color|border}-alpha-{subtle|muted|half}` utility classes
-      from `sf-tokens.css` and `--alpha-subtle/muted/half` aliases from `base.css` once
-      the editor no longer emits them. These are styling opinions baked into names, not
-      theme decisions — callers should use `--sf-alpha-*` range steps directly.
-
 ## Implement missing class families
 
 - [x] `sf-depth-*` bundles (`-0`, `-1`, `-2`, `-3`) — depth-0 is background only (canvas,
