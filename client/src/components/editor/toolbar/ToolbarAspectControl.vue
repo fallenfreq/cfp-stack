@@ -11,12 +11,26 @@
 			<span class="ap-label">Aspect ratio</span>
 			<div class="ap-row">
 				<button
-					v-for="opt in options"
+					v-for="opt in aspectOptions"
 					:key="opt.value"
 					class="ap-chip"
-					:class="{ 'sf-on-selected': selectedToken === opt.value }"
+					:class="{ 'sf-on-selected': selectedAspect === opt.value }"
 					@mousedown.prevent
-					@click="selectToken(opt.value)"
+					@click="selectAspect(opt.value)"
+				>
+					{{ opt.label }}
+				</button>
+			</div>
+
+			<span class="ap-label">Image fill</span>
+			<div class="ap-row">
+				<button
+					v-for="opt in objectOptions"
+					:key="opt.value"
+					class="ap-chip"
+					:class="{ 'sf-on-selected': selectedObject === opt.value }"
+					@mousedown.prevent
+					@click="selectObject(opt.value)"
 				>
 					{{ opt.label }}
 				</button>
@@ -34,41 +48,60 @@ import type { Editor } from '@tiptap/vue-3'
 import { ref, watch } from 'vue'
 import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
-const options = [
+const aspectOptions = [
 	{ label: '16:9', value: '16-9' },
 	{ label: '4:3', value: '4-3' },
 	{ label: '1:1', value: '1-1' },
 	{ label: '9:16', value: '9-16' },
 ] as const
 
+const objectOptions = [
+	{ label: 'Cover', value: 'cover' },
+	{ label: 'Contain', value: 'contain' },
+	{ label: 'Stretch', value: 'fill' },
+	{ label: 'Original', value: 'none' },
+] as const
+
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
 const { open, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
 
-const selectedToken = ref<string | null>(null)
+const selectedAspect = ref<string | null>(null)
+const selectedObject = ref<string | null>(null)
 
 watch(open, (isOpen) => {
 	if (!isOpen || capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
 	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
-	selectedToken.value = getClassToken(cls, 'sl-aspect-')
+	selectedAspect.value = getClassToken(cls, 'sl-aspect-')
+	selectedObject.value = getClassToken(cls, 'sl-object-')
 })
 
-const selectToken = (value: string) => {
-	// Toggle off if already selected
-	const next = selectedToken.value === value ? null : value
-	selectedToken.value = next
-
+const commit = (cls: string) => {
 	if (capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
-	const newClass = setClassToken(cls, 'sl-aspect-', next)
 	props.editor.view.dispatch(
 		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
 			...node.attrs,
-			class: newClass || null,
+			class: cls || null,
 		}),
 	)
+}
+
+const selectAspect = (value: string) => {
+	const next = selectedAspect.value === value ? null : value
+	selectedAspect.value = next
+	const node = nodeAt(props.editor.state.doc, capturedPos.value!)
+	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	commit(setClassToken(cls, 'sl-aspect-', next))
+}
+
+const selectObject = (value: string) => {
+	const next = selectedObject.value === value ? null : value
+	selectedObject.value = next
+	const node = nodeAt(props.editor.state.doc, capturedPos.value!)
+	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	commit(setClassToken(cls, 'sl-object-', next))
 }
 </script>
 

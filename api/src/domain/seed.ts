@@ -457,6 +457,29 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'layout',
 		description: 'Collapse to single column below md breakpoint',
 	},
+
+	// Object-fit modifiers — vocabulary only; CSS uses child selectors that the
+	// class_rules schema cannot express, so rules live as a static block in generateCss.ts.
+	{
+		name: 'sl-object-cover',
+		kind: 'layout',
+		description: 'Image fills the aspect box, cropped to cover',
+	},
+	{
+		name: 'sl-object-contain',
+		kind: 'layout',
+		description: 'Image scaled to fit within the aspect box',
+	},
+	{
+		name: 'sl-object-fill',
+		kind: 'layout',
+		description: 'Image stretched to fill the aspect box exactly',
+	},
+	{
+		name: 'sl-object-none',
+		kind: 'layout',
+		description: 'Image at natural size, no object-fit applied',
+	},
 ]
 
 // ─── Rules (root theme defaults) ─────────────────────────────────────────

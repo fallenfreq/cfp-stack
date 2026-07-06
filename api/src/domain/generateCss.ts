@@ -54,6 +54,7 @@ export async function emitStylesheet(db: Db): Promise<string> {
 		emitUtilityLayer(buckets),
 		emitRichLayer('sf-state', themesList, rootTheme, rulesByLayer),
 		emitRichLayer('sl-layout', themesList, rootTheme, rulesByLayer),
+		SL_OBJECT,
 		emitCollapseLayer(collapseThresholds),
 		emitEditorLayer(buckets),
 	]
@@ -406,6 +407,26 @@ const util = (e: BucketEntry, property: string): string =>
 
 const section = (title: string): string =>
 	`\t/* ── ${title} ─────────────────────────────────────────── */\n`
+
+// ─── Object-fit layer ────────────────────────────────────────────────────
+// sl-object-* is vocabulary-only in the DB — the rules need child element
+// selectors (.sl-object-cover > img:only-child) which the class_rules schema
+// cannot express (selector is always the class element, not a descendant).
+// Two selectors per value:
+//   img.sl-object-*             — class on the <img> itself (TipTap image node)
+//   .sl-object-* > img:only-child — class on a container; :only-child guard
+//                                   prevents affecting images alongside other content.
+
+const SL_OBJECT = `@layer sl-layout {
+\timg.sl-object-cover,
+\t.sl-object-cover > img:only-child { object-fit: cover; width: 100%; height: 100%; display: block; }
+\timg.sl-object-contain,
+\t.sl-object-contain > img:only-child { object-fit: contain; width: 100%; height: 100%; display: block; }
+\timg.sl-object-fill,
+\t.sl-object-fill > img:only-child { object-fit: fill; width: 100%; height: 100%; display: block; }
+\timg.sl-object-none,
+\t.sl-object-none > img:only-child { object-fit: none; display: block; }
+}\n`
 
 // ─── Collapse layer ──────────────────────────────────────────────────────
 // sl-collapse-* is vocabulary-only in the DB (var() is not valid in @container
