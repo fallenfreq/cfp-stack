@@ -329,8 +329,8 @@ var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
       `sf-on-hover × sf-variant-danger`. Still available for future work: `sf-on-active`
       (currently pseudo `:active`; no consumers yet — mousedown-flash treatment).
 - [x] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`) — vocabulary + rules in seed
-- [ ] `sl-aspect` — added to spec; seed vocabulary + rules. Aspect ratio set via
-      `--sl-aspect` custom property on the element.
+- [x] `sl-aspect` — vocabulary + rule seeded. Aspect ratio set via `--sl-aspect`
+      custom property on the element (`aspect-ratio: var(--sl-aspect)`).
 - [x] `sl-collapse-*` container-responsive collapse classes — vocabulary in seed;
       CSS generated from `collapse_steps` table (DB-stored px values, not theme tokens;
       `var()` is not valid in `@container` conditions so values are read at emit time)

@@ -431,6 +431,11 @@ const VOCABULARY: VocabSpec[] = [
 	{ name: 'sl-split', kind: 'layout', description: 'Fixed + flexible two-column split' },
 	{ name: 'sl-center', kind: 'layout', description: 'Centered max-width block' },
 	{ name: 'sl-grid', kind: 'layout', description: 'Auto-responsive grid' },
+	{
+		name: 'sl-aspect',
+		kind: 'layout',
+		description: 'Aspect-ratio box; set --sl-aspect on the element',
+	},
 
 	// Collapse modifiers — vocabulary only; CSS is generated from breakpoint token values (no var() in @container)
 	{
@@ -643,6 +648,9 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sl-grid'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
 	{ classNames: ['sl-grid'], cssProperty: 'container-type', value: 'inline-size' },
+
+	// sl-aspect
+	{ classNames: ['sl-aspect'], cssProperty: 'aspect-ratio', value: 'var(--sl-aspect)' },
 
 	// Overflow context — mask-image applied to the scrolling element.
 	// Arrows are component-level; ::before/::after rules can be added per-theme via the DB.
