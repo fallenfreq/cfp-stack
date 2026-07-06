@@ -198,20 +198,9 @@
 			<h3 class="sf-heading-3">Images</h3>
 			<p>
 				Insert via <code>/image</code>. Select to reveal the
-				<span class="material-symbols-rounded icon-inline">edit</span> URL editor. Use the
-				<span class="material-symbols-rounded icon-inline">aspect_ratio</span>
-				toolbar to set an aspect ratio and image fill mode.
+				<span class="material-symbols-rounded icon-inline">edit</span> URL editor.
 			</p>
-			<img src="https://placehold.co/800x450" style="width: 100%" />
-			<p>
-				The image below has <code>sl-aspect-16-9</code> and <code>sl-object-cover</code>
-				applied — it holds the 16:9 ratio regardless of its container width:
-			</p>
-			<img
-				src="https://placehold.co/800x450"
-				class="sl-aspect-16-9 sl-object-cover"
-				style="width: 100%"
-			/>
+			<img src="https://placehold.co/400x300" style="width: 100%" />
 		</layout-section>
 
 		<layout-section class="sf-gap-sm">
@@ -241,6 +230,42 @@
 			</table>
 		</layout-section>
 	</layout-columns>
+
+	<div data-container="">
+		<h2 class="sf-heading-2">Aspect Ratio &amp; Image Fill</h2>
+		<p>
+			Select any image or block and use the
+			<span class="material-symbols-rounded icon-inline">aspect_ratio</span> toolbar to lock
+			it to a ratio and choose how the image fills that shape. The two images below have
+			different natural proportions but are locked to different ratios — both use
+			<code>sl-object-cover</code> so the image crops to fill the box.
+		</p>
+	</div>
+
+	<layout-split split="1/2" class="sf-gap-md sl-collapse-sm">
+		<layout-section class="sf-gap-sm">
+			<p>
+				Portrait source image (<code>400×600</code>) locked to <code>sl-aspect-16-9</code>
+				— the top and bottom are cropped to fill the widescreen shape.
+			</p>
+			<img
+				src="https://placehold.co/400x600"
+				class="sl-aspect-16-9 sl-object-cover"
+				style="width: 100%"
+			/>
+		</layout-section>
+		<layout-section class="sf-gap-sm">
+			<p>
+				Landscape source image (<code>800×300</code>) locked to <code>sl-aspect-1-1</code>
+				— the sides are cropped to make a square.
+			</p>
+			<img
+				src="https://placehold.co/800x300"
+				class="sl-aspect-1-1 sl-object-cover"
+				style="width: 100%"
+			/>
+		</layout-section>
+	</layout-split>
 
 	<div data-container="">
 		<h2 class="sf-heading-2">Code Blocks</h2>
