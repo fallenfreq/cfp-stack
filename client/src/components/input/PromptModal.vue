@@ -113,6 +113,6 @@ const close = () => {
 .button-group {
 	display: flex;
 	justify-content: flex-end;
-	gap: 5px;
+	gap: var(--sf-gap, var(--sf-spacing-2xs));
 }
 </style>

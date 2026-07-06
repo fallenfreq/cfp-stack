@@ -122,7 +122,7 @@ onUnmounted(() => {
 	.attr-row {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		padding: 2px 4px;
 	}
 

@@ -176,14 +176,14 @@ const commit = () => {
 	.sp-picker {
 		display: flex;
 		flex-direction: column;
-		gap: var(--sf-spacing-xs);
+		gap: var(--sf-gap, var(--sf-spacing-xs));
 		padding: var(--sf-spacing-2xs);
 	}
 
 	.sp-section {
 		display: flex;
 		flex-direction: column;
-		gap: var(--sf-spacing-2xs);
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 
 	.sp-label {
@@ -194,7 +194,7 @@ const commit = () => {
 	.sp-row {
 		display: flex;
 		align-items: center;
-		gap: var(--sf-spacing-2xs);
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		flex-wrap: wrap;
 	}
 

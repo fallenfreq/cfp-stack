@@ -13,7 +13,7 @@ const initials = computed(() => {
 </script>
 
 <template>
-	<div class="flex items-center gap-5 mb-8">
+	<div class="sl-cluster sf-gap-md mb-8">
 		<div
 			class="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-on-primary text-2xl font-bold shrink-0"
 		>

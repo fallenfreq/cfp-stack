@@ -396,19 +396,19 @@ Tags</pre>
 .marker-info-header {
 	display: grid;
 	grid-template-columns: 1fr auto; /* Text takes remaining space, button fits content */
-	gap: 1rem; /* Spacing between text and button */
+	gap: var(--sf-gap, var(--sf-spacing-sm));
 	align-items: center; /* Aligns items vertically */
 }
 
 .Marker-info-button-group {
 	display: flex;
-	gap: 0.5rem;
+	gap: var(--sf-gap, var(--sf-spacing-xs));
 }
 
 .all-tags-container {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.5rem;
+	gap: var(--sf-gap, var(--sf-spacing-xs));
 	margin-top: 2rem;
 }
 
@@ -416,7 +416,7 @@ Tags</pre>
 .tags-container {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.5rem;
+	gap: var(--sf-gap, var(--sf-spacing-xs));
 	align-items: center;
 }
 

@@ -183,7 +183,7 @@ const onNewPage = async () => {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 4px;
+	gap: var(--sf-gap, var(--sf-spacing-2xs));
 	background: none;
 	border: 1px solid transparent;
 	border-radius: 4px;

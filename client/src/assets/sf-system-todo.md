@@ -297,7 +297,7 @@ The editor currently emits legacy class names for palette picks. This needs upda
       vocabulary (no rules yet — held to the spec's admission test: add rules when a
       consumer needs shape/colour distinct from bare `<button>`).
 - [x] Bare `button` element rule — seeded in `sf-element`. `border-radius:
-    var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
+  var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
       components with `sf-size-*` get scale-appropriate padding without writing
       `padding: var(--sf-padding)` locally; `font: inherit` so nested buttons pick up
       their container's type scale (e.g. `sf-text-xs` on a wrapper). Compound with
@@ -362,7 +362,7 @@ Done:
 - [x] `ToolbarButton.vue` — `sf-is-contained sf-on-hover sf-on-disabled sf-size-xs` + conditional `sf-on-current`; local rule reduced to `display: inline-flex`,
       `align-items`, `gap`, `white-space`. All chrome removed.
 - [x] `NodePath.vue` — `.path-node` gets `sf-is-contained sf-loudness-1 sf-on-hover
-    sf-on-disabled sf-size-2xs` + conditional `sf-on-current`; container gets
+  sf-on-disabled sf-size-2xs` + conditional `sf-on-current`; container gets
       `sf-text-xs` (buttons inherit via bare `button { font: inherit }`); local
       rules are layout only. Previous asymmetric `padding: 1px 5px` replaced by
       the size axis feeding the bare button rule.
@@ -443,7 +443,7 @@ the component):
       it when actually inside a toolbar (breaks the "chrome comes from the class
       combo" contract for all current consumers), (b) don't reuse ToolbarButton
       for floating overlays — use a bare `<button class="sf-depth-2 sf-is-overlay
-    sf-on-hover sf-size-xs">` in CodeViewToggle, (c) add a compound rule that
+  sf-on-hover sf-size-xs">` in CodeViewToggle, (c) add a compound rule that
       lets `sf-is-overlay` re-enable chrome even under `sf-is-contained`.
 
 ## System design gaps (known, intentional for now)
@@ -451,12 +451,14 @@ the component):
 These are not bugs but unresolved tensions in the current design:
 
 - **Raw token refs in component CSS** — many components still reference `--border_color`,
-  `--primary`, `--bg_secondary` etc. directly in their CSS. The correct approach is for
-  components to use the class system (`sf-variant-*`, `sf-on-*`, depth bundles) rather than
-  raw tokens, so themes can change the class definitions without touching component code.
-  However, the class system doesn't yet have equivalents for everything (e.g. no "add a
-  themed border" class, no "floating-surface at 90% opacity" class). These components must
-  stay on raw tokens until the right higher-level class exists.
+  `--primary` etc. directly in their CSS. The correct approach is for components to use the
+  class system (`sf-variant-*`, `sf-on-*`, depth bundles) rather than raw tokens, so themes
+  can change class definitions without touching component code. The class system doesn't yet
+  have equivalents for everything (e.g. no "add a themed border" class, no
+  "floating-surface at 90% opacity" class). These components must stay on raw tokens until
+  the right higher-level class exists. Gap values are resolved — all component CSS now uses `var(--sf-gap, var(--sf-spacing-*))`
+  (keeps the channel open with a scale-step default) or `sl-*` + `sf-gap-*` (structural
+  layout containers where `sf-gap-*` is authored on the node).
 - **`--bg_secondary` migration** — cannot be replaced with a raw `--sf-surface-*` token
   because surface-N is just a numbered color slot, not a semantic "secondary surface" token.
   The right migration is to add the appropriate `sf-depth-N` bundle class to elements that
@@ -486,6 +488,9 @@ These are not bugs but unresolved tensions in the current design:
       there); the real layout CSS targets `> [data-node-view-content]` via `:global`.
       Full migration (removing `layout-*` class and `:global` CSS) requires restructuring
       the content-wrapper pattern so `sl-*` classes can be applied directly to the layout div.
+- [x] Layout components moved to `components/layout/` — they are general components; TipTap
+      wraps them externally so the components themselves have no editor dependency. Call sites
+      outside the editor use them directly with `sf-gap-*` as a class attribute.
 - [x] `LayoutCard.vue` — wears `sf-depth-1`; background inherited from bundle (5a95dfe).
 
 ## Vuestic compatibility (temporary)

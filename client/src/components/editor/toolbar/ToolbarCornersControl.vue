@@ -256,7 +256,7 @@ const commit = () => {
 	.corners-picker {
 		display: flex;
 		flex-direction: column;
-		gap: var(--sf-spacing-xs);
+		gap: var(--sf-gap, var(--sf-spacing-xs));
 		min-width: 200px;
 		padding: var(--sf-spacing-2xs);
 	}
@@ -264,7 +264,7 @@ const commit = () => {
 	.cp-section {
 		display: flex;
 		flex-direction: column;
-		gap: var(--sf-spacing-2xs);
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 
 	.cp-label {
@@ -275,7 +275,7 @@ const commit = () => {
 	.cp-row {
 		display: flex;
 		align-items: center;
-		gap: var(--sf-spacing-2xs);
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		flex-wrap: wrap;
 	}
 
@@ -317,7 +317,7 @@ const commit = () => {
 	.cp-check-label {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--sf-gap, var(--sf-spacing-xs));
 		font-size: 0.75rem;
 		color: rgb(var(--text_primary));
 		cursor: pointer;
@@ -326,13 +326,13 @@ const commit = () => {
 	.cp-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: var(--sf-spacing-xs);
+		gap: var(--sf-gap, var(--sf-spacing-xs));
 	}
 
 	.cp-corner {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 }
 </style>

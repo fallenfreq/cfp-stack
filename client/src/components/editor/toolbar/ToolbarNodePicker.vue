@@ -81,7 +81,7 @@ const select = (item: NodePickerItem) => {
 	.picker-item {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--sf-gap, var(--sf-spacing-xs));
 		cursor: pointer;
 		padding: 5px 8px;
 		border-radius: 4px;

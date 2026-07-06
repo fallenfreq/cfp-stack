@@ -14,7 +14,7 @@
 						Not published — only admins can see this collection
 					</p>
 				</div>
-				<div v-if="isAdmin" class="flex gap-2">
+				<div v-if="isAdmin" class="sl-cluster sf-gap-xs">
 					<VaButton
 						preset="secondary"
 						size="small"

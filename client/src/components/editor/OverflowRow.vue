@@ -99,7 +99,7 @@ watch(() => props.refreshKey, refreshOverflow)
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--sf-gap, var(--sf-spacing-xs));
 	padding: 0 0.5rem;
 	overflow-x: auto;
 	overflow-y: hidden;

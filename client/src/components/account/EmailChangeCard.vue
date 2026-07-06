@@ -21,14 +21,14 @@ const {
 <template>
 	<VaCard class="p-6">
 		<h2 class="text-xl font-semibold mb-5">Email</h2>
-		<div class="flex items-center gap-3 mb-5">
+		<div class="sl-cluster sf-gap-sm mb-5">
 			<span>{{ profile.email }}</span>
 			<VaBadge v-if="profile.email_verified" text="Verified" color="success" />
 			<VaBadge v-else text="Unverified" color="warning" />
 		</div>
 
 		<template v-if="emailStatus === 'idle' || emailStatus === 'sending'">
-			<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+			<div class="grid grid-cols-1 sm:grid-cols-2 email-fields-grid mb-3">
 				<VaInput v-model="newEmail" label="New email address" type="email" />
 				<VaInput
 					v-model="confirmEmail"
@@ -66,7 +66,7 @@ const {
 			<p class="text-sm mb-4" style="opacity: 0.8">
 				A verification code has been sent to <strong>{{ pendingEmail }}</strong>. Your current email remains active until you verify the new one.
 			</p>
-			<div class="flex flex-wrap gap-3 items-end">
+			<div class="flex flex-wrap items-end email-verify-row">
 				<VaInput
 					v-model="verificationCode"
 					label="Verification code"
@@ -81,7 +81,7 @@ const {
 				</VaButton>
 				<VaButton preset="secondary" @click="cancelEmailChange">Cancel</VaButton>
 			</div>
-			<div class="flex items-center gap-3 mt-3">
+			<div class="sl-cluster sf-gap-sm mt-3">
 				<VaButton preset="plain" size="small" @click="resendEmailCode">
 					Resend code
 				</VaButton>
@@ -94,7 +94,7 @@ const {
 			</p>
 		</template>
 
-		<div v-else-if="emailStatus === 'done'" class="flex items-center gap-4">
+		<div v-else-if="emailStatus === 'done'" class="sl-cluster sf-gap-sm">
 			<p class="text-sm" style="color: var(--va-success)">
 				Email updated to {{ pendingEmail }}. Sign out and back in to see the change
 				reflected here.
@@ -105,3 +105,13 @@ const {
 		</div>
 	</VaCard>
 </template>
+
+<style scoped>
+.email-fields-grid {
+	gap: var(--sf-gap, var(--sf-spacing-sm));
+}
+
+.email-verify-row {
+	gap: var(--sf-gap, var(--sf-spacing-sm));
+}
+</style>

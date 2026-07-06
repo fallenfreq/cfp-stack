@@ -1,7 +1,7 @@
 <template>
 	<div
 		v-if="show"
-		class="floating-toolbar sf-depth-2 sf-is-overlay flex flex-wrap gap-2 px-7"
+		class="floating-toolbar sf-depth-2 sf-is-overlay sl-cluster sf-gap-xs px-7"
 		:style="{ top: `${position.top}px`, left: `${position.left}px` }"
 	>
 		<!-- Use for when the caret is not in a text block  -->

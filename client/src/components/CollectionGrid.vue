@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-5"
+		class="collection-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5"
 	>
 		<BasicCard
 			v-for="(item, index) in displayedItems"
@@ -65,3 +65,9 @@ const setDisplayedItems = (items: GridItem[]) => {
 
 watch(() => props.items, setDisplayedItems, { immediate: true })
 </script>
+
+<style scoped>
+.collection-grid {
+	gap: var(--sf-gap, var(--sf-spacing-md));
+}
+</style>

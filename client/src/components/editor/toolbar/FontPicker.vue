@@ -179,7 +179,7 @@ const pickTracking = (cssVar: string | null) => {
 	.font-picker {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--sf-gap, var(--sf-spacing-xs));
 		min-width: 240px;
 		padding: 4px;
 	}
@@ -187,7 +187,7 @@ const pickTracking = (cssVar: string | null) => {
 	.fp-section {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 
 	.fp-label {
@@ -198,7 +198,7 @@ const pickTracking = (cssVar: string | null) => {
 	.fp-row {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		flex-wrap: wrap;
 	}
 

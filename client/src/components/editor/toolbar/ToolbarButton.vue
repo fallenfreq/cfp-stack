@@ -24,7 +24,7 @@ defineEmits<{ click: [] }>()
 	.toolbar-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		white-space: nowrap;
 	}
 }

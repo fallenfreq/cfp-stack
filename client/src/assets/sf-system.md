@@ -203,6 +203,12 @@ slots filled by utility classes, not theme values. A theme cannot meaningfully s
 `--sf-gap` in a theme class — the per-wrapper reset overwrites it at every node-view
 boundary.
 
+Component-internal layout (gap between icon and label inside a button, controls inside
+a picker) uses the channel with a scale-step default: `gap: var(--sf-gap, var(--sf-spacing-xs))`.
+This keeps the gap open to override via `sf-gap-*` while setting a sensible component-level
+fallback. The raw scale step alone (`var(--sf-spacing-xs)`) is not the pattern — it bypasses
+the channel and closes off per-element override.
+
 ### Bridges
 
 Rule-to-rule contract when a context/state/utility rule needs a value a bundle owns.

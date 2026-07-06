@@ -195,7 +195,7 @@ const commit = () => {
 	.color-picker {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: var(--sf-gap, var(--sf-spacing-xs));
 		min-width: 240px;
 		padding: 4px;
 	}
@@ -209,7 +209,7 @@ const commit = () => {
 	.cp-row {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 
 	.cp-families {

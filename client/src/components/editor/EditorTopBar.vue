@@ -107,7 +107,7 @@ const cancelRename = () => {
 		display: flex;
 		align-items: center;
 		padding: 4px 1.75rem;
-		gap: 4px;
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 
 	/* Name input — chrome comes from sf-is-contained + sf-loudness-1 + sf-on-hover +
@@ -158,7 +158,7 @@ const cancelRename = () => {
 	.top-bar__actions {
 		display: flex;
 		align-items: center;
-		gap: 2px;
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		flex-shrink: 0;
 	}
 

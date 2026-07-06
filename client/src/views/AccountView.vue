@@ -18,13 +18,13 @@ const { form, saving, saveSuccess, saveError, saveWarning, saveAccount } = useAc
 		<template v-else>
 			<AccountHeader :profile="profile" />
 
-			<div class="flex flex-wrap gap-6 mb-8 text-sm" style="opacity: 0.6">
+			<div class="sl-cluster sf-gap-md mb-8 text-sm" style="opacity: 0.6">
 				<span><span class="font-medium">User ID: </span>{{ profile.sub }}</span>
 			</div>
 
 			<VaCard class="mb-6 p-6">
 				<h2 class="text-xl font-semibold mb-5">Account</h2>
-				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<div class="grid grid-cols-1 sm:grid-cols-2 account-fields-grid">
 					<VaInput v-model="form.firstName" label="First name" />
 					<VaInput v-model="form.lastName" label="Last name" />
 					<VaInput v-model="form.displayName" label="Display name" />
@@ -44,7 +44,7 @@ const { form, saving, saveSuccess, saveError, saveWarning, saveAccount } = useAc
 						value-by="value"
 					/>
 				</div>
-				<div class="flex items-center gap-4 mt-5">
+				<div class="sl-cluster sf-gap-sm mt-5">
 					<VaButton :loading="saving" @click="saveAccount">Save</VaButton>
 					<span
 						v-if="saveSuccess && !saveWarning"
@@ -66,3 +66,9 @@ const { form, saving, saveSuccess, saveError, saveWarning, saveAccount } = useAc
 		</template>
 	</div>
 </template>
+
+<style scoped>
+.account-fields-grid {
+	gap: var(--sf-gap, var(--sf-spacing-sm));
+}
+</style>
