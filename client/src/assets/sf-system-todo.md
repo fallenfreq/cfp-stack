@@ -335,8 +335,8 @@ var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
       CSS generated from `collapse_steps` table (DB-stored px values, not theme tokens;
       `var()` is not valid in `@container` conditions so values are read at emit time)
 - [x] Migrate `--bg_secondary` consumers to `sf-depth-1` — done in commit 5a95dfe.
-      Translucent floating-UI consumers (FloatingToolbar, FloatingDragHandle, etc.)
-      still hold raw token refs; no sf class equivalent exists yet for depth + alpha.
+      Translucent floating-UI consumers (FloatingToolbar, FloatingDragHandle) use
+      `sf-depth-2 sf-is-overlay` — surface translucency covered.
 
 ## Editor chrome migration (in progress)
 
@@ -406,8 +406,9 @@ These are not bugs but unresolved tensions in the current design:
 - **`--bg_secondary` migration** — cannot be replaced with a raw `--sf-surface-*` token
   because surface-N is just a numbered color slot, not a semantic "secondary surface" token.
   The right migration is to add the appropriate `sf-depth-N` bundle class to elements that
-  match that depth level, and remove their explicit background CSS. Elements that need
-  translucency (floating toolbars, drag handles) have no sf class equivalent yet.
+  match that depth level, and remove their explicit background CSS. Floating/translucent
+  surfaces use `sf-depth-N sf-is-overlay` — `sf-is-overlay` reads `--sfx-surface-color`
+  (set by the depth bundle) at `--sf-alpha-9`.
 - **Variant rules overriding bundle properties** — `sf-variant-outlined` and `sf-variant-plain`
   on LayoutCard use temporary in-component CSS to reset `box-shadow`/`background` that
   `sf-depth-1` sets. Once these enter the DB as proper variant rules, the in-component CSS
