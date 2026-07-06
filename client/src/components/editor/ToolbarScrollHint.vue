@@ -2,18 +2,19 @@
 	<Transition name="hint-fade">
 		<button
 			v-if="direction !== null"
-			class="toolbar-scroll-hint sf-depth-2 sf-is-overlay sf-size-2xs"
+			class="toolbar-scroll-hint sf-depth-2 sf-is-overlay sf-size-xs"
 			:style="hintStyle"
 			@click="scrollToToolbar"
 		>
-			<span class="material-symbols-rounded">
+			<MaterialIcon>
 				{{ direction === 'up' ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
-			</span>
+			</MaterialIcon>
 		</button>
 	</Transition>
 </template>
 
 <script setup lang="ts">
+import MaterialIcon from '@/components/ui/MaterialIcon.vue'
 import { useToolbarRect } from '@/composables/editor/useToolbarRect'
 import type { Editor } from '@tiptap/vue-3'
 import { computed } from 'vue'
@@ -54,7 +55,6 @@ const scrollToToolbar = () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: var(--sf-padding);
 	border: 1px solid rgb(var(--border_color));
 	cursor: pointer;
 	z-index: var(--z-scroll-hint);
