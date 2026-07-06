@@ -1,5 +1,9 @@
 <template>
-	<div class="node-path sf-text-xs">
+	<div
+		ref="nodePathEl"
+		class="node-path sf-text-xs"
+		:class="{ 'sf-is-overflow-left': isOverflowLeft, 'sf-is-overflow-right': isOverflowRight }"
+	>
 		<template v-for="(segment, i) in path" :key="segment.depth">
 			<span v-if="i > 0" class="path-sep">›</span>
 			<button
@@ -16,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+import { useScrollOverflow } from '@/composables/useScrollOverflow'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
@@ -26,6 +31,8 @@ const props = defineProps<{ editor: Editor }>()
 const dragHandleStore = useDragHandleStore()
 
 const tick = ref(0)
+const nodePathEl = ref<HTMLElement | null>(null)
+const { left: isOverflowLeft, right: isOverflowRight } = useScrollOverflow(nodePathEl, tick)
 
 interface PathSegment {
 	name: string
