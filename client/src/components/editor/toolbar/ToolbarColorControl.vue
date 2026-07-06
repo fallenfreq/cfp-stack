@@ -1,5 +1,5 @@
 <template>
-	<ToolbarPanelItem :open="open" align="right" @close="onClose">
+	<ToolbarPanelItem :open="open" :tooltip="tooltip" align="right" @close="onClose">
 		<template #trigger>
 			<Tooltip :text="tooltip">
 				<Button class="sf-is-contained" @click="toggle">

@@ -18,8 +18,8 @@ import ToolbarPanel from './ToolbarPanel.vue'
 defineProps<{
 	open: boolean
 	icon?: string
-	tooltip?: string
-	align?: 'left' | 'right'
+	tooltip: string
+	align: 'left' | 'right'
 }>()
 
 const emit = defineEmits<{ toggle: []; close: [] }>()

@@ -3,6 +3,7 @@
 		:icon="iconName"
 		:tooltip="tooltip"
 		:open="open"
+		align="right"
 		@toggle="toggle"
 		@close="close"
 	>
