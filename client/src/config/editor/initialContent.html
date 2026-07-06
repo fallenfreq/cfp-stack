@@ -198,9 +198,20 @@
 			<h3 class="sf-heading-3">Images</h3>
 			<p>
 				Insert via <code>/image</code>. Select to reveal the
-				<span class="material-symbols-rounded icon-inline">edit</span> URL editor.
+				<span class="material-symbols-rounded icon-inline">edit</span> URL editor. Use the
+				<span class="material-symbols-rounded icon-inline">aspect_ratio</span>
+				toolbar to set an aspect ratio and image fill mode.
 			</p>
-			<img src="https://placehold.co/400x360" style="width: 100%" />
+			<img src="https://placehold.co/800x450" style="width: 100%" />
+			<p>
+				The image below has <code>sl-aspect-16-9</code> and <code>sl-object-cover</code>
+				applied — it holds the 16:9 ratio regardless of its container width:
+			</p>
+			<img
+				src="https://placehold.co/800x450"
+				class="sl-aspect-16-9 sl-object-cover"
+				style="width: 100%"
+			/>
 		</layout-section>
 
 		<layout-section class="sf-gap-sm">
