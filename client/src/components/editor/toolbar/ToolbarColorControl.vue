@@ -1,12 +1,14 @@
 <template>
-	<div ref="buttonEl" class="color-control">
-		<ToolbarButton @click="toggle">
-			<span class="color-swatch" :style="swatchStyle" />
-		</ToolbarButton>
-		<ToolbarPanel :open="open" :anchor-el="buttonEl" align="right" @close="onClose">
-			<ColorPicker :value="currentColor" @commit="onCommit" @remove="onRemove" />
-		</ToolbarPanel>
-	</div>
+	<ToolbarPanelItem :open="open" align="right" @close="onClose">
+		<template #trigger>
+			<Tooltip :text="tooltip">
+				<Button class="sf-is-contained" @click="toggle">
+					<span class="color-swatch" :style="swatchStyle" />
+				</Button>
+			</Tooltip>
+		</template>
+		<ColorPicker :value="currentColor" @commit="onCommit" @remove="onRemove" />
+	</ToolbarPanelItem>
 </template>
 
 <script setup lang="ts">
@@ -21,13 +23,11 @@ import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, type CSSProperties } from 'vue'
 import ColorPicker from './ColorPicker.vue'
-import ToolbarButton from './ToolbarButton.vue'
-import ToolbarPanel from './ToolbarPanel.vue'
+import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
-const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
+const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, buttonEl, capturedPos, mode, toggle, onClose, commitMark } =
-	useToolbarMarkControl(props)
+const { open, capturedPos, mode, toggle, onClose, commitMark } = useToolbarMarkControl(props)
 const { steps: alphaSteps, snapToStep } = useAlphaPalette()
 const { parseStoredValue } = useColorPalette()
 
@@ -114,10 +114,6 @@ const onRemove = () => applyColor(null)
 </script>
 
 <style scoped>
-.color-control {
-	position: relative;
-}
-
 .color-swatch {
 	display: inline-block;
 	width: 16px;

@@ -1,37 +1,36 @@
 <template>
-	<div ref="anchorEl" class="toolbar-node-picker">
-		<ToolbarButton @click="toggle">
-			<ToolbarIcon>{{ iconName }}</ToolbarIcon>
-		</ToolbarButton>
-		<ToolbarPanel :open="open" :anchor-el="anchorEl" @close="close">
-			<div class="picker-list">
-				<template v-if="computedItems.length">
-					<div
-						v-for="item in computedItems"
-						:key="item.label"
-						class="picker-item"
-						:class="{ 'sf-on-current': item.active }"
-						@mousedown.prevent="select(item)"
-					>
-						<span class="material-symbols-rounded picker-item-icon">{{
-							item.iconName
-						}}</span>
-						<span>{{ item.label }}</span>
-					</div>
-				</template>
-				<div v-else class="picker-item picker-empty">No compatible types</div>
-			</div>
-		</ToolbarPanel>
-	</div>
+	<ToolbarPanelItem
+		:icon="iconName"
+		:tooltip="tooltip"
+		:open="open"
+		@toggle="toggle"
+		@close="close"
+	>
+		<div class="picker-list">
+			<template v-if="computedItems.length">
+				<div
+					v-for="item in computedItems"
+					:key="item.label"
+					class="picker-item"
+					:class="{ 'sf-on-current': item.active }"
+					@mousedown.prevent="select(item)"
+				>
+					<span class="material-symbols-rounded picker-item-icon">{{
+						item.iconName
+					}}</span>
+					<span>{{ item.label }}</span>
+				</div>
+			</template>
+			<div v-else class="picker-item picker-empty">No compatible types</div>
+		</div>
+	</ToolbarPanelItem>
 </template>
 
 <script setup lang="ts">
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, ref } from 'vue'
-import ToolbarButton from './ToolbarButton.vue'
-import ToolbarIcon from './ToolbarIcon.vue'
-import ToolbarPanel from './ToolbarPanel.vue'
+import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 export interface NodePickerItem {
 	label: string
@@ -44,11 +43,11 @@ const props = defineProps<{
 	editor: Editor
 	context: ToolbarItemContext
 	iconName: string
+	tooltip: string
 	getItems: (editor: Editor, context: ToolbarItemContext) => NodePickerItem[]
 }>()
 
 const open = ref(false)
-const anchorEl = ref<HTMLElement | null>(null)
 
 const computedItems = computed(() => props.getItems(props.editor, props.context))
 

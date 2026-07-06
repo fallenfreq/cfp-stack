@@ -5,7 +5,7 @@ import { computed, ref } from 'vue'
 import { useToolbarNodeControl } from './useToolbarNodeControl'
 
 export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarItemContext }) {
-	const { open, buttonEl, capturedPos, onClose: nodeClose } = useToolbarNodeControl(props)
+	const { open, capturedPos, onClose: nodeClose } = useToolbarNodeControl(props)
 	// Note: we don't use nodeControl.toggle — the mark variant also captures savedRange.
 	// The watcher inside nodeControl calls nodeClose (not our wrapped onClose), so
 	// savedRange is not cleared on a watcher-triggered close. This is harmless since
@@ -54,5 +54,5 @@ export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarI
 		props.editor.view.dispatch(tr)
 	}
 
-	return { open, buttonEl, capturedPos, mode, toggle, onClose, commitMark }
+	return { open, capturedPos, mode, toggle, onClose, commitMark }
 }

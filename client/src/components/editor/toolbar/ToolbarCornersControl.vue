@@ -1,103 +1,105 @@
 <template>
-	<div ref="buttonEl" class="corners-control">
-		<ToolbarButton @click="toggle">
-			<ToolbarIcon>rounded_corner</ToolbarIcon>
-		</ToolbarButton>
-		<ToolbarPanel :open="open" :anchor-el="buttonEl" align="right" @close="onClose">
-			<div class="corners-picker" @mousedown.stop>
+	<ToolbarPanelItem
+		icon="rounded_corner"
+		:tooltip="tooltip"
+		:open="open"
+		align="right"
+		@toggle="toggle"
+		@close="onClose"
+	>
+		<div class="corners-picker" @mousedown.stop>
+			<div class="cp-section">
+				<span class="cp-label">Corners</span>
+				<div class="cp-row">
+					<button
+						v-for="t in radiusOptions"
+						:key="t"
+						class="cp-chip"
+						:class="{ 'sf-on-selected': selectedToken === t }"
+						@mousedown.prevent
+						@click="selectToken(t)"
+					>
+						{{ t }}
+					</button>
+					<button
+						class="cp-chip"
+						:class="{ 'sf-on-selected': selectedToken === 'custom' }"
+						@mousedown.prevent
+						@click="selectToken('custom')"
+					>
+						custom
+					</button>
+				</div>
+			</div>
+
+			<template v-if="selectedToken === 'custom'">
 				<div class="cp-section">
-					<span class="cp-label">Corners</span>
 					<div class="cp-row">
-						<button
-							v-for="t in radiusOptions"
-							:key="t"
-							class="cp-chip"
-							:class="{ 'sf-on-selected': selectedToken === t }"
-							@mousedown.prevent
-							@click="selectToken(t)"
+						<input
+							v-model.number="customUniform"
+							type="number"
+							min="0"
+							class="cp-input sf-on-focus sf-on-disabled"
+							:disabled="individualized"
+							@change="commit"
 						>
-							{{ t }}
-						</button>
-						<button
-							class="cp-chip"
-							:class="{ 'sf-on-selected': selectedToken === 'custom' }"
-							@mousedown.prevent
-							@click="selectToken('custom')"
-						>
-							custom
-						</button>
+						<span class="cp-unit">px</span>
 					</div>
+					<label class="cp-check-label">
+						<input
+							v-model="individualized"
+							type="checkbox"
+							@change="onIndividualizeToggle"
+						>
+						Individualize
+					</label>
 				</div>
 
-				<template v-if="selectedToken === 'custom'">
-					<div class="cp-section">
-						<div class="cp-row">
-							<input
-								v-model.number="customUniform"
-								type="number"
-								min="0"
-								class="cp-input sf-on-focus sf-on-disabled"
-								:disabled="individualized"
-								@change="commit"
-							>
-							<span class="cp-unit">px</span>
-						</div>
-						<label class="cp-check-label">
-							<input
-								v-model="individualized"
-								type="checkbox"
-								@change="onIndividualizeToggle"
-							>
-							Individualize
-						</label>
+				<div v-if="individualized" class="cp-section cp-grid">
+					<div class="cp-corner">
+						<span class="cp-label">TL</span>
+						<input
+							v-model.number="customCorners.tl"
+							type="number"
+							min="0"
+							class="cp-input sf-on-focus sf-on-disabled"
+							@change="commit"
+						>
 					</div>
-
-					<div v-if="individualized" class="cp-section cp-grid">
-						<div class="cp-corner">
-							<span class="cp-label">TL</span>
-							<input
-								v-model.number="customCorners.tl"
-								type="number"
-								min="0"
-								class="cp-input sf-on-focus sf-on-disabled"
-								@change="commit"
-							>
-						</div>
-						<div class="cp-corner">
-							<span class="cp-label">TR</span>
-							<input
-								v-model.number="customCorners.tr"
-								type="number"
-								min="0"
-								class="cp-input sf-on-focus sf-on-disabled"
-								@change="commit"
-							>
-						</div>
-						<div class="cp-corner">
-							<span class="cp-label">BL</span>
-							<input
-								v-model.number="customCorners.bl"
-								type="number"
-								min="0"
-								class="cp-input sf-on-focus sf-on-disabled"
-								@change="commit"
-							>
-						</div>
-						<div class="cp-corner">
-							<span class="cp-label">BR</span>
-							<input
-								v-model.number="customCorners.br"
-								type="number"
-								min="0"
-								class="cp-input sf-on-focus sf-on-disabled"
-								@change="commit"
-							>
-						</div>
+					<div class="cp-corner">
+						<span class="cp-label">TR</span>
+						<input
+							v-model.number="customCorners.tr"
+							type="number"
+							min="0"
+							class="cp-input sf-on-focus sf-on-disabled"
+							@change="commit"
+						>
 					</div>
-				</template>
-			</div>
-		</ToolbarPanel>
-	</div>
+					<div class="cp-corner">
+						<span class="cp-label">BL</span>
+						<input
+							v-model.number="customCorners.bl"
+							type="number"
+							min="0"
+							class="cp-input sf-on-focus sf-on-disabled"
+							@change="commit"
+						>
+					</div>
+					<div class="cp-corner">
+						<span class="cp-label">BR</span>
+						<input
+							v-model.number="customCorners.br"
+							type="number"
+							min="0"
+							class="cp-input sf-on-focus sf-on-disabled"
+							@change="commit"
+						>
+					</div>
+				</div>
+			</template>
+		</div>
+	</ToolbarPanelItem>
 </template>
 
 <script setup lang="ts">
@@ -110,9 +112,7 @@ import { nodeAt } from '@/utils/editor/editorUtils'
 import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, ref, watch } from 'vue'
-import ToolbarButton from './ToolbarButton.vue'
-import ToolbarIcon from './ToolbarIcon.vue'
-import ToolbarPanel from './ToolbarPanel.vue'
+import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 const { radiusOptions } = useLayoutTokens()
 const store = useThemeTokensStore()
@@ -127,9 +127,9 @@ const tokenPx = computed<Record<string, number>>(() =>
 	),
 )
 
-const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
+const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, buttonEl, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
+const { open, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
 
 // null = no radius set; string = token name or 'custom'
 const selectedToken = ref<string | null>(null)
@@ -253,22 +253,18 @@ const commit = () => {
 
 <style scoped>
 @layer ui {
-	.corners-control {
-		position: relative;
-	}
-
 	.corners-picker {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--sf-spacing-xs);
 		min-width: 200px;
-		padding: 4px;
+		padding: var(--sf-spacing-2xs);
 	}
 
 	.cp-section {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--sf-spacing-2xs);
 	}
 
 	.cp-label {
@@ -279,7 +275,7 @@ const commit = () => {
 	.cp-row {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--sf-spacing-2xs);
 		flex-wrap: wrap;
 	}
 
@@ -330,7 +326,7 @@ const commit = () => {
 	.cp-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 8px;
+		gap: var(--sf-spacing-xs);
 	}
 
 	.cp-corner {

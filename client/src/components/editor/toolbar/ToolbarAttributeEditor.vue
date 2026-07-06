@@ -1,63 +1,63 @@
 <template>
-	<div ref="buttonEl" class="toolbar-attr-editor">
-		<ToolbarButton @click="toggle">
-			<ToolbarIcon>tune</ToolbarIcon>
-		</ToolbarButton>
-		<ToolbarPanel :open="open" :anchor-el="buttonEl" align="right" @close="onClose">
-			<div class="attr-content">
-				<ToolbarAttrRow
-					v-for="row in classTokenRows"
-					:key="row.key"
-					:attr-key="row.key"
-					:value="row.value"
-					:spec-default="null"
-					:spec-options="row.options"
-					:is-at-default="false"
-					:pending="justAddedKey === row.key"
-					@update="onUpdate"
-					@remove="onRemove"
-				/>
-				<ToolbarAttrRow
-					v-for="row in attrRows"
-					:key="row.key"
-					:attr-key="row.key"
-					:value="row.value"
-					:spec-default="specAttrs[row.key]?.default ?? null"
-					:spec-options="propOptions[row.key]"
-					:is-at-default="row.isAtDefault"
-					:pending="justAddedKey === row.key"
-					@update="onUpdate"
-					@remove="onRemove"
-				/>
+	<ToolbarPanelItem
+		icon="tune"
+		:tooltip="tooltip"
+		:open="open"
+		align="right"
+		@toggle="toggle"
+		@close="onClose"
+	>
+		<div class="attr-content">
+			<ToolbarAttrRow
+				v-for="row in classTokenRows"
+				:key="row.key"
+				:attr-key="row.key"
+				:value="row.value"
+				:spec-default="null"
+				:spec-options="row.options"
+				:is-at-default="false"
+				:pending="justAddedKey === row.key"
+				@update="onUpdate"
+				@remove="onRemove"
+			/>
+			<ToolbarAttrRow
+				v-for="row in attrRows"
+				:key="row.key"
+				:attr-key="row.key"
+				:value="row.value"
+				:spec-default="specAttrs[row.key]?.default ?? null"
+				:spec-options="propOptions[row.key]"
+				:is-at-default="row.isAtDefault"
+				:pending="justAddedKey === row.key"
+				@update="onUpdate"
+				@remove="onRemove"
+			/>
 
-				<div v-if="!allRowCount && !allAddableCount" class="attr-empty">
-					No attributes set
-				</div>
+			<div v-if="!allRowCount && !allAddableCount" class="attr-empty">No attributes set</div>
 
-				<template v-if="allAddableCount">
-					<div v-if="allRowCount" class="attr-divider" />
-					<button
-						v-for="key in classAddableKeys"
-						:key="key"
-						class="attr-add-btn"
-						@mousedown.prevent="startAdd(key)"
-					>
-						<span class="material-symbols-rounded">add</span>
-						{{ key }}
-					</button>
-					<button
-						v-for="key in addableKeys"
-						:key="key"
-						class="attr-add-btn"
-						@mousedown.prevent="startAdd(key)"
-					>
-						<span class="material-symbols-rounded">add</span>
-						{{ key }}
-					</button>
-				</template>
-			</div>
-		</ToolbarPanel>
-	</div>
+			<template v-if="allAddableCount">
+				<div v-if="allRowCount" class="attr-divider" />
+				<button
+					v-for="key in classAddableKeys"
+					:key="key"
+					class="attr-add-btn"
+					@mousedown.prevent="startAdd(key)"
+				>
+					<span class="material-symbols-rounded">add</span>
+					{{ key }}
+				</button>
+				<button
+					v-for="key in addableKeys"
+					:key="key"
+					class="attr-add-btn"
+					@mousedown.prevent="startAdd(key)"
+				>
+					<span class="material-symbols-rounded">add</span>
+					{{ key }}
+				</button>
+			</template>
+		</div>
+	</ToolbarPanelItem>
 </template>
 
 <script setup lang="ts">
@@ -69,14 +69,11 @@ import { filterNonDefaultAttrs, nodeAt, type NodePos } from '@/utils/editor/edit
 import type { Editor } from '@tiptap/vue-3'
 import { computed, nextTick, ref, watch } from 'vue'
 import ToolbarAttrRow from './ToolbarAttrRow.vue'
-import ToolbarButton from './ToolbarButton.vue'
-import ToolbarIcon from './ToolbarIcon.vue'
-import ToolbarPanel from './ToolbarPanel.vue'
+import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
-const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
+const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
 const open = ref(false)
-const buttonEl = ref<HTMLElement | null>(null)
 const capturedPos = ref<NodePos | null>(null)
 const explicitlyAdded = ref(new Set<string>())
 const justAddedKey = ref<string | null>(null)
@@ -238,10 +235,6 @@ watch(
 </script>
 
 <style scoped>
-.toolbar-attr-editor {
-	position: relative;
-}
-
 .attr-content {
 	min-width: 300px;
 	max-width: calc(100vw - 8px);

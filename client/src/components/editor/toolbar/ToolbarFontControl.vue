@@ -1,18 +1,20 @@
 <template>
-	<div ref="buttonEl" class="font-control">
-		<ToolbarButton @click="toggle">
-			<ToolbarIcon>format_size</ToolbarIcon>
-		</ToolbarButton>
-		<ToolbarPanel :open="open" :anchor-el="buttonEl" align="right" @close="onClose">
-			<FontPicker
-				:font-family="currentFontFamily"
-				:font-size="currentFontSize"
-				:line-height="currentLineHeight"
-				:letter-spacing="currentLetterSpacing"
-				@commit="onCommit"
-			/>
-		</ToolbarPanel>
-	</div>
+	<ToolbarPanelItem
+		icon="format_size"
+		:tooltip="tooltip"
+		:open="open"
+		align="right"
+		@toggle="toggle"
+		@close="onClose"
+	>
+		<FontPicker
+			:font-family="currentFontFamily"
+			:font-size="currentFontSize"
+			:line-height="currentLineHeight"
+			:letter-spacing="currentLetterSpacing"
+			@commit="onCommit"
+		/>
+	</ToolbarPanelItem>
 </template>
 
 <script setup lang="ts">
@@ -25,14 +27,11 @@ import { setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
 import { computed } from 'vue'
 import FontPicker from './FontPicker.vue'
-import ToolbarButton from './ToolbarButton.vue'
-import ToolbarIcon from './ToolbarIcon.vue'
-import ToolbarPanel from './ToolbarPanel.vue'
+import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
-const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
+const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, buttonEl, capturedPos, mode, toggle, onClose, commitMark } =
-	useToolbarMarkControl(props)
+const { open, capturedPos, mode, toggle, onClose, commitMark } = useToolbarMarkControl(props)
 
 const markAttrs = computed(() =>
 	mode.value === 'mark' ? props.editor.getAttributes('fontStyle') : {},
@@ -135,9 +134,3 @@ const onCommit = ({ fontFamily, fontSize, lineHeight, letterSpacing }: FontStyle
 	)
 }
 </script>
-
-<style scoped>
-.font-control {
-	position: relative;
-}
-</style>

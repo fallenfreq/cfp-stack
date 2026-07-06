@@ -1,45 +1,43 @@
 <template>
-	<div ref="buttonEl" class="shadow-control">
-		<ToolbarButton @click="toggle">
-			<ToolbarIcon>shadow</ToolbarIcon>
-		</ToolbarButton>
-		<ToolbarPanel :open="open" :anchor-el="buttonEl" align="right" @close="onClose">
-			<div class="sp-picker" @mousedown.stop>
-				<div class="sp-section">
-					<span class="sp-label">Shadow</span>
-					<div class="sp-row">
-						<button
-							class="sp-chip"
-							:class="{ 'sf-on-selected': selectedToken === null }"
-							@mousedown.prevent
-							@click="selectToken(null)"
-						>
-							none
-						</button>
-						<button
-							v-for="t in shadowOptions"
-							:key="t"
-							class="sp-chip"
-							:class="{ 'sf-on-selected': selectedToken === t }"
-							@mousedown.prevent
-							@click="selectToken(t)"
-						>
-							{{ t }}
-						</button>
-					</div>
+	<ToolbarPanelItem
+		icon="shadow"
+		:tooltip="tooltip"
+		:open="open"
+		align="right"
+		@toggle="toggle"
+		@close="onClose"
+	>
+		<div class="sp-picker" @mousedown.stop>
+			<div class="sp-section">
+				<span class="sp-label">Shadow</span>
+				<div class="sp-row">
+					<button
+						class="sp-chip"
+						:class="{ 'sf-on-selected': selectedToken === null }"
+						@mousedown.prevent
+						@click="selectToken(null)"
+					>
+						none
+					</button>
+					<button
+						v-for="t in shadowOptions"
+						:key="t"
+						class="sp-chip"
+						:class="{ 'sf-on-selected': selectedToken === t }"
+						@mousedown.prevent
+						@click="selectToken(t)"
+					>
+						{{ t }}
+					</button>
 				</div>
-
-				<template v-if="selectedToken !== null">
-					<div class="sp-divider" />
-					<ColorPicker
-						:value="shadowColor"
-						:show-remove="false"
-						@commit="onColorCommit"
-					/>
-				</template>
 			</div>
-		</ToolbarPanel>
-	</div>
+
+			<template v-if="selectedToken !== null">
+				<div class="sp-divider" />
+				<ColorPicker :value="shadowColor" :show-remove="false" @commit="onColorCommit" />
+			</template>
+		</div>
+	</ToolbarPanelItem>
 </template>
 
 <script setup lang="ts">
@@ -54,15 +52,13 @@ import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
 import { ref, watch } from 'vue'
 import ColorPicker from './ColorPicker.vue'
-import ToolbarButton from './ToolbarButton.vue'
-import ToolbarIcon from './ToolbarIcon.vue'
-import ToolbarPanel from './ToolbarPanel.vue'
+import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 const DEFAULT_SHADOW_COLOR = 'rgb(var(--sf-shadow) / var(--sf-alpha-2))'
 
-const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
+const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, buttonEl, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
+const { open, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
 const { shadowOptions } = useLayoutTokens()
 const { steps: alphaSteps, snapToStep } = useAlphaPalette()
 const { parseStoredValue } = useColorPalette()
@@ -177,21 +173,17 @@ const commit = () => {
 
 <style scoped>
 @layer ui {
-	.shadow-control {
-		position: relative;
-	}
-
 	.sp-picker {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		padding: 4px;
+		gap: var(--sf-spacing-xs);
+		padding: var(--sf-spacing-2xs);
 	}
 
 	.sp-section {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--sf-spacing-2xs);
 	}
 
 	.sp-label {
@@ -202,7 +194,7 @@ const commit = () => {
 	.sp-row {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--sf-spacing-2xs);
 		flex-wrap: wrap;
 	}
 

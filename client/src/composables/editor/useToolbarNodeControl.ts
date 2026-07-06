@@ -5,7 +5,6 @@ import { nextTick, ref, watch } from 'vue'
 
 export function useToolbarNodeControl(props: { editor: Editor; context: ToolbarItemContext }) {
 	const open = ref(false)
-	const buttonEl = ref<HTMLElement | null>(null)
 	const capturedPos = ref<NodePos | null>(null)
 
 	const toggle = () => {
@@ -32,5 +31,5 @@ export function useToolbarNodeControl(props: { editor: Editor; context: ToolbarI
 		},
 	)
 
-	return { open, buttonEl, capturedPos, toggle, onClose }
+	return { open, capturedPos, toggle, onClose }
 }
