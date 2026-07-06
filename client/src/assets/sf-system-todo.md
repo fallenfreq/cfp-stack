@@ -329,8 +329,10 @@ var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
       `sf-on-hover × sf-variant-danger`. Still available for future work: `sf-on-active`
       (currently pseudo `:active`; no consumers yet — mousedown-flash treatment).
 - [x] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`) — vocabulary + rules in seed
-- [x] `sl-aspect` — vocabulary + rule seeded. Aspect ratio set via `--sl-aspect`
-      custom property on the element (`aspect-ratio: var(--sl-aspect)`).
+- [x] `sl-aspect` — four preset classes seeded (`sl-aspect-16-9`, `sl-aspect-4-3`,
+      `sl-aspect-1-1`, `sl-aspect-9-16`). `ToolbarAspectControl.vue` chip-picker
+      registered in `defaultItemsStyle.ts` (shows on any block node, single selection).
+      Bare `sl-aspect` kept in vocabulary as developer escape hatch (`--sl-aspect` inline).
 - [x] `sl-collapse-*` container-responsive collapse classes — vocabulary in seed;
       CSS generated from `collapse_steps` table (DB-stored px values, not theme tokens;
       `var()` is not valid in `@container` conditions so values are read at emit time)

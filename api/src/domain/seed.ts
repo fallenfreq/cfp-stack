@@ -434,8 +434,12 @@ const VOCABULARY: VocabSpec[] = [
 	{
 		name: 'sl-aspect',
 		kind: 'layout',
-		description: 'Aspect-ratio box; set --sl-aspect on the element',
+		description: 'Aspect-ratio box; set --sl-aspect on the element (developer escape hatch)',
 	},
+	{ name: 'sl-aspect-16-9', kind: 'layout', description: 'Aspect ratio 16:9 (widescreen)' },
+	{ name: 'sl-aspect-4-3', kind: 'layout', description: 'Aspect ratio 4:3 (classic)' },
+	{ name: 'sl-aspect-1-1', kind: 'layout', description: 'Aspect ratio 1:1 (square)' },
+	{ name: 'sl-aspect-9-16', kind: 'layout', description: 'Aspect ratio 9:16 (portrait)' },
 
 	// Collapse modifiers — vocabulary only; CSS is generated from breakpoint token values (no var() in @container)
 	{
@@ -649,8 +653,11 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sl-grid'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
 	{ classNames: ['sl-grid'], cssProperty: 'container-type', value: 'inline-size' },
 
-	// sl-aspect
-	{ classNames: ['sl-aspect'], cssProperty: 'aspect-ratio', value: 'var(--sl-aspect)' },
+	// sl-aspect presets (bare sl-aspect is developer escape hatch — no rule; author sets --sl-aspect inline)
+	{ classNames: ['sl-aspect-16-9'], cssProperty: 'aspect-ratio', value: '16/9' },
+	{ classNames: ['sl-aspect-4-3'], cssProperty: 'aspect-ratio', value: '4/3' },
+	{ classNames: ['sl-aspect-1-1'], cssProperty: 'aspect-ratio', value: '1' },
+	{ classNames: ['sl-aspect-9-16'], cssProperty: 'aspect-ratio', value: '9/16' },
 
 	// Overflow context — mask-image applied to the scrolling element.
 	// Arrows are component-level; ::before/::after rules can be added per-theme via the DB.

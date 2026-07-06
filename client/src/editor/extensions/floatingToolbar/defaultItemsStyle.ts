@@ -1,3 +1,4 @@
+import ToolbarAspectControl from '@/components/editor/toolbar/ToolbarAspectControl.vue'
 import ToolbarAttributeEditor from '@/components/editor/toolbar/ToolbarAttributeEditor.vue'
 import ToolbarColorControl from '@/components/editor/toolbar/ToolbarColorControl.vue'
 import ToolbarCornersControl from '@/components/editor/toolbar/ToolbarCornersControl.vue'
@@ -42,6 +43,17 @@ export const styleItems = [
 		},
 		ToolbarFontControl,
 		{ tooltip: 'Font' },
+	),
+
+	// --- Aspect ratio ---
+	toolbarCustomItem(
+		'aspect',
+		(_e, ctx) =>
+			ctx.activeDepth > 0
+			&& !useEditorStore().isCodeView
+			&& useMultiSelectStore().positions.length <= 1,
+		ToolbarAspectControl,
+		{ tooltip: 'Aspect ratio' },
 	),
 
 	// --- Border-radius corners ---
