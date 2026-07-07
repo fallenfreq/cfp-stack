@@ -459,6 +459,15 @@ the spec. Until Vuestic is removed:
   `sf-color-bg_*` / `sf-bg-text_*` classes that exist solely to expose these tokens
   through the sf- vocabulary can be deleted in one sweep.
 
+## Deferred (pending design pass)
+
+- **Chip / button colour styling** — `ap-chip` in `ToolbarAspectControl.vue` and similar
+  picker chips across the site currently have `background: none` and blend into the panel.
+  Need a coherent treatment for chip shape, selected state, hover, and default background
+  that works across light/dark themes. `sf-chip` marker is already in the vocabulary
+  (no rules yet — held to the spec's admission test). This should be a single coordinated
+  pass across all chip/button consumers rather than ad-hoc per-component fixes.
+
 ## Deferred (decided in spec review, not done)
 
 - `--sf-fg_primary`, `--sf-fg_inverted`, `--sf-border_color`, `--sf-primary`,
