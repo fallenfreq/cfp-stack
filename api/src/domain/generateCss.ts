@@ -413,18 +413,21 @@ const section = (title: string): string =>
 // selectors (.sl-object-cover > img:only-child) which the class_rules schema
 // cannot express (selector is always the class element, not a descendant).
 // Two selectors per value:
-//   img.sl-object-*             — class on the <img> itself (TipTap image node)
-//   .sl-object-* > img:only-child — class on a container; :only-child guard
-//                                   prevents affecting images alongside other content.
+//   img.sl-object-*             — class on the <img> itself (TipTap image node).
+//                                 No height: the img's own aspect-ratio determines it.
+//   .sl-object-* > img:only-child — class on a container; the container provides the
+//                                   height via its own aspect-ratio, so height: 100%
+//                                   fills that box. :only-child guard prevents affecting
+//                                   images alongside other content.
 
 const SL_OBJECT = `@layer sl-layout {
-\timg.sl-object-cover,
+\timg.sl-object-cover { object-fit: cover; width: 100%; display: block; }
 \t.sl-object-cover > img:only-child { object-fit: cover; width: 100%; height: 100%; display: block; }
-\timg.sl-object-contain,
+\timg.sl-object-contain { object-fit: contain; width: 100%; display: block; }
 \t.sl-object-contain > img:only-child { object-fit: contain; width: 100%; height: 100%; display: block; }
-\timg.sl-object-fill,
+\timg.sl-object-fill { object-fit: fill; width: 100%; display: block; }
 \t.sl-object-fill > img:only-child { object-fit: fill; width: 100%; height: 100%; display: block; }
-\timg.sl-object-none,
+\timg.sl-object-none { object-fit: none; display: block; }
 \t.sl-object-none > img:only-child { object-fit: none; display: block; }
 }\n`
 
