@@ -59,6 +59,7 @@ declare module 'vue' {
     TiptapCodeBlock: typeof import('./src/components/editor/TiptapCodeBlock.vue')['default']
     TiptapEditor: typeof import('./src/components/editor/TiptapEditor.vue')['default']
     TiptapTest: typeof import('./src/components/editor/TiptapTest.vue')['default']
+    ToolbarAspectControl: typeof import('./src/components/editor/toolbar/ToolbarAspectControl.vue')['default']
     ToolbarAttributeEditor: typeof import('./src/components/editor/toolbar/ToolbarAttributeEditor.vue')['default']
     ToolbarAttrRow: typeof import('./src/components/editor/toolbar/ToolbarAttrRow.vue')['default']
     ToolbarButton: typeof import('./src/components/editor/toolbar/ToolbarButton.vue')['default']
