@@ -35,7 +35,7 @@
 			v-else-if="typeof specDefault === 'number'"
 			ref="inputEl"
 			type="number"
-			class="attr-input sf-on-focus"
+			class="attr-input sf sf-on-focus"
 			:value="value as number"
 			@change="
 				emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
@@ -46,7 +46,7 @@
 			v-else
 			ref="inputEl"
 			type="text"
-			class="attr-input sf-on-focus"
+			class="attr-input sf sf-on-focus"
 			:value="value as string"
 			@input="onTextInput(($event.target as HTMLInputElement).value)"
 			@blur="onTextBlur(($event.target as HTMLInputElement).value)"

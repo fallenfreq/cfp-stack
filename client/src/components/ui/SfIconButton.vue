@@ -1,7 +1,7 @@
 <template>
 	<SfTooltip :text="tooltip">
 		<button
-			class="sf-icon-btn sf-on-hover sf-on-disabled"
+			class="sf-icon-btn sf sf-on-hover sf-on-disabled"
 			:class="`sf-size-${size}`"
 			v-bind="$attrs"
 		>

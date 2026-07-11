@@ -12,7 +12,7 @@
 				<span class="sp-label">Shadow</span>
 				<div class="sp-row">
 					<button
-						class="sp-chip"
+						class="sf sf-chip sf-size-xs sf-on-hover"
 						:class="{ 'sf-on-selected': selectedToken === null }"
 						@mousedown.prevent
 						@click="selectToken(null)"
@@ -22,7 +22,7 @@
 					<button
 						v-for="t in shadowOptions"
 						:key="t"
-						class="sp-chip"
+						class="sf sf-chip sf-size-xs sf-on-hover"
 						:class="{ 'sf-on-selected': selectedToken === t }"
 						@mousedown.prevent
 						@click="selectToken(t)"
@@ -196,24 +196,6 @@ const commit = () => {
 		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		flex-wrap: wrap;
-	}
-
-	.sp-chip {
-		height: 26px;
-		border-radius: 4px;
-		border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
-		padding: 0 6px;
-		cursor: pointer;
-		transition: transform 0.08s;
-		font-size: 0.75rem;
-		line-height: 1;
-		background: none;
-		color: rgb(var(--text_primary));
-	}
-
-	.sp-chip:hover {
-		transform: scale(1.05);
-		background: rgba(var(--text_primary) / var(--sf-alpha-1));
 	}
 
 	.sp-divider {

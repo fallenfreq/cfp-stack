@@ -42,7 +42,7 @@
 				<button
 					v-for="s in sizes"
 					:key="s.cssVar"
-					class="fp-chip"
+					class="sf sf-chip sf-size-xs sf-on-hover"
 					:class="{ 'sf-on-selected': activeSizeVar === s.cssVar }"
 					:title="s.value"
 					@mousedown.prevent
@@ -68,7 +68,7 @@
 				<button
 					v-for="l in leading"
 					:key="l.cssVar"
-					class="fp-chip"
+					class="sf sf-chip sf-size-xs sf-on-hover"
 					:class="{ 'sf-on-selected': activeLeadingVar === l.cssVar }"
 					:title="`line-height: ${l.value}`"
 					@mousedown.prevent
@@ -94,7 +94,7 @@
 				<button
 					v-for="t in tracking"
 					:key="t.cssVar"
-					class="fp-chip"
+					class="sf sf-chip sf-size-xs sf-on-hover"
 					:class="{ 'sf-on-selected': activeTrackingVar === t.cssVar }"
 					:title="`letter-spacing: ${t.value}`"
 					@mousedown.prevent

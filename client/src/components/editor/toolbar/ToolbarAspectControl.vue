@@ -13,7 +13,7 @@
 				<button
 					v-for="opt in aspectOptions"
 					:key="opt.value"
-					class="ap-chip"
+					class="sf sf-chip sf-size-xs sf-on-hover"
 					:class="{ 'sf-on-selected': selectedAspect === opt.value }"
 					@mousedown.prevent
 					@click="selectAspect(opt.value)"
@@ -27,7 +27,7 @@
 				<button
 					v-for="opt in objectOptions"
 					:key="opt.value"
-					class="ap-chip"
+					class="sf sf-chip sf-size-xs sf-on-hover"
 					:class="{ 'sf-on-selected': selectedObject === opt.value }"
 					@mousedown.prevent
 					@click="selectObject(opt.value)"
@@ -123,24 +123,6 @@ const selectObject = (value: string) => {
 		display: flex;
 		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
-	}
-
-	.ap-chip {
-		height: 26px;
-		border-radius: 4px;
-		border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
-		padding: 0 6px;
-		cursor: pointer;
-		transition: transform 0.08s;
-		font-size: 0.75rem;
-		line-height: 1;
-		background: none;
-		color: rgb(var(--text_primary));
-	}
-
-	.ap-chip:hover {
-		transform: scale(1.05);
-		background: rgba(var(--text_primary) / var(--sf-alpha-1));
 	}
 }
 </style>

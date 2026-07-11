@@ -12,7 +12,7 @@ import { CLASS_KINDS, type ClassKind, type Db } from './types.js'
 
 // ─── Vocabulary admin ────────────────────────────────────────────────────
 
-const CLASS_NAME_RE = /^(sf|sl)-[a-z][a-z0-9_-]*$/
+const CLASS_NAME_RE = /^(sf|sl)(-[a-z][a-z0-9_-]*)?$/
 // Vocabulary pseudo (state classes): strict — only :pseudo-class or ::pseudo-element
 const VOCAB_PSEUDO_RE = /^::?[a-z][a-z-]*$/
 // Rule-level pseudo: also allows combinator suffixes (' > * + *', ':last-child td', etc.)
@@ -107,9 +107,17 @@ function assertValidRulePseudo(value: string | null | undefined): void {
 }
 
 function assertValidElementSelector(element: string): void {
+	const notMatch = element.match(/^:not\(([a-z]+)\)$/)
+	if (notMatch) {
+		if (!HTML_ELEMENTS.has(notMatch[1]))
+			throw new ValidationError(
+				`Element inside :not() must be a known HTML element — got "${notMatch[1]}"`,
+			)
+		return
+	}
 	if (!HTML_ELEMENTS.has(element))
 		throw new ValidationError(
-			`Element selector must be a known HTML element — got "${element}"`,
+			`Element selector must be a known HTML element or :not(<element>) — got "${element}"`,
 		)
 }
 

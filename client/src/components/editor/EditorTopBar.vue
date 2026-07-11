@@ -6,7 +6,7 @@
 		<input
 			ref="nameInput"
 			v-model="nameInputValue"
-			class="top-bar__name sf-is-contained sf-loudness-1 sf-on-hover sf-size-2xs"
+			class="top-bar__name sf sf-is-contained sf-loudness-1 sf-on-hover sf-size-2xs"
 			:title="currentName ?? 'Untitled'"
 			@focus="startRename"
 			@blur="commitRename"
@@ -15,7 +15,7 @@
 		>
 		<NodePath :editor="editor" />
 		<button
-			class="top-bar__toggle sf-is-contained sf-loudness-1 sf-on-hover sf-size-2xs"
+			class="top-bar__toggle sf sf-is-contained sf-loudness-1 sf-on-hover sf-size-2xs"
 			:class="{ 'sf-on-current': actionsOpen }"
 			title="Editor actions"
 			@click="actionsOpen = !actionsOpen"
@@ -25,7 +25,7 @@
 		<Transition name="top-bar-actions">
 			<div v-if="actionsOpen" class="top-bar__actions">
 				<button
-					class="top-bar__action sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-2xs"
+					class="top-bar__action sf sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-2xs"
 					:class="{
 						'is-saving': saveStatus === 'saving',
 						'is-saved': saveStatus === 'saved',
@@ -40,7 +40,7 @@
 					<SfIcon v-else name="check" />
 				</button>
 				<button
-					class="top-bar__action sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-2xs"
+					class="top-bar__action sf sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-2xs"
 					title="Editor settings"
 					disabled
 				>

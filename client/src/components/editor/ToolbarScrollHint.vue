@@ -2,7 +2,7 @@
 	<Transition name="hint-fade">
 		<button
 			v-if="direction !== null"
-			class="toolbar-scroll-hint sf-depth-2 sf-is-overlay sf-size-xs"
+			class="toolbar-scroll-hint sf sf-depth-2 sf-is-overlay sf-size-xs sf-on-hover"
 			:style="hintStyle"
 			@click="scrollToToolbar"
 		>
@@ -55,14 +55,8 @@ const scrollToToolbar = () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border: 1px solid rgb(var(--border_color));
 	cursor: pointer;
 	z-index: var(--z-scroll-hint);
-	color: rgb(var(--text_primary));
-}
-
-.toolbar-scroll-hint:hover {
-	background: rgba(var(--bg_element) / var(--sf-alpha-9));
 }
 
 .hint-fade-enter-active,

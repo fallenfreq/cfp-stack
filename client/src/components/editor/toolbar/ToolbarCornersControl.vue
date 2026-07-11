@@ -14,7 +14,7 @@
 					<button
 						v-for="t in radiusOptions"
 						:key="t"
-						class="cp-chip"
+						class="sf sf-chip sf-size-xs sf-on-hover"
 						:class="{ 'sf-on-selected': selectedToken === t }"
 						@mousedown.prevent
 						@click="selectToken(t)"
@@ -22,7 +22,7 @@
 						{{ t }}
 					</button>
 					<button
-						class="cp-chip"
+						class="sf sf-chip sf-size-xs sf-on-hover"
 						:class="{ 'sf-on-selected': selectedToken === 'custom' }"
 						@mousedown.prevent
 						@click="selectToken('custom')"
@@ -39,7 +39,7 @@
 							v-model.number="customUniform"
 							type="number"
 							min="0"
-							class="cp-input sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-on-focus sf-on-disabled"
 							:disabled="individualized"
 							@change="commit"
 						>
@@ -62,7 +62,7 @@
 							v-model.number="customCorners.tl"
 							type="number"
 							min="0"
-							class="cp-input sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
@@ -72,7 +72,7 @@
 							v-model.number="customCorners.tr"
 							type="number"
 							min="0"
-							class="cp-input sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
@@ -82,7 +82,7 @@
 							v-model.number="customCorners.bl"
 							type="number"
 							min="0"
-							class="cp-input sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
@@ -92,7 +92,7 @@
 							v-model.number="customCorners.br"
 							type="number"
 							min="0"
-							class="cp-input sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
@@ -277,24 +277,6 @@ const commit = () => {
 		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		flex-wrap: wrap;
-	}
-
-	.cp-chip {
-		height: 26px;
-		border-radius: 4px;
-		border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
-		padding: 0 6px;
-		cursor: pointer;
-		transition: transform 0.08s;
-		font-size: 0.75rem;
-		line-height: 1;
-		background: none;
-		color: rgb(var(--text_primary));
-	}
-
-	.cp-chip:hover {
-		transform: scale(1.05);
-		background: rgba(var(--text_primary) / var(--sf-alpha-1));
 	}
 
 	.cp-input {

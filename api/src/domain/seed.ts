@@ -247,8 +247,14 @@ const VOCABULARY: VocabSpec[] = [
 	// Emits to sf-element layer (below sf-bundle) so bundles/variants/states layered
 	// on top override predictably — the same baseline behaviour HTML elements get for free.
 	{
-		name: 'sf-chip',
+		name: 'sf',
 		kind: 'element',
+		description:
+			'System membership marker — scopes bare element baseline rules to opted-in elements only',
+	},
+	{
+		name: 'sf-chip',
+		kind: 'bundle',
 		description:
 			'Compact representation of a discrete data unit — tag, filter, selection, status. Theme decides shape, colour, hover.',
 	},
@@ -392,6 +398,12 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'context',
 		description:
 			'Element sits inside a container that already provides visual boundary — author-declared; theme decides how to soften (default: drop own chrome)',
+	},
+	{
+		name: 'sf-is-disabled',
+		kind: 'context',
+		description:
+			'Author-declared disabled appearance — visually muted but remains interactive. For actually-disabled form controls, use sf-on-disabled with the disabled attribute instead.',
 	},
 
 	// Boundary / divide — content separation signal; theme decides the full treatment.
@@ -549,13 +561,18 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
 
 	// Loudness bare rules — apply at any depth; compounds below refine per-surface behaviour.
-	// loudness-1: muted foreground (low-attention text/element). Pairs with sf-on-hover to
-	// create the dim-at-rest, full-on-hover interactive pattern.
+	// loudness-1: muted foreground (low-attention text/element). Border cleared so text-only
+	// tier has no visible chrome. Pairs with sf-on-hover for dim-at-rest, full-on-hover pattern.
 	{
 		classNames: ['sf-loudness-1'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-6))',
 	},
+	{ classNames: ['sf-loudness-1'], cssProperty: 'border-color', value: 'transparent' },
+
+	// loudness-3 solid fill is button-only — see button.sf.sf-loudness-3 compound in the
+	// element baseline section. For depth-1 surfaces, loudness-3 means stronger shadow + border
+	// (handled by sf-depth-1 × sf-loudness-3 compounds below).
 
 	// Loudness × depth-1 compounds — loudness-2 is the default (shadow-md, no border); no rule needed.
 	{
@@ -574,21 +591,6 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border',
 		value: '1px solid rgb(var(--sf-border_color))',
 	},
-
-	// Depth-1 × variant-featured — tinted card; overrides the bare featured solid-primary
-	// background in sf-variant layer via higher specificity (compound beats bare rule).
-	{
-		classNames: ['sf-depth-1', 'sf-variant-featured'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary) / var(--sf-alpha-2))',
-	},
-	{
-		classNames: ['sf-depth-1', 'sf-variant-featured'],
-		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-primary) / var(--sf-alpha-5))',
-	},
-	{ classNames: ['sf-depth-1', 'sf-variant-featured'], cssProperty: 'box-shadow', value: 'none' },
-	{ classNames: ['sf-depth-1', 'sf-variant-featured'], cssProperty: 'color', value: 'inherit' },
 
 	// Size bundles — this theme spends size on --sf-padding (inheritable, read by layout
 	// primitives). Another theme could just as validly express size via border weight or
@@ -777,46 +779,111 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sfx-depth-radius, 0)',
 	},
 
-	// Variants — minimal property set; themes can extend per-bundle compound rules
+	// Variants — semantic colour only (text tint). Fill weight comes from loudness × variant
+	// compounds below. Bare variant with no loudness class = coloured text, no fill.
+	{ classNames: ['sf-variant-featured'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
+	{ classNames: ['sf-variant-danger'], cssProperty: 'color', value: 'rgb(var(--sf-danger))' },
+	{ classNames: ['sf-variant-warning'], cssProperty: 'color', value: 'rgb(var(--sf-warning))' },
+	{ classNames: ['sf-variant-success'], cssProperty: 'color', value: 'rgb(var(--sf-success))' },
+
+	// Loudness-1 × variant: dim the colour (muted text, no fill).
 	{
-		classNames: ['sf-variant-featured'],
+		classNames: ['sf-loudness-1', 'sf-variant-featured'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-primary) / var(--sf-alpha-6))',
+	},
+	{
+		classNames: ['sf-loudness-1', 'sf-variant-danger'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-danger) / var(--sf-alpha-6))',
+	},
+	{
+		classNames: ['sf-loudness-1', 'sf-variant-warning'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-warning) / var(--sf-alpha-6))',
+	},
+	{
+		classNames: ['sf-loudness-1', 'sf-variant-success'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-success) / var(--sf-alpha-6))',
+	},
+
+	// Loudness-2 × variant: outlined — featured gets tinted fill + coloured border;
+	// danger/warning/success get a coloured border (text colour inherited from bare variant rule).
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary) / var(--sf-alpha-2))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-featured'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-primary) / var(--sf-alpha-5))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-featured'],
+		cssProperty: 'box-shadow',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-featured'],
+		cssProperty: 'color',
+		value: 'inherit',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-danger'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-danger) / var(--sf-alpha-5))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-warning'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-warning) / var(--sf-alpha-5))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-success'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-success) / var(--sf-alpha-5))',
+	},
+
+	// Loudness-3 × variant: solid fill + inverted text.
+	{
+		classNames: ['sf-loudness-3', 'sf-variant-featured'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-primary))',
 	},
 	{
-		classNames: ['sf-variant-featured'],
+		classNames: ['sf-loudness-3', 'sf-variant-featured'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
-	{ classNames: ['sf-variant-danger'], cssProperty: 'color', value: 'rgb(var(--sf-danger))' },
-	// Full danger button — solid fill + inverted text when combined with a depth surface.
 	{
-		classNames: ['sf-depth-1', 'sf-variant-danger'],
+		classNames: ['sf-loudness-3', 'sf-variant-danger'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-danger))',
 	},
 	{
-		classNames: ['sf-depth-1', 'sf-variant-danger'],
+		classNames: ['sf-loudness-3', 'sf-variant-danger'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
 	{
-		classNames: ['sf-variant-warning'],
+		classNames: ['sf-loudness-3', 'sf-variant-warning'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-warning))',
 	},
 	{
-		classNames: ['sf-variant-warning'],
+		classNames: ['sf-loudness-3', 'sf-variant-warning'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
 	{
-		classNames: ['sf-variant-success'],
+		classNames: ['sf-loudness-3', 'sf-variant-success'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-success))',
 	},
 	{
-		classNames: ['sf-variant-success'],
+		classNames: ['sf-loudness-3', 'sf-variant-success'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
@@ -902,6 +969,34 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-danger) / var(--sf-alpha-1))',
 	},
 
+	// Hover × loudness-3 — darken the solid fill rather than overlaying fg_primary tint.
+	// Three-class compounds (0-3-0) beat two-class hover × variant (0-2-0) in sf-state layer.
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-fg_primary) / 0.85)',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary) / 0.85)',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-featured'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_inverted))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-danger'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-danger) / 0.85)',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-danger'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_inverted))',
+	},
+
 	// Focus state — bordered inputs pick up a primary border on keyboard/click focus.
 	// Vocabulary pseudo is :focus-visible; UAs treat form controls as always focus-visible.
 	{
@@ -915,6 +1010,10 @@ const ROOT_RULES: RuleSpec[] = [
 	// in their native disabled state (matches how sf-on-hover fires on :hover).
 	{ classNames: ['sf-on-disabled'], cssProperty: 'opacity', value: '0.4' },
 	{ classNames: ['sf-on-disabled'], cssProperty: 'cursor', value: 'not-allowed' },
+
+	// Author-declared disabled appearance — class alone fires, no pseudo. Element remains
+	// interactive (no cursor change). Use for muted-but-clickable elements at any loudness tier.
+	{ classNames: ['sf-is-disabled'], cssProperty: 'opacity', value: '0.4' },
 
 	// Selected state — outline chip pattern (swatches, size/shadow picker chips).
 	// No pseudo: this is a persistent stateful class, applied while the option is chosen.
@@ -959,42 +1058,92 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-single-line'], cssProperty: 'line-height', value: '1' },
 
 	// ─── Button element ───────────────────────────────────────────────────────
-	// Baseline for interactive buttons. Emits to sf-element (below sf-bundle) so any
-	// bundle/variant/state layered on top wins predictably. `padding: var(--sf-padding, 0)`
-	// consumes the size axis here so components only need `sf-size-*` classes — no local
-	// `padding: var(--sf-padding)` boilerplate. `font: inherit` lets buttons pick up the
-	// container's font (matches container-driven type scale like `sf-text-xs` on a wrapper).
-	// Compound with sf-is-overlay bumps to pill — the theme's opinion that floating actions
-	// read as chip-shaped tokens.
-	{ elementSelector: 'button', cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
-	{ elementSelector: 'button', cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
-	{ elementSelector: 'button', cssProperty: 'font', value: 'inherit' },
+	// Baseline scoped to button.sf (sf membership marker) — Vuestic and other third-party
+	// buttons are unaffected. Emits to sf-element (below sf-bundle) so bundles/variants/
+	// states layered on top win predictably. Border establishes a visible ghost baseline;
+	// sf-is-contained clears it (sf-context > sf-element); sf-loudness-1 also clears it.
 	{
 		elementSelector: 'button',
-		classNames: ['sf-is-overlay'],
+		classNames: ['sf'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-2)',
+	},
+	{
+		elementSelector: 'button',
+		classNames: ['sf'],
+		cssProperty: 'padding',
+		value: 'var(--sf-padding, 0)',
+	},
+	{ elementSelector: 'button', classNames: ['sf'], cssProperty: 'font', value: 'inherit' },
+	{
+		elementSelector: 'button',
+		classNames: ['sf'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-border_color) / var(--sf-alpha-4))',
+	},
+	{
+		elementSelector: 'button',
+		classNames: ['sf', 'sf-is-overlay'],
 		cssProperty: 'border-radius',
 		value: 'var(--sf-radius-3)',
 	},
+	// Loudness-3 solid fill — button-only. Non-button elements (cards) get loudness-3 prominence
+	// via sf-depth-1 × sf-loudness-3 shadow/border compounds; they keep their surface background.
+	{
+		elementSelector: 'button',
+		classNames: ['sf', 'sf-loudness-3'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-fg_primary))',
+	},
+	{
+		elementSelector: 'button',
+		classNames: ['sf', 'sf-loudness-3'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_inverted))',
+	},
 
 	// ─── Input element ────────────────────────────────────────────────────────
-	// Baseline for text inputs — same shape/scale contract as buttons. `font: inherit` so
-	// inputs match their container's type scale. `:focus-visible` expresses the "being
-	// edited" look — theme's call, not the component's.
-	{ elementSelector: 'input', cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
-	{ elementSelector: 'input', cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
-	{ elementSelector: 'input', cssProperty: 'font', value: 'inherit' },
+	// Baseline scoped to input.sf. Same shape/scale contract as buttons. `font: inherit`
+	// so inputs match their container's type scale. `:focus-visible` expresses the
+	// "being edited" look — theme's call, not the component's.
 	{
 		elementSelector: 'input',
+		classNames: ['sf'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-2)',
+	},
+	{
+		elementSelector: 'input',
+		classNames: ['sf'],
+		cssProperty: 'padding',
+		value: 'var(--sf-padding, 0)',
+	},
+	{ elementSelector: 'input', classNames: ['sf'], cssProperty: 'font', value: 'inherit' },
+	{
+		elementSelector: 'input',
+		classNames: ['sf'],
 		pseudo: ':focus-visible',
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_primary))',
 	},
 	{
 		elementSelector: 'input',
+		classNames: ['sf'],
 		pseudo: ':focus-visible',
 		cssProperty: 'background',
 		value: 'rgba(var(--sf-fg_primary) / var(--sf-alpha-1))',
 	},
+
+	// ─── sf-chip ──────────────────────────────────────────────────────────────
+	// Pill shape, ghost border, single-line. kind: 'bundle' puts these in sf-bundle layer,
+	// which beats sf-element (where button.sf lives) so chip shape wins on button elements.
+	{ classNames: ['sf-chip'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
+	{
+		classNames: ['sf-chip'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-border_color) / var(--sf-alpha-3))',
+	},
+	{ classNames: ['sf-chip'], cssProperty: 'line-height', value: '1' },
 
 	// ─── Table elements ───────────────────────────────────────────────────────
 	// Theme-wide defaults for data tables. border-collapse:separate + border-spacing:0 is
@@ -1076,7 +1225,6 @@ const COLLAPSE_THRESHOLDS = [
 ] as const
 
 function applyRule(db: Db, themeId: string, r: RuleSpec) {
-	if (r.elementSelector) return createClassRule(db, { themeId, ...r })
 	return createClassRule(db, { themeId, ...r })
 }
 

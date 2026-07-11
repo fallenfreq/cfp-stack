@@ -1,7 +1,7 @@
 <template>
 	<Tooltip :text="tooltip">
 		<button
-			class="material-icon-btn sf-on-hover sf-on-disabled"
+			class="material-icon-btn sf sf-on-hover sf-on-disabled"
 			:class="[`sf-size-${size}`, { 'sf-on-current': active }]"
 			:disabled="disabled"
 			v-bind="$attrs"
