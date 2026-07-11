@@ -220,7 +220,7 @@ const commit = () => {
 		width: 22px;
 		height: 22px;
 		border-radius: 4px;
-		border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
+		border: 1px solid rgb(var(--sf-border_color) / var(--sf-alpha-2));
 		padding: 0;
 		cursor: pointer;
 		transition: transform 0.08s;
@@ -234,8 +234,8 @@ const commit = () => {
 		background-image: linear-gradient(
 			45deg,
 			transparent 45%,
-			rgba(var(--danger) / var(--sf-alpha-7)) 45%,
-			rgba(var(--danger) / var(--sf-alpha-7)) 55%,
+			rgb(var(--sf-danger) / var(--sf-alpha-7)) 45%,
+			rgb(var(--sf-danger) / var(--sf-alpha-7)) 55%,
 			transparent 55%
 		);
 	}
