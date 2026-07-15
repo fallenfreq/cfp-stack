@@ -264,9 +264,8 @@ same coupling problem. Components migrate to vocabulary classes (`sf-variant-*`,
       default rendering of the full class combination, not just depth or loudness.
 - [x] `sf-boundary-*` / `sf-divide-*` — vocabulary + rules seeded as `bundle` kind
       (`sf-bundle` layer). Multi-property theme compositions belong here, not in the
-      auto-derived semantic layer. Remaining: AdminList sticky-column left edge should
-      compose `sf-boundary-left` (author intent — a real edge between fixed and scrolling
-      regions) alongside `sf-is-overflow-left` (runtime — content extends past visible).
+      auto-derived semantic layer. `AdminListItem` sticky actions cell carries
+      `sf-boundary-left`; empty header `th` intentionally omitted (no content).
 - [x] `sf-context` kind + `sf-is-overflow-{left,right,top,bottom}` — ClassKind,
       Layer, sort order, and generator support added. Vocabulary + rules seeded (mask-image
       gradients; same-axis compound rules for both-edges case). `OverflowRow.vue` migrated from

@@ -592,6 +592,15 @@ const ROOT_RULES: RuleSpec[] = [
 		value: '1px solid rgb(var(--sf-border_color))',
 	},
 
+	// sf-depth-1 × sf-variant-alt-1 — flat with border; visually distinct from the default
+	// elevated card without carrying a semantic attention claim.
+	{ classNames: ['sf-depth-1', 'sf-variant-alt-1'], cssProperty: 'box-shadow', value: 'none' },
+	{
+		classNames: ['sf-depth-1', 'sf-variant-alt-1'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
+
 	// Size bundles — this theme spends size on --sf-padding (inheritable, read by layout
 	// primitives). Another theme could just as validly express size via border weight or
 	// gap. Shape stays out of size — border-radius comes from the element's own rule (bare
