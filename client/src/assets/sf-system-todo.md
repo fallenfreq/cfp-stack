@@ -23,9 +23,10 @@ What's in place:
 - Seed (`api/src/domain/seed.ts`): Root/Dark/Pink themes + all tokens + full vocabulary +
   rules for depth/heading/variants/layout/overflow-context. Collapse thresholds seeded idempotently.
 - Auto-reseed system: `api/src/domain/seedVersion.ts` exports `SEED_VERSION`; `generateCss.ts`
-  checks `rootTheme.version` against it and throws `NotFoundError` on mismatch (auto-reseeds).
-  Dev endpoint `POST /dev/seed` (bearer-auth, absent in prod) + `pnpm seed:local` script for
-  on-demand forced reseeds.
+  warns on version mismatch but does NOT auto-reseed (avoids seeding with stale compiled code
+  during a dev server restart race). First-boot only: `sf-system.ts` seeds when no root theme
+  exists in D1. Dev endpoint `POST /dev/seed` (bearer-auth, absent in prod) + `pnpm seed:local`
+  script for on-demand forced reseeds after seed.ts changes.
 - `--sf-breakpoint-*` removed from tokens entirely; "breakpoint" term dropped.
   Collapse thresholds live in `collapse_thresholds` table; generator embeds pixel
   values directly in `@container` conditions.
@@ -410,23 +411,15 @@ These are not bugs but unresolved tensions in the current design:
   match that depth level, and remove their explicit background CSS. Floating/translucent
   surfaces use `sf-depth-N sf-is-overlay` — `sf-is-overlay` reads `--sfx-surface-color`
   (set by the depth bundle) at `--sf-alpha-9`.
-- **Variant rules overriding bundle properties** — `sf-variant-outlined` and `sf-variant-plain`
-  on LayoutCard use temporary in-component CSS to reset `box-shadow`/`background` that
-  `sf-depth-1` sets. Once these enter the DB as proper variant rules, the in-component CSS
-  can be removed.
 
 ## Editor + Vue components
 
 - [x] ~~`nodeClassTokens.ts:21` uses prefix `sf-collapse-`. Collapse is arrangement →
       should be `sl-collapse-`.~~ Done — also updated `LayoutColumns.vue`,
       `LayoutSplit.vue`, and `initialContent.html`.
-- [x] `LayoutCard.vue` — `sf-depth-1` added to root; variant prop now applies `sf-variant-${variant}`
-      class; `feature` → `featured` rename. `sf-variant-featured` keeps in-component CSS that
-      overrides the DB's minimal rule (solid primary bg) with a card-appropriate treatment:
-      transparent primary tint + primary border + no shadow. This is intentional — the DB rule
-      is the content-author surface; the card component adds its structural opinion on top.
-      Remaining variants (`elevated`, `outlined`, `filled`) also keep temporary in-component CSS
-      until their depth/variant rules enter the DB.
+- [x] `LayoutCard.vue` — wears `sf-depth-1`; variant prop removed entirely (cb1a466);
+      cards are composed with vocabulary classes (`sf-variant-alt-1`, `sf-variant-featured`,
+      `sf-loudness-*`) at the call site rather than via a prop. No in-component variant CSS.
 - [x] Layout components now carry `sl-*` identity class alongside `layout-*` (which stays as
       the `:global` CSS hook): `LayoutSection` → `sl-stack`, `LayoutColumns` → `sl-columns`,
       `LayoutSplit` → `sl-split`, `LayoutCenter` → `sl-center`. The DB-generated `sl-*` CSS
@@ -460,12 +453,13 @@ the spec. Until Vuestic is removed:
 
 ## Deferred (pending design pass)
 
-- **Chip / button colour styling** — `ap-chip` in `ToolbarAspectControl.vue` and similar
-  picker chips across the site currently have `background: none` and blend into the panel.
-  Need a coherent treatment for chip shape, selected state, hover, and default background
-  that works across light/dark themes. `sf-chip` marker is already in the vocabulary
-  (no rules yet — held to the spec's admission test). This should be a single coordinated
-  pass across all chip/button consumers rather than ad-hoc per-component fixes.
+- [x] **Chip / button colour styling** — done in d4f8d74 (v2.19.0). `sf` membership
+      marker added (opt-in, keeps third-party elements unaffected); `sf-chip` bundle seeded
+      (pill radius, ghost border, single-line); bare variant changed to text-tint only;
+      loudness governs fill weight (1=dim text, 2=outlined, 3=solid+inverted);
+      `sf-on-hover × sf-loudness-3` darken compounds added per variant; toolbar chip buttons
+      (`ToolbarAspectControl`, `FontPicker`, `ToolbarShadowControl`, `ToolbarCornersControl`)
+      migrated from local `.ap/.fp/.sp/.cp-chip` CSS to `sf sf-chip sf-size-xs sf-on-hover sf-on-selected`.
 
 ## Deferred (decided in spec review, not done)
 
