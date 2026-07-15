@@ -109,9 +109,10 @@ function assertValidRulePseudo(value: string | null | undefined): void {
 function assertValidElementSelector(element: string): void {
 	const notMatch = element.match(/^:not\(([a-z]+)\)$/)
 	if (notMatch) {
-		if (!HTML_ELEMENTS.has(notMatch[1]))
+		const inner = notMatch[1]!
+		if (!HTML_ELEMENTS.has(inner))
 			throw new ValidationError(
-				`Element inside :not() must be a known HTML element — got "${notMatch[1]}"`,
+				`Element inside :not() must be a known HTML element — got "${inner}"`,
 			)
 		return
 	}
