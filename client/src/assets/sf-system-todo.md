@@ -5,7 +5,7 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
-**Editor chrome (top bar, breadcrumb, toolbar buttons, slash menu) is mid-migration to intent-only class composition. Density spec reframed as form-factor scale (theme picks the channel); bare `button` and `input` element rules now consume `--sf-padding` so components no longer write `padding: var(--sf-padding)` themselves. Pending items are the migration-touched-but-not-finished consumers (see "Editor chrome migration" below), remaining class families, the Vuestic/bg_secondary migration, and the editor alpha-step rename.**
+**The sf/sl migration is largely complete. All class families are seeded (depth, heading, variant, loudness, size, state, layout, context, element markers). Editor chrome is fully on intent-only composition. What remains is either "wait for a consumer" (sf-is-loading, sf-on-active), a structural refactor (layout full migration), or the Vuestic removal track.**
 
 What's in place:
 
@@ -160,22 +160,20 @@ Done in the editor + cleanup slice:
 
 What's pending:
 
-1. **Rich classes** — bundles (`sf-depth-*`, `sf-heading-*`), variants
-   (`sf-variant-*`), states (`sf-on-*`), layout primitives (`sl-*`). These need
-   `class_vocabulary` + `class_properties` rows and generator support beyond the
-   property-mapping rules. Likely the next slice — see "Implement missing class
-   families" below.
-2. **`tailwind.config.js`** palette refs (`var(--primary-500)` etc.) — can stay until
-   Vuestic is removed; renaming them to `var(--sf-primary-5)` is a no-op since both
-   tokens carry the same value.
-3. **Vuestic shim** — duplicating values: keep `--text_primary` etc. but source values
-   from the corresponding `--sf-*` tokens via the seed (so theme authors only edit one
-   place). Currently the Vuestic-compat values in `base.css` are hand-written, not
-   driven from the DB.
-4. **Seed batching** — `seed.ts` loops with individual `await` per token/rule upsert
-   (~160 round-trips to D1). D1's `db.batch()` or Drizzle's batch API would collapse
-   this to a handful of requests. Not a correctness issue; only matters if seed time
-   becomes noticeable (e.g. when running against production D1 over HTTP).
+1. **Held — no consumer yet**: `sf-is-loading` / `sf-is-error`, `sf-on-active`,
+   `sf-on-ancestor`. Vocabulary seeded; add rules when a real consumer exists.
+2. **Raw token refs in component CSS** — many components still reference `--border_color`,
+   `--primary`, `--text_primary` etc. directly. Migrate one-by-one as the right
+   vocabulary class is seeded; no bulk pass until the class system covers the gap.
+3. **Layout full migration** — removing `layout-*` class alongside `sl-*` requires
+   restructuring the content-wrapper pattern. Deferred.
+4. **Vuestic shim** — Vuestic compat tokens in `base.css` are hand-written, not sourced
+   from the seed. Theme edits to `--sf-*` tokens don't propagate to `--text_primary` etc.
+   Fix when Vuestic removal gets scheduled.
+5. **Vuestic removal** — entire compat layer (`base.css` shim, `processTailwindColors`,
+   `tailwind.config.js` palette refs, `sf-bg_secondary` class) goes in one sweep.
+6. **Seed batching** — individual `await` per upsert (~160 round-trips). Use `db.batch()`
+   if seed time becomes a problem against production D1.
 
 ## Schema notes
 
