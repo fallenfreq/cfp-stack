@@ -1,7 +1,7 @@
 <template>
 	<div
-		class="layout-split sl-split"
-		:style="{ '--sl-template': SPLIT_TEMPLATES[split], '--align': align }"
+		class="sl-split"
+		:style="{ '--sl-template': SPLIT_TEMPLATES[split], 'align-items': align }"
 	>
 		<slot />
 	</div>
@@ -24,17 +24,11 @@ defineProps({
 </script>
 
 <style scoped>
-.layout-split {
-	container-type: inline-size;
-	width: 100%;
-	align-items: var(--align, stretch);
-}
-
-:global(.layout-split > [data-node-view-content]) {
+:global(.sl-split > [data-node-view-content]) {
 	display: contents;
 }
 
-:global(.layout-split > [data-node-view-content] > *) {
+:global(.sl-split > [data-node-view-content] > *) {
 	margin-bottom: 0;
 }
 </style>

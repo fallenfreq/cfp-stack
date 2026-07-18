@@ -1,5 +1,5 @@
 <template>
-	<div class="layout-center sl-center" :style="{ '--sl-measure': MAX_WIDTH[maxWidth] }">
+	<div class="sl-center" :style="{ '--sl-measure': MAX_WIDTH[maxWidth] }">
 		<slot />
 	</div>
 </template>
@@ -17,18 +17,13 @@ defineProps({
 </script>
 
 <style scoped>
-.layout-center {
-	container-type: inline-size;
-	width: 100%;
-}
-
-:global(.layout-center > [data-node-view-content]) {
+:global(.sl-center > [data-node-view-content]) {
 	display: flex;
 	flex-direction: column;
 	gap: var(--sf-gap, 0);
 }
 
-:global(.layout-center > [data-node-view-content] > *) {
+:global(.sl-center > [data-node-view-content] > *) {
 	margin-bottom: 0;
 }
 </style>

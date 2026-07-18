@@ -1,7 +1,7 @@
 <template>
 	<div
-		class="layout-columns sl-columns"
-		:style="{ '--sl-cols': `repeat(${columns}, 1fr)`, '--align': align }"
+		class="sl-columns"
+		:style="{ '--sl-cols': `repeat(${columns}, 1fr)`, 'align-items': align }"
 	>
 		<slot />
 	</div>
@@ -20,17 +20,11 @@ defineProps({
 </script>
 
 <style scoped>
-.layout-columns {
-	container-type: inline-size;
-	width: 100%;
-	align-items: var(--align, stretch);
-}
-
-:global(.layout-columns > [data-node-view-content]) {
+:global(.sl-columns > [data-node-view-content]) {
 	display: contents;
 }
 
-:global(.layout-columns > [data-node-view-content] > *) {
+:global(.sl-columns > [data-node-view-content] > *) {
 	margin-bottom: 0;
 }
 </style>

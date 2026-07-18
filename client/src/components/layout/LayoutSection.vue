@@ -1,5 +1,5 @@
 <template>
-	<div class="layout-section sl-stack" :style="{ '--align': align }">
+	<div class="sl-stack" :style="{ 'align-items': align, padding: 'var(--sf-padding, 0)' }">
 		<slot />
 	</div>
 </template>
@@ -13,17 +13,11 @@ defineProps({
 </script>
 
 <style scoped>
-.layout-section {
-	width: 100%;
-	padding: var(--sf-padding, 0);
-	align-items: var(--align, stretch);
-}
-
-:global(.layout-section > [data-node-view-content]) {
+:global(.sl-stack > [data-node-view-content]) {
 	display: contents;
 }
 
-:global(.layout-section > [data-node-view-content] > *) {
+:global(.sl-stack > [data-node-view-content] > *) {
 	margin-bottom: 0;
 }
 </style>
