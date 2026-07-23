@@ -1,5 +1,5 @@
 <template>
-	<Tooltip :text="tooltip">
+	<SfTooltip :text="tooltip">
 		<button
 			class="fa-icon-btn sf sf-on-hover sf-on-disabled"
 			:class="`sf-size-${size}`"
@@ -7,7 +7,7 @@
 		>
 			<FaIcon :name="icon" />
 		</button>
-	</Tooltip>
+	</SfTooltip>
 </template>
 
 <script setup lang="ts">

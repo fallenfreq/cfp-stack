@@ -254,6 +254,7 @@ tokens are prefixed `--sf-`. Two kinds, distinguished by separator:
 --sf-alpha-*      alpha values     (1..9)
 --sf-weight-*     font weight      (1..4)
 --sf-radius-*     border radius    (0..3)
+--sf-stroke-*     border/outline width  (1..3)
 --sf-font-*       font family      (1, 2, 3, mono)
 ```
 

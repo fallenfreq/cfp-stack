@@ -1,5 +1,5 @@
 <template>
-	<Tooltip :text="tooltip">
+	<SfTooltip :text="tooltip">
 		<button
 			class="material-icon-btn sf sf-on-hover sf-on-disabled"
 			:class="[`sf-size-${size}`, { 'sf-on-current': active }]"
@@ -8,7 +8,7 @@
 		>
 			<MaterialIcon><slot /></MaterialIcon>
 		</button>
-	</Tooltip>
+	</SfTooltip>
 </template>
 
 <script setup lang="ts">

@@ -16,7 +16,7 @@
 				:id="tooltipId"
 				ref="popupEl"
 				role="tooltip"
-				class="tooltip-popup"
+				class="tooltip-popup sf sf-depth-3 sf-is-overlay"
 				:style="tooltipStyle"
 			>
 				{{ text }}
@@ -70,7 +70,7 @@ const updatePosition = async () => {
 
 	const triggerRect = rootEl.value.getBoundingClientRect()
 	const popupRect = popupEl.value.getBoundingClientRect()
-	const { top, left } = getTooltipPosition(triggerRect, popupRect, props.placement ?? 'bottom')
+	const { top, left } = getTooltipPosition(triggerRect, popupRect, props.placement ?? 'top')
 
 	tooltipStyle.value = {
 		top: `${top}px`,
@@ -136,10 +136,5 @@ onUnmounted(() => {
 	white-space: nowrap;
 	font-size: 11px;
 	padding: 3px 7px;
-	border-radius: 4px;
-	background: rgb(var(--bg_primary));
-	border: 1px solid rgb(var(--border_color));
-	box-shadow: 0 2px 6px rgb(0 0 0 / var(--sf-alpha-2));
-	color: rgb(var(--text_primary));
 }
 </style>

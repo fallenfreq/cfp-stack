@@ -27,37 +27,35 @@ body .va-dropdown__content-wrapper {
 	*::before,
 	*::after {
 		transition: var(--transition);
-		border-color: rgb(var(--border_color));
-	}
-
-	*:focus-visible {
-		outline: 2px solid rgb(var(--focus));
+		border-color: rgb(var(--sf-border_color));
 	}
 }
 
-body {
-	background-color: rgb(var(--bg_primary));
-	color: rgb(var(--text_primary));
-	min-height: 100vh;
-	line-height: 1.6;
-	font-family:
-		'Source Sans Pro',
-		Inter,
-		-apple-system,
-		BlinkMacSystemFont,
-		'Segoe UI',
-		Roboto,
-		Oxygen,
-		Ubuntu,
-		Cantarell,
-		'Fira Sans',
-		'Droid Sans',
-		'Helvetica Neue',
-		sans-serif;
-	font-size: 16px;
-	text-rendering: optimizeLegibility;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+@layer reset {
+	body {
+		background-color: rgb(var(--bg_primary));
+		color: rgb(var(--text_primary));
+		min-height: 100vh;
+		line-height: 1.6;
+		font-family:
+			'Source Sans Pro',
+			Inter,
+			-apple-system,
+			BlinkMacSystemFont,
+			'Segoe UI',
+			Roboto,
+			Oxygen,
+			Ubuntu,
+			Cantarell,
+			'Fira Sans',
+			'Droid Sans',
+			'Helvetica Neue',
+			sans-serif;
+		font-size: 16px;
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
 }
 
 /* https://developers.google.com/fonts/docs/material_symbols */

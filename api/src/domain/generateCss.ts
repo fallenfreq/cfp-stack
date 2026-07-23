@@ -45,6 +45,7 @@ export async function emitStylesheet(db: Db): Promise<string> {
 	const sections = [
 		HEADER,
 		RESET,
+		SF_ELEMENT_DEFAULTS,
 		emitTokenBlocks(themesList, tokensByTheme),
 		emitRichLayer('sf-element', themesList, rootTheme, rulesByLayer),
 		emitRichLayer('sf-bundle', themesList, rootTheme, rulesByLayer),
@@ -117,6 +118,19 @@ const RESET = `@layer reset {
 \t/* Remove trailing margin from the last child of any table cell */
 \ttd > *:last-child,
 \tth > *:last-child { margin-bottom: 0; }
+}`
+
+// Static sf-element defaults — page-wide baselines using sf tokens.
+// Emitted before DB-seeded sf-element rules so seed rules for the same
+// selectors win within the layer. Themes override via sf-bundle or higher.
+const SF_ELEMENT_DEFAULTS = `@layer sf-element {
+\tbody {
+\t\tcolor: rgb(var(--sf-fg_primary));
+\t\tbackground-color: rgb(var(--sf-surface-0));
+\t}
+\t*:focus-visible {
+\t\toutline: var(--sf-stroke-2) solid rgb(var(--sf-primary));
+\t}
 }`
 
 // ─── Tokens ─────────────────────────────────────────────────────────────

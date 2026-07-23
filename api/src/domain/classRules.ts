@@ -107,6 +107,9 @@ function assertValidRulePseudo(value: string | null | undefined): void {
 }
 
 function assertValidElementSelector(element: string): void {
+	// * is allowed for page-wide defaults (e.g. *:focus-visible) that themes
+	// need to override via higher seed layers without touching static CSS.
+	if (element === '*') return
 	const notMatch = element.match(/^:not\(([a-z]+)\)$/)
 	if (notMatch) {
 		const inner = notMatch[1]!

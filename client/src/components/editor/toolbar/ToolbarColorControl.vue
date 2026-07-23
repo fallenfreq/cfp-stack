@@ -1,11 +1,11 @@
 <template>
 	<ToolbarPanelItem :open="open" :tooltip="tooltip" align="right" @close="onClose">
 		<template #trigger>
-			<Tooltip :text="tooltip">
+			<SfTooltip :text="tooltip">
 				<Button class="sf-is-contained" @click="toggle">
 					<span class="color-swatch" :style="swatchStyle" />
 				</Button>
-			</Tooltip>
+			</SfTooltip>
 		</template>
 		<ColorPicker :value="currentColor" @commit="onCommit" @remove="onRemove" />
 	</ToolbarPanelItem>

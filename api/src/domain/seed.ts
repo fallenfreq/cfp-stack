@@ -125,6 +125,11 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-radius-2', value: '8px', kind: 'length' },
 	{ name: '--sf-radius-3', value: '16px', kind: 'length' },
 
+	// Stroke — border/outline widths (1 = regular borders, 2 = focus/selection, 3 = emphasis)
+	{ name: '--sf-stroke-1', value: '1px', kind: 'length' },
+	{ name: '--sf-stroke-2', value: '2px', kind: 'length' },
+	{ name: '--sf-stroke-3', value: '4px', kind: 'length' },
+
 	// Font families (slot 3 reserved)
 	{
 		name: '--sf-font-1',
