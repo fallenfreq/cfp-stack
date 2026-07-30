@@ -99,7 +99,6 @@ onUnmounted(() => {
 }
 .floating-toolbar {
 	position: fixed;
-	border: 1px solid rgb(var(--border_color));
 	padding: 8px;
 	z-index: var(--z-toolbar);
 	transition:
