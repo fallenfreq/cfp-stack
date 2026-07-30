@@ -1,11 +1,12 @@
 <template>
 	<div
 		v-if="targetPos !== null && pixelPos"
-		class="floating-drag-handle-wrapper sf-depth-2 sf-is-overlay"
+		class="floating-drag-handle-wrapper sf sf-drag-handle sf-depth-2 sf-is-overlay sf-on-hover"
 		:class="{
 			'is-fading': store.isFading,
-			'is-dragging': isDragging,
-			'is-over-toolbar': isOverToolbar,
+			'sf-on-dragging': isDragging,
+			'sf-is-contained': isOverToolbar,
+			'sf-boundary-right': isOverToolbar,
 		}"
 		contenteditable="false"
 		draggable="true"
@@ -145,54 +146,22 @@ const onDragend = () => {
 	align-items: center;
 	justify-content: center;
 	cursor: grab;
-	color: rgba(var(--text_primary) / var(--sf-alpha-4));
 	user-select: none;
 	box-sizing: border-box;
 	transform: translateY(-100%);
-	border: 1px solid rgb(var(--border_color));
 	opacity: 1;
 	transition: opacity 1s ease 1s;
 }
 
-.floating-drag-handle-wrapper:hover {
-	border-color: rgb(var(--primary));
-	color: rgb(var(--primary));
-}
-
-.floating-drag-handle-wrapper.is-dragging {
+.floating-drag-handle-wrapper.sf-on-dragging {
 	cursor: grabbing;
-	color: rgb(var(--primary));
-	background: rgba(var(--primary) / var(--sf-alpha-1));
-	border-color: rgb(var(--primary));
 }
 
 .floating-drag-handle-wrapper.is-fading {
 	opacity: 0;
 }
 
-/* Over-toolbar variant: handle sits flush against the toolbar's left slot,
-   no translate, no shadow/border (the toolbar provides those), transparent
-   background.  A right border keeps the visual separation from the toolbar
-   items, matching the old inline variant. */
-.floating-drag-handle-wrapper.is-over-toolbar {
+.floating-drag-handle-wrapper.sf-is-contained {
 	transform: none;
-	background: transparent;
-	border: none;
-	border-right: 1px solid rgb(var(--border_color));
-	border-radius: 0;
-	box-shadow: none;
-}
-
-.floating-drag-handle-wrapper.is-over-toolbar:hover {
-	background: rgba(var(--text_primary) / var(--sf-alpha-1));
-	border-color: transparent;
-	border-right-color: rgb(var(--border_color));
-	color: rgb(var(--primary));
-}
-
-.floating-drag-handle-wrapper.is-over-toolbar.is-dragging {
-	background: rgba(var(--primary) / var(--sf-alpha-1));
-	border-color: transparent;
-	border-right-color: rgb(var(--border_color));
 }
 </style>

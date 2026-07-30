@@ -275,6 +275,12 @@ const VOCABULARY: VocabSpec[] = [
 		description:
 			'Content is a single line of text. Normalises line-height to 1 so tight padding is not inflated by leading.',
 	},
+	{
+		name: 'sf-drag-handle',
+		kind: 'element',
+		description:
+			'Drag affordance — dim at rest, accents to primary on hover and while dragging. Wears sf-depth-* and sf-is-overlay; theme decides chrome via compounds.',
+	},
 
 	// Variants
 	{
@@ -343,6 +349,11 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sf-on-ancestor',
 		kind: 'state',
 		description: 'On the path to sf-on-current but not it (nav parent, breadcrumb non-leaf)',
+	},
+	{
+		name: 'sf-on-dragging',
+		kind: 'state',
+		description: 'Element is actively being dragged (JS-toggled, no CSS pseudo)',
 	},
 
 	// Context — JS-detected or author-declared conditions; sits above variant, below state
@@ -757,6 +768,19 @@ const ROOT_RULES: RuleSpec[] = [
 	// on any tag that would otherwise draw its own container.
 	{ classNames: ['sf-is-contained'], cssProperty: 'background', value: 'none' },
 	{ classNames: ['sf-is-contained'], cssProperty: 'border-color', value: 'transparent' },
+	// sf-is-contained × sf-is-overlay — contained takes priority over overlay's tinted
+	// surface background. Both are single-class context rules; the compound wins by specificity.
+	// Without this, the generator's alphabetical emission order lets sf-is-overlay overwrite
+	// sf-is-contained's background: none at equal specificity.
+	{ classNames: ['sf-is-contained', 'sf-is-overlay'], cssProperty: 'background', value: 'none' },
+	// sf-is-contained × sf-boundary-right — contained element that still marks a directional
+	// boundary (e.g. a toolbar slot handle with a right separator). sf-is-contained zeros
+	// border-color; this compound restores the right side at higher specificity (2 vs 1 class).
+	{
+		classNames: ['sf-is-contained', 'sf-boundary-right'],
+		cssProperty: 'border-right-color',
+		value: 'rgb(var(--sf-border_color))',
+	},
 
 	// Viewport-edge context — zero the corners that touch the boundary (specificity 0-1-0).
 	// Three-side panel patterns restore the open-side corners via compound rules (0-3-0)
@@ -1011,6 +1035,42 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
 
+	// Hover × drag-handle — icon accents to primary; border stays themed (subtle hover signal).
+	// Bare sf-on-hover rule already provides the fg_primary/alpha-1 background tint.
+	{
+		classNames: ['sf-drag-handle', 'sf-on-hover'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-primary))',
+	},
+
+	// Dragging state — primary accent throughout; tinted fill signals actively engaged.
+	{
+		classNames: ['sf-drag-handle', 'sf-on-dragging'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-drag-handle', 'sf-on-dragging'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-drag-handle', 'sf-on-dragging'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary) / var(--sf-alpha-1))',
+	},
+	// Dragging × contained — suppress the full-border primary; only right separator shows.
+	{
+		classNames: ['sf-drag-handle', 'sf-is-contained', 'sf-on-dragging'],
+		cssProperty: 'border-color',
+		value: 'transparent',
+	},
+	{
+		classNames: ['sf-drag-handle', 'sf-is-contained', 'sf-on-dragging'],
+		cssProperty: 'border-right-color',
+		value: 'rgb(var(--sf-border_color))',
+	},
+
 	// Focus state — bordered inputs pick up a primary border on keyboard/click focus.
 	// Vocabulary pseudo is :focus-visible; UAs treat form controls as always focus-visible.
 	{
@@ -1070,6 +1130,23 @@ const ROOT_RULES: RuleSpec[] = [
 	// when padding is tight. Applied to any element whose content is definitionally one
 	// line — breadcrumb segments, inline labels, count chips.
 	{ classNames: ['sf-single-line'], cssProperty: 'line-height', value: '1' },
+
+	// sf-drag-handle: dim icon at rest; border marks its floating extent. Hover/drag state
+	// compounds below in sf-state layer override the active treatment.
+	{
+		classNames: ['sf-drag-handle'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-4))',
+	},
+	{
+		classNames: ['sf-drag-handle'],
+		cssProperty: 'border',
+		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
+	},
+	// sf-drag-handle × sf-is-contained — sits in toolbar slot; drop shadow and radius.
+	// sf-is-contained already zeros border-color; sf-boundary-right restores the separator.
+	{ classNames: ['sf-drag-handle', 'sf-is-contained'], cssProperty: 'box-shadow', value: 'none' },
+	{ classNames: ['sf-drag-handle', 'sf-is-contained'], cssProperty: 'border-radius', value: '0' },
 
 	// ─── Button element ───────────────────────────────────────────────────────
 	// Baseline scoped to button.sf (sf membership marker) — Vuestic and other third-party

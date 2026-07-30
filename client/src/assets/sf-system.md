@@ -472,6 +472,9 @@ sf-icon          content is a single icon — font icon or SVG. line-height:1 re
 sf-single-line   content is a single line of text. line-height:1 removes the
                  half-leading that would otherwise inflate apparent vertical spacing
                  beyond the authored padding
+sf-drag-handle   drag affordance — dim at rest, accents to primary on hover and
+                 while dragging. Wears sf-depth-* and sf-is-overlay; theme decides
+                 chrome via compounds
 ```
 
 **A marker only declares what's unique to the category.** Everything a chip and a card
@@ -625,6 +628,7 @@ sf-on-focus
 sf-on-active
 sf-on-selected
 sf-on-disabled
+sf-on-dragging   element is actively being dragged (JS-toggled, no CSS pseudo)
 ```
 
 ```css
