@@ -12,7 +12,7 @@
 		<!-- Passive slot for the unified drag handle.  FloatingDragHandle (a separate
 		     fixed-position instance) overlays this exactly when targeting the selected
 		     node; the ghost SVG is always visible as a placeholder behind it. -->
-		<div class="toolbar-slot" aria-hidden="true">
+		<div class="toolbar-slot sf-is-contained sf-boundary-right" aria-hidden="true">
 			<SfIcon name="drag-handle" style="width: 10px; height: 16px" />
 		</div>
 		<OverflowRow class="toolbar-overflow" :refresh-key="toolbarRefreshKey">
@@ -163,8 +163,6 @@ onUnmounted(() => {
 
 <style>
 .sel-count {
-	font-size: 0.75rem;
-	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	padding: 0 4px;
 	white-space: nowrap;
 	align-self: center;
@@ -182,7 +180,6 @@ onUnmounted(() => {
 	width: fit-content;
 	height: var(--toolbar-height);
 	transform: translateY(-100%);
-	border: 1px solid rgb(var(--border_color));
 	z-index: var(--z-toolbar);
 	overflow: hidden;
 }
@@ -194,8 +191,7 @@ onUnmounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border-right: 1px solid rgb(var(--border_color));
-	color: rgba(var(--text_primary) / 0);
+	color: transparent;
 	pointer-events: none;
 }
 

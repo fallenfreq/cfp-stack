@@ -245,7 +245,12 @@ export const multiSelectItems = [
 			inheritAttrs: false,
 			setup() {
 				const store = useMultiSelectStore()
-				return () => h('span', { class: 'sel-count' }, `${store.positions.length} selected`)
+				return () =>
+					h(
+						'span',
+						{ class: 'sel-count sf-loudness-1 sf-single-line sf-text-xs' },
+						`${store.positions.length} selected`,
+					)
 			},
 		}),
 	),
