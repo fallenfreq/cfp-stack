@@ -1,6 +1,6 @@
 <template>
-	<div class="attr-row">
-		<span class="attr-key">{{ attrKey }}</span>
+	<div class="attr-row sf-text-xs">
+		<span class="attr-key sf-loudness-1">{{ attrKey }}</span>
 
 		<StyleAttrEditor
 			v-if="attrKey === 'style'"
@@ -53,7 +53,7 @@
 			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
 		>
 
-		<span v-if="isAtDefault" class="attr-default-badge">default</span>
+		<span v-if="isAtDefault" class="attr-default-badge sf-loudness-1">default</span>
 
 		<ToolbarButton @mousedown.prevent="emit('remove', attrKey)">
 			<ToolbarIcon>close</ToolbarIcon>
@@ -127,8 +127,6 @@ onUnmounted(() => {
 	}
 
 	.attr-key {
-		font-size: 0.75rem;
-		color: rgba(var(--text_primary) / var(--sf-alpha-7));
 		min-width: 36px;
 		flex-shrink: 0;
 	}
@@ -139,10 +137,9 @@ onUnmounted(() => {
 		height: 22px;
 		padding: 1px 5px;
 		border-radius: 3px;
-		border: 1px solid rgb(var(--border_color));
-		background: rgb(var(--bg_primary));
-		color: rgb(var(--text_primary));
-		font-size: 0.75rem;
+		border: 1px solid rgb(var(--sf-border_color));
+		background: rgb(var(--sf-surface-0));
+		color: rgb(var(--sf-fg_primary));
 		outline: none;
 	}
 
@@ -150,7 +147,7 @@ onUnmounted(() => {
 		width: 14px;
 		height: 14px;
 		flex-shrink: 0;
-		accent-color: rgb(var(--primary));
+		accent-color: rgb(var(--sf-primary));
 	}
 
 	.attr-select {
@@ -159,7 +156,6 @@ onUnmounted(() => {
 
 	.attr-default-badge {
 		font-size: 0.65rem;
-		color: rgba(var(--text_primary) / var(--sf-alpha-4));
 		flex-shrink: 0;
 		white-space: nowrap;
 	}
