@@ -14,7 +14,7 @@
 					<div ref="editorEl" class="style-attr-editor" />
 					<button
 						v-if="!fullscreen"
-						class="style-fs-open"
+						class="style-fs-open sf-loudness-1 sf-on-hover"
 						tabindex="-1"
 						@mousedown.prevent
 						@click="fullscreen = true"
@@ -23,7 +23,7 @@
 					</button>
 					<button
 						v-if="fullscreen"
-						class="style-fs-close"
+						class="style-fs-close sf-loudness-1 sf-on-hover"
 						@mousedown.prevent
 						@click="closeFullscreen"
 					>
@@ -169,7 +169,6 @@ onUnmounted(() => {
 .style-editor-frame--fs {
 	position: relative;
 	width: min(80vw, 800px);
-	border: 1px solid rgb(var(--border_color));
 	padding: 8px;
 	display: flex;
 	flex-direction: column;
@@ -179,20 +178,20 @@ onUnmounted(() => {
 	flex: 1;
 	min-width: 0;
 	border-radius: 3px;
-	border: 1px solid rgb(var(--border_color));
+	border: 1px solid rgb(var(--sf-border_color));
 	overflow: hidden;
 	transition: border-color 0.1s;
 }
 
 .style-attr-editor:focus-within {
-	border-color: rgb(var(--primary));
+	border-color: rgb(var(--sf-primary));
 }
 
 :deep(.cm-editor) {
 	min-height: 44px;
 	max-height: 150px;
 	overflow-y: auto;
-	background: rgb(var(--bg_primary));
+	background: rgb(var(--sf-surface-0));
 }
 
 .style-editor-frame--fs :deep(.cm-editor) {
@@ -223,14 +222,8 @@ onUnmounted(() => {
 	background: none;
 	border: none;
 	border-radius: 3px;
-	color: rgba(var(--text_primary) / var(--sf-alpha-3));
 	cursor: pointer;
 	padding: 0;
-}
-
-.style-fs-open:hover {
-	color: rgb(var(--text_primary));
-	background: rgba(var(--bg_primary) / var(--sf-alpha-9));
 }
 
 .style-fs-open .material-symbols-rounded {
@@ -249,13 +242,7 @@ onUnmounted(() => {
 	background: none;
 	border: none;
 	border-radius: 4px;
-	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	cursor: pointer;
-}
-
-.style-fs-close:hover {
-	background: rgba(var(--text_primary) / var(--sf-alpha-1));
-	color: rgb(var(--text_primary));
 }
 
 .style-fs-close .material-symbols-rounded {
