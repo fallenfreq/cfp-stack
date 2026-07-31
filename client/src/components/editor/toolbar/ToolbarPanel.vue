@@ -143,7 +143,6 @@ onUnmounted(() => {
 	 * left edge on the first open. */
 	position: fixed;
 	z-index: var(--z-panel);
-	border: 1px solid rgb(var(--border_color));
 	padding: 4px;
 	overflow-y: auto;
 	scrollbar-width: none;
