@@ -33,14 +33,16 @@
 				@remove="onRemove"
 			/>
 
-			<div v-if="!allRowCount && !allAddableCount" class="attr-empty">No attributes set</div>
+			<div v-if="!allRowCount && !allAddableCount" class="attr-empty sf-loudness-1">
+				No attributes set
+			</div>
 
 			<template v-if="allAddableCount">
 				<div v-if="allRowCount" class="attr-divider" />
 				<button
 					v-for="key in classAddableKeys"
 					:key="key"
-					class="attr-add-btn"
+					class="attr-add-btn sf-loudness-1 sf-on-hover"
 					@mousedown.prevent="startAdd(key)"
 				>
 					<span class="material-symbols-rounded">add</span>
@@ -49,7 +51,7 @@
 				<button
 					v-for="key in addableKeys"
 					:key="key"
-					class="attr-add-btn"
+					class="attr-add-btn sf-loudness-1 sf-on-hover"
 					@mousedown.prevent="startAdd(key)"
 				>
 					<span class="material-symbols-rounded">add</span>
@@ -249,7 +251,7 @@ watch(
 
 .attr-divider {
 	height: 1px;
-	background: rgb(var(--border_color));
+	background: rgb(var(--sf-border_color));
 	margin: 4px 0;
 }
 
@@ -262,15 +264,9 @@ watch(
 	border-radius: 3px;
 	border: none;
 	background: none;
-	color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	font-size: 0.8rem;
 	cursor: pointer;
 	text-align: left;
-}
-
-.attr-add-btn:hover {
-	background: rgba(var(--text_primary) / var(--sf-alpha-1));
-	color: rgb(var(--text_primary));
 }
 
 .attr-add-btn .material-symbols-rounded {
@@ -280,7 +276,6 @@ watch(
 .attr-empty {
 	padding: 6px 8px;
 	font-size: 0.8rem;
-	color: rgba(var(--text_primary) / var(--sf-alpha-4));
 	text-align: center;
 }
 </style>
