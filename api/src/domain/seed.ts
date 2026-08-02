@@ -1112,6 +1112,17 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-on-current'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
 
+	// Hover × current — intensify the primary tint on the currently-selected item.
+	// Without this compound, sf-on-current's bare rules would mask sf-on-hover's fg_primary
+	// tint via source order, leaving current items unresponsive to pointer. Overriding only
+	// background keeps color: primary and border-color: primary/alpha-4 from bare
+	// sf-on-current — "current" identity is preserved while hover reads as intensification.
+	{
+		classNames: ['sf-on-hover', 'sf-on-current'],
+		cssProperty: 'background',
+		value: 'rgba(var(--sf-primary) / var(--sf-alpha-2))',
+	},
+
 	// Ancestor state — muted primary text, no fill. Reads as "on the trail to current".
 	// Nav sidebars, breadcrumb non-leaf segments.
 	{

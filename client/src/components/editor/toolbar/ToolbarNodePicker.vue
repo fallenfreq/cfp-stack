@@ -12,7 +12,7 @@
 				<div
 					v-for="item in computedItems"
 					:key="item.label"
-					class="picker-item"
+					class="picker-item sf-on-hover"
 					:class="{ 'sf-on-current': item.active }"
 					@mousedown.prevent="select(item)"
 				>
@@ -22,7 +22,7 @@
 					<span>{{ item.label }}</span>
 				</div>
 			</template>
-			<div v-else class="picker-item picker-empty">No compatible types</div>
+			<div v-else class="picker-item picker-empty sf-loudness-1">No compatible types</div>
 		</div>
 	</ToolbarPanelItem>
 </template>
@@ -87,12 +87,7 @@ const select = (item: NodePickerItem) => {
 		padding: 5px 8px;
 		border-radius: 4px;
 		font-size: 0.85rem;
-		color: rgb(var(--text_primary));
 		user-select: none;
-	}
-
-	.picker-item:hover {
-		background: rgba(var(--text_primary) / var(--sf-alpha-1));
 	}
 
 	.picker-item-icon {
@@ -101,7 +96,6 @@ const select = (item: NodePickerItem) => {
 	}
 
 	.picker-empty {
-		color: gray;
 		text-align: center;
 		cursor: default;
 		justify-content: center;
