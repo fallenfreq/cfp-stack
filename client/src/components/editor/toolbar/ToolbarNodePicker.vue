@@ -7,22 +7,21 @@
 		@toggle="toggle"
 		@close="close"
 	>
-		<div class="picker-list">
+		<div class="picker-list sf-size-xs">
 			<template v-if="computedItems.length">
-				<div
+				<button
 					v-for="item in computedItems"
 					:key="item.label"
-					class="picker-item sf-on-hover"
+					type="button"
+					class="picker-item sf sf-is-contained sf-size-xs sf-on-hover"
 					:class="{ 'sf-on-current': item.active }"
 					@mousedown.prevent="select(item)"
 				>
-					<span class="material-symbols-rounded picker-item-icon">{{
-						item.iconName
-					}}</span>
+					<span class="material-symbols-rounded sf-icon">{{ item.iconName }}</span>
 					<span>{{ item.label }}</span>
-				</div>
+				</button>
 			</template>
-			<div v-else class="picker-item picker-empty sf-loudness-1">No compatible types</div>
+			<div v-else class="picker-empty sf-loudness-1">No compatible types</div>
 		</div>
 	</ToolbarPanelItem>
 </template>
@@ -83,22 +82,15 @@ const select = (item: NodePickerItem) => {
 		display: flex;
 		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-xs));
+		width: 100%;
+		text-align: left;
 		cursor: pointer;
-		padding: 5px 8px;
-		border-radius: 4px;
-		font-size: 0.85rem;
 		user-select: none;
 	}
 
-	.picker-item-icon {
-		font-size: 16px;
-		line-height: 1;
-	}
-
 	.picker-empty {
+		padding: var(--sf-padding);
 		text-align: center;
-		cursor: default;
-		justify-content: center;
 	}
 }
 </style>
