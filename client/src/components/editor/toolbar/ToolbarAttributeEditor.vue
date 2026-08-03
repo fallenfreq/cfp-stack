@@ -7,7 +7,7 @@
 		@toggle="toggle"
 		@close="onClose"
 	>
-		<div class="attr-content">
+		<div class="attr-content sf-size-2xs">
 			<ToolbarAttrRow
 				v-for="row in classTokenRows"
 				:key="row.key"
@@ -42,19 +42,21 @@
 				<button
 					v-for="key in classAddableKeys"
 					:key="key"
-					class="attr-add-btn sf-loudness-1 sf-on-hover"
+					type="button"
+					class="attr-add-btn sf sf-is-contained sf-size-2xs sf-loudness-1 sf-on-hover"
 					@mousedown.prevent="startAdd(key)"
 				>
-					<span class="material-symbols-rounded">add</span>
+					<span class="material-symbols-rounded sf-icon">add</span>
 					{{ key }}
 				</button>
 				<button
 					v-for="key in addableKeys"
 					:key="key"
-					class="attr-add-btn sf-loudness-1 sf-on-hover"
+					type="button"
+					class="attr-add-btn sf sf-is-contained sf-size-2xs sf-loudness-1 sf-on-hover"
 					@mousedown.prevent="startAdd(key)"
 				>
-					<span class="material-symbols-rounded">add</span>
+					<span class="material-symbols-rounded sf-icon">add</span>
 					{{ key }}
 				</button>
 			</template>
@@ -260,22 +262,12 @@ watch(
 	align-items: center;
 	gap: var(--sf-gap, var(--sf-spacing-2xs));
 	width: 100%;
-	padding: 4px 6px;
-	border-radius: 3px;
-	border: none;
-	background: none;
-	font-size: 0.8rem;
 	cursor: pointer;
 	text-align: left;
 }
 
-.attr-add-btn .material-symbols-rounded {
-	font-size: 14px;
-}
-
 .attr-empty {
-	padding: 6px 8px;
-	font-size: 0.8rem;
+	padding: var(--sf-padding);
 	text-align: center;
 }
 </style>
