@@ -35,7 +35,7 @@
 			v-else-if="typeof specDefault === 'number'"
 			ref="inputEl"
 			type="number"
-			class="attr-input sf sf-on-focus"
+			class="attr-input sf sf-boundary sf-size-2xs sf-on-focus"
 			:value="value as number"
 			@change="
 				emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
@@ -46,7 +46,7 @@
 			v-else
 			ref="inputEl"
 			type="text"
-			class="attr-input sf sf-on-focus"
+			class="attr-input sf sf-boundary sf-size-2xs sf-on-focus"
 			:value="value as string"
 			@input="onTextInput(($event.target as HTMLInputElement).value)"
 			@blur="onTextBlur(($event.target as HTMLInputElement).value)"
@@ -134,6 +134,12 @@ onUnmounted(() => {
 	.attr-input {
 		flex: 1;
 		min-width: 0;
+	}
+
+	/* select.sf baseline TODO — native select needs appearance:none + custom arrow
+	   for cross-browser sf treatment. Keeping raw appearance here until that lands. */
+	.attr-select {
+		cursor: pointer;
 		height: 22px;
 		padding: 1px 5px;
 		border-radius: 3px;
@@ -150,12 +156,7 @@ onUnmounted(() => {
 		accent-color: rgb(var(--sf-primary));
 	}
 
-	.attr-select {
-		cursor: pointer;
-	}
-
 	.attr-default-badge {
-		font-size: 0.65rem;
 		flex-shrink: 0;
 		white-space: nowrap;
 	}
