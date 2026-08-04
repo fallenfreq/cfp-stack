@@ -9,7 +9,7 @@
 	>
 		<div class="corners-picker" @mousedown.stop>
 			<div class="cp-section">
-				<span class="cp-label">Corners</span>
+				<span class="cp-label sf-loudness-1">Corners</span>
 				<div class="cp-row">
 					<button
 						v-for="t in radiusOptions"
@@ -39,11 +39,11 @@
 							v-model.number="customUniform"
 							type="number"
 							min="0"
-							class="cp-input sf sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-size-2xs sf-on-focus sf-on-disabled"
 							:disabled="individualized"
 							@change="commit"
 						>
-						<span class="cp-unit">px</span>
+						<span class="cp-unit sf-loudness-1">px</span>
 					</div>
 					<label class="cp-check-label">
 						<input
@@ -57,42 +57,42 @@
 
 				<div v-if="individualized" class="cp-section cp-grid">
 					<div class="cp-corner">
-						<span class="cp-label">TL</span>
+						<span class="cp-label sf-loudness-1">TL</span>
 						<input
 							v-model.number="customCorners.tl"
 							type="number"
 							min="0"
-							class="cp-input sf sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
 					<div class="cp-corner">
-						<span class="cp-label">TR</span>
+						<span class="cp-label sf-loudness-1">TR</span>
 						<input
 							v-model.number="customCorners.tr"
 							type="number"
 							min="0"
-							class="cp-input sf sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
 					<div class="cp-corner">
-						<span class="cp-label">BL</span>
+						<span class="cp-label sf-loudness-1">BL</span>
 						<input
 							v-model.number="customCorners.bl"
 							type="number"
 							min="0"
-							class="cp-input sf sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
 					<div class="cp-corner">
-						<span class="cp-label">BR</span>
+						<span class="cp-label sf-loudness-1">BR</span>
 						<input
 							v-model.number="customCorners.br"
 							type="number"
 							min="0"
-							class="cp-input sf sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
@@ -258,18 +258,12 @@ const commit = () => {
 		flex-direction: column;
 		gap: var(--sf-gap, var(--sf-spacing-xs));
 		min-width: 200px;
-		padding: var(--sf-spacing-2xs);
 	}
 
 	.cp-section {
 		display: flex;
 		flex-direction: column;
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
-	}
-
-	.cp-label {
-		font-size: 0.7rem;
-		color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	}
 
 	.cp-row {
@@ -280,28 +274,13 @@ const commit = () => {
 	}
 
 	.cp-input {
-		height: 26px;
 		width: 56px;
-		padding: 2px 6px;
-		border-radius: 4px;
-		border: 1px solid rgb(var(--border_color));
-		background: rgb(var(--bg_primary));
-		color: rgb(var(--text_primary));
-		font-size: 0.8rem;
-		outline: none;
-	}
-
-	.cp-unit {
-		font-size: 0.75rem;
-		color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	}
 
 	.cp-check-label {
 		display: flex;
 		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-xs));
-		font-size: 0.75rem;
-		color: rgb(var(--text_primary));
 		cursor: pointer;
 	}
 
