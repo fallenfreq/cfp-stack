@@ -1,10 +1,11 @@
 <template>
 	<div class="font-picker" @mousedown.stop>
 		<div class="fp-section">
-			<span class="fp-label">Family</span>
+			<span class="fp-label sf-loudness-1">Family</span>
 			<div class="fp-row">
 				<button
-					class="fp-chip fp-chip-clear"
+					type="button"
+					class="sf sf-chip sf-size-xs sf-on-hover"
 					title="Default family"
 					:class="{ 'sf-on-selected': !activeFamilyVar }"
 					@mousedown.prevent
@@ -15,7 +16,8 @@
 				<button
 					v-for="f in families"
 					:key="f.cssVar"
-					class="fp-chip fp-chip-family"
+					type="button"
+					class="sf sf-chip sf-size-xs sf-on-hover"
 					:class="{ 'sf-on-selected': activeFamilyVar === f.cssVar }"
 					:style="{ fontFamily: f.value }"
 					:title="f.label"
@@ -28,10 +30,11 @@
 		</div>
 
 		<div class="fp-section">
-			<span class="fp-label">Size</span>
+			<span class="fp-label sf-loudness-1">Size</span>
 			<div class="fp-row">
 				<button
-					class="fp-chip fp-chip-clear"
+					type="button"
+					class="sf sf-chip sf-size-xs sf-on-hover"
 					title="Default size"
 					:class="{ 'sf-on-selected': !activeSizeVar }"
 					@mousedown.prevent
@@ -54,10 +57,11 @@
 		</div>
 
 		<div class="fp-section">
-			<span class="fp-label">Leading</span>
+			<span class="fp-label sf-loudness-1">Leading</span>
 			<div class="fp-row">
 				<button
-					class="fp-chip fp-chip-clear"
+					type="button"
+					class="sf sf-chip sf-size-xs sf-on-hover"
 					title="Default line height"
 					:class="{ 'sf-on-selected': !activeLeadingVar }"
 					@mousedown.prevent
@@ -80,10 +84,11 @@
 		</div>
 
 		<div class="fp-section">
-			<span class="fp-label">Tracking</span>
+			<span class="fp-label sf-loudness-1">Tracking</span>
 			<div class="fp-row">
 				<button
-					class="fp-chip fp-chip-clear"
+					type="button"
+					class="sf sf-chip sf-size-xs sf-on-hover"
 					title="Default letter spacing"
 					:class="{ 'sf-on-selected': !activeTrackingVar }"
 					@mousedown.prevent
@@ -181,7 +186,6 @@ const pickTracking = (cssVar: string | null) => {
 		flex-direction: column;
 		gap: var(--sf-gap, var(--sf-spacing-xs));
 		min-width: 240px;
-		padding: 4px;
 	}
 
 	.fp-section {
@@ -190,46 +194,11 @@ const pickTracking = (cssVar: string | null) => {
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 
-	.fp-label {
-		font-size: 0.7rem;
-		color: rgba(var(--text_primary) / var(--sf-alpha-6));
-	}
-
 	.fp-row {
 		display: flex;
 		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		flex-wrap: wrap;
-	}
-
-	.fp-chip {
-		height: 26px;
-		border-radius: 4px;
-		border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-2));
-		padding: 0 6px;
-		cursor: pointer;
-		transition: transform 0.08s;
-		font-size: 0.75rem;
-		line-height: 1;
-		background: none;
-		color: rgb(var(--text_primary));
-	}
-
-	.fp-chip:hover {
-		transform: scale(1.05);
-		background: rgba(var(--text_primary) / var(--sf-alpha-1));
-	}
-
-	.fp-chip-clear {
-		width: 26px;
-		padding: 0;
-		text-align: center;
-		color: rgba(var(--text_primary) / var(--sf-alpha-4));
-	}
-
-	.fp-chip-family {
-		font-size: 0.9rem;
-		min-width: 36px;
 	}
 }
 </style>
