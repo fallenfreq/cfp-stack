@@ -1,7 +1,7 @@
 <template>
 	<div class="color-picker" @mousedown.stop>
 		<div class="cp-header">
-			<span class="cp-label">{{ headerLabel }}</span>
+			<span class="cp-label sf-loudness-1">{{ headerLabel }}</span>
 		</div>
 
 		<div class="cp-row cp-families">
@@ -38,7 +38,7 @@
 		</div>
 
 		<div v-if="allowAlpha" class="cp-row cp-alpha">
-			<span class="cp-label">α</span>
+			<span class="cp-label sf-loudness-1">α</span>
 			<input
 				type="range"
 				class="cp-range"
@@ -48,7 +48,7 @@
 				:value="alphaIndex"
 				@input="onAlphaInput"
 			>
-			<span class="cp-alpha-val">{{ Math.round(alpha * 100) }}%</span>
+			<span class="cp-alpha-val sf-loudness-1">{{ Math.round(alpha * 100) }}%</span>
 		</div>
 
 		<div class="cp-row cp-freeform">
@@ -197,13 +197,10 @@ const commit = () => {
 		flex-direction: column;
 		gap: var(--sf-gap, var(--sf-spacing-xs));
 		min-width: 240px;
-		padding: 4px;
 	}
 
 	.cp-header {
 		min-height: 16px;
-		font-size: 0.75rem;
-		color: rgba(var(--text_primary) / var(--sf-alpha-7));
 	}
 
 	.cp-row {
@@ -216,6 +213,11 @@ const commit = () => {
 		flex-wrap: wrap;
 	}
 
+	/* Color-surface tiles (.cp-chip palette swatches + .cp-color-input native input)
+	   still carry raw shape/border. Deferred pending sf-swatch bundle — the "shows
+	   a colour, has thin theme-controlled chrome" role isn't captured by sf-chip
+	   (pill radius). Resolve alongside Corners/Shadow/Aspect swatches so one vocab
+	   covers all consumers. */
 	.cp-chip {
 		width: 22px;
 		height: 22px;
@@ -243,13 +245,11 @@ const commit = () => {
 	.cp-range {
 		flex: 1;
 		min-width: 0;
-		accent-color: rgb(var(--primary));
+		accent-color: rgb(var(--sf-primary));
 	}
 
 	.cp-label,
 	.cp-alpha-val {
-		font-size: 0.7rem;
-		color: rgba(var(--text_primary) / var(--sf-alpha-6));
 		min-width: 24px;
 		text-align: center;
 	}
@@ -257,7 +257,7 @@ const commit = () => {
 	.cp-color-input {
 		width: 30px;
 		height: 24px;
-		border: 1px solid rgb(var(--border_color));
+		border: 1px solid rgb(var(--sf-border_color));
 		border-radius: 3px;
 		padding: 0;
 		background: none;
