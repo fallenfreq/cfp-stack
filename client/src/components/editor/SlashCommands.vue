@@ -61,7 +61,6 @@ defineExpose({ onKeyDown })
 <style>
 @layer ui {
 	.dropdown-menu {
-		padding: var(--sf-padding);
 		overflow-y: auto;
 		min-width: 200px;
 		scrollbar-width: none;

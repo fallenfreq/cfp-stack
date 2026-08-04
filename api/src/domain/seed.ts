@@ -545,6 +545,10 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-shadow-md) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-1'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+	// Inner padding driven by --sf-padding bridge, filled by sf-size-* on the same element.
+	// Fallback 0 preserves existing depth-* consumers that don't wear sf-size-* and have no
+	// scoped padding; consumers with raw padding in scoped CSS win via @layer ui specificity.
+	{ classNames: ['sf-depth-1'], cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
 
 	// depth-2: dropdowns, popovers — stronger shadow
 	{
@@ -560,6 +564,7 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-2'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+	{ classNames: ['sf-depth-2'], cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
 
 	// depth-3: modals — strongest shadow
 	{
@@ -575,6 +580,7 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
+	{ classNames: ['sf-depth-3'], cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
 
 	// Loudness bare rules — apply at any depth; compounds below refine per-surface behaviour.
 	// loudness-1: muted foreground (low-attention text/element). Border cleared so text-only
