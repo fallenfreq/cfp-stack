@@ -1227,6 +1227,15 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-padding, 0)',
 	},
 	{ elementSelector: 'input', classNames: ['sf'], cssProperty: 'font', value: 'inherit' },
+	// Border establishes a visible editable-field boundary; full alpha (not button.sf's
+	// alpha-4) because inputs need stronger visual delineation than decorative button
+	// chrome. Cleared by sf-is-contained (context layer) or sf-loudness-1 (bundle layer).
+	{
+		elementSelector: 'input',
+		classNames: ['sf'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-border_color))',
+	},
 	{
 		elementSelector: 'input',
 		classNames: ['sf'],
