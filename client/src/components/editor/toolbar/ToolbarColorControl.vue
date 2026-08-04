@@ -59,7 +59,7 @@ const currentColor = computed<string | null>(() => {
 })
 
 const NO_COLOR_STRIPE =
-	'linear-gradient(45deg, transparent 45%, rgba(var(--danger) / var(--sf-alpha-6)) 45%, rgba(var(--danger) / var(--sf-alpha-6)) 55%, transparent 55%)'
+	'linear-gradient(45deg, transparent 45%, rgba(var(--sf-danger) / var(--sf-alpha-6)) 45%, rgba(var(--sf-danger) / var(--sf-alpha-6)) 55%, transparent 55%)'
 
 const swatchStyle = computed<CSSProperties>(() =>
 	currentColor.value
@@ -114,6 +114,8 @@ const onRemove = () => applyColor(null)
 </script>
 
 <style scoped>
+/* Trigger swatch — same colour-surface tile role as ColorPicker's .cp-chip.
+   Deferred to sf-swatch bundle pass; keeps raw shape/border until then. */
 .color-swatch {
 	display: inline-block;
 	width: 16px;
