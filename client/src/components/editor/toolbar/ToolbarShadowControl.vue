@@ -7,9 +7,9 @@
 		@toggle="toggle"
 		@close="onClose"
 	>
-		<div class="sp-picker" @mousedown.stop>
+		<div class="sp-picker sf-divide-y" @mousedown.stop>
 			<div class="sp-section">
-				<span class="sp-label">Shadow</span>
+				<span class="sp-label sf-loudness-1">Shadow</span>
 				<div class="sp-row">
 					<button
 						class="sf sf-chip sf-size-xs sf-on-hover"
@@ -32,10 +32,12 @@
 				</div>
 			</div>
 
-			<template v-if="selectedToken !== null">
-				<div class="sp-divider" />
-				<ColorPicker :value="shadowColor" :show-remove="false" @commit="onColorCommit" />
-			</template>
+			<ColorPicker
+				v-if="selectedToken !== null"
+				:value="shadowColor"
+				:show-remove="false"
+				@commit="onColorCommit"
+			/>
 		</div>
 	</ToolbarPanelItem>
 </template>
@@ -177,7 +179,6 @@ const commit = () => {
 		display: flex;
 		flex-direction: column;
 		gap: var(--sf-gap, var(--sf-spacing-xs));
-		padding: var(--sf-spacing-2xs);
 	}
 
 	.sp-section {
@@ -186,22 +187,11 @@ const commit = () => {
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 
-	.sp-label {
-		font-size: 0.7rem;
-		color: rgba(var(--text_primary) / var(--sf-alpha-6));
-	}
-
 	.sp-row {
 		display: flex;
 		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		flex-wrap: wrap;
-	}
-
-	.sp-divider {
-		height: 1px;
-		background: rgba(var(--text_primary) / var(--sf-alpha-1));
-		margin: 0 -4px;
 	}
 }
 </style>
