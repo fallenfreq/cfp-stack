@@ -8,7 +8,7 @@
 		@close="onClose"
 	>
 		<div class="aspect-picker" @mousedown.stop>
-			<span class="ap-label">Aspect ratio</span>
+			<span class="ap-label sf-loudness-1">Aspect ratio</span>
 			<div class="ap-row">
 				<button
 					v-for="opt in aspectOptions"
@@ -22,7 +22,7 @@
 				</button>
 			</div>
 
-			<span class="ap-label">Image fill</span>
+			<span class="ap-label sf-loudness-1">Image fill</span>
 			<div class="ap-row">
 				<button
 					v-for="opt in objectOptions"
@@ -111,12 +111,6 @@ const selectObject = (value: string) => {
 		display: flex;
 		flex-direction: column;
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
-		padding: var(--sf-spacing-2xs);
-	}
-
-	.ap-label {
-		font-size: 0.7rem;
-		color: rgba(var(--text_primary) / var(--sf-alpha-6));
 	}
 
 	.ap-row {
