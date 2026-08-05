@@ -118,7 +118,7 @@ watch(editor, (newEditor) => {
 }
 
 .tiptap p.is-empty::before {
-	color: rgba(var(--text_primary) / var(--sf-alpha-5));
+	color: rgba(var(--sf-fg_primary) / var(--sf-alpha-5));
 	content: attr(data-placeholder);
 	float: left;
 	height: 0;
@@ -127,13 +127,7 @@ watch(editor, (newEditor) => {
 
 /* ProseMirror / drag-handle selection states */
 .ProseMirror-selectednode {
-	outline: 3px solid rgba(var(--primary) / var(--sf-alpha-2));
-}
-
-.node-selected {
-	outline: 2px solid rgb(var(--primary));
-	outline-offset: 1px;
-	border-radius: 2px;
+	outline: 3px solid rgba(var(--sf-primary) / var(--sf-alpha-2));
 }
 
 .tiptap:focus {

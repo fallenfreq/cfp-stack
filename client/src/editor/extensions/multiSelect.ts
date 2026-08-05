@@ -62,7 +62,7 @@ const MultiSelectExtension = Extension.create({
 						const decorations = pluginState.positions.map((pos) => {
 							const node = nodeAt(state.doc, pos)
 							return Decoration.node(pos, pos + node.nodeSize, {
-								class: 'node-selected',
+								class: 'sf-on-selected',
 							})
 						})
 						return DecorationSet.create(state.doc, decorations)
