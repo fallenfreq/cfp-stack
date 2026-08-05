@@ -118,6 +118,13 @@ const RESET = `@layer reset {
 \t/* Remove trailing margin from the last child of any table cell */
 \ttd > *:last-child,
 \tth > *:last-child { margin-bottom: 0; }
+
+\t/* sf-swatch structural — display enables width/height on the marker;
+\t   background-clip guards padded-frame themes so bg doesn't bleed into the border. */
+\t.sf-swatch { display: inline-block; background-clip: padding-box; }
+
+\t/* Native colour input: strip UA inset chrome so swatch treatment can render. */
+\tinput[type="color"].sf-swatch { padding: 0; background: none; }
 }`
 
 // Static sf-element defaults — page-wide baselines using sf tokens.

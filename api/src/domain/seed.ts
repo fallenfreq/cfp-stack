@@ -281,6 +281,12 @@ const VOCABULARY: VocabSpec[] = [
 		description:
 			'Drag affordance — dim at rest, accents to primary on hover and while dragging. Wears sf-depth-* and sf-is-overlay; theme decides chrome via compounds.',
 	},
+	{
+		name: 'sf-swatch',
+		kind: 'element',
+		description:
+			'Content is a small colour-surface tile — palette chip, native colour input, preview. Theme decides border, radius, padding; consumers set width/height.',
+	},
 
 	// Variants
 	{
@@ -1261,6 +1267,30 @@ const ROOT_RULES: RuleSpec[] = [
 		value: '1px solid rgb(var(--sf-border_color) / var(--sf-alpha-3))',
 	},
 	{ classNames: ['sf-chip'], cssProperty: 'line-height', value: '1' },
+
+	// ─── sf-swatch ────────────────────────────────────────────────────────────
+	// Colour-surface tile — chrome only. Consumers set width/height (component metric).
+	// Padding: 0 is root theme's default; a padded-frame theme overrides + adds background-clip.
+	{ classNames: ['sf-swatch'], cssProperty: 'padding', value: '0' },
+	{
+		classNames: ['sf-swatch'],
+		cssProperty: 'border',
+		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color) / var(--sf-alpha-2))',
+	},
+	{ classNames: ['sf-swatch'], cssProperty: 'border-radius', value: 'var(--sf-radius-1)' },
+
+	// Swatch hover — outline ring keeps the swatch's own colour intact (bare sf-on-hover
+	// bg tint would be masked by the inline background-color anyway; ring gives real feedback).
+	{
+		classNames: ['sf-swatch', 'sf-on-hover'],
+		cssProperty: 'outline',
+		value: 'var(--sf-stroke-2) solid rgb(var(--sf-primary) / var(--sf-alpha-4))',
+	},
+	{
+		classNames: ['sf-swatch', 'sf-on-hover'],
+		cssProperty: 'outline-offset',
+		value: 'var(--sf-stroke-1)',
+	},
 
 	// ─── Table elements ───────────────────────────────────────────────────────
 	// Theme-wide defaults for data tables. border-collapse:separate + border-spacing:0 is

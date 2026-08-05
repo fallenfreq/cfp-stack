@@ -3,7 +3,7 @@
 		<template #trigger>
 			<SfTooltip :text="tooltip">
 				<Button class="sf-is-contained" @click="toggle">
-					<span class="color-swatch" :style="swatchStyle" />
+					<span class="color-swatch sf-swatch sf-size-2xs" :style="swatchStyle" />
 				</Button>
 			</SfTooltip>
 		</template>
@@ -114,13 +114,8 @@ const onRemove = () => applyColor(null)
 </script>
 
 <style scoped>
-/* Trigger swatch — same colour-surface tile role as ColorPicker's .cp-chip.
-   Deferred to sf-swatch bundle pass; keeps raw shape/border until then. */
 .color-swatch {
-	display: inline-block;
 	width: 16px;
 	height: 16px;
-	border-radius: 3px;
-	border: 1px solid rgba(var(--text_primary) / var(--sf-alpha-3));
 }
 </style>

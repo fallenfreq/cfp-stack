@@ -7,7 +7,7 @@
 		<div class="cp-row cp-families">
 			<button
 				v-if="showRemove"
-				class="cp-chip cp-chip-clear"
+				class="cp-chip cp-chip-clear sf-swatch sf-size-2xs sf-on-hover"
 				title="No color"
 				@mousedown.prevent
 				@click="$emit('remove')"
@@ -15,7 +15,7 @@
 			<button
 				v-for="family in families"
 				:key="family.key"
-				class="cp-chip"
+				class="cp-chip sf-swatch sf-size-2xs sf-on-hover"
 				:class="{ 'sf-on-selected': mode === 'palette' && familyKey === family.key }"
 				:style="chipStyle(family)"
 				:title="family.key"
@@ -28,7 +28,7 @@
 			<button
 				v-for="(shade, idx) in activeFamily.shades"
 				:key="shade.key"
-				class="cp-chip"
+				class="cp-chip sf-swatch sf-size-2xs sf-on-hover"
 				:class="{ 'sf-on-selected': mode === 'palette' && shadeIndex === idx }"
 				:style="{ background: cssVarColor(shade.cssVar) }"
 				:title="shade.key"
@@ -54,7 +54,7 @@
 		<div class="cp-row cp-freeform">
 			<input
 				type="color"
-				class="cp-color-input"
+				class="cp-color-input sf-swatch sf-size-2xs sf-on-hover"
 				:value="freeformHex"
 				@input="onFreeformInput"
 			>
@@ -213,23 +213,10 @@ const commit = () => {
 		flex-wrap: wrap;
 	}
 
-	/* Color-surface tiles (.cp-chip palette swatches + .cp-color-input native input)
-	   still carry raw shape/border. Deferred pending sf-swatch bundle — the "shows
-	   a colour, has thin theme-controlled chrome" role isn't captured by sf-chip
-	   (pill radius). Resolve alongside Corners/Shadow/Aspect swatches so one vocab
-	   covers all consumers. */
 	.cp-chip {
 		width: 22px;
 		height: 22px;
-		border-radius: 4px;
-		border: 1px solid rgb(var(--sf-border_color) / var(--sf-alpha-2));
-		padding: 0;
 		cursor: pointer;
-		transition: transform 0.08s;
-	}
-
-	.cp-chip:hover {
-		transform: scale(1.1);
 	}
 
 	.cp-chip-clear {
@@ -255,12 +242,8 @@ const commit = () => {
 	}
 
 	.cp-color-input {
-		width: 30px;
-		height: 24px;
-		border: 1px solid rgb(var(--sf-border_color));
-		border-radius: 3px;
-		padding: 0;
-		background: none;
+		width: 22px;
+		height: 22px;
 		cursor: pointer;
 	}
 }
