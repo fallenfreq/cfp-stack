@@ -5,7 +5,7 @@
 		:class="{ 'sf-is-overflow-left': isOverflowLeft, 'sf-is-overflow-right': isOverflowRight }"
 	>
 		<template v-for="(segment, i) in path" :key="segment.depth">
-			<span v-if="i > 0" class="path-sep">›</span>
+			<span v-if="i > 0" class="path-sep sf-icon sf-loudness-1">›</span>
 			<button
 				class="path-node sf sf-single-line sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-xs"
 				:class="{ 'sf-on-current': segment.depth === effectiveActiveDepth }"
@@ -138,7 +138,6 @@ onUnmounted(() => {
 	}
 
 	.path-sep {
-		color: rgba(var(--text_primary) / var(--sf-alpha-3));
 		padding: 0 4px;
 		user-select: none;
 		flex-shrink: 0;
