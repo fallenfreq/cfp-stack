@@ -41,7 +41,7 @@
 			<span class="cp-label sf-loudness-1">α</span>
 			<input
 				type="range"
-				class="cp-range"
+				class="cp-range sf"
 				min="0"
 				:max="alphaSteps.length - 1"
 				step="1"
@@ -232,7 +232,6 @@ const commit = () => {
 	.cp-range {
 		flex: 1;
 		min-width: 0;
-		accent-color: rgb(var(--sf-primary));
 	}
 
 	.cp-label,

@@ -39,7 +39,7 @@
 							v-model.number="customUniform"
 							type="number"
 							min="0"
-							class="cp-input sf sf-size-2xs sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-field sf-size-2xs sf-on-focus sf-on-disabled"
 							:disabled="individualized"
 							@change="commit"
 						>
@@ -62,7 +62,7 @@
 							v-model.number="customCorners.tl"
 							type="number"
 							min="0"
-							class="cp-input sf sf-size-2xs sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-field sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
@@ -72,7 +72,7 @@
 							v-model.number="customCorners.tr"
 							type="number"
 							min="0"
-							class="cp-input sf sf-size-2xs sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-field sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
@@ -82,7 +82,7 @@
 							v-model.number="customCorners.bl"
 							type="number"
 							min="0"
-							class="cp-input sf sf-size-2xs sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-field sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>
@@ -92,7 +92,7 @@
 							v-model.number="customCorners.br"
 							type="number"
 							min="0"
-							class="cp-input sf sf-size-2xs sf-on-focus sf-on-disabled"
+							class="cp-input sf sf-field sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
 						>
 					</div>

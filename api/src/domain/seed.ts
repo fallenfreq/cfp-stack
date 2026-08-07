@@ -259,9 +259,9 @@ const VOCABULARY: VocabSpec[] = [
 	},
 	{
 		name: 'sf-chip',
-		kind: 'bundle',
+		kind: 'element',
 		description:
-			'Compact representation of a discrete data unit — tag, filter, selection, status. Theme decides shape, colour, hover.',
+			'Compact discrete-unit chip — tag, filter, selection, status. Wear alongside sf on the underlying element; element-specific chip overrides (radius, border) live in compound rules like button.sf-chip.',
 	},
 	{
 		name: 'sf-icon',
@@ -286,6 +286,12 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'element',
 		description:
 			'Content is a small colour-surface tile — palette chip, native colour input, preview. Theme decides border, radius, padding; consumers set width/height.',
+	},
+	{
+		name: 'sf-field',
+		kind: 'element',
+		description:
+			'Editable form-control chrome shared by input, select, textarea — border, radius, font, padding-bridge, focus contract. Wear alongside sf on form elements that want field chrome (checkbox/radio/range wear sf alone for accent-color only). Element-specific additions (chevron on select) via compound rules like select.sf-field.',
 	},
 
 	// Variants
@@ -1217,56 +1223,37 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 
 	// ─── Input element ────────────────────────────────────────────────────────
-	// Baseline scoped to input.sf. Same shape/scale contract as buttons. `font: inherit`
-	// so inputs match their container's type scale. `:focus-visible` expresses the
-	// "being edited" look — theme's call, not the component's.
+	// input.sf carries only input-specific chrome. Shared editable-form-control baseline
+	// (border, radius, padding-bridge, font, focus) lives on sf-field — text/select/textarea
+	// wear `sf sf-field` together to opt in. accent-color stays on input.sf because it
+	// applies to checkbox/radio/range which want the tint without full field chrome.
 	{
 		elementSelector: 'input',
 		classNames: ['sf'],
-		cssProperty: 'border-radius',
-		value: 'var(--sf-radius-2)',
-	},
-	{
-		elementSelector: 'input',
-		classNames: ['sf'],
-		cssProperty: 'padding',
-		value: 'var(--sf-padding, 0)',
-	},
-	{ elementSelector: 'input', classNames: ['sf'], cssProperty: 'font', value: 'inherit' },
-	// Border establishes a visible editable-field boundary; full alpha (not button.sf's
-	// alpha-4) because inputs need stronger visual delineation than decorative button
-	// chrome. Cleared by sf-is-contained (context layer) or sf-loudness-1 (bundle layer).
-	{
-		elementSelector: 'input',
-		classNames: ['sf'],
-		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-border_color))',
-	},
-	{
-		elementSelector: 'input',
-		classNames: ['sf'],
-		pseudo: ':focus-visible',
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_primary))',
-	},
-	{
-		elementSelector: 'input',
-		classNames: ['sf'],
-		pseudo: ':focus-visible',
-		cssProperty: 'background',
-		value: 'rgba(var(--sf-fg_primary) / var(--sf-alpha-1))',
+		cssProperty: 'accent-color',
+		value: 'rgb(var(--sf-primary))',
 	},
 
 	// ─── sf-chip ──────────────────────────────────────────────────────────────
-	// Pill shape, ghost border, single-line. kind: 'bundle' puts these in sf-bundle layer,
-	// which beats sf-element (where button.sf lives) so chip shape wins on button elements.
-	{ classNames: ['sf-chip'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
+	// Consumer wears `sf sf-chip` on the underlying element (button, span, etc.). Bare rule
+	// carries the universal chip trait (tight leading). Chip-shape overrides are compound
+	// rules scoped to the host element — button.sf-chip beats button.sf in the same
+	// sf-element layer via source order (sf-chip seeded later), overriding button.sf's
+	// r-2 / alpha-4 border with the chip's r-3 / alpha-3 without duplicating font, padding,
+	// background, focus which button.sf already provides.
+	{ classNames: ['sf-chip'], cssProperty: 'line-height', value: '1' },
 	{
+		elementSelector: 'button',
+		classNames: ['sf-chip'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-3)',
+	},
+	{
+		elementSelector: 'button',
 		classNames: ['sf-chip'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-border_color) / var(--sf-alpha-3))',
+		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color) / var(--sf-alpha-3))',
 	},
-	{ classNames: ['sf-chip'], cssProperty: 'line-height', value: '1' },
 
 	// ─── sf-swatch ────────────────────────────────────────────────────────────
 	// Colour-surface tile — chrome only. Consumers set width/height (component metric).
@@ -1290,6 +1277,68 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-swatch', 'sf-on-hover'],
 		cssProperty: 'outline-offset',
 		value: 'var(--sf-stroke-1)',
+	},
+
+	// ─── sf-field ─────────────────────────────────────────────────────────────
+	// Shared editable-form-control chrome. Consumers on <input>, <select>, <textarea>
+	// wear this alongside sf-size-* for padding scale. Element-specific extras
+	// (select chevron etc.) live in compound rules below in the same layer.
+	{ classNames: ['sf-field'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
+	{ classNames: ['sf-field'], cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
+	{ classNames: ['sf-field'], cssProperty: 'font', value: 'inherit' },
+	{
+		classNames: ['sf-field'],
+		cssProperty: 'border',
+		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-field'],
+		pseudo: ':focus-visible',
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_primary))',
+	},
+	{
+		classNames: ['sf-field'],
+		pseudo: ':focus-visible',
+		cssProperty: 'background-color',
+		value: 'rgba(var(--sf-fg_primary) / var(--sf-alpha-1))',
+	},
+
+	// select.sf-field — chevron indicator + right-padding to clear it. Element-scoped
+	// so only selects get these; sits in sf-bundle (via sf-field kind), higher
+	// specificity than bare .sf-field so padding-right wins its longhand cascade.
+	// currentColor via two crossed linear-gradients — URL-referenced SVGs don't inherit
+	// currentColor cross-browser, and a hard-coded hex would fight themes. `appearance: none`
+	// is in the reset layer (structural browser-strip, not theme concern).
+	{
+		elementSelector: 'select',
+		classNames: ['sf-field'],
+		cssProperty: 'background-image',
+		value: 'linear-gradient(135deg, transparent 50%, currentColor 50%), linear-gradient(45deg, currentColor 50%, transparent 50%)',
+	},
+	{
+		elementSelector: 'select',
+		classNames: ['sf-field'],
+		cssProperty: 'background-position',
+		value: 'calc(100% - 13px) 50%, calc(100% - 8px) 50%',
+	},
+	{
+		elementSelector: 'select',
+		classNames: ['sf-field'],
+		cssProperty: 'background-size',
+		value: '5px 5px',
+	},
+	{
+		elementSelector: 'select',
+		classNames: ['sf-field'],
+		cssProperty: 'background-repeat',
+		value: 'no-repeat',
+	},
+	{
+		elementSelector: 'select',
+		classNames: ['sf-field'],
+		cssProperty: 'padding-right',
+		value: 'calc(var(--sf-padding, 0) + var(--sf-spacing-md))',
 	},
 
 	// ─── Table elements ───────────────────────────────────────────────────────

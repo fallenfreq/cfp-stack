@@ -464,17 +464,17 @@ something to decorate. Markers sit in their own cascade layer (`sf-element`, bel
 and states override predictably, without depending on source order to break ties.
 
 ```
-sf-chip          compact representation of a discrete data unit — tag, filter,
-                 selection, status
-sf-icon          content is a single icon — font icon or SVG. line-height:1 removes
-                 leading so padding drives vertical spacing; theme sets font-size if
-                 a specific scale is wanted (default: inherits context)
+sf-chip          compact discrete-unit chip — tag, filter, selection, status
+sf-icon          content is a single icon (font icon or SVG). line-height:1
+                 removes leading so padding drives vertical spacing
 sf-single-line   content is a single line of text. line-height:1 removes the
-                 half-leading that would otherwise inflate apparent vertical spacing
-                 beyond the authored padding
-sf-drag-handle   drag affordance — dim at rest, accents to primary on hover and
-                 while dragging. Wears sf-depth-* and sf-is-overlay; theme decides
-                 chrome via compounds
+                 half-leading that would otherwise inflate vertical spacing
+sf-drag-handle   drag affordance — dim at rest, accents to primary on hover
+                 and while dragging
+sf-swatch        small colour-surface tile — palette chip, native colour input.
+                 Theme decides border/radius/padding; consumers set width/height
+sf-field         editable form-control chrome shared by input/select/textarea —
+                 border, radius, font, padding-bridge, focus contract
 ```
 
 **A marker only declares what's unique to the category.** Everything a chip and a card
@@ -484,6 +484,13 @@ carries only the _residual_ the composable axes can't express: a shape conventio
 theme prefers for chips (square edges when the theme's default is round, or the reverse),
 a colour treatment specific to badges, whatever the category demands after the axes have
 done their work.
+
+**Markers stack additively over the underlying element.** `<button class="sf sf-chip">`
+wears both — `button.sf` provides the button baseline; `sf-chip` adds tight leading;
+`button.sf-chip` compound refines chip-specific properties (r-3 shape, tighter alpha
+border). A theme that hasn't defined the compound still produces a working button — the
+element rule is always the floor. Markers never replace the underlying identity; they
+add and refine.
 
 **Admission test:** after depth + loudness + size + variant + state have applied, is there
 anything left that's specific to this category?

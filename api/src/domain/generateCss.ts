@@ -125,6 +125,10 @@ const RESET = `@layer reset {
 
 \t/* Native colour input: strip UA inset chrome so swatch treatment can render. */
 \tinput[type="color"].sf-swatch { padding: 0; background: none; }
+
+\t/* Native <select>.sf-field: strip UA appearance so the custom chevron renders,
+\t   align cursor across browsers (Firefox: pointer, Chrome: default). */
+\tselect.sf-field { appearance: none; cursor: pointer; }
 }`
 
 // Static sf-element defaults — page-wide baselines using sf tokens.
