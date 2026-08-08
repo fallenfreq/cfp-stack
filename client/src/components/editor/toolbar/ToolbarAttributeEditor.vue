@@ -7,7 +7,7 @@
 		@toggle="toggle"
 		@close="onClose"
 	>
-		<div class="attr-content sf-size-2xs">
+		<div class="attr-content sl-stack sf-gap-2xs sf-size-2xs">
 			<ToolbarAttrRow
 				v-for="row in classTokenRows"
 				:key="row.key"
@@ -38,7 +38,7 @@
 			</div>
 
 			<template v-if="allAddableCount">
-				<div v-if="allRowCount" class="attr-divider" />
+				<hr v-if="allRowCount" class="sf">
 				<button
 					v-for="key in classAddableKeys"
 					:key="key"
@@ -249,12 +249,6 @@ watch(
 
 .attr-content::-webkit-scrollbar {
 	display: none;
-}
-
-.attr-divider {
-	height: 1px;
-	background: rgb(var(--sf-border_color));
-	margin: 4px 0;
 }
 
 .attr-add-btn {

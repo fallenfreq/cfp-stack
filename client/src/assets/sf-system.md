@@ -313,7 +313,7 @@ when no palette token fits.
 
 ### When a token belongs
 
-Two rules:
+Three rules:
 
 **Used in more than one place.** A token earns its place only if its value is used in more
 than one place. A token used in exactly one class is an indirection — replace it with the
@@ -327,6 +327,11 @@ legitimate only when it represents a theme-level choice. `--sf-primary` = `--sf-
 is valid because the theme decides which palette step is the brand. `--sf-alpha-subtle` =
 `--sf-alpha-3` is not — "subtle" is a styling opinion, not a theme decision. Use the
 scale step directly.
+
+**Compose before naming.** If a value can be built at the use site from existing tokens
+(`var(--sf-stroke-1) solid rgb(var(--sf-border_color))`), do that — a new composed token
+earns its place only when themes would plausibly override the whole treatment as a unit,
+not just its parts.
 
 ---
 

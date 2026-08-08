@@ -1341,6 +1341,20 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'calc(var(--sf-padding, 0) + var(--sf-spacing-md))',
 	},
 
+	// ─── Horizontal rule ──────────────────────────────────────────────────────
+	// Baseline scoped to hr.sf so editor content and third-party <hr> keep UA styling
+	// unless they opt in. Normalizes UA inset border and clears UA margin so external
+	// spacing is entirely the parent layout's decision (sl-stack + sf-gap-*).
+	{ elementSelector: 'hr', classNames: ['sf'], cssProperty: 'height', value: '0' },
+	{ elementSelector: 'hr', classNames: ['sf'], cssProperty: 'border', value: '0' },
+	{
+		elementSelector: 'hr',
+		classNames: ['sf'],
+		cssProperty: 'border-top',
+		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
+	},
+	{ elementSelector: 'hr', classNames: ['sf'], cssProperty: 'margin', value: '0' },
+
 	// ─── Table elements ───────────────────────────────────────────────────────
 	// Theme-wide defaults for data tables. border-collapse:separate + border-spacing:0 is
 	// required so that box-shadow works on sticky <td> cells (collapse merges cell paint layers
