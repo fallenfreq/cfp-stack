@@ -1,5 +1,5 @@
 <template>
-	<div v-if="props.isVisible.value" class="prompt-modal">
+	<div v-if="props.isVisible.value" class="prompt-modal sf-scrim">
 		<div class="prompt-content sf-depth-3">
 			<h3 class="message text-2xl">
 				{{ message }}
@@ -82,13 +82,13 @@ const close = () => {
 
 <style scoped>
 @layer ui {
+	/* Positioning + centering only — chrome (background, blur) comes from sf-scrim. */
 	.prompt-modal {
 		position: fixed;
 		top: 0;
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background: rgb(0 0 0 / var(--sf-alpha-5));
 		display: flex;
 		justify-content: center;
 		align-items: center;

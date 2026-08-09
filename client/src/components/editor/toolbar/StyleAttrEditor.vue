@@ -3,7 +3,7 @@
 		<Teleport to="body" :disabled="!fullscreen">
 			<div
 				class="style-editor-wrap"
-				:class="{ 'style-editor-wrap--overlay': fullscreen }"
+				:class="{ 'style-editor-wrap--overlay sf-scrim': fullscreen }"
 				@mousedown.stop
 				@mousedown.self="closeFullscreen"
 			>
@@ -138,114 +138,123 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.style-attr-editor-root {
-	flex: 1;
-	min-width: 0;
-}
+@layer ui {
+	.style-attr-editor-root {
+		flex: 1;
+		min-width: 0;
+	}
 
-.style-editor-wrap {
-	flex: 1;
-	min-width: 0;
-	display: flex;
-}
+	.style-editor-wrap {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+	}
 
-.style-editor-wrap--overlay {
-	position: fixed;
-	inset: 0;
-	z-index: var(--z-modal);
-	background: rgb(0 0 0 / var(--sf-alpha-5));
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
+	/* Positioning + centering only — chrome (background, blur) comes from sf-scrim. */
+	.style-editor-wrap--overlay {
+		position: fixed;
+		inset: 0;
+		z-index: var(--z-modal);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
 
-.style-editor-frame {
-	flex: 1;
-	min-width: 0;
-	display: flex;
-	position: relative;
-}
+	.style-editor-frame {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		position: relative;
+	}
 
-.style-editor-frame--fs {
-	position: relative;
-	width: min(80vw, 800px);
-	padding: 8px;
-	display: flex;
-	flex-direction: column;
-}
+	.style-editor-frame--fs {
+		position: relative;
+		width: min(80vw, 800px);
+		padding: var(--sf-spacing-xs);
+		display: flex;
+		flex-direction: column;
+	}
 
-.style-attr-editor {
-	flex: 1;
-	min-width: 0;
-	border-radius: 3px;
-	border: 1px solid rgb(var(--sf-border_color));
-	overflow: hidden;
-	transition: border-color 0.1s;
-}
+	.style-attr-editor {
+		flex: 1;
+		min-width: 0;
+		border-radius: var(--sf-radius-1);
+		border: var(--sf-stroke-1) solid rgb(var(--sf-border_color));
+		overflow: hidden;
+		transition: border-color 0.1s;
+	}
 
-.style-attr-editor:focus-within {
-	border-color: rgb(var(--sf-primary));
-}
+	.style-attr-editor:focus-within {
+		border-color: rgb(var(--sf-primary));
+	}
 
-:deep(.cm-editor) {
-	min-height: 44px;
-	max-height: 150px;
-	overflow-y: auto;
-	background: rgb(var(--sf-surface-0));
-}
+	/* CodeMirror internal DOM — component-owned bridge to CM's expected layout.
+	   The precise font-size / padding values are calibrated to CM's own metrics;
+	   changing them to spacing tokens would risk breaking CM's line-measurement. */
+	:deep(.cm-editor) {
+		min-height: 44px;
+		max-height: 150px;
+		overflow-y: auto;
+		background: rgb(var(--sf-surface-0));
+	}
 
-.style-editor-frame--fs :deep(.cm-editor) {
-	min-height: 0;
-	max-height: 60vh;
-	height: 60vh;
-}
+	.style-editor-frame--fs :deep(.cm-editor) {
+		min-height: 0;
+		max-height: 60vh;
+		height: 60vh;
+	}
 
-:deep(.cm-content) {
-	font-size: 0.75rem;
-	font-family: monospace;
-	padding: 3px 5px;
-}
+	:deep(.cm-content) {
+		font-size: 0.75rem;
+		font-family: monospace;
+		padding: 3px 5px;
+	}
 
-:deep(.cm-focused) {
-	outline: none;
-}
+	:deep(.cm-focused) {
+		outline: none;
+	}
 
-.style-fs-open {
-	position: absolute;
-	bottom: 3px;
-	right: 3px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 18px;
-	height: 18px;
-	background: none;
-	border: none;
-	border-radius: 3px;
-	cursor: pointer;
-	padding: 0;
-}
+	/* Icon buttons — width/height as component metric because these are precisely-fit
+	   icon frames (13px symbol in 18×18 box, 18px symbol in 28×28 box). SfIconButton
+	   uses sf-size-*'s padding bridge which doesn't hit exact-px targets; if we grow
+	   more of these, factor to a shared "icon button with explicit size" abstraction. */
+	.style-fs-open {
+		position: absolute;
+		bottom: 3px;
+		right: 3px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		background: none;
+		border: none;
+		border-radius: var(--sf-radius-1);
+		cursor: pointer;
+		padding: 0;
+	}
 
-.style-fs-open .material-symbols-rounded {
-	font-size: 13px;
-}
+	.style-fs-open .material-symbols-rounded {
+		font-size: 13px;
+	}
 
-.style-fs-close {
-	position: absolute;
-	top: 8px;
-	right: 8px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	background: none;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-}
+	.style-fs-close {
+		position: absolute;
+		top: var(--sf-spacing-xs);
+		right: var(--sf-spacing-xs);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		background: none;
+		border: none;
+		border-radius: var(--sf-radius-1);
+		cursor: pointer;
+	}
 
-.style-fs-close .material-symbols-rounded {
-	font-size: 18px;
+	.style-fs-close .material-symbols-rounded {
+		font-size: 18px;
+	}
 }
 </style>

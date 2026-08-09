@@ -293,6 +293,12 @@ const VOCABULARY: VocabSpec[] = [
 		description:
 			'Editable form-control chrome shared by input, select, textarea — border, radius, font, padding-bridge, focus contract. Wear alongside sf on form elements that want field chrome (checkbox/radio/range wear sf alone for accent-color only). Element-specific additions (chevron on select) via compound rules like select.sf-field.',
 	},
+	{
+		name: 'sf-scrim',
+		kind: 'element',
+		description:
+			'Modal backdrop — semi-transparent full-viewport overlay that darkens and blurs the underlying content. Chrome only (background + backdrop-filter); consumer owns positioning (fixed, inset:0, z-index, centering).',
+	},
 
 	// Variants
 	{
@@ -1326,6 +1332,17 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'outline-offset',
 		value: 'var(--sf-stroke-1)',
 	},
+
+	// ─── sf-scrim ─────────────────────────────────────────────────────────────
+	// Modal backdrop. Black tint darkens regardless of theme; alpha via token.
+	// backdrop-filter blur value is scrim-specific chrome — if blur becomes multi-use
+	// across the vocabulary, introduce a --sf-blur-* scale.
+	{
+		classNames: ['sf-scrim'],
+		cssProperty: 'background',
+		value: 'rgb(0 0 0 / var(--sf-alpha-5))',
+	},
+	{ classNames: ['sf-scrim'], cssProperty: 'backdrop-filter', value: 'blur(8px)' },
 
 	// ─── sf-field ─────────────────────────────────────────────────────────────
 	// Shared editable-form-control chrome. Consumers on <input>, <select>, <textarea>

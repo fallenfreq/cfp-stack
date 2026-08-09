@@ -483,6 +483,8 @@ sf-swatch        small colour-surface tile — palette chip, native colour input
                  Theme decides border/radius/padding; consumers set width/height
 sf-field         editable form-control chrome shared by input/select/textarea —
                  border, radius, font, padding-bridge, focus contract
+sf-scrim         modal backdrop — darkening + blur overlay for dialogs/modals.
+                 Chrome only; consumer owns positioning (fixed, inset:0, z-index)
 ```
 
 **A marker only declares what's unique to the category.** Everything a chip and a card
