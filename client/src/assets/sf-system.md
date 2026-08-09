@@ -485,6 +485,9 @@ sf-field         editable form-control chrome shared by input/select/textarea �
                  border, radius, font, padding-bridge, focus contract
 sf-scrim         modal backdrop — darkening + blur overlay for dialogs/modals.
                  Chrome only; consumer owns positioning (fixed, inset:0, z-index)
+sf-content-frame frame around focusable content that itself is not focusable —
+                 third-party editor wrappers, contenteditable containers, iframe
+                 hosts. Border + :focus-within primary-border response
 ```
 
 **A marker only declares what's unique to the category.** Everything a chip and a card

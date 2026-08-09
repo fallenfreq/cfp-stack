@@ -299,6 +299,12 @@ const VOCABULARY: VocabSpec[] = [
 		description:
 			'Modal backdrop — semi-transparent full-viewport overlay that darkens and blurs the underlying content. Chrome only (background + backdrop-filter); consumer owns positioning (fixed, inset:0, z-index, centering).',
 	},
+	{
+		name: 'sf-content-frame',
+		kind: 'element',
+		description:
+			'Frame around focusable content that itself is not focusable — third-party editor wrappers (CodeMirror, TipTap), contenteditable containers, iframe hosts. Border + radius + :focus-within primary-border response. Consumer keeps layout/overflow/transition scoped.',
+	},
 
 	// Variants
 	{
@@ -1343,6 +1349,27 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(0 0 0 / var(--sf-alpha-5))',
 	},
 	{ classNames: ['sf-scrim'], cssProperty: 'backdrop-filter', value: 'blur(8px)' },
+
+	// ─── sf-content-frame ─────────────────────────────────────────────────────
+	// Frame around focusable content (CodeMirror, TipTap, contenteditable, iframe).
+	// The frame itself isn't focusable; :focus-within surfaces descendant focus as a
+	// primary-tinted border. Consumer keeps layout / overflow / transition scoped.
+	{
+		classNames: ['sf-content-frame'],
+		cssProperty: 'border',
+		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-content-frame'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-1)',
+	},
+	{
+		classNames: ['sf-content-frame'],
+		pseudo: ':focus-within',
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-primary))',
+	},
 
 	// ─── sf-field ─────────────────────────────────────────────────────────────
 	// Shared editable-form-control chrome. Consumers on <input>, <select>, <textarea>

@@ -11,7 +11,7 @@
 					class="style-editor-frame"
 					:class="{ 'style-editor-frame--fs': fullscreen, 'sf-depth-2': fullscreen }"
 				>
-					<div ref="editorEl" class="style-attr-editor" />
+					<div ref="editorEl" class="style-attr-editor sf-content-frame" />
 					<button
 						v-if="!fullscreen"
 						class="style-fs-open sf-loudness-1 sf-on-hover"
@@ -175,17 +175,13 @@ onUnmounted(() => {
 		flex-direction: column;
 	}
 
+	/* Layout + CM overflow clipping + focus-color transition — chrome (border,
+	   radius, :focus-within primary border) comes from sf-content-frame. */
 	.style-attr-editor {
 		flex: 1;
 		min-width: 0;
-		border-radius: var(--sf-radius-1);
-		border: var(--sf-stroke-1) solid rgb(var(--sf-border_color));
 		overflow: hidden;
 		transition: border-color 0.1s;
-	}
-
-	.style-attr-editor:focus-within {
-		border-color: rgb(var(--sf-primary));
 	}
 
 	/* CodeMirror internal DOM — component-owned bridge to CM's expected layout.
