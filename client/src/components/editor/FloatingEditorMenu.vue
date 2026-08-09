@@ -1,33 +1,35 @@
 <template>
 	<div
 		v-if="show"
-		class="floating-toolbar sf-depth-2 sf-is-overlay sl-cluster sf-gap-xs px-7"
+		class="floating-toolbar sf-depth-2 sf-is-overlay sl-cluster sf-gap-xs sf-size-xs"
 		:style="{ top: `${position.top}px`, left: `${position.left}px` }"
 	>
-		<!-- Use for when the caret is not in a text block  -->
-		<!--
-    <VaChip v-if="!isTextNodeType">
-    </VaChip>
-    -->
-		<VaChip
+		<!-- Use for when the caret is not in a text block: (placeholder for a future chip) -->
+		<SfChip
 			v-if="isTextNodeType && !editorStore.isCodeView"
-			:class="{ 'is-active': editor.isActive('codeBlock') }"
+			size="xs"
+			:current="editor.isActive('codeBlock')"
 			@click="editor.chain().focus().toggleCodeBlock().run()"
 		>
 			Code Block
-		</VaChip>
-		<VaChip v-if="selectedNodeType === 'codeBlock'" @click="() => prettifySelectedCode(editor)">
+		</SfChip>
+		<SfChip
+			v-if="selectedNodeType === 'codeBlock'"
+			size="xs"
+			@click="() => prettifySelectedCode(editor)"
+		>
 			Format
-		</VaChip>
+		</SfChip>
 	</div>
 	<div class="bottom-right-nav">
-		<VaChip @click="editorStore.toggleCodeView">
+		<SfChip size="xs" @click="editorStore.toggleCodeView">
 			{{ editorStore.isCodeView ? 'Aa' : '< >' }}
-		</VaChip>
+		</SfChip>
 	</div>
 </template>
 
 <script setup lang="ts">
+import SfChip from '@/components/SfChip.vue'
 import { useEditorStore } from '@/stores/editorStore.js'
 import { prettifySelectedCode } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
@@ -90,19 +92,22 @@ onUnmounted(() => {
 </script>
 
 <style>
-.bottom-right-nav {
-	position: fixed;
-	bottom: 0;
-	right: 0;
-	padding: 8px;
-	z-index: var(--z-toolbar);
-}
-.floating-toolbar {
-	position: fixed;
-	padding: 8px;
-	z-index: var(--z-toolbar);
-	transition:
-		transform 0.15s ease-in-out,
-		opacity 0.15s ease-in-out;
+@layer ui {
+	.bottom-right-nav {
+		position: fixed;
+		bottom: 0;
+		right: 0;
+		padding: var(--sf-spacing-xs);
+		z-index: var(--z-toolbar);
+	}
+
+	/* .floating-toolbar padding comes from sf-depth-2 × sf-size-xs bridge. */
+	.floating-toolbar {
+		position: fixed;
+		z-index: var(--z-toolbar);
+		transition:
+			transform 0.15s ease-in-out,
+			opacity 0.15s ease-in-out;
+	}
 }
 </style>

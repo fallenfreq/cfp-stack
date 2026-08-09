@@ -3,116 +3,112 @@
 		<div class="fp-section">
 			<span class="fp-label sf-loudness-1">Family</span>
 			<div class="fp-row">
-				<button
-					type="button"
-					class="sf sf-chip sf-size-xs sf-on-hover"
+				<SfChip
+					size="xs"
 					title="Default family"
-					:class="{ 'sf-on-selected': !activeFamilyVar }"
+					:selected="!activeFamilyVar"
 					@mousedown.prevent
 					@click="pickFamily(null)"
 				>
 					×
-				</button>
-				<button
+				</SfChip>
+				<SfChip
 					v-for="f in families"
 					:key="f.cssVar"
-					type="button"
-					class="sf sf-chip sf-size-xs sf-on-hover"
-					:class="{ 'sf-on-selected': activeFamilyVar === f.cssVar }"
+					size="xs"
+					:selected="activeFamilyVar === f.cssVar"
 					:style="{ fontFamily: f.value }"
 					:title="f.label"
 					@mousedown.prevent
 					@click="pickFamily(f.cssVar)"
 				>
 					Aa
-				</button>
+				</SfChip>
 			</div>
 		</div>
 
 		<div class="fp-section">
 			<span class="fp-label sf-loudness-1">Size</span>
 			<div class="fp-row">
-				<button
-					type="button"
-					class="sf sf-chip sf-size-xs sf-on-hover"
+				<SfChip
+					size="xs"
 					title="Default size"
-					:class="{ 'sf-on-selected': !activeSizeVar }"
+					:selected="!activeSizeVar"
 					@mousedown.prevent
 					@click="pickSize(null)"
 				>
 					×
-				</button>
-				<button
+				</SfChip>
+				<SfChip
 					v-for="s in sizes"
 					:key="s.cssVar"
-					class="sf sf-chip sf-size-xs sf-on-hover"
-					:class="{ 'sf-on-selected': activeSizeVar === s.cssVar }"
+					size="xs"
+					:selected="activeSizeVar === s.cssVar"
 					:title="s.value"
 					@mousedown.prevent
 					@click="pickSize(s.cssVar)"
 				>
 					{{ s.label }}
-				</button>
+				</SfChip>
 			</div>
 		</div>
 
 		<div class="fp-section">
 			<span class="fp-label sf-loudness-1">Leading</span>
 			<div class="fp-row">
-				<button
-					type="button"
-					class="sf sf-chip sf-size-xs sf-on-hover"
+				<SfChip
+					size="xs"
 					title="Default line height"
-					:class="{ 'sf-on-selected': !activeLeadingVar }"
+					:selected="!activeLeadingVar"
 					@mousedown.prevent
 					@click="pickLeading(null)"
 				>
 					×
-				</button>
-				<button
+				</SfChip>
+				<SfChip
 					v-for="l in leading"
 					:key="l.cssVar"
-					class="sf sf-chip sf-size-xs sf-on-hover"
-					:class="{ 'sf-on-selected': activeLeadingVar === l.cssVar }"
+					size="xs"
+					:selected="activeLeadingVar === l.cssVar"
 					:title="`line-height: ${l.value}`"
 					@mousedown.prevent
 					@click="pickLeading(l.cssVar)"
 				>
 					{{ l.label }}
-				</button>
+				</SfChip>
 			</div>
 		</div>
 
 		<div class="fp-section">
 			<span class="fp-label sf-loudness-1">Tracking</span>
 			<div class="fp-row">
-				<button
-					type="button"
-					class="sf sf-chip sf-size-xs sf-on-hover"
+				<SfChip
+					size="xs"
 					title="Default letter spacing"
-					:class="{ 'sf-on-selected': !activeTrackingVar }"
+					:selected="!activeTrackingVar"
 					@mousedown.prevent
 					@click="pickTracking(null)"
 				>
 					×
-				</button>
-				<button
+				</SfChip>
+				<SfChip
 					v-for="t in tracking"
 					:key="t.cssVar"
-					class="sf sf-chip sf-size-xs sf-on-hover"
-					:class="{ 'sf-on-selected': activeTrackingVar === t.cssVar }"
+					size="xs"
+					:selected="activeTrackingVar === t.cssVar"
 					:title="`letter-spacing: ${t.value}`"
 					@mousedown.prevent
 					@click="pickTracking(t.cssVar)"
 				>
 					{{ t.label }}
-				</button>
+				</SfChip>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
+import SfChip from '@/components/SfChip.vue'
 import {
 	SIZE_TO_LEADING,
 	parseFontVar,

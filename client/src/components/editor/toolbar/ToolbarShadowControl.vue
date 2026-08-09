@@ -11,24 +11,24 @@
 			<div class="sp-section">
 				<span class="sp-label sf-loudness-1">Shadow</span>
 				<div class="sp-row">
-					<button
-						class="sf sf-chip sf-size-xs sf-on-hover"
-						:class="{ 'sf-on-selected': selectedToken === null }"
+					<SfChip
+						size="xs"
+						:selected="selectedToken === null"
 						@mousedown.prevent
 						@click="selectToken(null)"
 					>
 						none
-					</button>
-					<button
+					</SfChip>
+					<SfChip
 						v-for="t in shadowOptions"
 						:key="t"
-						class="sf sf-chip sf-size-xs sf-on-hover"
-						:class="{ 'sf-on-selected': selectedToken === t }"
+						size="xs"
+						:selected="selectedToken === t"
 						@mousedown.prevent
 						@click="selectToken(t)"
 					>
 						{{ t }}
-					</button>
+					</SfChip>
 				</div>
 			</div>
 
@@ -43,6 +43,7 @@
 </template>
 
 <script setup lang="ts">
+import SfChip from '@/components/SfChip.vue'
 import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeControl'
 import { useLayoutTokens } from '@/config/editor/layoutTokens'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'

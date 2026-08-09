@@ -11,24 +11,24 @@
 			<div class="cp-section">
 				<span class="cp-label sf-loudness-1">Corners</span>
 				<div class="cp-row">
-					<button
+					<SfChip
 						v-for="t in radiusOptions"
 						:key="t"
-						class="sf sf-chip sf-size-xs sf-on-hover"
-						:class="{ 'sf-on-selected': selectedToken === t }"
+						size="xs"
+						:selected="selectedToken === t"
 						@mousedown.prevent
 						@click="selectToken(t)"
 					>
 						{{ t }}
-					</button>
-					<button
-						class="sf sf-chip sf-size-xs sf-on-hover"
-						:class="{ 'sf-on-selected': selectedToken === 'custom' }"
+					</SfChip>
+					<SfChip
+						size="xs"
+						:selected="selectedToken === 'custom'"
 						@mousedown.prevent
 						@click="selectToken('custom')"
 					>
 						custom
-					</button>
+					</SfChip>
 				</div>
 			</div>
 
@@ -103,6 +103,7 @@
 </template>
 
 <script setup lang="ts">
+import SfChip from '@/components/SfChip.vue'
 import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeControl'
 import { useLayoutTokens } from '@/config/editor/layoutTokens'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'

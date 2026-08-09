@@ -10,36 +10,37 @@
 		<div class="aspect-picker" @mousedown.stop>
 			<span class="ap-label sf-loudness-1">Aspect ratio</span>
 			<div class="ap-row">
-				<button
+				<SfChip
 					v-for="opt in aspectOptions"
 					:key="opt.value"
-					class="sf sf-chip sf-size-xs sf-on-hover"
-					:class="{ 'sf-on-selected': selectedAspect === opt.value }"
+					size="xs"
+					:selected="selectedAspect === opt.value"
 					@mousedown.prevent
 					@click="selectAspect(opt.value)"
 				>
 					{{ opt.label }}
-				</button>
+				</SfChip>
 			</div>
 
 			<span class="ap-label sf-loudness-1">Image fill</span>
 			<div class="ap-row">
-				<button
+				<SfChip
 					v-for="opt in objectOptions"
 					:key="opt.value"
-					class="sf sf-chip sf-size-xs sf-on-hover"
-					:class="{ 'sf-on-selected': selectedObject === opt.value }"
+					size="xs"
+					:selected="selectedObject === opt.value"
 					@mousedown.prevent
 					@click="selectObject(opt.value)"
 				>
 					{{ opt.label }}
-				</button>
+				</SfChip>
 			</div>
 		</div>
 	</ToolbarPanelItem>
 </template>
 
 <script setup lang="ts">
+import SfChip from '@/components/SfChip.vue'
 import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeControl'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
