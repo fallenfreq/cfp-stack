@@ -16,7 +16,7 @@
 				:id="tooltipId"
 				ref="popupEl"
 				role="tooltip"
-				class="tooltip-popup sf sf-depth-3 sf-is-overlay"
+				class="tooltip-popup sf sf-depth-3 sf-size-2xs sf-is-overlay"
 				:style="tooltipStyle"
 			>
 				{{ text }}
@@ -121,20 +121,21 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.tooltip-root {
-	position: relative;
-	display: inline-flex;
-	user-select: none;
-	-webkit-user-select: none;
-	-webkit-touch-callout: none;
-}
+@layer ui {
+	.tooltip-root {
+		position: relative;
+		display: inline-flex;
+		user-select: none;
+		-webkit-user-select: none;
+		-webkit-touch-callout: none;
+	}
 
-.tooltip-popup {
-	position: fixed;
-	z-index: var(--z-overlay);
-	pointer-events: none;
-	white-space: nowrap;
-	font-size: 11px;
-	padding: 3px 7px;
+	.tooltip-popup {
+		position: fixed;
+		z-index: var(--z-overlay);
+		pointer-events: none;
+		white-space: nowrap;
+		font-size: 11px;
+	}
 }
 </style>

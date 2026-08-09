@@ -432,6 +432,9 @@ sf-size-xl   hero scale
 Size is independent of depth and loudness. A small pill can be `sf-depth-2 sf-loudness-1
 sf-variant-featured sf-size-xs sf-radius-3`; the axes do not constrain each other.
 
+Absence of `sf-size-*` is a valid, meaningful state. The theme decides what the default
+scale is for any given element type; `sf-size-*` is the author's explicit override.
+
 **Boundary** — visual separation on the element's own sides. The theme decides the full
 treatment; the default is a themed border, but themes may compose multi-property (line
 weight, style, colour, spacing increase). No scale step is involved; the hyphen is a

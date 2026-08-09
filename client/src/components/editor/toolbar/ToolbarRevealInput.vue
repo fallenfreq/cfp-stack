@@ -8,7 +8,7 @@
 				ref="inputEl"
 				v-model="localUrl"
 				type="url"
-				class="toolbar-url-input sf sf-field sf-on-focus"
+				class="toolbar-url-input sf sf-field sf-size-xs sf-on-focus"
 				:placeholder="placeholder ?? 'https://'"
 				@keydown.enter.prevent="apply"
 				@keydown.escape.prevent="collapse"

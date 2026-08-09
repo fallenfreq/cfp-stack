@@ -7,7 +7,7 @@
 		<div
 			v-else
 			ref="tableWrap"
-			class="admin-table-wrap sf-depth-1"
+			class="admin-table-wrap sf-depth-1 sf-size-2xs"
 			:class="{
 				'sf-is-edge-left': isBelowThreshold,
 				'sf-is-edge-right': isBelowThreshold,

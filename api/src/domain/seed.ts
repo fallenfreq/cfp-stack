@@ -557,10 +557,20 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-shadow-md) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-1'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
-	// Inner padding driven by --sf-padding bridge, filled by sf-size-* on the same element.
-	// Fallback 0 preserves existing depth-* consumers that don't wear sf-size-* and have no
-	// scoped padding; consumers with raw padding in scoped CSS win via @layer ui specificity.
-	{ classNames: ['sf-depth-1'], cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
+	// Chrome classes both set --sf-padding (card-scale default) AND consume it. sf-size-*
+	// worn on the same element overrides via cascade — same layer, same specificity, sf-size
+	// wins by source order (its selector "sf-size-*" sorts after chrome-class selectors like
+	// "sf-depth-*", "button.sf", "sf-field" in the generator's alphabetic emit). This
+	// dependency on alphabetic ordering is fragile long-term — see [[project-seed-rule-order]].
+	// Tight consumers (tooltips, drag handles, floating toolbars) opt in via sf-size-2xs /
+	// sf-size-xs. Node-view-wrapper reset zeros --sf-padding to fence inheritance across
+	// primitive boundaries; a chrome class on the wrapper itself wins by cascade layer.
+	{
+		classNames: ['sf-depth-1'],
+		cssProperty: '--sf-padding',
+		value: 'var(--sf-spacing-md)',
+	},
+	{ classNames: ['sf-depth-1'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 
 	// depth-2: dropdowns, popovers — stronger shadow
 	{
@@ -576,7 +586,12 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-2'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
-	{ classNames: ['sf-depth-2'], cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
+	{
+		classNames: ['sf-depth-2'],
+		cssProperty: '--sf-padding',
+		value: 'var(--sf-spacing-md)',
+	},
+	{ classNames: ['sf-depth-2'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 
 	// depth-3: modals — strongest shadow
 	{
@@ -592,7 +607,12 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
-	{ classNames: ['sf-depth-3'], cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
+	{
+		classNames: ['sf-depth-3'],
+		cssProperty: '--sf-padding',
+		value: 'var(--sf-spacing-md)',
+	},
+	{ classNames: ['sf-depth-3'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 
 	// Loudness bare rules — apply at any depth; compounds below refine per-surface behaviour.
 	// loudness-1: muted foreground (low-attention text/element). Border cleared so text-only
@@ -707,7 +727,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sl-center'],
 		cssProperty: 'padding-inline',
-		value: 'var(--sf-padding, var(--sf-spacing-md))',
+		value: 'var(--sf-padding)',
 	},
 	{ classNames: ['sl-center'], cssProperty: 'container-type', value: 'inline-size' },
 
@@ -1107,14 +1127,35 @@ const ROOT_RULES: RuleSpec[] = [
 	// interactive (no cursor change). Use for muted-but-clickable elements at any loudness tier.
 	{ classNames: ['sf-is-disabled'], cssProperty: 'opacity', value: '0.4' },
 
-	// Selected state — outline chip pattern (swatches, size/shadow picker chips).
-	// No pseudo: this is a persistent stateful class, applied while the option is chosen.
+	// Selected state — bare rule gives the card/block-scale default: a thicker, softer
+	// outline suitable for large content surfaces (editor node selection, section outlines).
+	// Compounds with sf-size-2xs / sf-size-xs give the chip-scale chip pattern (thinner, saturated,
+	// offset) — palette swatches, picker chips. No pseudo: persistent stateful class.
 	{
 		classNames: ['sf-on-selected'],
 		cssProperty: 'outline',
-		value: '2px solid rgb(var(--sf-primary))',
+		value: 'var(--sf-stroke-3) solid rgba(var(--sf-primary) / var(--sf-alpha-2))',
 	},
-	{ classNames: ['sf-on-selected'], cssProperty: 'outline-offset', value: '1px' },
+	{
+		classNames: ['sf-size-2xs', 'sf-on-selected'],
+		cssProperty: 'outline',
+		value: 'var(--sf-stroke-2) solid rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-size-2xs', 'sf-on-selected'],
+		cssProperty: 'outline-offset',
+		value: 'var(--sf-stroke-1)',
+	},
+	{
+		classNames: ['sf-size-xs', 'sf-on-selected'],
+		cssProperty: 'outline',
+		value: 'var(--sf-stroke-2) solid rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-size-xs', 'sf-on-selected'],
+		cssProperty: 'outline-offset',
+		value: 'var(--sf-stroke-1)',
+	},
 
 	// Current state — tinted-primary fill (toolbar toggles, breadcrumb leaf, keyboard-highlighted menu item).
 	// Reads as "this option is on right now" — distinct from sf-on-selected's outline chip.
@@ -1188,11 +1229,18 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-radius',
 		value: 'var(--sf-radius-2)',
 	},
+	// Card-scale default; sf-size-* on the same button overrides via source order.
+	{
+		elementSelector: 'button',
+		classNames: ['sf'],
+		cssProperty: '--sf-padding',
+		value: 'var(--sf-spacing-md)',
+	},
 	{
 		elementSelector: 'button',
 		classNames: ['sf'],
 		cssProperty: 'padding',
-		value: 'var(--sf-padding, 0)',
+		value: 'var(--sf-padding)',
 	},
 	{ elementSelector: 'button', classNames: ['sf'], cssProperty: 'font', value: 'inherit' },
 	{
@@ -1284,7 +1332,8 @@ const ROOT_RULES: RuleSpec[] = [
 	// wear this alongside sf-size-* for padding scale. Element-specific extras
 	// (select chevron etc.) live in compound rules below in the same layer.
 	{ classNames: ['sf-field'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
-	{ classNames: ['sf-field'], cssProperty: 'padding', value: 'var(--sf-padding, 0)' },
+	{ classNames: ['sf-field'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-md)' },
+	{ classNames: ['sf-field'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 	{ classNames: ['sf-field'], cssProperty: 'font', value: 'inherit' },
 	{
 		classNames: ['sf-field'],
@@ -1338,7 +1387,7 @@ const ROOT_RULES: RuleSpec[] = [
 		elementSelector: 'select',
 		classNames: ['sf-field'],
 		cssProperty: 'padding-right',
-		value: 'calc(var(--sf-padding, 0) + var(--sf-spacing-md))',
+		value: 'calc(var(--sf-padding) + var(--sf-spacing-md))',
 	},
 
 	// ─── Horizontal rule ──────────────────────────────────────────────────────

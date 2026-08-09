@@ -1,7 +1,7 @@
 <template>
 	<div
 		v-if="targetPos !== null && pixelPos"
-		class="floating-drag-handle-wrapper sf sf-drag-handle sf-depth-2 sf-is-overlay sf-on-hover"
+		class="floating-drag-handle-wrapper sf sf-drag-handle sf-depth-2 sf-size-2xs sf-is-overlay sf-on-hover"
 		:class="{
 			'is-fading': store.isFading,
 			'sf-on-dragging': isDragging,
@@ -137,31 +137,33 @@ const onDragend = () => {
 </script>
 
 <style scoped>
-.floating-drag-handle-wrapper {
-	position: fixed;
-	z-index: var(--z-toolbar);
-	width: var(--toolbar-height);
-	height: var(--toolbar-height);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: grab;
-	user-select: none;
-	box-sizing: border-box;
-	transform: translateY(-100%);
-	opacity: 1;
-	transition: opacity 1s ease 1s;
-}
+@layer ui {
+	.floating-drag-handle-wrapper {
+		position: fixed;
+		z-index: var(--z-toolbar);
+		width: var(--toolbar-height);
+		height: var(--toolbar-height);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: grab;
+		user-select: none;
+		box-sizing: border-box;
+		transform: translateY(-100%);
+		opacity: 1;
+		transition: opacity 1s ease 1s;
+	}
 
-.floating-drag-handle-wrapper.sf-on-dragging {
-	cursor: grabbing;
-}
+	.floating-drag-handle-wrapper.sf-on-dragging {
+		cursor: grabbing;
+	}
 
-.floating-drag-handle-wrapper.is-fading {
-	opacity: 0;
-}
+	.floating-drag-handle-wrapper.is-fading {
+		opacity: 0;
+	}
 
-.floating-drag-handle-wrapper.sf-is-contained {
-	transform: none;
+	.floating-drag-handle-wrapper.sf-is-contained {
+		transform: none;
+	}
 }
 </style>

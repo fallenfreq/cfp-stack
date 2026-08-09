@@ -2,7 +2,7 @@
 	<div
 		v-if="visibleItems.length"
 		ref="toolbarEl"
-		class="floating-toolbar sf-depth-2 sf-is-overlay"
+		class="floating-toolbar sf-depth-2 sf-size-2xs sf-is-overlay"
 		:style="{
 			top: `${position.top}px`,
 			left: `${position.left}px`,
@@ -162,41 +162,43 @@ onUnmounted(() => {
 </script>
 
 <style>
-.sel-count {
-	padding: 0 4px;
-	white-space: nowrap;
-	align-self: center;
-}
+@layer ui {
+	.sel-count {
+		padding: 0 4px;
+		white-space: nowrap;
+		align-self: center;
+	}
 
-.tiptap.has-floating-toolbar[contenteditable='true'] {
-	padding-top: calc(var(--toolbar-height) + 20px);
-}
+	.tiptap.has-floating-toolbar[contenteditable='true'] {
+		padding-top: calc(var(--toolbar-height) + 20px);
+	}
 
-.floating-toolbar {
-	position: fixed;
-	display: flex;
-	align-items: stretch;
-	box-sizing: border-box;
-	width: fit-content;
-	height: var(--toolbar-height);
-	transform: translateY(-100%);
-	z-index: var(--z-toolbar);
-	overflow: hidden;
-}
+	.floating-toolbar {
+		position: fixed;
+		display: flex;
+		align-items: stretch;
+		box-sizing: border-box;
+		width: fit-content;
+		height: var(--toolbar-height);
+		transform: translateY(-100%);
+		z-index: var(--z-toolbar);
+		overflow: hidden;
+	}
 
-.toolbar-slot {
-	width: var(--toolbar-height);
-	flex-shrink: 0;
-	align-self: stretch;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: transparent;
-	pointer-events: none;
-}
+	.toolbar-slot {
+		width: var(--toolbar-height);
+		flex-shrink: 0;
+		align-self: stretch;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: transparent;
+		pointer-events: none;
+	}
 
-.toolbar-overflow {
-	flex: 1;
-	min-width: 0;
+	.toolbar-overflow {
+		flex: 1;
+		min-width: 0;
+	}
 }
 </style>

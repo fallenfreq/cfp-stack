@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="editor-top-bar sf-depth-1 sf-is-sticky sf-is-edge-left sf-is-edge-right sf-text-xs"
+		class="editor-top-bar sf-depth-1 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right sf-text-xs"
 		:class="{ 'is-renaming': renamingName }"
 	>
 		<input
@@ -106,7 +106,7 @@ const cancelRename = () => {
 		z-index: var(--z-nodepath);
 		display: flex;
 		align-items: center;
-		padding: 4px 1.75rem;
+		padding-inline: var(--sf-spacing-lg);
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 

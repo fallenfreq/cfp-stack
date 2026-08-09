@@ -81,38 +81,39 @@ const close = () => {
 </script>
 
 <style scoped>
-.prompt-modal {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background: rgb(0 0 0 / var(--sf-alpha-5));
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	z-index: var(--z-modal);
-}
+@layer ui {
+	.prompt-modal {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgb(0 0 0 / var(--sf-alpha-5));
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: var(--z-modal);
+	}
 
-.prompt-content {
-	padding: 20px;
-	width: 100%;
-	text-align: left;
-	margin: 0 20px;
-	max-width: 500px;
-}
+	.prompt-content {
+		width: 100%;
+		text-align: left;
+		margin: 0 20px;
+		max-width: 500px;
+	}
 
-.prompt-content input {
-	width: 100%;
-	background: rgb(var(--bg_primary));
-	padding: 5px;
-	margin: 10px 0;
-	border-radius: 5px;
-}
+	.prompt-content input {
+		width: 100%;
+		background: rgb(var(--bg_primary));
+		padding: 5px;
+		margin: 10px 0;
+		border-radius: 5px;
+	}
 
-.button-group {
-	display: flex;
-	justify-content: flex-end;
-	gap: var(--sf-gap, var(--sf-spacing-2xs));
+	.button-group {
+		display: flex;
+		justify-content: flex-end;
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
+	}
 }
 </style>

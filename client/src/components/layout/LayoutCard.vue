@@ -5,15 +5,17 @@
 </template>
 
 <style scoped>
-.layout-card {
-	container-type: inline-size;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-}
+@layer ui {
+	.layout-card {
+		container-type: inline-size;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+	}
 
-:global(.layout-card > [data-node-view-content]) {
-	display: block;
-	padding: var(--sf-padding, 0);
+	:global(.layout-card > [data-node-view-content]) {
+		display: block;
+		padding: var(--sf-padding, 0);
+	}
 }
 </style>

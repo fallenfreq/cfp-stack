@@ -125,9 +125,11 @@ watch(editor, (newEditor) => {
 	pointer-events: none;
 }
 
-/* ProseMirror / drag-handle selection states */
+/* ProseMirror / drag-handle selection states — mirrors sf-on-selected's bare rule
+   (block/card-scale outline). Kept as a scoped bridge because ProseMirror applies
+   this class internally on NodeSelection; we can't rename it without a TipTap plugin. */
 .ProseMirror-selectednode {
-	outline: 3px solid rgba(var(--sf-primary) / var(--sf-alpha-2));
+	outline: var(--sf-stroke-3) solid rgba(var(--sf-primary) / var(--sf-alpha-2));
 }
 
 .tiptap:focus {
