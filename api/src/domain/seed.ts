@@ -1352,6 +1352,13 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'background-color',
 		value: 'rgba(var(--sf-fg_primary) / var(--sf-alpha-1))',
 	},
+	// Placeholder — muted foreground tint so hint text reads as inactive.
+	{
+		classNames: ['sf-field'],
+		pseudo: '::placeholder',
+		cssProperty: 'color',
+		value: 'rgba(var(--sf-fg_primary) / var(--sf-alpha-5))',
+	},
 
 	// select.sf-field — chevron indicator + right-padding to clear it. Element-scoped
 	// so only selects get these; sits in sf-bundle (via sf-field kind), higher

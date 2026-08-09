@@ -117,6 +117,9 @@ watch(editor, (newEditor) => {
 	cursor: default;
 }
 
+/* TipTap placeholder — mirrors sf-field::placeholder's muted tint. Kept as a scoped
+   bridge because TipTap's Placeholder extension emits the .is-empty class internally
+   and we don't add .sf-field to editor node children. */
 .tiptap p.is-empty::before {
 	color: rgba(var(--sf-fg_primary) / var(--sf-alpha-5));
 	content: attr(data-placeholder);
