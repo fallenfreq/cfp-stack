@@ -2,13 +2,9 @@
 	<ToolbarPanelItem :open="open" :tooltip="tooltip" align="right" @close="onClose">
 		<template #trigger>
 			<SfTooltip :text="tooltip">
-				<button
-					type="button"
-					class="sf sf-is-contained sf-size-2xs sf-on-hover"
-					@click="toggle"
-				>
+				<SfButton class="sf-is-contained" @click="toggle">
 					<span class="color-swatch sf-swatch sf-size-2xs" :style="swatchStyle" />
-				</button>
+				</SfButton>
 			</SfTooltip>
 		</template>
 		<ColorPicker :value="currentColor" @commit="onCommit" @remove="onRemove" />
