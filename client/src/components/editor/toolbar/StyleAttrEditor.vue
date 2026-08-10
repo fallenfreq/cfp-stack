@@ -19,7 +19,7 @@
 						@mousedown.prevent
 						@click="fullscreen = true"
 					>
-						<span class="material-symbols-rounded">open_in_full</span>
+						<span class="material-symbols-rounded sf-icon sf-text-xs">open_in_full</span>
 					</button>
 					<button
 						v-if="fullscreen"
@@ -27,7 +27,7 @@
 						@mousedown.prevent
 						@click="closeFullscreen"
 					>
-						<span class="material-symbols-rounded">close_fullscreen</span>
+						<span class="material-symbols-rounded sf-icon sf-text-lg">close_fullscreen</span>
 					</button>
 				</div>
 			</div>
@@ -201,7 +201,7 @@ onUnmounted(() => {
 	}
 
 	:deep(.cm-content) {
-		font-size: 0.75rem;
+		font-size: var(--sf-text-xs);
 		font-family: monospace;
 		padding: 3px 5px;
 	}
@@ -210,10 +210,9 @@ onUnmounted(() => {
 		outline: none;
 	}
 
-	/* Icon buttons — width/height as component metric because these are precisely-fit
-	   icon frames (13px symbol in 18×18 box, 18px symbol in 28×28 box). SfIconButton
-	   uses sf-size-*'s padding bridge which doesn't hit exact-px targets; if we grow
-	   more of these, factor to a shared "icon button with explicit size" abstraction. */
+	/* Icon buttons — precise-fit icon frames (component metric for width/height).
+	   Icon sizes on the child span via sf-text-* utility; UA button chrome cleared
+	   here because the button doesn't wear sf marker. */
 	.style-fs-open {
 		position: absolute;
 		bottom: 3px;
@@ -230,10 +229,6 @@ onUnmounted(() => {
 		padding: 0;
 	}
 
-	.style-fs-open .material-symbols-rounded {
-		font-size: 13px;
-	}
-
 	.style-fs-close {
 		position: absolute;
 		top: var(--sf-spacing-xs);
@@ -247,10 +242,6 @@ onUnmounted(() => {
 		border: none;
 		border-radius: var(--sf-radius-1);
 		cursor: pointer;
-	}
-
-	.style-fs-close .material-symbols-rounded {
-		font-size: 18px;
 	}
 }
 </style>
