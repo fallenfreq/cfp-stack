@@ -100,13 +100,14 @@ const cancelRename = () => {
 
 <style>
 @layer ui {
+	/* Layout only — horizontal padding comes from sf-is-edge-left/right; vertical from
+	   sf-depth-1 × sf-size-2xs bridge. */
 	.editor-top-bar {
 		position: sticky;
 		top: 0;
 		z-index: var(--z-nodepath);
 		display: flex;
 		align-items: center;
-		padding-inline: var(--sf-spacing-lg);
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 
