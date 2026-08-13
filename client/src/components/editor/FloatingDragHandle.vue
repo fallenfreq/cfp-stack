@@ -6,7 +6,6 @@
 			'is-fading': store.isFading,
 			'sf-on-dragging': isDragging,
 			'sf-is-contained': isOverToolbar,
-			'sf-boundary-right': isOverToolbar,
 		}"
 		contenteditable="false"
 		draggable="true"
