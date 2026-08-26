@@ -2,7 +2,7 @@
 	<div
 		v-if="visibleItems.length"
 		ref="toolbarEl"
-		class="floating-toolbar sf-depth-2 sf-size-2xs sf-is-overlay"
+		class="floating-toolbar sf-depth-2 sf-size-2xs sf-is-overlay sf-flush"
 		:style="{
 			top: `${position.top}px`,
 			left: `${position.left}px`,

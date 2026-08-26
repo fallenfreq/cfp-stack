@@ -440,6 +440,12 @@ const VOCABULARY: VocabSpec[] = [
 			'Element sits inside a container that already provides visual boundary — author-declared; theme decides how to soften (default: drop own chrome)',
 	},
 	{
+		name: 'sf-flush',
+		kind: 'context',
+		description:
+			'Container holds content edge-to-edge — opt-out of chrome-class padding default. Wear alongside sf-depth-*.',
+	},
+	{
 		name: 'sf-is-disabled',
 		kind: 'context',
 		description:
@@ -575,8 +581,9 @@ const ROOT_RULES: RuleSpec[] = [
 	// "sf-depth-*", "button.sf", "sf-field" in the generator's alphabetic emit). This
 	// dependency on alphabetic ordering is fragile long-term — see [[project-seed-rule-order]].
 	// Tight consumers (tooltips, drag handles, floating toolbars) opt in via sf-size-2xs /
-	// sf-size-xs. Node-view-wrapper reset zeros --sf-padding to fence inheritance across
-	// primitive boundaries; a chrome class on the wrapper itself wins by cascade layer.
+	// sf-size-xs. Flush-content containers opt out via sf-flush. Node-view-wrapper reset
+	// zeros --sf-padding to fence inheritance across primitive boundaries; a chrome class
+	// on the wrapper itself wins by cascade layer. Follow-up: [[project-sl-padding]].
 	{
 		classNames: ['sf-depth-1'],
 		cssProperty: '--sf-padding',
@@ -831,6 +838,12 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-right-color',
 		value: 'rgb(var(--sf-border_color))',
 	},
+
+	// Flush context — opts out of chrome-class padding default. sf-context layer beats
+	// sf-bundle's `padding: var(--sf-padding)` on sf-depth-*. --sf-padding also zeroed so
+	// descendants that inherit it (sl-center, LayoutCard inner) don't see a stale value.
+	{ classNames: ['sf-flush'], cssProperty: '--sf-padding', value: '0' },
+	{ classNames: ['sf-flush'], cssProperty: 'padding', value: '0' },
 
 	// Viewport-edge context — zero the corners that touch the boundary (specificity 0-1-0).
 	// Three-side panel patterns restore the open-side corners via compound rules (0-3-0)

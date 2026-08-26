@@ -560,6 +560,8 @@ sf-is-sticky           a sticky element is currently in its pinned position
 sf-is-error            element or field is in a validation / error state
 sf-is-contained        element sits inside a container that already provides
                        visual boundary
+sf-flush               container holds content edge-to-edge (opt-out of
+                       chrome-class padding default)
 ```
 
 `sf-is-contained` is author-declared (like `sf-is-edge-*`) — the DOM structure is
@@ -569,6 +571,12 @@ chrome (background, border) since the parent already delineates, but a theme is
 free to soften it differently — reduced padding, muted colour, no change at all.
 Element-agnostic: applies equally to a `<button>` inside a card, a nested
 card-shaped `<div>`, or anything else that would otherwise draw its own container.
+
+`sf-flush` opts out of the chrome-class padding default — wear alongside `sf-depth-*`
+when the child touches the container's inner edge (image cards, toolbar slots).
+**Follow-up ([[project-sl-padding]]):** move padding to an `sl-pad-*` layout family
+so `sf-flush` isn't needed — an image card becomes bare `sf-depth-1`, a padded card
+becomes `sf-depth-1 sl-pad-md`.
 
 Every `sf-is-*` class declares _intent_, never appearance. `sf-is-overlay` means
 "this element is floating over content" — not "this element is pill-shaped." The
