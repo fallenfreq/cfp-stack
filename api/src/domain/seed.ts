@@ -856,6 +856,32 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-is-edge-bottom'], cssProperty: 'border-bottom-left-radius', value: '0' },
 	{ classNames: ['sf-is-edge-left'], cssProperty: 'border-top-left-radius', value: '0' },
 	{ classNames: ['sf-is-edge-left'], cssProperty: 'border-bottom-left-radius', value: '0' },
+	// Edge padding — the common case (chrome bar / sheet / table flush with viewport)
+	// wants inner breathing room so its content doesn't jam against the edge. Full-bleed
+	// content elements (imgs) opt out via element-scoped rules below. Longhands in
+	// sf-context beat sf-bundle's `padding: var(--sf-padding)` shorthand on sf-depth-*.
+	{ classNames: ['sf-is-edge-left'], cssProperty: 'padding-left', value: 'var(--sf-spacing-lg)' },
+	{
+		classNames: ['sf-is-edge-right'],
+		cssProperty: 'padding-right',
+		value: 'var(--sf-spacing-lg)',
+	},
+	// img exception — full-bleed by nature; padding would shrink the image away from
+	// the edge it just declared it's flush with. Element-scoped rule fires precisely
+	// on imgs wearing the edge marker; higher specificity than the bare `.sf-is-edge-*`
+	// padding above (0-1-1 vs 0-1-0) so it wins its longhand.
+	{
+		elementSelector: 'img',
+		classNames: ['sf-is-edge-left'],
+		cssProperty: 'padding-left',
+		value: '0',
+	},
+	{
+		elementSelector: 'img',
+		classNames: ['sf-is-edge-right'],
+		cssProperty: 'padding-right',
+		value: '0',
+	},
 	// Right panel (flush top+right+bottom): all four corners touch an edge, but the left
 	// corners are the "opening" side — restore them from the depth bundle's bridge variable.
 	{
