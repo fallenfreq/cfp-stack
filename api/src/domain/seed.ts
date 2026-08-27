@@ -856,16 +856,6 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-is-edge-bottom'], cssProperty: 'border-bottom-left-radius', value: '0' },
 	{ classNames: ['sf-is-edge-left'], cssProperty: 'border-top-left-radius', value: '0' },
 	{ classNames: ['sf-is-edge-left'], cssProperty: 'border-bottom-left-radius', value: '0' },
-	// Edge padding — content flush with a viewport edge shouldn't jam against it. Padding-inline
-	// on the flush side gives breathing room. Longhands land in sf-context (higher than
-	// sf-bundle's shorthand `padding: var(--sf-padding)` on sf-depth-*) so the flush-side
-	// padding wins independently of the block padding coming from depth × size.
-	{ classNames: ['sf-is-edge-left'], cssProperty: 'padding-left', value: 'var(--sf-spacing-lg)' },
-	{
-		classNames: ['sf-is-edge-right'],
-		cssProperty: 'padding-right',
-		value: 'var(--sf-spacing-lg)',
-	},
 	// Right panel (flush top+right+bottom): all four corners touch an edge, but the left
 	// corners are the "opening" side — restore them from the depth bundle's bridge variable.
 	{

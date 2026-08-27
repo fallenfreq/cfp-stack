@@ -74,6 +74,7 @@ const HTML_ELEMENTS = new Set([
 	// Content blocks (theme-styleable)
 	'blockquote',
 	'code',
+	'hr',
 	'kbd',
 	'pre',
 ])

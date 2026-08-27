@@ -100,8 +100,9 @@ const cancelRename = () => {
 
 <style>
 @layer ui {
-	/* Layout only — horizontal padding comes from sf-is-edge-left/right; vertical from
-	   sf-depth-1 × sf-size-2xs bridge. */
+	/* Vertical padding from sf-depth-1 × sf-size-2xs bridge. Horizontal padding is
+	   component-owned: sf-is-edge-* is a pure position marker (border-radius only),
+	   so the "text needs breathing room from viewport edge" decision lives here. */
 	.editor-top-bar {
 		position: sticky;
 		top: 0;
@@ -109,6 +110,7 @@ const cancelRename = () => {
 		display: flex;
 		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
+		padding-inline: var(--sf-spacing-lg);
 	}
 
 	/* Name input — chrome comes from sf-is-contained + sf-loudness-1 + sf-on-hover +
