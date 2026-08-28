@@ -8,6 +8,7 @@
 				ref="input"
 				v-model="userInput"
 				type="text"
+				class="sf sf-field"
 				:autocapitalize="props.transform?.value ? 'none' : undefined"
 				:autocorrect="props.transform?.value ? 'off' : undefined"
 				@keyup.enter="submit"
@@ -102,12 +103,11 @@ const close = () => {
 		max-width: 500px;
 	}
 
+	/* Chrome (bg, padding, radius, border, focus) comes from sf sf-field on the input.
+	   Layout (fill parent, vertical separation from h3 / button-group) stays here. */
 	.prompt-content input {
 		width: 100%;
-		background: rgb(var(--bg_primary));
-		padding: 5px;
-		margin: 10px 0;
-		border-radius: 5px;
+		margin-block: var(--sf-spacing-xs);
 	}
 
 	.button-group {
