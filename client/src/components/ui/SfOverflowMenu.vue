@@ -41,5 +41,6 @@ withDefaults(
 .sf-overflow-menu > * {
 	display: block;
 	text-align: left;
+	white-space: nowrap;
 }
 </style>
