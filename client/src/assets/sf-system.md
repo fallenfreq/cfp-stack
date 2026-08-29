@@ -477,6 +477,9 @@ sf-icon          content is a single icon (font icon or SVG). line-height:1
                  removes leading so padding drives vertical spacing
 sf-single-line   content is a single line of text. line-height:1 removes the
                  half-leading that would otherwise inflate vertical spacing
+sf-text-block    non-semantic wrapper (<span>/<div>) holds text — declares
+                 text-holder intent for containers whose HTML tag doesn't
+                 already imply it. Theme picks the leading
 sf-drag-handle   drag affordance — dim at rest, accents to primary on hover
                  and while dragging
 sf-swatch        small colour-surface tile — palette chip, native colour input.

@@ -16,7 +16,7 @@
 				:id="tooltipId"
 				ref="popupEl"
 				role="tooltip"
-				class="tooltip-popup sf sf-depth-3 sf-size-2xs sf-is-overlay"
+				class="tooltip-popup sf sf-text-block sf-depth-3 sf-size-2xs sf-is-overlay"
 				:style="tooltipStyle"
 			>
 				{{ text }}

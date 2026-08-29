@@ -276,6 +276,12 @@ const VOCABULARY: VocabSpec[] = [
 			'Content is a single line of text. Normalises line-height to 1 so tight padding is not inflated by leading.',
 	},
 	{
+		name: 'sf-text-block',
+		kind: 'element',
+		description:
+			'Non-semantic wrapper holds text — declares text-holder intent on <span>/<div> containers (tooltip, label, badge). Semantic text elements (<p>, <blockquote>, <li>) do not need this.',
+	},
+	{
 		name: 'sf-drag-handle',
 		kind: 'element',
 		description:
@@ -618,14 +624,15 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: '--sfx-surface-color',
 		value: 'var(--sf-surface-3)',
 	},
-	{ classNames: ['sf-depth-3'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-3)' },
+	{ classNames: ['sf-depth-3'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
 	{ classNames: ['sf-depth-3'], cssProperty: 'background', value: 'rgb(var(--sf-surface-3))' },
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: 'box-shadow',
 		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
-	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
+	// Matches sf-depth-1/2 — chip-scale radius belongs to sf-chip, not depth.
+	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: '--sf-padding',
@@ -1252,6 +1259,12 @@ const ROOT_RULES: RuleSpec[] = [
 	// line — breadcrumb segments, inline labels, count chips.
 	{ classNames: ['sf-single-line'], cssProperty: 'line-height', value: '1' },
 
+	// sf-text-block: compact leading for non-semantic text wrappers (tooltip, label,
+	// badge). Works for 1..N lines — tight enough that padding isn't dominated by
+	// half-leading at small sizes, loose enough that wrapped text stays readable.
+	// Theme can compound with sf-text-* / sf-size-* to tune pairs.
+	{ classNames: ['sf-text-block'], cssProperty: 'line-height', value: 'var(--sf-leading-tight)' },
+
 	// sf-drag-handle: dim icon at rest; border marks its floating extent. Hover/drag state
 	// compounds below in sf-state layer override the active treatment.
 	{
@@ -1293,7 +1306,10 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'padding',
 		value: 'var(--sf-padding)',
 	},
-	{ elementSelector: 'button', classNames: ['sf'], cssProperty: 'font', value: 'inherit' },
+	// Inherit typography but not line-height — same reasoning as sf-field above.
+	{ elementSelector: 'button', classNames: ['sf'], cssProperty: 'font-family', value: 'inherit' },
+	{ elementSelector: 'button', classNames: ['sf'], cssProperty: 'font-size', value: 'inherit' },
+	{ elementSelector: 'button', classNames: ['sf'], cssProperty: 'font-weight', value: 'inherit' },
 	{
 		elementSelector: 'button',
 		classNames: ['sf'],
@@ -1417,11 +1433,27 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-field'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	{ classNames: ['sf-field'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-md)' },
 	{ classNames: ['sf-field'], cssProperty: 'padding', value: 'var(--sf-padding)' },
-	{ classNames: ['sf-field'], cssProperty: 'font', value: 'inherit' },
+	// Inherit typography from the parent (match surrounding text) without inheriting
+	// the reading line-height — the `font` shorthand would pull line-height too,
+	// which stretches single-line controls in body-text contexts (body: 1.6).
+	// Native <input>'s browser default line-height (`normal`, ~1.2) is right here.
+	{ classNames: ['sf-field'], cssProperty: 'font-family', value: 'inherit' },
+	{ classNames: ['sf-field'], cssProperty: 'font-size', value: 'inherit' },
+	{ classNames: ['sf-field'], cssProperty: 'font-weight', value: 'inherit' },
 	{
 		classNames: ['sf-field'],
 		cssProperty: 'border',
 		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
+	},
+	// Field owns its focus expression: the existing border re-colours to primary,
+	// and the global `*:focus-visible` outline (2px) is suppressed. Consistent at
+	// every sf-size-* — no size-scoped variants needed.
+	{ classNames: ['sf-field'], pseudo: ':focus-visible', cssProperty: 'outline', value: '0' },
+	{
+		classNames: ['sf-field'],
+		pseudo: ':focus-visible',
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-primary))',
 	},
 	{
 		classNames: ['sf-field'],
