@@ -47,7 +47,10 @@ const getTooltipPosition = (
 	popupRect: DOMRect,
 	placement: 'top' | 'bottom' | 'left' | 'right',
 ) => {
-	const gap = placement === 'top' ? 15 : 5
+	// Top-placement gap is generous so touch-triggered tooltips clear the user's
+	// thumb resting on the target. Desktop hover gets the extra clearance too;
+	// slightly disconnected-looking but preferable to being obscured on mobile.
+	const gap = placement === 'top' ? 40 : 5
 	const centeredLeft = triggerRect.left + (triggerRect.width - popupRect.width) / 2
 	const centeredTop = triggerRect.top + (triggerRect.height - popupRect.height) / 2
 

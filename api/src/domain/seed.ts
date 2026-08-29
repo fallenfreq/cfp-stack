@@ -1265,6 +1265,22 @@ const ROOT_RULES: RuleSpec[] = [
 	// Theme can compound with sf-text-* / sf-size-* to tune pairs.
 	{ classNames: ['sf-text-block'], cssProperty: 'line-height', value: 'var(--sf-leading-tight)' },
 
+	// sf-text-block × small sizes: bump inline padding one tier past block padding
+	// to compensate for the built-in em-box air above/below glyphs. At small
+	// padding, that air makes vertical visual space larger than horizontal —
+	// extra inline padding restores symmetry. At sm+ sizes padding is large
+	// enough that glyph air is invisible; no compound needed.
+	{
+		classNames: ['sf-text-block', 'sf-size-2xs'],
+		cssProperty: 'padding-inline',
+		value: 'var(--sf-spacing-xs)',
+	},
+	{
+		classNames: ['sf-text-block', 'sf-size-xs'],
+		cssProperty: 'padding-inline',
+		value: 'var(--sf-spacing-sm)',
+	},
+
 	// sf-drag-handle: dim icon at rest; border marks its floating extent. Hover/drag state
 	// compounds below in sf-state layer override the active treatment.
 	{
