@@ -33,4 +33,13 @@ withDefaults(
 	padding: var(--sf-padding);
 	min-width: 130px;
 }
+
+/* Menu-item layout contract — items fill the menu width and left-align their text.
+   Anchor colour/underline UA strips are handled by Tailwind preflight.
+   Visual chrome (padding, radius, font, hover, contained) comes from sf classes
+   on the item element. */
+.sf-overflow-menu > * {
+	display: block;
+	text-align: left;
+}
 </style>

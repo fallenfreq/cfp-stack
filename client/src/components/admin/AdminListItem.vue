@@ -53,20 +53,5 @@ defineEmits<{ 'update:published': [value: boolean] }>()
 		font-size: 0.75rem;
 		white-space: nowrap;
 	}
-
-	/* Slot content API — non-scoped so it applies inside action slots */
-	.admin-action {
-		display: block;
-		width: 100%;
-		text-align: left;
-		background: none;
-		border: none;
-		border-radius: 4px;
-		padding: 6px 10px;
-		font-size: 0.875rem;
-		cursor: pointer;
-		color: inherit;
-		text-decoration: none;
-	}
 }
 </style>
