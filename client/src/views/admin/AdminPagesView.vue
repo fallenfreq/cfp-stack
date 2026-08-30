@@ -174,8 +174,7 @@ const onNewPage = async () => {
 </script>
 
 <style scoped>
-/* Structural layout only — chrome (bg strip, border, radius, padding, hover treatment)
-   comes from `sf sf-is-contained sf-size-2xs sf-on-hover` on the button. */
+/* Structural layout only — everything else comes from the sf classes on the button. */
 .tags-cell {
 	display: flex;
 	flex-wrap: wrap;
