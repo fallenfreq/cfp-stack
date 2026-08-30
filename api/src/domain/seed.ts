@@ -1338,6 +1338,49 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-radius',
 		value: 'var(--sf-radius-3)',
 	},
+
+	// ─── Anchor element ───────────────────────────────────────────────────────
+	// a.sf mirrors button.sf's chrome contract — <a class="sf"> and <button class="sf">
+	// render identically when composed with the same size/loudness/state axes. For
+	// anchors acting as interactive button-like elements (navigation actions in menus,
+	// link-buttons in toolbars). Anchor default display is `inline`, which doesn't
+	// respect vertical padding predictably — `inline-block` gives padded-box behaviour
+	// while preserving inline flow. text-decoration/color reset is Tailwind preflight
+	// territory, not repeated here.
+	{ elementSelector: 'a', classNames: ['sf'], cssProperty: 'display', value: 'inline-block' },
+	{
+		elementSelector: 'a',
+		classNames: ['sf'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-2)',
+	},
+	{
+		elementSelector: 'a',
+		classNames: ['sf'],
+		cssProperty: '--sf-padding',
+		value: 'var(--sf-spacing-md)',
+	},
+	{
+		elementSelector: 'a',
+		classNames: ['sf'],
+		cssProperty: 'padding',
+		value: 'var(--sf-padding)',
+	},
+	{ elementSelector: 'a', classNames: ['sf'], cssProperty: 'font-family', value: 'inherit' },
+	{ elementSelector: 'a', classNames: ['sf'], cssProperty: 'font-size', value: 'inherit' },
+	{ elementSelector: 'a', classNames: ['sf'], cssProperty: 'font-weight', value: 'inherit' },
+	{
+		elementSelector: 'a',
+		classNames: ['sf'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-border_color) / var(--sf-alpha-4))',
+	},
+	{
+		elementSelector: 'a',
+		classNames: ['sf', 'sf-is-overlay'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-3)',
+	},
 	// Loudness-3 solid fill — button-only. Non-button elements (cards) get loudness-3 prominence
 	// via sf-depth-1 × sf-loudness-3 shadow/border compounds; they keep their surface background.
 	{
