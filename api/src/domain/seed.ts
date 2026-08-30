@@ -318,7 +318,11 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'variant',
 		description: 'Prominent, calls for attention',
 	},
-	{ name: 'sf-variant-danger', kind: 'variant', description: 'Destructive intent' },
+	{
+		name: 'sf-variant-danger',
+		kind: 'variant',
+		description: 'Danger role — destructive intent, error state, or reporting a problem/threat',
+	},
 	{
 		name: 'sf-variant-warning',
 		kind: 'variant',

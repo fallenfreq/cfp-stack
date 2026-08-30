@@ -27,9 +27,8 @@
 				<button
 					class="top-bar__action sf sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-2xs"
 					:class="{
-						'is-saving': saveStatus === 'saving',
-						'is-saved': saveStatus === 'saved',
-						'is-error': saveStatus === 'error',
+						'sf-variant-success': saveStatus === 'saved',
+						'sf-variant-danger': saveStatus === 'error',
 					}"
 					:disabled="saveStatus === 'saving'"
 					title="Save"
@@ -161,13 +160,6 @@ const cancelRename = () => {
 		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		flex-shrink: 0;
-	}
-
-	.top-bar__action.is-saved {
-		color: rgb(var(--success, 34 197 94));
-	}
-	.top-bar__action.is-error {
-		color: rgb(var(--danger, 239 68 68));
 	}
 
 	.top-bar-actions-enter-active,
