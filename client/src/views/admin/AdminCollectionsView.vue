@@ -3,7 +3,7 @@
 		<template #actions>
 			<SfIconButton icon="plus" tooltip="New tag" @click="onNewTag" />
 		</template>
-		<p class="text-sm opacity-50 mb-5">
+		<p class="sf-text-sm sf-loudness-1 mb-5">
 			Published tags are browseable as collections at <code>/c/:slug</code>. Unpublished tags
 			work as internal labels only.
 		</p>
@@ -25,7 +25,7 @@
 				@update:published="(v) => togglePublished(tag.tagId, v)"
 			>
 				<template #meta>
-					<span class="page-count">
+					<span class="page-count sf-text-sm sf-loudness-1 sf-single-line">
 						{{ tag.pageCount }} page{{ tag.pageCount === 1 ? '' : 's' }}
 					</span>
 				</template>
@@ -98,9 +98,9 @@ const onNewTag = async () => {
 </script>
 
 <style scoped>
+/* Structural nowrap — chrome (font, colour, line-height) comes from
+   sf-text-sm sf-loudness-1 sf-single-line on the span. */
 .page-count {
-	font-size: 0.8rem;
-	color: rgba(var(--text_primary) / 0.55);
 	white-space: nowrap;
 }
 </style>
