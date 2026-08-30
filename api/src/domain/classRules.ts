@@ -77,6 +77,8 @@ const HTML_ELEMENTS = new Set([
 	'hr',
 	'kbd',
 	'pre',
+	// Inline content
+	'span',
 ])
 
 function assertValidClassName(name: string): void {
