@@ -3,7 +3,7 @@
 		<template #actions>
 			<SfIconButton icon="plus" tooltip="New tag" @click="onNewTag" />
 		</template>
-		<p class="sf-text-sm sf-loudness-1 mb-5">
+		<p class="sf-text-sm sf-loudness-1">
 			Published tags are browseable as collections at <code>/c/:slug</code>. Unpublished tags
 			work as internal labels only.
 		</p>
@@ -98,8 +98,7 @@ const onNewTag = async () => {
 </script>
 
 <style scoped>
-/* Structural nowrap — chrome (font, colour, line-height) comes from
-   sf-text-sm sf-loudness-1 sf-single-line on the span. */
+/* Structural nowrap — everything else comes from the sf classes on the span. */
 .page-count {
 	white-space: nowrap;
 }

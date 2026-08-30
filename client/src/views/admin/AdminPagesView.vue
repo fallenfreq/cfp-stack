@@ -4,12 +4,7 @@
 			<SfIconButton icon="plus" tooltip="New page" @click="onNewPage" />
 		</template>
 
-		<VaInput
-			v-model="search"
-			placeholder="Search by name or slug…"
-			class="mb-4 w-full"
-			clearable
-		/>
+		<VaInput v-model="search" placeholder="Search by name or slug…" class="w-full" clearable />
 
 		<AdminList :loading="isPending" :empty="!filteredPages.length">
 			<template #header>
