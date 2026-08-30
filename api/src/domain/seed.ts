@@ -1523,6 +1523,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-field'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	{ classNames: ['sf-field'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-md)' },
 	{ classNames: ['sf-field'], cssProperty: 'padding', value: 'var(--sf-padding)' },
+	// Fields are writable surfaces. Explicit background + text colour make the
+	// field visually distinct on any raised parent (depth-1+); on a bare page
+	// (surface-0) the bg is the same as the canvas so it's invisible but the
+	// border still delineates. :focus-visible rules below override for focus.
+	{ classNames: ['sf-field'], cssProperty: 'background', value: 'rgb(var(--sf-surface-0))' },
+	{ classNames: ['sf-field'], cssProperty: 'color', value: 'rgb(var(--sf-fg_primary))' },
 	// Inherit typography from the parent (match surrounding text) without inheriting
 	// the reading line-height — the `font` shorthand would pull line-height too,
 	// which stretches single-line controls in body-text contexts (body: 1.6).

@@ -8,7 +8,7 @@
 				ref="inputEl"
 				v-model="localUrl"
 				type="url"
-				class="toolbar-url-input sf sf-field sf-size-xs sf-on-focus"
+				class="toolbar-url-input sf sf-field sf-size-xs sf-text-xs sf-on-focus"
 				:placeholder="placeholder ?? 'https://'"
 				@keydown.enter.prevent="apply"
 				@keydown.escape.prevent="collapse"
@@ -79,20 +79,15 @@ const remove = () => {
 
 <style scoped>
 @layer ui {
+	/* Dissolves into the toolbar row so input + buttons flow inline. */
 	.toolbar-reveal {
 		display: contents;
 	}
 
+	/* Structural only — chrome (bg, colour, border, radius, padding, focus)
+	   comes from `sf sf-field sf-size-xs sf-text-xs sf-on-focus` on the input. */
 	.toolbar-url-input {
-		height: 26px;
-		padding: 2px 6px;
-		border-radius: 4px;
-		border: 1px solid rgb(var(--border_color));
-		background: rgb(var(--bg_primary));
-		color: rgb(var(--text_primary));
-		font-size: 0.8rem;
 		width: 180px;
-		outline: none;
 	}
 }
 </style>
