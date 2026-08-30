@@ -1,7 +1,9 @@
 <template>
 	<div>
-		<div v-if="loading" class="admin-list__state">Loading…</div>
-		<div v-else-if="empty" class="admin-list__state">
+		<div v-if="loading" class="admin-list__state sf-size-sm sf-text-sm sf-loudness-1">
+			Loading…
+		</div>
+		<div v-else-if="empty" class="admin-list__state sf-size-sm sf-text-sm sf-loudness-1">
 			<slot name="empty">Nothing here yet.</slot>
 		</div>
 		<div
@@ -43,10 +45,11 @@ const { left: isOverflowLeft } = useScrollOverflow(tableWrap)
 
 <style>
 @layer ui {
+	/* Vertical breathing — reads the --sf-padding bridge set by sf-size-sm on
+	   the div. Follows the theme's decision for sm-scale spacing without
+	   hardcoding the value. */
 	.admin-list__state {
-		opacity: 0.5;
-		padding: 12px 4px;
-		font-size: 0.875rem;
+		padding-block: var(--sf-padding);
 	}
 
 	.admin-table-wrap {
