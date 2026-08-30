@@ -508,6 +508,11 @@ border). A theme that hasn't defined the compound still produces a working butto
 element rule is always the floor. Markers never replace the underlying identity; they
 add and refine.
 
+Elements without a baseline in the vocab (e.g. `<span>`) can still opt into a marker's
+chrome via that marker's element compound alone — `<span class="sf-chip">` fires
+`span.sf-chip` rules without any `sf` membership marker, because a span has no baseline
+to admit. The element compound is the floor in that case.
+
 **Admission test:** after depth + loudness + size + variant + state have applied, is there
 anything left that's specific to this category?
 

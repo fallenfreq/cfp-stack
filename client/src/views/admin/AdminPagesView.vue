@@ -31,20 +31,20 @@
 				<template #meta>
 					<VaDropdown placement="bottom-start" :close-on-content-click="false">
 						<template #anchor>
-							<button class="tags-cell">
+							<button class="tags-cell sf sf-is-contained sf-size-2xs sf-on-hover">
 								<span
 									v-if="!pageTags.get(page.pageId)?.length"
-									class="tags-cell__empty"
+									class="tags-cell__empty sf-text-xs sf-loudness-1"
 									>—</span>
 								<template v-else>
 									<span
 										v-for="t in (pageTags.get(page.pageId) ?? []).slice(0, 2)"
 										:key="t.tagId"
-										class="tags-cell__chip"
+										class="sf-chip sf-size-2xs sf-variant-featured sf-loudness-2"
 										>{{ t.name }}</span>
 									<span
 										v-if="(pageTags.get(page.pageId)?.length ?? 0) > 2"
-										class="tags-cell__chip tags-cell__chip--more"
+										class="sf-chip sf-size-2xs sf-loudness-1"
 										>+{{ (pageTags.get(page.pageId)?.length ?? 0) - 2 }}</span>
 								</template>
 							</button>
@@ -179,47 +179,18 @@ const onNewPage = async () => {
 </script>
 
 <style scoped>
+/* Structural layout only — chrome (bg strip, border, radius, padding, hover treatment)
+   comes from `sf sf-is-contained sf-size-2xs sf-on-hover` on the button. */
 .tags-cell {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--sf-gap, var(--sf-spacing-2xs));
-	background: none;
-	border: 1px solid transparent;
-	border-radius: 4px;
-	padding: 3px 6px;
-	cursor: pointer;
-	text-align: left;
-	transition:
-		border-color 0.1s,
-		background 0.1s;
 	min-width: 48px;
-}
-.tags-cell:hover {
-	background: rgba(var(--text_primary) / 0.05);
-	border-color: rgba(var(--text_primary) / 0.15);
-}
-
-.tags-cell__empty {
-	font-size: 0.75rem;
-	opacity: 0.35;
-}
-
-.tags-cell__chip {
-	font-size: 0.7rem;
-	padding: 1px 7px;
-	border-radius: 10px;
-	background: rgba(var(--primary) / 0.12);
-	color: rgb(var(--primary));
-	white-space: nowrap;
-}
-.tags-cell__chip--more {
-	background: rgba(var(--text_primary) / 0.08);
-	color: rgba(var(--text_primary) / 0.55);
 }
 
 .tags-cell__popover {
-	padding: 10px;
+	padding: var(--sf-spacing-sm);
 	min-width: 220px;
 }
 </style>

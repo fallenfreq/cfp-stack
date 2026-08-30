@@ -1429,6 +1429,37 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color) / var(--sf-alpha-3))',
 	},
 
+	// span.sf-chip — display-only chip chrome. Mirrors button.sf-chip layout
+	// (radius, padding via --sf-padding) plus display: inline-block so spans
+	// actually respect padding, and white-space: nowrap so tag names don't
+	// break mid-word inside flex-wrap parents. No border baseline — display-only
+	// chips are informational, not tappable, and typically don't draw a boundary
+	// against the parent; theme can add one via a compound if a case wants it.
+	{
+		elementSelector: 'span',
+		classNames: ['sf-chip'],
+		cssProperty: 'display',
+		value: 'inline-block',
+	},
+	{
+		elementSelector: 'span',
+		classNames: ['sf-chip'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-3)',
+	},
+	{
+		elementSelector: 'span',
+		classNames: ['sf-chip'],
+		cssProperty: 'padding',
+		value: 'var(--sf-padding)',
+	},
+	{
+		elementSelector: 'span',
+		classNames: ['sf-chip'],
+		cssProperty: 'white-space',
+		value: 'nowrap',
+	},
+
 	// ─── sf-swatch ────────────────────────────────────────────────────────────
 	// Colour-surface tile — chrome only. Consumers set width/height (component metric).
 	// Padding: 0 is root theme's default; a padded-frame theme overrides + adds background-clip.
