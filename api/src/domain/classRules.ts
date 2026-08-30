@@ -21,6 +21,18 @@ const RULE_PSEUDO_RE = /^[: >+~][^{};]*$/
 
 // Interactive + structural elements only. Heading/text-scale elements (h1-h6, p) are
 // intentionally excluded — those are handled by sf-heading-* bundles and token utilities.
+// Safe list of HTML elements a theme is allowed to style. Enforced by the
+// untrusted path (`createClassRule`) that user-authored theme content flows
+// through — a theme submitted via the theme store can't target arbitrary tags
+// like <body>, <iframe>, <script>. Trusted seed authoring (`createClassRuleTrusted`)
+// skips this check because vocabulary designers add legitimately-needed selectors
+// as the design system grows.
+//
+// Curated to include tags a theme meaningfully styles: interactive controls,
+// form primitives, text semantics (headings, paragraphs, inline markup), tables,
+// lists, media, layout landmarks. Excluded on purpose: <div> and <body> (too
+// broad — could override system chrome), <script>/<style>/<iframe> (security),
+// <html>/<head>/<meta> (structural, non-content).
 const HTML_ELEMENTS = new Set([
 	// Interactive
 	'a',
@@ -71,14 +83,38 @@ const HTML_ELEMENTS = new Set([
 	'img',
 	'picture',
 	'video',
-	// Content blocks (theme-styleable)
+	// Text semantics — block
 	'blockquote',
 	'code',
+	'h1',
+	'h2',
+	'h3',
+	'h4',
+	'h5',
+	'h6',
 	'hr',
 	'kbd',
+	'p',
 	'pre',
-	// Inline content
+	// Text semantics — inline
+	'abbr',
+	'b',
+	'cite',
+	'del',
+	'dfn',
+	'em',
+	'i',
+	'ins',
+	'mark',
+	'q',
+	's',
+	'small',
 	'span',
+	'strong',
+	'sub',
+	'sup',
+	'time',
+	'u',
 ])
 
 function assertValidClassName(name: string): void {
@@ -305,14 +341,47 @@ async function assertNoDuplicateRule(
 	}
 }
 
+// Public entry points split by trust of the caller:
+//
+// - `createClassRule` — untrusted input (theme store, future admin UI). Enforces
+//   the full validation surface including HTML_ELEMENTS (the safe list of tags
+//   themes are allowed to style). This is the path a user-submitted theme rule
+//   flows through.
+// - `createClassRuleTrusted` — trusted authoring (seed). Skips the element
+//   allowlist because the vocabulary designers add legitimately-needed element
+//   selectors as the design system grows; a whitelist mismatch there aborts the
+//   seed partway through, which has bitten us with hr and span. Every other
+//   guard (property regex, pseudo shape, vocab existence, one-class-per-kind,
+//   duplicate check) still applies.
+//
+// Future theme-store work needs more than the element allowlist — value guards
+// against `url()` (except data:), `expression()`, `attr()` data leaks, length
+// caps, and a property allowlist are worth the audit before the store is live.
+// The element list is one layer; not the whole story.
+
 export async function createClassRule(
 	db: Db,
 	input: CreateClassRuleInput,
 ): Promise<{ id: number }> {
+	return insertRule(db, input, { trusted: false })
+}
+
+export async function createClassRuleTrusted(
+	db: Db,
+	input: CreateClassRuleInput,
+): Promise<{ id: number }> {
+	return insertRule(db, input, { trusted: true })
+}
+
+async function insertRule(
+	db: Db,
+	input: CreateClassRuleInput,
+	{ trusted }: { trusted: boolean },
+): Promise<{ id: number }> {
 	const elementSelector = input.elementSelector ?? null
 	const classNames = input.classNames ?? []
 
-	if (elementSelector) assertValidElementSelector(elementSelector)
+	if (elementSelector && !trusted) assertValidElementSelector(elementSelector)
 	if (classNames.length > 0) assertUniqueClassNames(classNames)
 	assertValidCssProperty(input.cssProperty)
 	if (!input.value.trim()) throw new ValidationError('Rule value is required')

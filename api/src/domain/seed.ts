@@ -5,7 +5,7 @@ import {
 	type ClassOnlyRuleInput,
 	type ElementRuleInput,
 	addVocabularyEntry,
-	createClassRule,
+	createClassRuleTrusted,
 } from './classRules.js'
 import { setCollapseThreshold } from './collapseThresholds.js'
 import { SEED_VERSION } from './seedVersion.js'
@@ -1696,7 +1696,7 @@ const COLLAPSE_THRESHOLDS = [
 ] as const
 
 function applyRule(db: Db, themeId: string, r: RuleSpec) {
-	return createClassRule(db, { themeId, ...r })
+	return createClassRuleTrusted(db, { themeId, ...r })
 }
 
 // ─── Orchestrator ────────────────────────────────────────────────────────
