@@ -102,7 +102,8 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-surface-8', value: '39 39 42', kind: 'color-triplet' },
 	{ name: '--sf-surface-9', value: '24 24 27', kind: 'color-triplet' },
 
-	// Alpha (theme-controlled values)
+	// Alpha (theme-controlled values) — used for channel tinting (colour, border, shadow).
+	// Ordinal scale: consumers reference step number (1st, 2nd, ...); theme picks values.
 	{ name: '--sf-alpha-1', value: '0.1', kind: 'number' },
 	{ name: '--sf-alpha-2', value: '0.2', kind: 'number' },
 	{ name: '--sf-alpha-3', value: '0.3', kind: 'number' },
@@ -112,6 +113,20 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-alpha-7', value: '0.7', kind: 'number' },
 	{ name: '--sf-alpha-8', value: '0.8', kind: 'number' },
 	{ name: '--sf-alpha-9', value: '0.9', kind: 'number' },
+
+	// Opacity (theme-controlled values) — used for element-wide opacity. Independent of
+	// alpha so themes can tune "how ghost do watermarks look" separately from "how muted
+	// do text tints render." Root theme initialises to the same values as alpha for
+	// simplicity; themes may diverge.
+	{ name: '--sf-opacity-1', value: '0.1', kind: 'number' },
+	{ name: '--sf-opacity-2', value: '0.2', kind: 'number' },
+	{ name: '--sf-opacity-3', value: '0.3', kind: 'number' },
+	{ name: '--sf-opacity-4', value: '0.4', kind: 'number' },
+	{ name: '--sf-opacity-5', value: '0.5', kind: 'number' },
+	{ name: '--sf-opacity-6', value: '0.6', kind: 'number' },
+	{ name: '--sf-opacity-7', value: '0.7', kind: 'number' },
+	{ name: '--sf-opacity-8', value: '0.8', kind: 'number' },
+	{ name: '--sf-opacity-9', value: '0.9', kind: 'number' },
 
 	// Font weight
 	{ name: '--sf-weight-1', value: '400', kind: 'number' },

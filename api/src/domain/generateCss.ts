@@ -188,6 +188,7 @@ interface Buckets {
 	weight: BucketEntry[]
 	shadow: BucketEntry[]
 	alpha: BucketEntry[]
+	opacity: BucketEntry[]
 }
 
 function suffixOf(name: string): string {
@@ -218,6 +219,7 @@ function classifyTokens(rootTokens: ThemeToken[]): Buckets {
 		weight: [],
 		shadow: [],
 		alpha: [],
+		opacity: [],
 	}
 	for (const tk of rootTokens) {
 		const suffix = suffixOf(tk.name)
@@ -242,6 +244,7 @@ function classifyTokens(rootTokens: ThemeToken[]): Buckets {
 		else if (suffix.startsWith('font-')) b.fontFamily.push(entry)
 		else if (suffix.startsWith('weight-')) b.weight.push(entry)
 		else if (suffix.startsWith('alpha-')) b.alpha.push(entry)
+		else if (suffix.startsWith('opacity-')) b.opacity.push(entry)
 		else if (tk.kind === 'shadow-shape') b.shadow.push(entry)
 	}
 	return b
@@ -420,6 +423,12 @@ function emitUtilityLayer(b: Buckets): string {
 		)
 		for (const e of b.shadow)
 			s += `\t.sf-${e.suffix} { box-shadow: var(${e.name}) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity))); }\n`
+		sections.push(s)
+	}
+
+	if (b.opacity.length) {
+		let s = section('Opacity — element-wide alpha; separate scale from channel-tint alphas')
+		for (const e of b.opacity) s += util(e, 'opacity')
 		sections.push(s)
 	}
 

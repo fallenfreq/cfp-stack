@@ -33,6 +33,7 @@ declare module 'vue' {
     LayoutCard: typeof import('./src/components/layout/LayoutCard.vue')['default']
     LayoutCenter: typeof import('./src/components/layout/LayoutCenter.vue')['default']
     LayoutColumns: typeof import('./src/components/layout/LayoutColumns.vue')['default']
+    LayoutCover: typeof import('./src/components/layout/LayoutCover.vue')['default']
     LayoutSection: typeof import('./src/components/layout/LayoutSection.vue')['default']
     LayoutSplit: typeof import('./src/components/layout/LayoutSplit.vue')['default']
     MaterialIcon: typeof import('./src/components/ui/MaterialIcon.vue')['default']
