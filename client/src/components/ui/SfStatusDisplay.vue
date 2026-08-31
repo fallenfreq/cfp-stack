@@ -1,6 +1,8 @@
 <template>
-	<div class="p-7">
-		<p class="opacity-50">{{ message ?? defaults[state] }}</p>
+	<div class="sl-cover" style="--sl-cover-min: 20rem">
+		<p class="sf-loudness-1" :class="{ 'sf-variant-danger': state === 'error' }">
+			{{ message ?? defaults[state] }}
+		</p>
 	</div>
 </template>
 
