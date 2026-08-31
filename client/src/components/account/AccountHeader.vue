@@ -13,17 +13,15 @@ const initials = computed(() => {
 </script>
 
 <template>
-	<div class="sl-cluster sf-gap-md mb-8">
-		<div
-			class="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-on-primary text-2xl font-bold shrink-0"
-		>
+	<div class="sl-cluster sf-gap-md">
+		<div class="sf-avatar sf-variant-featured sf-text-2xl w-16 h-16 shrink-0">
 			{{ initials }}
 		</div>
-		<div>
-			<h1 class="text-4xl font-bold">
+		<div class="sl-stack sf-gap-2xs">
+			<h1 class="sf-heading-1">
 				{{ profile.name || profile.preferred_username || 'Account' }}
 			</h1>
-			<p v-if="profile.preferred_username" class="text-sm mt-1" style="opacity: 0.6">
+			<p v-if="profile.preferred_username" class="sf-text-sm sf-loudness-1">
 				@{{ profile.preferred_username }}
 			</p>
 		</div>

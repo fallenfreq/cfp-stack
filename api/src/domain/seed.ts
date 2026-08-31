@@ -135,6 +135,7 @@ const ROOT_TOKENS: TokenSpec[] = [
 
 	// Radius
 	{ name: '--sf-radius-0', value: '0px', kind: 'length' },
+	{ name: '--sf-radius-full', value: '9999px', kind: 'length' },
 	{ name: '--sf-radius-1', value: '4px', kind: 'length' },
 	{ name: '--sf-radius-2', value: '8px', kind: 'length' },
 	{ name: '--sf-radius-3', value: '16px', kind: 'length' },
@@ -306,6 +307,12 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'element',
 		description:
 			'Content is a small colour-surface tile — palette chip, native colour input, preview. Theme decides border, radius, padding; consumers set width/height.',
+	},
+	{
+		name: 'sf-avatar',
+		kind: 'element',
+		description:
+			'User / entity identity indicator — solid-fill compact element holding initials, photo, or icon. Theme decides shape (round by default), default colours, layout. Wear alongside sf-variant-* for the colour role; consumers set width/height.',
 	},
 	{
 		name: 'sf-field',
@@ -1526,6 +1533,41 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'nowrap',
 	},
 
+	// sf-chip × sf-loudness-3 — loud chip expression: solid fill + inverted text.
+	// Enables status pills, notification counters, prominent tag callouts to compose
+	// as `sf-chip sf-loudness-3 sf-variant-*` without needing a separate marker.
+	// Variant compounds swap the fg_primary default for semantic colour roles.
+	{
+		classNames: ['sf-chip', 'sf-loudness-3'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-fg_primary))',
+	},
+	{
+		classNames: ['sf-chip', 'sf-loudness-3'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_inverted))',
+	},
+	{
+		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-danger'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-danger))',
+	},
+	{
+		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-warning'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-warning))',
+	},
+	{
+		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-success'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-success))',
+	},
+
 	// ─── sf-swatch ────────────────────────────────────────────────────────────
 	// Colour-surface tile — chrome only. Consumers set width/height (component metric).
 	// Padding: 0 is root theme's default; a padded-frame theme overrides + adds background-clip.
@@ -1548,6 +1590,42 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-swatch', 'sf-on-hover'],
 		cssProperty: 'outline-offset',
 		value: 'var(--sf-stroke-1)',
+	},
+
+	// ─── sf-avatar ────────────────────────────────────────────────────────────
+	// User / entity identity indicator. Solid-fill compact element for initials,
+	// photo, or icon. Theme decides shape (root theme: fully round via radius-full),
+	// default colours (fg_primary bg + fg_inverted text), and layout (inline-flex
+	// centred). Variant compounds swap the background for semantic colour roles.
+	// Consumer sets specific dimensions (w-*, h-*) since avatar sizes vary widely
+	// per use case (small comment avatar vs large profile avatar).
+	{ classNames: ['sf-avatar'], cssProperty: 'display', value: 'inline-flex' },
+	{ classNames: ['sf-avatar'], cssProperty: 'align-items', value: 'center' },
+	{ classNames: ['sf-avatar'], cssProperty: 'justify-content', value: 'center' },
+	{ classNames: ['sf-avatar'], cssProperty: 'border-radius', value: 'var(--sf-radius-full)' },
+	{ classNames: ['sf-avatar'], cssProperty: 'background', value: 'rgb(var(--sf-fg_primary))' },
+	{ classNames: ['sf-avatar'], cssProperty: 'color', value: 'rgb(var(--sf-fg_inverted))' },
+	// Variant compounds — semantic colour role overrides the neutral default fill.
+	// Bare sf-avatar still works if a theme doesn't define these (graceful degradation).
+	{
+		classNames: ['sf-avatar', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-avatar', 'sf-variant-danger'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-danger))',
+	},
+	{
+		classNames: ['sf-avatar', 'sf-variant-warning'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-warning))',
+	},
+	{
+		classNames: ['sf-avatar', 'sf-variant-success'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-success))',
 	},
 
 	// ─── sf-scrim ─────────────────────────────────────────────────────────────
