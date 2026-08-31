@@ -2,6 +2,7 @@ import TiptapTest from '@/components/editor/TiptapTest.vue'
 import LayoutCard from '@/components/layout/LayoutCard.vue'
 import LayoutCenter from '@/components/layout/LayoutCenter.vue'
 import LayoutColumns from '@/components/layout/LayoutColumns.vue'
+import LayoutCover from '@/components/layout/LayoutCover.vue'
 import LayoutSection from '@/components/layout/LayoutSection.vue'
 import LayoutSplit from '@/components/layout/LayoutSplit.vue'
 import { enumAttr } from '@/editor/enumAttr'
@@ -34,6 +35,8 @@ interface ComponentData {
 }
 
 const ALIGN_OPTIONS = ['start', 'center', 'end', 'stretch'] as const
+const POSITION_OPTIONS = ['start', 'center', 'end'] as const
+const COVER_MIN_HEIGHT_OPTIONS = ['default', 'compact', 'viewport', 'fill'] as const
 
 const editorComponents = {
 	VaButton: {
@@ -95,6 +98,17 @@ const editorComponents = {
 		alias: 'layout-card',
 		component: LayoutCard,
 		props: {},
+		content: 'block*',
+	},
+	LayoutCover: {
+		uuid: '7f0b8f26-3f14-4d3e-9a2b-c1d5e8f47b90',
+		alias: 'layout-cover',
+		component: LayoutCover,
+		props: {
+			positionY: enumAttr('center', POSITION_OPTIONS),
+			positionX: enumAttr('center', POSITION_OPTIONS),
+			minHeight: enumAttr('default', COVER_MIN_HEIGHT_OPTIONS),
+		},
 		content: 'block*',
 	},
 } satisfies Record<string, ComponentData>

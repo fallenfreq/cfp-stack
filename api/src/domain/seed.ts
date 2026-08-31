@@ -498,6 +498,36 @@ const VOCABULARY: VocabSpec[] = [
 	{ name: 'sl-columns', kind: 'layout', description: 'Equal or custom-ratio grid columns' },
 	{ name: 'sl-split', kind: 'layout', description: 'Fixed + flexible two-column split' },
 	{ name: 'sl-center', kind: 'layout', description: 'Centered max-width block' },
+	{
+		name: 'sl-cover',
+		kind: 'layout',
+		description:
+			'Fills at least 100dvh with content centred. Override via --sl-cover-min (e.g. 100% when parent chain has defined heights, or a fixed size like 20rem). Compose with sl-align-y-* / sl-align-x-* for non-centre alignment.',
+	},
+	{
+		name: 'sl-align-y-start',
+		kind: 'layout',
+		description:
+			'Aligns content to the start of the block axis (top in LTR). Composable with any grid/flex primitive (sl-cover, sl-stack).',
+	},
+	{
+		name: 'sl-align-y-end',
+		kind: 'layout',
+		description:
+			'Aligns content to the end of the block axis (bottom in LTR). Composable with any grid/flex primitive.',
+	},
+	{
+		name: 'sl-align-x-start',
+		kind: 'layout',
+		description:
+			'Aligns content to the start of the inline axis (left in LTR). Grid-based; on flex containers use justify-content directly (limitation).',
+	},
+	{
+		name: 'sl-align-x-end',
+		kind: 'layout',
+		description:
+			'Aligns content to the end of the inline axis (right in LTR). Grid-based; on flex containers use justify-content directly (limitation).',
+	},
 	{ name: 'sl-grid', kind: 'layout', description: 'Auto-responsive grid' },
 	{
 		name: 'sl-aspect',
@@ -760,6 +790,22 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-padding)',
 	},
 	{ classNames: ['sl-center'], cssProperty: 'container-type', value: 'inline-size' },
+
+	// sl-cover — fills at least 100dvh with content centred both axes. Consumer
+	// overrides --sl-cover-min for compact (20rem), viewport (100vh), or fill-
+	// parent (100% — requires parent chain with defined heights).
+	{ classNames: ['sl-cover'], cssProperty: 'display', value: 'grid' },
+	{ classNames: ['sl-cover'], cssProperty: 'place-items', value: 'center' },
+	{ classNames: ['sl-cover'], cssProperty: 'min-height', value: 'var(--sl-cover-min, 100dvh)' },
+
+	// sl-align-y-* / sl-align-x-* — axis alignment overrides for any grid/flex primitive.
+	// Beats sl-cover's `place-items: center` shorthand via later source order in the same
+	// layer. On flex containers, align-y works; align-x uses justify-items which flex
+	// ignores — for flex justify overrides use component-scoped justify-content.
+	{ classNames: ['sl-align-y-start'], cssProperty: 'align-items', value: 'start' },
+	{ classNames: ['sl-align-y-end'], cssProperty: 'align-items', value: 'end' },
+	{ classNames: ['sl-align-x-start'], cssProperty: 'justify-items', value: 'start' },
+	{ classNames: ['sl-align-x-end'], cssProperty: 'justify-items', value: 'end' },
 
 	// sl-grid
 	{ classNames: ['sl-grid'], cssProperty: 'display', value: 'grid' },

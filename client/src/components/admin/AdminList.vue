@@ -1,9 +1,16 @@
 <template>
 	<div>
-		<div v-if="loading" class="admin-list__state sf-size-sm sf-text-sm sf-loudness-1">
+		<!-- sl-cover with a compact override so the state message reserves a proper
+		     empty-state region without filling the viewport (default 100dvh would
+		     push the page header off-screen). -->
+		<div v-if="loading" class="sl-cover sf-text-sm sf-loudness-1" style="--sl-cover-min: 20rem">
 			Loading…
 		</div>
-		<div v-else-if="empty" class="admin-list__state sf-size-sm sf-text-sm sf-loudness-1">
+		<div
+			v-else-if="empty"
+			class="sl-cover sf-text-sm sf-loudness-1"
+			style="--sl-cover-min: 20rem"
+		>
 			<slot name="empty">Nothing here yet.</slot>
 		</div>
 		<div
@@ -45,13 +52,6 @@ const { left: isOverflowLeft } = useScrollOverflow(tableWrap)
 
 <style>
 @layer ui {
-	/* Vertical breathing — reads the --sf-padding bridge set by sf-size-sm on
-	   the div. Follows the theme's decision for sm-scale spacing without
-	   hardcoding the value. */
-	.admin-list__state {
-		padding-block: var(--sf-padding);
-	}
-
 	.admin-table-wrap {
 		overflow-x: auto;
 		scrollbar-width: none;

@@ -697,7 +697,7 @@ a pattern.
 
 ### Layout primitives
 
-Seven structural patterns:
+Eight structural patterns:
 
 ```
 sl-stack      vertical stack
@@ -705,8 +705,19 @@ sl-cluster    horizontal wrap
 sl-columns    grid — equal or custom ratio via --sl-cols
 sl-split      one fixed-width side, one flexible side
 sl-center     max-width centering
+sl-cover      fills at least 100dvh with content centred — empty states,
+              hero sections, standalone forms. Override via --sl-cover-min
 sl-grid       auto-responsive — fills with as many columns as fit at a minimum width
 sl-aspect     aspect-ratio container — ratio configured via --sl-aspect
+```
+
+Alignment modifiers compose with any grid/flex primitive (default centre on `sl-cover`):
+
+```
+sl-align-y-start   top
+sl-align-y-end     bottom
+sl-align-x-start   left      (grid-based; flex containers ignore justify-items)
+sl-align-x-end     right     (grid-based; flex containers ignore justify-items)
 ```
 
 `sl-columns` and `sl-split` are not variants of each other. Columns is proportional
