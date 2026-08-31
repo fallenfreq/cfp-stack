@@ -114,19 +114,18 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-alpha-8', value: '0.8', kind: 'number' },
 	{ name: '--sf-alpha-9', value: '0.9', kind: 'number' },
 
-	// Opacity (theme-controlled values) — used for element-wide opacity. Independent of
-	// alpha so themes can tune "how ghost do watermarks look" separately from "how muted
-	// do text tints render." Root theme initialises to the same values as alpha for
-	// simplicity; themes may diverge.
-	{ name: '--sf-opacity-1', value: '0.1', kind: 'number' },
-	{ name: '--sf-opacity-2', value: '0.2', kind: 'number' },
+	// Opacity (theme-controlled values) — used for element-wide opacity. Design-tuned
+	// non-linear tiers: the first step is a ghost/watermark, then subtle, muted, half,
+	// strong, near-solid, almost-full. Spacing tightens at both ends because designers
+	// pick clusters of useful opacities rather than uniform linear steps. Independent of
+	// --sf-alpha-* so themes can tune the two concerns separately.
+	{ name: '--sf-opacity-1', value: '0.05', kind: 'number' },
+	{ name: '--sf-opacity-2', value: '0.15', kind: 'number' },
 	{ name: '--sf-opacity-3', value: '0.3', kind: 'number' },
-	{ name: '--sf-opacity-4', value: '0.4', kind: 'number' },
-	{ name: '--sf-opacity-5', value: '0.5', kind: 'number' },
-	{ name: '--sf-opacity-6', value: '0.6', kind: 'number' },
-	{ name: '--sf-opacity-7', value: '0.7', kind: 'number' },
-	{ name: '--sf-opacity-8', value: '0.8', kind: 'number' },
-	{ name: '--sf-opacity-9', value: '0.9', kind: 'number' },
+	{ name: '--sf-opacity-4', value: '0.5', kind: 'number' },
+	{ name: '--sf-opacity-5', value: '0.7', kind: 'number' },
+	{ name: '--sf-opacity-6', value: '0.85', kind: 'number' },
+	{ name: '--sf-opacity-7', value: '0.95', kind: 'number' },
 
 	// Font weight
 	{ name: '--sf-weight-1', value: '400', kind: 'number' },
