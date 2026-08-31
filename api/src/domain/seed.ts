@@ -333,14 +333,16 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'variant',
 		description: 'Positive outcome — confirmation, completion, approval',
 	},
-	// alt-1 = alternative visual presentation of the same class combination; no semantic intent
-	// beyond "look distinct from the default rendering". The theme compounds against whatever
-	// other classes are present (depth, size, loudness) to decide the treatment.
+	// alt-1 = peer differentiation. The semantic is "distinguish from a sibling without
+	// asserting hierarchy or role" — zebra rows, alternating category cards, tab-vs-tab
+	// separation. Content with an established semantic (danger, success, featured, or an
+	// HTML element like <small>) should use the appropriate role, not alt.
 	// Numbered from the start so alt-2 etc. can be added without breaking existing content.
 	{
 		name: 'sf-variant-alt-1',
 		kind: 'variant',
-		description: 'Alternative visual form — distinct rendering of the same class combination',
+		description:
+			'Peer differentiation — visually distinguish this element from a sibling without asserting hierarchy',
 	},
 
 	// State classes — vocabulary only; rules are compound (depth/variant × state) added per-theme

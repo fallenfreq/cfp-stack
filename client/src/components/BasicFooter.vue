@@ -1,7 +1,9 @@
 <template>
-	<footer class="border-t mt-8 py-4 flex flex-col items-center">
-		<div class="text-sm">&copy; {{ year }} somefreq. All rights reserved.</div>
-		<div class="flex space-x-4 mt-4">
+	<footer class="basic-footer sl-stack sf-gap-md sf-boundary-top">
+		<small class="sf-text-sm sf-loudness-1">
+			&copy; {{ year }} somefreq. All rights reserved.
+		</small>
+		<div class="sl-cluster sf-gap-md">
 			<!-- <FontAwesomeIcon :icon="faFacebook" class="cursor-pointer" /> -->
 			<a
 				href="https://github.com/fallenfreq"
@@ -12,9 +14,7 @@
 			</a>
 			<!-- <FontAwesomeIcon :icon="faInstagram" class="cursor-pointer" /> -->
 		</div>
-		<div class="mt-4">
-			<DarkModeSwitch />
-		</div>
+		<DarkModeSwitch />
 	</footer>
 </template>
 
@@ -26,3 +26,14 @@ const year = new Date().getFullYear()
 // import { faFacebook } from '@fortawesome/free-brands-svg-icons'
 // import { faInstagram } from '@fortawesome/free-brands-svg-icons'
 </script>
+
+<style scoped>
+@layer ui {
+	/* Cross-axis centre for the flex-column stack (align-items on flex-col is horizontal).
+	   Vertical padding is component-owned — footer has no chrome marker to pull it from. */
+	.basic-footer {
+		align-items: center;
+		padding-block: var(--sf-spacing-md);
+	}
+}
+</style>
