@@ -1,6 +1,6 @@
 <template>
 	<div class="p-2">
-		<h1 class="text-2xl">Uneditable Heading</h1>
+		<h1 class="sf-heading-2">Uneditable Heading</h1>
 		<p>
 			These sections are interactive but they are not editable as they are not apart of the
 			editor.
