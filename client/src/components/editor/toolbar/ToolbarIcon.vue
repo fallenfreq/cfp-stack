@@ -1,10 +1,3 @@
 <template>
-	<span class="material-symbols-rounded toolbar-icon"><slot /></span>
+	<span class="material-symbols-rounded sf-icon sf-text-lg"><slot /></span>
 </template>
-
-<style scoped>
-.toolbar-icon {
-	font-size: 18px;
-	line-height: 1;
-}
-</style>
