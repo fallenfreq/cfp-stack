@@ -1,8 +1,10 @@
 import { nextTick, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
 
 export function useScrollOverflow(elRef: Ref<HTMLElement | null>, refreshKey?: Ref<unknown>) {
-	const left = ref(false)
+	const top = ref(false)
 	const right = ref(false)
+	const bottom = ref(false)
+	const left = ref(false)
 	let ro: ResizeObserver | null = null
 
 	const sync = () => {
@@ -13,11 +15,16 @@ export function useScrollOverflow(elRef: Ref<HTMLElement | null>, refreshKey?: R
 		// imprecision (the element can't scroll into its own end padding).
 		// Math.max(..., 2) keeps a minimum sub-pixel buffer when padding is 0.
 		const style = getComputedStyle(el)
-		const startEpsilon = Math.max(parseFloat(style.paddingLeft) || 0, 2)
-		const endEpsilon = Math.max(parseFloat(style.paddingRight) || 0, 2)
+		const leftEpsilon = Math.max(parseFloat(style.paddingLeft) || 0, 2)
+		const rightEpsilon = Math.max(parseFloat(style.paddingRight) || 0, 2)
+		const topEpsilon = Math.max(parseFloat(style.paddingTop) || 0, 2)
+		const bottomEpsilon = Math.max(parseFloat(style.paddingBottom) || 0, 2)
 		const maxScrollLeft = el.scrollWidth - el.clientWidth
-		left.value = el.scrollLeft > startEpsilon
-		right.value = maxScrollLeft - el.scrollLeft > endEpsilon
+		const maxScrollTop = el.scrollHeight - el.clientHeight
+		left.value = el.scrollLeft > leftEpsilon
+		right.value = maxScrollLeft - el.scrollLeft > rightEpsilon
+		top.value = el.scrollTop > topEpsilon
+		bottom.value = maxScrollTop - el.scrollTop > bottomEpsilon
 	}
 
 	const refresh = async () => {
@@ -45,5 +52,5 @@ export function useScrollOverflow(elRef: Ref<HTMLElement | null>, refreshKey?: R
 
 	if (refreshKey) watch(refreshKey, refresh)
 
-	return { left, right, sync }
+	return { top, right, bottom, left, sync }
 }

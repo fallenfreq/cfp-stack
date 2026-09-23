@@ -12,7 +12,7 @@
 				<th>Slug</th>
 				<th>Tags</th>
 				<th>Published</th>
-				<th />
+				<th class="sl-pin-right sf-boundary-left" />
 			</template>
 			<template #empty>No pages found.</template>
 			<AdminListItem
@@ -26,7 +26,9 @@
 				<template #meta>
 					<VaDropdown placement="bottom-start" :close-on-content-click="false">
 						<template #anchor>
-							<button class="tags-cell sf sf-is-contained sf-size-2xs sf-on-hover">
+							<button
+								class="tags-cell sl-cluster sf-gap-2xs sf sf-is-contained sf-size-2xs sf-on-hover"
+							>
 								<span
 									v-if="!pageTags.get(page.pageId)?.length"
 									class="tags-cell__empty sf-text-xs sf-loudness-1"
@@ -174,12 +176,8 @@ const onNewPage = async () => {
 </script>
 
 <style scoped>
-/* Structural layout only — everything else comes from the sf classes on the button. */
+/* Arrangement comes from sl-cluster, chrome from the sf classes on the button. */
 .tags-cell {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var(--sf-gap, var(--sf-spacing-2xs));
 	min-width: 48px;
 }
 

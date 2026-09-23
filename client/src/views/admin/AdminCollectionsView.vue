@@ -13,7 +13,7 @@
 				<th>Slug</th>
 				<th>Pages</th>
 				<th>Published</th>
-				<th />
+				<th class="sl-pin-right sf-boundary-left" />
 			</template>
 			<template #empty>No tags yet.</template>
 			<AdminListItem

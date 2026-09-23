@@ -566,6 +566,7 @@ sf-is-overflow-left    content is clipped at the left
 sf-is-overlay          element is physically positioned over other content
 sf-is-loading          element is in a loading / pending state
 sf-is-sticky           a sticky element is currently in its pinned position
+                       (sl-pin-* makes it sticky; this is the stuck state)
 sf-is-error            element or field is in a validation / error state
 sf-is-contained        element sits inside a container that already provides
                        visual boundary
@@ -725,6 +726,61 @@ sl-align-x-end     right     (grid-based; flex containers ignore justify-items)
 (equal or custom ratios via `--sl-cols: 1fr 2fr`). Split is fixed-plus-flexible — one
 side holds its width, the other takes the rest.
 
+### Scroll areas and pinned elements
+
+```
+sl-scroll-x    horizontal scroll area
+sl-scroll-y    vertical scroll area
+sl-pin-top     stays at the top edge of its scroll area while content scrolls under it
+sl-pin-right   …right edge
+sl-pin-bottom  …bottom edge
+sl-pin-left    …left edge
+```
+
+**Component author:** use `sl-scroll-x` / `sl-scroll-y` instead of writing overflow CSS,
+and bind the `useScrollOverflow` composable's state as `sf-is-overflow-*` on the same
+element. Use `sl-pin-*` instead of writing sticky CSS; add `sf-boundary-*` if the pinned
+element has a separator. Nothing else — no classes for how hidden content is shown.
+
+**Theme author:** three situations to style:
+
+- _A scroll area has hidden content on a side_ — `sf-is-overflow-*` (default: edge fade).
+- _Content is passing under a pinned element_ — `sl-pin-*` inside `sf-is-overflow-*` on
+  the same side (default: opaque surface + shadow cast onto the content).
+- _An edge holds a pinned element_ — `sf-is-overflow-*:has(.sl-pin-*)`. A theme that fades
+  edges should drop the fade there, or it covers the pinned element.
+
+**Keep the box and the scroll area apart.** Chrome (`sf-depth-*`) styles a box;
+`sl-scroll-*` + `sf-is-overflow-*` style the content scrolling inside one. Put them on
+separate elements — card outside, scroll area inside. On one element, whatever the theme
+does to scrolling content also lands on the box itself, and the component cannot know
+what that is.
+
+**Layout guarantee:** an edge of `sl-scroll-*` that holds a pinned element has no padding.
+Pinned means flush to that edge — padding there would leave a strip where content scrolls
+past beside the pinned element. Other edges keep their padding.
+
+**Caveat — nested scroll areas.** "Inside" and `:has()` look at any depth, so a scroll
+area nested inside another reacts to the outer area's state too: its pinned elements can
+pick up the outer area's treatment, and the outer area can drop an edge fade (and edge
+padding) because of a pinned element that belongs to the inner one. Rare, and only ever a stray shadow or a
+missing fade. Theme authors cannot scope it away.
+
+**Possible fixes (not yet done):**
+
+- _Composable reports pinned edges_ — works in today's browsers. `useScrollOverflow`
+  already runs on every scroll area; it can find the pinned elements whose nearest scroll
+  area is its own element and report `sf-is-pinned-*` facts on the scroll area alongside
+  `sf-is-overflow-*`. Fade and padding rules then compound two classes on one element
+  (no `:has()`), and the pinned-element treatment reads a bridge variable that every
+  `sl-scroll-*` resets, so the nearest scroll area always wins. Authors bind one class
+  object from the composable instead of listing classes. Trade-off: the flush pinned edge
+  waits for JS, so a small layout shift on load.
+- _CSS scroll-state container queries_ (`container-type: scroll-state`,
+  `@container scroll-state(scrollable: right)`) resolve against the nearest scroll area
+  natively, removing the caveat and the JS composable. Chrome/Edge only as of 2026-09;
+  switch once Safari and Firefox ship it. Needs `@container` support in the generator.
+
 ### Theme contract
 
 Themes can influence layout **metrics** via the tokens layout primitives read — gap,
@@ -737,7 +793,12 @@ always fixed-plus-flexible. No theme can make `sl-stack` horizontal.
 ### Container-responsive collapse
 
 Collapse responds to the node's own container width, not the viewport. A `sl-columns`
-nested inside a `sl-split` responds to the space it actually has:
+nested inside a `sl-split` responds to the space it actually has.
+
+A layout primitive only becomes a width container when it contains an `sl-collapse-*`
+element. Being a container makes a box ignore its own content when sizing its width, so
+primitives without collapsing content stay out of it — otherwise an `sl-cluster` in a
+table cell, button or dropdown would shrink to nothing.
 
 ```
 sl-collapse-xs   collapse below xs breakpoint

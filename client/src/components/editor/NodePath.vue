@@ -1,7 +1,7 @@
 <template>
 	<div
 		ref="nodePathEl"
-		class="node-path sf-text-xs"
+		class="node-path sl-scroll-x sf-text-xs"
 		:class="{ 'sf-is-overflow-left': isOverflowLeft, 'sf-is-overflow-right': isOverflowRight }"
 	>
 		<template v-for="(segment, i) in path" :key="segment.depth">
@@ -130,11 +130,6 @@ onUnmounted(() => {
 		align-items: center;
 		flex: 1;
 		min-width: 0;
-		overflow-x: auto;
-		scrollbar-width: none;
-	}
-	.node-path::-webkit-scrollbar {
-		display: none;
 	}
 
 	.path-sep {

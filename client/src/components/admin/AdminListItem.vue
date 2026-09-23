@@ -1,10 +1,10 @@
 <template>
 	<tr class="admin-row">
 		<td class="admin-cell">
-			<span class="admin-cell__name">{{ name || '—' }}</span>
+			<span class="sf-loudness-3" style="white-space: nowrap">{{ name || '—' }}</span>
 		</td>
 		<td class="admin-cell">
-			<code class="admin-cell__slug sf-loudness-1">/{{ slug }}</code>
+			<code class="sf sf-loudness-1 sf-text-xs" style="white-space: nowrap">/{{ slug }}</code>
 		</td>
 		<td class="admin-cell">
 			<slot name="meta" />
@@ -16,7 +16,7 @@
 				@update:model-value="($event: boolean) => $emit('update:published', $event)"
 			/>
 		</td>
-		<td class="admin-cell admin-cell--narrow admin-cell--sticky sf-boundary-left">
+		<td class="admin-cell admin-cell--narrow admin-cell--actions sl-pin-right sf-boundary-left">
 			<SfOverflowMenu tooltip="Actions">
 				<slot name="actions" />
 			</SfOverflowMenu>
@@ -35,23 +35,8 @@ defineEmits<{ 'update:published': [value: boolean] }>()
 		width: 1px;
 		white-space: nowrap;
 	}
-	.admin-cell--sticky {
-		position: sticky;
-		right: 0;
+	.admin-cell--actions {
 		width: 48px;
-		background: inherit;
-		z-index: 2;
-	}
-
-	.admin-cell__name {
-		font-weight: 500;
-		white-space: nowrap;
-	}
-
-	.admin-cell__slug {
-		font-family: monospace;
-		font-size: 0.75rem;
-		white-space: nowrap;
 	}
 }
 </style>

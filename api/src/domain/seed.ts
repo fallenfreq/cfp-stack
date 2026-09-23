@@ -601,6 +601,42 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'layout',
 		description: 'Image at natural size, no object-fit applied',
 	},
+
+	// Scroll areas + pinned elements. Structure only — the theme decides how hidden
+	// content is shown (sf-is-overflow-* on the scroll area) and how a pinned element
+	// looks while content passes under it (sl-pin-* inside sf-is-overflow-*).
+	{
+		name: 'sl-scroll-x',
+		kind: 'layout',
+		description:
+			'Horizontal scroll area. Pair with the overflow composable for sf-is-overflow-*.',
+	},
+	{
+		name: 'sl-scroll-y',
+		kind: 'layout',
+		description:
+			'Vertical scroll area. Pair with the overflow composable for sf-is-overflow-*.',
+	},
+	{
+		name: 'sl-pin-top',
+		kind: 'layout',
+		description: 'Stays at the top edge of its scroll area while content scrolls under it',
+	},
+	{
+		name: 'sl-pin-right',
+		kind: 'layout',
+		description: 'Stays at the right edge of its scroll area while content scrolls under it',
+	},
+	{
+		name: 'sl-pin-bottom',
+		kind: 'layout',
+		description: 'Stays at the bottom edge of its scroll area while content scrolls under it',
+	},
+	{
+		name: 'sl-pin-left',
+		kind: 'layout',
+		description: 'Stays at the left edge of its scroll area while content scrolls under it',
+	},
 ]
 
 // ─── Rules (root theme defaults) ─────────────────────────────────────────
@@ -609,6 +645,13 @@ const VOCABULARY: VocabSpec[] = [
 // can be added per-theme without touching these.
 
 type RuleSpec = ClassOnlyRuleInput | ElementRuleInput
+
+// Layout primitives become query containers only when something inside them collapses.
+// A container ignores its own content when sizing its width, so an unconditional
+// container-type collapses primitives that sit in size-to-content spots (table cells,
+// buttons, dropdowns). sl-collapse-* queries its nearest container, so only an ancestor
+// of a collapsing element needs to be one.
+const COLLAPSE_HOST = ':has([class*="sl-collapse-"])'
 
 const ROOT_RULES: RuleSpec[] = [
 	// Depth bundles — background + elevation cues.
@@ -766,7 +809,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sl-stack'], cssProperty: 'display', value: 'flex' },
 	{ classNames: ['sl-stack'], cssProperty: 'flex-direction', value: 'column' },
 	{ classNames: ['sl-stack'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
-	{ classNames: ['sl-stack'], cssProperty: 'container-type', value: 'inline-size' },
+	{
+		classNames: ['sl-stack'],
+		pseudo: COLLAPSE_HOST,
+		cssProperty: 'container-type',
+		value: 'inline-size',
+	},
 
 	// sl-cluster
 	{ classNames: ['sl-cluster'], cssProperty: 'display', value: 'flex' },
@@ -777,7 +825,12 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-gap, var(--sf-spacing-md))',
 	},
 	{ classNames: ['sl-cluster'], cssProperty: 'align-items', value: 'center' },
-	{ classNames: ['sl-cluster'], cssProperty: 'container-type', value: 'inline-size' },
+	{
+		classNames: ['sl-cluster'],
+		pseudo: COLLAPSE_HOST,
+		cssProperty: 'container-type',
+		value: 'inline-size',
+	},
 
 	// sl-columns
 	{ classNames: ['sl-columns'], cssProperty: 'display', value: 'grid' },
@@ -791,7 +844,12 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'gap',
 		value: 'var(--sf-gap, var(--sf-spacing-md))',
 	},
-	{ classNames: ['sl-columns'], cssProperty: 'container-type', value: 'inline-size' },
+	{
+		classNames: ['sl-columns'],
+		pseudo: COLLAPSE_HOST,
+		cssProperty: 'container-type',
+		value: 'inline-size',
+	},
 
 	// sl-split
 	{ classNames: ['sl-split'], cssProperty: 'display', value: 'grid' },
@@ -802,7 +860,12 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sl-split'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
 	{ classNames: ['sl-split'], cssProperty: 'align-items', value: 'start' },
-	{ classNames: ['sl-split'], cssProperty: 'container-type', value: 'inline-size' },
+	{
+		classNames: ['sl-split'],
+		pseudo: COLLAPSE_HOST,
+		cssProperty: 'container-type',
+		value: 'inline-size',
+	},
 
 	// sl-center
 	{ classNames: ['sl-center'], cssProperty: 'max-width', value: 'var(--sl-measure, 65ch)' },
@@ -812,7 +875,12 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'padding-inline',
 		value: 'var(--sf-padding)',
 	},
-	{ classNames: ['sl-center'], cssProperty: 'container-type', value: 'inline-size' },
+	{
+		classNames: ['sl-center'],
+		pseudo: COLLAPSE_HOST,
+		cssProperty: 'container-type',
+		value: 'inline-size',
+	},
 
 	// sl-cover — fills at least 100dvh with content centred both axes. Consumer
 	// overrides --sl-cover-min for compact (20rem), viewport (100vh), or fill-
@@ -838,13 +906,72 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'repeat(auto-fit, minmax(var(--sl-min, 250px), 1fr))',
 	},
 	{ classNames: ['sl-grid'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
-	{ classNames: ['sl-grid'], cssProperty: 'container-type', value: 'inline-size' },
+	{
+		classNames: ['sl-grid'],
+		pseudo: COLLAPSE_HOST,
+		cssProperty: 'container-type',
+		value: 'inline-size',
+	},
 
 	// sl-aspect presets (bare sl-aspect is developer escape hatch — no rule; author sets --sl-aspect inline)
 	{ classNames: ['sl-aspect-16-9'], cssProperty: 'aspect-ratio', value: '16/9' },
 	{ classNames: ['sl-aspect-4-3'], cssProperty: 'aspect-ratio', value: '4/3' },
 	{ classNames: ['sl-aspect-1-1'], cssProperty: 'aspect-ratio', value: '1' },
 	{ classNames: ['sl-aspect-9-16'], cssProperty: 'aspect-ratio', value: '9/16' },
+
+	// sl-scroll-* — scroll areas. Scrollbar hiding on sl-scroll-x is the default theme's
+	// choice (compact rows, tables); sl-scroll-y keeps native scrollbars.
+	{ classNames: ['sl-scroll-x'], cssProperty: 'overflow-x', value: 'auto' },
+	{ classNames: ['sl-scroll-x'], cssProperty: 'scrollbar-width', value: 'none' },
+	{
+		classNames: ['sl-scroll-x'],
+		pseudo: '::-webkit-scrollbar',
+		cssProperty: 'display',
+		value: 'none',
+	},
+	{ classNames: ['sl-scroll-y'], cssProperty: 'overflow-y', value: 'auto' },
+
+	// An edge that holds a pinned element has no padding — pinned means flush to that
+	// edge; padding there leaves a strip where content scrolls past beside the pinned
+	// element. Other edges keep whatever padding they have. Nested caveat: sf-system.md.
+	{
+		classNames: ['sl-scroll-x'],
+		pseudo: ':has(.sl-pin-right)',
+		cssProperty: 'padding-right',
+		value: '0',
+	},
+	{
+		classNames: ['sl-scroll-x'],
+		pseudo: ':has(.sl-pin-left)',
+		cssProperty: 'padding-left',
+		value: '0',
+	},
+	{
+		classNames: ['sl-scroll-y'],
+		pseudo: ':has(.sl-pin-top)',
+		cssProperty: 'padding-top',
+		value: '0',
+	},
+	{
+		classNames: ['sl-scroll-y'],
+		pseudo: ':has(.sl-pin-bottom)',
+		cssProperty: 'padding-bottom',
+		value: '0',
+	},
+
+	// sl-pin-* — sticky to one edge of the nearest scroll area.
+	{ classNames: ['sl-pin-top'], cssProperty: 'position', value: 'sticky' },
+	{ classNames: ['sl-pin-top'], cssProperty: 'top', value: '0' },
+	{ classNames: ['sl-pin-top'], cssProperty: 'z-index', value: '1' },
+	{ classNames: ['sl-pin-right'], cssProperty: 'position', value: 'sticky' },
+	{ classNames: ['sl-pin-right'], cssProperty: 'right', value: '0' },
+	{ classNames: ['sl-pin-right'], cssProperty: 'z-index', value: '1' },
+	{ classNames: ['sl-pin-bottom'], cssProperty: 'position', value: 'sticky' },
+	{ classNames: ['sl-pin-bottom'], cssProperty: 'bottom', value: '0' },
+	{ classNames: ['sl-pin-bottom'], cssProperty: 'z-index', value: '1' },
+	{ classNames: ['sl-pin-left'], cssProperty: 'position', value: 'sticky' },
+	{ classNames: ['sl-pin-left'], cssProperty: 'left', value: '0' },
+	{ classNames: ['sl-pin-left'], cssProperty: 'z-index', value: '1' },
 
 	// Overflow context — mask-image applied to the scrolling element.
 	// Arrows are component-level; ::before/::after rules can be added per-theme via the DB.
@@ -878,6 +1005,292 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overflow-top', 'sf-is-overflow-bottom'],
 		cssProperty: 'mask-image',
 		value: 'linear-gradient(to bottom, transparent, black 60px, black calc(100% - 60px), transparent)',
+	},
+
+	// Edges that hold a pinned element drop their fade — the fade would cover the pinned
+	// element, and the pinned element shows the hidden content itself (rules below).
+	// Caveat: :has() also sees pinned elements inside nested scroll areas — see sf-system.md.
+	{
+		classNames: ['sf-is-overflow-right'],
+		pseudo: ':has(.sl-pin-right)',
+		cssProperty: 'mask-image',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-is-overflow-left'],
+		pseudo: ':has(.sl-pin-left)',
+		cssProperty: 'mask-image',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-is-overflow-left', 'sf-is-overflow-right'],
+		pseudo: ':has(.sl-pin-right)',
+		cssProperty: 'mask-image',
+		value: 'linear-gradient(to right, transparent, black 60px)',
+	},
+	{
+		classNames: ['sf-is-overflow-left', 'sf-is-overflow-right'],
+		pseudo: ':has(.sl-pin-left)',
+		cssProperty: 'mask-image',
+		value: 'linear-gradient(to left, transparent, black 60px)',
+	},
+	{
+		classNames: ['sf-is-overflow-left', 'sf-is-overflow-right'],
+		pseudo: ':has(.sl-pin-left):has(.sl-pin-right)',
+		cssProperty: 'mask-image',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		pseudo: ':has(.sl-pin-bottom)',
+		cssProperty: 'mask-image',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		pseudo: ':has(.sl-pin-top)',
+		cssProperty: 'mask-image',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-is-overflow-top', 'sf-is-overflow-bottom'],
+		pseudo: ':has(.sl-pin-bottom)',
+		cssProperty: 'mask-image',
+		value: 'linear-gradient(to bottom, transparent, black 60px)',
+	},
+	{
+		classNames: ['sf-is-overflow-top', 'sf-is-overflow-bottom'],
+		pseudo: ':has(.sl-pin-top)',
+		cssProperty: 'mask-image',
+		value: 'linear-gradient(to top, transparent, black 60px)',
+	},
+	{
+		classNames: ['sf-is-overflow-top', 'sf-is-overflow-bottom'],
+		pseudo: ':has(.sl-pin-top):has(.sl-pin-bottom)',
+		cssProperty: 'mask-image',
+		value: 'none',
+	},
+
+	// Content passing under a pinned element — the pinned element turns opaque (nearest
+	// depth surface via the --sfx-surface-color bridge) and a shadow strip sits just outside
+	// it, exactly its height/width. Strips of adjacent pinned cells meet edge to edge, so a
+	// pinned column reads as one continuous shadow (a per-cell box-shadow blurs past each
+	// cell and doubles up at every row line). Same nested-scroll-area caveat as above.
+	{
+		classNames: ['sf-is-overflow-right'],
+		pseudo: ' .sl-pin-right',
+		cssProperty: 'background',
+		value: 'rgb(var(--sfx-surface-color, var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-is-overflow-right'],
+		pseudo: ' .sl-pin-right::after',
+		cssProperty: 'content',
+		value: "''",
+	},
+	{
+		classNames: ['sf-is-overflow-right'],
+		pseudo: ' .sl-pin-right::after',
+		cssProperty: 'position',
+		value: 'absolute',
+	},
+	{
+		classNames: ['sf-is-overflow-right'],
+		pseudo: ' .sl-pin-right::after',
+		cssProperty: 'right',
+		value: '100%',
+	},
+	{
+		classNames: ['sf-is-overflow-right'],
+		pseudo: ' .sl-pin-right::after',
+		cssProperty: 'top',
+		value: '0',
+	},
+	{
+		classNames: ['sf-is-overflow-right'],
+		pseudo: ' .sl-pin-right::after',
+		cssProperty: 'bottom',
+		value: '0',
+	},
+	{
+		classNames: ['sf-is-overflow-right'],
+		pseudo: ' .sl-pin-right::after',
+		cssProperty: 'width',
+		value: '12px',
+	},
+	{
+		classNames: ['sf-is-overflow-right'],
+		pseudo: ' .sl-pin-right::after',
+		cssProperty: 'pointer-events',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-is-overflow-right'],
+		pseudo: ' .sl-pin-right::after',
+		cssProperty: 'box-shadow',
+		value: 'inset -10px 0 8px -8px rgb(var(--sf-shadow) / var(--sf-shadow-opacity))',
+	},
+	{
+		classNames: ['sf-is-overflow-left'],
+		pseudo: ' .sl-pin-left',
+		cssProperty: 'background',
+		value: 'rgb(var(--sfx-surface-color, var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-is-overflow-left'],
+		pseudo: ' .sl-pin-left::after',
+		cssProperty: 'content',
+		value: "''",
+	},
+	{
+		classNames: ['sf-is-overflow-left'],
+		pseudo: ' .sl-pin-left::after',
+		cssProperty: 'position',
+		value: 'absolute',
+	},
+	{
+		classNames: ['sf-is-overflow-left'],
+		pseudo: ' .sl-pin-left::after',
+		cssProperty: 'left',
+		value: '100%',
+	},
+	{
+		classNames: ['sf-is-overflow-left'],
+		pseudo: ' .sl-pin-left::after',
+		cssProperty: 'top',
+		value: '0',
+	},
+	{
+		classNames: ['sf-is-overflow-left'],
+		pseudo: ' .sl-pin-left::after',
+		cssProperty: 'bottom',
+		value: '0',
+	},
+	{
+		classNames: ['sf-is-overflow-left'],
+		pseudo: ' .sl-pin-left::after',
+		cssProperty: 'width',
+		value: '12px',
+	},
+	{
+		classNames: ['sf-is-overflow-left'],
+		pseudo: ' .sl-pin-left::after',
+		cssProperty: 'pointer-events',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-is-overflow-left'],
+		pseudo: ' .sl-pin-left::after',
+		cssProperty: 'box-shadow',
+		value: 'inset 10px 0 8px -8px rgb(var(--sf-shadow) / var(--sf-shadow-opacity))',
+	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		pseudo: ' .sl-pin-top',
+		cssProperty: 'background',
+		value: 'rgb(var(--sfx-surface-color, var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		pseudo: ' .sl-pin-top::after',
+		cssProperty: 'content',
+		value: "''",
+	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		pseudo: ' .sl-pin-top::after',
+		cssProperty: 'position',
+		value: 'absolute',
+	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		pseudo: ' .sl-pin-top::after',
+		cssProperty: 'top',
+		value: '100%',
+	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		pseudo: ' .sl-pin-top::after',
+		cssProperty: 'left',
+		value: '0',
+	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		pseudo: ' .sl-pin-top::after',
+		cssProperty: 'right',
+		value: '0',
+	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		pseudo: ' .sl-pin-top::after',
+		cssProperty: 'height',
+		value: '12px',
+	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		pseudo: ' .sl-pin-top::after',
+		cssProperty: 'pointer-events',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-is-overflow-top'],
+		pseudo: ' .sl-pin-top::after',
+		cssProperty: 'box-shadow',
+		value: 'inset 0 10px 8px -8px rgb(var(--sf-shadow) / var(--sf-shadow-opacity))',
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		pseudo: ' .sl-pin-bottom',
+		cssProperty: 'background',
+		value: 'rgb(var(--sfx-surface-color, var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		pseudo: ' .sl-pin-bottom::after',
+		cssProperty: 'content',
+		value: "''",
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		pseudo: ' .sl-pin-bottom::after',
+		cssProperty: 'position',
+		value: 'absolute',
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		pseudo: ' .sl-pin-bottom::after',
+		cssProperty: 'bottom',
+		value: '100%',
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		pseudo: ' .sl-pin-bottom::after',
+		cssProperty: 'left',
+		value: '0',
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		pseudo: ' .sl-pin-bottom::after',
+		cssProperty: 'right',
+		value: '0',
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		pseudo: ' .sl-pin-bottom::after',
+		cssProperty: 'height',
+		value: '12px',
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		pseudo: ' .sl-pin-bottom::after',
+		cssProperty: 'pointer-events',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-is-overflow-bottom'],
+		pseudo: ' .sl-pin-bottom::after',
+		cssProperty: 'box-shadow',
+		value: 'inset 0 -10px 8px -8px rgb(var(--sf-shadow) / var(--sf-shadow-opacity))',
 	},
 
 	// Overlay context — reads --sfx-surface-color (bridge variable set by each depth bundle) so one
@@ -1454,6 +1867,29 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-radius',
 		value: 'var(--sf-radius-3)',
 	},
+
+	// ─── Code element ─────────────────────────────────────────────────────────
+	// Inline code / identifier content. Applied via <code class="sf">, matching
+	// button.sf / a.sf opt-in pattern. Content-only: sets mono font. Size and
+	// layout (nowrap, overflow) are consumer choices.
+	{
+		elementSelector: 'code',
+		classNames: ['sf'],
+		cssProperty: 'font-family',
+		value: 'var(--sf-font-mono)',
+	},
+
+	// span.sf-loudness-3 — text carriers at loudness-3 gain heavier weight.
+	// Scoped to span (not bare) so a loud card <div class="sf-loudness-3"> does not
+	// cascade bold onto every descendant. Extend to other text carriers (button, a,
+	// code, etc.) via similar compounds as they surface a need.
+	{
+		elementSelector: 'span',
+		classNames: ['sf-loudness-3'],
+		cssProperty: 'font-weight',
+		value: '600',
+	},
+
 	// Loudness-3 solid fill — button-only. Non-button elements (cards) get loudness-3 prominence
 	// via sf-depth-1 × sf-loudness-3 shadow/border compounds; they keep their surface background.
 	{
@@ -1770,10 +2206,18 @@ const ROOT_RULES: RuleSpec[] = [
 	// Theme-wide defaults for data tables. border-collapse:separate + border-spacing:0 is
 	// required so that box-shadow works on sticky <td> cells (collapse merges cell paint layers
 	// which clips overflow; separate gives each cell its own box).
-	// depth controls surface colour and corners; sf-is-overflow-left drives the sticky-column
-	// shadow; border-bottom on tr:last-child td removes the orphan bottom edge.
+	// depth controls surface colour and corners; pinned columns (sl-pin-*) get their overflow
+	// treatment from the sf-is-overflow-* rules; border-bottom on tr:last-child td removes the
+	// orphan bottom edge.
 	{ elementSelector: 'table', cssProperty: 'border-collapse', value: 'separate' },
 	{ elementSelector: 'table', cssProperty: 'border-spacing', value: '0' },
+	// table.sf — data tables are dense; smaller text is the common default.
+	{
+		elementSelector: 'table',
+		classNames: ['sf'],
+		cssProperty: 'font-size',
+		value: 'var(--sf-text-sm)',
+	},
 	{
 		elementSelector: 'td',
 		cssProperty: 'border-bottom',
