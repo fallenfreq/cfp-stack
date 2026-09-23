@@ -26,6 +26,7 @@
 		"build:client": "pnpm --filter @somefreq-app/client build",
 		"build:api": "pnpm --filter @somefreq-app/api build",
 		"preview:client": "pnpm --filter @somefreq-app/client preview",
+		"preview:components": "node --no-warnings client/preview/build.mjs",
 		"lint": "eslint --flag v10_config_lookup_from_file --fix",
 		"format": "prettier --write .",
 		"migrate:api": "pnpm --filter @somefreq-app/api migrate",
