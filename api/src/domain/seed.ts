@@ -522,6 +522,18 @@ const VOCABULARY: VocabSpec[] = [
 	{ name: 'sl-split', kind: 'layout', description: 'Fixed + flexible two-column split' },
 	{ name: 'sl-center', kind: 'layout', description: 'Centered max-width block' },
 	{
+		name: 'sl-inset',
+		kind: 'layout',
+		description:
+			'Vertical stack whose children sit inside side margins sized by --sf-padding (set with sf-padding-* or a chrome class). A child wearing sl-bleed spans the margins too.',
+	},
+	{
+		name: 'sl-bleed',
+		kind: 'layout',
+		description:
+			'Reaches the edges of its sl-inset parent, spanning the side margins. Does nothing outside an sl-inset.',
+	},
+	{
 		name: 'sl-cover',
 		kind: 'layout',
 		description:
@@ -880,6 +892,38 @@ const ROOT_RULES: RuleSpec[] = [
 		pseudo: COLLAPSE_HOST,
 		cssProperty: 'container-type',
 		value: 'inline-size',
+	},
+
+	// sl-inset — a stack whose side padding becomes grid tracks, so a child can opt into
+	// them (sl-bleed) instead of pulling itself out with a negative margin. It reads its
+	// own --sf-padding, the value it would have padded with, so it never guesses a
+	// parent's padding. The layout layer beats chrome padding, so a padded card can wear
+	// it and look unchanged. sl-bleed has no rule of its own: outside an sl-inset it's inert.
+	{ classNames: ['sl-inset'], cssProperty: 'display', value: 'grid' },
+	{
+		classNames: ['sl-inset'],
+		cssProperty: 'grid-template-columns',
+		value: '[full-start] var(--sf-padding, 0px) [content-start] minmax(0, 1fr) [content-end] var(--sf-padding, 0px) [full-end]',
+	},
+	{ classNames: ['sl-inset'], cssProperty: 'padding-inline', value: '0' },
+	{
+		classNames: ['sl-inset'],
+		cssProperty: 'row-gap',
+		value: 'var(--sf-gap, var(--sf-spacing-md))',
+	},
+	{ classNames: ['sl-inset'], cssProperty: 'align-content', value: 'start' },
+	{
+		classNames: ['sl-inset'],
+		pseudo: COLLAPSE_HOST,
+		cssProperty: 'container-type',
+		value: 'inline-size',
+	},
+	{ classNames: ['sl-inset'], pseudo: ' > *', cssProperty: 'grid-column', value: 'content' },
+	{
+		classNames: ['sl-inset'],
+		pseudo: ' > .sl-bleed',
+		cssProperty: 'grid-column',
+		value: 'full',
 	},
 
 	// sl-cover — fills at least 100dvh with content centred both axes. Consumer

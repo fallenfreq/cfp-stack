@@ -699,7 +699,7 @@ a pattern.
 
 ### Layout primitives
 
-Eight structural patterns:
+Nine structural patterns:
 
 ```
 sl-stack      vertical stack
@@ -707,6 +707,7 @@ sl-cluster    horizontal wrap
 sl-columns    grid — equal or custom ratio via --sl-cols
 sl-split      one fixed-width side, one flexible side
 sl-center     max-width centering
+sl-inset      vertical stack with side margins a child can reach into (sl-bleed)
 sl-cover      fills at least 100dvh with content centred — empty states,
               hero sections, standalone forms. Override via --sl-cover-min
 sl-grid       auto-responsive — fills with as many columns as fit at a minimum width
@@ -725,6 +726,42 @@ sl-align-x-end     right     (grid-based; flex containers ignore justify-items)
 `sl-columns` and `sl-split` are not variants of each other. Columns is proportional
 (equal or custom ratios via `--sl-cols: 1fr 2fr`). Split is fixed-plus-flexible — one
 side holds its width, the other takes the rest.
+
+### Side margins and full-bleed
+
+`sl-inset` is a stack whose children sit inside side margins. `sl-bleed` on a direct child
+lets it span those margins and reach the inset's edges — a table or image running
+edge to edge on a phone while the heading above it keeps its margin.
+
+```html
+<div class="sl-inset sf-padding-lg">
+	<h1>Title</h1>
+	<div class="sl-bleed">…reaches the edges…</div>
+</div>
+```
+
+- **Size.** The margins are the inset's own `--sf-padding`: set it with `sf-padding-*`, or
+  wear `sl-inset` on a chrome box (`sf-depth-1 sl-inset`) — its side padding becomes the
+  margins, so it looks the same but children can now bleed. Top and bottom padding are
+  untouched.
+- **Nothing is assumed.** The inset reads the padding it would have used itself, never a
+  parent's. Outside an `sl-inset`, `sl-bleed` does nothing — the element just stays
+  where it is.
+- **One arrangement per box.** `sl-inset` arranges its children, so it doesn't share an
+  element with `sl-stack`, `sl-cluster`, `sl-columns`, `sl-split` or `sl-grid`. If a box
+  already arranges its children, add a wrapper.
+- **Direct children only.** Bleed reaches the nearest inset; a nested inset offers its
+  own margins.
+
+Not yet covered:
+
+- **Edge padding.** `sf-is-edge-left/right` pad directly instead of through
+  `--sf-padding`, so `sl-inset` on an edge-marked box overrides that padding.
+- **Editor content.** Blocks sit inside node-view wrappers, so a block can't be a direct
+  child of an inset yet.
+- **Theme choice.** Whether an element actually goes edge to edge (and when) is decided
+  by the component today. Making it a theme decision needs a meaning marker plus a way
+  for rules to depend on width.
 
 ### Scroll areas and pinned elements
 

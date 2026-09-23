@@ -1,5 +1,6 @@
 <template>
-	<div>
+	<!-- On phones the table reaches the edges of the page's sl-inset. -->
+	<div :class="{ 'sl-bleed': isBelowThreshold }">
 		<!-- sl-cover with a compact override so the state message reserves a proper
 		     empty-state region without filling the viewport (default 100dvh would
 		     push the page header off-screen). -->
@@ -19,7 +20,6 @@
 			:class="{
 				'sf-is-edge-left': isBelowThreshold,
 				'sf-is-edge-right': isBelowThreshold,
-				'admin-table-wrap--full-bleed': isBelowThreshold,
 			}"
 		>
 			<div
@@ -59,10 +59,6 @@ const { left: isOverflowLeft, right: isOverflowRight } = useScrollOverflow(table
 
 <style>
 @layer ui {
-	.admin-table-wrap--full-bleed {
-		margin: 0 -1.25rem;
-	}
-
 	.admin-table {
 		width: 100%;
 	}

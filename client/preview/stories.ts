@@ -5,6 +5,7 @@ import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
 import NodePath from '@/components/editor/NodePath.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
+import SfPageShell from '@/components/ui/SfPageShell.vue'
 import SfStatusDisplay from '@/components/ui/SfStatusDisplay.vue'
 import { h, type VNode } from 'vue'
 
@@ -202,6 +203,32 @@ export const stories: Story[] = [
 				]),
 			])
 		},
+	},
+	{
+		id: 'inset-bleed',
+		title: 'sl-inset + sl-bleed',
+		notes: 'Page: heading and text keep the side margin; the bleed card touches both frame edges with square corners. Card: its padding becomes margins — the bar spans the card edge to edge, the text stays inset.',
+		maxWidth: '360px',
+		render: () => [
+			h(SfPageShell, { title: 'Page' }, () => [
+				h('p', 'Text keeps the page margin.'),
+				h('div', { class: 'sl-bleed' }, [
+					h(
+						'div',
+						{ class: 'sf-depth-1 sf-size-2xs sf-is-edge-left sf-is-edge-right' },
+						'Bleeds to the page edges.',
+					),
+				]),
+				h('p', 'Back inside the margin.'),
+			]),
+			h('div', { style: 'padding: 16px' }, [
+				h('div', { class: 'sf-depth-1 sl-inset sf-gap-sm' }, [
+					h('p', 'Card text, inside the padding.'),
+					h('div', { class: 'sl-bleed sf-bg-primary-5', style: 'height: 48px' }),
+					h('p', 'More card text.'),
+				]),
+			]),
+		],
 	},
 	{
 		id: 'node-path',

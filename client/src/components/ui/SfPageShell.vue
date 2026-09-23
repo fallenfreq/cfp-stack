@@ -1,5 +1,5 @@
 <template>
-	<div class="page-shell sl-stack sf-gap-lg">
+	<div class="page-shell sl-inset sf-padding-lg sf-gap-lg">
 		<div class="page-header sl-cluster sf-gap-sm">
 			<h1 class="sf-heading-1">{{ title }}</h1>
 			<slot name="actions" />
@@ -14,9 +14,9 @@ defineProps<{ title: string }>()
 
 <style scoped>
 @layer ui {
-	/* Edge padding — migrate to sl-pad-* once [[project-sl-padding]] lands. */
+	/* Side margins come from sl-inset + sf-padding-lg; top padding stays here until
+	   [[project-sl-padding]] lands. */
 	.page-shell {
-		padding-inline: var(--sf-spacing-lg);
 		padding-block-start: var(--sf-spacing-lg);
 	}
 	/* Title-left / actions-right with wrap on narrow viewports.
