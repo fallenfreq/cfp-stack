@@ -139,6 +139,11 @@ async function main() {
 		writeFileSync(join(outDir, 'components.css'), componentsCss)
 		log(`components.css from ${renderedSfcs.size} components`)
 
+		// FontAwesome injects this with JS at app startup; without it icons have no size.
+		cpSync(
+			join(clientDir, 'node_modules/@fortawesome/fontawesome-svg-core/styles.css'),
+			join(outDir, 'fontawesome.css'),
+		)
 		writeFileSync(join(outDir, 'preview.css'), PREVIEW_CSS)
 		writeFileSync(join(outDir, 'preview.js'), PREVIEW_JS)
 		log(
@@ -163,6 +168,7 @@ function head(title) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)} · preview</title>
+<link rel="stylesheet" href="fontawesome.css">
 <link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="sf-system.css">
 <link rel="stylesheet" href="components.css">
