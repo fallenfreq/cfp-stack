@@ -10,7 +10,9 @@ export async function renderStory(story: Story): Promise<string> {
 	app.use(createPinia())
 	for (const [name, component] of Object.entries(stubs)) app.component(name, component)
 	app.config.warnHandler = (msg) => console.warn(`  [vue] ${story.id}: ${msg}`)
-	return renderToString(app)
+	// SSR wraps <Transition appear> content in <template> for the client to hydrate; the
+	// preview has no client JS, so unwrap it or the content never shows.
+	return (await renderToString(app)).replace(/<\/?template>/g, '')
 }
 
 export { stories } from './stories'

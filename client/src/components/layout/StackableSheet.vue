@@ -2,18 +2,27 @@
 	<Transition appear name="slide">
 		<div
 			v-if="sheetStore.isSheetOpen"
-			class="sheet z-20 sf-depth-3 sf-size-lg"
+			class="sheet sl-stack sf-depth-3 sf-size-lg"
 			:class="
 				isBelowThreshold
 					? ['sheet--mobile', 'sf-is-edge-bottom']
 					: ['sheet--desktop', 'sf-is-edge-top', 'sf-is-edge-right', 'sf-is-edge-bottom']
 			"
 		>
-			<div class="close-button">
-				<FontAwesomeIcon size="sm" :icon="faXmark" @click="sheetStore.closeSheet" />
+			<!-- Top row stays put while the body scrolls, so the close control never
+			     scrolls away or covers content. -->
+			<div class="sheet-bar sl-cluster">
+				<SfIconButton
+					icon="x"
+					tooltip="Close"
+					class="sf-is-contained sf-loudness-1"
+					@click="sheetStore.closeSheet"
+				/>
 			</div>
 
-			<slot />
+			<div class="sheet-body sl-scroll-y">
+				<slot />
+			</div>
 		</div>
 	</Transition>
 </template>
@@ -21,8 +30,7 @@
 <script setup lang="ts">
 import { useCollapseBreakpoint } from '@/composables/useCollapseBreakpoint'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { onMounted, onUnmounted } from 'vue'
 const sheetStore = useStackableSheetStore()
 const { isBelowThreshold } = useCollapseBreakpoint('md')
 
@@ -30,28 +38,33 @@ defineProps<{
 	mobileHeight: string
 	desktopWidth: string
 }>()
+
+// Escape closes the sheet. No focus trap: the sheet doesn't block the page behind it.
+const onKeyDown = (e: KeyboardEvent) => {
+	if (e.key === 'Escape' && sheetStore.isSheetOpen) sheetStore.closeSheet()
+}
+
+onMounted(() => document.addEventListener('keydown', onKeyDown))
+onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
 </script>
 
 <style scoped>
 @layer ui {
 	.sheet {
 		position: fixed;
-		overflow-y: auto;
-		box-shadow: 0 2px 50px rgb(0 0 0 / var(--sf-alpha-5));
+		z-index: var(--z-panel);
 		transition: transform 0.3s ease-in-out;
-		::-webkit-scrollbar {
-			display: none;
-		}
 	}
 
-	.close-button {
-		position: absolute;
-		top: 15px;
-		right: 15px;
-		background: transparent;
-		border: none;
-		font-size: 1.5rem;
-		cursor: pointer;
+	/* Flex rows right-align with justify-content (sl-align-x-* is grid-only). */
+	.sheet-bar {
+		justify-content: end;
+	}
+
+	/* The body takes the rest of the sheet's height and scrolls inside it. */
+	.sheet-body {
+		flex: 1;
+		min-height: 0;
 	}
 
 	/* Layout driven by isBelowThreshold (md collapse threshold from DB) — no hardcoded breakpoints */

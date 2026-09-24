@@ -5,8 +5,10 @@ import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
 import NodePath from '@/components/editor/NodePath.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
+import StackableSheet from '@/components/layout/StackableSheet.vue'
 import SfPageShell from '@/components/ui/SfPageShell.vue'
 import SfStatusDisplay from '@/components/ui/SfStatusDisplay.vue'
+import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import { h, type VNode } from 'vue'
 
 export interface Story {
@@ -313,6 +315,34 @@ export const stories: Story[] = [
 				]),
 			]),
 		],
+	},
+	{
+		id: 'stackable-sheet',
+		title: 'StackableSheet',
+		notes: 'Desktop layout inside a framed box (transform makes the fixed sheet sit in the frame). The X sits in its own row at the top right, is a real button (tab to it), and stays put while the body scrolls. The long heading wraps below the X instead of running under it.',
+		render: () => {
+			useStackableSheetStore().isSheetOpen = true
+			return h(
+				'div',
+				{
+					style: 'position: relative; height: 360px; transform: translateZ(0); overflow: hidden; outline: 1px dotted #8888',
+				},
+				[
+					h(StackableSheet, { mobileHeight: '50%', desktopWidth: '65%' }, () =>
+						h('div', { class: 'sl-stack sf-gap-sm' }, [
+							h(
+								'h3',
+								{ class: 'sf-text-xl' },
+								'Marker details with a fairly long title',
+							),
+							...Array.from({ length: 12 }, (_, i) =>
+								h('p', `Line ${i + 1} of the sheet body — scroll to see the rest.`),
+							),
+						]),
+					),
+				],
+			)
+		},
 	},
 	{
 		id: 'node-path',

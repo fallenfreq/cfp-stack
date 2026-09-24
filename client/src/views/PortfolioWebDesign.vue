@@ -9,7 +9,7 @@ import { computed } from 'vue'
 
 const sheetStore = useStackableSheetStore()
 const { sheetContent } = storeToRefs(sheetStore)
-const { closeSheet, openSheet } = sheetStore
+const { openSheet } = sheetStore
 
 const { data, isPending } = getPortfolioEntries(['webDesignPortfolio'])
 const items = computed(() => data.value ?? [])
@@ -20,7 +20,7 @@ const onSelectItem = (item: GridItem) => {
 </script>
 
 <template>
-	<StackableSheet mobile-height="50%" desktop-width="65%" @close="closeSheet">
+	<StackableSheet mobile-height="50%" desktop-width="65%">
 		<div v-if="sheetContent?.id === 'collectionEntry'">
 			{{ sheetContent.content.content }}
 			This will soon display the content of the selected item.

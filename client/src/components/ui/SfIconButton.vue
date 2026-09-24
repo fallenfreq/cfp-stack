@@ -2,6 +2,7 @@
 	<SfTooltip :text="tooltip">
 		<button
 			class="sf-icon-btn sf sf-on-hover sf-on-disabled"
+			:aria-label="tooltip"
 			:class="`sf-size-${size}`"
 			v-bind="$attrs"
 		>
