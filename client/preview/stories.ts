@@ -92,7 +92,91 @@ const fakeEditor = (names: string[]) => ({
 	off: () => undefined,
 })
 
+// ─── Edge alignment: page line, bands, scrolling table ─────────────────────────
+// Rendered at two page margins (--sf-spacing_page overridden inline, as a theme would)
+// so anything that copied a number instead of reading the line would show.
+
+const wideTable = () =>
+	h('table', { class: 'sf', style: 'white-space: nowrap' }, [
+		h('thead', [
+			h('tr', [
+				...['Name', 'Slug', 'Updated', 'Status'].map((t) => h('th', t)),
+				h('th', { class: 'sl-pin-right sf-boundary-left' }),
+			]),
+		]),
+		h(
+			'tbody',
+			['Home', 'About the team', 'Blog'].map((n) =>
+				h('tr', [
+					...[n, n.toLowerCase().replaceAll(' ', '-'), '2026-09-24', 'Published'].map(
+						(c) => h('td', c),
+					),
+					h('td', { class: 'sl-pin-right sf-boundary-left' }, '⋯'),
+				]),
+			),
+		),
+	])
+
+const bandRow = () =>
+	h('div', { class: 'sl-cluster sf-gap-xs' }, [
+		h('strong', { class: 'sf-text-sm' }, 'Row band'),
+		h('span', { class: 'sf-chip sf-size-2xs sf-loudness-2' }, 'draft'),
+		h('span', { class: 'sf-chip sf-size-2xs sf-loudness-2' }, 'saved'),
+	])
+
+const swatch = (extra = '') =>
+	h('div', { class: `sl-bleed sf-bg-primary-5 ${extra}`, style: 'height: 40px' })
+
+const edgePage = (margin: string) =>
+	h(
+		'div',
+		{
+			class: 'sl-inset sf-gap-md',
+			style: `--sf-spacing_page: ${margin}; padding-block: 12px; outline: 1px dotted #8888`,
+		},
+		[
+			h('p', { class: 'sf-text-xs sf-loudness-1' }, `Page margin ${margin}`),
+			h('p', 'Page text sits on the line.'),
+			swatch(),
+			h(
+				'div',
+				{
+					class: 'sl-bleed sl-inset sf-depth-1 sf-is-edge-left sf-is-edge-right sf-gap-xs',
+				},
+				[
+					h('p', 'Stack band (sl-bleed sl-inset): on the line.'),
+					swatch(),
+				],
+			),
+			h(
+				'div',
+				{
+					class: 'sl-bleed sl-inset-line sf-depth-1 sf-size-2xs sf-is-edge-left sf-is-edge-right',
+				},
+				[
+					bandRow(),
+				],
+			),
+			h('p', 'Table: first column on the line, scrolls to the edge, pinned column flush.'),
+			h('div', { class: 'sl-bleed sf-depth-1 sf-flush sf-is-edge-left sf-is-edge-right' }, [
+				h('div', { class: 'sl-scroll-x sl-inset-line' }, [wideTable()]),
+			]),
+			h('div', { class: 'sf-depth-1 sl-inset sf-gap-xs' }, [
+				h('p', 'Card as inset: its own padding is the margin.'),
+				swatch(),
+				h('p', 'Back on the card line.'),
+			]),
+		],
+	)
+
 export const stories: Story[] = [
+	{
+		id: 'edge-alignment',
+		title: 'Edge alignment — page line, bands, table',
+		notes: 'At both margins: text, band content and the first table column share one line; colour bars reach the frame edges; table rows scroll to the edge; the ⋯ column stays pinned flush. The card bar reaches the card edges.',
+		maxWidth: '360px',
+		render: () => [edgePage('1.5rem'), edgePage('0.75rem')],
+	},
 	{
 		id: 'admin-list',
 		title: 'AdminList + AdminListItem',

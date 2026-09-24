@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="editor-top-bar sf-depth-1 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right sf-text-xs"
+		class="editor-top-bar sf-depth-1 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right sl-inset-line sf-text-xs"
 		:class="{ 'is-renaming': renamingName }"
 	>
 		<input
@@ -99,8 +99,8 @@ const cancelRename = () => {
 
 <style>
 @layer ui {
-	/* Layout only — horizontal padding from sf-is-edge-left/right, vertical from
-	   sf-depth-1 × sf-size-2xs bridge. */
+	/* Layout only — side padding puts the controls on the page line (sl-inset-line),
+	   top/bottom from sf-depth-1 × sf-size-2xs. */
 	.editor-top-bar {
 		position: sticky;
 		top: 0;

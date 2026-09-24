@@ -1,5 +1,5 @@
 <template>
-	<div class="page-shell sl-inset sf-padding-lg sf-gap-lg">
+	<div class="page-shell sl-inset sf-gap-lg">
 		<div class="page-header sl-cluster sf-gap-sm">
 			<h1 class="sf-heading-1">{{ title }}</h1>
 			<slot name="actions" />
@@ -14,8 +14,8 @@ defineProps<{ title: string }>()
 
 <style scoped>
 @layer ui {
-	/* Side margins come from sl-inset + sf-padding-lg; top padding stays here until
-	   [[project-sl-padding]] lands. */
+	/* Side margins are the theme's page margin (sl-inset). Top padding is this shell's
+	   own spacing choice — nothing lines up with it. */
 	.page-shell {
 		padding-block-start: var(--sf-spacing-lg);
 	}

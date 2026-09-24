@@ -110,7 +110,7 @@ export async function themeSignature(db: Db): Promise<string> {
 // ─── Header ─────────────────────────────────────────────────────────────
 
 const HEADER = `/* Generated from D1 — runtime-emitted, do not cache stale. */
-@layer reset, ui, sf-element, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;`
+@layer reset, ui, sf-element, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state, sl-layout;`
 
 // Static resets — no theme dependency, never stored in DB.
 // Lowest cascade priority (reset layer declared first).

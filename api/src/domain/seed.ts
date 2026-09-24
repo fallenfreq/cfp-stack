@@ -56,6 +56,10 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-spacing-md', value: '1rem', kind: 'length' },
 	{ name: '--sf-spacing-lg', value: '1.5rem', kind: 'length' },
 	{ name: '--sf-spacing-xl', value: '2.5rem', kind: 'length' },
+	// Page margin — room between the screen's side edges and content. A theme decision, read
+	// by sl-inset / sl-inset-line so everything spanning the screen shares one line. Must be a
+	// length (clamp()/vw fine), not a percentage: tracks and padding resolve % differently.
+	{ name: '--sf-spacing_page', value: 'var(--sf-spacing-lg)', kind: 'length' },
 
 	// Leading
 	{ name: '--sf-leading-none', value: '1', kind: 'number' },
@@ -525,13 +529,19 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sl-inset',
 		kind: 'layout',
 		description:
-			'Vertical stack whose children sit inside side margins sized by --sf-padding (set with sf-padding-* or a chrome class). A child wearing sl-bleed spans the margins too.',
+			'Vertical stack whose children sit inside side margins. The margins match the inset it sits in, or the page margin (--sf-spacing_page); on a chrome box (sf-depth-*) they are its own padding. A child wearing sl-bleed spans the margins too.',
 	},
 	{
 		name: 'sl-bleed',
 		kind: 'layout',
 		description:
 			'Reaches the edges of its sl-inset parent, spanning the side margins. Does nothing outside an sl-inset.',
+	},
+	{
+		name: 'sl-inset-line',
+		kind: 'layout',
+		description:
+			'Content starts on the inset line: side padding equals the margin of the inset it sits in, or the page margin outside any inset. Use on something whose box spans the full width (a bleeding child, a screen-wide bar or scroll area), with no padded box in between.',
 	},
 	{
 		name: 'sl-cover',
@@ -894,16 +904,16 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'inline-size',
 	},
 
-	// sl-inset — a stack whose side padding becomes grid tracks, so a child can opt into
-	// them (sl-bleed) instead of pulling itself out with a negative margin. It reads its
-	// own --sf-padding, the value it would have padded with, so it never guesses a
-	// parent's padding. The layout layer beats chrome padding, so a padded card can wear
-	// it and look unchanged. sl-bleed has no rule of its own: outside an sl-inset it's inert.
+	// sl-inset — a stack whose side margins are grid tracks, so a child can opt into them
+	// (sl-bleed) instead of pulling itself out with a negative margin. The margin is
+	// --sfx-inset-margin: inherited from the inset it sits in, else the page margin. A plain
+	// box only reads it, so it never picks up stray padding. sl-bleed has no rule of its own:
+	// outside an sl-inset it's inert.
 	{ classNames: ['sl-inset'], cssProperty: 'display', value: 'grid' },
 	{
 		classNames: ['sl-inset'],
 		cssProperty: 'grid-template-columns',
-		value: '[full-start] var(--sf-padding, 0px) [content-start] minmax(0, 1fr) [content-end] var(--sf-padding, 0px) [full-end]',
+		value: '[full-start] var(--sfx-inset-margin, var(--sf-spacing_page)) [content-start] minmax(0, 1fr) [content-end] var(--sfx-inset-margin, var(--sf-spacing_page)) [full-end]',
 	},
 	{ classNames: ['sl-inset'], cssProperty: 'padding-inline', value: '0' },
 	{
@@ -924,6 +934,35 @@ const ROOT_RULES: RuleSpec[] = [
 		pseudo: ' > .sl-bleed',
 		cssProperty: 'grid-column',
 		value: 'full',
+	},
+	// Chrome box as inset — the box's own padding (a theme decision) becomes the margins,
+	// for it and everything inside, so a card looks unchanged and its children can bleed to
+	// its edges. Relies on the theme contract that chrome padding goes through --sf-padding,
+	// which these boxes set on themselves, so nothing inherited is read. A new
+	// padding-owning class needs its own entry here.
+	...(['sf-depth-1', 'sf-depth-2', 'sf-depth-3'] as const).map((depth) => ({
+		classNames: [depth, 'sl-inset'],
+		cssProperty: '--sfx-inset-margin',
+		value: 'var(--sf-padding, 0px)',
+	})),
+	// An inset that actually bleeds has the parent's edges, so the parent's line carries on
+	// through it (a coloured band keeps the page line, not its own padding). Written from
+	// the parent (0-3-0) so it only applies where the bleed takes effect and beats the
+	// chrome compounds above (0-2-0).
+	{
+		classNames: ['sl-inset'],
+		pseudo: ' > .sl-bleed.sl-inset',
+		cssProperty: '--sfx-inset-margin',
+		value: 'inherit',
+	},
+
+	// sl-inset-line — content starts on the inset line. Layout layer, so it beats chrome
+	// padding on the same element; top/bottom padding stays. Pinned edges win: the
+	// sl-scroll-*:has(.sl-pin-*) rules (0-2-0) beat this (0-1-0).
+	{
+		classNames: ['sl-inset-line'],
+		cssProperty: 'padding-inline',
+		value: 'var(--sfx-inset-margin, var(--sf-spacing_page))',
 	},
 
 	// sl-cover — fills at least 100dvh with content centred both axes. Consumer
@@ -1393,32 +1432,6 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-is-edge-bottom'], cssProperty: 'border-bottom-left-radius', value: '0' },
 	{ classNames: ['sf-is-edge-left'], cssProperty: 'border-top-left-radius', value: '0' },
 	{ classNames: ['sf-is-edge-left'], cssProperty: 'border-bottom-left-radius', value: '0' },
-	// Edge padding — the common case (chrome bar / sheet / table flush with viewport)
-	// wants inner breathing room so its content doesn't jam against the edge. Full-bleed
-	// content elements (imgs) opt out via element-scoped rules below. Longhands in
-	// sf-context beat sf-bundle's `padding: var(--sf-padding)` shorthand on sf-depth-*.
-	{ classNames: ['sf-is-edge-left'], cssProperty: 'padding-left', value: 'var(--sf-spacing-lg)' },
-	{
-		classNames: ['sf-is-edge-right'],
-		cssProperty: 'padding-right',
-		value: 'var(--sf-spacing-lg)',
-	},
-	// img exception — full-bleed by nature; padding would shrink the image away from
-	// the edge it just declared it's flush with. Element-scoped rule fires precisely
-	// on imgs wearing the edge marker; higher specificity than the bare `.sf-is-edge-*`
-	// padding above (0-1-1 vs 0-1-0) so it wins its longhand.
-	{
-		elementSelector: 'img',
-		classNames: ['sf-is-edge-left'],
-		cssProperty: 'padding-left',
-		value: '0',
-	},
-	{
-		elementSelector: 'img',
-		classNames: ['sf-is-edge-right'],
-		cssProperty: 'padding-right',
-		value: '0',
-	},
 	// Right panel (flush top+right+bottom): all four corners touch an edge, but the left
 	// corners are the "opening" side — restore them from the depth bundle's bridge variable.
 	{

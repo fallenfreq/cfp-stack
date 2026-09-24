@@ -108,19 +108,23 @@ content outweighs the nomenclature purity.
 CSS cascade layers fix the override order regardless of source order:
 
 ```css
-@layer sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state;
+@layer reset, ui, sf-element, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state, sl-layout;
 ```
 
 Layers are declared lowest to highest priority; inline styles override all of them.
 
-| Layer         | Holds                                                                                                  |
-| ------------- | ------------------------------------------------------------------------------------------------------ |
-| `sf-bundle`   | Multi-property bundles (depth, heading, loudness, size, boundary, divide, etc.) and bare element rules |
-| `sf-variant`  | `sf-variant-*` — override selected bundle properties to express intent                                 |
-| `sf-context`  | `sf-is-*` — JS-detected or author-declared runtime conditions (overflow, sticky, edge, etc.)           |
-| `sf-semantic` | Single-property semantic token bindings, auto-derived from tokens (e.g. `sf-fg_primary`)               |
-| `sf-utility`  | Single-property bindings to a scale step (e.g. `sf-text-xl`), plus editor palette pairings             |
-| `sf-state`    | `sf-on-*` — interaction modifiers (highest so hover/focus win over utilities)                          |
+| Layer         | Holds                                                                                        |
+| ------------- | -------------------------------------------------------------------------------------------- |
+| `reset`       | Static resets (Tailwind preflight, table-cell margins) — lowest                              |
+| `ui`          | Component `<style>` blocks — below every system class                                        |
+| `sf-element`  | Bare element rules (`code.sf`, `table.sf`) and element markers (`sf-chip`)                   |
+| `sf-bundle`   | Multi-property bundles (depth, heading, loudness, size, boundary, divide, etc.)              |
+| `sf-variant`  | `sf-variant-*` — override selected bundle properties to express intent                       |
+| `sf-context`  | `sf-is-*` — JS-detected or author-declared runtime conditions (overflow, sticky, edge, etc.) |
+| `sf-semantic` | Single-property semantic token bindings, auto-derived from tokens (e.g. `sf-fg_primary`)     |
+| `sf-utility`  | Single-property bindings to a scale step (e.g. `sf-text-xl`), plus editor palette pairings   |
+| `sf-state`    | `sf-on-*` — interaction modifiers (highest so hover/focus win over utilities)                |
+| `sl-layout`   | `sl-*` — layout behaviour (declared last, so it wins where it sets a property)               |
 
 Bundles are the authoring baseline. Single-property classes (semantic, utility) are
 per-property overrides — they outrank variant because explicit property intent beats
@@ -131,8 +135,10 @@ bundle property survives.
 alpha pairings (`sf-bg-primary-5` + `sf-bg-alpha-3`). Both emit as `@layer sf-utility`
 blocks and share cascade order.
 
-`sl-` layout classes sit outside this order. They govern arrangement and do not compete
-with `sf-` classes for the same properties.
+`sl-` layout classes govern arrangement. Mostly they set properties no `sf-` class
+touches; where they do overlap, layout wins by design — `sl-inset` and `sl-inset-line`
+replace a chrome box's side padding with the inset margin, keeping its top and bottom
+padding.
 
 All class definitions — defaults and theme overrides alike — must live inside their
 matching `@layer` block. **Unlayered CSS beats all layered CSS** regardless of
@@ -155,7 +161,7 @@ different roles. The prefix rule:
 | Theme token      | `--sf-primary-5`, `--sf-fg_primary`         | Theme class (`.theme-x { --sf-X: ... }`)                        | Rules across every layer           |
 | Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); inline as escape hatch              | Carrier class in the same family   |
 | Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*`; reset to `0` per node-view-wrapper | `sl-*` primitive at inner selector |
-| Bridge           | `--sfx-surface-color`, `--sfx-depth-radius` | Bundle rule                                                     | Context / state / utility rule     |
+| Bridge           | `--sfx-surface-color`, `--sfx-inset-margin` | Bundle rule (or layout rule, for `--sfx-inset-margin`)          | Higher-layer rule / descendants    |
 
 ### Theme tokens
 
@@ -215,10 +221,11 @@ Rule-to-rule contract when a context/state/utility rule needs a value a bundle o
 The bundle publishes it as `--sfx-*` alongside its main declaration; the higher-priority
 layer reads it. Neither theme authors nor content authors touch these.
 
-| Variable              | Set by       | Read by                  |
-| --------------------- | ------------ | ------------------------ |
-| `--sfx-surface-color` | `sf-depth-*` | `sf-is-overlay`          |
-| `--sfx-depth-radius`  | `sf-depth-*` | `sf-is-edge-*` compounds |
+| Variable              | Set by                              | Read by                                   |
+| --------------------- | ----------------------------------- | ----------------------------------------- |
+| `--sfx-surface-color` | `sf-depth-*`                        | `sf-is-overlay`                           |
+| `--sfx-depth-radius`  | `sf-depth-*`                        | `sf-is-edge-*` compounds                  |
+| `--sfx-inset-margin`  | `sf-depth-*` + `sl-inset` compounds | `sl-inset`, `sl-inset-line` (descendants) |
 
 Two authoring rules keep the surface honest:
 
@@ -230,9 +237,18 @@ Two authoring rules keep the surface honest:
   therefore stops publishing the bridge), the consumer degrades to the fallback
   rather than picking up a stale value.
 
+**Exception — `--sfx-inset-margin`.** It is the one bridge set by layout rules (the
+`sf-depth-*` + `sl-inset` compounds) and read by descendants rather than the same element: a chrome box that is also an inset
+publishes its padding as the margin for everything inside it, so nested insets and
+`sl-inset-line` elements share its line. Unlike the layout channels it is deliberately
+**not** reset at node-view wrappers — lining up with the nearest inset is the point. With
+no inset above, readers fall back to the page margin.
+
 The alternative — hardcoding the underlying token (`var(--sf-radius-2)`) or writing
 per-bundle compound rules — couples the consumer to the current theme's choice and
-breaks under any theme that expresses the bundle differently.
+breaks under any theme that expresses the bundle differently. (The inset compounds are
+per-bundle only in naming which classes own padding; the value comes from the padding
+contract, not a hard-coded token.)
 
 ---
 
@@ -270,6 +286,7 @@ underscores (`--sf-fg_primary`); single-word names don't (`--sf-primary`).
 --sf-primary         brand colour
 --sf-border_color    border colour
 --sf-shadow          shadow colour
+--sf-spacing_page    page margin: room between the screen's side edges and content
 ```
 
 A theme changes the value; every reference picks it up.
@@ -414,8 +431,10 @@ independent of that — a depth-2 dropdown can be any loudness.
 
 **Size** — form-factor scale. Declares how large or tight the block reads. The theme
 picks which properties express each step — padding, border weight, gap, or a
-combination. This theme happens to spend size on `--sf-padding` (any layout primitive
-or component style reads it), but that's a theme choice, not the axis's contract.
+combination. Whether size changes padding is the theme's choice; **how** is not: any
+padding a theme gives `sf-depth-*` / `sf-size-*` goes through `--sf-padding`
+(`padding: var(--sf-padding)`), never a hard-coded `padding`. Layout reads it — an inset
+card uses it as its margins — so a theme that pads directly breaks alignment silently.
 Shape stays _out_ of size: a compact breadcrumb and a compact pill both want the same
 scale but different radii, so `border-radius` comes from the element's own rule (bare
 `<button>`, `<input>`) or an explicit `sf-radius-*` utility. Decoupling lets an author
@@ -708,6 +727,7 @@ sl-columns    grid — equal or custom ratio via --sl-cols
 sl-split      one fixed-width side, one flexible side
 sl-center     max-width centering
 sl-inset      vertical stack with side margins a child can reach into (sl-bleed)
+              and content lines up with (sl-inset-line)
 sl-cover      fills at least 100dvh with content centred — empty states,
               hero sections, standalone forms. Override via --sl-cover-min
 sl-grid       auto-responsive — fills with as many columns as fit at a minimum width
@@ -729,34 +749,72 @@ side holds its width, the other takes the rest.
 
 ### Side margins and full-bleed
 
-`sl-inset` is a stack whose children sit inside side margins. `sl-bleed` on a direct child
-lets it span those margins and reach the inset's edges — a table or image running
-edge to edge on a phone while the heading above it keeps its margin.
+`sl-inset` is a stack whose children sit inside side margins. The inner edge of those
+margins is **the line** — where content starts. `sl-bleed` on a direct child lets it span
+the margins and reach the inset's edges; `sl-inset-line` on any element puts its content
+back on the line.
 
 ```html
-<div class="sl-inset sf-padding-lg">
+<div class="sl-inset">
 	<h1>Title</h1>
-	<div class="sl-bleed">…reaches the edges…</div>
+	<!-- on the line -->
+	<img class="sl-bleed" … />
+	<!-- edge to edge -->
+	<div class="sl-bleed sf-depth-1 sl-inset-line">
+		<!-- background edge to edge, -->
+		…
+		<!-- content on the line -->
+	</div>
 </div>
 ```
 
-- **Size.** The margins are the inset's own `--sf-padding`: set it with `sf-padding-*`, or
-  wear `sl-inset` on a chrome box (`sf-depth-1 sl-inset`) — its side padding becomes the
-  margins, so it looks the same but children can now bleed. Top and bottom padding are
-  untouched.
-- **Nothing is assumed.** The inset reads the padding it would have used itself, never a
-  parent's. Outside an `sl-inset`, `sl-bleed` does nothing — the element just stays
-  where it is.
+**How wide the margins are**
+
+- The outermost inset uses the page margin, `--sf-spacing_page` — a theme value for the
+  room between the screen's side edges and content. Only the sides: top padding is the
+  component's own spacing choice, since nothing lines up with it.
+- An inset that bleeds inside another carries the same margin, so they share one line.
+  One that doesn't bleed sits inside the line, so its content moves in by another margin.
+- An inset on a chrome box (`sf-depth-1 sl-inset`) uses that box's own padding — whatever
+  the theme gives it. The card looks unchanged, and its children can bleed to its edges.
+  Everything inside lines up with the card instead of the page.
+- Unless that box actually bleeds (a direct child of an inset): its edges are then the
+  parent's edges, so the parent's line carries on through it. A coloured band
+  (`sl-bleed sl-inset sf-depth-1`) keeps the page line. Where `sl-bleed` does nothing, the
+  card keeps its own padding.
+
+**Putting content on the line** — `sl-inset-line` sets the element's side padding to the
+margin, so its content starts on the line whatever the box's own width. Use it on
+something that already spans the full width: a bleeding child, or something that spans
+the screen outside any inset (an app bar). Common shapes:
+
+| Want                                                     | Classes                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------- |
+| Image or block edge to edge                              | `sl-bleed`                                                    |
+| Band, stack of content                                   | `sl-bleed sl-inset` (children can bleed again)                |
+| Band or bar, row of controls                             | `sl-bleed sl-inset-line`                                      |
+| Scrolling table: starts on the line, scrolls to the edge | flush box `sl-bleed`, scroll area `sl-scroll-x sl-inset-line` |
+| Screen-wide bar outside any inset                        | `sl-inset-line`                                               |
+
+A padded box between the line's owner and an `sl-inset-line` element adds its padding on
+top — the content ends up one padding further in. A pinned edge (`sl-pin-*`) stays flush:
+pinning wins over the line.
+
+**Rules**
+
+- **Nothing is assumed.** A plain inset only reads the margin; only boxes that set their
+  own padding publish one. Outside an `sl-inset`, `sl-bleed` does nothing.
 - **One arrangement per box.** `sl-inset` arranges its children, so it doesn't share an
-  element with `sl-stack`, `sl-cluster`, `sl-columns`, `sl-split` or `sl-grid`. If a box
-  already arranges its children, add a wrapper.
-- **Direct children only.** Bleed reaches the nearest inset; a nested inset offers its
-  own margins.
+  element with `sl-stack`, `sl-cluster`, `sl-columns`, `sl-split` or `sl-grid`. Add a
+  wrapper if needed.
+- **Direct children only.** Bleed reaches the nearest inset.
+- **The page margin is a length**, not a percentage — tracks and padding resolve
+  percentages against different widths. `clamp()` and `vw` are fine.
+- `sf-is-edge-*` only says a box touches the screen edge; the theme decides the look
+  (default: square the touching corners). It adds no spacing.
 
 Not yet covered:
 
-- **Edge padding.** `sf-is-edge-left/right` pad directly instead of through
-  `--sf-padding`, so `sl-inset` on an edge-marked box overrides that padding.
 - **Editor content.** Blocks sit inside node-view wrappers, so a block can't be a direct
   child of an inset yet.
 - **Theme choice.** Whether an element actually goes edge to edge (and when) is decided
@@ -821,8 +879,10 @@ missing fade. Theme authors cannot scope it away.
 ### Theme contract
 
 Themes can influence layout **metrics** via the tokens layout primitives read — gap,
-padding, max-width, minimum column width. Authors set these through `sf-` utility classes
-(`sf-gap-md`, `sf-padding-lg`); themes decide what each scale step resolves to.
+padding, max-width, minimum column width, and the page margin (`--sf-spacing_page`).
+Authors set these through `sf-` utility classes (`sf-gap-md`, `sf-padding-lg`); themes
+decide what each scale step resolves to. Chrome padding must go through `--sf-padding`
+(see Size), since insets read it.
 
 Themes cannot change layout **behaviour**. `sl-columns` is always a grid. `sl-split` is
 always fixed-plus-flexible. No theme can make `sl-stack` horizontal.
