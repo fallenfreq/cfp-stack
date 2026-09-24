@@ -6,10 +6,46 @@ import AdminListItem from '@/components/admin/AdminListItem.vue'
 import NodePath from '@/components/editor/NodePath.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import StackableSheet from '@/components/layout/StackableSheet.vue'
+import SfTooltip from '@/components/SfTooltip.vue'
+import SfIcon from '@/components/ui/SfIcon.vue'
 import SfPageShell from '@/components/ui/SfPageShell.vue'
 import SfStatusDisplay from '@/components/ui/SfStatusDisplay.vue'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import { h, type VNode } from 'vue'
+
+// SfTooltip only opens on hover/touch, which the static preview can't do. This builds its popup
+// with the real classes, data attributes and scoped CSS, placed flush against the trigger the way
+// the component's script places it; the CSS gap does the rest. The wrapper's transform makes the
+// fixed popup position against the trigger.
+const flush: Record<string, string> = {
+	top: 'bottom: 100%; left: 50%; transform: translateX(-50%)',
+	bottom: 'top: 100%; left: 50%; transform: translateX(-50%)',
+	left: 'right: 100%; top: 50%; transform: translateY(-50%)',
+	right: 'left: 100%; top: 50%; transform: translateY(-50%)',
+}
+const openTooltip = (placement: string, input: 'mouse' | 'touch', label: string) =>
+	h('div', { class: 'sl-stack sf-gap-2xs', style: 'align-items: center; padding: 72px 96px' }, [
+		h('span', { style: 'position: relative; display: inline-flex; transform: translateZ(0)' }, [
+			h(
+				'button',
+				{ class: 'sf-icon-btn sf sf-on-hover sf-size-xs', 'aria-label': label },
+				h(SfIcon, { name: 'x' }),
+			),
+			h(
+				'span',
+				{
+					role: 'tooltip',
+					class: 'tooltip-popup sf sf-text-block sf-text-xs sf-depth-3 sf-size-2xs sf-is-overlay',
+					'data-placement': placement,
+					'data-input': input,
+					[(SfTooltip as { __scopeId?: string }).__scopeId ?? 'data-v-preview']: '',
+					style: flush[placement],
+				},
+				label,
+			),
+		]),
+		h('small', { class: 'sf-loudness-1' }, `${placement}, ${input}`),
+	])
 
 export interface Story {
 	id: string
@@ -232,6 +268,19 @@ export const stories: Story[] = [
 				{ class: 'sl-cluster sf-gap-sm' },
 				['close', 'code', 'check', 'link_off'].map((n) => h(ToolbarIcon, () => n)),
 			),
+	},
+	{
+		id: 'tooltip',
+		title: 'SfTooltip (held open)',
+		notes: "Text is the theme's xs size (was a fixed 11px). Mouse-opened tooltips sit a small theme gap (spacing-xs) from the button on every side; a touch-opened one above the button sits 40px clear so a thumb on the button doesn't hide it.",
+		render: () =>
+			h('div', { class: 'sl-cluster' }, [
+				openTooltip('top', 'mouse', 'Close'),
+				openTooltip('top', 'touch', 'Close'),
+				openTooltip('bottom', 'mouse', 'Close'),
+				openTooltip('left', 'mouse', 'Close'),
+				openTooltip('right', 'mouse', 'Close'),
+			]),
 	},
 	{
 		id: 'layout-fit-content',

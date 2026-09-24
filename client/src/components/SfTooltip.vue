@@ -16,7 +16,9 @@
 				:id="tooltipId"
 				ref="popupEl"
 				role="tooltip"
-				class="tooltip-popup sf sf-text-block sf-depth-3 sf-size-2xs sf-is-overlay"
+				class="tooltip-popup sf sf-text-block sf-text-xs sf-depth-3 sf-size-2xs sf-is-overlay"
+				:data-placement="placement ?? 'top'"
+				:data-input="input"
 				:style="tooltipStyle"
 			>
 				{{ text }}
@@ -39,6 +41,8 @@ const visible = ref(false)
 const rootEl = ref<HTMLElement | null>(null)
 const popupEl = ref<HTMLElement | null>(null)
 const tooltipStyle = ref<Record<string, string>>({})
+// How the tooltip was opened; the CSS widens the gap for touch.
+const input = ref<'mouse' | 'touch'>('mouse')
 let timer: ReturnType<typeof setTimeout> | null = null
 let lastTouchEnd = 0
 
@@ -47,23 +51,20 @@ const getTooltipPosition = (
 	popupRect: DOMRect,
 	placement: 'top' | 'bottom' | 'left' | 'right',
 ) => {
-	// Top-placement gap is generous so touch-triggered tooltips clear the user's
-	// thumb resting on the target. Desktop hover gets the extra clearance too;
-	// slightly disconnected-looking but preferable to being obscured on mobile.
-	const gap = placement === 'top' ? 40 : 5
+	// Positions the popup flush against the trigger; the CSS adds the gap.
 	const centeredLeft = triggerRect.left + (triggerRect.width - popupRect.width) / 2
 	const centeredTop = triggerRect.top + (triggerRect.height - popupRect.height) / 2
 
 	if (placement === 'top') {
-		return { top: triggerRect.top - popupRect.height - gap, left: centeredLeft }
+		return { top: triggerRect.top - popupRect.height, left: centeredLeft }
 	}
 	if (placement === 'left') {
-		return { top: centeredTop, left: triggerRect.left - popupRect.width - gap }
+		return { top: centeredTop, left: triggerRect.left - popupRect.width }
 	}
 	if (placement === 'right') {
-		return { top: centeredTop, left: triggerRect.right + gap }
+		return { top: centeredTop, left: triggerRect.right }
 	}
-	return { top: triggerRect.bottom + gap, left: centeredLeft }
+	return { top: triggerRect.bottom, left: centeredLeft }
 }
 
 const updatePosition = async () => {
@@ -84,6 +85,7 @@ const updatePosition = async () => {
 const onEnter = () => {
 	// Block the synthesized mouseenter that touch browsers fire after a tap
 	if (Date.now() - lastTouchEnd < 600) return
+	input.value = 'mouse'
 	timer = setTimeout(() => {
 		visible.value = true
 		updatePosition()
@@ -103,6 +105,7 @@ const onTouchStart = () => {
 		clearTimeout(timer)
 		timer = null
 	}
+	input.value = 'touch'
 	timer = setTimeout(() => {
 		visible.value = true
 		updatePosition()
@@ -126,7 +129,6 @@ onUnmounted(() => {
 <style scoped>
 @layer ui {
 	.tooltip-root {
-		position: relative;
 		display: inline-flex;
 		user-select: none;
 		-webkit-user-select: none;
@@ -138,7 +140,26 @@ onUnmounted(() => {
 		z-index: var(--z-overlay);
 		pointer-events: none;
 		white-space: nowrap;
-		font-size: 11px;
+		--tooltip-gap: var(--sf-spacing-xs);
+	}
+
+	/* A touch-opened tooltip above the target sits well clear so the thumb resting
+	   on the target doesn't cover it. */
+	.tooltip-popup[data-input='touch'][data-placement='top'] {
+		--tooltip-gap: 40px;
+	}
+
+	.tooltip-popup[data-placement='top'] {
+		translate: 0 calc(-1 * var(--tooltip-gap));
+	}
+	.tooltip-popup[data-placement='bottom'] {
+		translate: 0 var(--tooltip-gap);
+	}
+	.tooltip-popup[data-placement='left'] {
+		translate: calc(-1 * var(--tooltip-gap)) 0;
+	}
+	.tooltip-popup[data-placement='right'] {
+		translate: var(--tooltip-gap) 0;
 	}
 }
 </style>
