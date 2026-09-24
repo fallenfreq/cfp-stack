@@ -1973,6 +1973,22 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'accent-color',
 		value: 'rgb(var(--sf-primary))',
 	},
+	// Checkboxes and radios are sized from the text around them, so they grow and shrink
+	// with the type scale instead of each component fixing a pixel size.
+	{
+		elementSelector: 'input',
+		classNames: ['sf'],
+		pseudo: ':is([type="checkbox"], [type="radio"])',
+		cssProperty: 'width',
+		value: '1em',
+	},
+	{
+		elementSelector: 'input',
+		classNames: ['sf'],
+		pseudo: ':is([type="checkbox"], [type="radio"])',
+		cssProperty: 'height',
+		value: '1em',
+	},
 
 	// ─── sf-chip ──────────────────────────────────────────────────────────────
 	// Consumer wears `sf sf-chip` on the underlying element (button, span, etc.). Bare rule

@@ -1,5 +1,5 @@
 <template>
-	<div class="attr-row sf-text-xs">
+	<div class="attr-row sf-text-xs sf-size-2xs">
 		<span class="attr-key sf-loudness-1">{{ attrKey }}</span>
 
 		<StyleAttrEditor
@@ -123,11 +123,12 @@ onUnmounted(() => {
 		display: flex;
 		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-2xs));
-		padding: 2px 4px;
+		/* Same size as the panel's add buttons, so row content lines up with their labels. */
+		padding-inline: var(--sf-padding);
 	}
 
 	.attr-key {
-		min-width: 36px;
+		min-width: 5ch;
 		flex-shrink: 0;
 	}
 
@@ -137,8 +138,6 @@ onUnmounted(() => {
 	}
 
 	.attr-checkbox {
-		width: 14px;
-		height: 14px;
 		flex-shrink: 0;
 	}
 

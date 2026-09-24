@@ -52,6 +52,11 @@ const server = await createServer({
 				find: /^@\/services\/zitadelAuth$/,
 				replacement: join(previewDir, 'stubs/zitadelAuth.ts'),
 			},
+			// The attribute row's style editor needs a browser; the preview never shows it.
+			{
+				find: /^\.\/StyleAttrEditor\.vue$/,
+				replacement: join(previewDir, 'stubs/StyleAttrEditor.ts'),
+			},
 			{ find: '@', replacement: join(clientDir, 'src') },
 		],
 	},

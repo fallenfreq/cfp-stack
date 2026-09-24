@@ -4,6 +4,7 @@ import AccountHeader from '@/components/account/AccountHeader.vue'
 import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
 import NodePath from '@/components/editor/NodePath.vue'
+import ToolbarAttrRow from '@/components/editor/toolbar/ToolbarAttrRow.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import StackableSheet from '@/components/layout/StackableSheet.vue'
 import SfTooltip from '@/components/SfTooltip.vue'
@@ -281,6 +282,36 @@ export const stories: Story[] = [
 				openTooltip('left', 'mouse', 'Close'),
 				openTooltip('right', 'mouse', 'Close'),
 			]),
+	},
+	{
+		id: 'toolbar-attr-row',
+		title: 'ToolbarAttrRow (attribute panel)',
+		notes: "Each row's name should line up with the add buttons' labels below. The checkbox is sized by the text (theme rule on input.sf), not a fixed 14px.",
+		render: () => {
+			const row = (attrKey: string, value: unknown, specDefault: unknown, extra = {}) =>
+				h(ToolbarAttrRow, { attrKey, value, specDefault, ...extra })
+			const add = (key: string) =>
+				h(
+					'button',
+					{
+						type: 'button',
+						class: 'sf sf-is-contained sf-size-2xs sf-loudness-1 sf-on-hover',
+						style: 'display: flex; align-items: center; gap: var(--sf-spacing-2xs); width: 100%',
+					},
+					[h('span', { class: 'material-symbols-rounded sf-icon' }, 'add'), key],
+				)
+			return h('div', { class: 'sf-depth-2', style: 'width: 320px' }, [
+				h('div', { class: 'sl-stack sf-gap-2xs sf-size-2xs' }, [
+					row('id', 'hero', null),
+					row('align', 'center', 'left', { specOptions: ['left', 'center', 'right'] }),
+					row('open', true, false),
+					row('columns', 2, 2, { isAtDefault: true }),
+					h('hr', { class: 'sf' }),
+					add('href'),
+					add('target'),
+				]),
+			])
+		},
 	},
 	{
 		id: 'layout-fit-content',
