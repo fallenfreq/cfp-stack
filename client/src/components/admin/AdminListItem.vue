@@ -1,22 +1,23 @@
 <template>
-	<tr class="admin-row">
-		<td class="admin-cell">
+	<tr>
+		<td>
 			<span class="sf-loudness-3" style="white-space: nowrap">{{ name || '—' }}</span>
 		</td>
-		<td class="admin-cell">
+		<td>
 			<code class="sf sf-loudness-1 sf-text-xs" style="white-space: nowrap">/{{ slug }}</code>
 		</td>
-		<td class="admin-cell">
+		<td>
 			<slot name="meta" />
 		</td>
-		<td class="admin-cell admin-cell--narrow">
+		<!-- width: 1px — table idiom: the column shrinks to fit its control. -->
+		<td style="width: 1px">
 			<VaSwitch
 				:model-value="published"
 				size="small"
 				@update:model-value="($event: boolean) => $emit('update:published', $event)"
 			/>
 		</td>
-		<td class="admin-cell admin-cell--narrow admin-cell--actions sl-pin-right sf-boundary-left">
+		<td class="sl-pin-right sf-boundary-left" style="width: 1px">
 			<SfOverflowMenu tooltip="Actions">
 				<slot name="actions" />
 			</SfOverflowMenu>
@@ -28,15 +29,3 @@
 defineProps<{ name: string; slug: string; published: boolean }>()
 defineEmits<{ 'update:published': [value: boolean] }>()
 </script>
-
-<style>
-@layer ui {
-	.admin-cell--narrow {
-		width: 1px;
-		white-space: nowrap;
-	}
-	.admin-cell--actions {
-		width: 48px;
-	}
-}
-</style>
