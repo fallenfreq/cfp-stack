@@ -286,7 +286,7 @@ export const stories: Story[] = [
 	{
 		id: 'toolbar-attr-row',
 		title: 'ToolbarAttrRow (attribute panel)',
-		notes: "Each row's name should line up with the add buttons' labels below. The checkbox is sized by the text (theme rule on input.sf), not a fixed 14px.",
+		notes: "The rows are sl-split sl-collapse-xs. The real panel (320px) is under the 380px collapse width, so each name sits above its field. The 480px copy has room, so names share one column as wide as the longest name and every field starts on the same line. Names line up with the add buttons' labels. Last: sl-row in a three-column sl-columns, for rows that aren't forms.",
 		render: () => {
 			const row = (attrKey: string, value: unknown, specDefault: unknown, extra = {}) =>
 				h(ToolbarAttrRow, { attrKey, value, specDefault, ...extra })
@@ -300,16 +300,43 @@ export const stories: Story[] = [
 					},
 					[h('span', { class: 'material-symbols-rounded sf-icon' }, 'add'), key],
 				)
-			return h('div', { class: 'sf-depth-2', style: 'width: 320px' }, [
-				h('div', { class: 'sl-stack sf-gap-2xs sf-size-2xs' }, [
-					row('id', 'hero', null),
-					row('align', 'center', 'left', { specOptions: ['left', 'center', 'right'] }),
-					row('open', true, false),
-					row('columns', 2, 2, { isAtDefault: true }),
-					h('hr', { class: 'sf' }),
-					add('href'),
-					add('target'),
-				]),
+			const cells = (...texts: string[]) =>
+				h(
+					'div',
+					{ class: 'sl-row' },
+					texts.map((t) => h('span', t)),
+				)
+			const panel = (width: string) =>
+				h('div', { class: 'sf-depth-2', style: `width: ${width}` }, [
+					h('div', { class: 'sl-stack sf-gap-2xs sf-size-2xs' }, [
+						h('div', { class: 'sl-split sl-collapse-xs sf-gap-xs' }, [
+							row('id', 'hero', null),
+							row('align', 'center', 'left', {
+								specOptions: ['left', 'center', 'right'],
+							}),
+							row('open', true, false),
+							row('data-columns', 2, 2, { isAtDefault: true }),
+						]),
+						h('hr', { class: 'sf' }),
+						add('href'),
+						add('target'),
+					]),
+				])
+			return h('div', { class: 'sl-stack sf-gap-lg' }, [
+				panel('320px'),
+				panel('480px'),
+				h(
+					'div',
+					{
+						class: 'sl-columns sf-gap-sm sf-text-sm',
+						style: '--sl-cols: auto 1fr auto; width: 320px',
+					},
+					[
+						cells('Cut', 'Remove the selection', '⌘X'),
+						cells('Paste as plain text', 'Drop formatting', '⇧⌘V'),
+						cells('Undo', 'Step back', '⌘Z'),
+					],
+				),
 			])
 		},
 	},

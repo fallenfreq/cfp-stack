@@ -556,6 +556,11 @@ const VOCABULARY: VocabSpec[] = [
 			'Aligns content to the start of the block axis (top in LTR). Composable with any grid/flex primitive (sl-cover, sl-stack).',
 	},
 	{
+		name: 'sl-align-y-center',
+		kind: 'layout',
+		description: 'Centres content on the block axis. Composable with any grid/flex primitive.',
+	},
+	{
 		name: 'sl-align-y-end',
 		kind: 'layout',
 		description:
@@ -572,6 +577,12 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'layout',
 		description:
 			'Aligns content to the end of the inline axis (right in LTR). Grid-based; on flex containers use justify-content directly (limitation).',
+	},
+	{
+		name: 'sl-row',
+		kind: 'layout',
+		description:
+			"A child of a grid layout (sl-split, sl-columns, sl-grid) that spans every column and places its own children on the parent's columns, so separate rows line up. Children fill the columns in order; extras wrap onto a new line within the row.",
 	},
 	{ name: 'sl-grid', kind: 'layout', description: 'Auto-responsive grid' },
 	{
@@ -873,6 +884,12 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'inline-size',
 	},
 
+	// sl-row — joins the parent grid's columns (subgrid). Gaps follow the parent's.
+	// Only changes where cells are drawn; reading and tab order stay the source order.
+	{ classNames: ['sl-row'], cssProperty: 'grid-column', value: '1 / -1' },
+	{ classNames: ['sl-row'], cssProperty: 'display', value: 'grid' },
+	{ classNames: ['sl-row'], cssProperty: 'grid-template-columns', value: 'subgrid' },
+
 	// sl-split
 	{ classNames: ['sl-split'], cssProperty: 'display', value: 'grid' },
 	{
@@ -977,6 +994,7 @@ const ROOT_RULES: RuleSpec[] = [
 	// layer. On flex containers, align-y works; align-x uses justify-items which flex
 	// ignores — for flex justify overrides use component-scoped justify-content.
 	{ classNames: ['sl-align-y-start'], cssProperty: 'align-items', value: 'start' },
+	{ classNames: ['sl-align-y-center'], cssProperty: 'align-items', value: 'center' },
 	{ classNames: ['sl-align-y-end'], cssProperty: 'align-items', value: 'end' },
 	{ classNames: ['sl-align-x-start'], cssProperty: 'justify-items', value: 'start' },
 	{ classNames: ['sl-align-x-end'], cssProperty: 'justify-items', value: 'end' },

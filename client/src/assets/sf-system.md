@@ -738,10 +738,37 @@ Alignment modifiers compose with any grid/flex primitive (default centre on `sl-
 
 ```
 sl-align-y-start   top
+sl-align-y-center  middle
 sl-align-y-end     bottom
 sl-align-x-start   left      (grid-based; flex containers ignore justify-items)
 sl-align-x-end     right     (grid-based; flex containers ignore justify-items)
 ```
+
+**Rows that share columns** — `sl-row` on a child of a grid layout (`sl-split`,
+`sl-columns`, `sl-grid`) makes it span every column and put its own children on the
+parent's columns. Separate row elements then line up as if their cells were in one grid:
+name/field forms, key/value lists, menus with a shortcut column.
+
+```html
+<div class="sl-split sf-gap-2xs">
+	<div class="sl-row sl-align-y-center">
+		<label for="a">Name</label>
+		<input id="a" />
+	</div>
+	<div class="sl-row sl-align-y-center">
+		<label for="b">Longer name</label>
+		<input id="b" />
+	</div>
+</div>
+```
+
+- A row's children fill the columns in order; extras wrap onto a new line within the row.
+  Wrap a group (input plus buttons) in one element to keep it in one cell.
+- The parent's gaps and collapse apply: `sl-split sl-collapse-sm` stacks each name above
+  its field on narrow widths.
+- It only changes where cells are drawn. Reading and tab order stay the source order —
+  don't reorder cells visually. Screen readers don't hear rows and columns; data you
+  navigate as a table stays a `<table>`.
 
 `sl-columns` and `sl-split` are not variants of each other. Columns is proportional
 (equal or custom ratios via `--sl-cols: 1fr 2fr`). Split is fixed-plus-flexible — one

@@ -1,68 +1,77 @@
 <template>
-	<div class="attr-row sf-text-xs sf-size-2xs">
-		<span class="attr-key sf-loudness-1">{{ attrKey }}</span>
+	<div class="attr-row sl-row sl-align-y-center sf-text-xs sf-size-2xs">
+		<!-- The style editor isn't a form control a label can point at. -->
+		<span v-if="attrKey === 'style'" class="sf-loudness-1">{{ attrKey }}</span>
+		<label v-else :for="controlId" class="sf-loudness-1">{{ attrKey }}</label>
 
-		<StyleAttrEditor
-			v-if="attrKey === 'style'"
-			:value="(value as string) ?? ''"
-			@update="(val) => emit('update', attrKey, val)"
-		/>
-		<select
-			v-else-if="specOptions"
-			class="attr-input sf sf-field sf-size-2xs sf-on-focus"
-			:value="String(specOptions.indexOf(value))"
-			@change="
-				emit(
-					'update',
-					attrKey,
-					specOptions[Number(($event.target as HTMLSelectElement).value)],
-				)
-			"
-		>
-			<option v-for="(opt, i) in specOptions" :key="String(opt)" :value="String(i)">
-				{{ opt }}{{ specOptions[i] === specDefault ? ' (default)' : '' }}
-			</option>
-		</select>
-		<input
-			v-else-if="typeof specDefault === 'boolean'"
-			ref="inputEl"
-			type="checkbox"
-			class="attr-checkbox sf"
-			:checked="!!value"
-			@change="emit('update', attrKey, ($event.target as HTMLInputElement).checked)"
-		>
-		<input
-			v-else-if="typeof specDefault === 'number'"
-			ref="inputEl"
-			type="number"
-			class="attr-input sf sf-field sf-size-2xs sf-on-focus"
-			:value="value as number"
-			@change="
-				emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
-			"
-			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		>
-		<input
-			v-else
-			ref="inputEl"
-			type="text"
-			class="attr-input sf sf-field sf-size-2xs sf-on-focus"
-			:value="value as string"
-			@input="onTextInput(($event.target as HTMLInputElement).value)"
-			@blur="onTextBlur(($event.target as HTMLInputElement).value)"
-			@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-		>
+		<!-- One cell: the control and its buttons stay together in the field column. -->
+		<div class="attr-field">
+			<StyleAttrEditor
+				v-if="attrKey === 'style'"
+				:value="(value as string) ?? ''"
+				@update="(val) => emit('update', attrKey, val)"
+			/>
+			<select
+				v-else-if="specOptions"
+				:id="controlId"
+				class="attr-input sf sf-field sf-size-2xs sf-on-focus"
+				:value="String(specOptions.indexOf(value))"
+				@change="
+					emit(
+						'update',
+						attrKey,
+						specOptions[Number(($event.target as HTMLSelectElement).value)],
+					)
+				"
+			>
+				<option v-for="(opt, i) in specOptions" :key="String(opt)" :value="String(i)">
+					{{ opt }}{{ specOptions[i] === specDefault ? ' (default)' : '' }}
+				</option>
+			</select>
+			<input
+				v-else-if="typeof specDefault === 'boolean'"
+				:id="controlId"
+				ref="inputEl"
+				type="checkbox"
+				class="attr-checkbox sf"
+				:checked="!!value"
+				@change="emit('update', attrKey, ($event.target as HTMLInputElement).checked)"
+			>
+			<input
+				v-else-if="typeof specDefault === 'number'"
+				:id="controlId"
+				ref="inputEl"
+				type="number"
+				class="attr-input sf sf-field sf-size-2xs sf-on-focus"
+				:value="value as number"
+				@change="
+					emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
+				"
+				@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
+			>
+			<input
+				v-else
+				:id="controlId"
+				ref="inputEl"
+				type="text"
+				class="attr-input sf sf-field sf-size-2xs sf-on-focus"
+				:value="value as string"
+				@input="onTextInput(($event.target as HTMLInputElement).value)"
+				@blur="onTextBlur(($event.target as HTMLInputElement).value)"
+				@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
+			>
 
-		<span v-if="isAtDefault" class="attr-default-badge sf-loudness-1">default</span>
+			<span v-if="isAtDefault" class="attr-default-badge sf-loudness-1">default</span>
 
-		<ToolbarButton @mousedown.prevent="emit('remove', attrKey)">
-			<ToolbarIcon>close</ToolbarIcon>
-		</ToolbarButton>
+			<ToolbarButton :aria-label="`Remove ${attrKey}`" @click="emit('remove', attrKey)">
+				<ToolbarIcon>close</ToolbarIcon>
+			</ToolbarButton>
+		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, useId } from 'vue'
 import StyleAttrEditor from './StyleAttrEditor.vue'
 import ToolbarButton from './ToolbarButton.vue'
 import ToolbarIcon from './ToolbarIcon.vue'
@@ -81,6 +90,7 @@ const emit = defineEmits<{
 	remove: [key: string]
 }>()
 
+const controlId = useId()
 const inputEl = ref<HTMLElement | null>(null)
 let textDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let pendingTextVal: string | null = null
@@ -120,16 +130,15 @@ onUnmounted(() => {
 <style scoped>
 @layer ui {
 	.attr-row {
-		display: flex;
-		align-items: center;
-		gap: var(--sf-gap, var(--sf-spacing-2xs));
 		/* Same size as the panel's add buttons, so row content lines up with their labels. */
 		padding-inline: var(--sf-padding);
 	}
 
-	.attr-key {
-		min-width: 5ch;
-		flex-shrink: 0;
+	.attr-field {
+		display: flex;
+		align-items: center;
+		gap: var(--sf-gap, var(--sf-spacing-2xs));
+		min-width: 0;
 	}
 
 	.attr-input {

@@ -8,30 +8,33 @@
 		@close="onClose"
 	>
 		<div class="attr-content sl-stack sf-gap-2xs sf-size-2xs">
-			<ToolbarAttrRow
-				v-for="row in classTokenRows"
-				:key="row.key"
-				:attr-key="row.key"
-				:value="row.value"
-				:spec-default="null"
-				:spec-options="row.options"
-				:is-at-default="false"
-				:pending="justAddedKey === row.key"
-				@update="onUpdate"
-				@remove="onRemove"
-			/>
-			<ToolbarAttrRow
-				v-for="row in attrRows"
-				:key="row.key"
-				:attr-key="row.key"
-				:value="row.value"
-				:spec-default="specAttrs[row.key]?.default ?? null"
-				:spec-options="propOptions[row.key]"
-				:is-at-default="row.isAtDefault"
-				:pending="justAddedKey === row.key"
-				@update="onUpdate"
-				@remove="onRemove"
-			/>
+			<!-- Rows share one name column and one field column; when narrow, names go above. -->
+			<div v-if="allRowCount" class="sl-split sl-collapse-xs sf-gap-xs">
+				<ToolbarAttrRow
+					v-for="row in classTokenRows"
+					:key="row.key"
+					:attr-key="row.key"
+					:value="row.value"
+					:spec-default="null"
+					:spec-options="row.options"
+					:is-at-default="false"
+					:pending="justAddedKey === row.key"
+					@update="onUpdate"
+					@remove="onRemove"
+				/>
+				<ToolbarAttrRow
+					v-for="row in attrRows"
+					:key="row.key"
+					:attr-key="row.key"
+					:value="row.value"
+					:spec-default="specAttrs[row.key]?.default ?? null"
+					:spec-options="propOptions[row.key]"
+					:is-at-default="row.isAtDefault"
+					:pending="justAddedKey === row.key"
+					@update="onUpdate"
+					@remove="onRemove"
+				/>
+			</div>
 
 			<div v-if="!allRowCount && !allAddableCount" class="attr-empty sf-loudness-1">
 				No attributes set
@@ -44,7 +47,8 @@
 					:key="key"
 					type="button"
 					class="attr-add-btn sf sf-is-contained sf-size-2xs sf-loudness-1 sf-on-hover"
-					@mousedown.prevent="startAdd(key)"
+					@mousedown.prevent
+					@click="startAdd(key)"
 				>
 					<span class="material-symbols-rounded sf-icon">add</span>
 					{{ key }}
@@ -54,7 +58,8 @@
 					:key="key"
 					type="button"
 					class="attr-add-btn sf sf-is-contained sf-size-2xs sf-loudness-1 sf-on-hover"
-					@mousedown.prevent="startAdd(key)"
+					@mousedown.prevent
+					@click="startAdd(key)"
 				>
 					<span class="material-symbols-rounded sf-icon">add</span>
 					{{ key }}
