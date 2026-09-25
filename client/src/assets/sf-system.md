@@ -758,6 +758,7 @@ sl-inset      vertical stack with side margins a child can reach into (sl-bleed)
 sl-cover      fills at least 100dvh with content centred — empty states,
               hero sections, standalone forms. Override via --sl-cover-min
 sl-grid       auto-responsive — fills with as many columns as fit at a minimum width
+              (--sl-min, default 250px)
 sl-aspect     aspect-ratio container — ratio configured via --sl-aspect
 ```
 
@@ -827,28 +828,37 @@ back on the line.
 - The outermost inset uses the page margin, `--sf-spacing_page` — a theme value for the
   room between the screen's side edges and content. Only the sides: top padding is the
   component's own spacing choice, since nothing lines up with it.
+- The page's content column stops growing at the page width, `--sf-width_page` — a theme
+  value (default 80rem). Past it the column centres and the margins grow to fill the rest;
+  bleeding children still reach the screen edges, and the line moves with the column. A
+  very large length turns the limit off. Every page gets it; there is no per-page opt-out.
+- Any plain inset starts a page: inside a box wider than the page width (a screen-wide
+  card that isn't itself an inset), its content centres at the page width again.
 - An inset that bleeds inside another carries the same margin, so they share one line.
   One that doesn't bleed sits inside the line, so its content moves in by another margin.
 - An inset on a chrome box (`sf-depth-1 sl-inset`) uses that box's own padding — whatever
   the theme gives it. The card looks unchanged, and its children can bleed to its edges.
-  Everything inside lines up with the card instead of the page.
+  Everything inside lines up with the card instead of the page. The page width limit
+  doesn't apply inside it: the card's column is its full width.
 - Unless that box actually bleeds (a direct child of an inset): its edges are then the
   parent's edges, so the parent's line carries on through it. A coloured band
   (`sl-bleed sl-inset sf-depth-1`) keeps the page line. Where `sl-bleed` does nothing, the
   card keeps its own padding.
 
-**Putting content on the line** — `sl-inset-line` sets the element's side padding to the
-margin, so its content starts on the line whatever the box's own width. Use it on
-something that already spans the full width: a bleeding child, or something that spans
-the screen outside any inset (an app bar). Common shapes:
+**Putting content on the line** — `sl-inset-line` sets the element's side padding so its
+content starts on the line of the inset it sits in, whatever the box's own width. Use it
+on something that already spans the full width: a bleeding child, or something that spans
+the screen outside any inset (a tool bar). Outside any inset there is no page column, so
+its content sits one page margin from the screen edge at any width. Common shapes:
 
-| Want                                                     | Classes                                                       |
-| -------------------------------------------------------- | ------------------------------------------------------------- |
-| Image or block edge to edge                              | `sl-bleed`                                                    |
-| Band, stack of content                                   | `sl-bleed sl-inset` (children can bleed again)                |
-| Band or bar, row of controls                             | `sl-bleed sl-inset-line`                                      |
-| Scrolling table: starts on the line, scrolls to the edge | flush box `sl-bleed`, scroll area `sl-scroll-x sl-inset-line` |
-| Screen-wide bar outside any inset                        | `sl-inset-line`                                               |
+| Want                                                     | Classes                                                                        |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Image or block edge to edge                              | `sl-bleed`                                                                     |
+| Band, stack of content                                   | `sl-bleed sl-inset` (children can bleed again)                                 |
+| Band or bar, row of controls                             | `sl-bleed sl-inset-line`                                                       |
+| Scrolling table: starts on the line, scrolls to the edge | flush box `sl-bleed`, scroll area `sl-scroll-x sl-inset-line`                  |
+| Screen-wide bar, content full width (a tool bar)         | `sl-inset-line`, outside any inset                                             |
+| Screen-wide bar, content lines up with the page (a nav)  | wrapper `sl-inset` (sticky/edge classes go here), bar `sl-bleed sl-inset-line` |
 
 A padded box between the line's owner and an `sl-inset-line` element adds its padding on
 top — the content ends up one padding further in. A pinned edge (`sl-pin-*`) stays flush:
@@ -862,8 +872,8 @@ pinning wins over the line.
   element with `sl-stack`, `sl-cluster`, `sl-columns`, `sl-split` or `sl-grid`. Add a
   wrapper if needed.
 - **Direct children only.** Bleed reaches the nearest inset.
-- **The page margin is a length**, not a percentage — tracks and padding resolve
-  percentages against different widths. `clamp()` and `vw` are fine.
+- **The page margin and page width are lengths**, not percentages — tracks and padding
+  resolve percentages against different widths. `clamp()` and `vw` are fine.
 - `sf-is-edge-*` only says a box touches the screen edge; the theme decides the look
   (default: square the touching corners). It adds no spacing.
 

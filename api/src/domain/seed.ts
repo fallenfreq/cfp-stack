@@ -60,6 +60,10 @@ const ROOT_TOKENS: TokenSpec[] = [
 	// by sl-inset / sl-inset-line so everything spanning the screen shares one line. Must be a
 	// length (clamp()/vw fine), not a percentage: tracks and padding resolve % differently.
 	{ name: '--sf-spacing_page', value: 'var(--sf-spacing-lg)', kind: 'length' },
+	// Page width — the widest the page's content column gets. Past it the column centres and
+	// the margins grow; bands (sl-bleed) still reach the screen edges. A theme decision; a
+	// very large length turns the limit off.
+	{ name: '--sf-width_page', value: '80rem', kind: 'length' },
 
 	// Leading
 	{ name: '--sf-leading-none', value: '1', kind: 'number' },
@@ -560,7 +564,7 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sl-inset',
 		kind: 'layout',
 		description:
-			'Vertical stack whose children sit inside side margins. The margins match the inset it sits in, or the page margin (--sf-spacing_page); on a chrome box (sf-depth-*) they are its own padding. A child wearing sl-bleed spans the margins too.',
+			'Vertical stack whose children sit inside side margins. The margins match the inset it sits in, or the page margin (--sf-spacing_page); past the page width (--sf-width_page) the content column centres and the margins grow. On a chrome box (sf-depth-*) they are its own padding. A child wearing sl-bleed spans the margins too.',
 	},
 	{
 		name: 'sl-bleed',
@@ -930,13 +934,17 @@ const ROOT_RULES: RuleSpec[] = [
 	// sl-inset — a stack whose side margins are grid tracks, so a child can opt into them
 	// (sl-bleed) instead of pulling itself out with a negative margin. The margin is
 	// --sfx-inset-margin: inherited from the inset it sits in, else the page margin. A plain
-	// box only reads it, so it never picks up stray padding. sl-bleed's rules combine it with
+	// box only reads it, so it never picks up stray padding. The content column stops at
+	// --sfx-inset-width, which an inset sets on itself (the page width; a card's is its full
+	// width) and passes down the same way; each margin is the larger of the set margin and
+	// half the leftover width, so the column centres. sl-bleed's rules combine it with
 	// sl-inset, so they live in generateCss.ts (SL_COMBINED); outside an sl-inset it's inert.
 	{ classNames: ['sl-inset'], cssProperty: 'display', value: 'grid' },
+	{ classNames: ['sl-inset'], cssProperty: '--sfx-inset-width', value: 'var(--sf-width_page)' },
 	{
 		classNames: ['sl-inset'],
 		cssProperty: 'grid-template-columns',
-		value: '[full-start] var(--sfx-inset-margin, var(--sf-spacing_page)) [content-start] minmax(0, 1fr) [content-end] var(--sfx-inset-margin, var(--sf-spacing_page)) [full-end]',
+		value: '[full-start] max(var(--sfx-inset-margin, var(--sf-spacing_page)), (100% - var(--sfx-inset-width)) / 2) [content-start] minmax(0, 1fr) [content-end] max(var(--sfx-inset-margin, var(--sf-spacing_page)), (100% - var(--sfx-inset-width)) / 2) [full-end]',
 	},
 	{ classNames: ['sl-inset'], cssProperty: 'padding-inline', value: '0' },
 	{
@@ -949,24 +957,28 @@ const ROOT_RULES: RuleSpec[] = [
 	// Chrome box as inset — the box's own padding (a theme decision) becomes the margins,
 	// for it and everything inside, so a card looks unchanged and its children can bleed to
 	// its edges. Relies on the theme contract that chrome padding goes through --sf-padding,
-	// which these boxes set on themselves, so nothing inherited is read. A new
-	// padding-owning class needs its own entry here.
-	...(['sf-depth-1', 'sf-depth-2', 'sf-depth-3'] as const).map(
-		(depth): RuleSpec => ({
+	// which these boxes set on themselves, so nothing inherited is read. The page width
+	// limit is the page's, not a box's: a box's column is its full width (100%). A new
+	// padding-owning class needs its own entries here.
+	...(['sf-depth-1', 'sf-depth-2', 'sf-depth-3'] as const).flatMap((depth): RuleSpec[] => [
+		{
 			classNames: [depth, 'sl-inset'],
 			cssProperty: '--sfx-inset-margin',
 			value: 'var(--sf-padding, 0px)',
-		}),
-	),
+		},
+		{ classNames: [depth, 'sl-inset'], cssProperty: '--sfx-inset-width', value: '100%' },
+	]),
 
-	// sl-inset-line — content starts on the inset line. Layout layer, so it beats chrome
+	// sl-inset-line — content starts on the line of the inset it sits in (same sum as sl-inset;
+	// padding's % reads the parent's width, which matches when the element fills it). Outside
+	// any inset there's no width to follow (100%), so just the page margin. Layout layer, so it beats chrome
 	// padding on the same element, and its cascadeOrder beats sl-inset's own padding;
 	// top/bottom padding stays. Pinned edges win: the sl-scroll-*:has(.sl-pin-*) rules in
 	// generateCss.ts (0-2-0) beat this (0-1-0).
 	{
 		classNames: ['sl-inset-line'],
 		cssProperty: 'padding-inline',
-		value: 'var(--sfx-inset-margin, var(--sf-spacing_page))',
+		value: 'max(var(--sfx-inset-margin, var(--sf-spacing_page)), (100% - var(--sfx-inset-width, 100%)) / 2)',
 	},
 
 	// sl-cover — fills at least 100dvh with content centred both axes. Consumer

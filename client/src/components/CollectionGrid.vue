@@ -1,26 +1,18 @@
 <template>
-	<div
-		class="collection-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5"
-	>
+	<div ref="gridEl" class="collection-grid sl-grid sf-gap-md" style="--sl-min: 14rem">
 		<BasicCard
 			v-for="(item, index) in displayedItems"
 			:key="index"
 			:image-url="item.imageUrl"
 			:title="item.title"
-			:class="visibilityMap.get(item)?.join(' ')"
 			@click="() => emit('selectItem', item)"
 		/>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import {
-	calculatePlaceholdersNeeded,
-	createPlaceholders,
-	type Breakpoints,
-	type GridItem,
-} from '@/utils/collectionPlaceholders'
-import { ref, watch } from 'vue'
+import type { GridItem } from '@/utils/collectionPlaceholders'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 const props = defineProps<{
 	items: GridItem[]
@@ -31,43 +23,36 @@ const emit = defineEmits<{
 	selectItem: [item: GridItem]
 }>()
 
-const columns: Breakpoints = {
-	default: 1,
-	sm: 2,
-	md: 3,
-	lg: 4,
-	xl: 4,
-	'2xl': 5,
+const gridEl = ref<HTMLElement | null>(null)
+// Columns the browser actually laid out — sl-grid fits as many as the width allows.
+// Empty tracks still count: auto-fit lists them as 0px.
+const columns = ref(1)
+let ro: ResizeObserver | null = null
+
+const countColumns = () => {
+	const el = gridEl.value
+	if (!el) return
+	const tracks = getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length
+	columns.value = Math.max(tracks, 1)
 }
 
-const displayedItems = ref<GridItem[]>([])
-const visibilityMap = ref<Map<GridItem, string[]>>(new Map())
+onMounted(() => {
+	countColumns()
+	ro = new ResizeObserver(countColumns)
+	if (gridEl.value) ro.observe(gridEl.value)
+})
 
-const customClassMap = {
-	default: 'block',
-	sm: 'sm:block',
-	md: 'md:block',
-	lg: 'lg:block',
-	xl: 'xl:block',
-	'2xl': '2xl:block',
-}
+onUnmounted(() => {
+	ro?.disconnect()
+	ro = null
+})
 
-const setDisplayedItems = (items: GridItem[]) => {
-	const placeholdersNeeded = calculatePlaceholdersNeeded(items.length, columns)
-	const { placeholders, visibilityMap: newVisibilityMap } = createPlaceholders(
-		placeholdersNeeded,
-		props.placeholderTitle ?? 'Coming Soon!',
-		customClassMap,
-	)
-	displayedItems.value = [...items, ...placeholders]
-	visibilityMap.value = newVisibilityMap
-}
-
-watch(() => props.items, setDisplayedItems, { immediate: true })
+// Placeholder cards fill the last row; an empty collection shows one full row of them.
+const displayedItems = computed<GridItem[]>(() => {
+	const cols = columns.value
+	const count = props.items.length
+	const needed = count === 0 ? cols : (cols - (count % cols)) % cols
+	const title = props.placeholderTitle ?? 'Coming Soon!'
+	return [...props.items, ...Array.from({ length: needed }, () => ({ imageUrl: '', title }))]
+})
 </script>
-
-<style scoped>
-.collection-grid {
-	gap: var(--sf-gap, var(--sf-spacing-md));
-}
-</style>

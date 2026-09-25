@@ -3,6 +3,7 @@
 import AccountHeader from '@/components/account/AccountHeader.vue'
 import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
+import CollectionGrid from '@/components/CollectionGrid.vue'
 import NodePath from '@/components/editor/NodePath.vue'
 import ToolbarAttrRow from '@/components/editor/toolbar/ToolbarAttrRow.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
@@ -459,6 +460,41 @@ export const stories: Story[] = [
 				h('div', { class: 'sl-cluster sf-gap-2xs' }, items),
 				h('div', { class: 'sl-cluster sl-scroll-x sf-gap-2xs' }, items),
 			])
+		},
+	},
+	{
+		id: 'collection-grid',
+		title: 'Collection grid at page widths',
+		notes: 'The real CollectionGrid (6 cards) in a page inset at 375, 768, 1024, 1280, 1600 and 1920px screens, scaled down to fit: 1, 3, 4, 5, 5, 5 columns. From 1600 the content stops at the page width (80rem) and centres — the dotted outline is the screen, the band still reaches its edges. Placeholder cards need the running page, so they don’t show here.',
+		render: () => {
+			const items = Array.from({ length: 6 }, (_, i) => ({
+				imageUrl: '',
+				title: `Page ${i + 1}`,
+			}))
+			const widths = [375, 768, 1024, 1280, 1600, 1920]
+			return h(
+				'div',
+				{ class: 'sl-stack sf-gap-md', style: 'padding: 16px' },
+				widths.map((w) =>
+					h('div', { class: 'sl-stack sf-gap-2xs' }, [
+						h('p', { class: 'sf-text-xs sf-loudness-1' }, `${w}px screen`),
+						h(
+							'div',
+							{
+								class: 'sl-inset',
+								style: `width: ${w}px; zoom: ${Math.min(1, 300 / w)}; outline: 1px dotted #8888`,
+							},
+							[
+								h('div', {
+									class: 'sl-bleed sf-bg-primary-5',
+									style: 'height: 24px',
+								}),
+								h(CollectionGrid, { items }),
+							],
+						),
+					]),
+				),
+			)
 		},
 	},
 	{

@@ -494,7 +494,7 @@ const SL_OBJECT = `@layer sl-layout {
 //     scrolling replaces both wrapping and squeezing (a squeezed item wraps its own text).
 //   Bleed — a child wearing sl-bleed spans its sl-inset parent's margins. An inset that
 //     bleeds has the parent's edges, so the parent's line carries on through it (a
-//     coloured band keeps the page line, not its own padding). Written from the parent
+//     coloured band keeps the page line and width limit, not its own padding). Written from the parent
 //     (0-3-0) so it only applies where the bleed takes effect and beats the chrome × inset
 //     compounds (0-2-0).
 //   Pinned edges — an edge that holds a pinned element has no padding: pinned means flush
@@ -505,7 +505,7 @@ const SL_COMBINED = `@layer sl-layout {
 \t.sl-cluster.sl-scroll-x { flex-wrap: nowrap; }
 \t.sl-cluster.sl-scroll-x > * { flex-shrink: 0; }
 \t.sl-inset > .sl-bleed { grid-column: full; }
-\t.sl-inset > .sl-bleed.sl-inset { --sfx-inset-margin: inherit; }
+\t.sl-inset > .sl-bleed.sl-inset { --sfx-inset-margin: inherit; --sfx-inset-width: inherit; }
 \t.sl-scroll-x:has(.sl-pin-left) { padding-left: 0; }
 \t.sl-scroll-x:has(.sl-pin-right) { padding-right: 0; }
 \t.sl-scroll-y:has(.sl-pin-top) { padding-top: 0; }

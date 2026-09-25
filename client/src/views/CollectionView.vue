@@ -1,39 +1,36 @@
 <template>
-	<div class="mx-5 pt-5">
-		<SfStatusDisplay v-if="tagPending" state="loading" />
-		<SfStatusDisplay
-			v-else-if="!tag || (!tag.published && !isAdmin)"
-			state="error"
-			message="This collection does not exist."
-		/>
-		<div v-else>
-			<div class="flex justify-between items-center mb-5">
-				<div>
-					<h1 class="text-4xl">{{ tag.name }}</h1>
-					<p v-if="!tag.published" class="text-sm opacity-50 mt-1">
-						Not published — only admins can see this collection
-					</p>
-				</div>
-				<div v-if="isAdmin" class="sl-cluster sf-gap-xs">
-					<VaButton
-						preset="secondary"
-						size="small"
-						:to="{ name: 'editor', query: autoTagQuery }"
-					>
-						New page
-					</VaButton>
-					<VaButton preset="secondary" size="small" :to="{ name: 'admin-pages' }">
-						Manage
-					</VaButton>
-				</div>
+	<SfStatusDisplay v-if="tagPending" state="loading" />
+	<SfStatusDisplay
+		v-else-if="!tag || (!tag.published && !isAdmin)"
+		state="error"
+		message="This collection does not exist."
+	/>
+	<SfPageShell v-else :title="tag.name">
+		<template v-if="isAdmin" #actions>
+			<div class="sl-cluster sf-gap-xs">
+				<RouterLink
+					class="sf sf-loudness-2 sf-on-hover sf-size-xs"
+					:to="{ name: 'editor', query: autoTagQuery }"
+				>
+					New page
+				</RouterLink>
+				<RouterLink
+					class="sf sf-loudness-2 sf-on-hover sf-size-xs"
+					:to="{ name: 'admin-pages' }"
+				>
+					Manage
+				</RouterLink>
 			</div>
-			<CollectionGrid
-				:items="gridItems"
-				:placeholder-title="pagesPending ? 'Loading...' : 'Coming Soon!'"
-				@select-item="onSelectItem"
-			/>
-		</div>
-	</div>
+		</template>
+		<p v-if="!tag.published" class="sf-text-sm sf-loudness-1">
+			Not published — only admins can see this collection
+		</p>
+		<CollectionGrid
+			:items="gridItems"
+			:placeholder-title="pagesPending ? 'Loading...' : 'Coming Soon!'"
+			@select-item="onSelectItem"
+		/>
+	</SfPageShell>
 </template>
 
 <script setup lang="ts">
@@ -68,7 +65,7 @@ const gridItems = computed<GridItem[]>(() =>
 	})),
 )
 
-const autoTagQuery = computed(() => (tag.value ? { autoTag: tag.value.tagId } : undefined))
+const autoTagQuery = computed(() => (tag.value ? { autoTag: tag.value.tagId } : {}))
 
 const onSelectItem = (item: GridItem) => {
 	if (item.slug) {
