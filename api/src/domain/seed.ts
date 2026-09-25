@@ -718,11 +718,6 @@ type RuleSpec = ClassOnlyRuleInput | ElementRuleInput
 
 // Layout primitives become query containers only when something inside them collapses.
 // A container ignores its own content when sizing its width, so an unconditional
-// container-type collapses primitives that sit in size-to-content spots (table cells,
-// buttons, dropdowns). sl-collapse-* queries its nearest container, so only an ancestor
-// of a collapsing element needs to be one.
-const COLLAPSE_HOST = ':has([class*="sl-collapse-"])'
-
 const ROOT_RULES: RuleSpec[] = [
 	// Depth bundles — background + elevation cues.
 	// --sfx-surface-color is set alongside background so sf-is-overlay can add alpha without
@@ -877,12 +872,6 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sl-stack'], cssProperty: 'display', value: 'flex' },
 	{ classNames: ['sl-stack'], cssProperty: 'flex-direction', value: 'column' },
 	{ classNames: ['sl-stack'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
-	{
-		classNames: ['sl-stack'],
-		pseudo: COLLAPSE_HOST,
-		cssProperty: 'container-type',
-		value: 'inline-size',
-	},
 
 	// sl-cluster
 	{ classNames: ['sl-cluster'], cssProperty: 'display', value: 'flex' },
@@ -893,12 +882,6 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-gap, var(--sf-spacing-md))',
 	},
 	{ classNames: ['sl-cluster'], cssProperty: 'align-items', value: 'center' },
-	{
-		classNames: ['sl-cluster'],
-		pseudo: COLLAPSE_HOST,
-		cssProperty: 'container-type',
-		value: 'inline-size',
-	},
 
 	// sl-columns
 	{ classNames: ['sl-columns'], cssProperty: 'display', value: 'grid' },
@@ -911,12 +894,6 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sl-columns'],
 		cssProperty: 'gap',
 		value: 'var(--sf-gap, var(--sf-spacing-md))',
-	},
-	{
-		classNames: ['sl-columns'],
-		pseudo: COLLAPSE_HOST,
-		cssProperty: 'container-type',
-		value: 'inline-size',
 	},
 
 	// sl-row — joins the parent grid's columns (subgrid). Gaps follow the parent's.
@@ -934,12 +911,6 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sl-split'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
 	{ classNames: ['sl-split'], cssProperty: 'align-items', value: 'start' },
-	{
-		classNames: ['sl-split'],
-		pseudo: COLLAPSE_HOST,
-		cssProperty: 'container-type',
-		value: 'inline-size',
-	},
 
 	// sl-center
 	{ classNames: ['sl-center'], cssProperty: 'max-width', value: 'var(--sl-measure, 65ch)' },
@@ -949,18 +920,12 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'padding-inline',
 		value: 'var(--sf-padding)',
 	},
-	{
-		classNames: ['sl-center'],
-		pseudo: COLLAPSE_HOST,
-		cssProperty: 'container-type',
-		value: 'inline-size',
-	},
 
 	// sl-inset — a stack whose side margins are grid tracks, so a child can opt into them
 	// (sl-bleed) instead of pulling itself out with a negative margin. The margin is
 	// --sfx-inset-margin: inherited from the inset it sits in, else the page margin. A plain
-	// box only reads it, so it never picks up stray padding. sl-bleed has no rule of its own:
-	// outside an sl-inset it's inert.
+	// box only reads it, so it never picks up stray padding. sl-bleed's rules combine it with
+	// sl-inset, so they live in generateCss.ts (SL_COMBINED); outside an sl-inset it's inert.
 	{ classNames: ['sl-inset'], cssProperty: 'display', value: 'grid' },
 	{
 		classNames: ['sl-inset'],
@@ -974,19 +939,7 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-gap, var(--sf-spacing-md))',
 	},
 	{ classNames: ['sl-inset'], cssProperty: 'align-content', value: 'start' },
-	{
-		classNames: ['sl-inset'],
-		pseudo: COLLAPSE_HOST,
-		cssProperty: 'container-type',
-		value: 'inline-size',
-	},
 	{ classNames: ['sl-inset'], pseudo: ' > *', cssProperty: 'grid-column', value: 'content' },
-	{
-		classNames: ['sl-inset'],
-		pseudo: ' > .sl-bleed',
-		cssProperty: 'grid-column',
-		value: 'full',
-	},
 	// Chrome box as inset — the box's own padding (a theme decision) becomes the margins,
 	// for it and everything inside, so a card looks unchanged and its children can bleed to
 	// its edges. Relies on the theme contract that chrome padding goes through --sf-padding,
@@ -999,21 +952,11 @@ const ROOT_RULES: RuleSpec[] = [
 			value: 'var(--sf-padding, 0px)',
 		}),
 	),
-	// An inset that actually bleeds has the parent's edges, so the parent's line carries on
-	// through it (a coloured band keeps the page line, not its own padding). Written from
-	// the parent (0-3-0) so it only applies where the bleed takes effect and beats the
-	// chrome compounds above (0-2-0).
-	{
-		classNames: ['sl-inset'],
-		pseudo: ' > .sl-bleed.sl-inset',
-		cssProperty: '--sfx-inset-margin',
-		value: 'inherit',
-	},
 
 	// sl-inset-line — content starts on the inset line. Layout layer, so it beats chrome
 	// padding on the same element, and its cascadeOrder beats sl-inset's own padding;
-	// top/bottom padding stays. Pinned edges win: the sl-scroll-*:has(.sl-pin-*) rules
-	// (0-2-0) beat this (0-1-0).
+	// top/bottom padding stays. Pinned edges win: the sl-scroll-*:has(.sl-pin-*) rules in
+	// generateCss.ts (0-2-0) beat this (0-1-0).
 	{
 		classNames: ['sl-inset-line'],
 		cssProperty: 'padding-inline',
@@ -1046,12 +989,6 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'repeat(auto-fit, minmax(var(--sl-min, 250px), 1fr))',
 	},
 	{ classNames: ['sl-grid'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
-	{
-		classNames: ['sl-grid'],
-		pseudo: COLLAPSE_HOST,
-		cssProperty: 'container-type',
-		value: 'inline-size',
-	},
 
 	// sl-aspect presets (bare sl-aspect is developer escape hatch — no rule; author sets --sl-aspect inline)
 	{ classNames: ['sl-aspect-16-9'], cssProperty: 'aspect-ratio', value: '16/9' },
@@ -1070,34 +1007,6 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'none',
 	},
 	{ classNames: ['sl-scroll-y'], cssProperty: 'overflow-y', value: 'auto' },
-
-	// An edge that holds a pinned element has no padding — pinned means flush to that
-	// edge; padding there leaves a strip where content scrolls past beside the pinned
-	// element. Other edges keep whatever padding they have. Nested caveat: sf-system.md.
-	{
-		classNames: ['sl-scroll-x'],
-		pseudo: ':has(.sl-pin-right)',
-		cssProperty: 'padding-right',
-		value: '0',
-	},
-	{
-		classNames: ['sl-scroll-x'],
-		pseudo: ':has(.sl-pin-left)',
-		cssProperty: 'padding-left',
-		value: '0',
-	},
-	{
-		classNames: ['sl-scroll-y'],
-		pseudo: ':has(.sl-pin-top)',
-		cssProperty: 'padding-top',
-		value: '0',
-	},
-	{
-		classNames: ['sl-scroll-y'],
-		pseudo: ':has(.sl-pin-bottom)',
-		cssProperty: 'padding-bottom',
-		value: '0',
-	},
 
 	// sl-pin-* — sticky to one edge of the nearest scroll area.
 	{ classNames: ['sl-pin-top'], cssProperty: 'position', value: 'sticky' },

@@ -18,7 +18,9 @@ Three actors share the vocabulary; each can work without knowing the others.
 
 **Theme author** decides how `sf-` classes are expressed visually and how shared scales
 resolve. Sets scale tokens, and overrides class definitions when the look needs different
-CSS properties — not just different values.
+CSS properties — not just different values. Themes set looks, never arrangement: a theme
+may use `sl-` classes to find things (a pinned edge, a scroll area) and places its own
+`::before`/`::after` decorations, but never moves, sizes the flow of, or aligns elements.
 
 **Component author** bakes classes into a component's structure. A `Card` might already
 wear `sf-depth-1`; a `Dialog`, `sf-depth-3`. These decisions live in code.
@@ -735,6 +737,11 @@ prefixes coexist on the same node:
 
 `sf-*` utilities set runtime variables that `sl-*` primitives read; the reverse is not
 a pattern.
+
+The maintainer defines what `sl-` classes do; a theme changes layout only through the
+tokens they read (gap, page margin, padding, breakpoints). What two `sl-` classes mean
+together (a cluster that scrolls, a bleed inside an inset) is part of that definition,
+not a theme rule.
 
 ### Layout primitives
 

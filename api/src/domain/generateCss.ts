@@ -487,12 +487,27 @@ const SL_OBJECT = `@layer sl-layout {
 }\n`
 
 // ─── Combined layout classes ─────────────────────────────────────────────
-// What two sl- classes mean together is the maintainer's to decide, not a theme's,
-// so it's written here rather than as a rule (a rule allows one layout class).
-// A cluster that scrolls sideways stays on one line: scrolling replaces wrapping.
+// What sl- classes mean together is the maintainer's to decide, not a theme's, so it's
+// written here rather than as rules (a rule allows one layout class). Emitted after the
+// DB rules of sl-layout; each selector here already outranks what it competes with.
+//   Scrolling cluster — stays on one line: scrolling replaces wrapping.
+//   Bleed — a child wearing sl-bleed spans its sl-inset parent's margins. An inset that
+//     bleeds has the parent's edges, so the parent's line carries on through it (a
+//     coloured band keeps the page line, not its own padding). Written from the parent
+//     (0-3-0) so it only applies where the bleed takes effect and beats the chrome × inset
+//     compounds (0-2-0).
+//   Pinned edges — an edge that holds a pinned element has no padding: pinned means flush
+//     to that edge; padding there leaves a strip where content scrolls past beside it.
+//     Other edges keep their padding. Nested caveat: sf-system.md.
 
 const SL_COMBINED = `@layer sl-layout {
 \t.sl-cluster.sl-scroll-x { flex-wrap: nowrap; }
+\t.sl-inset > .sl-bleed { grid-column: full; }
+\t.sl-inset > .sl-bleed.sl-inset { --sfx-inset-margin: inherit; }
+\t.sl-scroll-x:has(.sl-pin-left) { padding-left: 0; }
+\t.sl-scroll-x:has(.sl-pin-right) { padding-right: 0; }
+\t.sl-scroll-y:has(.sl-pin-top) { padding-top: 0; }
+\t.sl-scroll-y:has(.sl-pin-bottom) { padding-bottom: 0; }
 }\n`
 
 // ─── Collapse layer ──────────────────────────────────────────────────────
@@ -500,14 +515,28 @@ const SL_COMBINED = `@layer sl-layout {
 // conditions). CSS is generated here from the resolved breakpoint token values
 // so the pixel widths can be embedded directly in @container conditions.
 // Each collapsible layout primitive gets a compound selector per breakpoint.
+// A primitive holding a collapsing element becomes a size container — only there, since
+// container-type collapses primitives that sit in size-to-content spots (table cells,
+// buttons, dropdowns). sl-collapse-* queries its nearest container, so only an ancestor
+// of a collapsing element needs to be one.
 
 const COLLAPSE_GRID = ['.sl-columns', '.sl-split', '.sl-grid']
 const COLLAPSE_FLEX = ['.sl-cluster']
+const COLLAPSE_HOSTS = [
+	'.sl-stack',
+	'.sl-cluster',
+	'.sl-columns',
+	'.sl-split',
+	'.sl-center',
+	'.sl-inset',
+	'.sl-grid',
+]
 
 function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
 	if (collapseThresholds.length === 0) return ''
 
-	let body = ''
+	const hosts = COLLAPSE_HOSTS.map((s) => `\t${s}:has([class*="sl-collapse-"])`).join(',\n')
+	let body = `${hosts} { container-type: inline-size; }\n`
 	for (const { name, value } of collapseThresholds) {
 		const gridSels = COLLAPSE_GRID.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')
 		const flexSels = COLLAPSE_FLEX.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')

@@ -6,8 +6,9 @@ import { type DrizzleD1Database } from 'drizzle-orm/d1'
 export type Db = DrizzleD1Database<Record<string, unknown>>
 
 // sf-class kinds. `bundle`/`variant`/`state` live in the sf cascade
-// layers. `layout` is for sl-* primitives (outside the sf layer order;
-// not currently used in class_rules but allowed for future).
+// layers. `layout` is for sl-* classes (the sl-layout layer, after the sf
+// layers). A rule holds at most one; combinations of sl- classes are written
+// in generateCss.ts, since what they mean together is the maintainer's.
 // `element` names a UI category HTML forgot (chip, badge, tag) — the class
 // itself sets nothing; the theme decorates it the same way it decorates a
 // bare `<button>` or `<nav>`. Rules emit to sf-element (below sf-bundle)
