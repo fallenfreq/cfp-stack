@@ -20,6 +20,8 @@
 		"prepare": "husky",
 		"dev": "pnpm --filter @somefreq-app/* --parallel dev",
 		"build": "pnpm --filter @somefreq-app/* build",
+		"build:deploy": "node scripts/typecheck.mjs --all && pnpm build",
+		"typecheck": "node scripts/typecheck.mjs",
 		"dev:client": "pnpm --filter @somefreq-app/client dev",
 		"dev:vite:client": "pnpm --filter @somefreq-app/client dev:vite",
 		"dev:api": "pnpm --filter @somefreq-app/api dev",

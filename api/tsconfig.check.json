@@ -1,0 +1,13 @@
+{
+	// Type-check only (pnpm typecheck). Covers src and functions_src in one pass, with
+	// `@/*` pointing at src so it doesn't need a prior build's dist/.
+	"extends": "./tsconfig.base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"tsBuildInfoFile": "./node_modules/.tmp/check.tsbuildinfo",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["src/**/*.ts", "functions_src/**/*.ts"]
+}

@@ -14,8 +14,9 @@
 	],
 	"scripts": {
 		"dev": "concurrently \"npm run build:watch\" \"npx wrangler pages dev ./client_dist --live-reload\"",
-		"build:watch": "tsc --build -w",
-		"build": "rm -rf dist functions .tsbuildinfo && tsc --build",
+		"build:watch": "tsc --build -w --noCheck",
+		"build": "rm -rf dist functions .tsbuildinfo && tsc --build --noCheck",
+		"type-check": "tsc -p tsconfig.check.json",
 		"build:all": "pnpm --filter @somefreq-app/* --parallel build",
 		"migrate": "pnpm drizzle-kit generate:sqlite",
 		"migrate:custom": "pnpm drizzle-kit generate:sqlite --custom",
