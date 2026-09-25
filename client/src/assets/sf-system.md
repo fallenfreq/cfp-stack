@@ -884,21 +884,32 @@ sl-pin-top     stays at the top edge of its scroll area while content scrolls un
 sl-pin-right   …right edge
 sl-pin-bottom  …bottom edge
 sl-pin-left    …left edge
+sl-scroll-frame  box around one scroll area; its edges can carry overlays outside the clip
 ```
 
 **Component author:** use `sl-scroll-x` / `sl-scroll-y` instead of writing overflow CSS,
 and bind the `useScrollOverflow` composable's state as `sf-is-overflow-*` on the same
 element. Use `sl-pin-*` instead of writing sticky CSS; add `sf-boundary-*` if the pinned
 element has a separator. Nothing else — no classes for how hidden content is shown.
-`sl-scroll-x` on an `sl-cluster` keeps it to one line: scrolling replaces wrapping.
+`sl-scroll-x` on an `sl-cluster` keeps it to one line and its items at their natural
+width: scrolling replaces wrapping and squeezing. A swipe that reaches the end stops there
+rather than scrolling the page.
 
-**Theme author:** three situations to style:
+Wrap the scroll area in `sl-scroll-frame` when its edges should be able to show more than
+the fade — the theme's indicators, or your own edge controls positioned on the frame. The
+frame is optional; an unframed scroll area gets only what the theme does to it directly.
+
+**Theme author:** four situations to style:
 
 - _A scroll area has hidden content on a side_ — `sf-is-overflow-*` (default: edge fade).
 - _Content is passing under a pinned element_ — `sl-pin-*` inside `sf-is-overflow-*` on
   the same side (default: opaque surface + shadow cast onto the content).
 - _An edge holds a pinned element_ — `sf-is-overflow-*:has(.sl-pin-*)`. A theme that fades
   edges should drop the fade there, or it covers the pinned element.
+- _A framed scroll area has hidden content on a side_ —
+  `sl-scroll-frame:has(> .sf-is-overflow-*)`, drawn with the frame's own `::before` /
+  `::after` (default: an arrow on that edge, dropped where the edge holds a pinned
+  element). The fade is a mask on the scroll area, so anything drawn inside it fades too.
 
 **Keep the box and the scroll area apart.** Chrome (`sf-depth-*`) styles a box;
 `sl-scroll-*` + `sf-is-overflow-*` style the content scrolling inside one. Put them on

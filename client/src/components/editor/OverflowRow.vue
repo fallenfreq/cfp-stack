@@ -1,19 +1,12 @@
 <template>
-	<div
-		class="overflow-row"
-		:class="{
-			'has-overflow-left': overflow.left,
-			'has-overflow-right': overflow.right,
-		}"
-	>
+	<div class="overflow-row sl-scroll-frame">
 		<div
 			ref="scrollerEl"
-			class="overflow-row__scroller"
+			class="overflow-row__scroller sl-cluster sl-scroll-x sf-gap-xs sf-size-2xs"
 			:class="{
-				'sf-is-overflow-left': overflow.left,
-				'sf-is-overflow-right': overflow.right,
+				'sf-is-overflow-left': overflowLeft,
+				'sf-is-overflow-right': overflowRight,
 			}"
-			@scroll.passive="syncOverflow"
 		>
 			<slot />
 		</div>
@@ -21,94 +14,27 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { useScrollOverflow } from '@/composables/useScrollOverflow'
+import { ref, toRef } from 'vue'
 
 const props = defineProps<{
 	refreshKey?: unknown
 }>()
 
 const scrollerEl = ref<HTMLElement | null>(null)
-const overflow = ref({ left: false, right: false })
-
-const OVERFLOW_EPSILON = 2
-
-const syncOverflow = () => {
-	const scroller = scrollerEl.value
-	if (!scroller) return
-	const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth
-	overflow.value = {
-		left: scroller.scrollLeft > OVERFLOW_EPSILON,
-		right: maxScrollLeft - scroller.scrollLeft > OVERFLOW_EPSILON,
-	}
-}
-
-const refreshOverflow = async () => {
-	await nextTick()
-	syncOverflow()
-}
-
-onMounted(refreshOverflow)
-watch(() => props.refreshKey, refreshOverflow)
+// Adding a tool changes what's hidden without changing the row's size, so the size
+// watcher alone misses it — refreshKey re-checks.
+const { left: overflowLeft, right: overflowRight } = useScrollOverflow(
+	scrollerEl,
+	toRef(props, 'refreshKey'),
+)
 </script>
 
-<style scoped>
-.overflow-row {
-	position: relative;
-	display: flex;
-	height: 100%;
-}
-
-.overflow-row::before,
-.overflow-row::after {
-	content: '';
-	position: absolute;
-	top: 50%;
-	transform: translateY(-50%);
-	width: 0;
-	height: 0;
-	pointer-events: none;
-	opacity: 0;
-	transition: opacity 0.15s ease;
-	z-index: 1;
-}
-
-.overflow-row::before {
-	left: 8px;
-	border-top: 4px solid transparent;
-	border-bottom: 4px solid transparent;
-	border-right: 5px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-5));
-}
-
-.overflow-row::after {
-	right: 8px;
-	border-top: 4px solid transparent;
-	border-bottom: 4px solid transparent;
-	border-left: 5px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-5));
-}
-
-.overflow-row.has-overflow-left::before {
-	opacity: 1;
-}
-
-.overflow-row.has-overflow-right::after {
-	opacity: 1;
-}
-
-.overflow-row__scroller {
-	flex: 1;
-	display: flex;
-	flex-wrap: nowrap;
-	align-items: center;
-	gap: var(--sf-gap, var(--sf-spacing-xs));
-	padding: 0 0.5rem;
-	overflow-x: auto;
-	overflow-y: hidden;
-	overscroll-behavior-x: contain;
-	scrollbar-width: none;
-	-ms-overflow-style: none;
-}
-
-.overflow-row__scroller::-webkit-scrollbar {
-	display: none;
+<style>
+@layer ui {
+	/* The row's own end padding, at its size (the toolbar is sf-flush). */
+	.overflow-row__scroller {
+		padding-inline: var(--sf-padding);
+	}
 }
 </style>

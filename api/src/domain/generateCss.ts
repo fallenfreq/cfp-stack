@@ -490,7 +490,8 @@ const SL_OBJECT = `@layer sl-layout {
 // What sl- classes mean together is the maintainer's to decide, not a theme's, so it's
 // written here rather than as rules (a rule allows one layout class). Emitted after the
 // DB rules of sl-layout; each selector here already outranks what it competes with.
-//   Scrolling cluster — stays on one line: scrolling replaces wrapping.
+//   Scrolling cluster — stays on one line, and its items keep their natural width:
+//     scrolling replaces both wrapping and squeezing (a squeezed item wraps its own text).
 //   Bleed — a child wearing sl-bleed spans its sl-inset parent's margins. An inset that
 //     bleeds has the parent's edges, so the parent's line carries on through it (a
 //     coloured band keeps the page line, not its own padding). Written from the parent
@@ -502,6 +503,7 @@ const SL_OBJECT = `@layer sl-layout {
 
 const SL_COMBINED = `@layer sl-layout {
 \t.sl-cluster.sl-scroll-x { flex-wrap: nowrap; }
+\t.sl-cluster.sl-scroll-x > * { flex-shrink: 0; }
 \t.sl-inset > .sl-bleed { grid-column: full; }
 \t.sl-inset > .sl-bleed.sl-inset { --sfx-inset-margin: inherit; }
 \t.sl-scroll-x:has(.sl-pin-left) { padding-left: 0; }

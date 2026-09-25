@@ -271,6 +271,11 @@ const PREVIEW_JS = `(() => {
 		}
 	}
 	document.querySelectorAll('.sl-scroll-x, .sl-scroll-y').forEach((el) => {
+		// A story can start a scroll area part-way so both edges show hidden content.
+		if (el.dataset.previewScroll === 'middle') {
+			el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+			el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
+		}
 		sync(el)
 		el.addEventListener('scroll', () => sync(el), { passive: true })
 		new ResizeObserver(() => sync(el)).observe(el)

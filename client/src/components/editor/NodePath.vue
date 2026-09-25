@@ -134,9 +134,5 @@ onUnmounted(() => {
 	.path-sep {
 		user-select: none;
 	}
-
-	.path-node {
-		white-space: nowrap;
-	}
 }
 </style>

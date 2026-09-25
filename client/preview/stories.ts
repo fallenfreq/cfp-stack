@@ -449,15 +449,44 @@ export const stories: Story[] = [
 	{
 		id: 'cluster-scroll',
 		title: 'A cluster that scrolls stays on one line',
-		notes: 'Top: sl-cluster wraps onto new lines. Bottom: the same cluster with sl-scroll-x stays on one line and scrolls sideways.',
+		notes: 'Top: sl-cluster wraps onto new lines. Bottom: the same cluster with sl-scroll-x stays on one line and scrolls sideways; “Bullet list” stays on one line inside its chip instead of being squeezed onto two.',
 		maxWidth: '240px',
 		render: () => {
-			const items = ['One', 'Two', 'Three', 'Four', 'Five', 'Six'].map((t) =>
+			const items = ['One', 'Bullet list', 'Three', 'Four', 'Five', 'Six'].map((t) =>
 				h('span', { class: 'sf-chip sf-loudness-2' }, t),
 			)
 			return h('div', { class: 'sl-stack sf-gap-md', style: 'padding: 16px' }, [
 				h('div', { class: 'sl-cluster sf-gap-2xs' }, items),
 				h('div', { class: 'sl-cluster sl-scroll-x sf-gap-2xs' }, items),
+			])
+		},
+	},
+	{
+		id: 'scroll-frame',
+		title: 'Framed scroll areas',
+		notes: 'Scroll each row. Top and middle are framed: an arrow shows on each side with hidden content (middle starts scrolled halfway, so both). Bottom: the same row unframed — fade only.',
+		maxWidth: '240px',
+		render: () => {
+			const words = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight']
+			const items = () =>
+				words.map((t) => h('span', { class: 'sf-chip sf-loudness-2' }, `Item ${t}`))
+			const row = (overflow: string, props: Record<string, unknown> = {}) =>
+				h(
+					'div',
+					{ class: `sl-cluster sl-scroll-x sf-gap-2xs ${overflow}`, ...props },
+					items(),
+				)
+			return h('div', { class: 'sl-stack sf-gap-md', style: 'padding: 16px' }, [
+				h('div', { class: 'sl-scroll-frame sf-depth-1 sf-flush' }, [
+					row('sf-is-overflow-right'),
+				]),
+				h('div', { class: 'sl-scroll-frame sf-depth-1 sf-flush' }, [
+					// preview.js syncs overflow classes from the scroll position; start mid-way.
+					row('sf-is-overflow-left sf-is-overflow-right', {
+						'data-preview-scroll': 'middle',
+					}),
+				]),
+				h('div', { class: 'sf-depth-1 sf-flush' }, [row('sf-is-overflow-right')]),
 			])
 		},
 	},

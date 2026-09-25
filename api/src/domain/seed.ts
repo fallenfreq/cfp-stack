@@ -688,6 +688,12 @@ const VOCABULARY: VocabSpec[] = [
 			'Vertical scroll area. Pair with the overflow composable for sf-is-overflow-*.',
 	},
 	{
+		name: 'sl-scroll-frame',
+		kind: 'layout',
+		description:
+			"Box around one scroll area, whose edges can carry overlays outside the clip: the theme's indicators of hidden content, or the component's own edge controls. The scroll area fills it. Optional.",
+	},
+	{
 		name: 'sl-pin-top',
 		kind: 'layout',
 		description: 'Stays at the top edge of its scroll area while content scrolls under it',
@@ -1007,6 +1013,19 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'none',
 	},
 	{ classNames: ['sl-scroll-y'], cssProperty: 'overflow-y', value: 'auto' },
+	// A swipe that reaches the end stops there instead of carrying on to the page (which can
+	// fire the browser's back gesture).
+	{ classNames: ['sl-scroll-x'], cssProperty: 'overscroll-behavior-x', value: 'contain' },
+
+	// sl-scroll-frame — positions overlays on a scroll area's edges; the scroll area fills
+	// it and can still shrink (minmax(0, …)).
+	{ classNames: ['sl-scroll-frame'], cssProperty: 'position', value: 'relative' },
+	{ classNames: ['sl-scroll-frame'], cssProperty: 'display', value: 'grid' },
+	{
+		classNames: ['sl-scroll-frame'],
+		cssProperty: 'grid-template-columns',
+		value: 'minmax(0, 1fr)',
+	},
 
 	// sl-pin-* — sticky to one edge of the nearest scroll area.
 	{ classNames: ['sl-pin-top'], cssProperty: 'position', value: 'sticky' },
@@ -1022,8 +1041,8 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sl-pin-left'], cssProperty: 'left', value: '0' },
 	{ classNames: ['sl-pin-left'], cssProperty: 'z-index', value: '1' },
 
-	// Overflow context — mask-image applied to the scrolling element.
-	// Arrows are component-level; ::before/::after rules can be added per-theme via the DB.
+	// Overflow context — mask-image applied to the scrolling element. How hidden content is
+	// shown is the theme's; a control that scrolls is the component's.
 	// Same-axis compound rules handle both-edges case at higher specificity.
 	{
 		classNames: ['sf-is-overflow-left'],
@@ -1340,6 +1359,205 @@ const ROOT_RULES: RuleSpec[] = [
 		pseudo: ' .sl-pin-bottom::after',
 		cssProperty: 'box-shadow',
 		value: 'inset 0 -10px 8px -8px rgb(var(--sf-shadow) / var(--sf-shadow-opacity))',
+	},
+
+	// Framed scroll area with hidden content on a side — an arrow on that edge, drawn on the
+	// frame so the fade (a mask on the scroll area) doesn't hide it. Horizontal only until a
+	// framed sl-scroll-y exists. Edges holding a pinned element drop the arrow, as they drop
+	// the fade. These are looks, but a rule's only class sets its layer, so they sit in
+	// sl-layout; nothing else styles a frame's own ::before/::after. The shown/dropped rules
+	// name the scroll area in full so they outrank the hidden base (0-3-1 / 0-4-1 over 0-2-1).
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'content',
+		value: "''",
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'position',
+		value: 'absolute',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'top',
+		value: '50%',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'transform',
+		value: 'translateY(-50%)',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'left',
+		value: 'var(--sf-spacing-xs)',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'width',
+		value: '0',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'height',
+		value: '0',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'border-top',
+		value: '4px solid transparent',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'border-bottom',
+		value: '4px solid transparent',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'border-right',
+		value: '5px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-5))',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'pointer-events',
+		value: 'none',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'opacity',
+		value: '0',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'transition',
+		value: 'opacity 0.15s ease',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::before',
+		cssProperty: 'z-index',
+		value: '1',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'content',
+		value: "''",
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'position',
+		value: 'absolute',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'top',
+		value: '50%',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'transform',
+		value: 'translateY(-50%)',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'right',
+		value: 'var(--sf-spacing-xs)',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'width',
+		value: '0',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'height',
+		value: '0',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'border-top',
+		value: '4px solid transparent',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'border-bottom',
+		value: '4px solid transparent',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'border-left',
+		value: '5px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-5))',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'pointer-events',
+		value: 'none',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'opacity',
+		value: '0',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'transition',
+		value: 'opacity 0.15s ease',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x)::after',
+		cssProperty: 'z-index',
+		value: '1',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x.sf-is-overflow-left)::before',
+		cssProperty: 'opacity',
+		value: '1',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x.sf-is-overflow-right)::after',
+		cssProperty: 'opacity',
+		value: '1',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x.sf-is-overflow-left .sl-pin-left)::before',
+		cssProperty: 'opacity',
+		value: '0',
+	},
+	{
+		classNames: ['sl-scroll-frame'],
+		pseudo: ':has(> .sl-scroll-x.sf-is-overflow-right .sl-pin-right)::after',
+		cssProperty: 'opacity',
+		value: '0',
 	},
 
 	// Overlay context — reads --sfx-surface-color (bridge variable set by each depth bundle) so one
