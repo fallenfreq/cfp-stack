@@ -58,6 +58,7 @@ export async function emitStylesheet(db: Db): Promise<string> {
 		// Hand-written blocks come after the DB rules of their layer, so they sit
 		// above every cascade_order at equal specificity.
 		SL_OBJECT,
+		SL_COMBINED,
 		emitCollapseLayer(collapseThresholds),
 		emitEditorLayer(buckets),
 	]
@@ -483,6 +484,15 @@ const SL_OBJECT = `@layer sl-layout {
 \t.sl-object-fill > img:only-child { object-fit: fill; width: 100%; height: 100%; display: block; }
 \timg.sl-object-none { object-fit: none; display: block; }
 \t.sl-object-none > img:only-child { object-fit: none; display: block; }
+}\n`
+
+// ─── Combined layout classes ─────────────────────────────────────────────
+// What two sl- classes mean together is the maintainer's to decide, not a theme's,
+// so it's written here rather than as a rule (a rule allows one layout class).
+// A cluster that scrolls sideways stays on one line: scrolling replaces wrapping.
+
+const SL_COMBINED = `@layer sl-layout {
+\t.sl-cluster.sl-scroll-x { flex-wrap: nowrap; }
 }\n`
 
 // ─── Collapse layer ──────────────────────────────────────────────────────

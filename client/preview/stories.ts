@@ -447,6 +447,21 @@ export const stories: Story[] = [
 		],
 	},
 	{
+		id: 'cluster-scroll',
+		title: 'A cluster that scrolls stays on one line',
+		notes: 'Top: sl-cluster wraps onto new lines. Bottom: the same cluster with sl-scroll-x stays on one line and scrolls sideways.',
+		maxWidth: '240px',
+		render: () => {
+			const items = ['One', 'Two', 'Three', 'Four', 'Five', 'Six'].map((t) =>
+				h('span', { class: 'sf-chip sf-loudness-2' }, t),
+			)
+			return h('div', { class: 'sl-stack sf-gap-md', style: 'padding: 16px' }, [
+				h('div', { class: 'sl-cluster sf-gap-2xs' }, items),
+				h('div', { class: 'sl-cluster sl-scroll-x sf-gap-2xs' }, items),
+			])
+		},
+	},
+	{
 		id: 'stackable-sheet',
 		title: 'StackableSheet',
 		notes: 'Desktop layout inside a framed box (transform makes the fixed sheet sit in the frame). The X sits in its own row at the top right, is a real button (tab to it), and stays put while the body scrolls. The long heading wraps below the X instead of running under it.',

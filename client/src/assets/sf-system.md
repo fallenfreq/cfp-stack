@@ -883,6 +883,7 @@ sl-pin-left    …left edge
 and bind the `useScrollOverflow` composable's state as `sf-is-overflow-*` on the same
 element. Use `sl-pin-*` instead of writing sticky CSS; add `sf-boundary-*` if the pinned
 element has a separator. Nothing else — no classes for how hidden content is shown.
+`sl-scroll-x` on an `sl-cluster` keeps it to one line: scrolling replaces wrapping.
 
 **Theme author:** three situations to style:
 

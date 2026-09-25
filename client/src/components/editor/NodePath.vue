@@ -1,11 +1,11 @@
 <template>
 	<div
 		ref="nodePathEl"
-		class="node-path sl-scroll-x sf-text-xs"
+		class="node-path sl-cluster sl-scroll-x sf-gap-2xs sf-text-xs"
 		:class="{ 'sf-is-overflow-left': isOverflowLeft, 'sf-is-overflow-right': isOverflowRight }"
 	>
 		<template v-for="(segment, i) in path" :key="segment.depth">
-			<span v-if="i > 0" class="path-sep sf-icon sf-loudness-1">›</span>
+			<span v-if="i > 0" class="path-sep sf-icon sf-loudness-1" aria-hidden="true">›</span>
 			<button
 				class="path-node sf sf-single-line sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-xs"
 				:class="{ 'sf-on-current': segment.depth === effectiveActiveDepth }"
@@ -125,17 +125,14 @@ onUnmounted(() => {
 
 <style>
 @layer ui {
+	/* Placement in the top bar's row — the top bar's rename mode also targets .node-path. */
 	.node-path {
-		display: flex;
-		align-items: center;
 		flex: 1;
 		min-width: 0;
 	}
 
 	.path-sep {
-		padding: 0 4px;
 		user-select: none;
-		flex-shrink: 0;
 	}
 
 	.path-node {
