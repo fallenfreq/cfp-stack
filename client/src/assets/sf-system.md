@@ -140,6 +140,24 @@ touches; where they do overlap, layout wins by design — `sl-inset` and `sl-ins
 replace a chrome box's side padding with the inset margin, keeping its top and bottom
 padding.
 
+### Ties within a layer
+
+When two classes on one element set the same property in the same layer, with equal
+specificity, **a modifier beats the thing it modifies**, whatever the class names:
+`sl-split sl-align-y-end` aligns to the end, and `sf-size-xs` sets the padding of an
+`sf-depth-1` card. Each class carries an order number (default 0) that settles these
+ties; modifiers such as `sf-size-*`, `sl-align-*` and `sl-inset-line` carry a higher
+one. The number only breaks ties — it never crosses layers and never beats a more
+specific combination of classes. It belongs to the vocabulary, so themes can't change
+it.
+
+Themes restyle classes; they don't outrank combinations. A theme's rule for a class
+beats the root rule for the same class, and the nearest theme wins when themes nest.
+A theme rule doesn't beat a more specific root combination
+(`.sf-depth-1.sf-loudness-3`). A theme that restyles a layout's own alignment would
+also beat the alignment modifiers, so alignment is not a theme's to change — themes
+change looks, not arrangement.
+
 All class definitions — defaults and theme overrides alike — must live inside their
 matching `@layer` block. **Unlayered CSS beats all layered CSS** regardless of
 specificity, so an override written outside a layer would silently destroy the order.
@@ -367,10 +385,12 @@ and theme overrides both live inside the matching `@layer` block:
 		border-radius: var(--sf-radius-2);
 	}
 
-	/* theme override — same layer, higher specificity wins */
-	.theme-flat .sf-depth-1 {
-		box-shadow: none;
-		border: 1px solid rgb(var(--sf-border_color));
+	/* theme override — same layer; the nearest theme wins */
+	@scope (.theme-flat) {
+		.sf-depth-1 {
+			box-shadow: none;
+			border: 1px solid rgb(var(--sf-border_color));
+		}
 	}
 }
 ```
@@ -935,7 +955,7 @@ sl-collapse-md   collapse below md breakpoint
 ## Themes
 
 A theme is a set of token values plus optional class definition overrides, scoped by an
-activation class on an ancestor (typically `<html>`).
+activation class on the element it themes or an ancestor (typically `<html>`).
 
 ```css
 /* token settings — no layer needed (custom properties cascade per-property) */
@@ -943,11 +963,13 @@ activation class on an ancestor (typically `<html>`).
 	--sf-primary-5: 30 64 175;
 }
 
-/* class overrides — must live in the matching layer */
+/* class overrides — must live in the matching layer, scoped to the theme */
 @layer sf-bundle {
-	.theme-editorial .sf-depth-1 {
-		box-shadow: none;
-		border-left: 4px solid rgb(var(--sf-primary));
+	@scope (.theme-editorial) {
+		.sf-depth-1 {
+			box-shadow: none;
+			border-left: 4px solid rgb(var(--sf-primary));
+		}
 	}
 }
 ```

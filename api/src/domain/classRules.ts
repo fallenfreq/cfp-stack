@@ -169,6 +169,7 @@ export interface AddVocabularyEntryInput {
 	kind: ClassKind
 	pseudo?: string | null
 	description?: string | null
+	cascadeOrder?: number
 }
 
 export async function addVocabularyEntry(db: Db, input: AddVocabularyEntryInput): Promise<void> {
@@ -179,6 +180,9 @@ export async function addVocabularyEntry(db: Db, input: AddVocabularyEntryInput)
 		throw new ValidationError(
 			`Only state classes carry a pseudo — got "${input.pseudo}" on a ${input.kind}`,
 		)
+	const cascadeOrder = input.cascadeOrder ?? 0
+	if (!Number.isInteger(cascadeOrder))
+		throw new ValidationError(`cascadeOrder must be an integer — got ${cascadeOrder}`)
 
 	await db
 		.insert(classVocabulary)
@@ -187,6 +191,8 @@ export async function addVocabularyEntry(db: Db, input: AddVocabularyEntryInput)
 			kind: input.kind,
 			pseudo: input.pseudo ?? null,
 			description: input.description ?? null,
+			cascadeOrder,
+			updatedAt: new Date(),
 		})
 		.onConflictDoUpdate({
 			target: classVocabulary.name,
@@ -194,6 +200,8 @@ export async function addVocabularyEntry(db: Db, input: AddVocabularyEntryInput)
 				kind: input.kind,
 				pseudo: input.pseudo ?? null,
 				description: input.description ?? null,
+				cascadeOrder,
+				updatedAt: new Date(),
 			},
 		})
 }
@@ -218,7 +226,7 @@ export async function listVocabulary(db: Db): Promise<ClassVocabulary[]> {
 // involved state classes' vocabulary entries.
 
 export type ClassRuleWithClasses = ClassRule & {
-	classes: { name: string; kind: ClassKind; pseudo: string | null }[]
+	classes: { name: string; kind: ClassKind; pseudo: string | null; cascadeOrder: number }[]
 }
 
 export interface ClassOnlyRuleInput {
@@ -457,6 +465,7 @@ function ruleJoinQuery(db: Db) {
 			className: classVocabulary.name,
 			classKind: classVocabulary.kind,
 			classPseudo: classVocabulary.pseudo,
+			classOrder: classVocabulary.cascadeOrder,
 		})
 		.from(classRules)
 		.leftJoin(classRuleClasses, eq(classRuleClasses.ruleId, classRules.id))
@@ -474,6 +483,7 @@ interface RuleJoinRow {
 	className: string | null
 	classKind: string | null
 	classPseudo: string | null
+	classOrder: number | null
 }
 
 function groupRulesFromRows(rows: RuleJoinRow[]): ClassRuleWithClasses[] {
@@ -498,6 +508,7 @@ function groupRulesFromRows(rows: RuleJoinRow[]): ClassRuleWithClasses[] {
 				name: r.className,
 				kind: r.classKind as ClassKind,
 				pseudo: r.classPseudo,
+				cascadeOrder: r.classOrder ?? 0,
 			})
 		}
 	}

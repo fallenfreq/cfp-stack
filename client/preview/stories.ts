@@ -424,6 +424,29 @@ export const stories: Story[] = [
 		],
 	},
 	{
+		id: 'modifier-wins',
+		title: 'Modifiers beat what they modify',
+		notes: 'Split: the short item sits at the bottom (sl-align-y-end beats sl-split’s own start alignment). Cover: the content sits at the top, not centred. Card: sf-size-2xs gives tight padding over sf-depth-1’s default.',
+		maxWidth: '360px',
+		render: () => [
+			h('div', { class: 'sl-stack sf-gap-md', style: 'padding: 16px' }, [
+				h('div', { class: 'sl-split sl-align-y-end sf-gap-sm sf-depth-1' }, [
+					h('span', { class: 'sf-bg-primary-5' }, 'Short'),
+					h('p', 'A taller item that wraps over several lines so the row has height.'),
+				]),
+				h(
+					'div',
+					{
+						class: 'sl-cover sl-align-y-start sf-depth-1',
+						style: '--sl-cover-min: 8rem',
+					},
+					[h('p', 'At the top of the cover.')],
+				),
+				h('div', { class: 'sf-depth-1 sf-size-2xs' }, 'Tight card padding.'),
+			]),
+		],
+	},
+	{
 		id: 'stackable-sheet',
 		title: 'StackableSheet',
 		notes: 'Desktop layout inside a framed box (transform makes the fixed sheet sit in the frame). The X sits in its own row at the top right, is a real button (tab to it), and stays put while the body scrolls. The long heading wraps below the X instead of running under it.',

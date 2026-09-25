@@ -55,6 +55,8 @@ export async function emitStylesheet(db: Db): Promise<string> {
 		emitUtilityLayer(buckets),
 		emitRichLayer('sf-state', themesList, rootTheme, rulesByLayer),
 		emitRichLayer('sl-layout', themesList, rootTheme, rulesByLayer),
+		// Hand-written blocks come after the DB rules of their layer, so they sit
+		// above every cascade_order at equal specificity.
 		SL_OBJECT,
 		emitCollapseLayer(collapseThresholds),
 		emitEditorLayer(buckets),
@@ -80,9 +82,10 @@ export async function getStylesheet(db: Db): Promise<CachedCss> {
 
 // Signature for cache + ETag. Captures every change path that affects the
 // generated CSS: theme add/remove (themeCount), token add/remove
-// (tokenCount), rule add/remove (ruleCount), vocabulary add/remove
-// (vocabCount), and any theme-scoped value edit (themeMax — bumped by
-// `touchTheme` from token/rule mutators).
+// (tokenCount), rule add/remove (ruleCount), vocabulary add/remove/edit
+// (vocabCount, vocabMax — kind and cascade_order change emit), and any
+// theme-scoped value edit (themeMax — bumped by `touchTheme` from
+// token/rule mutators).
 export async function themeSignature(db: Db): Promise<string> {
 	const [themeAgg, tokenAgg, vocabAgg, ruleAgg, collapseThresholdAgg] = await Promise.all([
 		db
@@ -90,7 +93,10 @@ export async function themeSignature(db: Db): Promise<string> {
 			.from(themes)
 			.get(),
 		db.select({ count: count() }).from(themeTokens).get(),
-		db.select({ count: count() }).from(classVocabulary).get(),
+		db
+			.select({ max: max(classVocabulary.updatedAt), count: count() })
+			.from(classVocabulary)
+			.get(),
 		db.select({ count: count() }).from(classRules).get(),
 		db
 			.select({ max: max(collapseThresholds.updatedAt), count: count() })
@@ -103,8 +109,9 @@ export async function themeSignature(db: Db): Promise<string> {
 		throw new Error('themeSignature: aggregate query returned no row')
 
 	const maxMs = themeAgg.max === null ? 0 : themeAgg.max.getTime()
+	const vocabMs = vocabAgg.max === null ? 0 : vocabAgg.max.getTime()
 	const collapseMs = collapseThresholdAgg.max === null ? 0 : collapseThresholdAgg.max.getTime()
-	return `${maxMs}.${themeAgg.count}.${tokenAgg.count}.${vocabAgg.count}.${ruleAgg.count}.${collapseMs}.${collapseThresholdAgg.count}`
+	return `${maxMs}.${themeAgg.count}.${tokenAgg.count}.${vocabMs}.${vocabAgg.count}.${ruleAgg.count}.${collapseMs}.${collapseThresholdAgg.count}`
 }
 
 // ─── Header ─────────────────────────────────────────────────────────────
@@ -256,8 +263,13 @@ interface CssProp {
 	property: string
 	value: string
 }
-type LayerRules = Map<string, Map<string, CssProp[]>>
-// themeId → selector → properties
+interface SelectorBlock {
+	// Highest cascade_order among the selector's classes — sorts the block within its layer.
+	order: number
+	props: CssProp[]
+}
+type LayerRules = Map<string, Map<string, SelectorBlock>>
+// themeId → selector → block
 
 function groupRulesByLayer(rules: ClassRuleWithClasses[]): Map<Layer, LayerRules> {
 	const out = new Map<Layer, LayerRules>()
@@ -278,13 +290,13 @@ function groupRulesByLayer(rules: ClassRuleWithClasses[]): Map<Layer, LayerRules
 			layerMap.set(rule.themeId, themeMap)
 		}
 
-		let props = themeMap.get(selector)
-		if (!props) {
-			props = []
-			themeMap.set(selector, props)
+		let block = themeMap.get(selector)
+		if (!block) {
+			block = { order: Math.max(0, ...sorted.map((c) => c.cascadeOrder)), props: [] }
+			themeMap.set(selector, block)
 		}
 
-		props.push({ property: rule.cssProperty, value: rule.value })
+		block.props.push({ property: rule.cssProperty, value: rule.value })
 	}
 	return out
 }
@@ -347,26 +359,34 @@ function emitRichLayer(
 	let body = ''
 
 	const rootRules = layerMap.get(rootTheme.id)
-	if (rootRules) body += emitThemeBlocks(rootRules, '')
+	if (rootRules) body += emitThemeBlocks(rootRules, '\t')
 
+	// Theme rules are scoped rather than prefixed: @scope adds no specificity, so a
+	// theme restyles a class without outranking root compounds, and the nearest
+	// theme wins when themes nest. :scope is included — the element carrying the
+	// theme class is themed too.
 	for (const theme of themesList) {
 		if (theme.isRoot) continue
 		const themeRules = layerMap.get(theme.id)
 		if (!themeRules) continue
-		body += emitThemeBlocks(themeRules, `.${theme.activationClass} `)
+		body += `\t@scope (.${theme.activationClass}) {\n${emitThemeBlocks(themeRules, '\t\t')}\t}\n`
 	}
 
 	if (body.length === 0) return ''
 	return `@layer ${layer} {\n${body}}\n`
 }
 
-function emitThemeBlocks(rules: Map<string, CssProp[]>, selectorPrefix: string): string {
+// Within a layer, equal-specificity ties go to the later rule: sort by cascade_order,
+// then alphabetically so unordered classes keep a stable, deterministic output.
+function emitThemeBlocks(rules: Map<string, SelectorBlock>, indent: string): string {
 	let out = ''
-	const sorted = [...rules.entries()].sort(([a], [b]) => a.localeCompare(b))
-	for (const [sel, props] of sorted) {
-		out += `\t${selectorPrefix}${sel} {\n`
-		for (const { property, value } of props) out += `\t\t${property}: ${value};\n`
-		out += '\t}\n'
+	const sorted = [...rules.entries()].sort(
+		([a, ba], [b, bb]) => ba.order - bb.order || a.localeCompare(b),
+	)
+	for (const [sel, { props }] of sorted) {
+		out += `${indent}${sel} {\n`
+		for (const { property, value } of props) out += `${indent}\t${property}: ${value};\n`
+		out += `${indent}}\n`
 	}
 	return out
 }

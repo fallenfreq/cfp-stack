@@ -227,7 +227,13 @@ interface VocabSpec {
 	kind: ClassKind
 	pseudo?: string | null
 	description?: string
+	// Tie-break within a layer: higher wins over equal-specificity classes. Set it on
+	// modifiers so they beat what they modify, whatever the names. Default 0.
+	cascadeOrder?: number
 }
+
+// Modifiers that must win ties against the classes they modify.
+const MODIFIER_ORDER = 10
 
 const VOCABULARY: VocabSpec[] = [
 	// Depth bundles
@@ -259,12 +265,37 @@ const VOCABULARY: VocabSpec[] = [
 	// Size bundles — form-factor scale. Theme picks which properties express each step;
 	// this theme spends size on --sf-padding. Shape stays out — border-radius comes from
 	// the element's own rule (bare <button>) or an explicit sf-radius-* utility.
-	{ name: 'sf-size-2xs', kind: 'bundle', description: 'Very tight — breadcrumb, dense chip' },
-	{ name: 'sf-size-xs', kind: 'bundle', description: 'Compact — icon button, small tag' },
-	{ name: 'sf-size-sm', kind: 'bundle', description: 'Small — small button' },
-	{ name: 'sf-size-md', kind: 'bundle', description: 'Standard density' },
-	{ name: 'sf-size-lg', kind: 'bundle', description: 'Large — featured tile' },
-	{ name: 'sf-size-xl', kind: 'bundle', description: 'Hero scale' },
+	{
+		name: 'sf-size-2xs',
+		kind: 'bundle',
+		cascadeOrder: MODIFIER_ORDER,
+		description: 'Very tight — breadcrumb, dense chip',
+	},
+	{
+		name: 'sf-size-xs',
+		kind: 'bundle',
+		cascadeOrder: MODIFIER_ORDER,
+		description: 'Compact — icon button, small tag',
+	},
+	{
+		name: 'sf-size-sm',
+		kind: 'bundle',
+		cascadeOrder: MODIFIER_ORDER,
+		description: 'Small — small button',
+	},
+	{
+		name: 'sf-size-md',
+		kind: 'bundle',
+		cascadeOrder: MODIFIER_ORDER,
+		description: 'Standard density',
+	},
+	{
+		name: 'sf-size-lg',
+		kind: 'bundle',
+		cascadeOrder: MODIFIER_ORDER,
+		description: 'Large — featured tile',
+	},
+	{ name: 'sf-size-xl', kind: 'bundle', cascadeOrder: MODIFIER_ORDER, description: 'Hero scale' },
 
 	// Element markers — class analog of a bare HTML element rule. The class itself
 	// sets nothing; the theme decorates it the same way it decorates <button> or <nav>.
@@ -540,6 +571,7 @@ const VOCABULARY: VocabSpec[] = [
 	{
 		name: 'sl-inset-line',
 		kind: 'layout',
+		cascadeOrder: MODIFIER_ORDER,
 		description:
 			'Content starts on the inset line: side padding equals the margin of the inset it sits in, or the page margin outside any inset. Use on something whose box spans the full width (a bleeding child, a screen-wide bar or scroll area), with no padded box in between.',
 	},
@@ -552,29 +584,34 @@ const VOCABULARY: VocabSpec[] = [
 	{
 		name: 'sl-align-y-start',
 		kind: 'layout',
+		cascadeOrder: MODIFIER_ORDER,
 		description:
 			'Aligns content to the start of the block axis (top in LTR). Composable with any grid/flex primitive (sl-cover, sl-stack).',
 	},
 	{
 		name: 'sl-align-y-center',
 		kind: 'layout',
+		cascadeOrder: MODIFIER_ORDER,
 		description: 'Centres content on the block axis. Composable with any grid/flex primitive.',
 	},
 	{
 		name: 'sl-align-y-end',
 		kind: 'layout',
+		cascadeOrder: MODIFIER_ORDER,
 		description:
 			'Aligns content to the end of the block axis (bottom in LTR). Composable with any grid/flex primitive.',
 	},
 	{
 		name: 'sl-align-x-start',
 		kind: 'layout',
+		cascadeOrder: MODIFIER_ORDER,
 		description:
 			'Aligns content to the start of the inline axis (left in LTR). Grid-based; on flex containers use justify-content directly (limitation).',
 	},
 	{
 		name: 'sl-align-x-end',
 		kind: 'layout',
+		cascadeOrder: MODIFIER_ORDER,
 		description:
 			'Aligns content to the end of the inline axis (right in LTR). Grid-based; on flex containers use justify-content directly (limitation).',
 	},
@@ -716,9 +753,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-1'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	// Chrome classes both set --sf-padding (card-scale default) AND consume it. sf-size-*
 	// worn on the same element overrides via cascade — same layer, same specificity, sf-size
-	// wins by source order (its selector "sf-size-*" sorts after chrome-class selectors like
-	// "sf-depth-*", "button.sf", "sf-field" in the generator's alphabetic emit). This
-	// dependency on alphabetic ordering is fragile long-term — see [[project-seed-rule-order]].
+	// wins through its cascadeOrder (MODIFIER_ORDER), which emits it after sf-depth-*.
 	// Tight consumers (tooltips, drag handles, floating toolbars) opt in via sf-size-2xs /
 	// sf-size-xs. Flush-content containers opt out via sf-flush. Node-view-wrapper reset
 	// zeros --sf-padding to fence inheritance across primitive boundaries; a chrome class
@@ -957,11 +992,13 @@ const ROOT_RULES: RuleSpec[] = [
 	// its edges. Relies on the theme contract that chrome padding goes through --sf-padding,
 	// which these boxes set on themselves, so nothing inherited is read. A new
 	// padding-owning class needs its own entry here.
-	...(['sf-depth-1', 'sf-depth-2', 'sf-depth-3'] as const).map((depth) => ({
-		classNames: [depth, 'sl-inset'],
-		cssProperty: '--sfx-inset-margin',
-		value: 'var(--sf-padding, 0px)',
-	})),
+	...(['sf-depth-1', 'sf-depth-2', 'sf-depth-3'] as const).map(
+		(depth): RuleSpec => ({
+			classNames: [depth, 'sl-inset'],
+			cssProperty: '--sfx-inset-margin',
+			value: 'var(--sf-padding, 0px)',
+		}),
+	),
 	// An inset that actually bleeds has the parent's edges, so the parent's line carries on
 	// through it (a coloured band keeps the page line, not its own padding). Written from
 	// the parent (0-3-0) so it only applies where the bleed takes effect and beats the
@@ -974,8 +1011,9 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 
 	// sl-inset-line — content starts on the inset line. Layout layer, so it beats chrome
-	// padding on the same element; top/bottom padding stays. Pinned edges win: the
-	// sl-scroll-*:has(.sl-pin-*) rules (0-2-0) beat this (0-1-0).
+	// padding on the same element, and its cascadeOrder beats sl-inset's own padding;
+	// top/bottom padding stays. Pinned edges win: the sl-scroll-*:has(.sl-pin-*) rules
+	// (0-2-0) beat this (0-1-0).
 	{
 		classNames: ['sl-inset-line'],
 		cssProperty: 'padding-inline',
@@ -990,9 +1028,10 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sl-cover'], cssProperty: 'min-height', value: 'var(--sl-cover-min, 100dvh)' },
 
 	// sl-align-y-* / sl-align-x-* — axis alignment overrides for any grid/flex primitive.
-	// Beats sl-cover's `place-items: center` shorthand via later source order in the same
-	// layer. On flex containers, align-y works; align-x uses justify-items which flex
-	// ignores — for flex justify overrides use component-scoped justify-content.
+	// Beats the primitive's own alignment (sl-cover's place-items, sl-split/sl-cluster's
+	// align-items) through its cascadeOrder. On flex containers, align-y works; align-x
+	// uses justify-items which flex ignores — for flex justify overrides use
+	// component-scoped justify-content.
 	{ classNames: ['sl-align-y-start'], cssProperty: 'align-items', value: 'start' },
 	{ classNames: ['sl-align-y-center'], cssProperty: 'align-items', value: 'center' },
 	{ classNames: ['sl-align-y-end'], cssProperty: 'align-items', value: 'end' },

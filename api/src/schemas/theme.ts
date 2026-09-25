@@ -42,12 +42,19 @@ export const themeTokens = sqliteTable(
 // What sf-/sl- classes are admitted. `kind` drives layer assignment and
 // canonical class ordering inside compound selectors. `pseudo` is
 // intrinsic to state classes (e.g., sf-on-hover carries `:hover`).
+// `cascade_order` breaks ties between classes of equal specificity in the same
+// layer: higher is emitted later and wins (a modifier beats what it modifies).
+// It never crosses layers and never beats a more specific selector. Global and
+// maintainer-owned — themes can't reorder what classes mean.
 
 export const classVocabulary = sqliteTable('class_vocabulary', {
 	name: text('name', { length: 128 }).primaryKey(),
 	kind: text('kind', { length: 32 }).notNull(),
 	pseudo: text('pseudo', { length: 32 }),
 	description: text('description', { length: 512 }),
+	cascadeOrder: integer('cascade_order').notNull().default(0),
+	// Nullable so the column can be added to existing rows; the CSS signature reads max().
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 })
 
 // ─── Class rules + junction ──────────────────────────────────────────────
