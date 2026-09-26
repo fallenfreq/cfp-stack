@@ -1,4 +1,4 @@
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 // Which item is open, kept in the address (?open=<slug>): back closes it, a copied link
@@ -16,6 +16,12 @@ export const useOpenItem = () => {
 	// a copied link would otherwise leave the site.
 	let openedHere = false
 
+	// Going back takes a moment; a second close in that moment would remove `open` again.
+	let closing = false
+	watch(openSlug, () => {
+		closing = false
+	})
+
 	const open = (slug: string) => {
 		if (openSlug.value === slug) return
 		const query = { ...route.query, open: slug }
@@ -29,7 +35,8 @@ export const useOpenItem = () => {
 	}
 
 	const close = () => {
-		if (!openSlug.value) return
+		if (!openSlug.value || closing) return
+		closing = true
 		if (openedHere) {
 			openedHere = false
 			router.back()

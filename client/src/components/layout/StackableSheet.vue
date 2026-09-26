@@ -6,7 +6,7 @@
 			class="sheet sl-stack sf-depth-3 sf-size-lg"
 			role="dialog"
 			aria-modal="false"
-			:aria-label="label"
+			:aria-labelledby="label ? titleId : undefined"
 			tabindex="-1"
 			:class="
 				isBelowThreshold
@@ -17,7 +17,10 @@
 		>
 			<!-- Top row stays put while the body scrolls, so the close control never
 			     scrolls away or covers content. -->
-			<div class="sheet-bar sl-cluster">
+			<div class="sheet-bar sl-cluster sf-gap-sm">
+				<p v-if="label" :id="titleId" class="sheet-title sf-text-sm sf-loudness-1">
+					{{ label }}
+				</p>
 				<SfIconButton
 					icon="x"
 					tooltip="Close"
@@ -36,7 +39,7 @@
 <script setup lang="ts">
 import { useCollapseBreakpoint } from '@/composables/useCollapseBreakpoint'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, useId, watch } from 'vue'
 const sheetStore = useStackableSheetStore()
 const { isBelowThreshold } = useCollapseBreakpoint('md')
 
@@ -47,7 +50,8 @@ const props = withDefaults(
 		// Given: the parent decides when the sheet shows and handles `close`.
 		// Left out: the shared sheet store does.
 		open?: boolean | null
-		// The sheet's name for screen readers, e.g. the title of what it shows.
+		// The sheet's name, e.g. the title of what it shows: a small line in the top row,
+		// and what screen readers announce.
 		label?: string | undefined
 	}>(),
 	{ open: null },
@@ -57,7 +61,11 @@ const emit = defineEmits<{ close: [] }>()
 
 const isOpen = computed(() => props.open ?? sheetStore.isSheetOpen)
 
+const titleId = useId()
+
 const close = () => {
+	// Already closing (double click, or close then Escape during the slide-out).
+	if (!isOpen.value) return
 	if (props.open === null) sheetStore.closeSheet()
 	emit('close')
 }
@@ -99,6 +107,12 @@ onMounted(() => {
 	/* Flex rows right-align with justify-content (sl-align-x-* is grid-only). */
 	.sheet-bar {
 		justify-content: end;
+	}
+
+	/* The title takes the row's free space, keeping the close button on the right. */
+	.sheet-title {
+		flex: 1;
+		min-width: 0;
 	}
 
 	/* The body takes the rest of the sheet's height and scrolls inside it. */

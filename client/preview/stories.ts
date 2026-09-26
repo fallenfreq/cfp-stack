@@ -545,7 +545,7 @@ export const stories: Story[] = [
 	{
 		id: 'stackable-sheet',
 		title: 'StackableSheet',
-		notes: 'Desktop layout inside a framed box (transform makes the fixed sheet sit in the frame). The X sits in its own row at the top right, is a real button (tab to it), and stays put while the body scrolls. The long heading wraps below the X instead of running under it.',
+		notes: 'Desktop layout inside a framed box (transform makes the fixed sheet sit in the frame). The X sits in its own row at the top right, is a real button (tab to it), and stays put while the body scrolls. The long heading wraps below the X instead of running under it. The small muted line left of the X is the sheet’s title (its label), also what screen readers announce.',
 		render: () => {
 			useStackableSheetStore().isSheetOpen = true
 			return h(
@@ -554,17 +554,23 @@ export const stories: Story[] = [
 					style: 'position: relative; height: 360px; transform: translateZ(0); overflow: hidden; outline: 1px dotted #8888',
 				},
 				[
-					h(StackableSheet, { mobileHeight: '50%', desktopWidth: '65%' }, () =>
-						h('div', { class: 'sl-stack sf-gap-sm' }, [
-							h(
-								'h3',
-								{ class: 'sf-text-xl' },
-								'Marker details with a fairly long title',
-							),
-							...Array.from({ length: 12 }, (_, i) =>
-								h('p', `Line ${i + 1} of the sheet body — scroll to see the rest.`),
-							),
-						]),
+					h(
+						StackableSheet,
+						{ mobileHeight: '50%', desktopWidth: '65%', label: 'Shop redesign' },
+						() =>
+							h('div', { class: 'sl-stack sf-gap-sm' }, [
+								h(
+									'h3',
+									{ class: 'sf-text-xl' },
+									'Marker details with a fairly long title',
+								),
+								...Array.from({ length: 12 }, (_, i) =>
+									h(
+										'p',
+										`Line ${i + 1} of the sheet body — scroll to see the rest.`,
+									),
+								),
+							]),
 					),
 				],
 			)
