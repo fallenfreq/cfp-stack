@@ -275,7 +275,7 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 	</div>
 
 	<!-- StackableSheet with marker details -->
-	<StackableSheet mobile-height="50%" desktop-width="65%">
+	<StackableSheet mobile-height="50%" desktop-width="65%" label="Marker details">
 		<div v-if="sheetContent?.id === 'mapMarker'">
 			<h3 class="text-3xl font-bold">Marker Details</h3>
 			<pre>

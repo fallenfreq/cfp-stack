@@ -32,6 +32,7 @@
 		/>
 		<StackableSheet
 			:open="openSlug !== null"
+			:label="openPage?.name || shownSlug || undefined"
 			mobile-height="85%"
 			desktop-width="50%"
 			@close="close"

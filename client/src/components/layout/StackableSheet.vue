@@ -2,12 +2,18 @@
 	<Transition appear name="slide">
 		<div
 			v-if="isOpen"
+			ref="sheetEl"
 			class="sheet sl-stack sf-depth-3 sf-size-lg"
+			role="dialog"
+			aria-modal="false"
+			:aria-label="label"
+			tabindex="-1"
 			:class="
 				isBelowThreshold
 					? ['sheet--mobile', 'sf-is-edge-bottom']
 					: ['sheet--desktop', 'sf-is-edge-top', 'sf-is-edge-right', 'sf-is-edge-bottom']
 			"
+			@keydown.esc="close"
 		>
 			<!-- Top row stays put while the body scrolls, so the close control never
 			     scrolls away or covers content. -->
@@ -30,7 +36,7 @@
 <script setup lang="ts">
 import { useCollapseBreakpoint } from '@/composables/useCollapseBreakpoint'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 const sheetStore = useStackableSheetStore()
 const { isBelowThreshold } = useCollapseBreakpoint('md')
 
@@ -41,6 +47,8 @@ const props = withDefaults(
 		// Given: the parent decides when the sheet shows and handles `close`.
 		// Left out: the shared sheet store does.
 		open?: boolean | null
+		// The sheet's name for screen readers, e.g. the title of what it shows.
+		label?: string | undefined
 	}>(),
 	{ open: null },
 )
@@ -54,13 +62,30 @@ const close = () => {
 	emit('close')
 }
 
-// Escape closes the sheet. No focus trap: the sheet doesn't block the page behind it.
-const onKeyDown = (e: KeyboardEvent) => {
-	if (e.key === 'Escape' && isOpen.value) close()
-}
+// Focus moves into the sheet when it opens and back to where it came from when it
+// closes — but only if it's still in the sheet, so it never pulls focus from elsewhere.
+// No focus trap: the sheet doesn't block the page behind it. Escape (on the sheet)
+// closes it.
+const sheetEl = ref<HTMLElement | null>(null)
+let returnFocusTo: HTMLElement | null = null
 
-onMounted(() => document.addEventListener('keydown', onKeyDown))
-onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
+watch(isOpen, async (open) => {
+	if (open) {
+		const active = document.activeElement
+		returnFocusTo = active instanceof HTMLElement && active !== document.body ? active : null
+		await nextTick()
+		sheetEl.value?.focus()
+		return
+	}
+	const focusInSheet = sheetEl.value?.contains(document.activeElement) ?? false
+	if (focusInSheet && returnFocusTo?.isConnected) returnFocusTo.focus()
+	returnFocusTo = null
+})
+
+// Open from the start (e.g. a copied link): nothing to return to, just move focus in.
+onMounted(() => {
+	if (isOpen.value) sheetEl.value?.focus()
+})
 </script>
 
 <style scoped>
