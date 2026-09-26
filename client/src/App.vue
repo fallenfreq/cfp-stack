@@ -3,15 +3,30 @@ import { RouterView } from 'vue-router'
 </script>
 
 <template>
-	<header class="m-3">
-		<vuesticNavBar />
-	</header>
+	<div class="app-frame">
+		<header class="m-3">
+			<vuesticNavBar />
+		</header>
 
-	<main class="flex-1 justify-center">
-		<RouterView />
-	</main>
+		<main>
+			<RouterView />
+		</main>
 
-	<BasicFooter />
+		<BasicFooter />
+	</div>
 </template>
 
-<style scoped></style>
+<style scoped>
+@layer ui {
+	/* Header, page and footer fill at least the screen; the page takes the spare height so
+	   the footer sits at the bottom on short pages. Plain layout, no gap: they sit flush. */
+	.app-frame {
+		display: flex;
+		flex-direction: column;
+		min-height: 100dvh;
+	}
+	main {
+		flex: 1;
+	}
+}
+</style>

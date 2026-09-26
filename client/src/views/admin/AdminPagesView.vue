@@ -4,7 +4,13 @@
 			<SfIconButton icon="plus" tooltip="New page" @click="onNewPage" />
 		</template>
 
-		<VaInput v-model="search" placeholder="Search by name or slug…" class="w-full" clearable />
+		<input
+			v-model="search"
+			type="search"
+			class="sf sf-field sf-on-focus"
+			placeholder="Search by name or slug…"
+			aria-label="Search pages"
+		>
 
 		<AdminList :loading="isPending" :empty="!filteredPages.length">
 			<template #header>
@@ -176,13 +182,15 @@ const onNewPage = async () => {
 </script>
 
 <style scoped>
-/* Arrangement comes from sl-cluster, chrome from the sf classes on the button. */
-.tags-cell {
-	min-width: 48px;
-}
+@layer ui {
+	/* Arrangement comes from sl-cluster, chrome from the sf classes on the button. */
+	.tags-cell {
+		min-width: 48px;
+	}
 
-.tags-cell__popover {
-	padding: var(--sf-spacing-sm);
-	min-width: 220px;
+	.tags-cell__popover {
+		padding: var(--sf-spacing-sm);
+		min-width: 220px;
+	}
 }
 </style>

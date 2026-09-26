@@ -4,15 +4,14 @@
 			&copy; {{ year }} somefreq. All rights reserved.
 		</small>
 		<div class="sl-cluster sf-gap-md">
-			<!-- <FontAwesomeIcon :icon="faFacebook" class="cursor-pointer" /> -->
 			<a
 				href="https://github.com/fallenfreq"
 				target="_blank"
 				rel="noopener noreferrer nofollow"
+				aria-label="GitHub (opens in new tab)"
 			>
 				<FontAwesomeIcon size="xl" :icon="faGithub" />
 			</a>
-			<!-- <FontAwesomeIcon :icon="faInstagram" class="cursor-pointer" /> -->
 		</div>
 		<DarkModeSwitch />
 	</footer>
@@ -23,8 +22,6 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const year = new Date().getFullYear()
-// import { faFacebook } from '@fortawesome/free-brands-svg-icons'
-// import { faInstagram } from '@fortawesome/free-brands-svg-icons'
 </script>
 
 <style scoped>

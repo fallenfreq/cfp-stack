@@ -1,9 +1,8 @@
 <template>
-	<div class="flex justify-center pt-5">
-		<div>
-			<h1 class="font-bold">Contact</h1>
-			<p>Mobile: 07572377622</p>
-			<p>Email: michael@somefreq.com</p>
-		</div>
-	</div>
+	<SfPageShell title="Contact">
+		<address class="sl-stack sf-gap-xs">
+			<p>Mobile: <a href="tel:+447572377622">07572377622</a></p>
+			<p>Email: <a href="mailto:michael@somefreq.com">michael@somefreq.com</a></p>
+		</address>
+	</SfPageShell>
 </template>

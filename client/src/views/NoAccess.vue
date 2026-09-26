@@ -1,6 +1,5 @@
 <template>
-	<div class="flex-grow pt-5">
-		<h1>Access denied</h1>
-		<h2>You don't have the role "admin" in your ZITADEL project.</h2>
-	</div>
+	<SfPageShell title="Access denied">
+		<p class="sf-loudness-1">You don't have the "admin" role in your ZITADEL project.</p>
+	</SfPageShell>
 </template>
