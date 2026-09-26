@@ -3,6 +3,7 @@
 import AccountHeader from '@/components/account/AccountHeader.vue'
 import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
+import BasicCard from '@/components/BasicCard.vue'
 import CollectionGrid from '@/components/CollectionGrid.vue'
 import NodePath from '@/components/editor/NodePath.vue'
 import ToolbarAttrRow from '@/components/editor/toolbar/ToolbarAttrRow.vue'
@@ -461,6 +462,21 @@ export const stories: Story[] = [
 				h('div', { class: 'sl-cluster sl-scroll-x sf-gap-2xs' }, items),
 			])
 		},
+	},
+	{
+		id: 'basic-card',
+		title: 'Basic card',
+		notes: 'Left: a card with a picture, cut to the rounded corners. Right: no picture — the faded logo centred. Both keep a 4:3 box.',
+		maxWidth: '520px',
+		render: () =>
+			h('div', { class: 'sl-grid sf-gap-md', style: '--sl-min: 14rem' }, [
+				h(BasicCard, {
+					imageUrl:
+						"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g'%3E%3Cstop offset='0' stop-color='%23c06'/%3E%3Cstop offset='1' stop-color='%2306c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='300' fill='url(%23g)'/%3E%3C/svg%3E",
+					title: 'With a picture',
+				}),
+				h(BasicCard, { imageUrl: '', title: 'Coming Soon!' }),
+			]),
 	},
 	{
 		id: 'collection-grid',

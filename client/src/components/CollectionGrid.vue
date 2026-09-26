@@ -5,6 +5,7 @@
 			:key="index"
 			:image-url="item.imageUrl"
 			:title="item.title"
+			:to="item.to"
 			@click="() => emit('selectItem', item)"
 		/>
 	</div>

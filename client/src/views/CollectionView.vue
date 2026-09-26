@@ -28,7 +28,6 @@
 		<CollectionGrid
 			:items="gridItems"
 			:placeholder-title="pagesPending ? 'Loading...' : 'Coming Soon!'"
-			@select-item="onSelectItem"
 		/>
 	</SfPageShell>
 </template>
@@ -41,10 +40,9 @@ import type { GridItem } from '@/utils/collectionPlaceholders'
 import { paramString } from '@/utils/router'
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const router = useRouter()
 const collectionSlug = computed(() => paramString(route.params.collectionSlug))
 const isAdmin = useIsAdmin()
 
@@ -66,10 +64,4 @@ const gridItems = computed<GridItem[]>(() =>
 )
 
 const autoTagQuery = computed(() => (tag.value ? { autoTag: tag.value.tagId } : {}))
-
-const onSelectItem = (item: GridItem) => {
-	if (item.slug) {
-		router.push({ name: 'page-preview', params: { slug: item.slug as string } })
-	}
-}
 </script>
