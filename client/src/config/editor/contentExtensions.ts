@@ -81,12 +81,8 @@ export function getContentExtensions({
 		StarterKit.configure({
 			codeBlock: false,
 			heading: false,
-			bulletList: { HTMLAttributes: { class: 'list-disc' } },
-			orderedList: { HTMLAttributes: { class: 'list-decimal' } },
-			listItem: { HTMLAttributes: { class: '' } },
-			blockquote: {
-				HTMLAttributes: { class: 'border-l-8 border-primary sf-depth-1 p-4' },
-			},
+			// A quote sits on a card surface; the theme draws the quote stripe (blockquote.sf).
+			blockquote: { HTMLAttributes: { class: 'sf sf-depth-1' } },
 			link: { openOnClick: 'whenNotEditable' },
 			// Inline code opts into the theme's code look (code.sf).
 			code: { HTMLAttributes: { class: 'sf' } },
@@ -108,7 +104,8 @@ export function getContentExtensions({
 		AllowAttributesExtension,
 		TaskList.configure(),
 		CustomTaskItem.configure({
-			HTMLAttributes: { class: 'flex items-start' },
+			// Checkbox beside the item's content: fixed side + flexible side.
+			HTMLAttributes: { class: 'sl-split sf-gap-md' },
 			nested: true,
 		}),
 		codeBlockNodeView

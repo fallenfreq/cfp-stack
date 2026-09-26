@@ -2264,6 +2264,16 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-font-mono)',
 	},
 
+	// ─── Blockquote element ───────────────────────────────────────────────────
+	// A quote: <blockquote class="sf">. The stripe down its leading edge is what's unique
+	// to quotes; surface and padding come from whatever depth it wears.
+	{
+		elementSelector: 'blockquote',
+		classNames: ['sf'],
+		cssProperty: 'border-inline-start',
+		value: 'calc(var(--sf-stroke-3) * 2) solid rgb(var(--sf-primary))',
+	},
+
 	// ─── Pre element ──────────────────────────────────────────────────────────
 	// A code block: <pre class="sf">. Theme gives it padding, corners and the mono font;
 	// the code inside inherits the font (otherwise the browser's own monospace wins).
