@@ -3,7 +3,6 @@ import { publicProcedure, router } from '../config/trpc.js'
 import { keysRouter } from './keys/router.js'
 import { markersRouter } from './markers/router.js'
 import { adminPagesRouter, publicPagesRouter } from './pages/router.js'
-import { portfolioRouter } from './portfolio/router.js'
 import { secureRouter } from './secure/router.js'
 import { seedRouter } from './seed/router.js'
 import { adminTagsRouter, publicTagsRouter } from './tags/router.js'
@@ -18,8 +17,6 @@ const appRouter = router({
 	user: userRouter,
 
 	mapMarker: markersRouter,
-
-	portfolio: portfolioRouter,
 
 	publicPages: publicPagesRouter,
 

@@ -6,7 +6,6 @@
 			:image-url="item.imageUrl"
 			:title="item.title"
 			:to="item.to"
-			@click="() => emit('selectItem', item)"
 		/>
 	</div>
 </template>
@@ -18,10 +17,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 const props = defineProps<{
 	items: GridItem[]
 	placeholderTitle?: string
-}>()
-
-const emit = defineEmits<{
-	selectItem: [item: GridItem]
 }>()
 
 const gridEl = ref<HTMLElement | null>(null)

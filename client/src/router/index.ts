@@ -18,22 +18,9 @@ const router = createRouter({
 			// which is lazy-loaded when the route is visited.
 			component: () => import('../views/ContactView.vue'),
 		},
-		{
-			path: '/portfolio/branding',
-			name: 'portfolio-branding',
-			// route level code-splitting
-			// this generates a separate chunk (About.[hash].js) for this route
-			// which is lazy-loaded when the route is visited.
-			component: () => import('../views/PortfolioBranding.vue'),
-		},
-		{
-			path: '/portfolio/web-design',
-			name: 'portfolio-web-design',
-			// route level code-splitting
-			// this generates a separate chunk (About.[hash].js) for this route
-			// which is lazy-loaded when the route is visited.
-			component: () => import('../views/PortfolioWebDesign.vue'),
-		},
+		// The portfolios are collections now; the old addresses keep working.
+		{ path: '/portfolio/branding', redirect: '/c/branding' },
+		{ path: '/portfolio/web-design', redirect: '/c/web-design' },
 		{
 			path: '/account',
 			name: 'account',

@@ -252,11 +252,11 @@ const items = ref<MenuItem[]>([
 		title: 'Portfolio',
 		icon: 'dashboard',
 		children: [
-			createMenuItem({ title: 'Branding', icon: 'view_comfy', to: '/portfolio/branding' }),
+			createMenuItem({ title: 'Branding', icon: 'view_comfy', to: '/c/branding' }),
 			createMenuItem({
 				title: 'Web & App Design',
 				icon: 'view_comfy',
-				to: '/portfolio/web-design',
+				to: '/c/web-design',
 			}),
 		],
 	}),
