@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
 import { RouterView } from 'vue-router'
+
+// Code block colours on every page, not only in the editor.
+useSyntaxHighlighting()
 </script>
 
 <template>

@@ -2264,6 +2264,36 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-font-mono)',
 	},
 
+	// ─── Pre element ──────────────────────────────────────────────────────────
+	// A code block: <pre class="sf">. Theme gives it padding, corners and the mono font;
+	// the code inside inherits the font (otherwise the browser's own monospace wins).
+	// Colours come from the syntax-highlighting theme, not here.
+	{
+		elementSelector: 'pre',
+		classNames: ['sf'],
+		cssProperty: 'padding',
+		value: 'var(--sf-spacing-sm) var(--sf-spacing-md)',
+	},
+	{
+		elementSelector: 'pre',
+		classNames: ['sf'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-2)',
+	},
+	{
+		elementSelector: 'pre',
+		classNames: ['sf'],
+		cssProperty: 'font-family',
+		value: 'var(--sf-font-mono)',
+	},
+	{
+		elementSelector: 'pre',
+		classNames: ['sf'],
+		pseudo: ' code',
+		cssProperty: 'font-family',
+		value: 'inherit',
+	},
+
 	// span.sf-loudness-3 — text carriers at loudness-3 gain heavier weight.
 	// Scoped to span (not bare) so a loud card <div class="sf-loudness-3"> does not
 	// cascade bold onto every descendant. Extend to other text carriers (button, a,

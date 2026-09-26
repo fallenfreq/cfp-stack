@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="ts">
-import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
 import { useNodeViewInteractions } from '@/composables/editor/useNodeViewInteractions'
 import { getContentExtensions } from '@/config/editor/contentExtensions'
 import Commands from '@/editor/extensions/commands/commands.js'
@@ -36,8 +35,6 @@ import FloatingDragHandle from './FloatingDragHandle.vue'
 import FloatingToolbar from './FloatingToolbar.vue'
 import TiptapCodeBlock from './TiptapCodeBlock.vue'
 import ToolbarScrollHint from './ToolbarScrollHint.vue'
-
-useSyntaxHighlighting()
 
 const toolbarItems: ToolbarItem[] = defaultToolbarItems
 const dragHandleStore = useDragHandleStore()

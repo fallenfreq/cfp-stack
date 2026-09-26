@@ -88,6 +88,8 @@ export function getContentExtensions({
 				HTMLAttributes: { class: 'border-l-8 border-primary sf-depth-1 p-4' },
 			},
 			link: { openOnClick: 'whenNotEditable' },
+			// Inline code opts into the theme's code look (code.sf).
+			code: { HTMLAttributes: { class: 'sf' } },
 		}),
 		SfHeading,
 		Image,

@@ -1,32 +1,29 @@
 <template>
-	<NodeViewWrapper
-		contenteditable="true"
-		class="code-block"
-		:style="{ '--code-radius': codeRadius }"
-	>
-		<div
-			class="code-block-header hljs flex p-2 justify-end relative shadow-sm dark:shadow-black/50"
-		>
-			<select
-				v-model="selectedLanguage"
-				class="bg-transparent"
-				contenteditable="false"
-				:disabled="editorStore.isCodeView"
-			>
-				<option :value="null">Auto</option>
-				<option disabled>—</option>
-				<option v-for="(language, index) in languages" :key="index" :value="language">
-					{{ languagesName[index] }}
-				</option>
-			</select>
+	<NodeViewWrapper contenteditable="true" class="code-block">
+		<!-- The block itself matches the published page (pre.sf.hljs plus the node's own
+		     classes); the editor only adds the language picker above it. -->
+		<div class="sl-stack sf-gap-2xs">
+			<div class="code-block-header sl-cluster sf-gap-xs" contenteditable="false">
+				<select
+					v-model="selectedLanguage"
+					class="sf sf-field sf-is-contained sf-size-2xs sf-on-focus"
+					aria-label="Code language"
+					:disabled="editorStore.isCodeView"
+				>
+					<option :value="null">Auto</option>
+					<option disabled>—</option>
+					<option v-for="(language, index) in languages" :key="index" :value="language">
+						{{ languagesName[index] }}
+					</option>
+				</select>
+			</div>
+			<pre :class="['sf hljs', node.attrs.class]"><code><NodeViewContent /></code></pre>
 		</div>
-		<pre class="code-block-body hljs"><code><NodeViewContent /></code></pre>
 	</NodeViewWrapper>
 </template>
 
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
-import { getClassToken } from '@/utils/editor/classTokens'
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from '@tiptap/vue-3'
 import highlight from 'highlight.js'
 import { computed } from 'vue'
@@ -36,12 +33,6 @@ const props = defineProps<NodeViewProps>()
 const languages: string[] = props.extension.options.lowlight.listLanguages()
 const languagesName = languages.map((language) => {
 	return highlight.getLanguage(language)?.name?.split(',')[0]
-})
-
-const codeRadius = computed(() => {
-	const cls = typeof props.node.attrs.class === 'string' ? props.node.attrs.class : ''
-	const token = getClassToken(cls, 'sf-radius-')
-	return token ? `var(--sf-radius-${token})` : 'var(--sf-radius-2)'
 })
 
 const selectedLanguage = computed({
@@ -55,17 +46,10 @@ const selectedLanguage = computed({
 </script>
 
 <style scoped>
-pre {
-	padding: 0.75rem 1rem;
-}
-
-.code-block-header {
-	border-top-left-radius: var(--code-radius);
-	border-top-right-radius: var(--code-radius);
-}
-
-.code-block-body {
-	border-bottom-left-radius: var(--code-radius);
-	border-bottom-right-radius: var(--code-radius);
+@layer ui {
+	/* Flex rows right-align with justify-content (sl-align-x-* is grid-only). */
+	.code-block-header {
+		justify-content: end;
+	}
 }
 </style>
