@@ -14,7 +14,8 @@ const initials = computed(() => {
 
 <template>
 	<div class="sl-cluster sf-gap-md">
-		<div class="sf-avatar sf-variant-featured sf-text-2xl w-16 h-16 shrink-0">
+		<!-- The initials repeat the name beside them. -->
+		<div class="account-avatar sf-avatar sf-text-2xl" aria-hidden="true">
 			{{ initials }}
 		</div>
 		<div class="sl-stack sf-gap-2xs">
@@ -24,6 +25,18 @@ const initials = computed(() => {
 			<p v-if="profile.preferred_username" class="sf-text-sm sf-loudness-1">
 				@{{ profile.preferred_username }}
 			</p>
+			<p class="sf-text-sm sf-loudness-1">User ID: {{ profile.sub }}</p>
 		</div>
 	</div>
 </template>
+
+<style scoped>
+@layer ui {
+	/* Sized from its own letters, so it keeps its proportions with the text size. */
+	.account-avatar {
+		width: 2.5em;
+		height: 2.5em;
+		flex-shrink: 0;
+	}
+}
+</style>

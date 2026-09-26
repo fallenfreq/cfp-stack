@@ -1,5 +1,6 @@
 // Preview stories: real components rendered with sample props. Markup in slots mirrors the
 // real consumers (e.g. AdminPagesView) so the preview shows what the app renders.
+import AccountDetailsCard from '@/components/account/AccountDetailsCard.vue'
 import AccountHeader from '@/components/account/AccountHeader.vue'
 import EmailChangeCard from '@/components/account/EmailChangeCard.vue'
 import AdminList from '@/components/admin/AdminList.vue'
@@ -16,6 +17,17 @@ import SfPageShell from '@/components/ui/SfPageShell.vue'
 import SfStatusDisplay from '@/components/ui/SfStatusDisplay.vue'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import { h, type VNode } from 'vue'
+
+// EmailChangeCard reads its pending change from sessionStorage, which the server render
+// lacks. Profile sub '2' has a change pending, so it shows the code step.
+const stubSessionStorage = () => {
+	const store = new Map([['cfp_pending_email_2', 'ada@new.example']])
+	globalThis.sessionStorage ??= {
+		getItem: (k: string) => store.get(k) ?? null,
+		setItem: (k: string, v: string) => void store.set(k, v),
+		removeItem: (k: string) => void store.delete(k),
+	} as Storage
+}
 
 // SfTooltip only opens on hover/touch, which the static preview can't do. This builds its popup
 // with the real classes, data attributes and scoped CSS, placed flush against the trigger the way
@@ -241,18 +253,30 @@ export const stories: Story[] = [
 		],
 	},
 	{
-		id: 'account-header',
-		title: 'AccountHeader',
-		render: () =>
-			h(AccountHeader, {
-				profile: {
-					sub: '1',
-					name: 'Ada Lovelace',
-					given_name: 'Ada',
-					family_name: 'Lovelace',
-					preferred_username: 'ada',
-				} as never,
-			}),
+		id: 'account-view',
+		title: 'AccountView',
+		notes: "The account page's pieces: SfPageShell with AccountHeader in its header slot, then the two cards.",
+		maxWidth: '900px',
+		render: () => {
+			stubSessionStorage()
+			const profile = {
+				sub: '284719365024',
+				name: 'Ada Lovelace',
+				given_name: 'Ada',
+				family_name: 'Lovelace',
+				preferred_username: 'ada',
+				email: 'ada@example.com',
+				email_verified: true,
+				locale: 'en',
+			} as never
+			return h(SfPageShell, null, {
+				header: () => h(AccountHeader, { profile }),
+				default: () => [
+					h(AccountDetailsCard, { profile }),
+					h(EmailChangeCard, { profile }),
+				],
+			})
+		},
 	},
 	{
 		id: 'email-change-card',
@@ -260,13 +284,7 @@ export const stories: Story[] = [
 		notes: 'Idle (verified) and code-sent (unverified) states. The warning notice, a mismatched field (sf-is-error) and a busy button (sf-is-loading) only show mid-edit, so they are repeated below on their own.',
 		maxWidth: '640px',
 		render: () => {
-			// The card reads its pending change from sessionStorage, which the server render lacks.
-			const store = new Map([['cfp_pending_email_2', 'ada@new.example']])
-			globalThis.sessionStorage ??= {
-				getItem: (k: string) => store.get(k) ?? null,
-				setItem: (k: string, v: string) => void store.set(k, v),
-				removeItem: (k: string) => void store.delete(k),
-			} as Storage
+			stubSessionStorage()
 			const profile = (sub: string, verified: boolean) =>
 				({ sub, email: 'ada@example.com', email_verified: verified }) as never
 			return h('div', { class: 'sl-stack sf-gap-md' }, [
@@ -286,7 +304,7 @@ export const stories: Story[] = [
 					h(
 						'button',
 						{
-							class: 'sf sf-loudness-3 sf-variant-featured sf-on-hover sf-on-disabled sf-is-loading',
+							class: 'sf sf-loudness-3 sf-variant-primary sf-on-hover sf-on-disabled sf-is-loading',
 							disabled: true,
 							'aria-busy': 'true',
 						},

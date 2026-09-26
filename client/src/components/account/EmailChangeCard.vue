@@ -67,7 +67,7 @@ const mismatch = computed(() => !!confirmEmail.value && newEmail.value !== confi
 			<div class="sl-cluster sf-gap-sm">
 				<button
 					type="button"
-					class="sf sf-loudness-3 sf-variant-featured sf-on-hover sf-on-disabled"
+					class="sf sf-loudness-3 sf-variant-primary sf-on-hover sf-on-disabled"
 					:class="{ 'sf-is-loading': emailStatus === 'sending' }"
 					:aria-busy="emailStatus === 'sending'"
 					:disabled="emailStatus === 'sending' || !newEmail || newEmail !== confirmEmail"
@@ -96,7 +96,7 @@ const mismatch = computed(() => !!confirmEmail.value && newEmail.value !== confi
 				</label>
 				<button
 					type="button"
-					class="sf sf-loudness-3 sf-variant-featured sf-on-hover sf-on-disabled"
+					class="sf sf-loudness-3 sf-variant-primary sf-on-hover sf-on-disabled"
 					:class="{ 'sf-is-loading': emailStatus === 'verifying' }"
 					:aria-busy="emailStatus === 'verifying'"
 					:disabled="emailStatus === 'verifying' || !verificationCode"

@@ -379,6 +379,12 @@ const VOCABULARY: VocabSpec[] = [
 		description: 'Prominent, calls for attention',
 	},
 	{
+		name: 'sf-variant-primary',
+		kind: 'variant',
+		description:
+			"Primary colour role — the theme's brand colour, at any loudness (solid, tinted, text). Not a promotion claim; that's featured.",
+	},
+	{
 		name: 'sf-variant-danger',
 		kind: 'variant',
 		description: 'Danger role — destructive intent, error state, or reporting a problem/threat',
@@ -1669,6 +1675,7 @@ const ROOT_RULES: RuleSpec[] = [
 	// Variants — semantic colour only (text tint). Fill weight comes from loudness × variant
 	// compounds below. Bare variant with no loudness class = coloured text, no fill.
 	{ classNames: ['sf-variant-featured'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
+	{ classNames: ['sf-variant-primary'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
 	{ classNames: ['sf-variant-danger'], cssProperty: 'color', value: 'rgb(var(--sf-danger))' },
 	{ classNames: ['sf-variant-warning'], cssProperty: 'color', value: 'rgb(var(--sf-warning))' },
 	{ classNames: ['sf-variant-success'], cssProperty: 'color', value: 'rgb(var(--sf-success))' },
@@ -1676,6 +1683,11 @@ const ROOT_RULES: RuleSpec[] = [
 	// Loudness-1 × variant: dim the colour (muted text, no fill).
 	{
 		classNames: ['sf-loudness-1', 'sf-variant-featured'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-primary) / var(--sf-alpha-6))',
+	},
+	{
+		classNames: ['sf-loudness-1', 'sf-variant-primary'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-primary) / var(--sf-alpha-6))',
 	},
@@ -1703,7 +1715,17 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-primary) / var(--sf-alpha-2))',
 	},
 	{
+		classNames: ['sf-loudness-2', 'sf-variant-primary'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary) / var(--sf-alpha-2))',
+	},
+	{
 		classNames: ['sf-loudness-2', 'sf-variant-featured'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-primary) / var(--sf-alpha-5))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-primary'],
 		cssProperty: 'border',
 		value: '1px solid rgb(var(--sf-primary) / var(--sf-alpha-5))',
 	},
@@ -1713,7 +1735,17 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'none',
 	},
 	{
+		classNames: ['sf-loudness-2', 'sf-variant-primary'],
+		cssProperty: 'box-shadow',
+		value: 'none',
+	},
+	{
 		classNames: ['sf-loudness-2', 'sf-variant-featured'],
+		cssProperty: 'color',
+		value: 'inherit',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-primary'],
 		cssProperty: 'color',
 		value: 'inherit',
 	},
@@ -1770,7 +1802,17 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-primary))',
 	},
 	{
+		classNames: ['sf-loudness-3', 'sf-variant-primary'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
 		classNames: ['sf-loudness-3', 'sf-variant-featured'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_inverted))',
+	},
+	{
+		classNames: ['sf-loudness-3', 'sf-variant-primary'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
@@ -1915,7 +1957,17 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-primary) / 0.85)',
 	},
 	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-primary'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary) / 0.85)',
+	},
+	{
 		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-featured'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_inverted))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-primary'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
@@ -2336,6 +2388,11 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-primary))',
 	},
 	{
+		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-primary'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
 		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-danger'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-danger))',
@@ -2392,6 +2449,11 @@ const ROOT_RULES: RuleSpec[] = [
 	// Bare sf-avatar still works if a theme doesn't define these (graceful degradation).
 	{
 		classNames: ['sf-avatar', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-avatar', 'sf-variant-primary'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-primary))',
 	},

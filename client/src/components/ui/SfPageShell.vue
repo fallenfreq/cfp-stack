@@ -1,7 +1,10 @@
 <template>
 	<div class="page-shell sl-inset sf-gap-lg">
 		<div class="page-header sl-cluster sf-gap-sm">
-			<h1 class="sf-heading-1">{{ title }}</h1>
+			<!-- `header` replaces the plain title when a page needs more (e.g. an avatar). -->
+			<slot name="header">
+				<h1 class="sf-heading-1">{{ title }}</h1>
+			</slot>
 			<slot name="actions" />
 		</div>
 		<slot />
@@ -9,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{ title: string }>()
+defineProps<{ title?: string }>()
 </script>
 
 <style scoped>

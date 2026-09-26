@@ -578,6 +578,8 @@ plays so it can be expressed appropriately — a star, a colour, a badge, whatev
 
 ```
 sf-variant-featured   editorially selected or promoted — a featured product, a highlight
+sf-variant-primary    primary colour role — the theme's brand colour; a main action is
+                      `sf-loudness-3 sf-variant-primary`, a quieter one a lower loudness
 sf-variant-danger     destructive action — delete, remove, irreversible
 sf-variant-warning    cautionary — something needs attention but is not destructive
 sf-variant-success    positive outcome — confirmation, completion, approval
@@ -585,7 +587,10 @@ sf-variant-alt-1      alternative visual form — distinct rendering of the same
                       no semantic intent beyond looking different from the default
 ```
 
-Variants are not about visual weight — that is loudness's job. `sf-variant-featured` on a
+Variants are not about visual weight — that is loudness's job. Colour roles (primary,
+danger, warning, success) combine with any loudness: `sf-loudness-3` alone is a loud button
+in the theme's neutral form; add `sf-variant-primary` for the brand colour. Featured is not
+a colour role — it claims promotion, a level above a main action. `sf-variant-featured` on a
 small pill and on a full-width hero section both signal the same intent; the theme decides
 how to express it at each size.
 
