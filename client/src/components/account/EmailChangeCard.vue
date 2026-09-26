@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useEmailChange } from '@/composables/useEmailChange'
 import { type ZitadelProfile } from '@/composables/useZitadelProfile'
+import { computed } from 'vue'
 
 const props = defineProps<{ profile: ZitadelProfile }>()
 const {
@@ -16,102 +17,141 @@ const {
 	resendEmailCode,
 	cancelEmailChange,
 } = useEmailChange(props.profile)
+
+const mismatch = computed(() => !!confirmEmail.value && newEmail.value !== confirmEmail.value)
 </script>
 
 <template>
-	<VaCard class="p-6">
-		<h2 class="text-xl font-semibold mb-5">Email</h2>
-		<div class="sl-cluster sf-gap-sm mb-5">
+	<section class="sf-depth-1 sl-stack sf-gap-md">
+		<h2 class="sf-heading-2">Email</h2>
+		<div class="sl-cluster sf-gap-sm">
 			<span>{{ profile.email }}</span>
-			<VaBadge v-if="profile.email_verified" text="Verified" color="success" />
-			<VaBadge v-else text="Unverified" color="warning" />
+			<span
+				v-if="profile.email_verified"
+				class="sf-chip sf-size-2xs sf-loudness-3 sf-variant-success"
+			>
+				Verified
+			</span>
+			<span v-else class="sf-chip sf-size-2xs sf-loudness-3 sf-variant-warning">
+				Unverified
+			</span>
 		</div>
 
 		<template v-if="emailStatus === 'idle' || emailStatus === 'sending'">
-			<div class="grid grid-cols-1 sm:grid-cols-2 email-fields-grid mb-3">
-				<VaInput v-model="newEmail" label="New email address" type="email" />
-				<VaInput
-					v-model="confirmEmail"
-					label="Confirm new email address"
-					type="email"
-					:error="!!confirmEmail && newEmail !== confirmEmail"
-					error-messages="Addresses do not match"
-				/>
+			<div class="sl-columns sl-collapse-sm sf-gap-sm">
+				<label class="sl-stack sf-gap-2xs">
+					<span class="sf-text-sm">New email address</span>
+					<input v-model="newEmail" type="email" class="sf sf-field sf-on-focus">
+				</label>
+				<label class="sl-stack sf-gap-2xs">
+					<span class="sf-text-sm">Confirm new email address</span>
+					<input
+						v-model="confirmEmail"
+						type="email"
+						class="sf sf-field sf-on-focus"
+						:class="{ 'sf-is-error': mismatch }"
+						:aria-invalid="mismatch"
+					>
+					<span v-if="mismatch" class="sf-text-sm sf-variant-danger">
+						Addresses do not match
+					</span>
+				</label>
 			</div>
 			<p
 				v-if="newEmail && newEmail === confirmEmail"
-				class="text-sm mb-3 p-3 rounded"
-				style="
-					background: color-mix(in srgb, var(--va-warning) 15%, transparent);
-					color: var(--va-warning);
-				"
+				class="sf-depth-1 sf-loudness-2 sf-variant-warning sf-text-sm"
 			>
 				This change takes effect immediately. If you cannot access the verification email
-				sent to
-				{{ newEmail }}, you will be locked out until an admin resets your address.
+				sent to {{ newEmail }}, you will be locked out until an admin resets your address.
 			</p>
-			<VaButton
-				:loading="emailStatus === 'sending'"
-				:disabled="!newEmail || newEmail !== confirmEmail"
-				@click="requestEmailChange"
-			>
-				Request change
-			</VaButton>
-			<p v-if="emailError" class="text-sm mt-3" style="color: var(--va-danger)">
+			<div class="sl-cluster sf-gap-sm">
+				<button
+					type="button"
+					class="sf sf-loudness-3 sf-variant-featured sf-on-hover sf-on-disabled"
+					:class="{ 'sf-is-loading': emailStatus === 'sending' }"
+					:aria-busy="emailStatus === 'sending'"
+					:disabled="emailStatus === 'sending' || !newEmail || newEmail !== confirmEmail"
+					@click="requestEmailChange"
+				>
+					{{ emailStatus === 'sending' ? 'Sending…' : 'Request change' }}
+				</button>
+			</div>
+			<p v-if="emailError" class="sf-text-sm sf-variant-danger" role="alert">
 				{{ emailError }}
 			</p>
 		</template>
 
 		<template v-else-if="emailStatus === 'code' || emailStatus === 'verifying'">
-			<p class="text-sm mb-4" style="opacity: 0.8">
+			<p class="sf-text-sm sf-loudness-1">
 				A verification code has been sent to <strong>{{ pendingEmail }}</strong>. Your current email remains active until you verify the new one.
 			</p>
-			<div class="flex flex-wrap items-end email-verify-row">
-				<VaInput
-					v-model="verificationCode"
-					label="Verification code"
-					class="flex-1 min-w-48"
-				/>
-				<VaButton
-					:loading="emailStatus === 'verifying'"
-					:disabled="!verificationCode"
+			<div class="sl-cluster sl-align-y-end sf-gap-sm">
+				<label class="code-field sl-stack sf-gap-2xs">
+					<span class="sf-text-sm">Verification code</span>
+					<input
+						v-model="verificationCode"
+						class="sf sf-field sf-on-focus"
+						autocomplete="one-time-code"
+					>
+				</label>
+				<button
+					type="button"
+					class="sf sf-loudness-3 sf-variant-featured sf-on-hover sf-on-disabled"
+					:class="{ 'sf-is-loading': emailStatus === 'verifying' }"
+					:aria-busy="emailStatus === 'verifying'"
+					:disabled="emailStatus === 'verifying' || !verificationCode"
 					@click="verifyEmailCode"
 				>
-					Verify
-				</VaButton>
-				<VaButton preset="secondary" @click="cancelEmailChange">Cancel</VaButton>
+					{{ emailStatus === 'verifying' ? 'Verifying…' : 'Verify' }}
+				</button>
+				<button
+					type="button"
+					class="sf sf-loudness-2 sf-on-hover"
+					@click="cancelEmailChange"
+				>
+					Cancel
+				</button>
 			</div>
-			<div class="sl-cluster sf-gap-sm mt-3">
-				<VaButton preset="plain" size="small" @click="resendEmailCode">
+			<div class="sl-cluster sl-align-y-center sf-gap-sm">
+				<button
+					type="button"
+					class="sf sf-loudness-2 sf-size-xs sf-on-hover"
+					@click="resendEmailCode"
+				>
 					Resend code
-				</VaButton>
-				<span v-if="resendSent" class="text-sm" style="color: var(--va-success)">
+				</button>
+				<span v-if="resendSent" class="sf-text-sm sf-variant-success" role="status">
 					Code resent to {{ pendingEmail }}
 				</span>
 			</div>
-			<p v-if="emailError" class="text-sm mt-2" style="color: var(--va-danger)">
+			<p v-if="emailError" class="sf-text-sm sf-variant-danger" role="alert">
 				{{ emailError }}
 			</p>
 		</template>
 
-		<div v-else-if="emailStatus === 'done'" class="sl-cluster sf-gap-sm">
-			<p class="text-sm" style="color: var(--va-success)">
+		<div v-else-if="emailStatus === 'done'" class="sl-cluster sl-align-y-center sf-gap-sm">
+			<p class="sf-text-sm sf-variant-success" role="status">
 				Email updated to {{ pendingEmail }}. Sign out and back in to see the change
 				reflected here.
 			</p>
-			<VaButton preset="secondary" size="small" @click="cancelEmailChange">
+			<button
+				type="button"
+				class="sf sf-loudness-2 sf-size-xs sf-on-hover"
+				@click="cancelEmailChange"
+			>
 				Change again
-			</VaButton>
+			</button>
 		</div>
-	</VaCard>
+	</section>
 </template>
 
 <style scoped>
-.email-fields-grid {
-	gap: var(--sf-gap, var(--sf-spacing-sm));
-}
-
-.email-verify-row {
-	gap: var(--sf-gap, var(--sf-spacing-sm));
+@layer ui {
+	/* The code field takes the row's spare space; the buttons sit beside it until the
+	   row is too narrow, then wrap below. */
+	.code-field {
+		flex: 1;
+		min-width: 12rem;
+	}
 }
 </style>

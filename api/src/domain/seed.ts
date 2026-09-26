@@ -518,6 +518,18 @@ const VOCABULARY: VocabSpec[] = [
 			'Container holds content edge-to-edge — opt-out of chrome-class padding default. Wear alongside sf-depth-*.',
 	},
 	{
+		name: 'sf-is-loading',
+		kind: 'context',
+		description:
+			'Element is in a loading / pending state — e.g. a button whose action is running. Theme decides the look (default: busy cursor).',
+	},
+	{
+		name: 'sf-is-error',
+		kind: 'context',
+		description:
+			'Element or field is in a validation / error state. Theme decides the look (default: danger-coloured border). Pair with aria-invalid on fields.',
+	},
+	{
 		name: 'sf-is-disabled',
 		kind: 'context',
 		description:
@@ -1597,6 +1609,8 @@ const ROOT_RULES: RuleSpec[] = [
 	// on any tag that would otherwise draw its own container.
 	{ classNames: ['sf-is-contained'], cssProperty: 'background', value: 'none' },
 	{ classNames: ['sf-is-contained'], cssProperty: 'border-color', value: 'transparent' },
+	{ classNames: ['sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
+	{ classNames: ['sf-is-error'], cssProperty: 'border-color', value: 'rgb(var(--sf-danger))' },
 	// sf-is-contained × sf-is-overlay — contained takes priority over overlay's tinted
 	// surface background. Both are single-class context rules; the compound wins by specificity.
 	// Without this, the generator's alphabetical emission order lets sf-is-overlay overwrite
@@ -1681,8 +1695,8 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-success) / var(--sf-alpha-6))',
 	},
 
-	// Loudness-2 × variant: outlined — featured gets tinted fill + coloured border;
-	// danger/warning/success get a coloured border (text colour inherited from bare variant rule).
+	// Loudness-2 × variant: tinted fill + coloured border, no shadow. Featured keeps the
+	// surrounding text colour; danger/warning/success keep their variant colour.
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-featured'],
 		cssProperty: 'background',
@@ -1705,18 +1719,48 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-danger'],
-		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-danger) / var(--sf-alpha-5))',
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-danger) / var(--sf-alpha-2))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-danger'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-danger) / var(--sf-alpha-5))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-danger'],
+		cssProperty: 'box-shadow',
+		value: 'none',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-warning'],
-		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-warning) / var(--sf-alpha-5))',
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-warning) / var(--sf-alpha-2))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-warning'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-warning) / var(--sf-alpha-5))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-warning'],
+		cssProperty: 'box-shadow',
+		value: 'none',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-success'],
-		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-success) / var(--sf-alpha-5))',
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-success) / var(--sf-alpha-2))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-success'],
+		cssProperty: 'border',
+		value: '1px solid rgb(var(--sf-success) / var(--sf-alpha-5))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-success'],
+		cssProperty: 'box-shadow',
+		value: 'none',
 	},
 
 	// Loudness-3 × variant: solid fill + inverted text.
@@ -1840,6 +1884,22 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-on-hover', 'sf-variant-danger'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-danger) / var(--sf-alpha-1))',
+	},
+
+	// Loading usually disables the control too; keep the busy cursor rather than "not allowed".
+	{ classNames: ['sf-on-disabled', 'sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
+	// An error stays visible while the field has focus.
+	{
+		classNames: ['sf-on-focus', 'sf-is-error'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-danger))',
+	},
+
+	// Hover × loudness-2 — one step past the resting tint, so the hover still shows.
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-2'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-2))',
 	},
 
 	// Hover × loudness-3 — darken the solid fill rather than overlaying fg_primary tint.
@@ -2048,12 +2108,13 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-radius',
 		value: 'var(--sf-radius-2)',
 	},
-	// Card-scale default; sf-size-* on the same button overrides via source order.
+	// Control-scale default (a button with no size is a normal button, not card-sized);
+	// sf-size-* on the same button overrides it (later layer).
 	{
 		elementSelector: 'button',
 		classNames: ['sf'],
 		cssProperty: '--sf-padding',
-		value: 'var(--sf-spacing-md)',
+		value: 'var(--sf-spacing-xs)',
 	},
 	{
 		elementSelector: 'button',
@@ -2097,7 +2158,7 @@ const ROOT_RULES: RuleSpec[] = [
 		elementSelector: 'a',
 		classNames: ['sf'],
 		cssProperty: '--sf-padding',
-		value: 'var(--sf-spacing-md)',
+		value: 'var(--sf-spacing-xs)',
 	},
 	{
 		elementSelector: 'a',
@@ -2142,6 +2203,23 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'font-weight',
 		value: '600',
 	},
+
+	// Loudness-2 on buttons and link-buttons: a light tint of the text colour, so the
+	// control shows on any surface (page, card, sheet) without knowing which one.
+	...(['button', 'a'] as const).flatMap((el): RuleSpec[] => [
+		{
+			elementSelector: el,
+			classNames: ['sf', 'sf-loudness-2'],
+			cssProperty: 'background',
+			value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-1))',
+		},
+		{
+			elementSelector: el,
+			classNames: ['sf', 'sf-loudness-2'],
+			cssProperty: 'border-color',
+			value: 'rgb(var(--sf-border_color) / var(--sf-alpha-5))',
+		},
+	]),
 
 	// Loudness-3 solid fill — button-only. Non-button elements (cards) get loudness-3 prominence
 	// via sf-depth-1 × sf-loudness-3 shadow/border compounds; they keep their surface background.
@@ -2370,7 +2448,8 @@ const ROOT_RULES: RuleSpec[] = [
 	// wear this alongside sf-size-* for padding scale. Element-specific extras
 	// (select chevron etc.) live in compound rules below in the same layer.
 	{ classNames: ['sf-field'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
-	{ classNames: ['sf-field'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-md)' },
+	// Control-scale default, same as button.sf; sf-size-* overrides.
+	{ classNames: ['sf-field'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xs)' },
 	{ classNames: ['sf-field'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 	// Fields are writable surfaces. Explicit background + text colour make the
 	// field visually distinct on any raised parent (depth-1+); on a bare page

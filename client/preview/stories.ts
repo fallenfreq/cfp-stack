@@ -1,6 +1,7 @@
 // Preview stories: real components rendered with sample props. Markup in slots mirrors the
 // real consumers (e.g. AdminPagesView) so the preview shows what the app renders.
 import AccountHeader from '@/components/account/AccountHeader.vue'
+import EmailChangeCard from '@/components/account/EmailChangeCard.vue'
 import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
 import BasicCard from '@/components/BasicCard.vue'
@@ -252,6 +253,48 @@ export const stories: Story[] = [
 					preferred_username: 'ada',
 				} as never,
 			}),
+	},
+	{
+		id: 'email-change-card',
+		title: 'EmailChangeCard',
+		notes: 'Idle (verified) and code-sent (unverified) states. The warning notice, a mismatched field (sf-is-error) and a busy button (sf-is-loading) only show mid-edit, so they are repeated below on their own.',
+		maxWidth: '640px',
+		render: () => {
+			// The card reads its pending change from sessionStorage, which the server render lacks.
+			const store = new Map([['cfp_pending_email_2', 'ada@new.example']])
+			globalThis.sessionStorage ??= {
+				getItem: (k: string) => store.get(k) ?? null,
+				setItem: (k: string, v: string) => void store.set(k, v),
+				removeItem: (k: string) => void store.delete(k),
+			} as Storage
+			const profile = (sub: string, verified: boolean) =>
+				({ sub, email: 'ada@example.com', email_verified: verified }) as never
+			return h('div', { class: 'sl-stack sf-gap-md' }, [
+				h(EmailChangeCard, { profile: profile('1', true) }),
+				h(EmailChangeCard, { profile: profile('2', false) }),
+				h(
+					'p',
+					{ class: 'sf-depth-1 sf-loudness-2 sf-variant-warning sf-text-sm' },
+					'This change takes effect immediately. If you cannot access the verification email sent to ada@new.example, you will be locked out until an admin resets your address.',
+				),
+				h('input', {
+					class: 'sf sf-field sf-on-focus sf-is-error',
+					'aria-invalid': 'true',
+					value: 'ada@exmaple.com',
+				}),
+				h('div', { class: 'sl-cluster sf-gap-sm' }, [
+					h(
+						'button',
+						{
+							class: 'sf sf-loudness-3 sf-variant-featured sf-on-hover sf-on-disabled sf-is-loading',
+							disabled: true,
+							'aria-busy': 'true',
+						},
+						'Sending…',
+					),
+				]),
+			])
+		},
 	},
 	{
 		id: 'status-display',

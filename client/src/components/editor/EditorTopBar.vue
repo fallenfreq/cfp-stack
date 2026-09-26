@@ -29,7 +29,9 @@
 					:class="{
 						'sf-variant-success': saveStatus === 'saved',
 						'sf-variant-danger': saveStatus === 'error',
+						'sf-is-loading': saveStatus === 'saving',
 					}"
+					:aria-busy="saveStatus === 'saving'"
 					:disabled="saveStatus === 'saving'"
 					title="Save"
 					@click="store.save()"
