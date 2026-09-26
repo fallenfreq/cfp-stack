@@ -106,11 +106,6 @@ body .va-dropdown__content-wrapper {
 	opacity: 0.85;
 }
 
-.tiptap a {
-	color: rgb(var(--primary));
-	text-decoration: underline;
-}
-
 .tiptap :is(p, h1, h2, h3, pre, table, img, ol, ul, blockquote, hr, .code-block):not(:last-child),
 .tiptap > [data-node-view-wrapper]:not(:last-child),
 .tiptap > [data-container]:not(:last-child),

@@ -2197,8 +2197,27 @@ const ROOT_RULES: RuleSpec[] = [
 	// anchors acting as interactive button-like elements (navigation actions in menus,
 	// link-buttons in toolbars). Anchor default display is `inline`, which doesn't
 	// respect vertical padding predictably — `inline-block` gives padded-box behaviour
-	// while preserving inline flow. text-decoration/color reset is Tailwind preflight
-	// territory, not repeated here.
+	// while preserving inline flow.
+	// Links inside running text read as links. Only there: a link wrapping a card, an
+	// icon or a logo isn't a text link, and needs no opt-out. :where keeps this as weak
+	// as a bare `a` rule, so a.sf and every class beat it.
+	...(
+		[
+			['color', 'rgb(var(--sf-primary))'],
+			['text-decoration', 'underline'],
+		] as const
+	).map(
+		([cssProperty, value]): RuleSpec => ({
+			elementSelector: 'a',
+			pseudo: ':where(p *, li *, dd *, td *, th *, blockquote *, figcaption *, address *, h1 *, h2 *, h3 *, h4 *, h5 *, h6 *)',
+			cssProperty,
+			value,
+		}),
+	),
+	// A link-button reads as a button wherever it sits, including inside text; loudness
+	// and variant classes set its colour.
+	{ elementSelector: 'a', classNames: ['sf'], cssProperty: 'color', value: 'inherit' },
+	{ elementSelector: 'a', classNames: ['sf'], cssProperty: 'text-decoration', value: 'none' },
 	{ elementSelector: 'a', classNames: ['sf'], cssProperty: 'display', value: 'inline-block' },
 	{
 		elementSelector: 'a',
