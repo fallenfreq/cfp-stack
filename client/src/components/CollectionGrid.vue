@@ -6,6 +6,7 @@
 			:image-url="item.imageUrl"
 			:title="item.title"
 			:to="item.to"
+			:on-open="openHandler(item)"
 		/>
 	</div>
 </template>
@@ -17,7 +18,14 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 const props = defineProps<{
 	items: GridItem[]
 	placeholderTitle?: string
+	// Given: a plain click on a real card hands its item here instead of going to its page.
+	onOpen?: ((item: GridItem) => void) | undefined
 }>()
+
+const openHandler = (item: GridItem) => {
+	const onOpen = props.onOpen
+	return onOpen && item.to ? () => onOpen(item) : undefined
+}
 
 const gridEl = ref<HTMLElement | null>(null)
 // Columns the browser actually laid out — sl-grid fits as many as the width allows.

@@ -1,7 +1,7 @@
 <template>
 	<Transition appear name="slide">
 		<div
-			v-if="sheetStore.isSheetOpen"
+			v-if="isOpen"
 			class="sheet sl-stack sf-depth-3 sf-size-lg"
 			:class="
 				isBelowThreshold
@@ -16,7 +16,7 @@
 					icon="x"
 					tooltip="Close"
 					class="sf-is-contained sf-loudness-1"
-					@click="sheetStore.closeSheet"
+					@click="close"
 				/>
 			</div>
 
@@ -30,18 +30,33 @@
 <script setup lang="ts">
 import { useCollapseBreakpoint } from '@/composables/useCollapseBreakpoint'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
-import { onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 const sheetStore = useStackableSheetStore()
 const { isBelowThreshold } = useCollapseBreakpoint('md')
 
-defineProps<{
-	mobileHeight: string
-	desktopWidth: string
-}>()
+const props = withDefaults(
+	defineProps<{
+		mobileHeight: string
+		desktopWidth: string
+		// Given: the parent decides when the sheet shows and handles `close`.
+		// Left out: the shared sheet store does.
+		open?: boolean | null
+	}>(),
+	{ open: null },
+)
+
+const emit = defineEmits<{ close: [] }>()
+
+const isOpen = computed(() => props.open ?? sheetStore.isSheetOpen)
+
+const close = () => {
+	if (props.open === null) sheetStore.closeSheet()
+	emit('close')
+}
 
 // Escape closes the sheet. No focus trap: the sheet doesn't block the page behind it.
 const onKeyDown = (e: KeyboardEvent) => {
-	if (e.key === 'Escape' && sheetStore.isSheetOpen) sheetStore.closeSheet()
+	if (e.key === 'Escape' && isOpen.value) close()
 }
 
 onMounted(() => document.addEventListener('keydown', onKeyDown))

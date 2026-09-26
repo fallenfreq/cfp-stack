@@ -1,7 +1,7 @@
 <template>
 	<SfStatusDisplay v-if="notFound" state="error" message="Page not found." />
-	<SfStatusDisplay v-else-if="!ready || !editor" state="loading" />
-	<div v-else class="relative">
+	<SfStatusDisplay v-else-if="!page" state="loading" />
+	<template v-else>
 		<div v-if="isAdmin" class="preview-edit-bar">
 			<VaButton
 				preset="secondary"
@@ -11,52 +11,19 @@
 				Edit
 			</VaButton>
 		</div>
-		<EditorContent :editor="editor" />
-	</div>
+		<PageContent :page="page" />
+	</template>
 </template>
 
 <script setup lang="ts">
 import { useIsAdmin } from '@/composables/useIsAdmin'
-import { getContentExtensions } from '@/config/editor/contentExtensions'
-import { trpc } from '@/trpc'
+import { usePage } from '@/composables/usePage'
 import { paramString } from '@/utils/router'
-import { EditorContent, useEditor } from '@tiptap/vue-3'
-import { onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const notFound = ref(false)
-const ready = ref(false)
 const isAdmin = useIsAdmin()
-
-const editor = useEditor({
-	editable: false,
-	content: '',
-	extensions: [...getContentExtensions()],
-})
-
-onMounted(async () => {
-	const slug = paramString(route.params.slug)
-	const page = await (
-		isAdmin.value
-			? trpc.adminPages.getBySlug.query({ slug })
-			: trpc.publicPages.getBySlug.query({ slug })
-	).catch(() => null)
-	if (!page || !editor.value) {
-		notFound.value = true
-		return
-	}
-	try {
-		editor.value.commands.setContent(JSON.parse(page.contentJson), {
-			errorOnInvalidContent: true,
-		})
-		ready.value = true
-	} catch {
-		notFound.value = true
-	}
-})
-
-onUnmounted(() => editor.value?.destroy())
+const { page, notFound } = usePage(() => paramString(route.params.slug))
 </script>
 
 <style scoped>

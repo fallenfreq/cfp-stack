@@ -28,18 +28,31 @@
 		<CollectionGrid
 			:items="gridItems"
 			:placeholder-title="pagesPending ? 'Loading...' : 'Coming Soon!'"
+			@open="(item) => open(item.slug as string)"
 		/>
+		<StackableSheet
+			:open="openSlug !== null"
+			mobile-height="85%"
+			desktop-width="50%"
+			@close="close"
+		>
+			<SfStatusDisplay v-if="openNotFound" state="error" message="Page not found." />
+			<SfStatusDisplay v-else-if="!openPage" state="loading" />
+			<PageContent v-else :page="openPage" />
+		</StackableSheet>
 	</SfPageShell>
 </template>
 
 <script setup lang="ts">
 import { useIsAdmin } from '@/composables/useIsAdmin'
+import { useOpenItem } from '@/composables/useOpenItem'
+import { usePage } from '@/composables/usePage'
 import { usePagesByCollection, usePagesByCollectionAdmin } from '@/services/pages'
 import { trpc } from '@/trpc'
 import type { GridItem } from '@/utils/collectionPlaceholders'
 import { paramString } from '@/utils/router'
 import { useQuery } from '@tanstack/vue-query'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -60,8 +73,22 @@ const gridItems = computed<GridItem[]>(() =>
 		imageUrl: p.imageUrl ?? '',
 		title: p.name || p.slug,
 		slug: p.slug,
+		to: { name: 'page-preview', params: { slug: p.slug } },
 	})),
 )
+
+// Trial: this collection opens its pages in a sheet. Without @open, cards go to the page.
+const { openSlug, open, close } = useOpenItem()
+// The sheet keeps showing the last page while it slides away.
+const shownSlug = ref<string | null>(null)
+watch(
+	openSlug,
+	(slug) => {
+		if (slug) shownSlug.value = slug
+	},
+	{ immediate: true },
+)
+const { page: openPage, notFound: openNotFound } = usePage(shownSlug)
 
 const autoTagQuery = computed(() => (tag.value ? { autoTag: tag.value.tagId } : {}))
 </script>
