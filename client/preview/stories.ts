@@ -16,6 +16,7 @@ import SfIcon from '@/components/ui/SfIcon.vue'
 import SfPageShell from '@/components/ui/SfPageShell.vue'
 import SfStatusDisplay from '@/components/ui/SfStatusDisplay.vue'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
+import PagePreview from '@/views/PagePreview.vue'
 import { h, type VNode } from 'vue'
 
 // EmailChangeCard reads its pending change from sessionStorage, which the server render
@@ -251,6 +252,29 @@ export const stories: Story[] = [
 			h(AdminList, { loading: true }),
 			h(AdminList, { empty: true }, { empty: () => 'No pages found.' }),
 		],
+	},
+	{
+		id: 'page-preview',
+		title: 'PagePreview — admin Edit link',
+		notes: 'The whole view needs the router, the page query and tiptap, so this rebuilds the admin Edit link with its real classes and scoped CSS. It floats bottom-right on the page margin, over the text.',
+		render: () =>
+			h('div', { class: 'sl-stack sf-gap-sm' }, [
+				...Array.from({ length: 12 }, () =>
+					h(
+						'p',
+						'Published page content runs underneath the Edit link, which stays put in the corner while the page scrolls.',
+					),
+				),
+				h(
+					'a',
+					{
+						href: '#',
+						class: 'preview-edit sf sf-depth-2 sf-is-overlay sf-size-xs sf-on-hover',
+						[(PagePreview as { __scopeId?: string }).__scopeId ?? 'data-v-preview']: '',
+					},
+					'Edit',
+				),
+			]),
 	},
 	{
 		id: 'account-view',

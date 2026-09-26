@@ -2,15 +2,13 @@
 	<SfStatusDisplay v-if="notFound" state="error" message="Page not found." />
 	<SfStatusDisplay v-else-if="!page" state="loading" />
 	<template v-else>
-		<div v-if="isAdmin" class="preview-edit-bar">
-			<VaButton
-				preset="secondary"
-				size="small"
-				:to="{ name: 'editor', params: { slug: route.params.slug } }"
-			>
-				Edit
-			</VaButton>
-		</div>
+		<RouterLink
+			v-if="isAdmin"
+			class="preview-edit sf sf-depth-2 sf-is-overlay sf-size-xs sf-on-hover"
+			:to="{ name: 'editor', params: { slug: route.params.slug } }"
+		>
+			Edit
+		</RouterLink>
 		<PageContent :page="page" />
 	</template>
 </template>
@@ -27,10 +25,13 @@ const { page, notFound } = usePage(() => paramString(route.params.slug))
 </script>
 
 <style scoped>
-.preview-edit-bar {
-	position: fixed;
-	bottom: 1.5rem;
-	right: 1.5rem;
-	z-index: 50;
+@layer ui {
+	/* Floats over the page on the page's own margin. */
+	.preview-edit {
+		position: fixed;
+		bottom: var(--sf-spacing_page);
+		right: var(--sf-spacing_page);
+		z-index: var(--z-toolbar);
+	}
 }
 </style>
