@@ -1,6 +1,5 @@
 import PromptModal from '@/components/input/PromptModal.vue'
 import { createApp, ref, type AppContext } from 'vue'
-import { useColors } from 'vuestic-ui'
 
 const isVisible = ref(false)
 const message = ref('')
@@ -33,16 +32,10 @@ export function initPromptModal(appContext: AppContext): void {
 	modalInstance = document.createElement('div')
 	document.body.appendChild(modalInstance)
 
-	// useColors() must be called inside initPromptModal (which runs inside the
-	// main app's async startup), not at module level — Vuestic composables
-	// require a Vue context to resolve which app instance to use.
-	const { currentPresetName } = useColors()
-
 	appInstance = createApp(PromptModal, {
 		isVisible,
 		message,
 		transform,
-		rootCurrentPresetName: currentPresetName,
 		onSubmit: handleClose,
 	})
 
