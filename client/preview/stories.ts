@@ -2,23 +2,27 @@
 // real consumers (e.g. AdminPagesView) so the preview shows what the app renders.
 import AccountDetailsCard from '@/components/account/AccountDetailsCard.vue'
 import AccountHeader from '@/components/account/AccountHeader.vue'
+import AccountIcon from '@/components/account/AccountIcon.vue'
 import EmailChangeCard from '@/components/account/EmailChangeCard.vue'
 import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
 import BasicCard from '@/components/BasicCard.vue'
+import MothBrand from '@/components/brand/MothBrand.vue'
 import CollectionGrid from '@/components/CollectionGrid.vue'
 import NodePath from '@/components/editor/NodePath.vue'
 import ToolbarAttrRow from '@/components/editor/toolbar/ToolbarAttrRow.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import StackableSheet from '@/components/layout/StackableSheet.vue'
 import SfTooltip from '@/components/SfTooltip.vue'
+import type { NavItem } from '@/components/siteNav'
+import SiteNav from '@/components/SiteNav.vue'
 import SfIcon from '@/components/ui/SfIcon.vue'
 import SfPageShell from '@/components/ui/SfPageShell.vue'
 import SfPopover from '@/components/ui/SfPopover.vue'
 import SfStatusDisplay from '@/components/ui/SfStatusDisplay.vue'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import PagePreview from '@/views/PagePreview.vue'
-import { h, type VNode } from 'vue'
+import { h, markRaw, type VNode } from 'vue'
 
 // EmailChangeCard reads its pending change from sessionStorage, which the server render
 // lacks. Profile sub '2' has a change pending, so it shows the code step.
@@ -72,6 +76,8 @@ export interface Story {
 	notes?: string
 	/** Constrain width to force overflow / narrow layouts. */
 	maxWidth?: string
+	/** The current page, for components that mark where you are. */
+	route?: string
 	render: () => VNode | VNode[]
 }
 
@@ -174,18 +180,19 @@ const adminList = () =>
 						{ name: r.name, slug: r.slug, published: r.published },
 						{
 							meta: () => tagsCell(r.tags),
-							actions: () => [
-								action('Edit'),
-								h(
-									'a',
-									{
-										href: '#',
-										class: 'sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover',
-									},
-									'Preview',
-								),
-								action('Delete', 'sf-variant-danger'),
-							],
+							actions: () =>
+								[
+									action('Edit'),
+									h(
+										'a',
+										{
+											href: '#',
+											class: 'sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover',
+										},
+										'Preview',
+									),
+									action('Delete', 'sf-variant-danger'),
+								].map((item) => h('li', item)),
 						},
 					),
 				),
@@ -285,6 +292,51 @@ const edgePage = (margin: string) =>
 		],
 	)
 
+// App.vue's nav: the same items and brand. The preview's auth stand-in reads as signed in.
+const navItems: NavItem[] = [
+	{ title: 'Contact', icon: 'info', to: '/contact' },
+	{
+		title: 'Portfolio',
+		icon: 'dashboard',
+		children: [
+			{ title: 'Branding', icon: 'view_comfy', to: '/c/branding' },
+			{ title: 'Web & App Design', icon: 'view_comfy', to: '/c/web-design' },
+		],
+	},
+	{
+		title: 'Demo',
+		icon: 'science',
+		children: [
+			{ title: 'Editor', icon: 'edit_note', to: '/demo/editor' },
+			{ title: 'Map', icon: 'map', to: '/demo/map' },
+		],
+	},
+	{
+		title: 'Account',
+		icon: markRaw(AccountIcon),
+		iconOnly: true,
+		alwaysShown: true,
+		children: [
+			{ title: 'Account', icon: 'account_circle', to: '/account' },
+			{ title: 'Admin', icon: 'settings', to: '/admin' },
+			{ title: 'Sign out', icon: 'exit_to_app', action: () => undefined },
+		],
+	},
+]
+const siteNav = () =>
+	h(
+		'header',
+		{ class: 'app-header sl-inset' },
+		h(
+			SiteNav,
+			{ items: navItems },
+			{
+				brand: () => h(MothBrand),
+				end: () => h('span', { class: 'sf-text-xs sf-loudness-1' }, '[dark switch]'),
+			},
+		),
+	)
+
 export const stories: Story[] = [
 	{
 		id: 'edge-alignment',
@@ -336,6 +388,38 @@ export const stories: Story[] = [
 					'Edit',
 				),
 			]),
+	},
+	{
+		id: 'site-nav',
+		title: 'SiteNav — wide',
+		notes: 'On /c/branding: Portfolio is marked as the group you are in, and Branding as the current page inside its dropdown. The account icon is brand-coloured (signed in). Tap the groups to open their dropdowns.',
+		route: '/c/branding',
+		render: siteNav,
+	},
+	{
+		id: 'site-nav-phone',
+		title: 'SiteNav — phone',
+		notes: 'The logo shows what fits the space left beside the buttons: mark and wordmark, else the wordmark alone, else the mark alone. Below: the logo on its own at 180px, 120px and 80px wide.',
+		route: '/c/branding',
+		maxWidth: '360px',
+		render: () => [
+			siteNav(),
+			...['180px', '120px', '80px'].map((width) =>
+				h(
+					'div',
+					{ class: 'sf-boundary-left', style: `inline-size: ${width}` },
+					h(MothBrand),
+				),
+			),
+		],
+	},
+	{
+		id: 'site-nav-narrow',
+		title: 'SiteNav — narrow',
+		notes: 'The nav is under 640px wide, so the links go into the menu button; the account icon and the end slot stay. In the menu, Portfolio starts open because the current page is in it; Demo opens and closes without closing the menu.',
+		route: '/c/branding',
+		maxWidth: '480px',
+		render: siteNav,
 	},
 	{
 		id: 'popover-placement',

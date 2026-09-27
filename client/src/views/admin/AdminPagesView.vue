@@ -92,36 +92,46 @@
 					</SfPopover>
 				</template>
 				<template #actions>
-					<RouterLink
-						class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
-						:to="{ name: 'editor', params: { slug: page.slug } }"
-					>
-						Edit
-					</RouterLink>
-					<RouterLink
-						class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
-						:to="{ name: 'page-preview', params: { slug: page.slug } }"
-					>
-						Preview
-					</RouterLink>
-					<button
-						class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
-						@click="crud.onRename(page.pageId, page.name || page.slug)"
-					>
-						Rename
-					</button>
-					<button
-						class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
-						@click="crud.onChangeSlug(page.pageId, page.slug)"
-					>
-						Change slug
-					</button>
-					<button
-						class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover sf-variant-danger"
-						@click="crud.onDelete(page.pageId, page.name || page.slug)"
-					>
-						Delete
-					</button>
+					<li>
+						<RouterLink
+							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+							:to="{ name: 'editor', params: { slug: page.slug } }"
+						>
+							Edit
+						</RouterLink>
+					</li>
+					<li>
+						<RouterLink
+							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+							:to="{ name: 'page-preview', params: { slug: page.slug } }"
+						>
+							Preview
+						</RouterLink>
+					</li>
+					<li>
+						<button
+							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+							@click="crud.onRename(page.pageId, page.name || page.slug)"
+						>
+							Rename
+						</button>
+					</li>
+					<li>
+						<button
+							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+							@click="crud.onChangeSlug(page.pageId, page.slug)"
+						>
+							Change slug
+						</button>
+					</li>
+					<li>
+						<button
+							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover sf-variant-danger"
+							@click="crud.onDelete(page.pageId, page.name || page.slug)"
+						>
+							Delete
+						</button>
+					</li>
 				</template>
 			</AdminListItem>
 		</AdminList>

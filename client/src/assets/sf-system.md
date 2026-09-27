@@ -570,6 +570,13 @@ anything left that's specific to this category?
 If a marker ends up with zero rules after the axes cover the general case, the marker
 isn't earning its keep — collapse it back into the axes.
 
+**Rules combine on one element, never "inside X".** A theme rule is an element plus the
+classes and states on that same element — no ancestor selectors. When a component needs
+a category-specific look, it puts the category on the element itself: an HTML element
+where one exists (`menu.sf-is-nested` — a nested group in a menu), else a marker
+(`sf-tree.sf-is-nested`, once trees exist). Themes stay "this element with these classes
+looks like this", which a theme editor can show.
+
 ### Variants — `sf-variant`
 
 Semantic intent modifiers. The variant overrides only the bundle properties it touches;
@@ -616,6 +623,8 @@ sf-is-sticky           a sticky element is currently in its pinned position
 sf-is-error            element or field is in a validation / error state
 sf-is-contained        element sits inside a container that already provides
                        visual boundary
+sf-is-nested           group sits inside another group of the same kind (a nav
+                       group, a tree level, a reply thread) — worn at every level
 sf-flush               container holds content edge-to-edge (opt-out of
                        chrome-class padding default)
 ```
@@ -634,6 +643,11 @@ when the child touches the container's inner edge (image cards, toolbar slots).
 so `sf-flush` isn't needed — an image card becomes bare `sf-depth-1`, a padded card
 becomes `sf-depth-1 sl-pad-md`.
 
+`sf-is-nested` is also author-declared, and it repeats: each nested level wears it, with
+no level numbers. So its look must add up by itself — an indent inside an indent, a
+see-through tint over a tint, a guide line per level — never a depth step, which is a
+short, fixed ladder of surfaces. How deep a component nests is the component's call.
+
 Every `sf-is-*` class declares _intent_, never appearance. `sf-is-overlay` means
 "this element is floating over content" — not "this element is pill-shaped." The
 theme reads the intent and picks the expression: a compound like `button.sf-is-overlay`
@@ -643,11 +657,11 @@ colour, elevation are the theme's calls.
 
 `sf-is-*` classes differ from `sf-on-*` in source and meaning:
 
-|         | `sf-on-*`                              | `sf-is-*`                          |
-| ------- | -------------------------------------- | ---------------------------------- |
-| Set by  | Author intent                          | JavaScript measurement             |
-| Meaning | "this element should respond to hover" | "this condition is currently true" |
-| Example | `sf-on-hover`                          | `sf-is-overflow-right`             |
+|         | `sf-on-*`                              | `sf-is-*`                                                                 |
+| ------- | -------------------------------------- | ------------------------------------------------------------------------- |
+| Set by  | Author intent                          | JavaScript measurement, or the author where the structure makes it a fact |
+| Meaning | "this element should respond to hover" | "this condition is currently true"                                        |
+| Example | `sf-on-hover`                          | `sf-is-overflow-right`                                                    |
 
 Multiple `sf-is-*` classes may be present simultaneously and can be compounded in rules
 — a rule requiring both `sf-is-overflow-left` and `sf-is-overflow-right` handles the
@@ -973,8 +987,8 @@ always fixed-plus-flexible. No theme can make `sl-stack` horizontal.
 Collapse responds to the node's own container width, not the viewport. A `sl-columns`
 nested inside a `sl-split` responds to the space it actually has.
 
-A layout primitive only becomes a width container when it contains an `sl-collapse-*`
-element. Being a container makes a box ignore its own content when sizing its width, so
+A layout primitive only becomes a width container when it contains an `sl-collapse-*`,
+`sl-hide-below-*` or `sl-show-below-*` element. Being a container makes a box ignore its own content when sizing its width, so
 primitives without collapsing content stay out of it — otherwise an `sl-cluster` in a
 table cell, button or dropdown would shrink to nothing.
 
@@ -982,6 +996,16 @@ table cell, button or dropdown would shrink to nothing.
 sl-collapse-xs   collapse below xs breakpoint
 sl-collapse-sm   collapse below sm breakpoint
 sl-collapse-md   collapse below md breakpoint
+```
+
+The same widths swap what shows. `sl-hide-below-*` hides an element when its container is
+at or below the width; `sl-show-below-*` shows it only then. Pair them to put a menu button
+in place of a row of links. With no container around it the element always shows.
+
+```
+sl-hide-below-xs   sl-show-below-xs
+sl-hide-below-sm   sl-show-below-sm
+sl-hide-below-md   sl-show-below-md
 ```
 
 ---

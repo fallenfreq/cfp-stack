@@ -73,6 +73,7 @@ const HTML_ELEMENTS = new Set([
 	'dl',
 	'dt',
 	'li',
+	'menu',
 	'ol',
 	'ul',
 	// Media

@@ -39,6 +39,7 @@ declare module 'vue' {
     MaterialIcon: typeof import('./src/components/ui/MaterialIcon.vue')['default']
     MaterialIconButton: typeof import('./src/components/ui/MaterialIconButton.vue')['default']
     MiniMothLogo: typeof import('./src/components/brand/MiniMothLogo.vue')['default']
+    MothBrand: typeof import('./src/components/brand/MothBrand.vue')['default']
     MothLogo: typeof import('./src/components/brand/MothLogo.vue')['default']
     MothWordmark: typeof import('./src/components/brand/MothWordmark.vue')['default']
     NodePath: typeof import('./src/components/editor/NodePath.vue')['default']
@@ -55,6 +56,9 @@ declare module 'vue' {
     SfPopover: typeof import('./src/components/ui/SfPopover.vue')['default']
     SfStatusDisplay: typeof import('./src/components/ui/SfStatusDisplay.vue')['default']
     SfTooltip: typeof import('./src/components/SfTooltip.vue')['default']
+    SiteNav: typeof import('./src/components/SiteNav.vue')['default']
+    SiteNavItem: typeof import('./src/components/SiteNavItem.vue')['default']
+    SiteNavMenuLink: typeof import('./src/components/SiteNavMenuLink.vue')['default']
     SlashCommands: typeof import('./src/components/editor/SlashCommands.vue')['default']
     StackableSheet: typeof import('./src/components/layout/StackableSheet.vue')['default']
     StyleAttrEditor: typeof import('./src/components/editor/toolbar/StyleAttrEditor.vue')['default']
@@ -78,6 +82,5 @@ declare module 'vue' {
     ToolbarShadowControl: typeof import('./src/components/editor/toolbar/ToolbarShadowControl.vue')['default']
     ToolbarYouTubeUrlControl: typeof import('./src/components/editor/toolbar/ToolbarYouTubeUrlControl.vue')['default']
     TriangleShape: typeof import('./src/components/shapes/TriangleShape.vue')['default']
-    VuesticNavBar: typeof import('./src/components/VuesticNavBar.vue')['default']
   }
 }

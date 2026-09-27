@@ -521,6 +521,9 @@ const SL_COMBINED = `@layer sl-layout {
 // container-type collapses primitives that sit in size-to-content spots (table cells,
 // buttons, dropdowns). sl-collapse-* queries its nearest container, so only an ancestor
 // of a collapsing element needs to be one.
+// sl-hide-below-* / sl-show-below-* use the same widths to swap what shows: hidden at or
+// below the width, or shown only then (a hamburger in place of inline links). Without a
+// container around it, neither query matches and the element always shows.
 
 const COLLAPSE_GRID = ['.sl-columns', '.sl-split', '.sl-grid']
 const COLLAPSE_FLEX = ['.sl-cluster']
@@ -537,7 +540,10 @@ const COLLAPSE_HOSTS = [
 function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
 	if (collapseThresholds.length === 0) return ''
 
-	const hosts = COLLAPSE_HOSTS.map((s) => `\t${s}:has([class*="sl-collapse-"])`).join(',\n')
+	const hosts = COLLAPSE_HOSTS.map(
+		(s) =>
+			`\t${s}:has([class*="sl-collapse-"], [class*="sl-hide-below-"], [class*="sl-show-below-"])`,
+	).join(',\n')
 	let body = `${hosts} { container-type: inline-size; }\n`
 	for (const { name, value } of collapseThresholds) {
 		const gridSels = COLLAPSE_GRID.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')
@@ -545,6 +551,11 @@ function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
 		body += `\t@container (width <= ${value}) {\n`
 		body += `${gridSels} { grid-template-columns: 1fr; }\n`
 		body += `${flexSels} { flex-direction: column; align-items: stretch; }\n`
+		body += `\t\t.sl-hide-below-${name} { display: none; }\n`
+		body += '\t}\n'
+		// Emitted after the layout primitives, so it wins over their display on the same element.
+		body += `\t@container (width > ${value}) {\n`
+		body += `\t\t.sl-show-below-${name} { display: none; }\n`
 		body += '\t}\n'
 	}
 	return `@layer sl-layout {\n${body}}\n`

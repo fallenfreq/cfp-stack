@@ -9,9 +9,10 @@
 				class="sf-is-contained sf-loudness-1"
 			/>
 		</template>
-		<div class="overflow-menu">
+		<!-- Each action goes in its own <li>. -->
+		<menu class="overflow-menu">
 			<slot />
-		</div>
+		</menu>
 	</SfPopover>
 </template>
 
@@ -27,16 +28,20 @@ withDefaults(
 
 <style>
 @layer ui {
-	/* Menu-item layout contract — items stack (a column makes links and buttons alike
-	   fill the width) and left-align their text. Visual chrome (padding, radius, font,
-	   hover, contained) comes from sf classes on the item element. */
+	/* Menu-item layout contract — items stack and each fills the width, so links and
+	   buttons alike line up, with their text on the left. Visual chrome (padding, radius,
+	   font, hover, contained) comes from sf classes on the item element. */
 	.overflow-menu {
 		display: flex;
 		flex-direction: column;
 		min-width: 130px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
 
-	.overflow-menu > * {
+	.overflow-menu > li > * {
+		inline-size: 100%;
 		text-align: left;
 		white-space: nowrap;
 	}

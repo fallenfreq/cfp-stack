@@ -30,31 +30,38 @@
 					</span>
 				</template>
 				<template #actions>
-					<RouterLink
-						v-if="tag.published"
-						class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
-						:to="{ name: 'collection', params: { collectionSlug: tag.slug } }"
-					>
-						View collection
-					</RouterLink>
-					<button
-						class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
-						@click="crud.onRename(tag.tagId, tag.name)"
-					>
-						Rename
-					</button>
-					<button
-						class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
-						@click="crud.onChangeSlug(tag.tagId, tag.slug)"
-					>
-						Change slug
-					</button>
-					<button
-						class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover sf-variant-danger"
-						@click="crud.onDelete(tag.tagId, tag.name)"
-					>
-						Delete
-					</button>
+					<li v-if="tag.published">
+						<RouterLink
+							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+							:to="{ name: 'collection', params: { collectionSlug: tag.slug } }"
+						>
+							View collection
+						</RouterLink>
+					</li>
+					<li>
+						<button
+							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+							@click="crud.onRename(tag.tagId, tag.name)"
+						>
+							Rename
+						</button>
+					</li>
+					<li>
+						<button
+							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+							@click="crud.onChangeSlug(tag.tagId, tag.slug)"
+						>
+							Change slug
+						</button>
+					</li>
+					<li>
+						<button
+							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover sf-variant-danger"
+							@click="crud.onDelete(tag.tagId, tag.name)"
+						>
+							Delete
+						</button>
+					</li>
 				</template>
 			</AdminListItem>
 		</AdminList>

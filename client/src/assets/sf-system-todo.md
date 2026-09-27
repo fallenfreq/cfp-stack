@@ -160,8 +160,9 @@ Done in the editor + cleanup slice:
 
 What's pending:
 
-1. **Held — no consumer yet**: `sf-is-loading` / `sf-is-error`, `sf-on-active`,
-   `sf-on-ancestor`. Vocabulary seeded; add rules when a real consumer exists.
+1. **Held — no consumer yet**: `sf-is-loading` / `sf-is-error`. Vocabulary seeded; add
+   rules when a real consumer exists. (`sf-on-active` and `sf-on-ancestor` now have rules
+   and a consumer: SiteNav, v2.71.0.)
 2. **Raw token refs in component CSS** — many components still reference `--border_color`,
    `--primary`, `--text_primary` etc. directly. Migrate one-by-one as the right
    vocabulary class is seeded; no bulk pass until the class system covers the gap.
@@ -324,8 +325,8 @@ var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
       is invisible on bare buttons — see investigation above),
       `sf-on-ancestor` (muted primary text; stateful, no pseudo — reserved for
       nav/breadcrumb ancestors, no consumers yet). Compound done for
-      `sf-on-hover × sf-variant-danger`. Still available for future work: `sf-on-active`
-      (currently pseudo `:active`; no consumers yet — mousedown-flash treatment).
+      `sf-on-hover × sf-variant-danger`. `sf-on-active` (pseudo `:active`): pressed tint one
+      step past hover, bare + × loudness-2 + × current (v2.71.0; first consumer SiteNav).
 - [x] `sl-*` layout primitives (`stack`, `cluster`, `columns`, `split`, `center`, `grid`) — vocabulary + rules in seed
 - [x] `sl-aspect` — four preset classes seeded (`sl-aspect-16-9`, `sl-aspect-4-3`,
       `sl-aspect-1-1`, `sl-aspect-9-16`). `ToolbarAspectControl.vue` chip-picker

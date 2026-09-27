@@ -429,6 +429,8 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'state',
 		pseudo: ':active',
 		description: 'Active/pressed interaction modifier',
+		// Pressing happens while hovering: the press must win the tie.
+		cascadeOrder: MODIFIER_ORDER,
 	},
 	{
 		name: 'sf-on-disabled',
@@ -516,6 +518,12 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'context',
 		description:
 			'Element sits inside a container that already provides visual boundary — author-declared; theme decides how to soften (default: drop own chrome)',
+	},
+	{
+		name: 'sf-is-nested',
+		kind: 'context',
+		description:
+			'Group sits inside another group (nav group, tree level, reply thread) — author-declared at every level; the look must add up per level',
 	},
 	{
 		name: 'sf-flush',
@@ -654,7 +662,7 @@ const VOCABULARY: VocabSpec[] = [
 	{ name: 'sl-aspect-1-1', kind: 'layout', description: 'Aspect ratio 1:1 (square)' },
 	{ name: 'sl-aspect-9-16', kind: 'layout', description: 'Aspect ratio 9:16 (portrait)' },
 
-	// Collapse modifiers — vocabulary only; CSS is generated from breakpoint token values (no var() in @container)
+	// Collapse and show/hide modifiers — vocabulary only; CSS is generated from breakpoint token values (no var() in @container)
 	{
 		name: 'sl-collapse-xs',
 		kind: 'layout',
@@ -669,6 +677,36 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sl-collapse-md',
 		kind: 'layout',
 		description: 'Collapse to single column below md breakpoint',
+	},
+	{
+		name: 'sl-hide-below-xs',
+		kind: 'layout',
+		description: 'Hidden when its container is at or below the xs width',
+	},
+	{
+		name: 'sl-hide-below-sm',
+		kind: 'layout',
+		description: 'Hidden when its container is at or below the sm width',
+	},
+	{
+		name: 'sl-hide-below-md',
+		kind: 'layout',
+		description: 'Hidden when its container is at or below the md width',
+	},
+	{
+		name: 'sl-show-below-xs',
+		kind: 'layout',
+		description: 'Shown only when its container is at or below the xs width',
+	},
+	{
+		name: 'sl-show-below-sm',
+		kind: 'layout',
+		description: 'Shown only when its container is at or below the sm width',
+	},
+	{
+		name: 'sl-show-below-md',
+		kind: 'layout',
+		description: 'Shown only when its container is at or below the md width',
 	},
 
 	// Object-fit modifiers — vocabulary only; CSS uses child selectors that the
@@ -1613,6 +1651,19 @@ const ROOT_RULES: RuleSpec[] = [
 	// Default treatment: drop own chrome (background, border). Theme is free to override
 	// with a subtler treatment (reduced padding, muted colour, etc.). Element-agnostic — fires
 	// on any tag that would otherwise draw its own container.
+	// sf-is-nested — repeated at each level, so the look adds up by itself: a guide line on
+	// the start edge, level with the parent's edge, and the content a step off the line.
+	// Deeper levels draw their own line a step in. Never a depth step.
+	{
+		classNames: ['sf-is-nested'],
+		cssProperty: 'border-inline-start',
+		value: 'var(--sf-stroke-2) solid rgb(var(--sf-border_color))',
+	},
+	{
+		classNames: ['sf-is-nested'],
+		cssProperty: 'padding-inline-start',
+		value: 'var(--sf-spacing-xs)',
+	},
 	{ classNames: ['sf-is-contained'], cssProperty: 'background', value: 'none' },
 	{ classNames: ['sf-is-contained'], cssProperty: 'border-color', value: 'transparent' },
 	{ classNames: ['sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
@@ -1944,6 +1995,24 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-2))',
 	},
 
+	// Pressed — one step past hover. sf-on-active wins ties with sf-on-hover (cascadeOrder),
+	// so each compound here beats its hover twin while the pointer is down.
+	{
+		classNames: ['sf-on-active'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-2))',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-2'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-3))',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-on-current'],
+		cssProperty: 'background',
+		value: 'rgba(var(--sf-primary) / var(--sf-alpha-3))',
+	},
+
 	// Hover × loudness-3 — darken the solid fill rather than overlaying fg_primary tint.
 	// Three-class compounds (0-3-0) beat two-class hover × variant (0-2-0) in sf-state layer.
 	{
@@ -2252,6 +2321,25 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-radius',
 		value: 'var(--sf-radius-3)',
 	},
+
+	// ─── Summary element ──────────────────────────────────────────────────────
+	// The heading of a <details> is pressed like a button, so summary.sf gets the same
+	// chrome as button.sf / a.sf. Its disclosure marker is left to the component.
+	...(
+		[
+			['border-radius', 'var(--sf-radius-2)'],
+			['--sf-padding', 'var(--sf-spacing-xs)'],
+			['padding', 'var(--sf-padding)'],
+			['border', '1px solid rgb(var(--sf-border_color) / var(--sf-alpha-4))'],
+		] as const
+	).map(
+		([cssProperty, value]): RuleSpec => ({
+			elementSelector: 'summary',
+			classNames: ['sf'],
+			cssProperty,
+			value,
+		}),
+	),
 
 	// ─── Code element ─────────────────────────────────────────────────────────
 	// Inline code / identifier content. Applied via <code class="sf">, matching
