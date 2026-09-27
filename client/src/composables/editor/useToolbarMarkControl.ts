@@ -6,7 +6,7 @@ import { useToolbarNodeControl } from './useToolbarNodeControl'
 
 export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarItemContext }) {
 	const { open, capturedPos, onClose: nodeClose } = useToolbarNodeControl(props)
-	// Note: we don't use nodeControl.toggle — the mark variant also captures savedRange.
+	// Note: we don't use nodeControl.setOpen — the mark variant also captures savedRange.
 	// The watcher inside nodeControl calls nodeClose (not our wrapped onClose), so
 	// savedRange is not cleared on a watcher-triggered close. This is harmless since
 	// commitMark is never called after the panel closes.
@@ -26,8 +26,9 @@ export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarI
 		return 'node'
 	})
 
-	const toggle = () => {
-		if (open.value) {
+	const setOpen = (value: boolean) => {
+		if (value === open.value) return
+		if (!value) {
 			onClose()
 			return
 		}
@@ -54,5 +55,5 @@ export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarI
 		props.editor.view.dispatch(tr)
 	}
 
-	return { open, capturedPos, mode, toggle, onClose, commitMark }
+	return { open, capturedPos, mode, setOpen, commitMark }
 }

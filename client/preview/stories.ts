@@ -32,38 +32,38 @@ const stubSessionStorage = () => {
 }
 
 // SfTooltip only opens on hover/touch, which the static preview can't do. This builds its popup
-// with the real classes, data attributes and scoped CSS, placed flush against the trigger the way
-// the component's script places it; the CSS gap does the rest. The wrapper's transform makes the
-// fixed popup position against the trigger.
-const flush: Record<string, string> = {
-	top: 'bottom: 100%; left: 50%; transform: translateX(-50%)',
-	bottom: 'top: 100%; left: 50%; transform: translateX(-50%)',
-	left: 'right: 100%; top: 50%; transform: translateY(-50%)',
-	right: 'left: 100%; top: 50%; transform: translateY(-50%)',
+// with the real classes, data attributes and scoped CSS, anchored to the trigger the same way;
+// position: absolute stands in for the popover's top layer, which needs script to open.
+let tipCount = 0
+const openTooltip = (placement: string, input: 'mouse' | 'touch', label: string) => {
+	const anchor = `--preview-tip-${tipCount++}`
+	return h(
+		'div',
+		{ class: 'sl-stack sf-gap-2xs', style: 'align-items: center; padding: 72px 96px' },
+		[
+			h('span', { style: `display: inline-flex; anchor-name: ${anchor}` }, [
+				h(
+					'button',
+					{ class: 'sf-icon-btn sf sf-on-hover sf-size-xs', 'aria-label': label },
+					h(SfIcon, { name: 'x' }),
+				),
+				h(
+					'span',
+					{
+						role: 'tooltip',
+						class: 'tooltip-popup sf sf-text-block sf-text-xs sf-depth-3 sf-size-2xs sf-is-overlay',
+						'data-placement': placement,
+						'data-input': input,
+						[(SfTooltip as { __scopeId?: string }).__scopeId ?? 'data-v-preview']: '',
+						style: `position: absolute; position-anchor: ${anchor}`,
+					},
+					label,
+				),
+			]),
+			h('small', { class: 'sf-loudness-1' }, `${placement}, ${input}`),
+		],
+	)
 }
-const openTooltip = (placement: string, input: 'mouse' | 'touch', label: string) =>
-	h('div', { class: 'sl-stack sf-gap-2xs', style: 'align-items: center; padding: 72px 96px' }, [
-		h('span', { style: 'position: relative; display: inline-flex; transform: translateZ(0)' }, [
-			h(
-				'button',
-				{ class: 'sf-icon-btn sf sf-on-hover sf-size-xs', 'aria-label': label },
-				h(SfIcon, { name: 'x' }),
-			),
-			h(
-				'span',
-				{
-					role: 'tooltip',
-					class: 'tooltip-popup sf sf-text-block sf-text-xs sf-depth-3 sf-size-2xs sf-is-overlay',
-					'data-placement': placement,
-					'data-input': input,
-					[(SfTooltip as { __scopeId?: string }).__scopeId ?? 'data-v-preview']: '',
-					style: flush[placement],
-				},
-				label,
-			),
-		]),
-		h('small', { class: 'sf-loudness-1' }, `${placement}, ${input}`),
-	])
 
 export interface Story {
 	id: string
@@ -101,17 +101,15 @@ const tagsCell = (tags: string[]) =>
 					},
 					tags.length
 						? [
-								...tags
-									.slice(0, 2)
-									.map((t) =>
-										h(
-											'span',
-											{
-												class: 'sf-chip sf-size-2xs sf-loudness-2 sf-variant-primary',
-											},
-											t,
-										),
+								...tags.slice(0, 2).map((t) =>
+									h(
+										'span',
+										{
+											class: 'sf-chip sf-size-2xs sf-loudness-2 sf-variant-primary',
+										},
+										t,
 									),
+								),
 								tags.length > 2
 									? h(
 											'span',
@@ -338,6 +336,49 @@ export const stories: Story[] = [
 					'Edit',
 				),
 			]),
+	},
+	{
+		id: 'popover-placement',
+		title: 'SfPopover — placement',
+		notes: 'Tap each button. Narrow boxes line up with their button (end-aligned on the right). A wide box that fits neither side spans the screen width, centred on its button and slid back on screen, with the page margin each side. Buttons at the bottom open upwards.',
+		render: () => {
+			const wide =
+				'A wide box: this text is long enough that on a phone it cannot fit beside the button on either side, so the box should go full width less the page margin.'
+			const pop = (label: string, text: string, align: 'start' | 'end') =>
+				h(
+					SfPopover,
+					{ class: 'sf-size-xs', align },
+					{
+						trigger: (trigger: Record<string, unknown>) =>
+							h(
+								'button',
+								{
+									...trigger,
+									type: 'button',
+									class: 'sf sf-loudness-2 sf-on-hover',
+								},
+								label,
+							),
+						default: () => h('p', { style: 'max-inline-size: 60ch' }, text),
+					},
+				)
+			const row = (items: VNode[]) =>
+				h(
+					'div',
+					{ class: 'sl-columns sf-gap-sm', style: '--sl-cols: auto 1fr auto' },
+					items,
+				)
+			return h('div', { class: 'sl-stack sf-gap-md', style: 'min-height: 90vh' }, [
+				row([pop('Narrow', 'Short.', 'start'), h('span'), pop('Narrow', 'Short.', 'end')]),
+				row([
+					pop('Wide', wide, 'start'),
+					pop('Wide', wide, 'start'),
+					pop('Wide', wide, 'end'),
+				]),
+				h('div', { style: 'flex: 1' }),
+				row([pop('Wide', wide, 'start'), h('span'), pop('Wide', wide, 'end')]),
+			])
+		},
 	},
 	{
 		id: 'account-view',

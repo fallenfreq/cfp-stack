@@ -1,37 +1,38 @@
 <template>
 	<div class="style-attr-editor-root">
-		<Teleport to="body" :disabled="!fullscreen">
+		<!-- Full screen stays in place, not teleported: inside a toolbar panel (a popover in
+		     the top layer) a teleported overlay would paint under the panel, and a tap on it
+		     would count as outside and close the panel. Fixed position still covers the screen. -->
+		<div
+			class="style-editor-wrap"
+			:class="{ 'style-editor-wrap--overlay sf-scrim': fullscreen }"
+			@mousedown.stop
+			@mousedown.self="closeFullscreen"
+		>
 			<div
-				class="style-editor-wrap"
-				:class="{ 'style-editor-wrap--overlay sf-scrim': fullscreen }"
-				@mousedown.stop
-				@mousedown.self="closeFullscreen"
+				class="style-editor-frame"
+				:class="{ 'style-editor-frame--fs': fullscreen, 'sf-depth-2': fullscreen }"
 			>
-				<div
-					class="style-editor-frame"
-					:class="{ 'style-editor-frame--fs': fullscreen, 'sf-depth-2': fullscreen }"
+				<div ref="editorEl" class="style-attr-editor sf-content-frame" />
+				<button
+					v-if="!fullscreen"
+					class="style-fs-open sf-loudness-1 sf-on-hover"
+					tabindex="-1"
+					@mousedown.prevent
+					@click="fullscreen = true"
 				>
-					<div ref="editorEl" class="style-attr-editor sf-content-frame" />
-					<button
-						v-if="!fullscreen"
-						class="style-fs-open sf-loudness-1 sf-on-hover"
-						tabindex="-1"
-						@mousedown.prevent
-						@click="fullscreen = true"
-					>
-						<span class="material-symbols-rounded sf-icon sf-text-xs">open_in_full</span>
-					</button>
-					<button
-						v-if="fullscreen"
-						class="style-fs-close sf-loudness-1 sf-on-hover"
-						@mousedown.prevent
-						@click="closeFullscreen"
-					>
-						<span class="material-symbols-rounded sf-icon sf-text-lg">close_fullscreen</span>
-					</button>
-				</div>
+					<span class="material-symbols-rounded sf-icon sf-text-xs">open_in_full</span>
+				</button>
+				<button
+					v-if="fullscreen"
+					class="style-fs-close sf-loudness-1 sf-on-hover"
+					@mousedown.prevent
+					@click="closeFullscreen"
+				>
+					<span class="material-symbols-rounded sf-icon sf-text-lg">close_fullscreen</span>
+				</button>
 			</div>
-		</Teleport>
+		</div>
 	</div>
 </template>
 
@@ -102,8 +103,11 @@ const closeFullscreen = () => {
 	fullscreen.value = false
 }
 
+// Esc leaves full screen only; cancelling the key stops it also closing the panel.
 const onKeyDown = (e: KeyboardEvent) => {
-	if (e.key === 'Escape') closeFullscreen()
+	if (e.key !== 'Escape') return
+	e.preventDefault()
+	closeFullscreen()
 }
 
 watch(fullscreen, async (isFs) => {

@@ -1,8 +1,8 @@
 <template>
-	<ToolbarPanelItem :open="open" :tooltip="tooltip" align="right" @close="onClose">
-		<template #trigger>
+	<ToolbarPanelItem :open="open" :tooltip="tooltip" align="end" @update:open="setOpen">
+		<template #trigger="trigger">
 			<SfTooltip :text="tooltip">
-				<SfButton class="sf-is-contained" @click="toggle">
+				<SfButton v-bind="trigger" class="sf-is-contained" @mousedown.prevent>
 					<span class="color-swatch sf-swatch sf-size-2xs" :style="swatchStyle" />
 				</SfButton>
 			</SfTooltip>
@@ -27,7 +27,7 @@ import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, capturedPos, mode, toggle, onClose, commitMark } = useToolbarMarkControl(props)
+const { open, capturedPos, mode, setOpen, commitMark } = useToolbarMarkControl(props)
 const { steps: alphaSteps, snapToStep } = useAlphaPalette()
 const { parseStoredValue } = useColorPalette()
 

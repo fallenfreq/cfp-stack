@@ -3,9 +3,8 @@
 		icon="shadow"
 		:tooltip="tooltip"
 		:open="open"
-		align="right"
-		@toggle="toggle"
-		@close="onClose"
+		align="end"
+		@update:open="setOpen"
 	>
 		<div class="sp-picker sf-divide-y" @mousedown.stop>
 			<div class="sp-section">
@@ -61,7 +60,7 @@ const DEFAULT_SHADOW_COLOR = 'rgb(var(--sf-shadow) / var(--sf-alpha-2))'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
+const { open, capturedPos, setOpen } = useToolbarNodeControl(props)
 const { shadowOptions } = useLayoutTokens()
 const { steps: alphaSteps, snapToStep } = useAlphaPalette()
 const { parseStoredValue } = useColorPalette()

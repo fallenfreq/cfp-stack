@@ -1,8 +1,8 @@
 <template>
 	<span
-		ref="rootEl"
 		class="tooltip-root"
-		:aria-describedby="tooltipId"
+		:style="`anchor-name: ${anchor}`"
+		:aria-describedby="text ? id : undefined"
 		@mouseenter="onEnter"
 		@mouseleave="onLeave"
 		@touchstart.passive="onTouchStart"
@@ -10,25 +10,25 @@
 		@touchcancel="onTouchEnd"
 	>
 		<slot />
-		<Teleport to="body">
-			<span
-				v-if="visible && text"
-				:id="tooltipId"
-				ref="popupEl"
-				role="tooltip"
-				class="tooltip-popup sf sf-text-block sf-text-xs sf-depth-3 sf-size-2xs sf-is-overlay"
-				:data-placement="placement ?? 'top'"
-				:data-input="input"
-				:style="tooltipStyle"
-			>
-				{{ text }}
-			</span>
-		</Teleport>
+		<!-- A manual popover in the top layer, so it shows above open panels and menus too. -->
+		<span
+			v-if="text"
+			:id="id"
+			ref="popupEl"
+			popover="manual"
+			role="tooltip"
+			class="tooltip-popup sf sf-text-block sf-text-xs sf-depth-3 sf-size-2xs sf-is-overlay"
+			:data-placement="placement ?? 'top'"
+			:data-input="input"
+			:style="`position-anchor: ${anchor}`"
+		>
+			{{ text }}
+		</span>
 	</span>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onUnmounted, ref } from 'vue'
+import { onUnmounted, ref, useId, watch } from 'vue'
 
 const props = defineProps<{
 	text: string
@@ -36,51 +36,21 @@ const props = defineProps<{
 	delay?: number
 }>()
 
-const tooltipId = `tooltip-${Math.random().toString(36).slice(2)}`
+const id = useId()
+const anchor = `--${id}`
 const visible = ref(false)
-const rootEl = ref<HTMLElement | null>(null)
 const popupEl = ref<HTMLElement | null>(null)
-const tooltipStyle = ref<Record<string, string>>({})
 // How the tooltip was opened; the CSS widens the gap for touch.
 const input = ref<'mouse' | 'touch'>('mouse')
 let timer: ReturnType<typeof setTimeout> | null = null
 let lastTouchEnd = 0
 
-const getTooltipPosition = (
-	triggerRect: DOMRect,
-	popupRect: DOMRect,
-	placement: 'top' | 'bottom' | 'left' | 'right',
-) => {
-	// Positions the popup flush against the trigger; the CSS adds the gap.
-	const centeredLeft = triggerRect.left + (triggerRect.width - popupRect.width) / 2
-	const centeredTop = triggerRect.top + (triggerRect.height - popupRect.height) / 2
-
-	if (placement === 'top') {
-		return { top: triggerRect.top - popupRect.height, left: centeredLeft }
-	}
-	if (placement === 'left') {
-		return { top: centeredTop, left: triggerRect.left - popupRect.width }
-	}
-	if (placement === 'right') {
-		return { top: centeredTop, left: triggerRect.right }
-	}
-	return { top: triggerRect.bottom, left: centeredLeft }
-}
-
-const updatePosition = async () => {
-	await nextTick()
-
-	if (!rootEl.value || !popupEl.value) return
-
-	const triggerRect = rootEl.value.getBoundingClientRect()
-	const popupRect = popupEl.value.getBoundingClientRect()
-	const { top, left } = getTooltipPosition(triggerRect, popupRect, props.placement ?? 'top')
-
-	tooltipStyle.value = {
-		top: `${top}px`,
-		left: `${left}px`,
-	}
-}
+watch(visible, (show) => {
+	const el = popupEl.value
+	if (!el?.isConnected || el.matches(':popover-open') === show) return
+	if (show) el.showPopover()
+	else el.hidePopover()
+})
 
 const onEnter = () => {
 	// Block the synthesized mouseenter that touch browsers fire after a tap
@@ -88,7 +58,6 @@ const onEnter = () => {
 	input.value = 'mouse'
 	timer = setTimeout(() => {
 		visible.value = true
-		updatePosition()
 	}, props.delay ?? 400)
 }
 
@@ -108,7 +77,6 @@ const onTouchStart = () => {
 	input.value = 'touch'
 	timer = setTimeout(() => {
 		visible.value = true
-		updatePosition()
 	}, 500)
 }
 
@@ -135,9 +103,12 @@ onUnmounted(() => {
 		-webkit-touch-callout: none;
 	}
 
+	/* Placed against the trigger on the chosen side, centred on it and slid back on
+	   screen at the edges; flipped to the other side when there's no room. The gap is
+	   the margin on the side facing the trigger. */
 	.tooltip-popup {
-		position: fixed;
-		z-index: var(--z-overlay);
+		margin: 0;
+		overflow: visible;
 		pointer-events: none;
 		white-space: nowrap;
 		--tooltip-gap: var(--sf-spacing-xs);
@@ -150,16 +121,24 @@ onUnmounted(() => {
 	}
 
 	.tooltip-popup[data-placement='top'] {
-		translate: 0 calc(-1 * var(--tooltip-gap));
+		position-area: top;
+		margin-bottom: var(--tooltip-gap);
+		position-try-fallbacks: flip-block;
 	}
 	.tooltip-popup[data-placement='bottom'] {
-		translate: 0 var(--tooltip-gap);
+		position-area: bottom;
+		margin-top: var(--tooltip-gap);
+		position-try-fallbacks: flip-block;
 	}
 	.tooltip-popup[data-placement='left'] {
-		translate: calc(-1 * var(--tooltip-gap)) 0;
+		position-area: left;
+		margin-right: var(--tooltip-gap);
+		position-try-fallbacks: flip-inline;
 	}
 	.tooltip-popup[data-placement='right'] {
-		translate: var(--tooltip-gap) 0;
+		position-area: right;
+		margin-left: var(--tooltip-gap);
+		position-try-fallbacks: flip-inline;
 	}
 }
 </style>

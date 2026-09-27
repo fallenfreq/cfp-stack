@@ -3,9 +3,8 @@
 		icon="format_size"
 		:tooltip="tooltip"
 		:open="open"
-		align="right"
-		@toggle="toggle"
-		@close="onClose"
+		align="end"
+		@update:open="setOpen"
 	>
 		<FontPicker
 			:font-family="currentFontFamily"
@@ -31,7 +30,7 @@ import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, capturedPos, mode, toggle, onClose, commitMark } = useToolbarMarkControl(props)
+const { open, capturedPos, mode, setOpen, commitMark } = useToolbarMarkControl(props)
 
 const markAttrs = computed(() =>
 	mode.value === 'mark' ? props.editor.getAttributes('fontStyle') : {},

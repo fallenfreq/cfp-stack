@@ -1,12 +1,5 @@
 <template>
-	<ToolbarPanelItem
-		:icon="iconName"
-		:tooltip="tooltip"
-		:open="open"
-		align="right"
-		@toggle="toggle"
-		@close="close"
-	>
+	<ToolbarPanelItem v-model:open="open" :icon="iconName" :tooltip="tooltip" align="end">
 		<div class="picker-list sf-size-xs">
 			<template v-if="computedItems.length">
 				<button
@@ -51,17 +44,9 @@ const open = ref(false)
 
 const computedItems = computed(() => props.getItems(props.editor, props.context))
 
-const close = () => {
-	open.value = false
-}
-
-const toggle = () => {
-	open.value = !open.value
-}
-
 const select = (item: NodePickerItem) => {
 	item.action()
-	close()
+	open.value = false
 }
 </script>
 

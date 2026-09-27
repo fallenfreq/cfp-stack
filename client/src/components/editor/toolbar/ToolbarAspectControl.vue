@@ -3,9 +3,8 @@
 		icon="aspect_ratio"
 		:tooltip="tooltip"
 		:open="open"
-		align="right"
-		@toggle="toggle"
-		@close="onClose"
+		align="end"
+		@update:open="setOpen"
 	>
 		<div class="aspect-picker" @mousedown.stop>
 			<span class="ap-label sf-loudness-1">Aspect ratio</span>
@@ -65,7 +64,7 @@ const objectOptions = [
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
+const { open, capturedPos, setOpen } = useToolbarNodeControl(props)
 
 const selectedAspect = ref<string | null>(null)
 const selectedObject = ref<string | null>(null)

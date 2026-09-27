@@ -3,10 +3,13 @@
 	<div
 		v-bind="$attrs"
 		:id="id"
+		ref="box"
 		popover="auto"
 		class="popover-box sf-depth-2 sf-is-overlay"
 		:data-align="align"
 		:style="`position-anchor: ${anchor}`"
+		@beforetoggle="onBeforeToggle"
+		@toggle="onToggle"
 		@click="onClick"
 	>
 		<slot />
@@ -14,12 +17,14 @@
 </template>
 
 <script setup lang="ts">
-import { useId } from 'vue'
+import { onMounted, ref, useId, watch } from 'vue'
 
 // A box that opens from a button, over everything, and closes on Esc or a click outside
 // (the browser's own popover). The consumer's own button opens it: spread the trigger slot
 // props onto it. The box follows the trigger in the DOM, so Tab moves from the trigger into
 // the content, and it still inherits from where it sits (colour, context selectors).
+// v-model:open is optional: it reports every open and close (trigger, Esc, a click
+// outside) before the box paints, and setting it opens or closes the box from script.
 // Classes given to SfPopover land on the box — e.g. a size. Never give the box a display
 // class (sl-stack…): it would show the closed popover. Nest the layout inside instead.
 defineOptions({ inheritAttrs: false })
@@ -37,6 +42,31 @@ const id = useId()
 const anchor = `--${id}`
 const trigger = { popovertarget: id, style: `anchor-name: ${anchor}` }
 
+const open = defineModel<boolean>('open', { default: false })
+const box = ref<HTMLElement | null>(null)
+
+// Between beforetoggle and toggle the box is changing state; Vue's watcher runs in that
+// gap, so it goes by the state on its way rather than calling show/hide a second time.
+let changingTo: boolean | null = null
+const onBeforeToggle = (event: Event) => {
+	changingTo = (event as ToggleEvent).newState === 'open'
+	open.value = changingTo
+}
+const onToggle = () => {
+	changingTo = null
+	sync()
+}
+
+// Only act when the box is out of step: removing a shown box hides it without any event.
+const sync = () => {
+	const el = box.value
+	if (!el?.isConnected || (changingTo ?? el.matches(':popover-open')) === open.value) return
+	if (open.value) el.showPopover()
+	else el.hidePopover()
+}
+watch(open, sync)
+onMounted(sync)
+
 const onClick = (event: MouseEvent) => {
 	if (props.closeOnClick && (event.target as Element).closest('a, button'))
 		(event.currentTarget as HTMLElement).hidePopover()
@@ -45,22 +75,50 @@ const onClick = (event: MouseEvent) => {
 
 <style scoped>
 @layer ui {
-	/* Below the trigger, or above when there's no room below. Without anchor positioning
-	   the browser centres the box on screen instead, so the margin reset lives in here too. */
+	/* Below the trigger, lined up with its edge; else the other edge, else above. A box
+	   too wide for either side spans the screen width instead, centred on the trigger and
+	   slid back on screen at the edges; the last option always fits (it scrolls). The box
+	   keeps its content width, so it moves on rather than squeezing into a narrow gap.
+	   Without anchor positioning the browser centres the box on screen instead, so the
+	   margin reset lives in here too. */
 	@supports (position-area: block-end) {
 		.popover-box {
 			margin: 0;
 			margin-block-start: var(--sf-spacing-2xs);
+			inline-size: max-content;
 			position-area: block-end span-inline-end;
 			position-try-fallbacks:
-				flip-block,
 				flip-inline,
-				flip-block flip-inline;
+				flip-block,
+				flip-block flip-inline,
+				--popover-below-wide,
+				--popover-above-wide,
+				--popover-below-wide-scroll;
 		}
 
 		.popover-box[data-align='end'] {
 			position-area: block-end span-inline-start;
 		}
 	}
+}
+
+/* The wide options: here 100% is the screen width, less the page margin each side. */
+@position-try --popover-below-wide {
+	position-area: block-end span-all;
+	margin: var(--sf-spacing-2xs) var(--sf-spacing_page) 0;
+	max-inline-size: calc(100% - 2 * var(--sf-spacing_page));
+}
+
+@position-try --popover-above-wide {
+	position-area: block-start span-all;
+	margin: 0 var(--sf-spacing_page) var(--sf-spacing-2xs);
+	max-inline-size: calc(100% - 2 * var(--sf-spacing_page));
+}
+
+@position-try --popover-below-wide-scroll {
+	position-area: block-end span-all;
+	margin: var(--sf-spacing-2xs) var(--sf-spacing_page) 0;
+	max-inline-size: calc(100% - 2 * var(--sf-spacing_page));
+	max-block-size: calc(100% - var(--sf-spacing-2xs));
 }
 </style>

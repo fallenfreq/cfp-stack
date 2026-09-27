@@ -7,8 +7,10 @@ export function useToolbarNodeControl(props: { editor: Editor; context: ToolbarI
 	const open = ref(false)
 	const capturedPos = ref<NodePos | null>(null)
 
-	const toggle = () => {
-		if (open.value) {
+	// The panel reports opening and closing; opening remembers which node it's for.
+	const setOpen = (value: boolean) => {
+		if (value === open.value) return
+		if (!value) {
 			onClose()
 			return
 		}
@@ -31,5 +33,5 @@ export function useToolbarNodeControl(props: { editor: Editor; context: ToolbarI
 		},
 	)
 
-	return { open, capturedPos, toggle, onClose }
+	return { open, capturedPos, setOpen, onClose }
 }

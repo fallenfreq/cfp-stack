@@ -20,7 +20,6 @@ app-level :root block).
 	--z-panel: 20;
 	--z-nodepath: 30;
 	--va-z-index-teleport-overlay: 200; /* VaDropdown nav/hamburger menus */
-	--z-overlay: 300; /* tooltips — above nav menus and toast */
 	--z-modal: 400; /* full-screen modals */
 	--xs: 380;
 	--sm: 640;

@@ -3,9 +3,8 @@
 		icon="rounded_corner"
 		:tooltip="tooltip"
 		:open="open"
-		align="right"
-		@toggle="toggle"
-		@close="onClose"
+		align="end"
+		@update:open="setOpen"
 	>
 		<div class="corners-picker" @mousedown.stop>
 			<div class="cp-section">
@@ -130,7 +129,7 @@ const tokenPx = computed<Record<string, number>>(() =>
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, capturedPos, toggle, onClose } = useToolbarNodeControl(props)
+const { open, capturedPos, setOpen } = useToolbarNodeControl(props)
 
 // null = no radius set; string = token name or 'custom'
 const selectedToken = ref<string | null>(null)

@@ -4,7 +4,7 @@
 		ref="toolbarEl"
 		class="floating-toolbar sf-depth-2 sf-size-2xs sf-is-overlay sf-flush"
 		:style="{
-			top: `${position.top}px`,
+			top: `calc(${position.top}px - var(--toolbar-height))`,
 			left: `${position.left}px`,
 			'max-width': `${position.maxWidth}px`,
 		}"
@@ -94,9 +94,9 @@ const updatePosition = async () => {
 	const nodeRect = domNode.getBoundingClientRect()
 	// Layout not yet committed (typical on initial mount before the editor's
 	// DOM has its real size). Skip — we'll be called again on the next
-	// transaction/scroll once the browser has finished layout, and `transform:
-	// translateY(-100%)` keeps the toolbar off-screen at the default {0,0}
-	// position in the meantime.
+	// transaction/scroll once the browser has finished layout, and the top offset
+	// (bottom edge at `position.top`) keeps the toolbar off-screen at the default
+	// {0,0} position in the meantime.
 	if (nodeRect.width === 0 && nodeRect.height === 0) return
 
 	// First pass: tentatively position at the node's left edge with maxWidth
@@ -179,8 +179,9 @@ onUnmounted(() => {
 		align-items: stretch;
 		box-sizing: border-box;
 		width: fit-content;
+		/* Bottom edge sits at the inline top; no transform, so panels anchored to its
+		   buttons land where the buttons are. */
 		height: var(--toolbar-height);
-		transform: translateY(-100%);
 		z-index: var(--z-toolbar);
 		overflow: hidden;
 	}

@@ -3,9 +3,8 @@
 		icon="tune"
 		:tooltip="tooltip"
 		:open="open"
-		align="right"
-		@toggle="toggle"
-		@close="onClose"
+		align="end"
+		@update:open="setOpen"
 	>
 		<div class="attr-content sl-stack sf-gap-2xs sf-size-2xs">
 			<!-- Rows share one name column and one field column; when narrow, names go above. -->
@@ -215,15 +214,15 @@ const resetPanelState = () => {
 	justAddedKey.value = null
 }
 
-const toggle = () => {
-	if (!open.value) {
-		capturedPos.value = props.context.nodePos
-	} else {
-		open.value = false
-		nextTick(() => resetPanelState())
+// The panel reports opening and closing; opening remembers which node it's for.
+const setOpen = (value: boolean) => {
+	if (value === open.value) return
+	if (!value) {
+		onClose()
 		return
 	}
-	open.value = !open.value
+	capturedPos.value = props.context.nodePos
+	open.value = true
 }
 
 const onClose = () => {
@@ -235,10 +234,7 @@ watch(
 	() => props.context.nodePos,
 	(nodePos) => {
 		if (!open.value || capturedPos.value === null) return
-		if (nodePos !== capturedPos.value) {
-			open.value = false
-			nextTick(() => resetPanelState())
-		}
+		if (nodePos !== capturedPos.value) onClose()
 	},
 )
 </script>
