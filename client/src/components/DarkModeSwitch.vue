@@ -3,6 +3,12 @@
 		<template #thumb="{ on }">
 			<MaterialIcon>{{ on ? 'dark_mode' : 'light_mode' }}</MaterialIcon>
 		</template>
+		<template #off>
+			<MaterialIcon>light_mode</MaterialIcon>
+		</template>
+		<template #on>
+			<MaterialIcon>dark_mode</MaterialIcon>
+		</template>
 	</SfSwitch>
 </template>
 

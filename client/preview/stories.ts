@@ -540,7 +540,7 @@ export const stories: Story[] = [
 	{
 		id: 'switch',
 		title: 'SfSwitch',
-		notes: 'Rows: off / on / disabled off / disabled on. First row plain; second with label text; third the dark-mode switch with a sun or moon in the knob; last at sf-text-2xl to show it scales. Off is an outlined track with a muted knob; on tints the track and fills the knob primary. The preview is static, so clicking does not toggle, but hover, press and Tab focus show. Try the theme picker for dark and pink.',
+		notes: 'Rows: off / on / disabled off / disabled on. First row plain; second with label text; third the dark-mode switch: the knob shows where you are (sun or moon) and the free end of the track shows what you would switch to; last at sf-text-2xl to show it scales. Off is an outlined track with a muted knob; on tints the track and fills the knob primary. The preview is static, so clicking does not toggle, but hover, press and Tab focus show. Try the theme picker for dark and pink.',
 		render: () => {
 			const row = (make: (on: boolean, disabled: boolean) => VNode) =>
 				h('div', { class: 'sl-cluster sf-gap-md' }, [
@@ -552,6 +552,8 @@ export const stories: Story[] = [
 			const icon = {
 				thumb: ({ on }: { on: boolean }) =>
 					h(MaterialIcon, () => (on ? 'dark_mode' : 'light_mode')),
+				off: () => h(MaterialIcon, () => 'light_mode'),
+				on: () => h(MaterialIcon, () => 'dark_mode'),
 			}
 			return h('div', { class: 'sl-stack sf-gap-md' }, [
 				row((on, disabled) =>

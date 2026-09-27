@@ -890,6 +890,13 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-6))',
 	},
 	{ classNames: ['sf-loudness-1'], cssProperty: 'border-color', value: 'transparent' },
+	// A quiet icon sits a step below quiet text: a glyph carries more ink than a line of
+	// text in the same colour.
+	{
+		classNames: ['sf-icon', 'sf-loudness-1'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-4))',
+	},
 
 	// loudness-3 solid fill is button-only — see button.sf.sf-loudness-3 compound in the
 	// element baseline section. For depth-1 surfaces, loudness-3 means stronger shadow + border

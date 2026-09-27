@@ -11,6 +11,20 @@
 			:class="{ 'sf-on-current': on, 'sf-on-hover': !disabled, 'sf-on-active': !disabled }"
 			@click="on = !on"
 		>
+			<span
+				v-if="$slots.off"
+				class="switch-mark switch-mark-off sf-icon sf-loudness-1"
+				aria-hidden="true"
+			>
+				<slot name="off" />
+			</span>
+			<span
+				v-if="$slots.on"
+				class="switch-mark switch-mark-on sf-icon sf-loudness-1"
+				aria-hidden="true"
+			>
+				<slot name="on" />
+			</span>
 			<span class="switch-knob sf-thumb" :class="{ 'sf-on-current': on }" aria-hidden="true">
 				<slot name="thumb" :on="on" />
 			</span>
@@ -20,9 +34,11 @@
 </template>
 
 <script setup lang="ts">
-// An on/off switch. Its track and knob are themed as sf-switch and sf-thumb; the knob can
-// hold an icon (thumb slot), which gets whether the switch is on. Class and attributes
-// land on the switch itself, so aria-label and sf-text-* reach it.
+// An on/off switch. Its track and knob are themed as sf-switch and sf-thumb. The knob can
+// hold an icon (thumb slot), which gets whether the switch is on. The off and on slots put
+// quieter icons at the track's two ends; only the one the knob isn't covering shows, so
+// you see what the switch would change to. Class and attributes land on the switch
+// itself, so aria-label and sf-text-* reach it.
 defineOptions({ inheritAttrs: false })
 defineProps<{ disabled?: boolean }>()
 const on = defineModel<boolean>({ default: false })
@@ -30,11 +46,31 @@ const on = defineModel<boolean>({ default: false })
 
 <style>
 @layer ui {
+	/* One row, two halves: an end icon centred in each, the knob over both. */
 	.switch-track {
-		display: inline-flex;
+		display: inline-grid;
+		grid-template-columns: 1fr 1fr;
 		align-items: center;
 		flex: none;
 		cursor: pointer;
+	}
+	.switch-track > * {
+		grid-row: 1;
+	}
+	.switch-mark {
+		display: inline-flex;
+		justify-self: center;
+	}
+	.switch-mark-off {
+		grid-column: 1;
+	}
+	.switch-mark-on {
+		grid-column: 2;
+	}
+	/* The knob covers its own end; that end's icon hides rather than show through. */
+	.switch-track[aria-checked='false'] > .switch-mark-off,
+	.switch-track[aria-checked='true'] > .switch-mark-on {
+		visibility: hidden;
 	}
 
 	/* The knob starts at the track's inner start edge and slides to its end edge,
@@ -43,7 +79,8 @@ const on = defineModel<boolean>({ default: false })
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		flex: none;
+		grid-column: 1 / -1;
+		justify-self: start;
 		position: relative;
 		inset-inline-start: 0;
 		transition:
