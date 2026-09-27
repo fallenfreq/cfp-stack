@@ -25,8 +25,9 @@
 		<Transition name="top-bar-actions">
 			<div v-if="actionsOpen" class="top-bar__actions">
 				<button
-					class="top-bar__action sf sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-2xs"
+					class="top-bar__action sf sf-is-contained sf-loudness-1 sf-on-disabled sf-size-2xs"
 					:class="{
+						'sf-on-hover': saveStatus !== 'saving',
 						'sf-variant-success': saveStatus === 'saved',
 						'sf-variant-danger': saveStatus === 'error',
 						'sf-is-loading': saveStatus === 'saving',
@@ -41,7 +42,7 @@
 					<SfIcon v-else name="check" />
 				</button>
 				<button
-					class="top-bar__action sf sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-2xs"
+					class="top-bar__action sf sf-is-contained sf-loudness-1 sf-on-disabled sf-size-2xs"
 					title="Editor settings"
 					disabled
 				>

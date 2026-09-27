@@ -1,7 +1,7 @@
 <template>
 	<button
-		class="btn sf sf-loudness-2 sf-on-hover sf-on-disabled sf-size-xs"
-		:class="{ 'sf-on-current': active }"
+		class="btn sf sf-loudness-2 sf-on-disabled sf-size-xs"
+		:class="{ 'sf-on-current': active, 'sf-on-hover': !disabled }"
 		:disabled="disabled"
 		@click="$emit('click')"
 	>

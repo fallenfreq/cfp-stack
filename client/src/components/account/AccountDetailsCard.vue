@@ -53,8 +53,8 @@ const { form, saving, saveSuccess, saveError, saveWarning, saveAccount } = useAc
 		<div class="sl-cluster sl-align-y-center sf-gap-sm">
 			<button
 				type="button"
-				class="sf sf-loudness-3 sf-variant-primary sf-on-hover sf-on-disabled"
-				:class="{ 'sf-is-loading': saving }"
+				class="sf sf-loudness-3 sf-variant-primary sf-on-disabled"
+				:class="{ 'sf-is-loading': saving, 'sf-on-hover': !saving }"
 				:aria-busy="saving"
 				:disabled="saving"
 				@click="saveAccount"

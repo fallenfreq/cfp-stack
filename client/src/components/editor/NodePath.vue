@@ -7,8 +7,11 @@
 		<template v-for="(segment, i) in path" :key="segment.depth">
 			<span v-if="i > 0" class="path-sep sf-icon sf-loudness-1" aria-hidden="true">›</span>
 			<button
-				class="path-node sf sf-single-line sf-is-contained sf-loudness-1 sf-on-hover sf-on-disabled sf-size-xs"
-				:class="{ 'sf-on-current': segment.depth === effectiveActiveDepth }"
+				class="path-node sf sf-single-line sf-is-contained sf-loudness-1 sf-on-disabled sf-size-xs"
+				:class="{
+					'sf-on-current': segment.depth === effectiveActiveDepth,
+					'sf-on-hover': segment.depth !== 0,
+				}"
 				:disabled="segment.depth === 0"
 				@mousedown.prevent
 				@click="handleDepthClick(segment)"

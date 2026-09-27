@@ -1,7 +1,7 @@
 <template>
 	<button
-		class="toolbar-btn sf sf-is-contained sf-on-hover sf-on-disabled sf-size-xs"
-		:class="{ 'sf-on-current': active }"
+		class="toolbar-btn sf sf-is-contained sf-on-disabled sf-size-xs"
+		:class="{ 'sf-on-current': active, 'sf-on-hover': !disabled }"
 		:disabled="disabled"
 		@mousedown.prevent
 		@click="$emit('click')"

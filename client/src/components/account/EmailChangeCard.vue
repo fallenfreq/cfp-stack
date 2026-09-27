@@ -19,6 +19,14 @@ const {
 } = useEmailChange(props.profile)
 
 const mismatch = computed(() => !!confirmEmail.value && newEmail.value !== confirmEmail.value)
+// Each button's disabled state and its hover read from one value.
+const canRequest = computed(
+	() =>
+		emailStatus.value !== 'sending'
+		&& !!newEmail.value
+		&& newEmail.value === confirmEmail.value,
+)
+const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verificationCode.value)
 </script>
 
 <template>
@@ -67,10 +75,13 @@ const mismatch = computed(() => !!confirmEmail.value && newEmail.value !== confi
 			<div class="sl-cluster sf-gap-sm">
 				<button
 					type="button"
-					class="sf sf-loudness-3 sf-variant-primary sf-on-hover sf-on-disabled"
-					:class="{ 'sf-is-loading': emailStatus === 'sending' }"
+					class="sf sf-loudness-3 sf-variant-primary sf-on-disabled"
+					:class="{
+						'sf-is-loading': emailStatus === 'sending',
+						'sf-on-hover': canRequest,
+					}"
 					:aria-busy="emailStatus === 'sending'"
-					:disabled="emailStatus === 'sending' || !newEmail || newEmail !== confirmEmail"
+					:disabled="!canRequest"
 					@click="requestEmailChange"
 				>
 					{{ emailStatus === 'sending' ? 'Sending…' : 'Request change' }}
@@ -96,10 +107,13 @@ const mismatch = computed(() => !!confirmEmail.value && newEmail.value !== confi
 				</label>
 				<button
 					type="button"
-					class="sf sf-loudness-3 sf-variant-primary sf-on-hover sf-on-disabled"
-					:class="{ 'sf-is-loading': emailStatus === 'verifying' }"
+					class="sf sf-loudness-3 sf-variant-primary sf-on-disabled"
+					:class="{
+						'sf-is-loading': emailStatus === 'verifying',
+						'sf-on-hover': canVerify,
+					}"
 					:aria-busy="emailStatus === 'verifying'"
-					:disabled="emailStatus === 'verifying' || !verificationCode"
+					:disabled="!canVerify"
 					@click="verifyEmailCode"
 				>
 					{{ emailStatus === 'verifying' ? 'Verifying…' : 'Verify' }}
