@@ -55,6 +55,7 @@ declare module 'vue' {
     SfPageShell: typeof import('./src/components/ui/SfPageShell.vue')['default']
     SfPopover: typeof import('./src/components/ui/SfPopover.vue')['default']
     SfStatusDisplay: typeof import('./src/components/ui/SfStatusDisplay.vue')['default']
+    SfSwitch: typeof import('./src/components/ui/SfSwitch.vue')['default']
     SfTooltip: typeof import('./src/components/SfTooltip.vue')['default']
     SiteNav: typeof import('./src/components/SiteNav.vue')['default']
     SiteNavItem: typeof import('./src/components/SiteNavItem.vue')['default']

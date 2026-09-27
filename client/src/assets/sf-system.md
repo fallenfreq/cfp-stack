@@ -522,6 +522,10 @@ sf-single-line   content is a single line of text. line-height:1 removes the
 sf-text-block    non-semantic wrapper (<span>/<div>) holds text — declares
                  text-holder intent for containers whose HTML tag doesn't
                  already imply it. Theme picks the leading
+sf-switch        on/off switch track — worn with sf on a <button role="switch">,
+                 which stays the floor; adds the pill shape and knob gap
+sf-thumb         the knob that moves along a track (switch knob, custom slider
+                 handle); may hold an icon. sf-on-current when its track is on
 sf-drag-handle   drag affordance — dim at rest, accents to primary on hover
                  and while dragging
 sf-swatch        small colour-surface tile — palette chip, native colour input.

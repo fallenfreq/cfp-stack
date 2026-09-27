@@ -11,10 +11,10 @@
 		</td>
 		<!-- width: 1px — table idiom: the column shrinks to fit its control. -->
 		<td style="width: 1px">
-			<VaSwitch
+			<SfSwitch
 				:model-value="published"
-				size="small"
-				@update:model-value="($event: boolean) => $emit('update:published', $event)"
+				aria-label="Published"
+				@update:model-value="$emit('update:published', $event)"
 			/>
 		</td>
 		<td class="sl-pin-right sf-boundary-left" style="width: 1px">

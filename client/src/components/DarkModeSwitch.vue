@@ -1,27 +1,9 @@
 <template>
-	<VaSwitch
-		v-model="store.isDarkMode"
-		color="BackgroundSecondary"
-		style="--va-switch-checker-background-color: #252723"
-		:indeterminate="store.isPinkMode"
-		:disabled="store.isPinkMode"
-		size="small"
-		@input="toggleDarkMode"
-	>
-		<template #innerLabel>
-			<div class="va-text-center">
-				<VaIcon
-					:name="
-						store.isDarkMode == null
-							? ''
-							: store.isDarkMode
-								? 'dark_mode'
-								: 'light_mode'
-					"
-				/>
-			</div>
+	<SfSwitch v-model="store.isDarkMode" :disabled="store.isPinkMode" aria-label="Dark mode">
+		<template #thumb="{ on }">
+			<MaterialIcon>{{ on ? 'dark_mode' : 'light_mode' }}</MaterialIcon>
 		</template>
-	</VaSwitch>
+	</SfSwitch>
 </template>
 
 <script setup lang="ts">
@@ -29,7 +11,7 @@ import { useDarkModeStore } from '@/stores/darkModeStore'
 import { AddKeyCombo, RemoveKeyCombo, injectSafe } from '@/symbols'
 import { onMounted, onUnmounted } from 'vue'
 const store = useDarkModeStore()
-const { toggleDarkMode, togglePinkMode } = store
+const { togglePinkMode } = store
 
 onMounted(() => {
 	console.log('Mounting a dark mode switch')

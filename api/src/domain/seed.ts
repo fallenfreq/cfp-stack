@@ -318,6 +318,18 @@ const VOCABULARY: VocabSpec[] = [
 			'Compact discrete-unit chip — tag, filter, selection, status. Wear alongside sf on the underlying element; element-specific chip overrides (radius, border) live in compound rules like button.sf-chip.',
 	},
 	{
+		name: 'sf-switch',
+		kind: 'element',
+		description:
+			'On/off switch track. Wear alongside sf on a <button role="switch">; button.sf is the floor, the switch adds its shape. sf-on-current marks it on.',
+	},
+	{
+		name: 'sf-thumb',
+		kind: 'element',
+		description:
+			'The knob that moves along a track (a switch knob, a custom slider handle). May hold an icon. sf-on-current marks its track as on.',
+	},
+	{
 		name: 'sf-icon',
 		kind: 'element',
 		description:
@@ -2461,6 +2473,49 @@ const ROOT_RULES: RuleSpec[] = [
 		pseudo: ':is([type="checkbox"], [type="radio"])',
 		cssProperty: 'height',
 		value: '1em',
+	},
+
+	// ─── sf-switch / sf-thumb ─────────────────────────────────────────────────
+	// The switch is a button.sf with its own shape: a pill a little over two knobs long,
+	// with a thin gap round the knob. The role makes the rule stronger than a theme's plain
+	// button.sf rule, so a theme with square buttons keeps round switches unless it
+	// restyles sf-switch itself. Everything is in em so sf-text-* scales the whole switch.
+	...(
+		[
+			['border-radius', 'var(--sf-radius-full)'],
+			['--sf-padding', '0.2em'],
+			['inline-size', '2.5em'],
+		] as const
+	).map(
+		([cssProperty, value]): RuleSpec => ({
+			elementSelector: 'button',
+			classNames: ['sf-switch'],
+			pseudo: ':is([role="switch"])',
+			cssProperty,
+			value,
+		}),
+	),
+	// The knob: round, one text-em across, muted at rest and primary when on. Its icon
+	// is a little smaller than the knob and always contrasts with its fill.
+	{ classNames: ['sf-thumb'], cssProperty: 'border-radius', value: 'var(--sf-radius-full)' },
+	{ classNames: ['sf-thumb'], cssProperty: 'font-size', value: '0.8em' },
+	{ classNames: ['sf-thumb'], cssProperty: 'inline-size', value: '1.25em' },
+	{ classNames: ['sf-thumb'], cssProperty: 'block-size', value: '1.25em' },
+	{
+		classNames: ['sf-thumb'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-5))',
+	},
+	{ classNames: ['sf-thumb'], cssProperty: 'color', value: 'rgb(var(--sf-fg_inverted))' },
+	{
+		classNames: ['sf-thumb', 'sf-on-current'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-thumb', 'sf-on-current'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_inverted))',
 	},
 
 	// ─── sf-chip ──────────────────────────────────────────────────────────────

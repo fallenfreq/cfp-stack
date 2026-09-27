@@ -1,61 +1,48 @@
-import { useOSThemePreference } from '@/composables/useOSThemePreference'
-import { safeApplyPreset, safeCurrentPresetName } from '@/utils/theme'
+import type { Theme } from '@/constants/theme'
 import { defineStore } from 'pinia'
-import { ref, type Ref } from 'vue'
-import { useGlobalConfig } from 'vuestic-ui'
+import { computed, ref } from 'vue'
+import { useColors, useGlobalConfig } from 'vuestic-ui'
 
 export const useDarkModeStore = defineStore('darkMode', () => {
-	const osTheme = useOSThemePreference()
-	const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary')
+	// The Vuestic toasts and confirm dialog still read Vuestic's colour presets, so each
+	// mode change is mirrored there too. Remove with those.
 	const { globalConfig } = useGlobalConfig()
-	// Set the primary color to the value of the CSS variable used by other components
-	globalConfig.value.colors.presets.light.primary = `rgb(${primaryColor.replace(new RegExp(' ', 'g'), ', ')})`
+	const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary')
+	globalConfig.value.colors.presets.light.primary = `rgb(${primaryColor.replace(/ /g, ', ')})`
+	const { applyPreset } = useColors()
 
-	// Dark mode starts using the os preference
-	// The dark class is added in the head of the index.html using:
-	// if (window.matchMedia('(prefers-color-scheme: dark)').matches)
-	safeApplyPreset(osTheme.value)
+	// Starts from the OS preference: index.html adds theme-dark before the app loads.
+	const mode = ref<Theme>(
+		document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light',
+	)
 
-	const isDarkMode: Ref<boolean> = ref(document.documentElement.classList.contains('theme-dark'))
-	const isPinkMode = ref(false)
-
-	function toggleDarkMode(event: any) {
-		if (event.target['checked']) {
-			safeApplyPreset('dark')
-			document.documentElement.classList.add('theme-dark')
-		} else {
-			safeApplyPreset('light')
-			document.documentElement.classList.remove('theme-dark')
-		}
+	function setMode(next: Theme) {
+		const root = document.documentElement.classList
+		root.remove(`theme-${mode.value}`)
+		if (next !== 'light') root.add(`theme-${next}`)
+		mode.value = next
+		applyPreset(next)
 	}
+	setMode(mode.value)
 
-	let previousMode = safeCurrentPresetName.value
+	const isDarkMode = computed({
+		get: () => mode.value === 'dark',
+		set: (dark: boolean) => setMode(dark ? 'dark' : 'light'),
+	})
+	const isPinkMode = computed(() => mode.value === 'pink')
 
-	// Secret pink mode
+	// Secret pink mode: toggles back to whichever mode was on before.
+	let previousMode: Theme = mode.value
 	function togglePinkMode(): void {
-		if (safeCurrentPresetName.value === 'pink') {
-			safeApplyPreset(previousMode)
-			document.documentElement.classList.remove('theme-pink')
-			document.documentElement.classList.add(`theme-${previousMode}`)
-			isPinkMode.value = false
-			isDarkMode.value = document.documentElement.classList.contains('theme-dark')
+		if (isPinkMode.value) {
+			setMode(previousMode)
 			console.log('Secret pink mode deactivated')
 		} else {
-			previousMode = safeCurrentPresetName.value
-			safeApplyPreset('pink')
-			document.documentElement.classList.add('theme-pink')
-			isPinkMode.value = true
-			isDarkMode.value = false
-			document.documentElement.classList.remove(`theme-${previousMode}`)
+			previousMode = mode.value
+			setMode('pink')
 			console.log('Secret pink mode activated')
 		}
 	}
 
-	return {
-		mode: safeCurrentPresetName,
-		isDarkMode,
-		isPinkMode,
-		toggleDarkMode,
-		togglePinkMode,
-	}
+	return { mode, isDarkMode, isPinkMode, togglePinkMode }
 })

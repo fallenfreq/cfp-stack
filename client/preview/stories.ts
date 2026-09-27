@@ -16,10 +16,12 @@ import StackableSheet from '@/components/layout/StackableSheet.vue'
 import SfTooltip from '@/components/SfTooltip.vue'
 import type { NavItem } from '@/components/siteNav'
 import SiteNav from '@/components/SiteNav.vue'
+import MaterialIcon from '@/components/ui/MaterialIcon.vue'
 import SfIcon from '@/components/ui/SfIcon.vue'
 import SfPageShell from '@/components/ui/SfPageShell.vue'
 import SfPopover from '@/components/ui/SfPopover.vue'
 import SfStatusDisplay from '@/components/ui/SfStatusDisplay.vue'
+import SfSwitch from '@/components/ui/SfSwitch.vue'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import PagePreview from '@/views/PagePreview.vue'
 import { h, markRaw, type VNode } from 'vue'
@@ -534,6 +536,47 @@ export const stories: Story[] = [
 			h(SfStatusDisplay, { state: 'empty' }),
 			h(SfStatusDisplay, { state: 'error' }),
 		],
+	},
+	{
+		id: 'switch',
+		title: 'SfSwitch',
+		notes: 'Rows: off / on / disabled off / disabled on. First row plain; second with label text; third the dark-mode switch with a sun or moon in the knob; last at sf-text-2xl to show it scales. Off is an outlined track with a muted knob; on tints the track and fills the knob primary. The preview is static, so clicking does not toggle, but hover, press and Tab focus show. Try the theme picker for dark and pink.',
+		render: () => {
+			const row = (make: (on: boolean, disabled: boolean) => VNode) =>
+				h('div', { class: 'sl-cluster sf-gap-md' }, [
+					make(false, false),
+					make(true, false),
+					make(false, true),
+					make(true, true),
+				])
+			const icon = {
+				thumb: ({ on }: { on: boolean }) =>
+					h(MaterialIcon, () => (on ? 'dark_mode' : 'light_mode')),
+			}
+			return h('div', { class: 'sl-stack sf-gap-md' }, [
+				row((on, disabled) =>
+					h(SfSwitch, { modelValue: on, disabled, 'aria-label': 'Published' }),
+				),
+				row((on, disabled) =>
+					h(SfSwitch, { modelValue: on, disabled }, { default: () => 'Published' }),
+				),
+				row((on, disabled) =>
+					h(SfSwitch, { modelValue: on, disabled, 'aria-label': 'Dark mode' }, icon),
+				),
+				row((on, disabled) =>
+					h(
+						SfSwitch,
+						{
+							modelValue: on,
+							disabled,
+							class: 'sf-text-2xl',
+							'aria-label': 'Dark mode',
+						},
+						icon,
+					),
+				),
+			])
+		},
 	},
 	{
 		id: 'toolbar-icon',
