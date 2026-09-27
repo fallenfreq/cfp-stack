@@ -14,19 +14,4 @@ export const stubs = {
 				],
 			),
 	}),
-	VaButton: defineComponent({
-		setup:
-			(_, { slots }) =>
-			() =>
-				h('button', { class: 'va-stub' }, slots.default?.()),
-	}),
-	VaDropdown: defineComponent({
-		setup:
-			(_, { slots }) =>
-			() =>
-				h('span', slots.anchor?.()),
-	}),
-	VaDropdownContent: defineComponent({
-		setup: () => () => null,
-	}),
 }

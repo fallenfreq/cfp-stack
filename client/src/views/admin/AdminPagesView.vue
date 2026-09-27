@@ -30,20 +30,23 @@
 				@update:published="(v) => togglePublished(page.pageId, v)"
 			>
 				<template #meta>
-					<VaDropdown placement="bottom-start" :close-on-content-click="false">
-						<template #anchor>
+					<SfPopover class="sf-size-xs">
+						<template #trigger="trigger">
 							<button
+								v-bind="trigger"
+								type="button"
 								class="tags-cell sl-cluster sf-gap-2xs sf sf-is-contained sf-size-2xs sf-on-hover"
+								:aria-label="tagsLabel(page)"
 							>
 								<span
 									v-if="!pageTags.get(page.pageId)?.length"
-									class="tags-cell__empty sf-text-xs sf-loudness-1"
+									class="sf-text-xs sf-loudness-1"
 									>—</span>
 								<template v-else>
 									<span
 										v-for="t in (pageTags.get(page.pageId) ?? []).slice(0, 2)"
 										:key="t.tagId"
-										class="sf-chip sf-size-2xs sf-variant-featured sf-loudness-2"
+										class="sf-chip sf-size-2xs sf-loudness-2 sf-variant-primary"
 										>{{ t.name }}</span>
 									<span
 										v-if="(pageTags.get(page.pageId)?.length ?? 0) > 2"
@@ -52,25 +55,41 @@
 								</template>
 							</button>
 						</template>
-						<VaDropdownContent>
-							<div class="tags-cell__popover">
-								<VaSelect
-									:model-value="
-										pageTags.get(page.pageId)?.map((t) => t.tagId) ?? []
-									"
-									:options="tagOptions"
-									value-by="value"
-									text-by="text"
-									track-by="value"
-									multiple
-									placeholder="No tags"
-									@update:model-value="
-										(ids: number[]) => onTagsChange(page.pageId, ids)
-									"
-								/>
+						<div class="sl-stack sf-gap-xs">
+							<span
+								:id="`tags-label-${page.pageId}`"
+								class="sf-text-sm sf-loudness-1"
+							>
+								Tags
+							</span>
+							<div
+								v-if="allTags?.length"
+								role="group"
+								:aria-labelledby="`tags-label-${page.pageId}`"
+								class="sl-stack sf-gap-2xs"
+								@change="onTagsChange(page.pageId, $event)"
+							>
+								<label
+									v-for="t in allTags"
+									:key="t.tagId"
+									class="sl-cluster sf-gap-xs"
+								>
+									<input
+										type="checkbox"
+										class="sf"
+										:value="t.tagId"
+										:checked="
+											pageTags
+												.get(page.pageId)
+												?.some((a) => a.tagId === t.tagId)
+										"
+									>
+									{{ t.name }}
+								</label>
 							</div>
-						</VaDropdownContent>
-					</VaDropdown>
+							<p v-else class="sf-text-sm">No tags yet.</p>
+						</div>
+					</SfPopover>
 				</template>
 				<template #actions>
 					<RouterLink
@@ -136,10 +155,6 @@ const filteredPages = computed(() => {
 	return (pages.value ?? []).filter((p) => p.name.toLowerCase().includes(q) || p.slug.includes(q))
 })
 
-const tagOptions = computed(() =>
-	(allTags.value ?? []).map((t) => ({ value: t.tagId, text: t.name })),
-)
-
 const pageTags = computed(() => {
 	const map = new Map<number, { tagId: number; name: string }[]>()
 	for (const a of tagAssignments.value ?? []) {
@@ -163,9 +178,36 @@ const togglePublished = async (pageId: number, published: boolean) => {
 	await crud.invalidate()
 }
 
-const onTagsChange = async (pageId: number, tagIds: number[]) => {
-	await trpc.adminPages.update.mutate({ pageId, tagIds })
-	await crud.invalidate()
+// The name says which tags the page has, since the chips alone aren't read out.
+const tagsLabel = (page: { pageId: number; name: string; slug: string }) => {
+	const names = (pageTags.value.get(page.pageId) ?? []).map((t) => t.name).join(', ')
+	return `Tags for ${page.name || page.slug}: ${names || 'none'}`
+}
+
+// Each save sends the boxes as ticked right now, not the last list from the server,
+// so quick ticks don't undo each other. Saves for one page run one after another; a
+// failed save reloads, so the boxes show what was actually saved.
+const tagSaves = new Map<number, Promise<unknown>>()
+const onTagsChange = (pageId: number, event: Event) => {
+	const group = event.currentTarget as HTMLElement
+	const tagIds = [...group.querySelectorAll<HTMLInputElement>('input:checked')].map((input) =>
+		Number(input.value),
+	)
+	const save = (tagSaves.get(pageId) ?? Promise.resolve()).then(() =>
+		trpc.adminPages.update.mutate({ pageId, tagIds }),
+	)
+	// Reload only once no newer save is waiting — a reload in between would put back
+	// ticks the user has since changed.
+	const tail: Promise<unknown> = save
+		.then(
+			async () => {
+				if (tagSaves.get(pageId) === tail) await crud.invalidate()
+			},
+			() => crud.invalidate(),
+		)
+		// A failed reload mustn't block the next save in the chain.
+		.catch(() => undefined)
+	tagSaves.set(pageId, tail)
 }
 
 const onNewPage = async () => {
@@ -183,14 +225,10 @@ const onNewPage = async () => {
 
 <style scoped>
 @layer ui {
-	/* Arrangement comes from sl-cluster, chrome from the sf classes on the button. */
+	/* Arrangement comes from sl-cluster, chrome from the sf classes on the button;
+	   the min width keeps an empty cell easy to tap. */
 	.tags-cell {
 		min-width: 48px;
-	}
-
-	.tags-cell__popover {
-		padding: var(--sf-spacing-sm);
-		min-width: 220px;
 	}
 }
 </style>

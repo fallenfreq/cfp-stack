@@ -14,6 +14,7 @@ import StackableSheet from '@/components/layout/StackableSheet.vue'
 import SfTooltip from '@/components/SfTooltip.vue'
 import SfIcon from '@/components/ui/SfIcon.vue'
 import SfPageShell from '@/components/ui/SfPageShell.vue'
+import SfPopover from '@/components/ui/SfPopover.vue'
 import SfStatusDisplay from '@/components/ui/SfStatusDisplay.vue'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import PagePreview from '@/views/PagePreview.vue'
@@ -81,17 +82,74 @@ const action = (label: string, extra = '') =>
 		label,
 	)
 
-const tagChips = (tags: string[]) =>
-	h('button', { class: 'sl-cluster sf-gap-2xs sf sf-is-contained sf-size-2xs sf-on-hover' }, [
-		...tags
-			.slice(0, 2)
-			.map((t) =>
-				h('span', { class: 'sf-chip sf-size-2xs sf-variant-featured sf-loudness-2' }, t),
-			),
-		tags.length > 2
-			? h('span', { class: 'sf-chip sf-size-2xs sf-loudness-1' }, `+${tags.length - 2}`)
-			: null,
-	])
+// The tags cell as AdminPagesView builds it: chips on the trigger, a checkbox list in the
+// popover. popovertarget needs no script, so the popover opens by click in the preview too.
+const allTags = ['featured', 'news', 'updates', 'archive']
+const tagsCell = (tags: string[]) =>
+	h(
+		SfPopover,
+		{ class: 'sf-size-xs' },
+		{
+			trigger: (trigger: Record<string, unknown>) =>
+				h(
+					'button',
+					{
+						...trigger,
+						type: 'button',
+						class: 'sl-cluster sf-gap-2xs sf sf-is-contained sf-size-2xs sf-on-hover',
+						'aria-label': `Tags: ${tags.join(', ') || 'none'}`,
+					},
+					tags.length
+						? [
+								...tags
+									.slice(0, 2)
+									.map((t) =>
+										h(
+											'span',
+											{
+												class: 'sf-chip sf-size-2xs sf-loudness-2 sf-variant-primary',
+											},
+											t,
+										),
+									),
+								tags.length > 2
+									? h(
+											'span',
+											{ class: 'sf-chip sf-size-2xs sf-loudness-1' },
+											`+${tags.length - 2}`,
+										)
+									: null,
+							]
+						: h('span', { class: 'sf-text-xs sf-loudness-1' }, '—'),
+				),
+			default: () =>
+				h('div', { class: 'sl-stack sf-gap-xs' }, [
+					h(
+						'span',
+						{ id: `tags-${tags.length}`, class: 'sf-text-sm sf-loudness-1' },
+						'Tags',
+					),
+					h(
+						'div',
+						{
+							role: 'group',
+							'aria-labelledby': `tags-${tags.length}`,
+							class: 'sl-stack sf-gap-2xs',
+						},
+						allTags.map((t) =>
+							h('label', { class: 'sl-cluster sf-gap-xs' }, [
+								h('input', {
+									type: 'checkbox',
+									class: 'sf',
+									checked: tags.includes(t),
+								}),
+								t,
+							]),
+						),
+					),
+				]),
+		},
+	)
 
 const rows = [
 	{ name: 'Home', slug: 'home', published: true, tags: ['featured'] },
@@ -117,12 +175,17 @@ const adminList = () =>
 						AdminListItem,
 						{ name: r.name, slug: r.slug, published: r.published },
 						{
-							meta: () =>
-								r.tags.length
-									? tagChips(r.tags)
-									: h('span', { class: 'sf-text-xs sf-loudness-1' }, '—'),
+							meta: () => tagsCell(r.tags),
 							actions: () => [
 								action('Edit'),
+								h(
+									'a',
+									{
+										href: '#',
+										class: 'sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover',
+									},
+									'Preview',
+								),
 								action('Delete', 'sf-variant-danger'),
 							],
 						},

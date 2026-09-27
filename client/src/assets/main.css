@@ -29,6 +29,12 @@ body .va-dropdown__content-wrapper {
 		transition: var(--transition);
 		border-color: rgb(var(--sf-border_color));
 	}
+
+	/* A popover opens in the top layer but still belongs to the page: take its text
+	   colour from where it sits, not the browser's CanvasText. */
+	[popover] {
+		color: inherit;
+	}
 }
 
 @layer reset {
