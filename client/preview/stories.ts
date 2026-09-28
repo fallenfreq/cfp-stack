@@ -18,6 +18,7 @@ import SfTooltip from '@/components/SfTooltip.vue'
 import type { NavItem } from '@/components/siteNav'
 import SiteNav from '@/components/SiteNav.vue'
 import MaterialIcon from '@/components/ui/MaterialIcon.vue'
+import SfButton, { type ButtonVariant } from '@/components/ui/SfButton.vue'
 import SfIcon from '@/components/ui/SfIcon.vue'
 import SfIconButton from '@/components/ui/SfIconButton.vue'
 import SfPageShell from '@/components/ui/SfPageShell.vue'
@@ -86,16 +87,40 @@ export interface Story {
 	render: () => VNode | VNode[]
 }
 
-const action = (label: string, extra = '') =>
+const action = (label: string, variant?: ButtonVariant) =>
 	h(
-		'button',
-		{ class: `sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover ${extra}` },
-		label,
+		SfButton,
+		{ class: 'sf-is-contained sf-text-sm sf-single-line', size: 'xs', variant },
+		() => label,
 	)
 
 // The tags cell as AdminPagesView builds it: chips on the trigger, a checkbox list in the
 // popover. popovertarget needs no script, so the popover opens by click in the preview too.
 const allTags = ['featured', 'news', 'updates', 'archive']
+
+// The chips on the tags cell's trigger.
+const chips = (tags: string[]) =>
+	tags.length
+		? [
+				...tags.slice(0, 2).map((t) =>
+					h(
+						'span',
+						{
+							class: 'sf-chip sf-size-2xs sf-loudness-2 sf-variant-primary',
+						},
+						t,
+					),
+				),
+				tags.length > 2
+					? h(
+							'span',
+							{ class: 'sf-chip sf-size-2xs sf-loudness-1' },
+							`+${tags.length - 2}`,
+						)
+					: null,
+			]
+		: h('span', { class: 'sf-text-xs sf-loudness-1' }, '—')
+
 const tagsCell = (tags: string[]) =>
 	h(
 		SfPopover,
@@ -103,33 +128,16 @@ const tagsCell = (tags: string[]) =>
 		{
 			trigger: (trigger: Record<string, unknown>) =>
 				h(
-					'button',
+					SfButton,
 					{
 						...trigger,
-						type: 'button',
-						class: 'sl-cluster sf-gap-2xs sf sf-is-contained sf-size-2xs sf-on-hover',
+						class: 'sl-cluster sf-gap-2xs sf-is-contained',
+						size: '2xs',
+						// AdminPagesView's scoped .tags-cell.
+						style: 'min-width: 48px; justify-content: start',
 						'aria-label': `Tags: ${tags.join(', ') || 'none'}`,
 					},
-					tags.length
-						? [
-								...tags.slice(0, 2).map((t) =>
-									h(
-										'span',
-										{
-											class: 'sf-chip sf-size-2xs sf-loudness-2 sf-variant-primary',
-										},
-										t,
-									),
-								),
-								tags.length > 2
-									? h(
-											'span',
-											{ class: 'sf-chip sf-size-2xs sf-loudness-1' },
-											`+${tags.length - 2}`,
-										)
-									: null,
-							]
-						: h('span', { class: 'sf-text-xs sf-loudness-1' }, '—'),
+					() => chips(tags),
 				),
 			default: () =>
 				h('div', { class: 'sl-stack sf-gap-xs' }, [
@@ -196,7 +204,7 @@ const adminList = () =>
 										},
 										'Preview',
 									),
-									action('Delete', 'sf-variant-danger'),
+									action('Delete', 'danger'),
 								].map((item) => h('li', item)),
 						},
 					),
@@ -635,7 +643,12 @@ export const stories: Story[] = [
 			const scope = {
 				[(PromptModal as { __scopeId?: string }).__scopeId ?? 'data-v-preview']: '',
 			}
-			const box = (question: VNode, field: VNode | null, ok: string, okClass: string) =>
+			const box = (
+				question: VNode,
+				field: VNode | null,
+				ok: string,
+				okVariant: ButtonVariant,
+			) =>
 				h('div', { ...scope, class: 'sf-scrim' }, [
 					h(
 						'div',
@@ -656,21 +669,11 @@ export const stories: Story[] = [
 										{ ...scope, class: 'button-group sl-cluster sf-gap-xs' },
 										[
 											h(
-												'button',
-												{
-													type: 'button',
-													class: `sf sf-loudness-3 sf-on-hover ${okClass}`,
-												},
-												ok,
+												SfButton,
+												{ loudness: 3, variant: okVariant },
+												() => ok,
 											),
-											h(
-												'button',
-												{
-													type: 'button',
-													class: 'sf sf-loudness-2 sf-on-hover',
-												},
-												'Cancel',
-											),
+											h(SfButton, { loudness: 2 }, () => 'Cancel'),
 										],
 									),
 								],
@@ -691,7 +694,7 @@ export const stories: Story[] = [
 						class: 'sf sf-field sf-on-focus',
 					}),
 					'Submit',
-					'sf-variant-primary',
+					'primary',
 				),
 				box(
 					h(
@@ -701,7 +704,7 @@ export const stories: Story[] = [
 					),
 					null,
 					'Delete',
-					'sf-variant-danger',
+					'danger',
 				),
 			])
 		},

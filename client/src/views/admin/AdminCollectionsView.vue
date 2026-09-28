@@ -39,28 +39,32 @@
 						</RouterLink>
 					</li>
 					<li>
-						<button
-							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+						<SfButton
+							class="sf-is-contained sf-text-sm sf-single-line"
+							size="xs"
 							@click="crud.onRename(tag.tagId, tag.name)"
 						>
 							Rename
-						</button>
+						</SfButton>
 					</li>
 					<li>
-						<button
-							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+						<SfButton
+							class="sf-is-contained sf-text-sm sf-single-line"
+							size="xs"
 							@click="crud.onChangeSlug(tag.tagId, tag.slug)"
 						>
 							Change slug
-						</button>
+						</SfButton>
 					</li>
 					<li>
-						<button
-							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover sf-variant-danger"
+						<SfButton
+							class="sf-is-contained sf-text-sm sf-single-line"
+							size="xs"
+							variant="danger"
 							@click="crud.onDelete(tag.tagId, tag.name)"
 						>
 							Delete
-						</button>
+						</SfButton>
 					</li>
 				</template>
 			</AdminListItem>

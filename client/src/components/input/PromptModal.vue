@@ -35,24 +35,21 @@
 					autofocus
 				>
 				<div class="button-group sl-cluster sf-gap-xs">
-					<button
+					<SfButton
 						type="submit"
-						class="sf sf-loudness-3 sf-on-hover"
-						:class="
-							request.kind === 'confirm' ? 'sf-variant-danger' : 'sf-variant-primary'
-						"
+						:loudness="3"
+						:variant="request.kind === 'confirm' ? 'danger' : 'primary'"
 					>
 						{{ request.kind === 'confirm' ? request.okText : 'Submit' }}
-					</button>
+					</SfButton>
 					<!-- On a confirm, focus starts here so Enter never confirms by accident. -->
-					<button
-						type="button"
-						class="sf sf-loudness-2 sf-on-hover"
+					<SfButton
+						:loudness="2"
 						:autofocus="request.kind === 'confirm'"
 						@click="cancelModal"
 					>
 						Cancel
-					</button>
+					</SfButton>
 				</div>
 			</form>
 		</div>

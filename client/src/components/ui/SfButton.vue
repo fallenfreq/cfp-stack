@@ -58,8 +58,9 @@ const isDisabled = computed(() => props.disabled || props.loading)
 
 <style scoped>
 @layer ui {
-	/* Icon and text sit in a row, centred. */
-	.btn {
+	/* Icon and text sit in a row, centred. :where() keeps this as weak as a rule can be,
+	   so wherever a button sits (a menu, a table cell) can line its contents up otherwise. */
+	:where(.btn) {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;

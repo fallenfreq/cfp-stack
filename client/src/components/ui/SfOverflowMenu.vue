@@ -44,6 +44,8 @@ withDefaults(
 	.overflow-menu > li > * {
 		inline-size: 100%;
 		text-align: left;
+		/* Buttons centre their contents; menu items line up on the left like the links. */
+		justify-content: start;
 		white-space: nowrap;
 	}
 }

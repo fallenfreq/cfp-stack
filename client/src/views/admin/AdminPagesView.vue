@@ -32,10 +32,10 @@
 				<template #meta>
 					<SfPopover class="sf-size-xs">
 						<template #trigger="trigger">
-							<button
+							<SfButton
 								v-bind="trigger"
-								type="button"
-								class="tags-cell sl-cluster sf-gap-2xs sf sf-is-contained sf-size-2xs sf-on-hover"
+								class="tags-cell sl-cluster sf-gap-2xs sf-is-contained"
+								size="2xs"
 								:aria-label="tagsLabel(page)"
 							>
 								<span
@@ -53,7 +53,7 @@
 										class="sf-chip sf-size-2xs sf-loudness-1"
 										>+{{ (pageTags.get(page.pageId)?.length ?? 0) - 2 }}</span>
 								</template>
-							</button>
+							</SfButton>
 						</template>
 						<div class="sl-stack sf-gap-xs">
 							<span
@@ -109,28 +109,32 @@
 						</RouterLink>
 					</li>
 					<li>
-						<button
-							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+						<SfButton
+							class="sf-is-contained sf-text-sm sf-single-line"
+							size="xs"
 							@click="crud.onRename(page.pageId, page.name || page.slug)"
 						>
 							Rename
-						</button>
+						</SfButton>
 					</li>
 					<li>
-						<button
-							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
+						<SfButton
+							class="sf-is-contained sf-text-sm sf-single-line"
+							size="xs"
 							@click="crud.onChangeSlug(page.pageId, page.slug)"
 						>
 							Change slug
-						</button>
+						</SfButton>
 					</li>
 					<li>
-						<button
-							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover sf-variant-danger"
+						<SfButton
+							class="sf-is-contained sf-text-sm sf-single-line"
+							size="xs"
+							variant="danger"
 							@click="crud.onDelete(page.pageId, page.name || page.slug)"
 						>
 							Delete
-						</button>
+						</SfButton>
 					</li>
 				</template>
 			</AdminListItem>
@@ -235,10 +239,12 @@ const onNewPage = async () => {
 
 <style scoped>
 @layer ui {
-	/* Arrangement comes from sl-cluster, chrome from the sf classes on the button;
+	/* Arrangement comes from sl-cluster, chrome from SfButton;
 	   the min width keeps an empty cell easy to tap. */
 	.tags-cell {
 		min-width: 48px;
+		/* Chips start at the left, in line with the column heading. */
+		justify-content: start;
 	}
 }
 </style>

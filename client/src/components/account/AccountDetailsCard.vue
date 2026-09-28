@@ -51,16 +51,9 @@ const { form, saving, saveSuccess, saveError, saveWarning, saveAccount } = useAc
 			</label>
 		</div>
 		<div class="sl-cluster sl-align-y-center sf-gap-sm">
-			<button
-				type="button"
-				class="sf sf-loudness-3 sf-variant-primary sf-on-disabled"
-				:class="{ 'sf-is-loading': saving, 'sf-on-hover': !saving }"
-				:aria-busy="saving"
-				:disabled="saving"
-				@click="saveAccount"
-			>
+			<SfButton :loudness="3" variant="primary" :loading="saving" @click="saveAccount">
 				{{ saving ? 'Saving…' : 'Save' }}
-			</button>
+			</SfButton>
 			<span
 				v-if="saveSuccess && !saveWarning"
 				class="sf-text-sm sf-variant-success"

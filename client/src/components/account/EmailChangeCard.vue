@@ -73,19 +73,15 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 				sent to {{ newEmail }}, you will be locked out until an admin resets your address.
 			</p>
 			<div class="sl-cluster sf-gap-sm">
-				<button
-					type="button"
-					class="sf sf-loudness-3 sf-variant-primary sf-on-disabled"
-					:class="{
-						'sf-is-loading': emailStatus === 'sending',
-						'sf-on-hover': canRequest,
-					}"
-					:aria-busy="emailStatus === 'sending'"
+				<SfButton
+					:loudness="3"
+					variant="primary"
+					:loading="emailStatus === 'sending'"
 					:disabled="!canRequest"
 					@click="requestEmailChange"
 				>
 					{{ emailStatus === 'sending' ? 'Sending…' : 'Request change' }}
-				</button>
+				</SfButton>
 			</div>
 			<p v-if="emailError" class="sf-text-sm sf-variant-danger" role="alert">
 				{{ emailError }}
@@ -105,35 +101,19 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 						autocomplete="one-time-code"
 					>
 				</label>
-				<button
-					type="button"
-					class="sf sf-loudness-3 sf-variant-primary sf-on-disabled"
-					:class="{
-						'sf-is-loading': emailStatus === 'verifying',
-						'sf-on-hover': canVerify,
-					}"
-					:aria-busy="emailStatus === 'verifying'"
+				<SfButton
+					:loudness="3"
+					variant="primary"
+					:loading="emailStatus === 'verifying'"
 					:disabled="!canVerify"
 					@click="verifyEmailCode"
 				>
 					{{ emailStatus === 'verifying' ? 'Verifying…' : 'Verify' }}
-				</button>
-				<button
-					type="button"
-					class="sf sf-loudness-2 sf-on-hover"
-					@click="cancelEmailChange"
-				>
-					Cancel
-				</button>
+				</SfButton>
+				<SfButton :loudness="2" @click="cancelEmailChange"> Cancel </SfButton>
 			</div>
 			<div class="sl-cluster sl-align-y-center sf-gap-sm">
-				<button
-					type="button"
-					class="sf sf-loudness-2 sf-size-xs sf-on-hover"
-					@click="resendEmailCode"
-				>
-					Resend code
-				</button>
+				<SfButton :loudness="2" size="xs" @click="resendEmailCode"> Resend code </SfButton>
 				<span v-if="resendSent" class="sf-text-sm sf-variant-success" role="status">
 					Code resent to {{ pendingEmail }}
 				</span>
@@ -148,13 +128,7 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 				Email updated to {{ pendingEmail }}. Sign out and back in to see the change
 				reflected here.
 			</p>
-			<button
-				type="button"
-				class="sf sf-loudness-2 sf-size-xs sf-on-hover"
-				@click="cancelEmailChange"
-			>
-				Change again
-			</button>
+			<SfButton :loudness="2" size="xs" @click="cancelEmailChange"> Change again </SfButton>
 		</div>
 	</section>
 </template>
