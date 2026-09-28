@@ -2056,7 +2056,7 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'none',
 	},
 
-	// Loudness-3 × variant: solid fill + inverted text.
+	// Loudness-3 × variant: solid fill + that colour's fg_on_* text, in bold.
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-featured'],
 		cssProperty: 'background',
@@ -2209,7 +2209,8 @@ const ROOT_RULES: RuleSpec[] = [
 		value: '1px solid rgb(var(--sf-border_color))',
 	},
 
-	// Hover state — bare rules restore full-opacity foreground and add a subtle fill.
+	// Hover state — bare rules restore the surrounding text colour (undoing quiet) and add
+	// a subtle fill in it.
 	// Compounds (e.g. sf-on-hover × sf-variant-featured) override per variant where needed.
 	{ classNames: ['sf-on-hover'], cssProperty: 'color', value: 'inherit' },
 	{
@@ -2882,10 +2883,10 @@ const ROOT_RULES: RuleSpec[] = [
 			value,
 		}),
 	),
-	// The knob: round, one text-em across, muted at rest and primary when on. Its icon
-	// is a little smaller than the knob and always contrasts with its fill.
 	// A toast is a short message you glance at, so its text is heavier, whatever its colour.
 	{ classNames: ['sf-toast'], cssProperty: 'font-weight', value: 'var(--sf-weight-3)' },
+	// The knob: round, one text-em across, muted at rest and primary when on. Its icon
+	// is a little smaller than the knob and always contrasts with its fill.
 	{ classNames: ['sf-thumb'], cssProperty: 'border-radius', value: 'var(--sf-radius-full)' },
 	{ classNames: ['sf-thumb'], cssProperty: 'font-size', value: '0.8em' },
 	{ classNames: ['sf-thumb'], cssProperty: 'inline-size', value: '1.25em' },

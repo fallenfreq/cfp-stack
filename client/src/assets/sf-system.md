@@ -635,9 +635,10 @@ with the matching `fg_on_*` text in bold. The loudness-2 shades are solid: the c
 into the page colour (`--sf-surface-0`), so they look the same on any surface and follow
 dark mode. Coloured text is the colour moved halfway to the normal text's brightness with
 its colourfulness kept, so it reads on light and dark alike. One colour value per role
-serves both modes. Hover and press step each fill a little further without losing it. A floating box (`sf-is-overlay`) keeps its loudness: the
-tint sits on a solid surface so the page doesn't show through, and it keeps its depth's
-shadow (read through `--sfx-depth-shadow`).
+serves both modes. Hover and press step each fill a little further without losing it.
+A floating box (`sf-is-overlay`) keeps its loudness: the tint sits on a solid surface so
+the page doesn't show through, and it keeps its depth's shadow (read through
+`--sfx-depth-shadow`).
 
 **Quiet is a shade of the text around it.** Quiet text, quiet icons and hover and press
 tints are made from the text colour where they sit (`currentColor`), not from the theme's

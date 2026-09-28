@@ -32,7 +32,7 @@
 
 <script setup lang="ts">
 import { dismiss, holdToasts, toasts } from '@/services/toast'
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 
 // The one place toasts show; mounted once in App. notify() from services/toast adds them.
 const region = ref<HTMLElement | null>(null)
@@ -48,7 +48,13 @@ const bringToFront = () => {
 onMounted(bringToFront)
 watch(
 	() => toasts.length,
-	(length, previous) => length > previous && bringToFront(),
+	async (length, previous) => {
+		if (length > previous) return bringToFront()
+		// A removed toast doesn't report focus or the pointer leaving, so check after it goes.
+		await nextTick()
+		if (!length) holdToasts('hover', false)
+		if (!region.value?.contains(document.activeElement)) holdToasts('focus', false)
+	},
 )
 
 const onFocusOut = (event: FocusEvent) => {
