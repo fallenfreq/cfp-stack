@@ -350,14 +350,14 @@ Done:
 
 - [x] `ToolbarButton.vue` — now `SfButton` with `sf-is-contained`, `size="xs"` and
       `@mousedown.prevent`; `current`/`disabled` pass through. No local rules.
-- [x] `NodePath.vue` — `.path-node` gets `sf-is-contained sf-loudness-1 sf-on-hover
-sf-on-disabled sf-size-2xs` + conditional `sf-on-current`; container gets
+- [x] `NodePath.vue` — each block is an `SfButton` (`sf-single-line sf-is-contained`,
+      loudness 1, size xs, `current` for the chosen depth, Doc `disabled`); container gets
       `sf-text-xs` (buttons inherit via bare `button { font: inherit }`); local
       rules are layout only. Previous asymmetric `padding: 1px 5px` replaced by
       the size axis feeding the bare button rule.
 - [x] `EditorTopBar.vue` — top-bar container gets `sf-text-xs` (drops local
       `font-size`); `.top-bar__name` input carries `sf-is-contained sf-loudness-1
-    sf-on-hover sf-size-2xs`. The ⋯ toggle and Settings are `SfIconButton`, Save is
+  sf-on-hover sf-size-2xs`. The ⋯ toggle and Settings are `SfIconButton`, Save is
       `SfTooltip` + `SfButton` (`loading`, `variant` from the save state), all
       `sf-is-contained`, loudness 1, size 2xs; the toggle is `current` + `aria-expanded`. `.is-renaming` compound
       reduced to layout (flex grow / max-width / overflow / cursor); the editing

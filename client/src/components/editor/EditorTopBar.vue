@@ -67,7 +67,7 @@ defineProps<{ editor: Editor }>()
 const store = useEditorStore()
 const { saveStatus, currentName } = storeToRefs(store)
 const actionsOpen = ref(false)
-// Save shows green once saved and red if it failed.
+// Save marks how the last save went: success once saved, danger if it failed.
 const saveVariant = computed(() =>
 	saveStatus.value === 'saved' ? 'success' : saveStatus.value === 'error' ? 'danger' : undefined,
 )

@@ -6,18 +6,17 @@
 	>
 		<template v-for="(segment, i) in path" :key="segment.depth">
 			<span v-if="i > 0" class="path-sep sf-icon sf-loudness-1" aria-hidden="true">›</span>
-			<button
-				class="path-node sf sf-single-line sf-is-contained sf-loudness-1 sf-on-disabled sf-size-xs"
-				:class="{
-					'sf-on-current': segment.depth === effectiveActiveDepth,
-					'sf-on-hover': segment.depth !== 0,
-				}"
+			<SfButton
+				class="sf-single-line sf-is-contained"
+				:loudness="1"
+				size="xs"
+				:current="segment.depth === effectiveActiveDepth"
 				:disabled="segment.depth === 0"
 				@mousedown.prevent
 				@click="handleDepthClick(segment)"
 			>
 				{{ segment.name }}
-			</button>
+			</SfButton>
 		</template>
 	</div>
 </template>
