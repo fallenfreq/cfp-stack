@@ -356,9 +356,10 @@ sf-on-disabled sf-size-2xs` + conditional `sf-on-current`; container gets
       rules are layout only. Previous asymmetric `padding: 1px 5px` replaced by
       the size axis feeding the bare button rule.
 - [x] `EditorTopBar.vue` — top-bar container gets `sf-text-xs` (drops local
-      `font-size`); `.top-bar__name` input, `.top-bar__toggle` and `.top-bar__action`
-      buttons all carry `sf-is-contained sf-loudness-1 sf-on-hover sf-size-2xs` +
-      appropriate `sf-on-disabled` / `sf-on-current`. `.is-renaming` compound
+      `font-size`); `.top-bar__name` input carries `sf-is-contained sf-loudness-1
+    sf-on-hover sf-size-2xs`. The ⋯ toggle and Settings are `SfIconButton`, Save is
+      `SfTooltip` + `SfButton` (`loading`, `variant` from the save state), all
+      `sf-is-contained`, loudness 1, size 2xs; the toggle is `current` + `aria-expanded`. `.is-renaming` compound
       reduced to layout (flex grow / max-width / overflow / cursor); the editing
       look (fg-primary + subtle bg tint) now comes from bare `input:focus-visible`
       in the seed, driven by the input's own focus/blur.

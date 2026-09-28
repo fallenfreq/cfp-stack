@@ -38,10 +38,10 @@ export type ButtonSize = '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 const props = withDefaults(
 	defineProps<{
 		// No loudness means the theme's plain button, as no size means its normal size.
-		loudness?: ButtonLoudness
-		variant?: ButtonVariant
+		loudness?: ButtonLoudness | undefined
+		variant?: ButtonVariant | undefined
 		// No size means the theme's normal button size.
-		size?: ButtonSize
+		size?: ButtonSize | undefined
 		// Marks the button as the one that's on or selected (a pressed toggle, the open tab).
 		current?: boolean
 		// Waiting on its action: shows as busy and can't be pressed again.

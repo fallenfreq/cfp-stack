@@ -14,40 +14,42 @@
 			@keyup.escape="cancelRename"
 		>
 		<NodePath :editor="editor" />
-		<button
-			class="top-bar__toggle sf sf-is-contained sf-loudness-1 sf-on-hover sf-size-2xs"
-			:class="{ 'sf-on-current': actionsOpen }"
-			title="Editor actions"
+		<SfIconButton
+			icon="three-dot"
+			tooltip="Editor actions"
+			size="2xs"
+			:loudness="1"
+			class="sf-is-contained"
+			:current="actionsOpen"
+			:aria-expanded="actionsOpen"
 			@click="actionsOpen = !actionsOpen"
-		>
-			<SfIcon name="three-dot" />
-		</button>
+		/>
 		<Transition name="top-bar-actions">
 			<div v-if="actionsOpen" class="top-bar__actions">
-				<button
-					class="top-bar__action sf sf-is-contained sf-loudness-1 sf-on-disabled sf-size-2xs"
-					:class="{
-						'sf-on-hover': saveStatus !== 'saving',
-						'sf-variant-success': saveStatus === 'saved',
-						'sf-variant-danger': saveStatus === 'error',
-						'sf-is-loading': saveStatus === 'saving',
-					}"
-					:aria-busy="saveStatus === 'saving'"
-					:disabled="saveStatus === 'saving'"
-					title="Save"
-					@click="store.save()"
-				>
-					<SfIcon v-if="saveStatus === 'saving'" name="spinner" spin />
-					<SfIcon v-else-if="saveStatus === 'error'" name="x" />
-					<SfIcon v-else name="check" />
-				</button>
-				<button
-					class="top-bar__action sf sf-is-contained sf-loudness-1 sf-on-disabled sf-size-2xs"
-					title="Editor settings"
+				<!-- Not SfIconButton: the icon follows the save state and the spinner spins. -->
+				<SfTooltip text="Save">
+					<SfButton
+						aria-label="Save"
+						size="2xs"
+						:loudness="1"
+						class="sf-is-contained"
+						:variant="saveVariant"
+						:loading="saveStatus === 'saving'"
+						@click="store.save()"
+					>
+						<SfIcon v-if="saveStatus === 'saving'" name="spinner" spin />
+						<SfIcon v-else-if="saveStatus === 'error'" name="x" />
+						<SfIcon v-else name="check" />
+					</SfButton>
+				</SfTooltip>
+				<SfIconButton
+					icon="settings"
+					tooltip="Editor settings"
+					size="2xs"
+					:loudness="1"
+					class="sf-is-contained"
 					disabled
-				>
-					<SfIcon name="settings" />
-				</button>
+				/>
 			</div>
 		</Transition>
 	</div>
@@ -57,7 +59,7 @@
 import { useEditorStore } from '@/stores/editorStore'
 import type { Editor } from '@tiptap/vue-3'
 import { storeToRefs } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import NodePath from './NodePath.vue'
 
 defineProps<{ editor: Editor }>()
@@ -65,6 +67,10 @@ defineProps<{ editor: Editor }>()
 const store = useEditorStore()
 const { saveStatus, currentName } = storeToRefs(store)
 const actionsOpen = ref(false)
+// Save shows green once saved and red if it failed.
+const saveVariant = computed(() =>
+	saveStatus.value === 'saved' ? 'success' : saveStatus.value === 'error' ? 'danger' : undefined,
+)
 const renamingName = ref(false)
 const nameInputValue = ref(currentName.value ?? 'Untitled')
 const nameInput = ref<HTMLInputElement | null>(null)
@@ -147,15 +153,6 @@ const cancelRename = () => {
 		transition:
 			width 0.15s,
 			opacity 0.1s;
-	}
-
-	/* Toggle + action buttons — sf-size-2xs feeds bare button rule's padding. */
-	.top-bar__toggle,
-	.top-bar__action {
-		flex-shrink: 0;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
 	}
 
 	.top-bar__actions {
