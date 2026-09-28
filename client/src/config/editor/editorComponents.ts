@@ -7,7 +7,6 @@ import LayoutSection from '@/components/layout/LayoutSection.vue'
 import LayoutSplit from '@/components/layout/LayoutSplit.vue'
 import { enumAttr } from '@/editor/enumAttr'
 import { type Component } from 'vue'
-import { VaButton } from 'vuestic-ui'
 
 interface PropSpec {
 	default: unknown
@@ -39,14 +38,6 @@ const POSITION_OPTIONS = ['start', 'center', 'end'] as const
 const COVER_MIN_HEIGHT_OPTIONS = ['default', 'compact', 'viewport', 'fill'] as const
 
 const editorComponents = {
-	VaButton: {
-		uuid: 'b8a538a1-d902-4a46-b303-f09c76fe220c',
-		alias: 'va-button',
-		component: VaButton,
-		// VaButton.props is Vuestic's internal prop-options object; cast at the boundary.
-		props: VaButton.props as Record<string, PropSpec>,
-		content: 'inline*',
-	},
 	TiptapTest: {
 		uuid: 'a47e28a5-fd9d-40e9-bd74-819301247e9d',
 		alias: 'tiptap-test',

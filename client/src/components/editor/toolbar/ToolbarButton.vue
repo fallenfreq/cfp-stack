@@ -1,31 +1,7 @@
 <template>
-	<button
-		class="toolbar-btn sf sf-is-contained sf-on-disabled sf-size-xs"
-		:class="{ 'sf-on-current': active, 'sf-on-hover': !disabled }"
-		:disabled="disabled"
-		@mousedown.prevent
-		@click="$emit('click')"
-	>
+	<!-- A small toolbar button. mousedown.prevent keeps focus, and so the selection, in the
+	     editor; current, disabled and click pass through to SfButton. -->
+	<SfButton class="sf-is-contained" size="xs" @mousedown.prevent>
 		<slot />
-	</button>
+	</SfButton>
 </template>
-
-<script setup lang="ts">
-defineProps<{
-	active?: boolean
-	disabled?: boolean
-}>()
-
-defineEmits<{ click: [] }>()
-</script>
-
-<style scoped>
-@layer ui {
-	.toolbar-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--sf-gap, var(--sf-spacing-2xs));
-		white-space: nowrap;
-	}
-}
-</style>

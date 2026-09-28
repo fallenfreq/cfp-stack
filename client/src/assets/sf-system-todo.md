@@ -348,8 +348,8 @@ background, border, radius, focus/hover expression via seed rules.
 
 Done:
 
-- [x] `ToolbarButton.vue` — `sf-is-contained sf-on-hover sf-on-disabled sf-size-xs` + conditional `sf-on-current`; local rule reduced to `display: inline-flex`,
-      `align-items`, `gap`, `white-space`. All chrome removed.
+- [x] `ToolbarButton.vue` — now `SfButton` with `sf-is-contained`, `size="xs"` and
+      `@mousedown.prevent`; `current`/`disabled` pass through. No local rules.
 - [x] `NodePath.vue` — `.path-node` gets `sf-is-contained sf-loudness-1 sf-on-hover
 sf-on-disabled sf-size-2xs` + conditional `sf-on-current`; container gets
       `sf-text-xs` (buttons inherit via bare `button { font: inherit }`); local
@@ -366,11 +366,9 @@ sf-on-disabled sf-size-2xs` + conditional `sf-on-current`; container gets
       items get `sf-on-hover sf-size-2xs` (+ conditional `sf-on-current`);
       `.no-commands` placeholder gets `sf-loudness-1 sf-size-2xs`. Border and
       border-radius dropped locally — chrome is depth-2's call.
-- [x] `SfIconButton.vue` — dropped `variant` prop (outlined/ghost) and explicit
-      width/height; size prop expanded to full `xs..xl` scale; classes are
-      `sf-on-hover sf-on-disabled sf-size-${size}`. Button size now derives from
-      icon + `--sf-padding` via the bare button rule.
-- [x] `SfOverflowMenu.vue` — anchor carries `sf-is-contained sf-loudness-1`;
+- [x] `SfIconButton.vue` — `SfTooltip` + `SfButton` + `SfIcon`; the tooltip is also
+      the button's name. `size` defaults to `xs`; other `SfButton` props pass through.
+- [x] `SfOverflowMenu.vue` — anchor carries `sf-is-contained` and `:loudness="1"`;
       dropdown container passes `sf-size-${size}` through to `sf-overflow-menu`.
 - [x] `CodeViewToggle.vue` — floating toggle now composes `sf-depth-2 sf-is-overlay`
       on top of ToolbarButton. See "To investigate" — ToolbarButton's hardwired

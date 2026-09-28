@@ -6,7 +6,8 @@
 				icon="three-dot"
 				:size="size"
 				:tooltip="tooltip"
-				class="sf-is-contained sf-loudness-1"
+				class="sf-is-contained"
+				:loudness="1"
 			/>
 		</template>
 		<!-- Each action goes in its own <li>. -->

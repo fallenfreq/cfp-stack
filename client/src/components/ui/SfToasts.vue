@@ -22,7 +22,8 @@
 				<SfIconButton
 					icon="x"
 					tooltip="Dismiss"
-					class="sf-is-contained sf-loudness-1"
+					class="sf-is-contained"
+					:loudness="1"
 					@click="dismiss(toast.id)"
 				/>
 			</div>

@@ -72,7 +72,7 @@ export function toolbarButtonItem(options: ButtonItemOptions): ToolbarItem {
 		const btn = h(
 			ToolbarButton,
 			{
-				active: options.active?.(editor, context) ?? false,
+				current: options.active?.(editor, context) ?? false,
 				disabled: options.disabled?.(editor, context) ?? false,
 				onClick: () => options.action(editor, context),
 			},

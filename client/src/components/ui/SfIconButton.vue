@@ -1,42 +1,24 @@
 <template>
 	<SfTooltip :text="tooltip">
-		<button
-			class="sf-icon-btn sf sf-on-disabled"
-			:aria-label="tooltip"
-			:class="[`sf-size-${size}`, { 'sf-on-hover': !isDisabled() }]"
-			v-bind="$attrs"
-		>
+		<!-- An icon has no words, so the tooltip is also the button's name. -->
+		<SfButton :size="size" :aria-label="tooltip" v-bind="$attrs">
 			<SfIcon :name="icon" />
-		</button>
+		</SfButton>
 	</SfTooltip>
 </template>
 
 <script setup lang="ts">
-import { useAttrs } from 'vue'
+import type { ButtonSize } from './SfButton.vue'
 import type { IconName } from './SfIcon.vue'
 
+// Attributes and SfButton props (loudness, disabled, …) go to the button, not the tooltip.
 defineOptions({ inheritAttrs: false })
-// disabled passes through to the button with the other attributes; read it here so a
-// disabled button doesn't respond to hover.
-const attrs = useAttrs()
-const isDisabled = () => attrs.disabled != null && attrs.disabled !== false
 withDefaults(
 	defineProps<{
 		icon: IconName
 		tooltip: string
-		size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+		size?: ButtonSize
 	}>(),
 	{ size: 'xs' },
 )
 </script>
-
-<style>
-@layer ui {
-	.sf-icon-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-}
-</style>

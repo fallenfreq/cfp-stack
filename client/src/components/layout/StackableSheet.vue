@@ -24,7 +24,8 @@
 				<SfIconButton
 					icon="x"
 					tooltip="Close"
-					class="sf-is-contained sf-loudness-1"
+					class="sf-is-contained"
+					:loudness="1"
 					@click="close"
 				/>
 			</div>

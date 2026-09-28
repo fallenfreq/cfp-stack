@@ -1,14 +1,15 @@
 <template>
-	<div class="p-2">
+	<div class="sf-depth-1 sl-stack sf-gap-sm">
 		<h1 class="sf-heading-2">Uneditable Heading</h1>
 		<p>
-			These sections are interactive but they are not editable as they are not apart of the
+			These sections are interactive but they are not editable as they are not a part of the
 			editor.
 		</p>
-		<VaButton @click="onclick"> Click me </VaButton>
-		<p>Button clicked {{ count }} times</p>
-
-		The bit below is editable as it is passed into the slot via the editor.
+		<div class="sl-cluster sl-align-y-center sf-gap-sm">
+			<SfButton @click="onclick">Click me</SfButton>
+			<p>Button clicked {{ count }} times</p>
+		</div>
+		<p>The bit below is editable as it is passed into the slot via the editor.</p>
 		<slot />
 	</div>
 </template>

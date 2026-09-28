@@ -20,7 +20,7 @@ function parseSelector(selector: string): {
 	value: string | null
 } {
 	// Match the tag name and optional attribute selector. Custom-element tags
-	// like `va-button` contain hyphens (HTML custom element spec requires it).
+	// like `layout-card` contain hyphens (HTML custom element spec requires it).
 	const match = selector.match(
 		/^(?<tag>[\w-]+)(?:\[(?<attribute>[^\]=]+)(?:=(?<value>[^\]]+))?\])?$/,
 	)

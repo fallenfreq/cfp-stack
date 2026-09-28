@@ -5,7 +5,7 @@
 	     button in the floating toolbar. -->
 	<ToolbarButton
 		class="code-view-toggle"
-		:active="editorStore.isCodeView"
+		:current="editorStore.isCodeView"
 		@click="editorStore.toggleCodeView"
 	>
 		<ToolbarIcon>{{ editorStore.isCodeView ? 'text_fields' : 'code' }}</ToolbarIcon>

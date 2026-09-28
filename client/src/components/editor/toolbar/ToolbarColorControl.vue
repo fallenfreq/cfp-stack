@@ -2,9 +2,9 @@
 	<ToolbarPanelItem :open="open" :tooltip="tooltip" align="end" @update:open="setOpen">
 		<template #trigger="trigger">
 			<SfTooltip :text="tooltip">
-				<SfButton v-bind="trigger" class="sf-is-contained" @mousedown.prevent>
+				<ToolbarButton v-bind="trigger">
 					<span class="color-swatch sf-swatch sf-size-2xs" :style="swatchStyle" />
-				</SfButton>
+				</ToolbarButton>
 			</SfTooltip>
 		</template>
 		<ColorPicker :value="currentColor" @commit="onCommit" @remove="onRemove" />
@@ -23,6 +23,7 @@ import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, type CSSProperties } from 'vue'
 import ColorPicker from './ColorPicker.vue'
+import ToolbarButton from './ToolbarButton.vue'
 import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
