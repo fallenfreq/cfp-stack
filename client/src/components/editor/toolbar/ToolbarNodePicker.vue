@@ -2,17 +2,17 @@
 	<ToolbarPanelItem v-model:open="open" :icon="iconName" :tooltip="tooltip" align="end">
 		<div class="picker-list sf-size-xs">
 			<template v-if="computedItems.length">
-				<button
+				<SfButton
 					v-for="item in computedItems"
 					:key="item.label"
-					type="button"
-					class="picker-item sf sf-is-contained sf-size-xs sf-on-hover"
-					:class="{ 'sf-on-current': item.active }"
+					class="picker-item sf-is-contained"
+					size="xs"
+					:current="item.active"
 					@mousedown.prevent="select(item)"
 				>
 					<span class="material-symbols-rounded sf-icon">{{ item.iconName }}</span>
 					<span>{{ item.label }}</span>
-				</button>
+				</SfButton>
 			</template>
 			<div v-else class="picker-empty sf-loudness-1">No compatible types</div>
 		</div>
@@ -63,13 +63,13 @@ const select = (item: NodePickerItem) => {
 		display: none;
 	}
 
+	/* Full-width rows, contents on the left; long labels wrap. */
 	.picker-item {
 		display: flex;
-		align-items: center;
 		gap: var(--sf-gap, var(--sf-spacing-xs));
 		width: 100%;
-		text-align: left;
-		cursor: pointer;
+		justify-content: start;
+		white-space: normal;
 		user-select: none;
 	}
 

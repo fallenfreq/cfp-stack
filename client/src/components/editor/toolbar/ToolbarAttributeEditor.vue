@@ -41,28 +41,30 @@
 
 			<template v-if="allAddableCount">
 				<hr v-if="allRowCount" class="sf">
-				<button
+				<SfButton
 					v-for="key in classAddableKeys"
 					:key="key"
-					type="button"
-					class="attr-add-btn sf sf-is-contained sf-size-2xs sf-loudness-1 sf-on-hover"
+					class="attr-add-btn sf-is-contained"
+					size="2xs"
+					:loudness="1"
 					@mousedown.prevent
 					@click="startAdd(key)"
 				>
 					<span class="material-symbols-rounded sf-icon">add</span>
 					{{ key }}
-				</button>
-				<button
+				</SfButton>
+				<SfButton
 					v-for="key in addableKeys"
 					:key="key"
-					type="button"
-					class="attr-add-btn sf sf-is-contained sf-size-2xs sf-loudness-1 sf-on-hover"
+					class="attr-add-btn sf-is-contained"
+					size="2xs"
+					:loudness="1"
 					@mousedown.prevent
 					@click="startAdd(key)"
 				>
 					<span class="material-symbols-rounded sf-icon">add</span>
 					{{ key }}
-				</button>
+				</SfButton>
 			</template>
 		</div>
 	</ToolbarPanelItem>
@@ -240,29 +242,30 @@ watch(
 </script>
 
 <style scoped>
-.attr-content {
-	min-width: 300px;
-	max-width: calc(100vw - 8px);
-	max-height: 400px;
-	overflow-y: auto;
-	scrollbar-width: none;
-}
+@layer ui {
+	.attr-content {
+		min-width: 300px;
+		max-width: calc(100vw - 8px);
+		max-height: 400px;
+		overflow-y: auto;
+		scrollbar-width: none;
+	}
 
-.attr-content::-webkit-scrollbar {
-	display: none;
-}
+	.attr-content::-webkit-scrollbar {
+		display: none;
+	}
 
-.attr-add-btn {
-	display: flex;
-	align-items: center;
-	gap: var(--sf-gap, var(--sf-spacing-2xs));
-	width: 100%;
-	cursor: pointer;
-	text-align: left;
-}
+	/* Full-width rows, contents on the left; long names wrap. */
+	.attr-add-btn {
+		display: flex;
+		width: 100%;
+		justify-content: start;
+		white-space: normal;
+	}
 
-.attr-empty {
-	padding: var(--sf-padding);
-	text-align: center;
+	.attr-empty {
+		padding: var(--sf-padding);
+		text-align: center;
+	}
 }
 </style>

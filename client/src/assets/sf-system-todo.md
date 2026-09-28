@@ -357,7 +357,7 @@ Done:
       the size axis feeding the bare button rule.
 - [x] `EditorTopBar.vue` — top-bar container gets `sf-text-xs` (drops local
       `font-size`); `.top-bar__name` input carries `sf-is-contained sf-loudness-1
-  sf-on-hover sf-size-2xs`. The ⋯ toggle and Settings are `SfIconButton`, Save is
+sf-on-hover sf-size-2xs`. The ⋯ toggle and Settings are `SfIconButton`, Save is
       `SfTooltip` + `SfButton` (`loading`, `variant` from the save state), all
       `sf-is-contained`, loudness 1, size 2xs; the toggle is `current` + `aria-expanded`. `.is-renaming` compound
       reduced to layout (flex grow / max-width / overflow / cursor); the editing
@@ -374,8 +374,13 @@ Done:
 - [x] `CodeViewToggle.vue` — floating toggle now composes `sf-depth-2 sf-is-overlay`
       on top of ToolbarButton. See "To investigate" — ToolbarButton's hardwired
       `sf-is-contained` may be stripping depth-2's chrome here.
-- [x] `ToolbarScrollHint.vue` — `sf-size-xs` → `sf-size-2xs`; hardcoded
-      `padding: 4px 12px` replaced by `var(--sf-padding)` fed by the size class.
+- [x] `ToolbarScrollHint.vue` — hardcoded `padding: 4px 12px` replaced by the size
+      class. Now an `SfButton` (`sf-depth-2 sf-is-overlay`, size xs) named "Scroll to
+      toolbar"; centred with auto margins (not a transform a theme could override);
+      gaps are `--sf-spacing-xs` / `--sf-spacing-md`, the scroll math keeps `+ 8`.
+- [x] `ToolbarNodePicker.vue` rows and `ToolbarAttributeEditor.vue` add rows are
+      `SfButton`s; full-width rows set `display: flex`, `justify-content: start` and
+      `white-space: normal` over SfButton's centred single-line default.
 - [x] Toolbar-picker state classes migrated from legacy `is-active`:
       `ColorPicker.vue`, `FontPicker.vue`, `ToolbarCornersControl.vue`,
       `ToolbarShadowControl.vue` chips → `sf-on-selected` (outline-chip pattern);
