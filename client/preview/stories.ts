@@ -527,13 +527,9 @@ export const stories: Story[] = [
 				}),
 				h('div', { class: 'sl-cluster sf-gap-sm' }, [
 					h(
-						'button',
-						{
-							class: 'sf sf-loudness-3 sf-variant-primary sf-on-hover sf-on-disabled sf-is-loading',
-							disabled: true,
-							'aria-busy': 'true',
-						},
-						'Sending…',
+						SfButton,
+						{ loudness: 3, variant: 'primary', loading: true },
+						() => 'Sending…',
 					),
 				]),
 			])

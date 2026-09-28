@@ -571,7 +571,7 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sf-is-loading',
 		kind: 'context',
 		description:
-			'Element is in a loading / pending state — e.g. a button whose action is running. Theme decides the look (default: busy cursor).',
+			'Element is in a loading / pending state — e.g. a button whose action is running. A busy button stays enabled so it keeps focus. Theme decides the look (default: busy cursor, dimmed like disabled).',
 	},
 	{
 		name: 'sf-is-error',
@@ -1745,6 +1745,8 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-is-contained'], cssProperty: 'background', value: 'none' },
 	{ classNames: ['sf-is-contained'], cssProperty: 'border-color', value: 'transparent' },
 	{ classNames: ['sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
+	// A busy button stays focusable (so it isn't disabled); it dims like a disabled one.
+	{ classNames: ['sf-is-loading'], cssProperty: 'opacity', value: '0.4' },
 	{ classNames: ['sf-is-error'], cssProperty: 'border-color', value: 'rgb(var(--sf-danger))' },
 	// sf-is-contained × sf-is-overlay — contained takes priority over overlay's tinted
 	// surface background. Both are single-class context rules; the compound wins by specificity.
@@ -2230,7 +2232,8 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-danger) / var(--sf-alpha-1))',
 	},
 
-	// Loading usually disables the control too; keep the busy cursor rather than "not allowed".
+	// A control that is busy and also natively disabled (hand-written markup; SfButton never
+	// disables while busy) keeps the busy cursor rather than "not allowed".
 	{ classNames: ['sf-on-disabled', 'sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
 	// An error stays visible while the field has focus.
 	{

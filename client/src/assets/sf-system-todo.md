@@ -160,9 +160,9 @@ Done in the editor + cleanup slice:
 
 What's pending:
 
-1. **Held — no consumer yet**: `sf-is-loading` / `sf-is-error`. Vocabulary seeded; add
-   rules when a real consumer exists. (`sf-on-active` and `sf-on-ancestor` now have rules
-   and a consumer: SiteNav, v2.71.0.)
+1. ~~**Held — no consumer yet**: `sf-is-loading` / `sf-is-error`.~~ Both have rules and
+   consumers (2.65.0; loading dims like disabled since 2.82.0 — see below). (`sf-on-active`
+   and `sf-on-ancestor` have rules and a consumer: SiteNav, v2.71.0.)
 2. **Raw token refs in component CSS** — many components still reference `--border_color`,
    `--primary`, `--text_primary` etc. directly. Migrate one-by-one as the right
    vocabulary class is seeded; no bulk pass until the class system covers the gap.
@@ -310,8 +310,9 @@ var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
       Table padding lives in the seed (sf-element / sf-bundle layers) so `@layer ui`
       cell padding cannot override it — component-level padding differences must become
       seed compound rules.
-- [ ] `sf-is-loading` / `sf-is-error` — vocabulary + rules still needed. Loading:
-      skeleton shimmer or opacity reduction. Error: border-color + optional background tint.
+- [x] `sf-is-loading` / `sf-is-error` — Loading: busy cursor + opacity 0.4 (2.82.0). A busy
+      SfButton is never natively disabled (it would drop focus): aria-disabled + the click is
+      stopped instead. Error: danger border (× sf-on-focus keeps danger).
 - [ ] `sf-on-*` state class rules — vocabulary seeded for all states. Bare rules done for
       `sf-on-hover` (fg + subtle fill; no border channel yet — see hover-border
       investigation above), `sf-on-focus` (primary border-color; see also bare

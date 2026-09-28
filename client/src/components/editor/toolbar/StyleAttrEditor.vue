@@ -14,23 +14,30 @@
 				:class="{ 'style-editor-frame--fs': fullscreen, 'sf-depth-2': fullscreen }"
 			>
 				<div ref="editorEl" class="style-attr-editor sf-content-frame" />
-				<button
+				<!-- Out of the Tab order so Tab goes from field to field. -->
+				<SfButton
 					v-if="!fullscreen"
-					class="style-fs-open sf-loudness-1 sf-on-hover"
+					class="style-fs-open sf-is-contained"
+					size="2xs"
+					:loudness="1"
+					aria-label="Full screen"
 					tabindex="-1"
 					@mousedown.prevent
 					@click="fullscreen = true"
 				>
 					<span class="material-symbols-rounded sf-icon sf-text-xs">open_in_full</span>
-				</button>
-				<button
+				</SfButton>
+				<SfButton
 					v-if="fullscreen"
-					class="style-fs-close sf-loudness-1 sf-on-hover"
+					class="style-fs-close sf-is-contained"
+					size="2xs"
+					:loudness="1"
+					aria-label="Exit full screen"
 					@mousedown.prevent
 					@click="closeFullscreen"
 				>
 					<span class="material-symbols-rounded sf-icon sf-text-lg">close_fullscreen</span>
-				</button>
+				</SfButton>
 			</div>
 		</div>
 	</div>
@@ -214,38 +221,18 @@ onUnmounted(() => {
 		outline: none;
 	}
 
-	/* Icon buttons — precise-fit icon frames (component metric for width/height).
-	   Icon sizes on the child span via sf-text-* utility; UA button chrome cleared
-	   here because the button doesn't wear sf marker. */
+	/* The full-screen buttons sit in a corner: open in the code box's bottom corner,
+	   close in the full-screen frame's top corner. */
 	.style-fs-open {
 		position: absolute;
-		bottom: 3px;
-		right: 3px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 18px;
-		height: 18px;
-		background: none;
-		border: none;
-		border-radius: var(--sf-radius-1);
-		cursor: pointer;
-		padding: 0;
+		bottom: var(--sf-spacing-2xs);
+		right: var(--sf-spacing-2xs);
 	}
 
 	.style-fs-close {
 		position: absolute;
 		top: var(--sf-spacing-xs);
 		right: var(--sf-spacing-xs);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		background: none;
-		border: none;
-		border-radius: var(--sf-radius-1);
-		cursor: pointer;
 	}
 }
 </style>

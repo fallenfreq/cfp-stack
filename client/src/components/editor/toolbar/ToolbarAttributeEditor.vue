@@ -255,10 +255,8 @@ watch(
 		display: none;
 	}
 
-	/* Full-width rows, contents on the left; long names wrap. */
+	/* The stack makes rows full width; contents sit on the left and long names wrap. */
 	.attr-add-btn {
-		display: flex;
-		width: 100%;
 		justify-content: start;
 		white-space: normal;
 	}

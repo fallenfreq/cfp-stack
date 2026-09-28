@@ -14,8 +14,10 @@
 				'sf-on-hover': !isDisabled,
 			},
 		]"
-		:disabled="isDisabled"
+		:disabled="disabled && !loading"
+		:aria-disabled="loading || undefined"
 		:aria-busy="loading || undefined"
+		@click.capture="ignoreWhileLoading"
 	>
 		<slot />
 	</button>
@@ -44,7 +46,11 @@ const props = withDefaults(
 		size?: ButtonSize | undefined
 		// Marks the button as the one that's on or selected (a pressed toggle, the open tab).
 		current?: boolean
-		// Waiting on its action: shows as busy and can't be pressed again.
+		// Waiting on its action: shows as busy and can't be pressed again. It is never
+		// natively disabled while busy, even with `disabled` set, because a disabled button
+		// drops focus; aria-disabled tells assistive tech instead, and the click (mouse,
+		// touch, Enter, Space, form submit) is stopped before any handler runs. Handlers on
+		// other events (mousedown, keydown) are the caller's to guard.
 		loading?: boolean
 		disabled?: boolean
 		// A button's own default is "submit", which submits any form it sits in.
@@ -54,6 +60,13 @@ const props = withDefaults(
 )
 
 const isDisabled = computed(() => props.disabled || props.loading)
+
+// Runs before the consumer's click and stops it, and stops a submit button submitting.
+const ignoreWhileLoading = (event: MouseEvent) => {
+	if (!props.loading) return
+	event.preventDefault()
+	event.stopImmediatePropagation()
+}
 </script>
 
 <style scoped>

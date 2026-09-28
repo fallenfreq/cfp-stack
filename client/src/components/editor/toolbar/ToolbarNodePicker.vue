@@ -1,6 +1,6 @@
 <template>
 	<ToolbarPanelItem v-model:open="open" :icon="iconName" :tooltip="tooltip" align="end">
-		<div class="picker-list sf-size-xs">
+		<div class="picker-list sl-stack sf-gap-none sf-size-xs">
 			<template v-if="computedItems.length">
 				<SfButton
 					v-for="item in computedItems"
@@ -63,11 +63,9 @@ const select = (item: NodePickerItem) => {
 		display: none;
 	}
 
-	/* Full-width rows, contents on the left; long labels wrap. */
+	/* The stack makes rows full width; contents sit on the left and long labels wrap. */
 	.picker-item {
-		display: flex;
-		gap: var(--sf-gap, var(--sf-spacing-xs));
-		width: 100%;
+		gap: var(--sf-spacing-xs);
 		justify-content: start;
 		white-space: normal;
 		user-select: none;

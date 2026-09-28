@@ -665,7 +665,8 @@ sf-is-overflow-right   content is clipped at the right
 sf-is-overflow-bottom  content is clipped at the bottom
 sf-is-overflow-left    content is clipped at the left
 sf-is-overlay          element is physically positioned over other content
-sf-is-loading          element is in a loading / pending state
+sf-is-loading          element is in a loading / pending state; a busy button stays
+                       enabled (aria-disabled) so it keeps focus
 sf-is-sticky           a sticky element is currently in its pinned position
                        (sl-pin-* makes it sticky; this is the stuck state)
 sf-is-error            element or field is in a validation / error state
