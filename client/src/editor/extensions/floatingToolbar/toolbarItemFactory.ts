@@ -74,6 +74,8 @@ export function toolbarButtonItem(options: ButtonItemOptions): ToolbarItem {
 			{
 				current: options.active?.(editor, context) ?? false,
 				disabled: options.disabled?.(editor, context) ?? false,
+				// An icon has no words, so its tooltip is also its name.
+				'aria-label': isIconItem(options) ? options.tooltip : undefined,
 				onClick: () => options.action(editor, context),
 			},
 			isIconItem(options) ? () => options.label(editor, context) : () => options.label,

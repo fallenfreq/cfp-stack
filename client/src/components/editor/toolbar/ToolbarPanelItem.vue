@@ -9,15 +9,11 @@
 		<template #trigger="trigger">
 			<!-- A custom trigger spreads the slot props onto its own button. -->
 			<slot name="trigger" v-bind="trigger">
-				<MaterialIconButton
-					v-bind="trigger"
-					type="button"
-					:tooltip="tooltip"
-					class="sf-is-contained"
-					@mousedown.prevent
-				>
-					{{ icon }}
-				</MaterialIconButton>
+				<SfTooltip :text="tooltip">
+					<ToolbarButton v-bind="trigger" :aria-label="tooltip">
+						<ToolbarIcon>{{ icon }}</ToolbarIcon>
+					</ToolbarButton>
+				</SfTooltip>
 			</slot>
 		</template>
 		<slot />
