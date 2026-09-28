@@ -172,9 +172,18 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-primary', value: 'var(--sf-primary-5)', kind: 'color-triplet' },
 	{ name: '--sf-border_color', value: '222 229 242', kind: 'color-triplet' },
 	{ name: '--sf-shadow', value: '0 0 0', kind: 'color-triplet' },
+	// Colour roles: the solid fill. Tints and coloured text are made from these by the rules,
+	// so one value serves light and dark.
 	{ name: '--sf-danger', value: '239 68 68', kind: 'color-triplet' },
 	{ name: '--sf-warning', value: '245 158 11', kind: 'color-triplet' },
 	{ name: '--sf-success', value: '34 197 94', kind: 'color-triplet' },
+	{ name: '--sf-info', value: '59 130 246', kind: 'color-triplet' },
+	// Text on a solid fill of each colour role; set to whatever reads on that fill.
+	{ name: '--sf-fg_on_primary', value: '255 255 255', kind: 'color-triplet' },
+	{ name: '--sf-fg_on_danger', value: '255 255 255', kind: 'color-triplet' },
+	{ name: '--sf-fg_on_warning', value: '255 255 255', kind: 'color-triplet' },
+	{ name: '--sf-fg_on_success', value: '255 255 255', kind: 'color-triplet' },
+	{ name: '--sf-fg_on_info', value: '255 255 255', kind: 'color-triplet' },
 ]
 
 const DARK_TOKEN_OVERRIDES: TokenSpec[] = [
@@ -182,6 +191,8 @@ const DARK_TOKEN_OVERRIDES: TokenSpec[] = [
 	{ name: '--sf-fg_inverted', value: '11 18 26', kind: 'color-triplet' },
 	{ name: '--sf-border_color', value: '61 76 88', kind: 'color-triplet' },
 	{ name: '--sf-primary', value: 'var(--sf-primary-4)', kind: 'color-triplet' },
+	// The lighter dark-mode brand fill reads with dark text.
+	{ name: '--sf-fg_on_primary', value: '11 18 26', kind: 'color-triplet' },
 	// Surface palette — dark mode inverts the scale: 0 is the darkest canvas, higher = more elevated
 	{ name: '--sf-surface-0', value: '5 10 16', kind: 'color-triplet' },
 	{ name: '--sf-surface-1', value: '31 38 47', kind: 'color-triplet' },
@@ -222,6 +233,7 @@ const PINK_TOKEN_OVERRIDES: TokenSpec[] = [
 	// Semantic
 	{ name: '--sf-fg_primary', value: '102 0 51', kind: 'color-triplet' },
 	{ name: '--sf-fg_inverted', value: '255 230 240', kind: 'color-triplet' },
+	{ name: '--sf-fg_on_primary', value: '255 230 240', kind: 'color-triplet' },
 ]
 
 // ─── Vocabulary ──────────────────────────────────────────────────────────
@@ -330,6 +342,12 @@ const VOCABULARY: VocabSpec[] = [
 			'The knob that moves along a track (a switch knob, a custom slider handle). May hold an icon. sf-on-current marks its track as on.',
 	},
 	{
+		name: 'sf-toast',
+		kind: 'element',
+		description:
+			'A short message that pops up over the page and goes away by itself (a toast). Worn with sf-depth-*, sf-is-overlay, a loudness and a variant for its kind; the hook themes style toasts by. Its own default: bold text, since a toast is glanced at.',
+	},
+	{
 		name: 'sf-icon',
 		kind: 'element',
 		description:
@@ -410,6 +428,12 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sf-variant-success',
 		kind: 'variant',
 		description: 'Positive outcome — confirmation, completion, approval',
+	},
+	{
+		name: 'sf-variant-info',
+		kind: 'variant',
+		description:
+			'Info role — something to know that is neither good nor bad news: a hint, a tip, a status',
 	},
 	// alt-1 = peer differentiation. The semantic is "distinguish from a sibling without
 	// asserting hierarchy or role" — zebra rows, alternating category cards, tab-vs-tab
@@ -807,6 +831,11 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-surface-0)',
 	},
 	{ classNames: ['sf-depth-0'], cssProperty: 'background', value: 'rgb(var(--sf-surface-0))' },
+	{
+		classNames: ['sf-depth-0'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_primary))',
+	},
 
 	// depth-1: cards, wells — background + shadow + radius
 	// Border is intentionally absent at the default level; flat themes add one by overriding
@@ -820,7 +849,17 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-1'], cssProperty: 'background', value: 'rgb(var(--sf-surface-1))' },
 	{
 		classNames: ['sf-depth-1'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_primary))',
+	},
+	{
+		classNames: ['sf-depth-1'],
 		cssProperty: 'box-shadow',
+		value: 'var(--sf-shadow-md) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+	},
+	{
+		classNames: ['sf-depth-1'],
+		cssProperty: '--sfx-depth-shadow',
 		value: 'var(--sf-shadow-md) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-1'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
@@ -848,7 +887,17 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-2'], cssProperty: 'background', value: 'rgb(var(--sf-surface-2))' },
 	{
 		classNames: ['sf-depth-2'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_primary))',
+	},
+	{
+		classNames: ['sf-depth-2'],
 		cssProperty: 'box-shadow',
+		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+	},
+	{
+		classNames: ['sf-depth-2'],
+		cssProperty: '--sfx-depth-shadow',
 		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-2'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
@@ -869,7 +918,17 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-3'], cssProperty: 'background', value: 'rgb(var(--sf-surface-3))' },
 	{
 		classNames: ['sf-depth-3'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_primary))',
+	},
+	{
+		classNames: ['sf-depth-3'],
 		cssProperty: 'box-shadow',
+		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+	},
+	{
+		classNames: ['sf-depth-3'],
+		cssProperty: '--sfx-depth-shadow',
 		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	// Matches sf-depth-1/2 — chip-scale radius belongs to sf-chip, not depth.
@@ -887,7 +946,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-loudness-1'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-6))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-6))',
 	},
 	{ classNames: ['sf-loudness-1'], cssProperty: 'border-color', value: 'transparent' },
 	// A quiet icon sits a step below quiet text: a glyph carries more ink than a line of
@@ -895,7 +954,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-icon', 'sf-loudness-1'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-4))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
 	},
 
 	// loudness-3 solid fill is button-only — see button.sf.sf-loudness-3 compound in the
@@ -1692,6 +1751,101 @@ const ROOT_RULES: RuleSpec[] = [
 	// Without this, the generator's alphabetical emission order lets sf-is-overlay overwrite
 	// sf-is-contained's background: none at equal specificity.
 	{ classNames: ['sf-is-contained', 'sf-is-overlay'], cssProperty: 'background', value: 'none' },
+	// sf-is-overlay × sf-loudness-2/3 × sf-variant-* — a floating box keeps its loudness.
+	// The overlay's see-through surface would otherwise replace the variant's fill. At
+	// loudness-2 the shade is mixed with the box's own surface, and the depth's shadow comes
+	// back (a tinted box in a card is flat; a floating one isn't). At loudness-3 the fill
+	// is solid.
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 15%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-featured'],
+		cssProperty: 'box-shadow',
+		value: 'var(--sfx-depth-shadow, none)',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-primary'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 15%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-primary'],
+		cssProperty: 'box-shadow',
+		value: 'var(--sfx-depth-shadow, none)',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-primary'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-danger'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-danger)) 15%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-danger'],
+		cssProperty: 'box-shadow',
+		value: 'var(--sfx-depth-shadow, none)',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-danger'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-danger))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-warning'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-warning)) 15%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-warning'],
+		cssProperty: 'box-shadow',
+		value: 'var(--sfx-depth-shadow, none)',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-warning'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-warning))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-success'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-success)) 15%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-info'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-info)) 15%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-success'],
+		cssProperty: 'box-shadow',
+		value: 'var(--sfx-depth-shadow, none)',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-info'],
+		cssProperty: 'box-shadow',
+		value: 'var(--sfx-depth-shadow, none)',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-success'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-success))',
+	},
+	{
+		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-info'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-info))',
+	},
 	// sf-is-contained × sf-boundary-right — contained element that still marks a directional
 	// boundary (e.g. a toolbar slot handle with a right separator). sf-is-contained zeros
 	// border-color; this compound restores the right side at higher specificity (2 vs 1 class).
@@ -1746,9 +1900,26 @@ const ROOT_RULES: RuleSpec[] = [
 	// compounds below. Bare variant with no loudness class = coloured text, no fill.
 	{ classNames: ['sf-variant-featured'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
 	{ classNames: ['sf-variant-primary'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
-	{ classNames: ['sf-variant-danger'], cssProperty: 'color', value: 'rgb(var(--sf-danger))' },
-	{ classNames: ['sf-variant-warning'], cssProperty: 'color', value: 'rgb(var(--sf-warning))' },
-	{ classNames: ['sf-variant-success'], cssProperty: 'color', value: 'rgb(var(--sf-success))' },
+	{
+		classNames: ['sf-variant-danger'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
+	{
+		classNames: ['sf-variant-warning'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-warning)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
+	{
+		classNames: ['sf-variant-success'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-success)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
+	{
+		classNames: ['sf-variant-info'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-info)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
 
 	// Loudness-1 × variant: dim the colour (muted text, no fill).
 	{
@@ -1764,17 +1935,22 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-loudness-1', 'sf-variant-danger'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-danger) / var(--sf-alpha-6))',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h / var(--sf-alpha-6))',
 	},
 	{
 		classNames: ['sf-loudness-1', 'sf-variant-warning'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-warning) / var(--sf-alpha-6))',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-warning)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h / var(--sf-alpha-6))',
 	},
 	{
 		classNames: ['sf-loudness-1', 'sf-variant-success'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-success) / var(--sf-alpha-6))',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-success)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h / var(--sf-alpha-6))',
+	},
+	{
+		classNames: ['sf-loudness-1', 'sf-variant-info'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-info)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h / var(--sf-alpha-6))',
 	},
 
 	// Loudness-2 × variant: tinted fill + coloured border, no shadow. Featured keeps the
@@ -1782,22 +1958,22 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-featured'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary) / var(--sf-alpha-2))',
+		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 15%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-primary'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary) / var(--sf-alpha-2))',
+		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 15%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-featured'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-primary) / var(--sf-alpha-5))',
+		value: '1px solid color-mix(in oklab, rgb(var(--sf-primary)) 70%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-primary'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-primary) / var(--sf-alpha-5))',
+		value: '1px solid color-mix(in oklab, rgb(var(--sf-primary)) 70%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-featured'],
@@ -1822,12 +1998,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-danger'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-danger) / var(--sf-alpha-2))',
+		value: 'color-mix(in oklab, rgb(var(--sf-danger)) 15%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-danger'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-danger) / var(--sf-alpha-5))',
+		value: '1px solid color-mix(in oklab, rgb(var(--sf-danger)) 70%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-danger'],
@@ -1837,12 +2013,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-warning'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-warning) / var(--sf-alpha-2))',
+		value: 'color-mix(in oklab, rgb(var(--sf-warning)) 15%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-warning'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-warning) / var(--sf-alpha-5))',
+		value: '1px solid color-mix(in oklab, rgb(var(--sf-warning)) 70%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-warning'],
@@ -1852,15 +2028,30 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-success'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-success) / var(--sf-alpha-2))',
+		value: 'color-mix(in oklab, rgb(var(--sf-success)) 15%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-info'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-info)) 15%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-success'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-success) / var(--sf-alpha-5))',
+		value: '1px solid color-mix(in oklab, rgb(var(--sf-success)) 70%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-info'],
+		cssProperty: 'border',
+		value: '1px solid color-mix(in oklab, rgb(var(--sf-info)) 70%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-success'],
+		cssProperty: 'box-shadow',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-loudness-2', 'sf-variant-info'],
 		cssProperty: 'box-shadow',
 		value: 'none',
 	},
@@ -1879,12 +2070,22 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-featured'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
+		value: 'rgb(var(--sf-fg_on_primary))',
+	},
+	{
+		classNames: ['sf-loudness-3', 'sf-variant-featured'],
+		cssProperty: 'font-weight',
+		value: 'var(--sf-weight-3)',
 	},
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-primary'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
+		value: 'rgb(var(--sf-fg_on_primary))',
+	},
+	{
+		classNames: ['sf-loudness-3', 'sf-variant-primary'],
+		cssProperty: 'font-weight',
+		value: 'var(--sf-weight-3)',
 	},
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-danger'],
@@ -1894,7 +2095,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-danger'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
+		value: 'rgb(var(--sf-fg_on_danger))',
+	},
+	{
+		classNames: ['sf-loudness-3', 'sf-variant-danger'],
+		cssProperty: 'font-weight',
+		value: 'var(--sf-weight-3)',
 	},
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-warning'],
@@ -1904,7 +2110,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-warning'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
+		value: 'rgb(var(--sf-fg_on_warning))',
+	},
+	{
+		classNames: ['sf-loudness-3', 'sf-variant-warning'],
+		cssProperty: 'font-weight',
+		value: 'var(--sf-weight-3)',
 	},
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-success'],
@@ -1912,9 +2123,29 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-success))',
 	},
 	{
+		classNames: ['sf-loudness-3', 'sf-variant-info'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-info))',
+	},
+	{
 		classNames: ['sf-loudness-3', 'sf-variant-success'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
+		value: 'rgb(var(--sf-fg_on_success))',
+	},
+	{
+		classNames: ['sf-loudness-3', 'sf-variant-info'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_on_info))',
+	},
+	{
+		classNames: ['sf-loudness-3', 'sf-variant-success'],
+		cssProperty: 'font-weight',
+		value: 'var(--sf-weight-3)',
+	},
+	{
+		classNames: ['sf-loudness-3', 'sf-variant-info'],
+		cssProperty: 'font-weight',
+		value: 'var(--sf-weight-3)',
 	},
 
 	// Boundary — content separation signal; one rule per edge + shorthand composites.
@@ -1980,17 +2211,17 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// Hover state — bare rules restore full-opacity foreground and add a subtle fill.
 	// Compounds (e.g. sf-on-hover × sf-variant-featured) override per variant where needed.
-	{ classNames: ['sf-on-hover'], cssProperty: 'color', value: 'rgb(var(--sf-fg_primary))' },
+	{ classNames: ['sf-on-hover'], cssProperty: 'color', value: 'inherit' },
 	{
 		classNames: ['sf-on-hover'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-1))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-1))',
 	},
 	// Hover × danger — override generic on-hover; keep danger colour; tinted danger fill.
 	{
 		classNames: ['sf-on-hover', 'sf-variant-danger'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-danger))',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
 	},
 	{
 		classNames: ['sf-on-hover', 'sf-variant-danger'],
@@ -2011,7 +2242,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-hover', 'sf-loudness-2'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-2))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-2))',
 	},
 
 	// Pressed — one step past hover. sf-on-active wins ties with sf-on-hover (cascadeOrder),
@@ -2019,12 +2250,73 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-active'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-2))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-2))',
 	},
 	{
 		classNames: ['sf-on-active', 'sf-loudness-2'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-3))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-3))',
+	},
+	// Hover and press on a loudness-2 fill: a stronger shade of its own colour.
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-2', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 25%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-2', 'sf-variant-primary'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 25%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-2', 'sf-variant-danger'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-danger)) 25%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-2', 'sf-variant-warning'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-warning)) 25%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-2', 'sf-variant-success'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-success)) 25%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-2', 'sf-variant-info'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-info)) 25%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-2', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 35%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-2', 'sf-variant-primary'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 35%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-2', 'sf-variant-danger'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-danger)) 35%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-2', 'sf-variant-warning'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-warning)) 35%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-2', 'sf-variant-success'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-success)) 35%, rgb(var(--sf-surface-0)))',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-2', 'sf-variant-info'],
+		cssProperty: 'background',
+		value: 'color-mix(in oklab, rgb(var(--sf-info)) 35%, rgb(var(--sf-surface-0)))',
 	},
 	{
 		classNames: ['sf-on-active', 'sf-on-current'],
@@ -2040,6 +2332,78 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-fg_primary) / 0.85)',
 	},
 	{
+		classNames: ['sf-on-hover', 'sf-loudness-3'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_inverted))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-warning'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-warning) / 0.85)',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-warning'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_on_warning))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-success'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-success) / 0.85)',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-info'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-info) / 0.85)',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-success'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_on_success))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-info'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_on_info))',
+	},
+	// Pressing a solid fill goes a step further than hover; the fill stays solid enough
+	// for its text.
+	{
+		classNames: ['sf-on-active', 'sf-loudness-3'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-fg_primary) / 0.7)',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-3', 'sf-variant-featured'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary) / 0.7)',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-3', 'sf-variant-primary'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-primary) / 0.7)',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-3', 'sf-variant-danger'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-danger) / 0.7)',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-3', 'sf-variant-warning'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-warning) / 0.7)',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-3', 'sf-variant-success'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-success) / 0.7)',
+	},
+	{
+		classNames: ['sf-on-active', 'sf-loudness-3', 'sf-variant-info'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-info) / 0.7)',
+	},
+	{
 		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-featured'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-primary) / 0.85)',
@@ -2052,12 +2416,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-featured'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
+		value: 'rgb(var(--sf-fg_on_primary))',
 	},
 	{
 		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-primary'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
+		value: 'rgb(var(--sf-fg_on_primary))',
 	},
 	{
 		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-danger'],
@@ -2067,7 +2431,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-danger'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
+		value: 'rgb(var(--sf-fg_on_danger))',
 	},
 
 	// Hover × drag-handle — icon accents to primary; border stays themed (subtle hover signal).
@@ -2225,7 +2589,23 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-drag-handle'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-4))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
+	},
+	// A depth sets the text colour; a drag handle on one stays dim.
+	{
+		classNames: ['sf-drag-handle', 'sf-depth-1'],
+		cssProperty: 'color',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
+	},
+	{
+		classNames: ['sf-drag-handle', 'sf-depth-2'],
+		cssProperty: 'color',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
+	},
+	{
+		classNames: ['sf-drag-handle', 'sf-depth-3'],
+		cssProperty: 'color',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
 	},
 	{
 		classNames: ['sf-drag-handle'],
@@ -2429,7 +2809,7 @@ const ROOT_RULES: RuleSpec[] = [
 			elementSelector: el,
 			classNames: ['sf', 'sf-loudness-2'],
 			cssProperty: 'background',
-			value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-1))',
+			value: 'rgb(from currentColor r g b / var(--sf-alpha-1))',
 		},
 		{
 			elementSelector: el,
@@ -2504,6 +2884,8 @@ const ROOT_RULES: RuleSpec[] = [
 	),
 	// The knob: round, one text-em across, muted at rest and primary when on. Its icon
 	// is a little smaller than the knob and always contrasts with its fill.
+	// A toast is a short message you glance at, so its text is heavier, whatever its colour.
+	{ classNames: ['sf-toast'], cssProperty: 'font-weight', value: 'var(--sf-weight-3)' },
 	{ classNames: ['sf-thumb'], cssProperty: 'border-radius', value: 'var(--sf-radius-full)' },
 	{ classNames: ['sf-thumb'], cssProperty: 'font-size', value: '0.8em' },
 	{ classNames: ['sf-thumb'], cssProperty: 'inline-size', value: '1.25em' },
@@ -2522,7 +2904,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-thumb', 'sf-on-current'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
+		value: 'rgb(var(--sf-fg_on_primary))',
 	},
 
 	// ─── sf-chip ──────────────────────────────────────────────────────────────
@@ -2616,6 +2998,11 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-success))',
 	},
+	{
+		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-info'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-info))',
+	},
 
 	// ─── sf-swatch ────────────────────────────────────────────────────────────
 	// Colour-surface tile — chrome only. Consumers set width/height (component metric).
@@ -2662,9 +3049,19 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-primary))',
 	},
 	{
+		classNames: ['sf-avatar', 'sf-variant-featured'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_on_primary))',
+	},
+	{
 		classNames: ['sf-avatar', 'sf-variant-primary'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-avatar', 'sf-variant-primary'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_on_primary))',
 	},
 	{
 		classNames: ['sf-avatar', 'sf-variant-danger'],
@@ -2672,14 +3069,39 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-danger))',
 	},
 	{
+		classNames: ['sf-avatar', 'sf-variant-danger'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_on_danger))',
+	},
+	{
 		classNames: ['sf-avatar', 'sf-variant-warning'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-warning))',
 	},
 	{
+		classNames: ['sf-avatar', 'sf-variant-warning'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_on_warning))',
+	},
+	{
 		classNames: ['sf-avatar', 'sf-variant-success'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-success))',
+	},
+	{
+		classNames: ['sf-avatar', 'sf-variant-info'],
+		cssProperty: 'background',
+		value: 'rgb(var(--sf-info))',
+	},
+	{
+		classNames: ['sf-avatar', 'sf-variant-success'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_on_success))',
+	},
+	{
+		classNames: ['sf-avatar', 'sf-variant-info'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-fg_on_info))',
 	},
 
 	// ─── sf-scrim ─────────────────────────────────────────────────────────────

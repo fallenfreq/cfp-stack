@@ -5,6 +5,7 @@ import AddMarkerSwitch from '@/components/demos/map/AddMarkerSwitch.vue'
 import GoogleAutocomplete from '@/components/demos/map/GoogleAutocomplete.vue'
 import CurrentLocationMarker from '@/components/demos/map/currentLocation.vue'
 import { showPrompt } from '@/services/promptModal'
+import { notify } from '@/services/toast'
 import { useDarkModeStore } from '@/stores/darkModeStore'
 import { useMapStore } from '@/stores/mapStore'
 import { useMarkerStore } from '@/stores/markerStore'
@@ -15,7 +16,6 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
 import { storeToRefs } from 'pinia'
 import { computed, nextTick, onMounted, ref, useCssModule, watch } from 'vue'
-import { useToast } from 'vuestic-ui'
 
 // import zitadelAuth from '@/services/zitadelAuth'
 // const user = computed(() => zitadelAuth.oidcAuth.userProfile)
@@ -131,10 +131,9 @@ watch(
 		addMarkerSwitchEl.classList.add(mapsControlsStyle['spacing'])
 		mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT]?.push(addMarkerSwitchEl)
 
-		useToast().notify({
+		notify({
 			duration: 10000,
-			color: 'info',
-			position: 'bottom-right',
+			variant: 'info',
 			message: 'Click the plus button "+" at the top to enter "add marker mode"',
 		})
 	},
@@ -223,16 +222,16 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 		// Update the title locally
 		markerContent.title = newTitle
 
-		useToast().notify({
+		notify({
 			duration: 5000,
-			color: 'primary',
+			variant: 'success',
 			message: 'Title updated successfully!',
 		})
 	} catch (error) {
 		console.error('Error updating title:', error)
-		useToast().notify({
+		notify({
 			duration: 5000,
-			color: 'danger',
+			variant: 'danger',
 			message: 'Failed to update title. Please try again.',
 		})
 	}
@@ -322,10 +321,9 @@ Tags</pre>
 					@click="
 						() => {
 							;(deleteMode = !deleteMode)
-								&& useToast().notify({
+								&& notify({
 									duration: 10000,
-									color: 'info',
-									position: 'bottom-right',
+									variant: 'info',
 									message:
 										'Clicking a tag while they are red will delete the tag.\nClick - again or close the marker to cancel.',
 								})

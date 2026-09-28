@@ -1,12 +1,12 @@
 // the utils file needs editor and lowlight, both from the editor.vue
 import { type Lowlight } from '@/config/editor/lowlight'
+import { notify } from '@/services/toast'
 import { isPrettierLanguage, prettifyCode } from '@/utils/codeFormatting'
 import { type Node as ProseMirrorNode, type ResolvedPos } from '@tiptap/pm/model'
 import { NodeSelection } from '@tiptap/pm/state'
 import { type EditorView } from '@tiptap/pm/view'
 import { type Editor } from '@tiptap/vue-3'
 import highlight from 'highlight.js'
-import { useToast } from 'vuestic-ui'
 
 // A position guaranteed to be the "before" offset of an existing node in the document.
 // Produced only at verified entry points (resolveActive, NodeSelection.from, plugin mapResult).
@@ -59,10 +59,9 @@ const prettifySelectedCode = async (editor: Editor) => {
 	}
 
 	if (!language || !isPrettierLanguage(language)) {
-		useToast().notify({
+		notify({
 			duration: 10000,
-			color: 'warning',
-			position: 'bottom-right',
+			variant: 'warning',
 			message,
 		})
 		return
@@ -76,10 +75,9 @@ const prettifySelectedCode = async (editor: Editor) => {
 			{ type: 'text', text: formattedContent },
 		)
 	} catch (error) {
-		useToast().notify({
+		notify({
 			duration: 10000,
-			color: 'danger',
-			position: 'bottom-right',
+			variant: 'danger',
 			message:
 				'Formatting error: ' + (error instanceof Error ? error.message : 'Unknown error'),
 		})

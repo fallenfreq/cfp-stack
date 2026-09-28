@@ -12,16 +12,19 @@ import CollectionGrid from '@/components/CollectionGrid.vue'
 import NodePath from '@/components/editor/NodePath.vue'
 import ToolbarAttrRow from '@/components/editor/toolbar/ToolbarAttrRow.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
+import PromptModal from '@/components/input/PromptModal.vue'
 import StackableSheet from '@/components/layout/StackableSheet.vue'
 import SfTooltip from '@/components/SfTooltip.vue'
 import type { NavItem } from '@/components/siteNav'
 import SiteNav from '@/components/SiteNav.vue'
 import MaterialIcon from '@/components/ui/MaterialIcon.vue'
 import SfIcon from '@/components/ui/SfIcon.vue'
+import SfIconButton from '@/components/ui/SfIconButton.vue'
 import SfPageShell from '@/components/ui/SfPageShell.vue'
 import SfPopover from '@/components/ui/SfPopover.vue'
 import SfStatusDisplay from '@/components/ui/SfStatusDisplay.vue'
 import SfSwitch from '@/components/ui/SfSwitch.vue'
+import SfToasts from '@/components/ui/SfToasts.vue'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import PagePreview from '@/views/PagePreview.vue'
 import { h, markRaw, type VNode } from 'vue'
@@ -576,6 +579,129 @@ export const stories: Story[] = [
 						},
 						icon,
 					),
+				),
+			])
+		},
+	},
+	{
+		id: 'toasts',
+		title: 'SfToasts',
+		notes: "First five at loudness-2: plain, info, danger, warning, success. A solid light shade of the colour mixed with the surface, with a stronger shade for the border, and coloured text; nothing shows through, and it keeps its shadow. The close button is centred on the row; the third shows a long message wrapping. Last four at loudness-3: solid fills with bold white text in light mode (dark text in dark mode); the close button is a faded shade of the fill's text, including its hover. In the app they stack in the bottom corner above everything; the preview is static, so they sit in the page and do not time out.",
+		maxWidth: '24rem',
+		render: () => {
+			const scope = {
+				[(SfToasts as { __scopeId?: string }).__scopeId ?? 'data-v-preview']: '',
+			}
+			const toast = (message: string, variant?: string, loudness = 2) =>
+				h(
+					'div',
+					{
+						...scope,
+						class: [
+							`toast sf-toast sf-depth-3 sf-is-overlay sf-loudness-${loudness} sf-size-sm sl-split sl-align-y-center sf-gap-sm`,
+							variant && `sf-variant-${variant}`,
+						],
+					},
+					[
+						h('p', { ...scope, class: 'toast-message' }, message),
+						h(SfIconButton, {
+							icon: 'x',
+							tooltip: 'Dismiss',
+							class: 'sf-is-contained sf-loudness-1',
+						}),
+					],
+				)
+			return h('div', { class: 'sl-stack sf-gap-xs' }, [
+				toast('Click on the map to add a marker.'),
+				toast('Click the + button at the top to add markers.', 'info'),
+				toast(
+					'Save failed: the page could not be saved because the connection to the server was lost. Try again.',
+					'danger',
+				),
+				toast('Page "about" not found', 'warning'),
+				toast('Saved', 'success'),
+				toast('Save failed: the connection to the server was lost.', 'danger', 3),
+				toast('Page "about" not found', 'warning', 3),
+				toast('Saved', 'success', 3),
+				toast('Click on the map to add a marker.', 'info', 3),
+			])
+		},
+	},
+	{
+		id: 'prompt-modal',
+		title: 'PromptModal — prompt and confirm',
+		notes: 'The box as it shows in the dialog, over the scrim. Prompt: the question labels the field; Submit is primary. Confirm (delete): the question is the heading, the OK button is danger, and focus starts on Cancel so Enter never deletes by accident. In the app it is the browser modal dialog: Tab stays inside, Esc cancels.',
+		render: () => {
+			const scope = {
+				[(PromptModal as { __scopeId?: string }).__scopeId ?? 'data-v-preview']: '',
+			}
+			const box = (question: VNode, field: VNode | null, ok: string, okClass: string) =>
+				h('div', { ...scope, class: 'sf-scrim' }, [
+					h(
+						'div',
+						{
+							...scope,
+							class: 'prompt-cover sl-cover',
+							style: '--sl-cover-min: 16rem',
+						},
+						[
+							h(
+								'form',
+								{ ...scope, class: 'prompt-content sf-depth-3 sl-stack sf-gap-sm' },
+								[
+									question,
+									field,
+									h(
+										'div',
+										{ ...scope, class: 'button-group sl-cluster sf-gap-xs' },
+										[
+											h(
+												'button',
+												{
+													type: 'button',
+													class: `sf sf-loudness-3 sf-on-hover ${okClass}`,
+												},
+												ok,
+											),
+											h(
+												'button',
+												{
+													type: 'button',
+													class: 'sf sf-loudness-2 sf-on-hover',
+												},
+												'Cancel',
+											),
+										],
+									),
+								],
+							),
+						],
+					),
+				])
+			return h('div', { class: 'sl-stack sf-gap-md' }, [
+				box(
+					h(
+						'label',
+						{ ...scope, for: 'preview-prompt', class: 'prompt-message sf-heading-2' },
+						'Page name',
+					),
+					h('input', {
+						id: 'preview-prompt',
+						type: 'text',
+						class: 'sf sf-field sf-on-focus',
+					}),
+					'Submit',
+					'sf-variant-primary',
+				),
+				box(
+					h(
+						'h2',
+						{ ...scope, class: 'prompt-message sf-heading-2' },
+						'Delete "About us"?',
+					),
+					null,
+					'Delete',
+					'sf-variant-danger',
 				),
 			])
 		},

@@ -4,8 +4,8 @@ import { computed, ref } from 'vue'
 import { useColors, useGlobalConfig } from 'vuestic-ui'
 
 export const useDarkModeStore = defineStore('darkMode', () => {
-	// The Vuestic toasts and confirm dialog still read Vuestic's colour presets, so each
-	// mode change is mirrored there too. Remove with those.
+	// The map demo and TiptapTest still use Vuestic components, which read Vuestic's colour
+	// presets, so each mode change is mirrored there too. Remove with those.
 	const { globalConfig } = useGlobalConfig()
 	const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary')
 	globalConfig.value.colors.presets.light.primary = `rgb(${primaryColor.replace(/ /g, ', ')})`

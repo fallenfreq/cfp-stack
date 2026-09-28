@@ -1,59 +1,48 @@
-import PromptModal from '@/components/input/PromptModal.vue'
-import { createApp, ref, type AppContext } from 'vue'
+import { shallowRef } from 'vue'
 
-const isVisible = ref(false)
-const message = ref('')
-const transform = ref<((v: string) => string) | undefined>(undefined)
-const resolvePrompt = ref<((value: string | null) => void) | null>(null)
+// Ask the user something in a modal dialog (PromptModal, mounted once in App, shows it).
+// Plain functions, so they work outside components.
 
-let modalInstance: HTMLElement | null = null
-let appInstance: ReturnType<typeof createApp> | null = null
+export type ModalRequest =
+	| {
+			kind: 'prompt'
+			message: string
+			transform: ((value: string) => string) | undefined
+			resolve: (value: string | null) => void
+	  }
+	| {
+			kind: 'confirm'
+			message: string
+			okText: string
+			resolve: (ok: boolean) => void
+	  }
 
-let _prompt:
-	| ((message: string, inputTransform?: (v: string) => string) => Promise<string | null>)
-	| null = null
+export const modalRequest = shallowRef<ModalRequest | null>(null)
 
-const handleClose = (value: string | null) => {
-	isVisible.value = false
-	resolvePrompt.value?.(value)
-	resolvePrompt.value = null
+// A new question replaces one still open; the old one resolves as cancelled.
+function open(request: ModalRequest) {
+	cancelModal()
+	modalRequest.value = request
 }
 
+/** Closes the open question as cancelled: prompt gives null, confirm false. */
+export function cancelModal(): void {
+	const request = modalRequest.value
+	if (!request) return
+	modalRequest.value = null
+	if (request.kind === 'prompt') request.resolve(null)
+	else request.resolve(false)
+}
+
+/** Ask for text. Resolves null when cancelled. */
 export function showPrompt(
 	message: string,
-	transform?: (v: string) => string,
+	transform?: (value: string) => string,
 ): Promise<string | null> {
-	if (!_prompt) throw new Error('showPrompt called before initPromptModal')
-	return _prompt(message, transform)
+	return new Promise((resolve) => open({ kind: 'prompt', message, transform, resolve }))
 }
 
-export function initPromptModal(appContext: AppContext): void {
-	if (_prompt) return
-	modalInstance = document.createElement('div')
-	document.body.appendChild(modalInstance)
-
-	appInstance = createApp(PromptModal, {
-		isVisible,
-		message,
-		transform,
-		onSubmit: handleClose,
-	})
-
-	// Share the main app's context (global components, Vuestic, etc.) so the
-	// modal doesn't need a separate app.use(vuestic) — that would register
-	// Vuestic in a second app and break "outside setup" composable checks.
-	appInstance._context = appContext
-	appInstance.mount(modalInstance)
-
-	_prompt = async (
-		promptMessage: string,
-		inputTransform?: (v: string) => string,
-	): Promise<string | null> => {
-		message.value = promptMessage
-		transform.value = inputTransform
-		isVisible.value = true
-		return new Promise((resolve) => {
-			resolvePrompt.value = resolve
-		})
-	}
+/** Ask a yes/no question, e.g. before deleting. The OK button is marked as danger. */
+export function showConfirm(message: string, { okText = 'OK' } = {}): Promise<boolean> {
+	return new Promise((resolve) => open({ kind: 'confirm', message, okText, resolve }))
 }

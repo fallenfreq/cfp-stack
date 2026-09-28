@@ -1,7 +1,7 @@
-import { showPrompt } from '@/services/promptModal'
+import { showConfirm, showPrompt } from '@/services/promptModal'
+import { notify } from '@/services/toast'
 import { isValidSlug } from '@/utils/slug'
 import { useQueryClient } from '@tanstack/vue-query'
-import { useModal, useToast } from 'vuestic-ui'
 
 export function useListItemActions(options: {
 	queryKey: string[]
@@ -13,8 +13,6 @@ export function useListItemActions(options: {
 	deleteMessage?: (id: number, name: string) => string
 }) {
 	const queryClient = useQueryClient()
-	const { confirm } = useModal()
-	const { notify } = useToast()
 
 	const renameMsg = options.renameMessage ?? ((n) => `New name for "${n}"`)
 	const slugMsg =
@@ -37,7 +35,7 @@ export function useListItemActions(options: {
 		if (!isValidSlug(slug)) {
 			notify({
 				message: 'Slug may only contain letters, numbers, and hyphens',
-				color: 'danger',
+				variant: 'danger',
 			})
 			return
 		}
@@ -46,11 +44,7 @@ export function useListItemActions(options: {
 	}
 
 	const onDelete = async (id: number, name: string) => {
-		const ok = await confirm({
-			message: deleteMsg(id, name),
-			okText: 'Delete',
-			cancelText: 'Cancel',
-		})
+		const ok = await showConfirm(deleteMsg(id, name), { okText: 'Delete' })
 		if (!ok) return
 		await options.delete(id)
 		await invalidate()

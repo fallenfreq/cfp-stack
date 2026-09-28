@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { showPrompt } from '@/services/promptModal'
+import { notify } from '@/services/toast'
 import { useMapStore } from '@/stores/mapStore'
 import { useMarkerStore } from '@/stores/markerStore'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
@@ -8,7 +9,6 @@ import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useQuery } from '@tanstack/vue-query'
 import { onMounted, ref, toRaw, watch } from 'vue'
-import { useToast } from 'vuestic-ui'
 
 export interface MapMarkerItem {
 	mapMarkersId: any
@@ -41,10 +41,9 @@ const toggleAddingMarkers = () => {
 
 	if (isAddingMarkers.value && mapStore.map) {
 		addListenerRef.value = mapStore.map.addListener('click', onMapClick)
-		useToast().notify({
+		notify({
 			duration: 10000,
-			color: 'info',
-			position: 'bottom-right',
+			variant: 'info',
 			message: 'Click on the map to add a marker.',
 		})
 	} else {

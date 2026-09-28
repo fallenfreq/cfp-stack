@@ -1,5 +1,6 @@
 import router from '@/router'
 import { showPrompt } from '@/services/promptModal'
+import { notify } from '@/services/toast'
 import { trpc } from '@/trpc'
 import { prettifyCode } from '@/utils/codeFormatting'
 import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
@@ -7,10 +8,8 @@ import { escapeHTML } from '@/utils/stringUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { defineStore } from 'pinia'
 import { ref, shallowRef, watch, type ShallowRef } from 'vue'
-import { useToast } from 'vuestic-ui'
 
 export const useEditorStore = defineStore('editor', () => {
-	const { notify } = useToast()
 	const codeViewDefault = false
 	const isCodeView = ref(codeViewDefault)
 	const editor: ShallowRef<Editor | null> = shallowRef(null)
@@ -47,8 +46,7 @@ export const useEditorStore = defineStore('editor', () => {
 		} catch (err) {
 			notify({
 				duration: 8000,
-				color: 'danger',
-				position: 'bottom-right',
+				variant: 'danger',
 				message: `Code view failed: ${err instanceof Error ? err.message : String(err)}`,
 			})
 		}
@@ -59,8 +57,7 @@ export const useEditorStore = defineStore('editor', () => {
 		if (!page) {
 			notify({
 				duration: 5000,
-				color: 'warning',
-				position: 'bottom-right',
+				variant: 'warning',
 				message: `Page "${slug}" not found`,
 			})
 			return
@@ -73,8 +70,7 @@ export const useEditorStore = defineStore('editor', () => {
 			} catch (err) {
 				notify({
 					duration: 8000,
-					color: 'danger',
-					position: 'bottom-right',
+					variant: 'danger',
 					message: err instanceof Error ? err.message : 'Failed to load page content',
 				})
 				return
@@ -135,8 +131,7 @@ export const useEditorStore = defineStore('editor', () => {
 			}, 2000)
 			notify({
 				duration: 2000,
-				color: 'success',
-				position: 'bottom-right',
+				variant: 'success',
 				message: 'Saved',
 			})
 		} catch (error) {
@@ -147,8 +142,7 @@ export const useEditorStore = defineStore('editor', () => {
 			const message = error instanceof Error ? error.message : 'Save failed'
 			notify({
 				duration: 8000,
-				color: 'danger',
-				position: 'bottom-right',
+				variant: 'danger',
 				message,
 			})
 		}

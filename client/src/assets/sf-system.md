@@ -245,6 +245,7 @@ layer reads it. Neither theme authors nor content authors touch these.
 | --------------------- | ----------------------------------- | ----------------------------------------- |
 | `--sfx-surface-color` | `sf-depth-*`                        | `sf-is-overlay`                           |
 | `--sfx-depth-radius`  | `sf-depth-*`                        | `sf-is-edge-*` compounds                  |
+| `--sfx-depth-shadow`  | `sf-depth-*`                        | `sf-is-overlay` × loudness × variant      |
 | `--sfx-inset-margin`  | `sf-depth-*` + `sl-inset` compounds | `sl-inset`, `sl-inset-line` (descendants) |
 
 Two authoring rules keep the surface honest:
@@ -304,12 +305,26 @@ underscores (`--sf-fg_primary`); single-word names don't (`--sf-primary`).
 --sf-fg_primary      default foreground
 --sf-fg_inverted     foreground on brand/inverse surfaces
 --sf-primary         brand colour
+--sf-danger          danger colour role (sf-variant-danger)
+--sf-warning         warning colour role (sf-variant-warning)
+--sf-success         success colour role (sf-variant-success)
+--sf-info            info colour role (sf-variant-info)
+--sf-fg_on_primary   text on a solid primary fill (loud primary/featured, a switch knob)
+--sf-fg_on_danger    text on a solid danger fill
+--sf-fg_on_warning   text on a solid warning fill
+--sf-fg_on_success   text on a solid success fill
+--sf-fg_on_info      text on a solid info fill
 --sf-border_color    border colour
 --sf-shadow          shadow colour
 --sf-spacing_page    page margin: room between the screen's side edges and content
 ```
 
 A theme changes the value; every reference picks it up.
+
+`fg_on_*` follow the fill, not light or dark mode: a theme picks the text for its red,
+amber and so on once, whichever mode is on. `fg_inverted` is for neutral fills (a fill
+in the text colour), where flipping with the mode is right. A theme that changes a colour
+role sets its `fg_on_*` to match.
 
 ### Colours and alpha
 
@@ -526,6 +541,10 @@ sf-switch        on/off switch track — worn with sf on a <button role="switch"
                  which stays the floor; adds the pill shape and knob gap
 sf-thumb         the knob that moves along a track (switch knob, custom slider
                  handle); may hold an icon. sf-on-current when its track is on
+sf-toast         a short message that pops up over the page and goes by itself —
+                 worn with sf-depth-*, sf-is-overlay, a loudness and a variant for
+                 its kind. The hook a theme styles toasts by; its own default is
+                 bold text, since a toast is glanced at
 sf-drag-handle   drag affordance — dim at rest, accents to primary on hover
                  and while dragging
 sf-swatch        small colour-surface tile — palette chip, native colour input.
@@ -572,7 +591,10 @@ anything left that's specific to this category?
   composable axes can't express.
 
 If a marker ends up with zero rules after the axes cover the general case, the marker
-isn't earning its keep — collapse it back into the axes.
+isn't earning its keep — collapse it back into the axes. The exception is a component's
+own marker (`sf-toast` began this way): the axes may cover its default look, but a theme
+still needs a name to style that component by, so the marker may start with no rules as
+that hook.
 
 **Rules combine on one element, never "inside X".** A theme rule is an element plus the
 classes and states on that same element — no ancestor selectors. When a component needs
@@ -591,9 +613,11 @@ plays so it can be expressed appropriately — a star, a colour, a badge, whatev
 sf-variant-featured   editorially selected or promoted — a featured product, a highlight
 sf-variant-primary    primary colour role — the theme's brand colour; a main action is
                       `sf-loudness-3 sf-variant-primary`, a quieter one a lower loudness
-sf-variant-danger     destructive action — delete, remove, irreversible
+sf-variant-danger     destructive action — delete, remove, irreversible — or a failure
+                      being reported (an error message)
 sf-variant-warning    cautionary — something needs attention but is not destructive
 sf-variant-success    positive outcome — confirmation, completion, approval
+sf-variant-info       something to know that is neither good nor bad news — a hint, a tip
 sf-variant-alt-1      alternative visual form — distinct rendering of the same class combination,
                       no semantic intent beyond looking different from the default
 ```
@@ -604,6 +628,25 @@ in the theme's neutral form; add `sf-variant-primary` for the brand colour. Feat
 a colour role — it claims promotion, a level above a main action. `sf-variant-featured` on a
 small pill and on a full-width hero section both signal the same intent; the theme decides
 how to express it at each size.
+
+On a box, loudness steps the same box up: a variant alone colours the text,
+`sf-loudness-2` adds a tint and a border in that colour, `sf-loudness-3` fills it solid
+with the matching `fg_on_*` text in bold. The loudness-2 shades are solid: the colour mixed
+into the page colour (`--sf-surface-0`), so they look the same on any surface and follow
+dark mode. Coloured text is the colour moved halfway to the normal text's brightness with
+its colourfulness kept, so it reads on light and dark alike. One colour value per role
+serves both modes. Hover and press step each fill a little further without losing it. A floating box (`sf-is-overlay`) keeps its loudness: the
+tint sits on a solid surface so the page doesn't show through, and it keeps its depth's
+shadow (read through `--sfx-depth-shadow`).
+
+**Quiet is a shade of the text around it.** Quiet text, quiet icons and hover and press
+tints are made from the text colour where they sit (`currentColor`), not from the theme's
+`fg_primary`. So a quiet close button on a solid red box is a faded version of that box's
+white text, and on a card a faded version of the card's text. Each box sets only its own
+text colour: a solid fill its `fg_on_*`, a `sf-depth-*` surface the theme's `fg_primary`, so
+a card inside a coloured box has normal text again. No rule redefines a theme token.
+A marker with its own colour that is worn with a depth (`sf-drag-handle`) needs a compound
+with that depth, since depth sits in the higher layer.
 
 ### Context — `sf-context`
 
