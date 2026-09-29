@@ -10,6 +10,10 @@ import {
 } from '../schemas/theme.js'
 import { type ClassRuleWithClasses, listAllRules } from './classRules.js'
 import { type CollapseThreshold, listCollapseThresholds } from './collapseThresholds.js'
+import { SF_ELEMENT_DEFAULTS } from './css/elementDefaults.js'
+import { RESET } from './css/reset.js'
+import { SL_COMBINED } from './css/slCombined.js'
+import { SL_OBJECT } from './css/slObject.js'
 import { ValidationError } from './errors.js'
 import { SEED_VERSION } from './seedVersion.js'
 import { listAllTokens } from './themeTokens.js'
@@ -119,38 +123,6 @@ export async function themeSignature(db: Db): Promise<string> {
 
 const HEADER = `/* Generated from D1 — runtime-emitted, do not cache stale. */
 @layer reset, ui, sf-element, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state, sl-layout;`
-
-// Static resets — no theme dependency, never stored in DB.
-// Lowest cascade priority (reset layer declared first).
-const RESET = `@layer reset {
-\t/* Remove trailing margin from the last child of any table cell */
-\ttd > *:last-child,
-\tth > *:last-child { margin-bottom: 0; }
-
-\t/* sf-swatch structural — display enables width/height on the marker;
-\t   background-clip guards padded-frame themes so bg doesn't bleed into the border. */
-\t.sf-swatch { display: inline-block; background-clip: padding-box; }
-
-\t/* Native colour input: strip UA inset chrome so swatch treatment can render. */
-\tinput[type="color"].sf-swatch { padding: 0; background: none; }
-
-\t/* Native <select>.sf-field: strip UA appearance so the custom chevron renders,
-\t   align cursor across browsers (Firefox: pointer, Chrome: default). */
-\tselect.sf-field { appearance: none; cursor: pointer; }
-}`
-
-// Static sf-element defaults — page-wide baselines using sf tokens.
-// Emitted before DB-seeded sf-element rules so seed rules for the same
-// selectors win within the layer. Themes override via sf-bundle or higher.
-const SF_ELEMENT_DEFAULTS = `@layer sf-element {
-\tbody {
-\t\tcolor: rgb(var(--sf-fg_primary));
-\t\tbackground-color: rgb(var(--sf-surface-0));
-\t}
-\t*:focus-visible {
-\t\toutline: var(--sf-stroke-2) solid rgb(var(--sf-primary));
-\t}
-}`
 
 // ─── Tokens ─────────────────────────────────────────────────────────────
 
@@ -462,55 +434,6 @@ const util = (e: BucketEntry, property: string): string =>
 
 const section = (title: string): string =>
 	`\t/* ── ${title} ─────────────────────────────────────────── */\n`
-
-// ─── Object-fit layer ────────────────────────────────────────────────────
-// sl-object-* is vocabulary-only in the DB — the rules need child element
-// selectors (.sl-object-cover > img:only-child) which the class_rules schema
-// cannot express (selector is always the class element, not a descendant).
-// Two selectors per value:
-//   img.sl-object-*             — class on the <img> itself (TipTap image node).
-//                                 No height: the img's own aspect-ratio determines it.
-//   .sl-object-* > img:only-child — class on a container; the container provides the
-//                                   height via its own aspect-ratio, so height: 100%
-//                                   fills that box. :only-child guard prevents affecting
-//                                   images alongside other content.
-
-const SL_OBJECT = `@layer sl-layout {
-\timg.sl-object-cover { object-fit: cover; width: 100%; display: block; }
-\t.sl-object-cover > img:only-child { object-fit: cover; width: 100%; height: 100%; display: block; }
-\timg.sl-object-contain { object-fit: contain; width: 100%; display: block; }
-\t.sl-object-contain > img:only-child { object-fit: contain; width: 100%; height: 100%; display: block; }
-\timg.sl-object-fill { object-fit: fill; width: 100%; display: block; }
-\t.sl-object-fill > img:only-child { object-fit: fill; width: 100%; height: 100%; display: block; }
-\timg.sl-object-none { object-fit: none; display: block; }
-\t.sl-object-none > img:only-child { object-fit: none; display: block; }
-}\n`
-
-// ─── Combined layout classes ─────────────────────────────────────────────
-// What sl- classes mean together is the maintainer's to decide, not a theme's, so it's
-// written here rather than as rules (a rule allows one layout class). Emitted after the
-// DB rules of sl-layout; each selector here already outranks what it competes with.
-//   Scrolling cluster — stays on one line, and its items keep their natural width:
-//     scrolling replaces both wrapping and squeezing (a squeezed item wraps its own text).
-//   Bleed — a child wearing sl-bleed spans its sl-inset parent's margins. An inset that
-//     bleeds has the parent's edges, so the parent's line carries on through it (a
-//     coloured band keeps the page line and width limit, not its own padding). Written from the parent
-//     (0-3-0) so it only applies where the bleed takes effect and beats the chrome × inset
-//     compounds (0-2-0).
-//   Pinned edges — an edge that holds a pinned element has no padding: pinned means flush
-//     to that edge; padding there leaves a strip where content scrolls past beside it.
-//     Other edges keep their padding. Nested caveat: sf-system.md.
-
-const SL_COMBINED = `@layer sl-layout {
-\t.sl-cluster.sl-scroll-x { flex-wrap: nowrap; }
-\t.sl-cluster.sl-scroll-x > * { flex-shrink: 0; }
-\t.sl-inset > .sl-bleed { grid-column: full; }
-\t.sl-inset > .sl-bleed.sl-inset { --sfx-inset-margin: inherit; --sfx-inset-width: inherit; }
-\t.sl-scroll-x:has(.sl-pin-left) { padding-left: 0; }
-\t.sl-scroll-x:has(.sl-pin-right) { padding-right: 0; }
-\t.sl-scroll-y:has(.sl-pin-top) { padding-top: 0; }
-\t.sl-scroll-y:has(.sl-pin-bottom) { padding-bottom: 0; }
-}\n`
 
 // ─── Collapse layer ──────────────────────────────────────────────────────
 // sl-collapse-* is vocabulary-only in the DB (var() is not valid in @container

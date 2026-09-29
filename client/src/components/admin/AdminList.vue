@@ -67,5 +67,11 @@ const { left: isOverflowLeft, right: isOverflowRight } = useScrollOverflow(table
 	.admin-table {
 		width: 100%;
 	}
+	/* Headers stay on one line (the table scrolls sideways instead) and aren't picked up
+	   when selecting rows of text. */
+	.admin-table th {
+		white-space: nowrap;
+		user-select: none;
+	}
 }
 </style>

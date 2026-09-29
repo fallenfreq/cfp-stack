@@ -78,36 +78,36 @@ const MultiSelectExtension = Extension.create({
 // handle's dragstart), cleared on drop or dragend.
 let pendingMultiDrag: NodePos[] | null = null
 
+// The picture that follows the pointer while dragging several nodes: a floating card with
+// a count and copies of the first three nodes. It's placed at the page's corner and all but
+// invisible; the browser takes its snapshot from it, then it's removed.
 const createMultiDragPreview = (view: EditorView, sorted: NodePos[]): HTMLElement => {
 	const wrap = document.createElement('div')
+	wrap.className = 'sf-depth-3 sl-stack sf-gap-xs'
 	wrap.style.cssText =
-		'position:fixed;top:0;left:0;pointer-events:none;opacity:0.001;'
-		+ 'border-radius:var(--sf-radius-2);overflow:hidden;'
-		+ 'box-shadow:var(--sf-shadow-xl) rgba(0,0,0,0.15);border:1px solid rgba(var(--text_primary,0 0 0)/0.1);'
-		+ 'max-width:480px;'
+		'position:fixed;top:0;left:0;pointer-events:none;opacity:0.001;overflow:hidden;max-width:480px;'
 
-	const badge = document.createElement('div')
-	badge.textContent = `${sorted.length} nodes`
-	badge.style.cssText =
-		'padding:3px 10px;font-size:12px;font-weight:600;letter-spacing:0.02em;'
-		+ 'background:rgb(var(--primary,79 70 229));color:white;'
-	wrap.appendChild(badge)
+	const count = document.createElement('span')
+	count.className =
+		'sf-counter sf-single-line sf-size-2xs sf-text-xs sf-loudness-3 sf-variant-primary'
+	count.textContent = `${sorted.length} nodes`
+	count.style.alignSelf = 'start'
+	wrap.appendChild(count)
 
+	// Copies render as they do in the editor; the stack's gap spaces them, not their margins.
 	const content = document.createElement('div')
-	content.className = 'tiptap'
-	content.style.cssText =
-		'padding:8px 12px;pointer-events:none;background:rgb(var(--bg_primary,255 255 255));'
+	content.className = 'tiptap sl-stack sf-gap-xs'
 	for (const pos of sorted.slice(0, 3)) {
 		const dom = view.nodeDOM(pos) as HTMLElement | null
 		if (!dom) continue
 		const clone = dom.cloneNode(true) as HTMLElement
-		clone.style.marginBottom = '4px'
+		clone.style.margin = '0'
 		content.appendChild(clone)
 	}
 	if (sorted.length > 3) {
 		const more = document.createElement('p')
+		more.className = 'sf-text-xs sf-loudness-1'
 		more.textContent = `+${sorted.length - 3} more…`
-		more.style.cssText = 'margin:0;font-size:12px;opacity:0.5;padding:2px 0 4px;'
 		content.appendChild(more)
 	}
 	wrap.appendChild(content)

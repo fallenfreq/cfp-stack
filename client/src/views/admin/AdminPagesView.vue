@@ -46,11 +46,11 @@
 									<span
 										v-for="t in (pageTags.get(page.pageId) ?? []).slice(0, 2)"
 										:key="t.tagId"
-										class="sf-chip sf-size-2xs sf-loudness-2 sf-variant-primary"
+										class="sf-tag sf-single-line sf-size-2xs sf-loudness-2 sf-variant-primary"
 										>{{ t.name }}</span>
 									<span
 										v-if="(pageTags.get(page.pageId)?.length ?? 0) > 2"
-										class="sf-chip sf-size-2xs sf-loudness-1"
+										class="sf-counter sf-single-line sf-size-2xs sf-loudness-1"
 										>+{{ (pageTags.get(page.pageId)?.length ?? 0) - 2 }}</span>
 								</template>
 							</SfButton>
@@ -192,7 +192,7 @@ const togglePublished = async (pageId: number, published: boolean) => {
 	await crud.invalidate()
 }
 
-// The name says which tags the page has, since the chips alone aren't read out.
+// The name says which tags the page has, since the tags alone aren't read out.
 const tagsLabel = (page: { pageId: number; name: string; slug: string }) => {
 	const names = (pageTags.value.get(page.pageId) ?? []).map((t) => t.name).join(', ')
 	return `Tags for ${page.name || page.slug}: ${names || 'none'}`
@@ -243,7 +243,7 @@ const onNewPage = async () => {
 	   the min width keeps an empty cell easy to tap. */
 	.tags-cell {
 		min-width: 48px;
-		/* Chips start at the left, in line with the column heading. */
+		/* Tags start at the left, in line with the column heading. */
 		justify-content: start;
 	}
 }

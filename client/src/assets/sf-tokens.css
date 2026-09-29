@@ -1,12 +1,9 @@
 /* ========================================================================
-   sf-tokens.css — legacy-colour hold-out + TipTap reset.
+   sf-tokens.css — TipTap reset.
 
    Everything else (palette, alpha pairings, scale utilities, semantic
    canonicals against --sf-* tokens) is served at runtime from
    /styles/sf-system (emitted by api/src/domain/generateCss.ts).
-
-   The .sf-bg_secondary class and its --bg_secondary token in base.css go
-   together, with base.css's legacy colours.
    ======================================================================== */
 
 /* Reset on every NodeViewWrapper so outer layout nodes cannot inherit their
@@ -17,10 +14,4 @@
 	--sf-gap: 0;
 	--sf-padding: 0;
 	container-type: inline-size;
-}
-
-@layer sf-semantic {
-	.sf-bg_secondary {
-		background-color: rgb(var(--bg_secondary));
-	}
 }

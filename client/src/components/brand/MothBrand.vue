@@ -3,7 +3,7 @@
 	<div class="moth-brand">
 		<RouterLink to="/" class="moth-brand-link" aria-label="somefreq home">
 			<MothLogo class="moth-brand-mark sf-variant-primary" aria-hidden="true" />
-			<MothWordmark class="moth-brand-wordmark" aria-hidden="true" />
+			<MothWordmark class="moth-brand-wordmark sf-variant-primary" aria-hidden="true" />
 		</RouterLink>
 	</div>
 </template>

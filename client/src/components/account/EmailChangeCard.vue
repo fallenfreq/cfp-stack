@@ -36,11 +36,14 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 			<span>{{ profile.email }}</span>
 			<span
 				v-if="profile.email_verified"
-				class="sf-chip sf-size-2xs sf-loudness-3 sf-variant-success"
+				class="sf-status sf-single-line sf-size-2xs sf-loudness-3 sf-variant-success"
 			>
 				Verified
 			</span>
-			<span v-else class="sf-chip sf-size-2xs sf-loudness-3 sf-variant-warning">
+			<span
+				v-else
+				class="sf-status sf-single-line sf-size-2xs sf-loudness-3 sf-variant-warning"
+			>
 				Unverified
 			</span>
 		</div>

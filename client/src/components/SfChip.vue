@@ -1,7 +1,7 @@
 <template>
 	<button
 		type="button"
-		class="sf sf-chip sf-on-disabled"
+		class="sf sf-chip sf-single-line sf-on-disabled"
 		:class="[
 			size && `sf-size-${size}`,
 			hover && !disabled && 'sf-on-hover',

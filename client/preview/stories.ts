@@ -95,19 +95,19 @@ const action = (label: string, variant?: ButtonVariant) =>
 		() => label,
 	)
 
-// The tags cell as AdminPagesView builds it: chips on the trigger, a checkbox list in the
+// The tags cell as AdminPagesView builds it: tags on the trigger, a checkbox list in the
 // popover. popovertarget needs no script, so the popover opens by click in the preview too.
 const allTags = ['featured', 'news', 'updates', 'archive']
 
-// The chips on the tags cell's trigger.
-const chips = (tags: string[]) =>
+// The tags on the tags cell's trigger.
+const tagLabels = (tags: string[]) =>
 	tags.length
 		? [
 				...tags.slice(0, 2).map((t) =>
 					h(
 						'span',
 						{
-							class: 'sf-chip sf-size-2xs sf-loudness-2 sf-variant-primary',
+							class: 'sf-tag sf-single-line sf-size-2xs sf-loudness-2 sf-variant-primary',
 						},
 						t,
 					),
@@ -115,7 +115,7 @@ const chips = (tags: string[]) =>
 				tags.length > 2
 					? h(
 							'span',
-							{ class: 'sf-chip sf-size-2xs sf-loudness-1' },
+							{ class: 'sf-counter sf-single-line sf-size-2xs sf-loudness-1' },
 							`+${tags.length - 2}`,
 						)
 					: null,
@@ -138,7 +138,7 @@ const tagsCell = (tags: string[]) =>
 						style: 'min-width: 48px; justify-content: start',
 						'aria-label': `Tags: ${tags.join(', ') || 'none'}`,
 					},
-					() => chips(tags),
+					() => tagLabels(tags),
 				),
 			default: () =>
 				h('div', { class: 'sl-stack sf-gap-xs' }, [
@@ -257,8 +257,8 @@ const wideTable = () =>
 const bandRow = () =>
 	h('div', { class: 'sl-cluster sf-gap-xs' }, [
 		h('strong', { class: 'sf-text-sm' }, 'Row band'),
-		h('span', { class: 'sf-chip sf-size-2xs sf-loudness-2' }, 'draft'),
-		h('span', { class: 'sf-chip sf-size-2xs sf-loudness-2' }, 'saved'),
+		h('span', { class: 'sf-status sf-single-line sf-size-2xs sf-loudness-2' }, 'draft'),
+		h('span', { class: 'sf-status sf-single-line sf-size-2xs sf-loudness-2' }, 'saved'),
 	])
 
 const swatch = (extra = '') =>
@@ -817,10 +817,16 @@ export const stories: Story[] = [
 	{
 		id: 'layout-fit-content',
 		title: 'Layout primitives in size-to-content spots',
-		notes: 'Each row of chips should sit side by side, not one per line. The collapse demo: the 300px box shows one column, the 420px box two columns.',
+		notes: 'Each row of tags should sit side by side, not one per line. The collapse demo: the 300px box shows one column, the 420px box two columns.',
 		render: () => {
-			const chips = ['alpha', 'beta', 'gamma'].map((t) =>
-				h('span', { class: 'sf-chip sf-size-2xs sf-variant-featured sf-loudness-2' }, t),
+			const tags = ['alpha', 'beta', 'gamma'].map((t) =>
+				h(
+					'span',
+					{
+						class: 'sf-tag sf-single-line sf-size-2xs sf-variant-featured sf-loudness-2',
+					},
+					t,
+				),
 			)
 			const label = (text: string) => h('p', { class: 'sf-text-xs sf-loudness-1' }, text)
 			const columns = (width: string) =>
@@ -837,7 +843,7 @@ export const stories: Story[] = [
 						h('tbody', [
 							h('tr', [
 								h('td', 'Row'),
-								h('td', [h('div', { class: 'sl-cluster sf-gap-2xs' }, chips)]),
+								h('td', [h('div', { class: 'sl-cluster sf-gap-2xs' }, tags)]),
 							]),
 						]),
 					]),
@@ -846,7 +852,7 @@ export const stories: Story[] = [
 					label('sl-cluster inside a button'),
 					h('div', [
 						h('button', { class: 'sf sf-is-contained sf-size-2xs sf-on-hover' }, [
-							h('span', { class: 'sl-cluster sf-gap-2xs' }, chips),
+							h('span', { class: 'sl-cluster sf-gap-2xs' }, tags),
 						]),
 					]),
 				]),
@@ -923,11 +929,11 @@ export const stories: Story[] = [
 	{
 		id: 'cluster-scroll',
 		title: 'A cluster that scrolls stays on one line',
-		notes: 'Top: sl-cluster wraps onto new lines. Bottom: the same cluster with sl-scroll-x stays on one line and scrolls sideways; “Bullet list” stays on one line inside its chip instead of being squeezed onto two.',
+		notes: 'Top: sl-cluster wraps onto new lines. Bottom: the same cluster with sl-scroll-x stays on one line and scrolls sideways; “Bullet list” stays on one line inside its tag instead of being squeezed onto two.',
 		maxWidth: '240px',
 		render: () => {
 			const items = ['One', 'Bullet list', 'Three', 'Four', 'Five', 'Six'].map((t) =>
-				h('span', { class: 'sf-chip sf-loudness-2' }, t),
+				h('span', { class: 'sf-tag sf-single-line sf-loudness-2' }, t),
 			)
 			return h('div', { class: 'sl-stack sf-gap-md', style: 'padding: 16px' }, [
 				h('div', { class: 'sl-cluster sf-gap-2xs' }, items),
@@ -993,7 +999,9 @@ export const stories: Story[] = [
 		render: () => {
 			const words = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight']
 			const items = () =>
-				words.map((t) => h('span', { class: 'sf-chip sf-loudness-2' }, `Item ${t}`))
+				words.map((t) =>
+					h('span', { class: 'sf-tag sf-single-line sf-loudness-2' }, `Item ${t}`),
+				)
 			const row = (overflow: string, props: Record<string, unknown> = {}) =>
 				h(
 					'div',

@@ -147,16 +147,10 @@ Done in the editor + cleanup slice:
 
 ### What's intentionally still legacy
 
-- **`base.css`** keeps the legacy colour block: `--primary-{50..950}`, `--surface-*`,
-  semantic colours (`--bg_primary`, `--text_primary`, `--secondary`, etc.),
-  `--shadow`, `--shadow-opacity`. The Tailwind config and main.css still read them.
-  Whole block goes with Tailwind (Vuestic itself is gone, 2026-09-29).
-- **`sf-tokens.css`** keeps `.sf-bg_secondary` for the consumers it still has
-  (`BasicCard.vue`, `StackableSheet.vue`, `contentExtensions.ts`,
-  `initialContent.html`, plus ~18 component files that reference `--bg_secondary`
-  directly via `rgb(var(--bg_secondary))` or `rgba(... / var(--sf-alpha-9))`).
-  `sf-depth-{0..3}` now exists — the consumer migration is its own slice and
-  removes this class plus `--bg_secondary` from `base.css`.
+- Legacy colours are gone (2026-09-29): their last readers (multiSelect drag preview,
+  the logo SVGs, `.sf-bg_secondary`, main.css body) moved to theme classes and `--sf-*`
+  tokens. `base.css` holds only app vars (timing, toolbar height, z-index layers) and the
+  breakpoints the Tailwind config reads.
 
 What's pending:
 
@@ -168,12 +162,11 @@ What's pending:
    vocabulary class is seeded; no bulk pass until the class system covers the gap.
 3. **Layout full migration** — removing `layout-*` class alongside `sl-*` requires
    restructuring the content-wrapper pattern. Deferred.
-4. **Legacy colours** — the old tokens in `base.css` are hand-written, not sourced
-   from the seed. Theme edits to `--sf-*` tokens don't propagate to `--text_primary` etc.
-   Fix by moving their readers (main.css body, Tailwind palette) to `--sf-*`.
+4. ~~**Legacy colours**~~ — done 2026-09-29 (see above).
 5. ~~**Vuestic removal**~~ — done 2026-09-29 (runtime, config, `processTailwindColors`).
-   What's left (`base.css` legacy block, `tailwind.config.js` palette refs,
-   `sf-bg_secondary`) goes with the Tailwind removal.
+   Tailwind removal: preflight replaced by the theme's reset
+   (`api/src/domain/css/reset.ts`), no `@tailwind` directives left; the packages,
+   `tailwind.config.js`, `postcss.config.js` and base.css's breakpoints go next.
 6. **Seed batching** — individual `await` per upsert (~160 round-trips). Use `db.batch()`
    if seed time becomes a problem against production D1.
 
@@ -203,18 +196,17 @@ classes; query `class_vocabulary` for the rich ones.
       `@layer ui { }`. The name is `ui` (not `components`) because Tailwind's PostCSS
       plugin hijacks `@layer components` and requires a matching `@tailwind components`
       directive in the same file — using our own name sidesteps that entirely.
-- [x] Static `RESET` block — `generateCss.ts` emits a hardcoded `@layer reset { }` for
-      normalizations with no theme dependency (`td > *:last-child { margin-bottom: 0 }`).
-      Add new reset rules here; no seed bump needed.
+- [x] Static `RESET` block — `api/src/domain/css/reset.ts`, emitted by the generator as
+      `@layer reset { }`: the page's fixed starting point (replaced Tailwind preflight).
+      The other fixed blocks sit beside it in `css/`. Add rules there; no seed bump needed.
 - [x] Generator emits all auto-derived classes (semantic canonicals, value-linked
       utilities, editor palette + alpha pairings) inside their matching `@layer`
       blocks. The remaining "wrap in @layer" work is for the **legacy** hand-written
       `sf-tokens.css` sections — those go away with the editor migration rather than
       being wrapped, so no separate layer-wrapping pass is needed.
 - [x] Token names — `--sf-*` names are already correct in the DB seed and generated
-      at runtime. Legacy unprefixed names (`--text-*`, `--alpha-*`, etc.) survive in
-      `base.css` as legacy colours and stay there until Tailwind goes. No rename
-      pass is needed or correct.
+      at runtime. The legacy unprefixed colours were removed with their last readers
+      (2026-09-29), not renamed.
 - [x] Rename `.dark` theme class to `.theme-dark` to match the spec's theme activation
       convention. Done across `base.css`, `darkModeStore.ts`, `index.html`,
       `tailwind.config.js`; `.pink` → `.theme-pink` same pass.
@@ -222,8 +214,8 @@ classes; query `class_vocabulary` for the rich ones.
 ## Token notes
 
 The `--sf-*` token names are already correct in the DB seed and generated at runtime.
-Legacy unprefixed names (`--text-*`, `--alpha-*`, `--primary-*`, etc.) in `base.css`
-are legacy colours — they stay until Tailwind goes. No bulk rename pass is needed.
+The legacy unprefixed colours (`--primary`, `--text_primary`, …) are gone; `base.css`
+keeps only app vars.
 
 Component CSS that reaches for raw tokens directly is using the escape hatch. The right
 migration is to the vocabulary class system (per-component decision), not renaming the
@@ -447,15 +439,6 @@ These are not bugs but unresolved tensions in the current design:
       wraps them externally so the components themselves have no editor dependency. Call sites
       outside the editor use them directly with `sf-gap-*` as a class attribute.
 - [x] `LayoutCard.vue` — wears `sf-depth-1`; background inherited from bundle (5a95dfe).
-
-## Legacy colours (temporary)
-
-Vuestic is gone (2026-09-29). Its colour tokens stay in `base.css` under "Legacy colours"
-because other code still reads them: `main.css` (the body's background and text), the
-Tailwind config palette, `TriangleShape.vue` and `.sf-bg_secondary` (`sf-tokens.css`).
-They're deliberately absent from the spec. When those readers move to `--sf-*` tokens
-(the Tailwind removal steps), the block and any `sf-bg_*` / `sf-color-bg_*` /
-`sf-bg-text_*` classes that only expose these tokens go in one sweep.
 
 ## Deferred (pending design pass)
 

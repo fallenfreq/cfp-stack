@@ -117,7 +117,7 @@ Layers are declared lowest to highest priority; inline styles override all of th
 
 | Layer         | Holds                                                                                        |
 | ------------- | -------------------------------------------------------------------------------------------- |
-| `reset`       | Static resets (Tailwind preflight, table-cell margins) — lowest                              |
+| `reset`       | Fixed starting point: browser differences evened out, element defaults cleared — lowest      |
 | `ui`          | Component `<style>` blocks — below every system class                                        |
 | `sf-element`  | Bare element rules (`code.sf`, `table.sf`) and element markers (`sf-chip`)                   |
 | `sf-bundle`   | Multi-property bundles (depth, heading, loudness, size, boundary, divide, etc.)              |
@@ -523,13 +523,21 @@ Vocabulary Governance.
 
 Class analog of a bare HTML element rule. HTML has some element categories baked in —
 `<button>`, `<nav>`, `<table>`, `<mark>` — that themes decorate via bare element rules.
-Real UI categories HTML forgot (chip, badge, tag) need class markers to give themes
+Real UI categories HTML forgot (chip, tag, counter) need class markers to give themes
 something to decorate. Markers sit in their own cascade layer (`sf-element`, below
 `sf-bundle`) so they behave the way HTML elements do — a baseline that bundles, variants
 and states override predictably, without depending on source order to break ties.
 
 ```
-sf-chip          compact discrete-unit chip — tag, filter, selection, status
+sf-chip          compact unit standing for an input, attribute or action — an
+                 entered item, a filter, a choice, a suggestion. Any element:
+                 static on a <span>, or with sf on a <button> / <a>
+sf-tag           short read-only label naming a category the item belongs to
+sf-status        short read-only label saying what state something is in
+sf-counter       short read-only label holding a count (3 unread, +2 more).
+                 The four compact units are separate element types: the root
+                 theme draws them alike, a theme may tell them apart. Worn with
+                 sf-single-line; colour comes from loudness × variant
 sf-icon          content is a single icon (font icon or SVG). line-height:1
                  removes leading so padding drives vertical spacing
 sf-single-line   content is a single line of text. line-height:1 removes the
@@ -563,20 +571,25 @@ have in common with any other element — background, elevation, density, hover,
 muted attention — already comes from depth, loudness, size, variants, states. The marker
 carries only the _residual_ the composable axes can't express: a shape convention the
 theme prefers for chips (square edges when the theme's default is round, or the reverse),
-a colour treatment specific to badges, whatever the category demands after the axes have
+a colour treatment specific to counters, whatever the category demands after the axes have
 done their work.
 
 **Markers stack additively over the underlying element.** `<button class="sf sf-chip">`
-wears both — `button.sf` provides the button baseline; `sf-chip` adds tight leading;
+wears both — `button.sf` provides the button baseline;
 `button.sf-chip` compound refines chip-specific properties (r-3 shape, tighter alpha
 border). A theme that hasn't defined the compound still produces a working button — the
 element rule is always the floor. Markers never replace the underlying identity; they
 add and refine.
 
-Elements without a baseline in the vocab (e.g. `<span>`) can still opt into a marker's
-chrome via that marker's element compound alone — `<span class="sf-chip">` fires
-`span.sf-chip` rules without any `sf` membership marker, because a span has no baseline
-to admit. The element compound is the floor in that case.
+Elements without a baseline in the vocab (e.g. `<span>`) wear a marker without any `sf`
+membership marker, because a span has no baseline to admit: `<span class="sf-tag">` is
+styled by the marker's own rules, which are the floor in that case.
+
+**What a marker never carries: arrangement.** Whether text wraps, how an element sits
+among its neighbours, and what makes a box a box (`display: inline-block` so a span's
+padding applies) are the same under every theme. Wrapping belongs to the parent's layout
+(`sl-*`) or the component; structural display goes in the fixed reset. A theme that could
+change them would reflow the page.
 
 **Admission test:** after depth + loudness + size + variant + state have applied, is there
 anything left that's specific to this category?

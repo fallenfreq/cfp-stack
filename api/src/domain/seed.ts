@@ -326,8 +326,9 @@ const VOCABULARY: VocabSpec[] = [
 	{
 		name: 'sf-chip',
 		kind: 'element',
+		cascadeOrder: MODIFIER_ORDER,
 		description:
-			'Compact discrete-unit chip — tag, filter, selection, status. Wear alongside sf on the underlying element; element-specific chip overrides (radius, border) live in compound rules like button.sf-chip.',
+			'A compact unit standing for an input, attribute or action — an entered item, a filter, a choice, a suggestion. Any element: static on a <span>, or with sf on a <button> or <a> (compounds like button.sf-chip keep the chip shape). Wear with sf-single-line; for a category, state or count use sf-tag, sf-status, sf-counter.',
 	},
 	{
 		name: 'sf-switch',
@@ -376,6 +377,24 @@ const VOCABULARY: VocabSpec[] = [
 		kind: 'element',
 		description:
 			'Content is a small colour-surface tile — palette chip, native colour input, preview. Theme decides border, radius, padding; consumers set width/height.',
+	},
+	{
+		name: 'sf-tag',
+		kind: 'element',
+		description:
+			'A short label naming a category the item belongs to. Read-only; wear with sf-single-line, a size, and a loudness and variant for its colour.',
+	},
+	{
+		name: 'sf-status',
+		kind: 'element',
+		description:
+			'A short label saying what state something is in (verified, draft, failed). Read-only; wear with sf-single-line, a size, and a loudness and variant for its colour.',
+	},
+	{
+		name: 'sf-counter',
+		kind: 'element',
+		description:
+			'A short label holding a count (3 unread, +2 more). Read-only; wear with sf-single-line, a size, and a loudness and variant for its colour.',
 	},
 	{
 		name: 'sf-avatar',
@@ -2956,102 +2975,46 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-fg_on_primary))',
 	},
 
-	// ─── sf-chip ──────────────────────────────────────────────────────────────
-	// Consumer wears `sf sf-chip` on the underlying element (button, span, etc.). Bare rule
-	// carries the universal chip trait (tight leading). Chip-shape overrides are compound
-	// rules scoped to the host element — button.sf-chip beats button.sf in the same
-	// sf-element layer via source order (sf-chip seeded later), overriding button.sf's
-	// r-2 / alpha-4 border with the chip's r-3 / alpha-3 without duplicating font, padding,
-	// background, focus which button.sf already provides.
-	{ classNames: ['sf-chip'], cssProperty: 'line-height', value: '1' },
-	{
-		elementSelector: 'button',
-		classNames: ['sf-chip'],
-		cssProperty: 'border-radius',
-		value: 'var(--sf-radius-3)',
-	},
-	{
-		elementSelector: 'button',
-		classNames: ['sf-chip'],
-		cssProperty: 'border',
-		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color) / var(--sf-alpha-3))',
-	},
-
-	// span.sf-chip — display-only chip chrome. Mirrors button.sf-chip layout
-	// (radius, padding via --sf-padding) plus display: inline-block so spans
-	// actually respect padding, and white-space: nowrap so tag names don't
-	// break mid-word inside flex-wrap parents. No border baseline — display-only
-	// chips are informational, not tappable, and typically don't draw a boundary
-	// against the parent; theme can add one via a compound if a case wants it.
-	{
-		elementSelector: 'span',
-		classNames: ['sf-chip'],
-		cssProperty: 'display',
-		value: 'inline-block',
-	},
-	{
-		elementSelector: 'span',
-		classNames: ['sf-chip'],
-		cssProperty: 'border-radius',
-		value: 'var(--sf-radius-3)',
-	},
-	{
-		elementSelector: 'span',
-		classNames: ['sf-chip'],
-		cssProperty: 'padding',
-		value: 'var(--sf-padding)',
-	},
-	{
-		elementSelector: 'span',
-		classNames: ['sf-chip'],
-		cssProperty: 'white-space',
-		value: 'nowrap',
-	},
-
-	// sf-chip × sf-loudness-3 — loud chip expression: solid fill + inverted text.
-	// Enables status pills, notification counters, prominent tag callouts to compose
-	// as `sf-chip sf-loudness-3 sf-variant-*` without needing a separate marker.
-	// Variant compounds swap the fg_primary default for semantic colour roles.
-	{
-		classNames: ['sf-chip', 'sf-loudness-3'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-fg_primary))',
-	},
-	{
-		classNames: ['sf-chip', 'sf-loudness-3'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
-	},
-	{
-		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-featured'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary))',
-	},
-	{
-		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-primary'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary))',
-	},
-	{
-		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-danger'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-danger))',
-	},
-	{
-		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-warning'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-warning))',
-	},
-	{
-		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-success'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-success))',
-	},
-	{
-		classNames: ['sf-chip', 'sf-loudness-3', 'sf-variant-info'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-info))',
-	},
+	// ─── Compact units: sf-chip, sf-tag, sf-status, sf-counter ────────────────
+	// Each is its own element type. A chip stands for an input, attribute or action (an entered
+	// item, a filter, a choice, a suggestion); tag, status and counter are the read-only labels
+	// for a category, a state and a count. Any element may wear them (a span, a button, a
+	// link), so the bare rules are the floor. The root theme draws all four the same (a theme
+	// may tell them apart); they carry only their shape. Colour and weight come from the shared
+	// loudness × variant rules. With no variant, loudness-3 still means the loudest unit, so
+	// they get the neutral solid fill the shared rules give only buttons. Wearers add
+	// sf-single-line; display is structural (reset); wrapping is the layout's.
+	...(['sf-chip', 'sf-tag', 'sf-status', 'sf-counter'] as const).flatMap((unit): RuleSpec[] => [
+		{ classNames: [unit], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
+		{ classNames: [unit], cssProperty: 'padding', value: 'var(--sf-padding)' },
+		{
+			classNames: [unit, 'sf-loudness-3'],
+			cssProperty: 'background',
+			value: 'rgb(var(--sf-fg_primary))',
+		},
+		{
+			classNames: [unit, 'sf-loudness-3'],
+			cssProperty: 'color',
+			value: 'rgb(var(--sf-fg_inverted))',
+		},
+	]),
+	// A chip you press or follow is still a chip: it keeps the chip's own shape and edge over
+	// the button / link baseline, which outranks bare markers. The compounds tie with
+	// button.sf / a.sf; sf-chip's cascade order settles it (a marker refines its element).
+	...(['button', 'a'] as const).flatMap((el): RuleSpec[] => [
+		{
+			elementSelector: el,
+			classNames: ['sf-chip'],
+			cssProperty: 'border-radius',
+			value: 'var(--sf-radius-3)',
+		},
+		{
+			elementSelector: el,
+			classNames: ['sf-chip'],
+			cssProperty: 'border',
+			value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color) / var(--sf-alpha-3))',
+		},
+	]),
 
 	// ─── sf-swatch ────────────────────────────────────────────────────────────
 	// Colour-surface tile — chrome only. Consumers set width/height (component metric).
@@ -3365,8 +3328,6 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-5))',
 	},
-	{ classNames: ['sf-depth-1'], pseudo: ' th', cssProperty: 'user-select', value: 'none' },
-	{ classNames: ['sf-depth-1'], pseudo: ' th', cssProperty: 'white-space', value: 'nowrap' },
 ]
 
 // ─── Collapse thresholds ─────────────────────────────────────────────────

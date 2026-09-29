@@ -35,7 +35,6 @@ declare module 'vue' {
     LayoutSection: typeof import('./src/components/layout/LayoutSection.vue')['default']
     LayoutSplit: typeof import('./src/components/layout/LayoutSplit.vue')['default']
     MaterialIcon: typeof import('./src/components/ui/MaterialIcon.vue')['default']
-    MiniMothLogo: typeof import('./src/components/brand/MiniMothLogo.vue')['default']
     MothBrand: typeof import('./src/components/brand/MothBrand.vue')['default']
     MothLogo: typeof import('./src/components/brand/MothLogo.vue')['default']
     MothWordmark: typeof import('./src/components/brand/MothWordmark.vue')['default']
@@ -81,6 +80,5 @@ declare module 'vue' {
     ToolbarScrollHint: typeof import('./src/components/editor/ToolbarScrollHint.vue')['default']
     ToolbarShadowControl: typeof import('./src/components/editor/toolbar/ToolbarShadowControl.vue')['default']
     ToolbarYouTubeUrlControl: typeof import('./src/components/editor/toolbar/ToolbarYouTubeUrlControl.vue')['default']
-    TriangleShape: typeof import('./src/components/shapes/TriangleShape.vue')['default']
   }
 }

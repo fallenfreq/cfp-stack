@@ -48,6 +48,7 @@
 						<input
 							v-model="individualized"
 							type="checkbox"
+							class="sf"
 							@change="onIndividualizeToggle"
 						>
 						Individualize

@@ -174,8 +174,8 @@ function head(title) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)} · preview</title>
 <link rel="stylesheet" href="fontawesome.css">
-<link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="sf-system.css">
+<link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="preview.css">
 </head>`

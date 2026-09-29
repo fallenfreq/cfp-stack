@@ -1,28 +1,23 @@
 /* Layer order must be declared before any @layer block runs, otherwise the
    first imported block establishes the order implicitly and the explicit
    declaration becomes a no-op for layers it tries to put earlier.
-   `reset` holds Tailwind preflight so its `h1,h2,h3 { font-size: inherit }`
-   reset doesn't beat sf-bundle (unlayered rules win over any layer). */
+   `reset` (served with the theme, api/src/domain/css/reset.ts) is lowest, so
+   everything the theme and components set wins over it. */
 @layer reset, ui, sf-element, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state, sl-layout;
 
 @import './base.css';
 @import './sf-tokens.css';
-/* sf-system stylesheet (tokens + classes + editor pairings) is served at
-   runtime from /styles/sf-system; <link> in index.html loads it after this
-   file so the @layer declaration above is in scope. */
+/* sf-system stylesheet (reset, tokens, classes, editor pairings) is served at
+   runtime from /styles/sf-system; <link> in index.html loads it before this
+   file. It declares the same layer order first, so whichever loads first sets
+   it. The page's colours and type come from its body rule. */
 
 @layer reset {
-	@tailwind base;
-}
-@tailwind components;
-@tailwind utilities;
-
-@layer reset {
+	/* Colours fade with the site's colour changes (dark mode). */
 	*,
 	*::before,
 	*::after {
 		transition: var(--transition);
-		border-color: rgb(var(--sf-border_color));
 	}
 
 	/* A popover opens in the top layer but still belongs to the page: take its text
@@ -30,34 +25,9 @@
 	[popover] {
 		color: inherit;
 	}
-}
 
-@layer reset {
 	body {
-		background-color: rgb(var(--bg_primary));
-		color: rgb(var(--text_primary));
-		/* Fades the page with the site's colour changes (dark mode). */
-		transition: var(--transition);
 		min-height: 100vh;
-		line-height: 1.6;
-		font-family:
-			'Source Sans Pro',
-			Inter,
-			-apple-system,
-			BlinkMacSystemFont,
-			'Segoe UI',
-			Roboto,
-			Oxygen,
-			Ubuntu,
-			Cantarell,
-			'Fira Sans',
-			'Droid Sans',
-			'Helvetica Neue',
-			sans-serif;
-		font-size: 16px;
-		text-rendering: optimizeLegibility;
-		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
 	}
 }
 
