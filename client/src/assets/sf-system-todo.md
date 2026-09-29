@@ -296,8 +296,10 @@ var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
       inert; a closed dialog hides its copy, so exactly one is read). Out-of-sight CSS is
       component-owned, not theme vocab. A new modal must hold an `<SfAnnouncer />`. Each
       message goes only to the copy that could be heard when sent (`inModal`). SfButton
-      takes focus when pressed if focus fell to the page (Safari / macOS Firefox don't
-      focus clicked buttons); mousedown.prevent buttons keep focus where it was.
+      takes focus when pressed if focus fell to something around it (Safari / macOS
+      Firefox don't focus clicked buttons); mousedown.prevent buttons keep focus where it
+      was. A busy button also announces when focus lands on it. announce() warns in dev
+      when an open modal has no SfAnnouncer.
 - [x] Bare `input` element rule — seeded in `sf-element`. Same padding/font contract as
       `button`. `input:focus-visible` sets `color: rgb(var(--sf-fg_primary))` +
       `background: rgba(var(--sf-fg_primary) / var(--sf-alpha-1))` — the "being edited"

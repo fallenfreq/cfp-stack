@@ -13,6 +13,9 @@ export interface Announcement {
 }
 
 export const announcements = shallowReactive<Announcement[]>([])
+
+// The open modal dialog, if any.
+const openModal = () => document.querySelector<HTMLDialogElement>('dialog:modal')
 let nextId = 0
 
 /** Have screen readers read a message out, without moving focus. */
@@ -20,8 +23,14 @@ export function announce(message: string) {
 	// Each message is added as a new line, so the same message twice is read twice. It is
 	// removed after a while so moving through the page later doesn't find it again.
 	const id = nextId++
-	const inModal = document.querySelector('dialog:modal') !== null
-	announcements.push({ id, message, inModal })
+	const modal = openModal()
+	// Only a copy inside the modal can be heard while it's open.
+	if (import.meta.env.DEV && modal && !modal.querySelector('.announcer')) {
+		console.warn(
+			'announce(): the open modal dialog has no <SfAnnouncer />, so this is not heard.',
+		)
+	}
+	announcements.push({ id, message, inModal: modal !== null })
 	setTimeout(() => {
 		const index = announcements.findIndex((a) => a.id === id)
 		if (index !== -1) announcements.splice(index, 1)

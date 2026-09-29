@@ -19,6 +19,7 @@
 		:aria-disabled="loading || undefined"
 		:aria-busy="loading || undefined"
 		@click.capture="onPress"
+		@focus="onFocus"
 	>
 		<slot />
 	</button>
@@ -63,8 +64,9 @@ const props = withDefaults(
 
 const isDisabled = computed(() => props.disabled || props.loading)
 
-// Tell screen readers the button they're on went busy (aria-busy alone is mostly not read).
-// Busy buttons elsewhere on the page stay quiet.
+// Tell screen readers the button they're on is busy (aria-busy alone is mostly not read):
+// when it goes busy while focused, and when focus lands on it while busy (tabbing to it, or
+// focus coming back from a dialog). Busy buttons elsewhere on the page stay quiet.
 const el = ref<HTMLButtonElement | null>(null)
 watch(
 	() => props.loading,
@@ -72,6 +74,9 @@ watch(
 		if (busy && el.value && el.value === document.activeElement) announce('Loading')
 	},
 )
+const onFocus = () => {
+	if (props.loading) announce('Loading')
+}
 
 // Runs before the consumer's click. While busy it stops that click (and a submit button
 // submitting); otherwise it makes sure the pressed button has focus.
@@ -81,12 +86,16 @@ const onPress = (event: MouseEvent) => {
 		event.stopImmediatePropagation()
 		return
 	}
-	// Safari and Firefox on macOS don't focus a clicked button, so focus falls to the page.
-	// Take it, as other browsers do, so the button in use is the focused one (the busy
-	// announcement relies on that). A button that keeps focus elsewhere on purpose
-	// (mousedown.prevent) leaves it there: focus didn't fall to the page.
+	// Safari and Firefox on macOS don't focus a clicked button: focus falls to whatever
+	// around it can hold focus (the page, a scroll area, a popover). Take it, as other
+	// browsers do, so the button in use is the focused one (the busy announcement relies on
+	// that). A button that keeps focus elsewhere on purpose (mousedown.prevent) leaves it
+	// there: focus stayed on something that doesn't contain the button.
+	const button = el.value
 	const active = document.activeElement
-	if (!active || active === document.body) el.value?.focus({ preventScroll: true })
+	if (button && active !== button && (!active || active.contains(button))) {
+		button.focus({ preventScroll: true })
+	}
 }
 </script>
 
