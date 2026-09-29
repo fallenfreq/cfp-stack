@@ -9,6 +9,8 @@
 		@cancel.prevent="cancelModal"
 		@close="cancelModal"
 	>
+		<!-- The page outside is shut off from screen readers while this is open. -->
+		<SfAnnouncer />
 		<div v-if="request" class="prompt-cover sl-cover">
 			<form class="prompt-content sf-depth-3 sl-stack sf-gap-sm" @submit.prevent="submit">
 				<!-- A prompt's message is the question its field answers, so it labels the

@@ -52,7 +52,6 @@ const on = defineModel<boolean>({ default: false })
 		grid-template-columns: 1fr 1fr;
 		align-items: center;
 		flex: none;
-		cursor: pointer;
 	}
 	.switch-track > * {
 		grid-row: 1;

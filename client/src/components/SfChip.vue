@@ -1,13 +1,14 @@
 <template>
 	<button
 		type="button"
-		class="sf sf-chip"
+		class="sf sf-chip sf-on-disabled"
 		:class="[
 			size && `sf-size-${size}`,
-			hover && 'sf-on-hover',
+			hover && !disabled && 'sf-on-hover',
 			current && 'sf-on-current',
 			selected && 'sf-on-selected',
 		]"
+		:disabled="disabled"
 	>
 		<slot />
 	</button>
@@ -20,6 +21,8 @@ withDefaults(
 		current?: boolean
 		selected?: boolean
 		hover?: boolean
+		// Can't be pressed; drops hover like SfButton.
+		disabled?: boolean
 	}>(),
 	{ hover: true },
 )

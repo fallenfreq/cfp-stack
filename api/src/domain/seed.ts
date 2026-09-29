@@ -2646,6 +2646,8 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'padding',
 		value: 'var(--sf-padding)',
 	},
+	// A pointer shows it can be pressed; disabled (not-allowed) and busy (progress) override it.
+	{ elementSelector: 'button', classNames: ['sf'], cssProperty: 'cursor', value: 'pointer' },
 	// Inherit typography but not line-height — same reasoning as sf-field above.
 	{ elementSelector: 'button', classNames: ['sf'], cssProperty: 'font-family', value: 'inherit' },
 	{ elementSelector: 'button', classNames: ['sf'], cssProperty: 'font-size', value: 'inherit' },

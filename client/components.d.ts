@@ -44,6 +44,7 @@ declare module 'vue' {
     PromptModal: typeof import('./src/components/input/PromptModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SfAnnouncer: typeof import('./src/components/ui/SfAnnouncer.vue')['default']
     SfButton: typeof import('./src/components/ui/SfButton.vue')['default']
     SfChip: typeof import('./src/components/SfChip.vue')['default']
     SfIcon: typeof import('./src/components/ui/SfIcon.vue')['default']

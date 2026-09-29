@@ -2,6 +2,7 @@
 	<!-- The one button. The theme styles every button.sf; this sets the defaults and
 	     behaviour. Other attributes, listeners and classes pass through to the button. -->
 	<button
+		ref="el"
 		:type="type"
 		class="btn sf sf-on-disabled"
 		:class="[
@@ -17,14 +18,15 @@
 		:disabled="disabled && !loading"
 		:aria-disabled="loading || undefined"
 		:aria-busy="loading || undefined"
-		@click.capture="ignoreWhileLoading"
+		@click.capture="onPress"
 	>
 		<slot />
 	</button>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { announce } from '@/services/announce'
+import { computed, ref, watch } from 'vue'
 
 export type ButtonLoudness = 1 | 2 | 3
 export type ButtonVariant =
@@ -61,11 +63,30 @@ const props = withDefaults(
 
 const isDisabled = computed(() => props.disabled || props.loading)
 
-// Runs before the consumer's click and stops it, and stops a submit button submitting.
-const ignoreWhileLoading = (event: MouseEvent) => {
-	if (!props.loading) return
-	event.preventDefault()
-	event.stopImmediatePropagation()
+// Tell screen readers the button they're on went busy (aria-busy alone is mostly not read).
+// Busy buttons elsewhere on the page stay quiet.
+const el = ref<HTMLButtonElement | null>(null)
+watch(
+	() => props.loading,
+	(busy) => {
+		if (busy && el.value && el.value === document.activeElement) announce('Loading')
+	},
+)
+
+// Runs before the consumer's click. While busy it stops that click (and a submit button
+// submitting); otherwise it makes sure the pressed button has focus.
+const onPress = (event: MouseEvent) => {
+	if (props.loading) {
+		event.preventDefault()
+		event.stopImmediatePropagation()
+		return
+	}
+	// Safari and Firefox on macOS don't focus a clicked button, so focus falls to the page.
+	// Take it, as other browsers do, so the button in use is the focused one (the busy
+	// announcement relies on that). A button that keeps focus elsewhere on purpose
+	// (mousedown.prevent) leaves it there: focus didn't fall to the page.
+	const active = document.activeElement
+	if (!active || active === document.body) el.value?.focus({ preventScroll: true })
 }
 </script>
 

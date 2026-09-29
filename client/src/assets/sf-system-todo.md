@@ -288,7 +288,16 @@ var(--sf-radius-2)`; `padding: var(--sf-padding, 0)` consumes the size axis so
       components with `sf-size-*` get scale-appropriate padding without writing
       `padding: var(--sf-padding)` locally; `font: inherit` so nested buttons pick up
       their container's type scale (e.g. `sf-text-xs` on a wrapper). Compound with
-      `sf-is-overlay` bumps to pill.
+      `sf-is-overlay` bumps to pill. `cursor: pointer` (2.83.0) — the theme owns it, no
+      longer Tailwind preflight; busy (progress) and disabled (not-allowed) override it.
+- [x] Busy announcement — SfButton calls `announce('Loading')` (services/announce.ts)
+      when `loading` turns on while it has focus; one hidden live region, SfAnnouncer,
+      mounted in App and inside every modal `<dialog>` (content outside an open modal is
+      inert; a closed dialog hides its copy, so exactly one is read). Out-of-sight CSS is
+      component-owned, not theme vocab. A new modal must hold an `<SfAnnouncer />`. Each
+      message goes only to the copy that could be heard when sent (`inModal`). SfButton
+      takes focus when pressed if focus fell to the page (Safari / macOS Firefox don't
+      focus clicked buttons); mousedown.prevent buttons keep focus where it was.
 - [x] Bare `input` element rule — seeded in `sf-element`. Same padding/font contract as
       `button`. `input:focus-visible` sets `color: rgb(var(--sf-fg_primary))` +
       `background: rgba(var(--sf-fg_primary) / var(--sf-alpha-1))` — the "being edited"

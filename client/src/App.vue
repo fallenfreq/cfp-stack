@@ -77,6 +77,7 @@ const navItems = computed<NavItem[]>(() => {
 	</div>
 	<PromptModal />
 	<SfToasts />
+	<SfAnnouncer />
 </template>
 
 <style scoped>
