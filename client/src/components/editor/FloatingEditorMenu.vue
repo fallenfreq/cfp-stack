@@ -8,7 +8,7 @@
 		<SfChip
 			v-if="isTextNodeType && !editorStore.isCodeView"
 			size="xs"
-			:current="editor.isActive('codeBlock')"
+			:pressed="editor.isActive('codeBlock')"
 			@click="editor.chain().focus().toggleCodeBlock().run()"
 		>
 			Code Block

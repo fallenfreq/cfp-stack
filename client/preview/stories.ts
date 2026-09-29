@@ -14,6 +14,7 @@ import ToolbarAttrRow from '@/components/editor/toolbar/ToolbarAttrRow.vue'
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import PromptModal from '@/components/input/PromptModal.vue'
 import StackableSheet from '@/components/layout/StackableSheet.vue'
+import SfChip from '@/components/SfChip.vue'
 import SfTooltip from '@/components/SfTooltip.vue'
 import type { NavItem } from '@/components/siteNav'
 import SiteNav from '@/components/SiteNav.vue'
@@ -501,6 +502,34 @@ export const stories: Story[] = [
 					h(EmailChangeCard, { profile }),
 				],
 			})
+		},
+	},
+	{
+		id: 'toggles',
+		title: 'Toggles — pressed buttons and chips',
+		notes: 'Each pair is off, then on. A toggle with a colour variant keeps its colour while on (Delete tags in the map demo). Screen readers hear "pressed" or "not pressed".',
+		render: () => {
+			const pair = (props: Record<string, unknown>) =>
+				[false, true].map((pressed) =>
+					h(SfIconButton, { icon: 'trash', tooltip: 'Delete tags', ...props, pressed }),
+				)
+			return h('div', { class: 'sl-stack sf-gap-md' }, [
+				h('div', { class: 'sl-cluster sf-gap-xs' }, [
+					...pair({ class: 'sf-is-contained', loudness: 1 }),
+					...pair({ class: 'sf-is-contained', loudness: 1, variant: 'danger' }),
+					...pair({ loudness: 2, variant: 'success' }),
+					...[false, true].map((pressed) =>
+						h(SfButton, { loudness: 2, pressed }, () => 'Add marker'),
+					),
+				]),
+				h(
+					'div',
+					{ class: 'sl-cluster sf-gap-xs' },
+					['cafe', 'park', 'museum'].map((tag, i) =>
+						h(SfChip, { size: 'xs', pressed: i === 1 }, () => tag),
+					),
+				),
+			])
 		},
 	},
 	{

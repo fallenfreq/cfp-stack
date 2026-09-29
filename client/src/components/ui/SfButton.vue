@@ -10,12 +10,13 @@
 			variant && `sf-variant-${variant}`,
 			size && `sf-size-${size}`,
 			{
-				'sf-on-current': current,
+				'sf-on-current': current || pressed,
 				'sf-is-loading': loading,
 				'sf-on-hover': !isDisabled,
 			},
 		]"
 		:disabled="disabled && !loading"
+		:aria-pressed="pressed"
 		:aria-disabled="loading || undefined"
 		:aria-busy="loading || undefined"
 		@click.capture="onPress"
@@ -40,48 +41,57 @@ export type ButtonVariant =
 	| 'alt-1'
 export type ButtonSize = '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
-const props = withDefaults(
-	defineProps<{
-		// No loudness means the theme's plain button, as no size means its normal size.
-		loudness?: ButtonLoudness | undefined
-		variant?: ButtonVariant | undefined
-		// No size means the theme's normal button size.
-		size?: ButtonSize | undefined
-		// Marks the button as the one that's on or selected (a pressed toggle, the open tab).
-		current?: boolean
-		// Waiting on its action: shows as busy and can't be pressed again. It is never
-		// natively disabled while busy, even with `disabled` set, because a disabled button
-		// drops focus; aria-disabled tells assistive tech instead, and the click (mouse,
-		// touch, Enter, Space, form submit) is stopped before any handler runs. Handlers on
-		// other events (mousedown, keydown) are the caller's to guard.
-		loading?: boolean
-		disabled?: boolean
-		// A button's own default is "submit", which submits any form it sits in.
-		type?: 'button' | 'submit' | 'reset'
-	}>(),
-	{ type: 'button' },
-)
+const {
+	loudness,
+	variant,
+	size,
+	current = false,
+	pressed = undefined,
+	loading = false,
+	disabled = false,
+	type = 'button',
+} = defineProps<{
+	// No loudness means the theme's plain button, as no size means its normal size.
+	loudness?: ButtonLoudness | undefined
+	variant?: ButtonVariant | undefined
+	// No size means the theme's normal button size.
+	size?: ButtonSize | undefined
+	// Marks the button as the one that's on or selected (the block you're in, the open tab).
+	current?: boolean
+	// Makes it a toggle: true is on, false is off, and screen readers hear which. It shows
+	// on like `current`. Leave it out for a button that isn't a toggle.
+	pressed?: boolean | undefined
+	// Waiting on its action: shows as busy and can't be pressed again. It is never
+	// natively disabled while busy, even with `disabled` set, because a disabled button
+	// drops focus; aria-disabled tells assistive tech instead, and the click (mouse,
+	// touch, Enter, Space, form submit) is stopped before any handler runs. Handlers on
+	// other events (mousedown, keydown) are the caller's to guard.
+	loading?: boolean
+	disabled?: boolean
+	// A button's own default is "submit", which submits any form it sits in.
+	type?: 'button' | 'submit' | 'reset'
+}>()
 
-const isDisabled = computed(() => props.disabled || props.loading)
+const isDisabled = computed(() => disabled || loading)
 
 // Tell screen readers the button they're on is busy (aria-busy alone is mostly not read):
 // when it goes busy while focused, and when focus lands on it while busy (tabbing to it, or
 // focus coming back from a dialog). Busy buttons elsewhere on the page stay quiet.
 const el = ref<HTMLButtonElement | null>(null)
 watch(
-	() => props.loading,
+	() => loading,
 	(busy) => {
 		if (busy && el.value && el.value === document.activeElement) announce('Loading')
 	},
 )
 const onFocus = () => {
-	if (props.loading) announce('Loading')
+	if (loading) announce('Loading')
 }
 
 // Runs before the consumer's click. While busy it stops that click (and a submit button
 // submitting); otherwise it makes sure the pressed button has focus.
 const onPress = (event: MouseEvent) => {
-	if (props.loading) {
+	if (loading) {
 		event.preventDefault()
 		event.stopImmediatePropagation()
 		return

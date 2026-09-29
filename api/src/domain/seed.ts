@@ -2220,16 +2220,12 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'background',
 		value: 'rgb(from currentColor r g b / var(--sf-alpha-1))',
 	},
-	// Hover × danger — override generic on-hover; keep danger colour; tinted danger fill.
+	// Hover × danger — override generic on-hover's colour reset to keep danger colour; the
+	// generic tint, drawn from that colour, gives the danger fill.
 	{
 		classNames: ['sf-on-hover', 'sf-variant-danger'],
 		cssProperty: 'color',
 		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-on-hover', 'sf-variant-danger'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-danger) / var(--sf-alpha-1))',
 	},
 
 	// A control that is busy and also natively disabled (hand-written markup; SfButton never
@@ -2325,7 +2321,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-active', 'sf-on-current'],
 		cssProperty: 'background',
-		value: 'rgba(var(--sf-primary) / var(--sf-alpha-3))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-3))',
 	},
 
 	// Hover × loudness-3 — darken the solid fill rather than overlaying fg_primary tint.
@@ -2522,29 +2518,76 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-stroke-1)',
 	},
 
-	// Current state — tinted-primary fill (toolbar toggles, breadcrumb leaf, keyboard-highlighted menu item).
+	// Current state — tinted fill (toolbar toggles, breadcrumb leaf, keyboard-highlighted menu item).
 	// Reads as "this option is on right now" — distinct from sf-on-selected's outline chip.
+	// Text turns primary; fill and border are drawn from the text colour, so an element with a
+	// colour variant keeps its role while on (variant × current compounds below).
 	{
 		classNames: ['sf-on-current'],
 		cssProperty: 'background',
-		value: 'rgba(var(--sf-primary) / var(--sf-alpha-1))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-1))',
 	},
 	{
 		classNames: ['sf-on-current'],
 		cssProperty: 'border-color',
-		value: 'rgba(var(--sf-primary) / var(--sf-alpha-4))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
 	},
 	{ classNames: ['sf-on-current'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
+	// Variant × current — keep the variant's colour while on (featured and primary are already
+	// primary). Same text colour as the bare variant rules.
+	{
+		classNames: ['sf-variant-danger', 'sf-on-current'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
+	{
+		classNames: ['sf-variant-warning', 'sf-on-current'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-warning)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
+	{
+		classNames: ['sf-variant-success', 'sf-on-current'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-success)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
+	{
+		classNames: ['sf-variant-info', 'sf-on-current'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-info)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
 
-	// Hover × current — intensify the primary tint on the currently-selected item.
-	// Without this compound, sf-on-current's bare rules would mask sf-on-hover's fg_primary
-	// tint via source order, leaving current items unresponsive to pointer. Overriding only
-	// background keeps color: primary and border-color: primary/alpha-4 from bare
-	// sf-on-current — "current" identity is preserved while hover reads as intensification.
+	// Hover × current — intensify the current tint on the currently-selected item. Keeps the
+	// current colour, which generic on-hover would reset to the parent's (variant × hover ×
+	// current keeps a variant's colour the same way).
 	{
 		classNames: ['sf-on-hover', 'sf-on-current'],
 		cssProperty: 'background',
-		value: 'rgba(var(--sf-primary) / var(--sf-alpha-2))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-2))',
+	},
+	{
+		classNames: ['sf-on-hover', 'sf-on-current'],
+		cssProperty: 'color',
+		value: 'rgb(var(--sf-primary))',
+	},
+	{
+		classNames: ['sf-variant-danger', 'sf-on-hover', 'sf-on-current'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
+	{
+		classNames: ['sf-variant-warning', 'sf-on-hover', 'sf-on-current'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-warning)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
+	{
+		classNames: ['sf-variant-success', 'sf-on-hover', 'sf-on-current'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-success)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
+	{
+		classNames: ['sf-variant-info', 'sf-on-hover', 'sf-on-current'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-info)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
 	},
 
 	// Ancestor state — muted primary text, no fill. Reads as "on the trail to current".
