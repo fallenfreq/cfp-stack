@@ -5,8 +5,6 @@ import { useMapStore } from '@/stores/mapStore'
 import { useMarkerStore } from '@/stores/markerStore'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import { trpc } from '@/trpc'
-import { faPlus } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { useQuery } from '@tanstack/vue-query'
 import { onMounted, ref, toRaw, watch } from 'vue'
 
@@ -177,32 +175,15 @@ onMounted(async () => {
 </script>
 
 <template>
-	<button
-		ref="root"
-		class="add-marker-button"
-		:style="{ color: isAddingMarkers ? 'rgb(var(--primary))' : 'inherit' }"
-		@click="toggleAddingMarkers"
-	>
-		<FontAwesomeIcon :icon="faPlus" />
-	</button>
+	<!-- Wrapper is the element handed to the map's controls. -->
+	<div ref="root">
+		<SfIconButton
+			icon="plus"
+			tooltip="Add marker"
+			size="sm"
+			class="sf-depth-2"
+			:pressed="isAddingMarkers"
+			@click="toggleAddingMarkers"
+		/>
+	</div>
 </template>
-
-<style scoped>
-.add-marker-button {
-	height: 38px;
-	background: none;
-	border: none;
-	font-size: 1.5rem;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0.5rem;
-	border-radius: 50%;
-	transition: background-color 0.2s;
-}
-
-.add-marker-button:hover {
-	background-color: rgba(var(--primary) / var(--sf-alpha-1));
-}
-</style>

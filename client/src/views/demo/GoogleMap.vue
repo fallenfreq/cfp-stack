@@ -4,18 +4,16 @@
 import AddMarkerSwitch from '@/components/demos/map/AddMarkerSwitch.vue'
 import GoogleAutocomplete from '@/components/demos/map/GoogleAutocomplete.vue'
 import CurrentLocationMarker from '@/components/demos/map/currentLocation.vue'
-import { showPrompt } from '@/services/promptModal'
+import { showConfirm, showPrompt } from '@/services/promptModal'
 import { notify } from '@/services/toast'
 import { useDarkModeStore } from '@/stores/darkModeStore'
 import { useMapStore } from '@/stores/mapStore'
 import { useMarkerStore } from '@/stores/markerStore'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import { trpc } from '@/trpc'
-import { faMinus, faPen, faPlus } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, onMounted, ref, useCssModule, watch } from 'vue'
+import { nextTick, onMounted, ref, useCssModule, watch } from 'vue'
 
 // import zitadelAuth from '@/services/zitadelAuth'
 // const user = computed(() => zitadelAuth.oidcAuth.userProfile)
@@ -40,11 +38,11 @@ const { isSheetOpen, sheetContent } = storeToRefs(sheetStore)
 const { closeSheet } = sheetStore
 
 const mapsControlsStyle = useCssModule('mapsControls')
+// Controls placed on the map sit inside Google's box, which sets its own small font;
+// these put the page's font and text size back.
+const mapControlClasses = [mapsControlsStyle['spacing']!, 'sf-font-1', 'sf-text-base']
 
-// Computed property for efficient outline calculation
-const isTagOutlined = computed(() => {
-	return markerStore.allTags.map((tag) => !markerStore.selectedTags.includes(tag))
-})
+const isTagSelected = (tag: string) => markerStore.selectedTags.includes(tag)
 
 // Map container reference
 const mapContainer = ref<HTMLDivElement | null>(null)
@@ -108,8 +106,8 @@ onMounted(async () => {
 	renderMap(loader)
 })
 
-watch(isSheetOpen, () => {
-	if (!isSheetOpen) deleteMode.value = false
+watch(isSheetOpen, (open) => {
+	if (!open) deleteMode.value = false
 })
 watch(
 	() => darkModeStore.isDarkMode,
@@ -123,12 +121,12 @@ watch(
 
 		// Add Autocomplete
 		const autocompleteEl = googleAutocomplete.value.root
-		autocompleteEl.classList.add(mapsControlsStyle['spacing'])
+		autocompleteEl.classList.add(...mapControlClasses)
 		mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT]?.push(autocompleteEl)
 
 		// Add Marker Switch
 		const addMarkerSwitchEl = addMarkerSwitch.value.root
-		addMarkerSwitchEl.classList.add(mapsControlsStyle['spacing'])
+		addMarkerSwitchEl.classList.add(...mapControlClasses)
 		mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT]?.push(addMarkerSwitchEl)
 
 		notify({
@@ -139,15 +137,17 @@ watch(
 	},
 )
 
-const deleteMarker = async (
-	event: MouseEvent,
-	marker: google.maps.marker.AdvancedMarkerElement,
-) => {
-	if (!(event.currentTarget instanceof HTMLButtonElement)) return
-	const { toDeleteId } = event.currentTarget.dataset
-	if (!toDeleteId) return
+const deleteMarker = async (markerContent: {
+	mapMarkersId: number
+	title: string
+	markerInstance: google.maps.marker.AdvancedMarkerElement
+}) => {
+	const ok = await showConfirm(`Delete the marker "${markerContent.title}"?`, {
+		okText: 'Delete',
+	})
+	if (!ok) return
+	const { mapMarkersId: markerId, markerInstance: marker } = markerContent
 	try {
-		const markerId = parseInt(toDeleteId)
 		await trpc.mapMarker.delete.mutate(markerId)
 		// Remove the marker from the map
 		marker.position = null
@@ -158,9 +158,30 @@ const deleteMarker = async (
 		console.error('Error deleting marker:', error)
 	}
 }
-const { open } = window
+const directionsUrl = (lat: number, lng: number) => `https://maps.google.com/?q=${lat},${lng}`
 
+// While on, pressing a tag in the sheet deletes it from the marker instead of filtering.
 const deleteMode = ref(false)
+
+const toggleDeleteMode = () => {
+	deleteMode.value = !deleteMode.value
+	if (deleteMode.value)
+		notify({
+			duration: 10000,
+			variant: 'info',
+			message:
+				'Pressing a tag now deletes it. Press Delete tags again or close the marker to cancel.',
+		})
+}
+
+const onMarkerTagClick = async (tag: string) => {
+	if (deleteMode.value) {
+		await deleteTagFromMarker(tag)
+		deleteMode.value = false
+	} else {
+		onTagClick(tag)
+	}
+}
 
 // Delete a tag from the marker
 const deleteTagFromMarker = async (tag: string) => {
@@ -240,128 +261,132 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 
 <template>
 	<!-- Section above the map -->
-	<div class="marker-info-container pt-5">
-		<div class="marker-info-header">
-			<h3 class="text-3xl marker-info-text">
+	<section class="map-intro sl-inset sf-gap-sm">
+		<div class="sl-cluster sl-align-y-center">
+			<h3 class="map-intro__title sf-heading-2">
 				{{
 					markerStore.selectedTags.length
 						? `"${markerStore.selectedTags.join(', ')}" markers are being displayed`
 						: 'All markers are displayed'
 				}}
 			</h3>
-			<VaButton
+			<SfButton
+				size="xs"
+				:loudness="2"
 				:disabled="!markerStore.selectedTags.length"
-				size="small"
 				@click="() => clearFilter()"
 			>
 				All markers
-			</VaButton>
+			</SfButton>
 		</div>
 
-		<VaDivider />
-		<div v-if="markerStore.allTags.length" class="all-tags-container">
-			<VaChip
-				v-for="(tag, index) in markerStore.allTags"
+		<hr class="sf">
+		<div v-if="markerStore.allTags.length" class="sl-cluster sf-gap-xs">
+			<SfChip
+				v-for="tag in markerStore.allTags"
 				:key="tag"
-				:outline="isTagOutlined[index]!"
-				size="small"
-				class="tag-chip"
-				@click="() => onTagClick(tag)"
+				size="xs"
+				:pressed="isTagSelected(tag)"
+				@click="onTagClick(tag)"
 			>
 				{{ tag }}
-			</VaChip>
+			</SfChip>
 		</div>
-	</div>
+	</section>
 
 	<!-- StackableSheet with marker details -->
 	<StackableSheet mobile-height="50%" desktop-width="65%" label="Marker details">
-		<div v-if="sheetContent?.id === 'mapMarker'">
-			<h3 class="text-3xl font-bold">Marker Details</h3>
-			<pre>
-Title: {{ sheetContent.content.title }} <span><FontAwesomeIcon 
-      :icon="faPen" 
-      class="edit-title-icon" 
-      @click="() => sheetContent?.id === 'mapMarker' && openTitleEditPrompt(sheetContent.content)"
-    /></span>
-Marker ID: {{ sheetContent.content.mapMarkersId }}
-Latitude: {{ sheetContent.content.lat }}
-Longitude: {{ sheetContent.content.lng }}
-
-Tags</pre>
-			<div class="marker-tags-section">
-				<div v-if="sheetContent.content.tags.length" class="tags-container">
-					<VaChip
-						v-for="(tag, index) in sheetContent.content.tags"
-						:key="tag"
-						class="tag-chip"
-						:outline="isTagOutlined[index]!"
-						size="small"
-						:color="deleteMode ? 'danger' : ''"
-						@click="
-							async () => {
-								if (deleteMode) {
-									await deleteTagFromMarker(tag)
-									deleteMode = !deleteMode
-								} else {
-									onTagClick(tag)
-								}
-							}
-						"
-					>
-						{{ tag }}
-					</VaChip>
-				</div>
-
-				<FontAwesomeIcon :icon="faPlus" class="tag-add-button" @click="openAddTagPrompt" />
-				<FontAwesomeIcon
-					v-if="sheetContent.content.tags.length"
-					:icon="faMinus"
-					class="tag-delete-toggle"
-					color="deleteMode ? 'danger' : undefined"
+		<div v-if="sheetContent?.id === 'mapMarker'" class="sl-stack sf-gap-md">
+			<div class="sl-cluster sl-align-y-center sf-gap-xs">
+				<h3 class="sf-heading-2">{{ sheetContent.content.title }}</h3>
+				<SfIconButton
+					icon="edit"
+					tooltip="Edit title"
+					class="sf-is-contained"
+					:loudness="1"
 					@click="
-						() => {
-							;(deleteMode = !deleteMode)
-								&& notify({
-									duration: 10000,
-									variant: 'info',
-									message:
-										'Clicking a tag while they are red will delete the tag.\nClick - again or close the marker to cancel.',
-								})
-						}
+						sheetContent?.id === 'mapMarker'
+						&& openTitleEditPrompt(sheetContent.content)
 					"
 				/>
 			</div>
 
-			<div class="Marker-info-button-group">
-				<VaButton
-					class="all-markers-button"
-					:disabled="!markerStore.selectedTags.length"
-					@click="markerStore.selectedTags = []"
-				>
-					All markers
-				</VaButton>
+			<dl class="sl-split sf-gap-2xs">
+				<div class="sl-row">
+					<dt>Marker ID</dt>
+					<dd>{{ sheetContent.content.mapMarkersId }}</dd>
+				</div>
+				<div class="sl-row">
+					<dt>Latitude</dt>
+					<dd>{{ sheetContent.content.lat }}</dd>
+				</div>
+				<div class="sl-row">
+					<dt>Longitude</dt>
+					<dd>{{ sheetContent.content.lng }}</dd>
+				</div>
+			</dl>
 
-				<VaButton
-					@click="
-						open(
-							`https://maps.google.com/?q=${sheetContent.content.lat},${sheetContent.content.lng}`,
-							'_blank',
-						)
-					"
+			<div class="sl-stack sf-gap-xs">
+				<h4 id="marker-tags-heading" class="sf-heading-3">Tags</h4>
+				<div
+					class="sl-cluster sl-align-y-center sf-gap-xs"
+					role="group"
+					aria-labelledby="marker-tags-heading"
+				>
+					<SfChip
+						v-for="tag in sheetContent.content.tags"
+						:key="tag"
+						size="xs"
+						:class="deleteMode && 'sf-variant-danger'"
+						:pressed="deleteMode ? undefined : isTagSelected(tag)"
+						:aria-label="deleteMode ? `Delete tag ${tag}` : undefined"
+						@click="onMarkerTagClick(tag)"
+					>
+						{{ tag }}
+					</SfChip>
+					<SfIconButton
+						icon="plus"
+						tooltip="Add tags"
+						class="sf-is-contained"
+						:loudness="1"
+						@click="openAddTagPrompt"
+					/>
+					<SfIconButton
+						v-if="sheetContent.content.tags.length"
+						icon="trash"
+						tooltip="Delete tags"
+						class="sf-is-contained"
+						:loudness="1"
+						:variant="deleteMode ? 'danger' : undefined"
+						:pressed="deleteMode"
+						@click="toggleDeleteMode"
+					/>
+				</div>
+			</div>
+
+			<div class="sl-cluster sf-gap-xs">
+				<a
+					class="sf sf-loudness-3 sf-variant-primary sf-on-hover"
+					:href="directionsUrl(sheetContent.content.lat, sheetContent.content.lng)"
+					target="_blank"
+					rel="noopener"
 				>
 					Directions
-				</VaButton>
-				<VaButton
-					:data-to-delete-id="sheetContent.content.mapMarkersId"
-					color="danger"
-					@click="
-						(event: MouseEvent) =>
-							sheetContent?.id === 'mapMarker'
-							&& deleteMarker(event, sheetContent.content.markerInstance)
-					"
+				</a>
+				<SfButton
+					:loudness="2"
+					:disabled="!markerStore.selectedTags.length"
+					@click="clearFilter()"
 				>
-					Delete Marker
-				</VaButton>
+					All markers
+				</SfButton>
+				<SfButton
+					:loudness="2"
+					variant="danger"
+					@click="sheetContent?.id === 'mapMarker' && deleteMarker(sheetContent.content)"
+				>
+					Delete marker
+				</SfButton>
 			</div>
 		</div>
 	</StackableSheet>
@@ -376,79 +401,26 @@ Tags</pre>
 </template>
 
 <style module="mapsControls">
+/* Room between the map's edge and the controls placed on it. */
 .spacing {
-	margin: 10px 0 0 10px;
+	margin: var(--sf-spacing-xs) 0 0 var(--sf-spacing-xs);
 }
 </style>
 
 <style scoped>
-.tag-chip {
-	font-weight: bold;
-	cursor: pointer;
-}
+@layer ui {
+	.map-intro {
+		padding-block: var(--sf-spacing-md);
+	}
 
-.marker-info-container {
-	margin: 0 2rem 2rem 2rem;
-}
+	/* The title takes the row; the button sits at the end. */
+	.map-intro__title {
+		flex: 1 1 auto;
+	}
 
-.marker-info-header {
-	display: grid;
-	grid-template-columns: 1fr auto; /* Text takes remaining space, button fits content */
-	gap: var(--sf-gap, var(--sf-spacing-sm));
-	align-items: center; /* Aligns items vertically */
-}
-
-.Marker-info-button-group {
-	display: flex;
-	gap: var(--sf-gap, var(--sf-spacing-xs));
-}
-
-.all-tags-container {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--sf-gap, var(--sf-spacing-xs));
-	margin-top: 2rem;
-}
-
-.marker-tags-section,
-.tags-container {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--sf-gap, var(--sf-spacing-xs));
-	align-items: center;
-}
-
-.marker-tags-section {
-	margin-bottom: 1rem;
-	margin-top: 0.5rem;
-}
-
-#map {
-	height: 100vh;
-}
-
-.tag-add-button,
-.tag-delete-toggle,
-.edit-title-icon {
-	cursor: pointer;
-	font-size: 1rem;
-	padding: 0.3rem;
-	border-radius: 4rem;
-	background-color: rgba(var(--bg_primary) / var(--sf-alpha-5));
-	transition: background-color 0.3s ease;
-}
-
-.edit-title-icon {
-	font-size: 0.5rem;
-}
-
-.tag-add-button:hover,
-.tag-delete-toggle:hover {
-	background-color: rgba(var(--bg_primary) / var(--sf-alpha-2));
-}
-
-pre {
-	white-space: pre-wrap;
+	#map {
+		height: 100vh;
+	}
 }
 </style>
 

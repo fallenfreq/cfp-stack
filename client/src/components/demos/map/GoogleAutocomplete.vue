@@ -93,55 +93,51 @@ onMounted(() => {
 </script>
 
 <template>
-	<div ref="root">
+	<div ref="root" class="place-search">
 		<input
 			v-model="input"
-			type="text"
+			type="search"
 			placeholder="Go to a place..."
-			class="input-field"
+			aria-label="Go to a place"
+			class="sf sf-field"
 			@input="makeAcRequest"
 		>
-		<ul v-if="showDropdown" class="dropdown-menu">
-			<li
-				v-for="(result, index) in results"
-				:key="index"
-				class="dropdown-item"
-				@click="onPlaceSelected(result.place)"
-			>
-				{{ result.text }}
+		<ul v-if="showDropdown" class="place-search__results sl-stack sf-gap-none sf-depth-2">
+			<li v-for="(result, index) in results" :key="index">
+				<SfButton
+					class="place-search__result sf-is-contained"
+					@click="onPlaceSelected(result.place)"
+				>
+					{{ result.text }}
+				</SfButton>
 			</li>
 		</ul>
 	</div>
 </template>
 
 <style scoped>
-.input-field {
-	width: 100%;
-	padding: 8px;
-	font-size: 1rem;
-	border: 1px solid rgb(var(--border_color));
-	background-color: rgb(var(--bg_primary));
-	border-radius: 4px;
-}
+@layer ui {
+	/* The results hang below the field over the map. */
+	.place-search {
+		position: relative;
+		z-index: 1; /* results cover the controls stacked below it */
+	}
 
-.dropdown-menu {
-	list-style-type: none;
-	margin: 0;
-	padding: 0;
-	border: 1px solid rgb(var(--border_color));
-	border-radius: 4px;
-	background: rgb(var(--bg_primary));
-	position: absolute;
-	width: 100%;
-	z-index: 1000;
-}
+	.place-search > input {
+		width: 100%;
+	}
 
-.dropdown-item {
-	padding: 8px;
-	cursor: pointer;
-}
+	.place-search__results {
+		position: absolute;
+		inset-inline: 0;
+		overflow: hidden;
+	}
 
-.dropdown-item:hover {
-	background: rgb(var(--bg_secondary));
+	/* Full-width rows: the list stretches them; text starts at the left and may wrap. */
+	.place-search__result {
+		justify-content: start;
+		white-space: normal;
+		text-align: start;
+	}
 }
 </style>

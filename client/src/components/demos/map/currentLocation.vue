@@ -102,43 +102,45 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.custom-pin {
-	position: relative;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transform-origin: center;
-}
-
-.circle {
-	width: 20px;
-	height: 20px;
-	background-color: rgba(var(--primary) / 1);
-	border-radius: 50%;
-}
-
-.pulsating-circle {
-	width: 30px;
-	height: 30px;
-	background-color: rgba(var(--primary) / var(--sf-alpha-3));
-	border-radius: 50%;
-	position: absolute;
-	animation: pulsate 2s infinite ease-in-out;
-	z-index: -1;
-}
-
-@keyframes pulsate {
-	0% {
-		transform: scale(1);
-		opacity: 1;
+@layer ui {
+	.custom-pin {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transform-origin: center;
 	}
-	50% {
-		transform: scale(1.5);
-		opacity: 0.5;
+
+	.circle {
+		width: 20px;
+		height: 20px;
+		background-color: rgb(var(--sf-primary));
+		border-radius: 50%;
 	}
-	100% {
-		transform: scale(1);
-		opacity: 1;
+
+	.pulsating-circle {
+		width: 30px;
+		height: 30px;
+		background-color: rgba(var(--sf-primary) / var(--sf-alpha-3));
+		border-radius: 50%;
+		position: absolute;
+		animation: pulsate 2s infinite ease-in-out;
+		z-index: -1;
+	}
+
+	@keyframes pulsate {
+		0% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		50% {
+			transform: scale(1.5);
+			opacity: 0.5;
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 }
 </style>
