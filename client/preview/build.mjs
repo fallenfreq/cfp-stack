@@ -4,7 +4,7 @@
 //   pnpm preview:components --serve    build, then serve out/ at http://localhost:4173
 //
 // 1. sf-system.css: runs the real seed + CSS generator against an in-memory database.
-// 2. app.css: client/src/assets/main.css through the project's PostCSS (Tailwind).
+// 2. app.css: client/src/assets/main.css with its imports resolved.
 // 3. components.css: the <style> blocks of every component the stories rendered.
 // 4. One static HTML page per story (client/preview/stories.ts), rendered with Vue SSR.
 //
@@ -89,7 +89,7 @@ async function main() {
 		writeFileSync(join(outDir, 'sf-system.css'), await emitStylesheet(db))
 		log('sf-system.css generated from seed.ts')
 
-		// 2. app.css — Tailwind resolves content globs relative to the client dir.
+		// 2. app.css
 		process.chdir(clientDir)
 		const mainCssPath = join(clientDir, 'src/assets/main.css')
 		const app = await preprocessCSS(
@@ -98,7 +98,7 @@ async function main() {
 			server.config,
 		)
 		writeFileSync(join(outDir, 'app.css'), app.code.replaceAll('url(/', 'url(./'))
-		log('app.css built (main.css + Tailwind)')
+		log('app.css built from main.css')
 
 		// 4. stories (before 3, so we know which components rendered)
 		const { stories, renderStory } = await load(join(previewDir, 'render.ts'))
@@ -135,10 +135,7 @@ async function main() {
 					id: scopeId,
 					scoped: block.scoped,
 				})
-				let code = compiled.code
-				if (/@apply|@tailwind/.test(code))
-					code = (await preprocessCSS(code, `${file}.css`, server.config)).code
-				componentsCss += `/* ${relative(clientDir, file)} */\n${code}\n`
+				componentsCss += `/* ${relative(clientDir, file)} */\n${compiled.code}\n`
 			}
 		}
 		writeFileSync(join(outDir, 'components.css'), componentsCss)

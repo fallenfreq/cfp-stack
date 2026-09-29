@@ -1,11 +1,9 @@
 /*
 If this file is changed, the dev server picks it up and re-runs
-./plugins/extractCssVars.ts to refresh cssVariables.js (read by the
-Tailwind config).
+./plugins/extractCssVars.ts to refresh cssVariables.js.
 
 DESIGN SYSTEM TOKENS LIVE IN D1, served at runtime by /styles/sf-system.
-What remains here is app-level vars: timing, toolbar height, z-index layers,
-and the breakpoints the Tailwind config reads (they go with Tailwind).
+What remains here is app-level vars: timing, toolbar height, z-index layers.
 */
 
 :root {
@@ -18,10 +16,4 @@ and the breakpoints the Tailwind config reads (they go with Tailwind).
 	--z-panel: 20;
 	--z-nodepath: 30;
 	--z-modal: 400; /* full-screen modals */
-	--xs: 380;
-	--sm: 640;
-	--md: 768;
-	--lg: 1024;
-	--xl: 1280;
-	--xxl: 1536;
 }

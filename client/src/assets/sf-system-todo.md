@@ -149,8 +149,7 @@ Done in the editor + cleanup slice:
 
 - Legacy colours are gone (2026-09-29): their last readers (multiSelect drag preview,
   the logo SVGs, `.sf-bg_secondary`, main.css body) moved to theme classes and `--sf-*`
-  tokens. `base.css` holds only app vars (timing, toolbar height, z-index layers) and the
-  breakpoints the Tailwind config reads.
+  tokens. `base.css` holds only app vars (timing, toolbar height, z-index layers).
 
 What's pending:
 
@@ -164,9 +163,9 @@ What's pending:
    restructuring the content-wrapper pattern. Deferred.
 4. ~~**Legacy colours**~~ — done 2026-09-29 (see above).
 5. ~~**Vuestic removal**~~ — done 2026-09-29 (runtime, config, `processTailwindColors`).
-   Tailwind removal: preflight replaced by the theme's reset
-   (`api/src/domain/css/reset.ts`), no `@tailwind` directives left; the packages,
-   `tailwind.config.js`, `postcss.config.js` and base.css's breakpoints go next.
+   Tailwind removed 2026-09-29: preflight replaced by the theme's reset
+   (`api/src/domain/css/reset.ts`); packages, `tailwind.config.js`, `postcss.config.js`
+   gone. `extractCssVars` / `cssVariables.js` kept for now with no reader.
 6. **Seed batching** — individual `await` per upsert (~160 round-trips). Use `db.batch()`
    if seed time becomes a problem against production D1.
 
