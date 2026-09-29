@@ -36,6 +36,8 @@
 	body {
 		background-color: rgb(var(--bg_primary));
 		color: rgb(var(--text_primary));
+		/* Fades the page with the site's colour changes (dark mode). */
+		transition: var(--transition);
 		min-height: 100vh;
 		line-height: 1.6;
 		font-family:

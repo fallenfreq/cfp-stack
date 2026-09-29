@@ -147,10 +147,10 @@ Done in the editor + cleanup slice:
 
 ### What's intentionally still legacy
 
-- **`base.css`** keeps the Vuestic-compat block: `--primary-{50..950}`, `--surface-*`,
-  semantic Vuestic colours (`--bg_primary`, `--text_primary`, `--secondary`, etc.),
-  `--shadow`, `--shadow-opacity`. Tailwind config references these via `processTailwind`
-  Colors. Whole block goes when Vuestic is removed.
+- **`base.css`** keeps the legacy colour block: `--primary-{50..950}`, `--surface-*`,
+  semantic colours (`--bg_primary`, `--text_primary`, `--secondary`, etc.),
+  `--shadow`, `--shadow-opacity`. The Tailwind config and main.css still read them.
+  Whole block goes with Tailwind (Vuestic itself is gone, 2026-09-29).
 - **`sf-tokens.css`** keeps `.sf-bg_secondary` for the consumers it still has
   (`BasicCard.vue`, `StackableSheet.vue`, `contentExtensions.ts`,
   `initialContent.html`, plus ~18 component files that reference `--bg_secondary`
@@ -168,11 +168,12 @@ What's pending:
    vocabulary class is seeded; no bulk pass until the class system covers the gap.
 3. **Layout full migration** — removing `layout-*` class alongside `sl-*` requires
    restructuring the content-wrapper pattern. Deferred.
-4. **Vuestic shim** — Vuestic compat tokens in `base.css` are hand-written, not sourced
+4. **Legacy colours** — the old tokens in `base.css` are hand-written, not sourced
    from the seed. Theme edits to `--sf-*` tokens don't propagate to `--text_primary` etc.
-   Fix when Vuestic removal gets scheduled.
-5. **Vuestic removal** — entire compat layer (`base.css` shim, `processTailwindColors`,
-   `tailwind.config.js` palette refs, `sf-bg_secondary` class) goes in one sweep.
+   Fix by moving their readers (main.css body, Tailwind palette) to `--sf-*`.
+5. ~~**Vuestic removal**~~ — done 2026-09-29 (runtime, config, `processTailwindColors`).
+   What's left (`base.css` legacy block, `tailwind.config.js` palette refs,
+   `sf-bg_secondary`) goes with the Tailwind removal.
 6. **Seed batching** — individual `await` per upsert (~160 round-trips). Use `db.batch()`
    if seed time becomes a problem against production D1.
 
@@ -212,7 +213,7 @@ classes; query `class_vocabulary` for the rich ones.
       being wrapped, so no separate layer-wrapping pass is needed.
 - [x] Token names — `--sf-*` names are already correct in the DB seed and generated
       at runtime. Legacy unprefixed names (`--text-*`, `--alpha-*`, etc.) survive in
-      `base.css` as Vuestic compat and stay there until Vuestic is removed. No rename
+      `base.css` as legacy colours and stay there until Tailwind goes. No rename
       pass is needed or correct.
 - [x] Rename `.dark` theme class to `.theme-dark` to match the spec's theme activation
       convention. Done across `base.css`, `darkModeStore.ts`, `index.html`,
@@ -222,7 +223,7 @@ classes; query `class_vocabulary` for the rich ones.
 
 The `--sf-*` token names are already correct in the DB seed and generated at runtime.
 Legacy unprefixed names (`--text-*`, `--alpha-*`, `--primary-*`, etc.) in `base.css`
-are Vuestic compat — they stay until Vuestic is removed. No bulk rename pass is needed.
+are legacy colours — they stay until Tailwind goes. No bulk rename pass is needed.
 
 Component CSS that reaches for raw tokens directly is using the escape hatch. The right
 migration is to the vocabulary class system (per-component decision), not renaming the
@@ -447,24 +448,14 @@ These are not bugs but unresolved tensions in the current design:
       outside the editor use them directly with `sf-gap-*` as a class attribute.
 - [x] `LayoutCard.vue` — wears `sf-depth-1`; background inherited from bundle (5a95dfe).
 
-## Vuestic compatibility (temporary)
+## Legacy colours (temporary)
 
-Vuestic is the current UI library and will be removed eventually. It requires specific
-token names that aren't part of the sf/sl system design and are deliberately absent from
-the spec. Until Vuestic is removed:
-
-- Keep these tokens in `base.css`, organised under a clearly-labelled
-  "Vuestic compatibility" section so the dependency is visible at a glance:
-    - `--bg_primary`, `--bg_secondary`, `--bg_element`
-    - `--text_inverted` (foreground for elements painted with `--primary`)
-    - `--secondary`, `--success`, `--info`, `--danger`, `--warning`, `--focus`
-    - `--shadow-opacity`, `--primary-inverse`, `--primary-hover`,
-      `--primary-active-color`, `--primary-highlight-*`
-- Vuestic's config (`vuestic.my.config.ts`) consumes these via the JS processing
-  pipeline (`processTailwindColors`), so renames there need coordination.
-- When Vuestic is removed, this entire section of `base.css` and all `sf-bg_*` /
-  `sf-color-bg_*` / `sf-bg-text_*` classes that exist solely to expose these tokens
-  through the sf- vocabulary can be deleted in one sweep.
+Vuestic is gone (2026-09-29). Its colour tokens stay in `base.css` under "Legacy colours"
+because other code still reads them: `main.css` (the body's background and text), the
+Tailwind config palette, `TriangleShape.vue` and `.sf-bg_secondary` (`sf-tokens.css`).
+They're deliberately absent from the spec. When those readers move to `--sf-*` tokens
+(the Tailwind removal steps), the block and any `sf-bg_*` / `sf-color-bg_*` /
+`sf-bg-text_*` classes that only expose these tokens go in one sweep.
 
 ## Deferred (pending design pass)
 

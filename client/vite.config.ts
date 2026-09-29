@@ -44,7 +44,7 @@ export default defineConfig({
 			{
 				file: './src/assets/base.css',
 				onChange: () => {
-					console.log('Compiling Vuestic-compat CSS variables')
+					console.log('Extracting CSS variables from base.css')
 					extractCssVars('./src/assets/base.css', './cssVariables')
 				},
 			},

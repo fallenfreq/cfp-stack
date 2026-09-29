@@ -1,25 +1,22 @@
 /*
 If this file is changed, the dev server picks it up and re-runs
-./plugins/extractCssVars.ts to refresh cssVariables.js (Vuestic-compat
-values only).
+./plugins/extractCssVars.ts to refresh cssVariables.js (read by the
+Tailwind config).
 
 DESIGN SYSTEM TOKENS LIVE IN D1, served at runtime by /styles/sf-system.
-What remains below is Vuestic-compatibility + app-level vars only;
-everything in this file goes away when Vuestic is removed (except the
-app-level :root block).
+What remains below is app-level vars plus the legacy colours; the legacy
+block goes with Tailwind (see its note).
 */
 
 :root {
 	--transition: background-color 0.5s ease;
 	--toolbar-height: 44px;
 
-	/* Z-index scale — edit here, not per-component.
-	   Vuestic derives: VaNavbar = overlay−100 (→100), VaToast = overlay+100 (→300). */
+	/* Z-index scale — edit here, not per-component. */
 	--z-toolbar: 10;
 	--z-scroll-hint: 15;
 	--z-panel: 20;
 	--z-nodepath: 30;
-	--va-z-index-teleport-overlay: 200; /* VaDropdown nav/hamburger menus */
 	--z-modal: 400; /* full-screen modals */
 	--xs: 380;
 	--sm: 640;
@@ -29,12 +26,12 @@ app-level :root block).
 	--xxl: 1536;
 }
 
-/* ─── Vuestic compatibility ───────────────────────────────────────────────
-   These tokens exist for Vuestic's processTailwindColors pipeline + the
-   tailwind config that feeds it. The values mirror the legacy design system
-   that Vuestic was built against. The sf-system equivalents live in D1 and
-   are served from /styles/sf-system — when Vuestic is removed, this whole
-   block plus tailwind.config palette refs go too. */
+/* ─── Legacy colours ──────────────────────────────────────────────────────
+   The colours from before the sf-system. Still read by main.css (the body's
+   background and text), the Tailwind config palette, TriangleShape and
+   .sf-bg_secondary (sf-tokens.css). The sf-system equivalents live in D1 and
+   are served from /styles/sf-system — this block goes when those readers move
+   to --sf-* tokens (the Tailwind removal steps). */
 
 :root {
 	--primary-50: 236 253 245;

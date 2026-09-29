@@ -202,9 +202,6 @@ importers:
       '@trpc/client':
         specifier: 11.0.0-rc.402
         version: 11.0.0-rc.402(@trpc/server@11.0.0-rc.402)
-      '@vuestic/tailwind':
-        specifier: ^0.1.5
-        version: 0.1.5(tailwindcss@3.4.17)
       lowlight:
         specifier: ^3.3.0
         version: 3.3.0
@@ -223,9 +220,6 @@ importers:
       vue-router:
         specifier: ^4.5.1
         version: 4.5.1(vue@3.5.21(typescript@6.0.3))
-      vuestic-ui:
-        specifier: ^1.10.3
-        version: 1.10.3(vue@3.5.21(typescript@6.0.3))
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -883,9 +877,6 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
-
-  '@floating-ui/vue@1.1.9':
-    resolution: {integrity: sha512-BfNqNW6KA83Nexspgb9DZuz578R7HT8MZw1CfK9I6Ah4QReNWEJsXWHN+SdmOVLNGmTPDi+fDT535Df5PzMLbQ==}
 
   '@fortawesome/fontawesome-common-types@6.7.2':
     resolution: {integrity: sha512-Zs+YeHUC5fkt7Mg1l6XTniei3k4bwG/yo3iFUtZWd/pMx9g3fdvkSK9E0FOC+++phXOka78uJcYb8JaFkW52Xg==}
@@ -1557,12 +1548,6 @@ packages:
       vue:
         optional: true
 
-  '@vuestic/tailwind@0.1.5':
-    resolution: {integrity: sha512-9DBbF3YYZNg3jHEfSwCAfdb1HmI3Gg7AScekFsXMjCsu5oW4y4GWu1I451eWgbueCntFxugrDUQM+lXApAmRig==}
-    hasBin: true
-    peerDependencies:
-      tailwindcss: ^3.2.4
-
   '@zitadel/vue@1.1.7':
     resolution: {integrity: sha512-shyiEs3lju3Bltblx8c/t0rULDixGVXeK3Ozb8tvWJm4Zk3WBByg/z//tY0eh6I3peV1Dnz4DU97GF1rPhH1yg==}
 
@@ -1728,9 +1713,6 @@ packages:
   chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
     engines: {node: '>= 8.10.0'}
-
-  cleave.js@1.6.0:
-    resolution: {integrity: sha512-ivqesy3j5hQVG3gywPfwKPbi/7ZSftY/UNp5uphnqjr25yI2CP8FS2ODQPzuLXXnNLi29e2+PgPkkiKUXLs/Nw==}
 
   cli-color@2.0.4:
     resolution: {integrity: sha512-zlnpg0jNcibNrO7GG9IeHH7maWFeCz+Ja1wx/7tZNU5ASSSSZ+/qZciM0/LHCYxSdqv5h2sdbQ/PXYdOuetXvA==}
@@ -2109,6 +2091,7 @@ packages:
   eslint@9.35.0:
     resolution: {integrity: sha512-QePbBFMJFjgmlE+cXAlbHZbHpdFVS2E/6vzCy7aKlebddvl1vadiC4JFV5u/wqTkNUwEV8WrQi257jf5f06hrg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -2964,9 +2947,6 @@ packages:
     resolution: {integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==}
     engines: {node: '>=16 || 14 >=14.18'}
 
-  pathe@1.1.2:
-    resolution: {integrity: sha512-whLdWMYL2TwI08hn8/ZqAbrVemu0LNaNNJZX73O6qaIdCTfXutsLhMkjdENX0qhsQ9uIimo4/aQOmXkoon2nDQ==}
-
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
@@ -3594,11 +3574,6 @@ packages:
       typescript:
         optional: true
 
-  vuestic-ui@1.10.3:
-    resolution: {integrity: sha512-E8Y6E7dg08+yrN+0UfIb7pffH6dX9hBrLhjTR74w9T8iXlkw8t5ULPwnzIXxrTxPbk/HvDDs1s++bMw/S0OFmA==}
-    peerDependencies:
-      vue: ^3.0.4
-
   w3c-keyname@2.2.8:
     resolution: {integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==}
 
@@ -4113,15 +4088,6 @@ snapshots:
       '@floating-ui/utils': 0.2.10
 
   '@floating-ui/utils@0.2.10': {}
-
-  '@floating-ui/vue@1.1.9(vue@3.5.21(typescript@6.0.3))':
-    dependencies:
-      '@floating-ui/dom': 1.7.4
-      '@floating-ui/utils': 0.2.10
-      vue-demi: 0.14.10(vue@3.5.21(typescript@6.0.3))
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - vue
 
   '@fortawesome/fontawesome-common-types@6.7.2': {}
 
@@ -4852,11 +4818,6 @@ snapshots:
       typescript: 6.0.3
       vue: 3.5.21(typescript@6.0.3)
 
-  '@vuestic/tailwind@0.1.5(tailwindcss@3.4.17)':
-    dependencies:
-      pathe: 1.1.2
-      tailwindcss: 3.4.17
-
   '@zitadel/vue@1.1.7':
     dependencies:
       vue-oidc-client: 1.0.0-alpha.5
@@ -5010,8 +4971,6 @@ snapshots:
       readdirp: 3.6.0
     optionalDependencies:
       fsevents: 2.3.3
-
-  cleave.js@1.6.0: {}
 
   cli-color@2.0.4:
     dependencies:
@@ -6413,8 +6372,6 @@ snapshots:
       lru-cache: 10.4.3
       minipass: 7.1.2
 
-  pathe@1.1.2: {}
-
   pathe@2.0.3: {}
 
   perfect-debounce@1.0.0: {}
@@ -7062,16 +7019,6 @@ snapshots:
       '@vue/shared': 3.5.21
     optionalDependencies:
       typescript: 6.0.3
-
-  vuestic-ui@1.10.3(vue@3.5.21(typescript@6.0.3)):
-    dependencies:
-      '@floating-ui/vue': 1.1.9(vue@3.5.21(typescript@6.0.3))
-      '@types/lodash': 4.17.20
-      cleave.js: 1.6.0
-      lodash: 4.17.21
-      vue: 3.5.21(typescript@6.0.3)
-    transitivePeerDependencies:
-      - '@vue/composition-api'
 
   w3c-keyname@2.2.8: {}
 

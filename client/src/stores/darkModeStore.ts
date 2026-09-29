@@ -1,16 +1,8 @@
 import type { Theme } from '@/constants/theme'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { useColors, useGlobalConfig } from 'vuestic-ui'
 
 export const useDarkModeStore = defineStore('darkMode', () => {
-	// The map demo and TiptapTest still use Vuestic components, which read Vuestic's colour
-	// presets, so each mode change is mirrored there too. Remove with those.
-	const { globalConfig } = useGlobalConfig()
-	const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary')
-	globalConfig.value.colors.presets.light.primary = `rgb(${primaryColor.replace(/ /g, ', ')})`
-	const { applyPreset } = useColors()
-
 	// Starts from the OS preference: index.html adds theme-dark before the app loads.
 	const mode = ref<Theme>(
 		document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light',
@@ -21,9 +13,7 @@ export const useDarkModeStore = defineStore('darkMode', () => {
 		root.remove(`theme-${mode.value}`)
 		if (next !== 'light') root.add(`theme-${next}`)
 		mode.value = next
-		applyPreset(next)
 	}
-	setMode(mode.value)
 
 	const isDarkMode = computed({
 		get: () => mode.value === 'dark',

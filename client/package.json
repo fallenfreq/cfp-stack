@@ -41,14 +41,12 @@
 		"@tiptap/suggestion": "^3.4.1",
 		"@tiptap/vue-3": "^3.4.1",
 		"@trpc/client": "11.0.0-rc.402",
-		"@vuestic/tailwind": "^0.1.5",
 		"lowlight": "^3.3.0",
 		"pinia": "^3.0.3",
 		"postcss-safe-parser": "^7.0.1",
 		"typescript": "6.0.3",
 		"vue": "^3.5.21",
 		"vue-router": "^4.5.1",
-		"vuestic-ui": "^1.10.3",
 		"zod": "^3.25.76"
 	},
 	"devDependencies": {

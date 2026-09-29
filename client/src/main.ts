@@ -1,12 +1,3 @@
-import { createVuestic } from 'vuestic-ui'
-
-// import 'vuestic-ui/css'
-// Vuestic css used when tailwind is used to stop conflicts
-import 'vuestic-ui/styles/essential.css'
-import 'vuestic-ui/styles/typography.css'
-import config from '../vuestic.my.config'
-export const vuestic = createVuestic({ config })
-
 import './assets/main.css'
 
 import zitadelAuth from '@/services/zitadelAuth'
@@ -54,7 +45,6 @@ zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
 	app.use(createPinia())
 	app.use(VueQueryPlugin, { queryClient })
 	app.use(router)
-	app.use(vuestic)
 
 	// Fire-and-forget — palette computed refs update reactively when tokens arrive.
 	// /styles/sf-system CSS is served from edge cache so the stylesheet itself is instant.

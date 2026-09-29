@@ -1,12 +1,12 @@
 /* ========================================================================
-   sf-tokens.css — Vuestic-compat hold-out + TipTap reset.
+   sf-tokens.css — legacy-colour hold-out + TipTap reset.
 
    Everything else (palette, alpha pairings, scale utilities, semantic
    canonicals against --sf-* tokens) is served at runtime from
    /styles/sf-system (emitted by api/src/domain/generateCss.ts).
 
-   When Vuestic is removed, the .sf-bg_secondary class and its --bg_secondary
-   token in base.css go together.
+   The .sf-bg_secondary class and its --bg_secondary token in base.css go
+   together, with base.css's legacy colours.
    ======================================================================== */
 
 /* Reset on every NodeViewWrapper so outer layout nodes cannot inherit their
