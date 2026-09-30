@@ -6,7 +6,7 @@
 @layer reset, ui, sf-element, sf-bundle, sf-variant, sf-context, sf-semantic, sf-utility, sf-state, sl-layout;
 
 @import './base.css';
-@import './sf-tokens.css';
+@import './material-symbols.css';
 /* sf-system stylesheet (reset, tokens, classes, editor pairings) is served at
    runtime from /styles/sf-system; <link> in index.html loads it before this
    file. It declares the same layer order first, so whichever loads first sets
@@ -19,111 +19,4 @@
 	*::after {
 		transition: var(--transition);
 	}
-
-	/* A popover opens in the top layer but still belongs to the page: take its text
-	   colour from where it sits, not the browser's CanvasText. */
-	[popover] {
-		color: inherit;
-	}
-
-	body {
-		min-height: 100vh;
-	}
-}
-
-/* https://developers.google.com/fonts/docs/material_symbols */
-
-/* self hosting Material icons */
-@font-face {
-	font-family: 'Material Symbols Rounded';
-	font-style: normal;
-	font-display: block; /* Prevents FOUC by blocking until font loads */
-	src: url(/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].woff2) format('woff2');
-}
-
-.material-symbols-rounded {
-	font-family: 'Material Symbols Rounded';
-	font-weight: normal;
-	font-style: normal;
-	display: inline-block;
-	line-height: 1;
-	text-transform: none;
-	letter-spacing: normal;
-	word-wrap: normal;
-	white-space: nowrap;
-	direction: ltr;
-	width: 1em;
-	height: 1em;
-	overflow: hidden;
-}
-
-/* This should be kept even if using cloud hosted */
-.material-symbols-rounded {
-	font-variation-settings:
-		'FILL' 0,
-		'wght' 400,
-		'GRAD' 0,
-		'opsz' 48;
-}
-
-/* ─── Content styles ───────────────────────────────────────────────────────────
-   These apply wherever .tiptap is used — both inside the editor and on rendered
-   output pages. Wrap rendered content in <div class="tiptap"> to match the editor.
-   Editor-UI-only styles (cursors, selection outlines, placeholder) stay in
-   TiptapEditor.vue.
-   ─────────────────────────────────────────────────────────────────────────── */
-
-.material-symbols-rounded.icon-inline {
-	font-size: 1.1em;
-	vertical-align: -0.2em;
-	opacity: 0.85;
-}
-
-.tiptap :is(p, h1, h2, h3, pre, table, img, ol, ul, blockquote, hr, .code-block):not(:last-child),
-.tiptap > [data-node-view-wrapper]:not(:last-child),
-.tiptap > [data-container]:not(:last-child),
-.tiptap > [data-youtube-video]:not(:last-child) {
-	margin-bottom: 1rem;
-}
-
-.tiptap ul:not([data-type='taskList']),
-.tiptap ol {
-	padding-left: 1.5em; /* em scales with font size so markers stay proportional */
-}
-
-.tiptap ul:not([data-type='taskList']) {
-	list-style: disc;
-}
-
-.tiptap ol {
-	list-style: decimal;
-}
-
-.tiptap ul[data-type='taskList'] {
-	list-style: none;
-}
-
-.tiptap li {
-	margin-bottom: 0.5rem;
-}
-
-/* YouTube embed — 16:9 responsive */
-.tiptap [data-youtube-video]:has(> iframe.resp-yt) {
-	position: relative;
-	padding-bottom: 56.25%;
-	height: 0;
-	overflow: hidden;
-}
-
-.tiptap [data-youtube-video] > iframe.resp-yt {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	max-width: 100%;
-}
-
-.tiptap [data-youtube-video] > [data-youtube-video] {
-	margin-bottom: 0;
 }

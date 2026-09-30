@@ -22,13 +22,3 @@ defineProps({
 	},
 })
 </script>
-
-<style scoped>
-:global(.sl-split > [data-node-view-content]) {
-	display: contents;
-}
-
-:global(.sl-split > [data-node-view-content] > *) {
-	margin-bottom: 0;
-}
-</style>

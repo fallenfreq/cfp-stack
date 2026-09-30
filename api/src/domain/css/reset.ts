@@ -3,7 +3,19 @@
 // same under every theme, never stored in the DB. Lowest cascade priority (reset is the
 // first layer declared).
 
-export const RESET = `@layer reset {
+export const RESET = `/* Spacing classes (sf-gap-*, sf-padding-*, sf-size-*, chrome's own padding) apply to the
+   element that wears them: nothing inside takes them on. Every reader gives its own default,
+   or none where an unset value already means "no spacing". */
+@property --sf-gap {
+	syntax: '*';
+	inherits: false;
+}
+@property --sf-padding {
+	syntax: '*';
+	inherits: false;
+}
+
+@layer reset {
 	/* Width includes padding and border. A border shows by giving it a width. */
 	*,
 	::before,
@@ -113,11 +125,6 @@ export const RESET = `@layer reset {
 		border-color: inherit;
 		border-collapse: collapse;
 	}
-	/* Remove trailing margin from the last child of any table cell */
-	td > *:last-child,
-	th > *:last-child {
-		margin-bottom: 0;
-	}
 
 	/* Form controls take the text around them; buttons start without the browser's chrome. */
 	button,
@@ -199,6 +206,12 @@ export const RESET = `@layer reset {
 
 	[hidden]:where(:not([hidden="until-found"])) {
 		display: none;
+	}
+
+	/* A popover opens in the top layer but still belongs to the page: its text colour comes
+	   from where it sits, not the browser's CanvasText. */
+	[popover] {
+		color: inherit;
 	}
 
 	/* Compact units are inline boxes, so their padding applies on a <span>. */

@@ -96,7 +96,9 @@ watch(editor, (newEditor) => {
 
 <style>
 /* Editor-UI only — styles that apply to the editing experience, not rendered content.
-   Content styles (typography, spacing, radius, embeds) live in main.css under .tiptap. */
+   Content looks come from the theme (elements wearing sf); how the document's blocks sit
+   (spacing, node views, a video's default box) is fixed CSS served with the theme
+   (api/src/domain/css/blockSpacing.ts, nodeViews.ts, embeds.ts). */
 
 .tiptap {
 	position: relative;

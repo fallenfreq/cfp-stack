@@ -147,11 +147,12 @@ padding.
 When two classes on one element set the same property in the same layer, with equal
 specificity, **a modifier beats the thing it modifies**, whatever the class names:
 `sl-split sl-align-y-end` aligns to the end, and `sf-size-xs` sets the padding of an
-`sf-depth-1` card. Each class carries an order number (default 0) that settles these
-ties; modifiers such as `sf-size-*`, `sl-align-*` and `sl-inset-line` carry a higher
-one. The number only breaks ties — it never crosses layers and never beats a more
-specific combination of classes. It belongs to the vocabulary, so themes can't change
-it.
+`sf-depth-1` card. For `sf-` classes, each class carries an order number (default 0)
+that settles these ties; modifiers such as `sf-size-*` carry a higher one. The number
+only breaks ties — it never crosses layers and never beats a more specific combination
+of classes. It belongs to the vocabulary, so themes can't change it. `sl-` classes are
+fixed CSS, where modifiers (`sl-align-*`, `sl-inset-line`) are simply written after the
+layouts they modify.
 
 Themes restyle classes; they don't outrank combinations. A theme's rule for a class
 beats the root rule for the same class, and the nearest theme wins when themes nest.
@@ -176,12 +177,12 @@ different roles. The prefix rule:
 > `--sf-*` — a value an author could reasonably write inline.
 > `--sfx-*` — only rules write this; internal rule-to-rule contract.
 
-| Kind             | Example                                     | Set by                                                          | Read by                            |
-| ---------------- | ------------------------------------------- | --------------------------------------------------------------- | ---------------------------------- |
-| Theme token      | `--sf-primary-5`, `--sf-fg_primary`         | Theme class (`.theme-x { --sf-X: ... }`)                        | Rules across every layer           |
-| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); inline as escape hatch              | Carrier class in the same family   |
-| Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*`; reset to `0` per node-view-wrapper | `sl-*` primitive at inner selector |
-| Bridge           | `--sfx-surface-color`, `--sfx-inset-margin` | Bundle rule (or layout rule, for `--sfx-inset-margin`)          | Higher-layer rule / descendants    |
+| Kind             | Example                                     | Set by                                                     | Read by                          |
+| ---------------- | ------------------------------------------- | ---------------------------------------------------------- | -------------------------------- |
+| Theme token      | `--sf-primary-5`, `--sf-fg_primary`         | Theme class (`.theme-x { --sf-X: ... }`)                   | Rules across every layer         |
+| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); inline as escape hatch         | Carrier class in the same family |
+| Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*` / `sf-size-*`; never inherited | The element that wears the class |
+| Bridge           | `--sfx-surface-color`, `--sfx-inset-margin` | Bundle rule (or layout rule, for `--sfx-inset-margin`)     | Higher-layer rule / descendants  |
 
 ### Theme tokens
 
@@ -219,21 +220,24 @@ layer and is the escape hatch for freeform shadow colours.
 
 ### Layout channels
 
-Cross the `sf-` / `sl-` subsystem boundary. `sf-gap-md` sets `--sf-gap` on the wrapper;
-`sl-stack`'s inner content selector reads it. Every `[data-node-view-wrapper]` resets
-`--sf-gap` and `--sf-padding` to `0` — this prevents a parent layout primitive's spacing
-from cascading into a nested primitive that has no channel class of its own.
+Cross the `sf-` / `sl-` subsystem boundary. `sf-gap-md` sets `--sf-gap`; `sl-stack` on the
+same element reads it. Both channels are registered as not inherited (`@property … inherits:
+false`, in the fixed reset), so a spacing class applies to the element that wears it and
+nothing inside takes it on: a stack inside a stack keeps its own gap, and a button inside a
+spaced row keeps its own.
+
+Every reader gives its own default — `gap: var(--sf-gap, var(--sf-spacing-md))` on the
+layouts, `var(--sf-padding, var(--sf-spacing-2xs))` on the compact units — or none where an
+unset value already means no spacing (`sl-center`'s side padding). Chrome classes set
+`--sf-padding` on themselves and read it, so `sf-size-*` on the same element changes it.
 
 Channels look like tokens because they share the `--sf-*` prefix, but they are runtime
-slots filled by utility classes, not theme values. A theme cannot meaningfully set
-`--sf-gap` in a theme class — the per-wrapper reset overwrites it at every node-view
-boundary.
+slots filled by classes, not theme values.
 
 Component-internal layout (gap between icon and label inside a button, controls inside
 a picker) uses the channel with a scale-step default: `gap: var(--sf-gap, var(--sf-spacing-xs))`.
-This keeps the gap open to override via `sf-gap-*` while setting a sensible component-level
-fallback. The raw scale step alone (`var(--sf-spacing-xs)`) is not the pattern — it bypasses
-the channel and closes off per-element override.
+`sf-gap-*` on that same element overrides it. The raw scale step alone
+(`var(--sf-spacing-xs)`) is not the pattern — it closes off the override.
 
 ### Bridges
 
@@ -262,7 +266,7 @@ Two authoring rules keep the surface honest:
 `sf-depth-*` + `sl-inset` compounds) and read by descendants rather than the same element: a chrome box that is also an inset
 publishes its padding as the margin for everything inside it, so nested insets and
 `sl-inset-line` elements share its line. Unlike the layout channels it is deliberately
-**not** reset at node-view wrappers — lining up with the nearest inset is the point. With
+inherited — lining up with the nearest inset is the point. With
 no inset above, readers fall back to the page margin.
 
 The alternative — hardcoding the underlying token (`var(--sf-radius-2)`) or writing
@@ -761,12 +765,8 @@ sf-padding-lg      --sf-padding:    var(--sf-spacing-lg)
 
 `sf-gap-*` and `sf-padding-*` set runtime-state custom properties (`--sf-gap`,
 `--sf-padding`) that layout primitives read — this is how the styling system feeds
-spacing into the layout system without compromising layout's structural fixity.
-
-In the editor context, every `[data-node-view-wrapper]` resets `--sf-gap` and
-`--sf-padding` to `0`. This prevents a parent layout primitive's spacing from
-cascading into a nested layout primitive that has no spacing class of its own —
-the reset breaks CSS custom property inheritance at each node boundary.
+spacing into the layout system without compromising layout's structural fixity. They
+apply to the element that wears them only (see Layout channels).
 
 `sf-shadow-*` uses `rgb(var(--sf-shadow) / var(--sf-shadow-opacity))` as its default
 colour composition, both theme-controlled. Colour picks follow the same class-pair +
@@ -823,6 +823,15 @@ The maintainer defines what `sl-` classes do; a theme changes layout only throug
 tokens they read (gap, page margin, padding, breakpoints). What two `sl-` classes mean
 together (a cluster that scrolls, a bleed inside an inset) is part of that definition,
 not a theme rule.
+
+So their CSS is fixed, emitted by the generator after the root theme's rules: what each class
+does (`api/src/domain/css/slLayout.ts`), image fit (`slObject.ts`), classes together
+(`slCombined.ts`), and collapse, built from the theme's breakpoint tokens. The class names
+are in the DB vocabulary. A theme's own rules on `sl-` classes set looks only — the
+hidden scrollbar on `sl-scroll-x`, a scroll frame's arrows. Nothing enforces that yet: a
+non-root theme's rules are scoped (`@scope`), and a scoped rule beats an unscoped one of
+equal specificity, so a theme rule setting an `sl-` class's layout would win. Holding
+themes to looks is a job for the validator (not built).
 
 ### Layout primitives
 
@@ -1133,6 +1142,29 @@ Picker choices land in storage by a uniform pattern:
 - **Shape/scale token pick** (`sf-shadow-md`, `sf-radius-2`, `sf-text-xl`) → single class
   on `node.attrs.class`; the utility rule composes with any accompanying runtime state
   vars.
+
+Content renders through TipTap both in the editor and on published pages (a read-only
+editor), so the same rules apply to both. How a document's blocks sit is fixed CSS served
+with the theme (`api/src/domain/css/`), so it can read the one list of layouts that space
+their items with a gap (`GAP_LAYOUTS` in `slLayout.ts`):
+
+- **Elements** opt into the theme by wearing `sf`, set by the node: `blockquote.sf`,
+  `code.sf`, `ul.sf`, `ol.sf`. The theme draws them; the reset leaves the rest bare.
+- **Space between blocks** is `blockSpacing.ts`, in the lowest layer so any theme rule
+  wins. It belongs to flow containers — the document, a node view's content box, a plain
+  div block, a quote, a list item, a task item's content, a table cell — whose blocks each
+  get the theme's `md` step below them (`xs` between list items). Layouts are the author's
+  choice, not the default: an element wearing a layout class isn't a flow container, so
+  its gap alone spaces its children.
+- **Defaults the author can override** sit in the lowest layer, keyed on markers the node
+  renders but never stores: a responsive video fills its width at 16:9
+  (`embeds.ts`) until an `sl-aspect-*` choice or its own style says
+  otherwise.
+- **Node views** (blocks rendered by a Vue component, such as the layout blocks) add a
+  wrapper outside the component and a content box inside it. `nodeViews.ts` makes each
+  wrapper a width container (for collapse) and has a layout's content box step aside
+  (`display: contents`), so the blocks inside are the layout's own items. `sl-inset` is the exception: it places its own children, so its content box stays
+  as its one item and spaces its blocks like running text.
 
 ---
 

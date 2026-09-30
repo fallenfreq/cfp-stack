@@ -635,7 +635,7 @@ const VOCABULARY: VocabSpec[] = [
 		description: 'Visual separation between vertically arranged children',
 	},
 
-	// Layout primitives
+	// Layout — vocabulary only; what each class arranges is fixed CSS (css/slLayout.ts)
 	{ name: 'sl-stack', kind: 'layout', description: 'Vertical flex stack' },
 	{ name: 'sl-cluster', kind: 'layout', description: 'Horizontal flex wrap' },
 	{ name: 'sl-columns', kind: 'layout', description: 'Equal or custom-ratio grid columns' },
@@ -656,7 +656,6 @@ const VOCABULARY: VocabSpec[] = [
 	{
 		name: 'sl-inset-line',
 		kind: 'layout',
-		cascadeOrder: MODIFIER_ORDER,
 		description:
 			'Content starts on the inset line: side padding equals the margin of the inset it sits in, or the page margin outside any inset. Use on something whose box spans the full width (a bleeding child, a screen-wide bar or scroll area), with no padded box in between.',
 	},
@@ -669,34 +668,29 @@ const VOCABULARY: VocabSpec[] = [
 	{
 		name: 'sl-align-y-start',
 		kind: 'layout',
-		cascadeOrder: MODIFIER_ORDER,
 		description:
 			'Aligns content to the start of the block axis (top in LTR). Composable with any grid/flex primitive (sl-cover, sl-stack).',
 	},
 	{
 		name: 'sl-align-y-center',
 		kind: 'layout',
-		cascadeOrder: MODIFIER_ORDER,
 		description: 'Centres content on the block axis. Composable with any grid/flex primitive.',
 	},
 	{
 		name: 'sl-align-y-end',
 		kind: 'layout',
-		cascadeOrder: MODIFIER_ORDER,
 		description:
 			'Aligns content to the end of the block axis (bottom in LTR). Composable with any grid/flex primitive.',
 	},
 	{
 		name: 'sl-align-x-start',
 		kind: 'layout',
-		cascadeOrder: MODIFIER_ORDER,
 		description:
 			'Aligns content to the start of the inline axis (left in LTR). Grid-based; on flex containers use justify-content directly (limitation).',
 	},
 	{
 		name: 'sl-align-x-end',
 		kind: 'layout',
-		cascadeOrder: MODIFIER_ORDER,
 		description:
 			'Aligns content to the end of the inline axis (right in LTR). Grid-based; on flex containers use justify-content directly (limitation).',
 	},
@@ -765,7 +759,7 @@ const VOCABULARY: VocabSpec[] = [
 	},
 
 	// Object-fit modifiers — vocabulary only; CSS uses child selectors that the
-	// class_rules schema cannot express, so rules live as a static block in generateCss.ts.
+	// class_rules schema cannot express, so rules live as fixed CSS (css/slObject.ts).
 	{
 		name: 'sl-object-cover',
 		kind: 'layout',
@@ -886,9 +880,9 @@ const ROOT_RULES: RuleSpec[] = [
 	// worn on the same element overrides via cascade — same layer, same specificity, sf-size
 	// wins through its cascadeOrder (MODIFIER_ORDER), which emits it after sf-depth-*.
 	// Tight consumers (tooltips, drag handles, floating toolbars) opt in via sf-size-2xs /
-	// sf-size-xs. Flush-content containers opt out via sf-flush. Node-view-wrapper reset
-	// zeros --sf-padding to fence inheritance across primitive boundaries; a chrome class
-	// on the wrapper itself wins by cascade layer. Follow-up: [[project-sl-padding]].
+	// sf-size-xs. Flush-content containers opt out via sf-flush. --sf-padding is not
+	// inherited (reset.ts), so a box's padding never reaches what's inside it.
+	// Follow-up: [[project-sl-padding]].
 	{
 		classNames: ['sf-depth-1'],
 		cssProperty: '--sf-padding',
@@ -1007,8 +1001,8 @@ const ROOT_RULES: RuleSpec[] = [
 		value: '1px solid rgb(var(--sf-border_color))',
 	},
 
-	// Size bundles — this theme spends size on --sf-padding (inheritable, read by layout
-	// primitives). Another theme could just as validly express size via border weight or
+	// Size bundles — this theme spends size on --sf-padding (read by the element that wears
+	// the size; not inherited). Another theme could just as validly express size via border weight or
 	// gap. Shape stays out of size — border-radius comes from the element's own rule (bare
 	// <button>, <input>) or an explicit sf-radius-* utility, so a compact breadcrumb button
 	// stays square while a pill icon-button opts in via sf-radius-3.
@@ -1031,145 +1025,9 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-heading-3'], cssProperty: 'font-size', value: 'var(--sf-text-xl)' },
 	{ classNames: ['sf-heading-3'], cssProperty: 'line-height', value: 'var(--sf-leading-snug)' },
 
-	// sl-stack
-	{ classNames: ['sl-stack'], cssProperty: 'display', value: 'flex' },
-	{ classNames: ['sl-stack'], cssProperty: 'flex-direction', value: 'column' },
-	{ classNames: ['sl-stack'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
-
-	// sl-cluster
-	{ classNames: ['sl-cluster'], cssProperty: 'display', value: 'flex' },
-	{ classNames: ['sl-cluster'], cssProperty: 'flex-wrap', value: 'wrap' },
-	{
-		classNames: ['sl-cluster'],
-		cssProperty: 'gap',
-		value: 'var(--sf-gap, var(--sf-spacing-md))',
-	},
-	{ classNames: ['sl-cluster'], cssProperty: 'align-items', value: 'center' },
-
-	// sl-columns
-	{ classNames: ['sl-columns'], cssProperty: 'display', value: 'grid' },
-	{
-		classNames: ['sl-columns'],
-		cssProperty: 'grid-template-columns',
-		value: 'var(--sl-cols, repeat(auto-fit, minmax(0, 1fr)))',
-	},
-	{
-		classNames: ['sl-columns'],
-		cssProperty: 'gap',
-		value: 'var(--sf-gap, var(--sf-spacing-md))',
-	},
-
-	// sl-row — joins the parent grid's columns (subgrid). Gaps follow the parent's.
-	// Only changes where cells are drawn; reading and tab order stay the source order.
-	{ classNames: ['sl-row'], cssProperty: 'grid-column', value: '1 / -1' },
-	{ classNames: ['sl-row'], cssProperty: 'display', value: 'grid' },
-	{ classNames: ['sl-row'], cssProperty: 'grid-template-columns', value: 'subgrid' },
-
-	// sl-split
-	{ classNames: ['sl-split'], cssProperty: 'display', value: 'grid' },
-	{
-		classNames: ['sl-split'],
-		cssProperty: 'grid-template-columns',
-		value: 'var(--sl-template, auto 1fr)',
-	},
-	{ classNames: ['sl-split'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
-	{ classNames: ['sl-split'], cssProperty: 'align-items', value: 'start' },
-
-	// sl-center
-	{ classNames: ['sl-center'], cssProperty: 'max-width', value: 'var(--sl-measure, 65ch)' },
-	{ classNames: ['sl-center'], cssProperty: 'margin-inline', value: 'auto' },
-	{
-		classNames: ['sl-center'],
-		cssProperty: 'padding-inline',
-		value: 'var(--sf-padding)',
-	},
-
-	// sl-inset — a stack whose side margins are grid tracks, so a child can opt into them
-	// (sl-bleed) instead of pulling itself out with a negative margin. The margin is
-	// --sfx-inset-margin: inherited from the inset it sits in, else the page margin. A plain
-	// box only reads it, so it never picks up stray padding. The content column stops at
-	// --sfx-inset-width, which an inset sets on itself (the page width; a card's is its full
-	// width) and passes down the same way; each margin is the larger of the set margin and
-	// half the leftover width, so the column centres. sl-bleed's rules combine it with
-	// sl-inset, so they live in generateCss.ts (SL_COMBINED); outside an sl-inset it's inert.
-	{ classNames: ['sl-inset'], cssProperty: 'display', value: 'grid' },
-	{ classNames: ['sl-inset'], cssProperty: '--sfx-inset-width', value: 'var(--sf-width_page)' },
-	{
-		classNames: ['sl-inset'],
-		cssProperty: 'grid-template-columns',
-		value: '[full-start] max(var(--sfx-inset-margin, var(--sf-spacing_page)), (100% - var(--sfx-inset-width)) / 2) [content-start] minmax(0, 1fr) [content-end] max(var(--sfx-inset-margin, var(--sf-spacing_page)), (100% - var(--sfx-inset-width)) / 2) [full-end]',
-	},
-	{ classNames: ['sl-inset'], cssProperty: 'padding-inline', value: '0' },
-	{
-		classNames: ['sl-inset'],
-		cssProperty: 'row-gap',
-		value: 'var(--sf-gap, var(--sf-spacing-md))',
-	},
-	{ classNames: ['sl-inset'], cssProperty: 'align-content', value: 'start' },
-	{ classNames: ['sl-inset'], pseudo: ' > *', cssProperty: 'grid-column', value: 'content' },
-	// Chrome box as inset — the box's own padding (a theme decision) becomes the margins,
-	// for it and everything inside, so a card looks unchanged and its children can bleed to
-	// its edges. Relies on the theme contract that chrome padding goes through --sf-padding,
-	// which these boxes set on themselves, so nothing inherited is read. The page width
-	// limit is the page's, not a box's: a box's column is its full width (100%). A new
-	// padding-owning class needs its own entries here.
-	...(['sf-depth-1', 'sf-depth-2', 'sf-depth-3'] as const).flatMap((depth): RuleSpec[] => [
-		{
-			classNames: [depth, 'sl-inset'],
-			cssProperty: '--sfx-inset-margin',
-			value: 'var(--sf-padding, 0px)',
-		},
-		{ classNames: [depth, 'sl-inset'], cssProperty: '--sfx-inset-width', value: '100%' },
-	]),
-
-	// sl-inset-line — content starts on the line of the inset it sits in (same sum as sl-inset;
-	// padding's % reads the parent's width, which matches when the element fills it). Outside
-	// any inset there's no width to follow (100%), so just the page margin. Layout layer, so it beats chrome
-	// padding on the same element, and its cascadeOrder beats sl-inset's own padding;
-	// top/bottom padding stays. Pinned edges win: the sl-scroll-*:has(.sl-pin-*) rules in
-	// generateCss.ts (0-2-0) beat this (0-1-0).
-	{
-		classNames: ['sl-inset-line'],
-		cssProperty: 'padding-inline',
-		value: 'max(var(--sfx-inset-margin, var(--sf-spacing_page)), (100% - var(--sfx-inset-width, 100%)) / 2)',
-	},
-
-	// sl-cover — fills at least 100dvh with content centred both axes. Consumer
-	// overrides --sl-cover-min for compact (20rem), viewport (100vh), or fill-
-	// parent (100% — requires parent chain with defined heights).
-	{ classNames: ['sl-cover'], cssProperty: 'display', value: 'grid' },
-	{ classNames: ['sl-cover'], cssProperty: 'place-items', value: 'center' },
-	{ classNames: ['sl-cover'], cssProperty: 'min-height', value: 'var(--sl-cover-min, 100dvh)' },
-
-	// sl-align-y-* / sl-align-x-* — axis alignment overrides for any grid/flex primitive.
-	// Beats the primitive's own alignment (sl-cover's place-items, sl-split/sl-cluster's
-	// align-items) through its cascadeOrder. On flex containers, align-y works; align-x
-	// uses justify-items which flex ignores — for flex justify overrides use
-	// component-scoped justify-content.
-	{ classNames: ['sl-align-y-start'], cssProperty: 'align-items', value: 'start' },
-	{ classNames: ['sl-align-y-center'], cssProperty: 'align-items', value: 'center' },
-	{ classNames: ['sl-align-y-end'], cssProperty: 'align-items', value: 'end' },
-	{ classNames: ['sl-align-x-start'], cssProperty: 'justify-items', value: 'start' },
-	{ classNames: ['sl-align-x-end'], cssProperty: 'justify-items', value: 'end' },
-
-	// sl-grid
-	{ classNames: ['sl-grid'], cssProperty: 'display', value: 'grid' },
-	{
-		classNames: ['sl-grid'],
-		cssProperty: 'grid-template-columns',
-		value: 'repeat(auto-fit, minmax(var(--sl-min, 250px), 1fr))',
-	},
-	{ classNames: ['sl-grid'], cssProperty: 'gap', value: 'var(--sf-gap, var(--sf-spacing-md))' },
-
-	// sl-aspect presets (bare sl-aspect is developer escape hatch — no rule; author sets --sl-aspect inline)
-	{ classNames: ['sl-aspect-16-9'], cssProperty: 'aspect-ratio', value: '16/9' },
-	{ classNames: ['sl-aspect-4-3'], cssProperty: 'aspect-ratio', value: '4/3' },
-	{ classNames: ['sl-aspect-1-1'], cssProperty: 'aspect-ratio', value: '1' },
-	{ classNames: ['sl-aspect-9-16'], cssProperty: 'aspect-ratio', value: '9/16' },
-
-	// sl-scroll-* — scroll areas. Scrollbar hiding on sl-scroll-x is the default theme's
-	// choice (compact rows, tables); sl-scroll-y keeps native scrollbars.
-	{ classNames: ['sl-scroll-x'], cssProperty: 'overflow-x', value: 'auto' },
+	// sl-scroll-x hides its scrollbar — the default theme's choice (compact rows, tables);
+	// sl-scroll-y keeps native scrollbars. What each sl- class arranges is fixed CSS
+	// (css/slLayout.ts); a theme's rules on sl- classes set looks only.
 	{ classNames: ['sl-scroll-x'], cssProperty: 'scrollbar-width', value: 'none' },
 	{
 		classNames: ['sl-scroll-x'],
@@ -1177,34 +1035,6 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'display',
 		value: 'none',
 	},
-	{ classNames: ['sl-scroll-y'], cssProperty: 'overflow-y', value: 'auto' },
-	// A swipe that reaches the end stops there instead of carrying on to the page (which can
-	// fire the browser's back gesture).
-	{ classNames: ['sl-scroll-x'], cssProperty: 'overscroll-behavior-x', value: 'contain' },
-
-	// sl-scroll-frame — positions overlays on a scroll area's edges; the scroll area fills
-	// it and can still shrink (minmax(0, …)).
-	{ classNames: ['sl-scroll-frame'], cssProperty: 'position', value: 'relative' },
-	{ classNames: ['sl-scroll-frame'], cssProperty: 'display', value: 'grid' },
-	{
-		classNames: ['sl-scroll-frame'],
-		cssProperty: 'grid-template-columns',
-		value: 'minmax(0, 1fr)',
-	},
-
-	// sl-pin-* — sticky to one edge of the nearest scroll area.
-	{ classNames: ['sl-pin-top'], cssProperty: 'position', value: 'sticky' },
-	{ classNames: ['sl-pin-top'], cssProperty: 'top', value: '0' },
-	{ classNames: ['sl-pin-top'], cssProperty: 'z-index', value: '1' },
-	{ classNames: ['sl-pin-right'], cssProperty: 'position', value: 'sticky' },
-	{ classNames: ['sl-pin-right'], cssProperty: 'right', value: '0' },
-	{ classNames: ['sl-pin-right'], cssProperty: 'z-index', value: '1' },
-	{ classNames: ['sl-pin-bottom'], cssProperty: 'position', value: 'sticky' },
-	{ classNames: ['sl-pin-bottom'], cssProperty: 'bottom', value: '0' },
-	{ classNames: ['sl-pin-bottom'], cssProperty: 'z-index', value: '1' },
-	{ classNames: ['sl-pin-left'], cssProperty: 'position', value: 'sticky' },
-	{ classNames: ['sl-pin-left'], cssProperty: 'left', value: '0' },
-	{ classNames: ['sl-pin-left'], cssProperty: 'z-index', value: '1' },
 
 	// Overflow context — mask-image applied to the scrolling element. How hidden content is
 	// shown is the theme's; a control that scrolls is the component's.
@@ -1877,8 +1707,8 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 
 	// Flush context — opts out of chrome-class padding default. sf-context layer beats
-	// sf-bundle's `padding: var(--sf-padding)` on sf-depth-*. --sf-padding also zeroed so
-	// descendants that inherit it (sl-center, LayoutCard inner) don't see a stale value.
+	// sf-bundle's `padding: var(--sf-padding)` on sf-depth-*. --sf-padding also zeroed, since
+	// a chrome box that's also an sl-inset takes its margins from it (css/slLayout.ts).
 	{ classNames: ['sf-flush'], cssProperty: '--sf-padding', value: '0' },
 	{ classNames: ['sf-flush'], cssProperty: 'padding', value: '0' },
 
@@ -2829,6 +2659,25 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'calc(var(--sf-stroke-3) * 2) solid rgb(var(--sf-primary))',
 	},
 
+	// ─── List elements ────────────────────────────────────────────────────────
+	// A list: <ul class="sf"> / <ol class="sf">. The reset clears markers and indent; the
+	// theme brings them back. The indent is in em so the markers keep their room at any
+	// text size. Space between items is the document's (block spacing).
+	...(
+		[
+			['ul', 'disc'],
+			['ol', 'decimal'],
+		] as const
+	).flatMap(([el, marker]): RuleSpec[] => [
+		{ elementSelector: el, classNames: ['sf'], cssProperty: 'list-style', value: marker },
+		{
+			elementSelector: el,
+			classNames: ['sf'],
+			cssProperty: 'padding-inline-start',
+			value: '1.5em',
+		},
+	]),
+
 	// ─── Pre element ──────────────────────────────────────────────────────────
 	// A code block: <pre class="sf">. Theme gives it padding, corners and the mono font;
 	// the code inside inherits the font (otherwise the browser's own monospace wins).
@@ -2986,7 +2835,11 @@ const ROOT_RULES: RuleSpec[] = [
 	// sf-single-line; display is structural (reset); wrapping is the layout's.
 	...(['sf-chip', 'sf-tag', 'sf-status', 'sf-counter'] as const).flatMap((unit): RuleSpec[] => [
 		{ classNames: [unit], cssProperty: 'border-radius', value: 'var(--sf-radius-3)' },
-		{ classNames: [unit], cssProperty: 'padding', value: 'var(--sf-padding)' },
+		{
+			classNames: [unit],
+			cssProperty: 'padding',
+			value: 'var(--sf-padding, var(--sf-spacing-2xs))',
+		},
 		{
 			classNames: [unit, 'sf-loudness-3'],
 			cssProperty: 'background',
@@ -3242,9 +3095,8 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 
 	// ─── Horizontal rule ──────────────────────────────────────────────────────
-	// Baseline scoped to hr.sf so editor content and third-party <hr> keep UA styling
-	// unless they opt in. Normalizes UA inset border and clears UA margin so external
-	// spacing is entirely the parent layout's decision (sl-stack + sf-gap-*).
+	// A divider: <hr class="sf">. Replaces the browser's inset border with a single line.
+	// Space around it is the container's (a layout's gap, or block spacing), not the theme's.
 	{ elementSelector: 'hr', classNames: ['sf'], cssProperty: 'height', value: '0' },
 	{ elementSelector: 'hr', classNames: ['sf'], cssProperty: 'border', value: '0' },
 	{
@@ -3253,7 +3105,6 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-top',
 		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
 	},
-	{ elementSelector: 'hr', classNames: ['sf'], cssProperty: 'margin', value: '0' },
 
 	// ─── Table elements ───────────────────────────────────────────────────────
 	// Theme-wide defaults for data tables. border-collapse:separate + border-spacing:0 is

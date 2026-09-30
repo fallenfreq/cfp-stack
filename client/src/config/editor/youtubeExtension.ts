@@ -18,12 +18,11 @@ export const YoutubeExtension = Youtube.extend({
 			resp: {
 				default: '',
 				renderHTML: (attributes) => {
+					// Responsive: marked for its default box (api/src/domain/css/embeds.ts), which an
+					// sl-aspect-* choice or the node's own style overrides. The marker is
+					// rendered each time, never stored.
 					return attributes.resp === '' || attributes.resp
-						? {
-								width: 'auto',
-								height: 'auto',
-								class: ((attributes.class || '') + ' resp-yt').trim(),
-							}
+						? { width: 'auto', height: 'auto', 'data-responsive': '' }
 						: {}
 				},
 			},

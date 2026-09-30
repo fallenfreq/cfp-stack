@@ -782,7 +782,7 @@ export const stories: Story[] = [
 				)
 			const panel = (width: string) =>
 				h('div', { class: 'sf-depth-2', style: `width: ${width}` }, [
-					h('div', { class: 'sl-stack sf-gap-2xs sf-size-2xs' }, [
+					h('div', { class: 'sl-stack sf-gap-2xs' }, [
 						h('div', { class: 'sl-split sl-collapse-xs sf-gap-xs' }, [
 							row('id', 'hero', null),
 							row('align', 'center', 'left', {

@@ -42,9 +42,3 @@ const props = defineProps({
 
 const minHeightOverride = computed(() => MIN_HEIGHT_MAP[props.minHeight])
 </script>
-
-<style scoped>
-:global(.sl-cover > [data-node-view-content]) {
-	display: contents;
-}
-</style>

@@ -1,6 +1,6 @@
 <template>
 	<ToolbarPanelItem v-model:open="open" :icon="iconName" :tooltip="tooltip" align="end">
-		<div class="picker-list sl-stack sf-gap-none sf-size-xs">
+		<div class="picker-list sl-stack sf-gap-none">
 			<template v-if="computedItems.length">
 				<SfButton
 					v-for="item in computedItems"
@@ -14,7 +14,7 @@
 					<span>{{ item.label }}</span>
 				</SfButton>
 			</template>
-			<div v-else class="picker-empty sf-loudness-1">No compatible types</div>
+			<div v-else class="picker-empty sf-loudness-1 sf-size-xs">No compatible types</div>
 		</div>
 	</ToolbarPanelItem>
 </template>

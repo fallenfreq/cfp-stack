@@ -10,9 +10,13 @@ import {
 } from '../schemas/theme.js'
 import { type ClassRuleWithClasses, listAllRules } from './classRules.js'
 import { type CollapseThreshold, listCollapseThresholds } from './collapseThresholds.js'
+import { BLOCK_SPACING } from './css/blockSpacing.js'
 import { SF_ELEMENT_DEFAULTS } from './css/elementDefaults.js'
+import { EMBEDS } from './css/embeds.js'
+import { NODE_VIEWS } from './css/nodeViews.js'
 import { RESET } from './css/reset.js'
 import { SL_COMBINED } from './css/slCombined.js'
+import { COLLAPSE_CLASS_SELECTOR, COLLAPSE_HOST_SELECTOR, SL_LAYOUT } from './css/slLayout.js'
 import { SL_OBJECT } from './css/slObject.js'
 import { ValidationError } from './errors.js'
 import { SEED_VERSION } from './seedVersion.js'
@@ -61,9 +65,14 @@ export async function emitStylesheet(db: Db): Promise<string> {
 		emitRichLayer('sl-layout', themesList, rootTheme, rulesByLayer),
 		// Hand-written blocks come after the DB rules of their layer, so they sit
 		// above every cascade_order at equal specificity.
+		SL_LAYOUT,
 		SL_OBJECT,
 		SL_COMBINED,
 		emitCollapseLayer(collapseThresholds),
+		// How a TipTap document's blocks sit, in the editor and on published pages.
+		NODE_VIEWS,
+		BLOCK_SPACING,
+		EMBEDS,
 		emitEditorLayer(buckets),
 	]
 	return sections.filter((s) => s.length > 0).join('\n')
@@ -80,12 +89,20 @@ export async function getStylesheet(db: Db): Promise<CachedCss> {
 	const signature = await themeSignature(db)
 	if (cache && cache.signature === signature) return cache.result
 	const css = await emitStylesheet(db)
-	const result: CachedCss = { css, etag: `"${signature}"` }
+	// The ETag is a hash of the stylesheet itself, so any change gives a new one: DB data, or
+	// the fixed CSS and emitters in code. The signature only decides when to rebuild; new code
+	// runs in a new isolate, so it never keeps a stale build.
+	const result: CachedCss = { css, etag: `"${await contentHash(css)}"` }
 	cache = { signature, result }
 	return result
 }
 
-// Signature for cache + ETag. Captures every change path that affects the
+async function contentHash(text: string): Promise<string> {
+	const digest = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(text))
+	return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+// Signature for the in-isolate cache. Captures every change path that affects the
 // generated CSS: theme add/remove (themeCount), token add/remove
 // (tokenCount), rule add/remove (ruleCount), vocabulary add/remove/edit
 // (vocabCount, vocabMax — kind and cascade_order change emit), and any
@@ -450,24 +467,11 @@ const section = (title: string): string =>
 
 const COLLAPSE_GRID = ['.sl-columns', '.sl-split', '.sl-grid']
 const COLLAPSE_FLEX = ['.sl-cluster']
-const COLLAPSE_HOSTS = [
-	'.sl-stack',
-	'.sl-cluster',
-	'.sl-columns',
-	'.sl-split',
-	'.sl-center',
-	'.sl-inset',
-	'.sl-grid',
-]
 
 function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
 	if (collapseThresholds.length === 0) return ''
 
-	const hosts = COLLAPSE_HOSTS.map(
-		(s) =>
-			`\t${s}:has([class*="sl-collapse-"], [class*="sl-hide-below-"], [class*="sl-show-below-"])`,
-	).join(',\n')
-	let body = `${hosts} { container-type: inline-size; }\n`
+	let body = `\t:is(${COLLAPSE_HOST_SELECTOR}):has(${COLLAPSE_CLASS_SELECTOR}) { container-type: inline-size; }\n`
 	for (const { name, value } of collapseThresholds) {
 		const gridSels = COLLAPSE_GRID.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')
 		const flexSels = COLLAPSE_FLEX.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')

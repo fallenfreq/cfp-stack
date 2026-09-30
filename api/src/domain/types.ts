@@ -7,8 +7,8 @@ export type Db = DrizzleD1Database<Record<string, unknown>>
 
 // sf-class kinds. `bundle`/`variant`/`state` live in the sf cascade
 // layers. `layout` is for sl-* classes (the sl-layout layer, after the sf
-// layers). A rule holds at most one; combinations of sl- classes are written
-// in generateCss.ts, since what they mean together is the maintainer's.
+// layers). sl- arrangement is fixed CSS (css/slLayout.ts, and css/slCombined.ts for
+// what classes mean together), since it's the maintainer's; a rule holds at most one.
 // `element` names a UI category HTML forgot (chip, badge, tag) — the class
 // itself sets nothing; the theme decorates it the same way it decorates a
 // bare `<button>` or `<nav>`. Rules emit to sf-element (below sf-bundle)

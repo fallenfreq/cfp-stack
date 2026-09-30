@@ -86,6 +86,9 @@ export function getContentExtensions({
 			link: { openOnClick: 'whenNotEditable' },
 			// Inline code opts into the theme's code look (code.sf).
 			code: { HTMLAttributes: { class: 'sf' } },
+			// Lists opt into the theme's markers and indent (ul.sf, ol.sf).
+			bulletList: { HTMLAttributes: { class: 'sf' } },
+			orderedList: { HTMLAttributes: { class: 'sf' } },
 		}),
 		SfHeading,
 		Image,

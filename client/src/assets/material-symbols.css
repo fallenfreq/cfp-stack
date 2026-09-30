@@ -1,0 +1,35 @@
+/* Material Symbols icon font, self-hosted.
+   https://developers.google.com/fonts/docs/material_symbols */
+@font-face {
+	font-family: 'Material Symbols Rounded';
+	font-style: normal;
+	font-weight: 100 700; /* the font's weight range, so font-weight picks a real weight */
+	font-display: block; /* Prevents FOUC by blocking until font loads */
+	src: url(/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].woff2) format('woff2');
+}
+
+/* The icon font's own setup, as the weakest rule (:where, lowest layer) so [hidden],
+   sl-hide-*, the theme and components can all change it. The font picks its small- or
+   large-size drawing from the size it's shown at (font-optical-sizing), and its weight
+   from font-weight. */
+@layer reset {
+	:where(.material-symbols-rounded) {
+		font-family: 'Material Symbols Rounded';
+		font-weight: normal;
+		font-style: normal;
+		display: inline-block;
+		line-height: 1;
+		text-transform: none;
+		letter-spacing: normal;
+		word-wrap: normal;
+		white-space: nowrap;
+		direction: ltr;
+		width: 1em;
+		height: 1em;
+		overflow: hidden;
+		/* overflow: hidden makes the box's bottom edge its baseline, which lifts the glyph
+		   above the text beside it; this lowers it onto the text's line. No effect in a flex
+		   row. */
+		vertical-align: -0.2em;
+	}
+}

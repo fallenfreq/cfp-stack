@@ -6,7 +6,7 @@
 		align="end"
 		@update:open="setOpen"
 	>
-		<div class="attr-content sl-stack sf-gap-2xs sf-size-2xs">
+		<div class="attr-content sl-stack sf-gap-2xs">
 			<!-- Rows share one name column and one field column; when narrow, names go above. -->
 			<div v-if="allRowCount" class="sl-split sl-collapse-xs sf-gap-xs">
 				<ToolbarAttrRow
@@ -35,7 +35,10 @@
 				/>
 			</div>
 
-			<div v-if="!allRowCount && !allAddableCount" class="attr-empty sf-loudness-1">
+			<div
+				v-if="!allRowCount && !allAddableCount"
+				class="attr-empty sf-loudness-1 sf-size-2xs"
+			>
 				No attributes set
 			</div>
 

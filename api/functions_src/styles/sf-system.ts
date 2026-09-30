@@ -15,18 +15,34 @@ import { seed } from '../../dist/domain/seed.js'
 // Auto-seeds only on first boot (no root theme in DB). For seed data updates,
 // run `pnpm seed:local` — never auto-reseed on version mismatch to avoid
 // seeding with stale compiled code during a dev server restart race.
+// If-None-Match compares weakly (RFC 9110): Cloudflare marks the ETag weak (W/"…") when it
+// compresses the response, and the header may list several tags.
+function matchesEtag(request: Request, etag: string): boolean {
+	const header = request.headers.get('If-None-Match')
+	if (!header) return false
+	const bare = (tag: string) => tag.trim().replace(/^W\//, '')
+	return header === '*' || header.split(',').some((tag) => bare(tag) === bare(etag))
+}
+
 export const onRequest: PagesFunction<Envs> = async ({ request, env, waitUntil }) => {
 	try {
 		initEnvs(env)
+
+		// A 304 repeats the caching headers the 200 would send (RFC 9110 §15.4.5).
+		const cacheHeaders = (etag: string) => ({
+			ETag: etag,
+			'Cache-Control': 'public, max-age=60',
+		})
 
 		const cacheKey = new URL(request.url)
 		const edgeCache = caches.default
 		const cached = await edgeCache.match(cacheKey)
 		if (cached) {
-			if (request.headers.get('If-None-Match') === cached.headers.get('ETag'))
+			const cachedEtag = cached.headers.get('ETag')
+			if (cachedEtag && matchesEtag(request, cachedEtag))
 				return new Response(null, {
 					status: 304,
-					headers: { ETag: cached.headers.get('ETag')! },
+					headers: cacheHeaders(cachedEtag),
 				})
 			return cached
 		}
@@ -42,15 +58,14 @@ export const onRequest: PagesFunction<Envs> = async ({ request, env, waitUntil }
 			throw err
 		})
 
-		if (request.headers.get('If-None-Match') === etag)
-			return new Response(null, { status: 304, headers: { ETag: etag } })
+		if (matchesEtag(request, etag))
+			return new Response(null, { status: 304, headers: cacheHeaders(etag) })
 
 		const response = new Response(css, {
 			status: 200,
 			headers: {
 				'Content-Type': 'text/css; charset=utf-8',
-				ETag: etag,
-				'Cache-Control': 'public, max-age=60',
+				...cacheHeaders(etag),
 			},
 		})
 

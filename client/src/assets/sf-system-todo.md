@@ -159,8 +159,9 @@ What's pending:
 2. **Raw token refs in component CSS** — many components still reference `--border_color`,
    `--primary`, `--text_primary` etc. directly. Migrate one-by-one as the right
    vocabulary class is seeded; no bulk pass until the class system covers the gap.
-3. **Layout full migration** — removing `layout-*` class alongside `sl-*` requires
-   restructuring the content-wrapper pattern. Deferred.
+3. **Layout full migration** — the layout class on the node view's content box itself
+   instead of a stepped-aside wrapper (see Editor + Vue components). Deferred: layout blocks
+   stay Vue node views (user, 2026-09-30).
 4. ~~**Legacy colours**~~ — done 2026-09-29 (see above).
 5. ~~**Vuestic removal**~~ — done 2026-09-29 (runtime, config, `processTailwindColors`).
    Tailwind removed 2026-09-29: preflight replaced by the theme's reset
@@ -168,6 +169,40 @@ What's pending:
    gone. `extractCssVars` / `cssVariables.js` kept for now with no reader.
 6. **Seed batching** — individual `await` per upsert (~160 round-trips). Use `db.batch()`
    if seed time becomes a problem against production D1.
+7. ~~**sl layout in the seed / spacing inheritance**~~ — done 2.86.0 (2026-09-30). What
+   each `sl-` class arranges is fixed CSS (`api/src/domain/css/slLayout.ts`); the seed keeps
+   only looks on `sl-` classes (hidden scrollbar, scroll-frame arrows). `--sf-gap` and
+   `--sf-padding` are registered not inherited (`reset.ts`), replacing the zero reset on
+   node-view wrappers; compact units got their own padding default; `sl-cover` reads the
+   gap. `LayoutCard` lost its second (inherited) padding; `LayoutCenter` wears `sl-stack`.
+   `main.css` split: block spacing (flow containers, theme spacing steps, lowest layer),
+   node views and the video's default box are fixed CSS in `api/src/domain/css/`
+   (`blockSpacing.ts`, `nodeViews.ts`, `embeds.ts`) reading one `GAP_LAYOUTS` list from
+   `slLayout.ts`; the icon font setup is `material-symbols.css`; `sf-tokens.css` removed.
+   Lists wear `sf` (theme draws `ul.sf`/`ol.sf`), inline content
+   icons wear `sf-icon`, the popover colour rule moved to the reset, a responsive YouTube
+   video's 16:9 box is a reset-layer default (`embeds.ts`, keyed on a rendered
+   `data-responsive` marker) so the aspect control's choice wins.
+8. **Found in review 2026-09-30, not fixed:** a task item with its own `class` loses
+   `sl-split sf-gap-md` — TipTap's TaskItem node view sets the node's class attribute over
+   the extension's instead of merging (its `renderHTML` merges); the owning fix is in
+   `CustomTaskItem`. Saved documents may hold `resp-yt` in a video's class (rendered into
+   the iframe before 2.86.0, captured by a code-view round trip); harmless, no CSS uses it.
+   Collapse can shrink a block to zero width (found in review, unchanged — look at it in a
+   browser as its own change): a width container takes no width from its content, so a
+   node-view wrapper, `LayoutCard` or collapse host sitting in a content-sized spot (a
+   cover's centred item, a start/end-aligned item, a cluster item, an `auto` grid track)
+   ends up 0 wide. Every node-view wrapper is a container, and hosts match a collapsing
+   element anywhere inside, so containers also stack up the tree.
+   **YouTube, older bugs:** pasting a video stores the
+   rendered `width="auto"` / `height="auto"` as real attributes (the code view then shows
+   them), and loses its `resp` width limit (the iframe never renders `resp`, so paste
+   resets it to 36rem).
+9. **Open:** the `* { transition }` fade in `main.css` is a look (motion) — a theme token
+   would move it to the theme (new vocab, undecided). Spec-linter candidates: a
+   `var(--sf-gap)` / `var(--sf-padding)` read with no default where unset isn't "none"; a
+   theme rule setting a layout property on an `sl-` class (validator enforcement is a
+   separate decision).
 
 ## Schema notes
 
@@ -427,13 +462,13 @@ These are not bugs but unresolved tensions in the current design:
 - [x] `LayoutCard.vue` — wears `sf-depth-1`; variant prop removed entirely (cb1a466);
       cards are composed with vocabulary classes (`sf-variant-alt-1`, `sf-variant-featured`,
       `sf-loudness-*`) at the call site rather than via a prop. No in-component variant CSS.
-- [x] Layout components now carry `sl-*` identity class alongside `layout-*` (which stays as
-      the `:global` CSS hook): `LayoutSection` → `sl-stack`, `LayoutColumns` → `sl-columns`,
-      `LayoutSplit` → `sl-split`, `LayoutCenter` → `sl-center`. The DB-generated `sl-*` CSS
-      applies to the root div (harmless — root has one child so flex/grid has no visual effect
-      there); the real layout CSS targets `> [data-node-view-content]` via `:global`.
-      Full migration (removing `layout-*` class and `:global` CSS) requires restructuring
-      the content-wrapper pattern so `sl-*` classes can be applied directly to the layout div.
+- [x] Layout components' roots wear their `sl-*` class only: `LayoutSection` → `sl-stack`,
+      `LayoutColumns` → `sl-columns`, `LayoutSplit` → `sl-split`, `LayoutCover` → `sl-cover`,
+      `LayoutCenter` → `sl-center sl-stack`. The node view's content box between the root and
+      its blocks steps aside (`display: contents`, `api/src/domain/css/nodeViews.ts`), so the
+      blocks are the layout's items. Not for `sl-inset`, whose rules place its own children.
+      Full migration — the layout class on the content box itself, so nothing steps aside —
+      would need each layout component to render TipTap's content element as its root.
 - [x] Layout components moved to `components/layout/` — they are general components; TipTap
       wraps them externally so the components themselves have no editor dependency. Call sites
       outside the editor use them directly with `sf-gap-*` as a class attribute.

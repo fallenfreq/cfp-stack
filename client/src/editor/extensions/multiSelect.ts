@@ -101,7 +101,6 @@ const createMultiDragPreview = (view: EditorView, sorted: NodePos[]): HTMLElemen
 		const dom = view.nodeDOM(pos) as HTMLElement | null
 		if (!dom) continue
 		const clone = dom.cloneNode(true) as HTMLElement
-		clone.style.margin = '0'
 		content.appendChild(clone)
 	}
 	if (sorted.length > 3) {

@@ -12,10 +12,5 @@
 		height: 100%;
 		overflow: hidden;
 	}
-
-	:global(.layout-card > [data-node-view-content]) {
-		display: block;
-		padding: var(--sf-padding, 0);
-	}
 }
 </style>

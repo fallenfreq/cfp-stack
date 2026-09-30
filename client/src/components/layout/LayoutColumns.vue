@@ -18,13 +18,3 @@ defineProps({
 	},
 })
 </script>
-
-<style scoped>
-:global(.sl-columns > [data-node-view-content]) {
-	display: contents;
-}
-
-:global(.sl-columns > [data-node-view-content] > *) {
-	margin-bottom: 0;
-}
-</style>
