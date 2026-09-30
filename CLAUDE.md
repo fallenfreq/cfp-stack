@@ -78,3 +78,25 @@ pnpm migrate:push:local:api     # apply to local D1
 ## Deployment
 
 Push to `main` — Cloudflare Pages deploys automatically via GitHub integration.
+
+## Working method (sf/sl theme system)
+
+The theme system's spec is `client/src/assets/sf-system.md`; open work and where to resume is
+`client/src/assets/sf-system-todo.md` ("Current state (resume here)").
+
+- One file at a time: reason → sign-off → edit. Simple, behaviour-neutral files may be
+  batched with one review at the end.
+- Classes (and comments) state meaning; the theme decides the look. Plain user terms.
+- Flag new vocabulary for approval: classes, tokens, component names, props, services.
+- Theme creators and content creators must not need to know about each other.
+- Verify every review finding in code; fix it in the layer that owns it. A finding outside
+  the approved scope is logged and raised, not fixed inline — say which findings are
+  regressions from the current change and which predate it.
+- Never loosen validators or system limits without approval. Ask before undoing work.
+- Don't auto-run lint or build; typechecks are fine:
+  `cd client && ./node_modules/.bin/vue-tsc --noEmit -p tsconfig.app.json`,
+  `cd api && ../node_modules/.bin/tsc --noEmit -p tsconfig.src.json` (and
+  `tsconfig.functions.json`; `tsc -p .` checks nothing).
+- Component preview: `node --no-warnings client/preview/build.mjs` (`--serve` → :4173).
+- Commit only when asked. Browser floor is Safari 17; no compat code below it.
+- Bumping `api/src/domain/seedVersion.ts` needs a reseed (`pnpm seed:local`).

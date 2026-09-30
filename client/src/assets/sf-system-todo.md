@@ -5,6 +5,12 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
+**Next:** item 10 below (rules that reach through a node view) — plan reviewed, decisions A
+and B pending. **Not yet checked in a browser since 2.86.0:** reseed, then icons (optical
+size now follows the font; decide whether in-text icons want `1.1em` in
+`material-symbols.css` — rounded glyphs look smaller), spacing in cards, layouts, lists,
+task lists, quotes and videos, and the toolbar panel rows (`2xs`).
+
 **The sf/sl migration is largely complete. All class families are seeded (depth, heading, variant, loudness, size, state, layout, context, element markers). Editor chrome is fully on intent-only composition. What remains is either "wait for a consumer" (sf-is-loading, sf-on-active), a structural refactor (layout full migration), or the Vuestic removal track.**
 
 What's in place:
@@ -203,6 +209,70 @@ What's pending:
    `var(--sf-gap)` / `var(--sf-padding)` read with no default where unset isn't "none"; a
    theme rule setting a layout property on an `sl-` class (validator enforcement is a
    separate decision).
+10. **NEXT — rules that reach through a node view (planned and reviewed 2026-09-30, nothing
+    written).** A component block is `[data-node-view-wrapper]` > component root (wears the
+    author's classes) > `[data-node-view-content]` > child blocks, in the editor and on
+    published pages (both TipTap). CSS that expects items to be direct children, or a class
+    to sit on the box the parent places, misses:
+    - Theme rules with `>` see only the content box: `sf-divide-y` / `sf-divide-x`
+      (`' > * + *'`) draw no lines inside a section or card block; `:has(> .sl-scroll-x)`
+      misses a scroll area that is a block.
+    - Fixed sl rules for a layout's items: `.sl-inset > *`, `.sl-cluster.sl-scroll-x > *`,
+      `.sl-inset > .sl-bleed`.
+    - Classes that place the block itself (`sl-row`, `sl-pin-*`, `sl-bleed`) land on the
+      component root, but the parent places the wrapper: they do nothing.
+    - `sl-hide-below-*` on a block hides the component but not the wrapper, so its block
+      spacing stays as a gap; it also measures the block's own width (its wrapper is its
+      container) where a plain element measures the layout around it.
+
+    **Plan (reviewed; alternatives ranked worse — see below):**
+    - One helper, `throughNodeViews(selector)`, in a new `api/src/domain/css/nodeViewSelectors.ts`
+      (new names, approved in principle, confirm before writing). For each `>` step it adds
+      the step through a content box, compactly: `:is(A, A > :where([data-node-view-content])) > X`
+      (same weight); inside `:has()` it lists alternatives instead. The generator applies it
+      to every DB rule selector, sorting on the original selector first so alphabet ties
+      don't move. Theme rules are looks, so their copies land on the element wearing the
+      class; fixed sl CSS places boxes, so its copies land on the wrapper
+      (`:where([data-node-view-wrapper]):has(> .x)`). Split by owner, no per-rule flag.
+    - Splitter tracks quotes, `[...]` and parentheses. `*` steps skip the gap cursor
+      (`.ProseMirror-widget`, as `blockSpacing.ts` does) so `sf-divide-y` draws no line by
+      it. Wrapper copies only where the step names a class/attribute (`> :first-child` would
+      match every component inside its wrapper).
+    - Wrapper copies for `sl-row`, `sl-pin-*`, `sl-bleed` (inside an inset) and hide/show;
+      the component root's own hide/show rule is switched off so the two can't disagree.
+    - sl-inset's content box steps aside like the other layouts; `STEP_ASIDE_LAYOUT_SELECTOR`
+      goes from `nodeViews.ts` and `blockSpacing.ts` in the same change (else inset blocks
+      get margin plus gap). Tapping an inset's gaps then selects the block, as other layouts do.
+    - Dropped: `sl-object` through a content box (the box has no height to fill; images wear
+      `sl-object-*` directly). Sibling rules between two component blocks (`.x + .y`): none
+      in the seed, `* + *` works; linter candidate.
+    - Test: diff generated CSS against the seed; a preview page with the real wrapper /
+      content-box structure; check in a browser.
+
+    **Decisions pending (both change collapse — ask):**
+    - A. Every wrapper being a width container is the root of several failures: a block in a
+      cluster or an `auto` split column is 0 wide **today**; subgrid is off inside a
+      container (`sl-row` on a wrapper can't work); scrolling-cluster blocks would shrink
+      to 0. Recommended: a wrapper is a container only when something inside it collapses,
+      hides or shows (the test the layout hosts use). Left over: a collapsing block in a
+      cluster is still 0 wide; `sl-row` on a block holding a collapsing element.
+    - B. Hiding through the wrapper measures the space around the block, so a top-level
+      block needs a container above it — there is none, and it would stop hiding.
+      Recommended: `.tiptap` is a width container (always full width, safe); "hide below
+      md" means the content area is narrower than md. Plain top-level elements gain it too
+      (today they never hide).
+
+    **Alternatives reviewed and ranked worse:** wrapper = component root (TipTap allows it;
+    still needs the rewrite for content boxes and loses each block's width container);
+    classes on the content box (rejected by the user; TipTap can't make the root the
+    content box without replacing its node view); separate HTML for published pages (two
+    paths, editor still needs it); JS copying classes to the wrapper (double looks, flash,
+    doesn't fix `>`).
+
+    **Logged, outside this change:** scroll-frame arrows can't show in documents (the
+    `sf-is-overflow-*` classes come from a script only admin lists / toolbars run); a hidden
+    last block leaves the previous block's bottom space (plain elements too); non-root
+    themes use `@scope`, which needs Safari 17.4 (below it they're dropped).
 
 ## Schema notes
 
