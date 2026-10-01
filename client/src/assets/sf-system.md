@@ -320,7 +320,7 @@ underscores (`--sf-fg_primary`); single-word names don't (`--sf-primary`).
 --sf-fg_on_info      text on a solid info fill
 --sf-border_color    border colour
 --sf-shadow          shadow colour
---sf-spacing_page    page margin: room between the screen's side edges and content
+--sf-spacing_page    page margin: room at the screen's edges and around the header and footer
 ```
 
 A theme changes the value; every reference picks it up.
@@ -921,8 +921,9 @@ back on the line.
 **How wide the margins are**
 
 - The outermost inset uses the page margin, `--sf-spacing_page` — a theme value for the
-  room between the screen's side edges and content. Only the sides: top padding is the
-  component's own spacing choice, since nothing lines up with it.
+  room between the screen's side edges and content. The app uses the same room above the
+  header and between the header, the page and the footer, so a page has no top or bottom
+  room of its own to add.
 - The page's content column stops growing at the page width, `--sf-width_page` — a theme
   value (default 80rem). Past it the column centres and the margins grow to fill the rest;
   bleeding children still reach the screen edges, and the line moves with the column. A

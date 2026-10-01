@@ -83,10 +83,12 @@ const navItems = computed<NavItem[]>(() => {
 <style scoped>
 @layer ui {
 	/* Header, page and footer fill at least the screen; the page takes the spare height so
-	   the footer sits at the bottom on short pages. Plain layout, no gap: they sit flush. */
+	   the footer sits at the bottom on short pages. The page margin is the room between them,
+	   as above the header and at the sides, so a page adds no top or bottom room of its own. */
 	.app-frame {
 		display: flex;
 		flex-direction: column;
+		gap: var(--sf-spacing_page);
 		min-height: 100dvh;
 	}
 	main {

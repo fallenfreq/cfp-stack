@@ -8,7 +8,11 @@ describes the target design; this file enumerates what needs to change in code t
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
 the user), so themes in `@scope` apply on every supported browser. Item 8's to-do item bug
-is fixed (2026-10-01). Candidates:
+is fixed (2026-10-01). The room under the site nav is back (2026-10-01): it went when the nav
+was rebuilt (27 Sep, the header's all-round margin became top padding), so the editor's bar
+touched the nav. The app frame now puts the page margin between header, page and footer, and
+pages add no top room of their own (`SfPageShell`, the map). Margins that merge were tried
+and rejected: they add up in the frame's flex column and inside any sl layout. Candidates:
 
 1. **Scroll-frame arrows in documents:** the `sf-is-overflow-*` script doesn't run in pages
    (item 10, logged).
@@ -28,10 +32,11 @@ is fixed (2026-10-01). Candidates:
 
 Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a Section on the
 test page logs 171 TipTap warnings ("setNode() only supports text block nodes"); editing
-to-do items logs none.
+to-do items logs none. On the demo editor with an empty document (`/editor/demo`), the
+placeholder paragraph sits against the screen's left edge, with no page margin.
 
 **Layout checks** (added 2026-10-01): `pnpm test:ui` runs
-`client/e2e` with Playwright in the installed Chrome, against the dev server. 66 checks (14 of them
+`client/e2e` with Playwright in the installed Chrome, against the dev server. 68 checks (14 of them
 expected to fail), about 20 seconds.
 
 - **The stylesheet** is built from the seed in a throwaway database in memory

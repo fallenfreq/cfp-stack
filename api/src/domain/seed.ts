@@ -57,7 +57,8 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-spacing-lg', value: '1.5rem', kind: 'length' },
 	{ name: '--sf-spacing-xl', value: '2.5rem', kind: 'length' },
 	// Page margin — room between the screen's side edges and content. A theme decision, read
-	// by sl-inset / sl-inset-line so everything spanning the screen shares one line. Must be a
+	// by sl-inset / sl-inset-line so everything spanning the screen shares one line. The app
+	// also puts it above the header and between the header, the page and the footer. Must be a
 	// length (clamp()/vw fine), not a percentage: tracks and padding resolve % differently.
 	{ name: '--sf-spacing_page', value: 'var(--sf-spacing-lg)', kind: 'length' },
 	// Page width — the widest the page's content column gets. Past it the column centres and

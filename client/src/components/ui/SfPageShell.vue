@@ -17,11 +17,6 @@ defineProps<{ title?: string }>()
 
 <style scoped>
 @layer ui {
-	/* Side margins are the theme's page margin (sl-inset). Top padding is this shell's
-	   own spacing choice — nothing lines up with it. */
-	.page-shell {
-		padding-block-start: var(--sf-spacing-lg);
-	}
 	/* Title-left / actions-right with wrap on narrow viewports.
 	   sl-cluster covers flex + wrap + gap; component picks justification + alignment. */
 	.page-header {

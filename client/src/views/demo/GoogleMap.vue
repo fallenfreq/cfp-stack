@@ -280,7 +280,7 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 			</SfButton>
 		</div>
 
-		<hr class="sf">
+		<hr class="sf" />
 		<div v-if="markerStore.allTags.length" class="sl-cluster sf-gap-xs">
 			<SfChip
 				v-for="tag in markerStore.allTags"
@@ -409,8 +409,9 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 
 <style scoped>
 @layer ui {
+	/* Room between the intro and the map; the room above is the page's (App.vue). */
 	.map-intro {
-		padding-block: var(--sf-spacing-md);
+		padding-block-end: var(--sf-spacing-md);
 	}
 
 	/* The title takes the row; the button sits at the end. */

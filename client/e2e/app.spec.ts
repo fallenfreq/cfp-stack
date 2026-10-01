@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures'
-import { box, breakpoints, settle, steadyRequests, useTheme } from './helpers'
+import { box, breakpoints, openTests, settle, steadyRequests, useTheme } from './helpers'
 
 // App screens: outside documents, a layout measures the layout around it, as before.
 
@@ -23,4 +23,23 @@ test('the site nav swaps its links for a menu button when it is narrow', async (
 		expect(await links.isVisible(), `links at ${viewport}px`).toBe(wide)
 		expect(await menu.isVisible(), `menu button at ${viewport}px`).toBe(!wide)
 	}
+})
+
+test('a page starts as far below the site nav as the nav sits below the top', async ({
+	page,
+	themeClass,
+}) => {
+	const roomBelowNav = async (first: string) => {
+		await page.evaluate(() => window.scrollTo(0, 0))
+		const nav = await box(page.locator('.site-nav'))
+		expect(nav.top, 'the theme leaves room above the nav').toBeGreaterThan(0)
+		const below = (await box(page.locator(first))).top - nav.bottom
+		expect(Math.abs(below - nav.top), `room above ${first}`).toBeLessThanOrEqual(1)
+	}
+	// The editor's bar adds no room of its own; a page with a title adds none either.
+	await openTests(page, themeClass)
+	await roomBelowNav('.editor-top-bar')
+	await page.goto('/contact')
+	await useTheme(page, themeClass)
+	await roomBelowNav('main h1')
 })
