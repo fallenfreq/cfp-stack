@@ -7,13 +7,16 @@ describes the target design; this file enumerates what needs to change in code t
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
-the user), so themes in `@scope` apply on every supported browser. Candidates, the first
-agreed as next:
+the user), so themes in `@scope` apply on every supported browser. Item 8's to-do item bug
+is fixed (2026-10-01). Candidates:
 
-1. **Item 8:** a task item with its own `class` loses its layout classes (`CustomTaskItem`).
-   Add a test case.
-2. **Scroll-frame arrows in documents:** the `sf-is-overflow-*` script doesn't run in pages
+1. **Scroll-frame arrows in documents:** the `sf-is-overflow-*` script doesn't run in pages
    (item 10, logged).
+2. **Multi-select drops a block whose attributes change** (found 2026-10-01, not fixed):
+   multi-select a block, change its class, and it's no longer selected or highlighted. Its
+   position maps as deleted through `setNodeMarkup` (`multiSelect.ts`, `mapResult(pos, 1)`).
+   Checked in Chrome on a to-do item and a paragraph. Not checked: whether the toolbar lets
+   you change attributes while several blocks are selected.
 3. **Tooltips on Safari before 26** (found 2026-10-01, not fixed): `SfTooltip` is placed only
    by anchor positioning, which Safari has from 26, with no fallback, so there it sits in the
    screen's top-left corner. Checked in Chrome with the placement switched off: the Account
@@ -23,9 +26,13 @@ agreed as next:
    theirs also set `::-webkit-scrollbar`).
 4. Bigger: the validator / linter (item 11); WebKit in the layout checks.
 
+Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a Section on the
+test page logs 171 TipTap warnings ("setNode() only supports text block nodes"); editing
+to-do items logs none.
+
 **Layout checks** (added 2026-10-01): `pnpm test:ui` runs
-`client/e2e` with Playwright in the installed Chrome, against the dev server. 60 checks (14 of them
-expected to fail), about 15 seconds.
+`client/e2e` with Playwright in the installed Chrome, against the dev server. 66 checks (14 of them
+expected to fail), about 20 seconds.
 
 - **The stylesheet** is built from the seed in a throwaway database in memory
   (`e2e/globalSetup.ts`, using `e2e/d1Memory.mjs`, which the component preview now imports
@@ -241,17 +248,28 @@ What's pending:
    icons wear `sf-icon`, the popover colour rule moved to the reset, a responsive YouTube
    video's 16:9 box is a reset-layer default (`embeds.ts`, keyed on a rendered
    `data-responsive` marker) so the aspect control's choice wins.
-8. **Found in review 2026-09-30, not fixed:** a task item with its own `class` loses
-   `sl-split sf-gap-md` — TipTap's TaskItem node view sets the node's class attribute over
-   the extension's instead of merging (its `renderHTML` merges); the owning fix is in
-   `CustomTaskItem`. Saved documents may hold `resp-yt` in a video's class (rendered into
-   the iframe before 2.86.0, captured by a code-view round trip); harmless, no CSS uses it.
-   Collapse can shrink a block to zero width. This was checked in Chrome and is now part of item 10
-   (rule 3).
-   **YouTube, older bugs:** pasting a video stores the
-   rendered `width="auto"` / `height="auto"` as real attributes (the code view then shows
-   them), and loses its `resp` width limit (the iframe never renders `resp`, so paste
-   resets it to 36rem).
+8. **Found in review 2026-09-30.**
+    - **Fixed 2026-10-01:** a to-do item with its own `class` lost `sl-split sf-gap-md` (its
+      checkbox went above its text, in the editor and on published pages), and a class
+      changed while editing didn't show until reload. TipTap's TaskItem node view set the
+      item's attributes over the configured ones and updated only the tick; `CustomTaskItem`
+      now merges them as `renderHTML` does, and redraws the item when anything but the tick
+      changes. Checks: `blocks.spec.ts` (twin of a plain item) and `editor.spec.ts`. Also
+      tried in Chrome: Enter, Backspace, undo, a nested list in a redrawn item, and a
+      published page (its server reply swapped in the browser).
+    - Not fixed: a code-view round trip stores `sl-split sf-gap-md` as the item's own class
+      (the saved HTML carries them and parsing reads the whole class list). Harmless, as the
+      item merges them anyway; the same kind of leak as `resp-yt` below.
+    - Not fixed (found 2026-10-01, in the document, not the component): Enter in a to-do item
+      gives the new item the same class and the same `id`, so two items share an id.
+    - Not fixed: saved documents may hold `resp-yt` in a video's class (rendered into the
+      iframe before 2.86.0, captured by a code-view round trip); harmless, no CSS uses it.
+    - Collapse can shrink a block to zero width. This was checked in Chrome and is now part of
+      item 10 (rule 3).
+    - **YouTube, older bugs:** pasting a video stores the
+      rendered `width="auto"` / `height="auto"` as real attributes (the code view then shows
+      them), and loses its `resp` width limit (the iframe never renders `resp`, so paste
+      resets it to 36rem).
 9. **Open:** the `* { transition }` fade in `main.css` is a look (motion) — a theme token
    would move it to the theme (new vocab, undecided). Spec-linter candidates are collected in
    item 11.

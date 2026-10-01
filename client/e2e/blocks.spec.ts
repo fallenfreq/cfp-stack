@@ -1,6 +1,15 @@
 import type { Locator, Page } from '@playwright/test'
 import { expect, test } from './fixtures'
-import { box, breakpoints, css, openTests, placed, setDocumentWidth, settle } from './helpers'
+import {
+	box,
+	breakpoints,
+	css,
+	openTests,
+	placed,
+	setDocumentWidth,
+	settle,
+	taskItemLayout,
+} from './helpers'
 
 // A block rendered by a component is three boxes: the outer box its parent places, the component's
 // root (wearing the block's classes) and a content box holding its blocks. These check that layout
@@ -193,4 +202,12 @@ test("a Card set as a row puts its blocks in the parent's columns", async ({ pag
 			await within(page.locator(`#row-cell-${n}`), page.locator(`#row-column-${n}`)),
 			`cell ${n} sits in column ${n}`,
 		).toBe(true)
+})
+
+test('a to-do item with a class of its own keeps its checkbox beside its text', async ({
+	page,
+}) => {
+	const plain = await taskItemLayout(page.locator('#task-plain'))
+	expect(plain.besideCheckbox).toBe(true)
+	expect(await taskItemLayout(page.locator('#task-own'))).toEqual(plain)
 })

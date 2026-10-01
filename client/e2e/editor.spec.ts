@@ -1,7 +1,16 @@
 import { expect, test } from './fixtures'
-import { box, openTests, placed, selectBlock, settle } from './helpers'
+import {
+	box,
+	nodePosition,
+	openTests,
+	placed,
+	selectBlock,
+	settle,
+	taskItemLayout,
+} from './helpers'
 
-// The editor around the test cases: what's saved, selecting blocks, and the toolbar.
+// The editor around the test cases: what's saved, selecting blocks, editing a to-do item, and
+// the toolbar.
 
 test.beforeEach(async ({ page, themeClass }) => {
 	await openTests(page, themeClass)
@@ -60,4 +69,29 @@ test("the Attributes panel's class row stacks in the narrow panel", async ({ pag
 	)
 	expect(tracks).toBe(1)
 	expect((await box(row)).width).toBeGreaterThan(200)
+})
+
+test('a class given to a to-do item while editing shows at once', async ({ page }) => {
+	const item = page.locator('#task-plain')
+	const before = await taskItemLayout(item)
+	const at = await nodePosition(page, 'task-plain')
+	// As the Attributes panel writes it: new attributes on the item's node.
+	await page.evaluate((at) => {
+		const editor = (document.querySelector('.tiptap') as any).editor
+		const node = editor.state.doc.nodeAt(at)
+		editor.view.dispatch(
+			editor.state.tr.setNodeMarkup(at, null, { ...node.attrs, class: 'sf-depth-1' }),
+		)
+	}, at)
+	await settle(page)
+	await expect(item).toHaveClass(/(^|\s)sf-depth-1(\s|$)/)
+	expect(await taskItemLayout(item)).toEqual(before)
+})
+
+test('ticking a to-do item updates it without redrawing it', async ({ page }) => {
+	const item = page.locator('#task-plain')
+	await item.evaluate((el) => ((el as any).drawnBeforeTicking = true))
+	await item.locator(':scope > label input').check()
+	await expect(item).toHaveAttribute('data-checked', 'true')
+	expect(await item.evaluate((el) => (el as any).drawnBeforeTicking)).toBe(true)
 })

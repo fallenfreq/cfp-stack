@@ -172,6 +172,18 @@ export const measuredBox = (target: Locator): Promise<{ name: string; width: num
 		return { name, width }
 	})
 
+/** How a to-do item lays out its checkbox and its text. */
+export const taskItemLayout = (target: Locator) =>
+	target.evaluate((item) => {
+		const checkbox = item.querySelector(':scope > label')!.getBoundingClientRect()
+		const text = item.querySelector(':scope > div')!.getBoundingClientRect()
+		return {
+			display: getComputedStyle(item).display,
+			besideCheckbox: text.left >= checkbox.right && text.top < checkbox.bottom,
+			gap: Math.round(text.left - checkbox.right),
+		}
+	})
+
 /** The width "hide below" and "show below" see in a document: the page's. */
 export const pageWidth = (page: Page): Promise<number> =>
 	page.locator('.tiptap.ProseMirror').evaluate((doc) => {
