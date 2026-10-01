@@ -9,6 +9,7 @@
 		"build": "vite build --emptyOutDir",
 		"preview": "vite preview",
 		"type-check": "vue-tsc --build",
+		"test:ui": "playwright test",
 		"lint": "eslint --fix",
 		"format": "prettier --write ."
 	},
@@ -50,6 +51,7 @@
 		"zod": "^3.25.76"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.63.0",
 		"@trpc/server": "11.0.0-rc.402",
 		"@types/google.maps": "^3.64.1",
 		"@types/postcss-safe-parser": "^5.0.4",

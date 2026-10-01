@@ -23,6 +23,7 @@
 		"build:deploy": "node scripts/typecheck.mjs --all && pnpm build",
 		"typecheck": "node scripts/typecheck.mjs",
 		"test": "pnpm --filter @somefreq-app/api test",
+		"test:ui": "pnpm --filter @somefreq-app/client test:ui",
 		"dev:client": "pnpm --filter @somefreq-app/client dev",
 		"dev:vite:client": "pnpm --filter @somefreq-app/client dev:vite",
 		"dev:api": "pnpm --filter @somefreq-app/api dev",

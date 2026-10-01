@@ -5,8 +5,52 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
-**Next:** item 10 below (rules that reach through a node view) — plan reviewed, decisions A
-and B pending. **Not yet checked in a browser since 2.86.0:** reseed, then icons (optical
+**Next:** item 10 (rules that reach through a node view) and the layout checks below are
+committed (2026-10-01). Pick the next piece with the user. Candidates, the first recommended:
+
+1. **Themes on Safari 17.0–17.3.** Non-root themes are emitted in `@scope`, which Safari
+   supports from 17.4; the stated floor is Safari 17, so Dark, Pink and user themes silently
+   don't apply there. Either raise the floor to 17.4 (CLAUDE.md, a decision) or emit themes
+   without `@scope` (generator work; keep "a theme rule beats the root rule for the same
+   class").
+2. **Item 8:** a task item with its own `class` loses its layout classes (`CustomTaskItem`).
+   Add a test case.
+3. **Scroll-frame arrows in documents:** the `sf-is-overflow-*` script doesn't run in pages
+   (item 10, logged).
+4. Bigger: the validator / linter (item 11); WebKit in the layout checks.
+
+**Layout checks** (added 2026-10-01): `pnpm test:ui` runs
+`client/e2e` with Playwright in the installed Chrome, against the dev server. 46 checks, about
+15 seconds.
+
+- **The stylesheet** is built from the seed in a throwaway database in memory
+  (`e2e/globalSetup.ts`, using `e2e/d1Memory.mjs`, which the component preview now imports
+  too). The run notes when your local database serves something different.
+- **Theme independence.** Every check runs under the root theme and again under a test theme
+  that differs on purpose (`e2e/testTheme.ts`: twice the spacing, a wide page margin, another
+  font, divide lines as a shadow). It exists only in that throwaway database.
+  `theme.spec.ts` fails if the test theme stops differing.
+- **The checks state behaviour, not looks.**
+    - A component block is compared with a plain twin.
+    - Each collapse case names the box it measures, and is checked to measure it and to stack
+      exactly when that box is at or below its breakpoint (read from the stylesheet).
+- **The demo page** is snapshotted under the root theme only (`e2e/__snapshots__`).
+- **The cases** are on `/editor?seed=tests` (`client/src/config/editor/testContent.html`).
+  Add a case for each layout fix.
+- **Proved against old stylesheets** (`SF_SYSTEM_CSS=<file>`): the pre-item-10 stylesheet
+  fails 19 of the 25 root-theme checks, and the pre-6b one fails only the toolbar check (plus
+  the theme check, since old stylesheets have no test theme).
+
+To try a case by hand first, build it with `editor.commands.setContent(html)`: layout blocks as
+`<layout-section|columns|split|center|card|cover>`, plain blocks as
+`<div data-container class="…">`, and a component with parts of its own as `<tiptap-test>`.
+
+**Fixed with the checks:** `LayoutCard.vue` used `overflow: hidden`, so a block pinned inside a
+Card stuck to the Card instead of the scroll area around it (off by 104px). It now uses
+`overflow: clip` with `display: flow-root`. The demo page doesn't move; only the Cards' display
+value changes in the snapshot.
+
+**Not yet checked in a browser since 2.86.0:** reseed, then icons (optical
 size now follows the font; decide whether in-text icons want `1.1em` in
 `material-symbols.css` — rounded glyphs look smaller), spacing in cards, layouts, lists,
 task lists, quotes and videos, and the toolbar panel rows (`2xs`).
@@ -194,85 +238,263 @@ What's pending:
    the extension's instead of merging (its `renderHTML` merges); the owning fix is in
    `CustomTaskItem`. Saved documents may hold `resp-yt` in a video's class (rendered into
    the iframe before 2.86.0, captured by a code-view round trip); harmless, no CSS uses it.
-   Collapse can shrink a block to zero width (found in review, unchanged — look at it in a
-   browser as its own change): a width container takes no width from its content, so a
-   node-view wrapper, `LayoutCard` or collapse host sitting in a content-sized spot (a
-   cover's centred item, a start/end-aligned item, a cluster item, an `auto` grid track)
-   ends up 0 wide. Every node-view wrapper is a container, and hosts match a collapsing
-   element anywhere inside, so containers also stack up the tree.
+   Collapse can shrink a block to zero width. This was checked in Chrome and is now part of item 10
+   (rule 3).
    **YouTube, older bugs:** pasting a video stores the
    rendered `width="auto"` / `height="auto"` as real attributes (the code view then shows
    them), and loses its `resp` width limit (the iframe never renders `resp`, so paste
    resets it to 36rem).
 9. **Open:** the `* { transition }` fade in `main.css` is a look (motion) — a theme token
-   would move it to the theme (new vocab, undecided). Spec-linter candidates: a
-   `var(--sf-gap)` / `var(--sf-padding)` read with no default where unset isn't "none"; a
-   theme rule setting a layout property on an `sl-` class (validator enforcement is a
-   separate decision).
-10. **NEXT — rules that reach through a node view (planned and reviewed 2026-09-30, nothing
-    written).** A component block is `[data-node-view-wrapper]` > component root (wears the
-    author's classes) > `[data-node-view-content]` > child blocks, in the editor and on
-    published pages (both TipTap). CSS that expects items to be direct children, or a class
-    to sit on the box the parent places, misses:
-    - Theme rules with `>` see only the content box: `sf-divide-y` / `sf-divide-x`
-      (`' > * + *'`) draw no lines inside a section or card block; `:has(> .sl-scroll-x)`
-      misses a scroll area that is a block.
-    - Fixed sl rules for a layout's items: `.sl-inset > *`, `.sl-cluster.sl-scroll-x > *`,
-      `.sl-inset > .sl-bleed`.
-    - Classes that place the block itself (`sl-row`, `sl-pin-*`, `sl-bleed`) land on the
-      component root, but the parent places the wrapper: they do nothing.
-    - `sl-hide-below-*` on a block hides the component but not the wrapper, so its block
-      spacing stays as a gap; it also measures the block's own width (its wrapper is its
-      container) where a plain element measures the layout around it.
+   would move it to the theme (new vocab, undecided). Spec-linter candidates are collected in
+   item 11.
+10. **NEXT — rules that reach through a node view (design signed off 2026-10-01; steps 1–7
+    done, awaiting review and commit).**
+    - **The structure.** A component block is `[data-node-view-wrapper]` (the box the parent
+      places) > component root (wears the author's classes) > `[data-node-view-content]` >
+      child blocks. This holds in the editor and on published pages; both are TipTap.
+    - **What fails, confirmed in Chrome against a plain element as the control:**
+        - `sf-divide-*` draws no lines in a section or card block.
+        - The scroll frame misses a block.
+        - `sl-bleed`, `sl-row` and `sl-pin-*` on a block do nothing.
+        - A hidden block leaves a double gap.
+        - A block is 0 wide in a cluster, cover, aligned layout, table cell or `auto` column.
+        - Top-level elements never hide.
+        - A component that is a scrolling cluster squeezes its items.
 
-    **Plan (reviewed; alternatives ranked worse — see below):**
-    - One helper, `throughNodeViews(selector)`, in a new `api/src/domain/css/nodeViewSelectors.ts`
-      (new names, approved in principle, confirm before writing). For each `>` step it adds
-      the step through a content box, compactly: `:is(A, A > :where([data-node-view-content])) > X`
-      (same weight); inside `:has()` it lists alternatives instead. The generator applies it
-      to every DB rule selector, sorting on the original selector first so alphabet ties
-      don't move. Theme rules are looks, so their copies land on the element wearing the
-      class; fixed sl CSS places boxes, so its copies land on the wrapper
-      (`:where([data-node-view-wrapper]):has(> .x)`). Split by owner, no per-rule flag.
-    - Splitter tracks quotes, `[...]` and parentheses. `*` steps skip the gap cursor
-      (`.ProseMirror-widget`, as `blockSpacing.ts` does) so `sf-divide-y` draws no line by
-      it. Wrapper copies only where the step names a class/attribute (`> :first-child` would
-      match every component inside its wrapper).
-    - Wrapper copies for `sl-row`, `sl-pin-*`, `sl-bleed` (inside an inset) and hide/show;
-      the component root's own hide/show rule is switched off so the two can't disagree.
-    - sl-inset's content box steps aside like the other layouts; `STEP_ASIDE_LAYOUT_SELECTOR`
-      goes from `nodeViews.ts` and `blockSpacing.ts` in the same change (else inset blocks
-      get margin plus gap). Tapping an inset's gaps then selects the block, as other layouts do.
-    - Dropped: `sl-object` through a content box (the box has no height to fill; images wear
-      `sl-object-*` directly). Sibling rules between two component blocks (`.x + .y`): none
-      in the seed, `* + *` works; linter candidate.
-    - Test: diff generated CSS against the seed; a preview page with the real wrapper /
-      content-box structure; check in a browser.
+    **Design: three rules.** Measured with trial CSS in Chrome. The demo page doesn't change
+    at full, 600 or 360px; the only size change is a table that now fits its column. The
+    floating toolbar, the multi-select drag preview and the site nav swap are unchanged.
+    - **Rule 1: rules are written for the content tree, and the generator maps them onto the
+      DOM.**
+        - One helper, `throughNodeViews(selector, options)`, in
+          `api/src/domain/css/nodeViewSelectors.ts`. It imports nothing, and its tests are in
+          `api/test/nodeViewSelectors.test.mjs`.
+        - `subject` says which element a rule styles: `'wearer'`, the element wearing the
+          classes (looks; every theme rule), or `'placed'`, the box the parent places (fixed
+          placement CSS: inset items, bleed, a scrolling cluster's items, pin/hide/show).
+        - `placementClasses` and `stepAside` come from `slLayout.ts`.
+        - Each step splits in two. Position and sibling tests (`:first/last/only-child`,
+          `:nth-*`, `+`, `~`) are tested on the box the parent places. Classes, element types and
+          the look go on the element wearing the classes.
+        - When a layout's content box steps aside, its first block counts as the next sibling of
+          the root's last own part. So a decorated component's slot gets its divide line.
+        - Inserted tests sit in `:where()`, so weights don't change.
+        - The generator sorts and keys on the selector as written and maps only when emitting, so
+          alphabet ties don't move.
+        - A nested `:has()` throws, because the browser would drop the whole rule.
+        - The gap cursor isn't skipped. While it sits before a divided layout's first block,
+          that block shows a line. This is brief, and the cursor itself draws nothing.
+        - Fixed sl CSS goes through the same helper. `sl-object` is the exception to decide at
+          step 3: a content box has no height to fill.
+    - **Rule 2: placement classes are worn by the box the parent places.**
+        - A content extension adds a ProseMirror node decoration carrying the node's placement
+          tokens, so they land on the node view's outer box. This covers every node view, in the
+          editor and on published pages, and is never saved. TipTap already binds the wrapper's
+          class to decorations.
+        - `PLACEMENT_CLASSES` lives in `slLayout.ts` and is exported to the client: `sl-row` and
+          `sl-bleed`, plus the prefixes `sl-pin-`, `sl-hide-below-` and `sl-show-below-`.
+        - Pin, hide and show act only on the placed box. Row and bleed also act on the root, for
+          subgrid and the inset variables.
+        - Theme rules that name a placement class get `:where(:not([data-node-view-wrapper]))`, so
+          a pinned element's shadow draws once.
+    - **Rule 3: width containers.**
+        - **Collapse measures the space the block has.** A component block's wrapper is a
+          container when the block itself collapses. `sl-` layouts holding a collapse stay hosts;
+          plain elements measure the layout around them.
+        - **Inside a box sized by its content, nothing measures** (documents only). Queries go up
+          to the next box; otherwise that box is 0 wide. `SIZED_BY_CONTENT_SELECTOR` in
+          `slLayout.ts` covers:
+            - table cells, `sl-cluster` and `sl-cover`;
+            - any layout aligned sideways (`sl-align-x-*`, which now includes Section's align);
+            - the first column of a split with no `--sl-template` (its `auto` default).
 
-    **Decisions pending (both change collapse — ask):**
-    - A. Every wrapper being a width container is the root of several failures: a block in a
-      cluster or an `auto` split column is 0 wide **today**; subgrid is off inside a
-      container (`sl-row` on a wrapper can't work); scrolling-cluster blocks would shrink
-      to 0. Recommended: a wrapper is a container only when something inside it collapses,
-      hides or shows (the test the layout hosts use). Left over: a collapsing block in a
-      cluster is still 0 wide; `sl-row` on a block holding a collapsing element.
-    - B. Hiding through the wrapper measures the space around the block, so a top-level
-      block needs a container above it — there is none, and it would stop hiding.
-      Recommended: `.tiptap` is a width container (always full width, safe); "hide below
-      md" means the content area is narrower than md. Plain top-level elements gain it too
-      (today they never hide).
+            The check covers every ancestor, not just the parent (cluster → card → section).
 
-    **Alternatives reviewed and ranked worse:** wrapper = component root (TipTap allows it;
-    still needs the rewrite for content boxes and loses each block's width container);
-    classes on the content box (rejected by the user; TipTap can't make the root the
-    content box without replacing its node view); separate HTML for published pages (two
-    paths, editor still needs it); JS copying classes to the wrapper (double looks, flash,
-    doesn't fix `>`).
+        - **Inside documents, hide and show measure the document.** `.tiptap.ProseMirror` is a
+          named container (`sf-document`); hide/show inside it query it by name, and layouts there
+          don't become containers for hide/show. "Hide below md" means the page is narrower than
+          md. App chrome, such as the site nav swap, keeps today's behaviour.
+        - **A popover is laid out on its own** (step 6b). What's inside one doesn't make the
+          layouts around it measure; inside it, layouts measure as usual.
+        - **Nothing else is a container.**
+            - Chrome boxes aren't: the fit-content toolbar would be 0 wide.
+            - `LayoutCard.vue` loses its own `container-type`.
+            - Not every `.tiptap` is: the multi-select drag preview has that class.
 
-    **Logged, outside this change:** scroll-frame arrows can't show in documents (the
-    `sf-is-overflow-*` classes come from a script only admin lists / toolbars run); a hidden
-    last block leaves the previous block's bottom space (plain elements too); non-root
-    themes use `@scope`, which needs Safari 17.4 (below it they're dropped).
+    - **Housekeeping in the same change** (done in step 4).
+        - The node-view rules move into `@layer sl-layout`; they were unlayered.
+        - `sl-inset`'s content box steps aside like the other layouts, so
+          `STEP_ASIDE_LAYOUT_SELECTOR` is gone and everything reads `GAP_LAYOUT_SELECTOR`.
+
+    **Order: one file at a time.**
+    1. **Done 2026-10-01:** `nodeViewSelectors.ts` plus its tests. 8 tests pass, including that
+       every rewrite keeps its weight. In Chrome, its output in place of the hand-written trial
+       CSS gave identical results on the demo page (620 elements at full, 600 and 360px) and on
+       the divide, frame, bleed and scrolling-cluster cases.
+    2. **Done 2026-10-01:** `generateCss.ts` rewrites every theme rule as a look after sorting
+       (`forNodeViews`). `PLACEMENT_CLASSES` was added to `slLayout.ts`.
+        - A selector the helper can't rewrite is emitted as written with a console warning. The
+          seed has none.
+        - A descendant step inside `:where()` (`a:where(p *)`) stays as written.
+        - Served stylesheet: 592 rules before and after, and Chrome parses all 565 style rules;
+          +4.7% bytes.
+        - Demo page unchanged at full, 600 and 360px (boxes, borders, overlays).
+        - Divide lines now draw in section and card blocks and in a decorated component's slot.
+          A quiet card's line moved from its wrapper to the card.
+        - The scroll frame's overlays reach a scroll area that is a block. Arrows still need the
+          overflow script, which pages don't run (logged).
+    3. **Done 2026-10-01:** `slLayout.ts`, `slCombined.ts` and `slObject.ts` route every rule
+       with a child or sibling step through `forPlacement` / `forLooks` (shared in `slLayout.ts`;
+       the generator's theme rules use `forLooks` too).
+        - Inset items, bleed's column and a scrolling cluster's items are placement. A bleeding
+          inset's inherited edges and `sl-object` are looks.
+        - Pin, hide and show move to step 6, together with the decoration that puts them on the
+          wrapper. Doing it earlier would stop them working on component blocks in between.
+        - The sized-by-content list goes with step 5.
+        - Checked in Chrome: 592 rules, all parse; demo page unchanged at full, 600 and 360px.
+        - A Card block set to scroll sideways keeps its items' natural width (465px on one line,
+          was 420px on two).
+        - An image in a Card set to cover fills the card (was spilling out at its own height).
+        - Bleed inside a card used as an inset needs step 4.
+    4. **Done 2026-10-01:** `nodeViews.ts`, `blockSpacing.ts` and `slLayout.ts`. An inset's
+       content box steps aside, `STEP_ASIDE_LAYOUT_SELECTOR` is deleted (the helper's
+       `stepAside` is `GAP_LAYOUT_SELECTOR`), and the node-view rules are in `@layer sl-layout`.
+        - Checked in Chrome: demo page unchanged at full, 600 and 360px, including every box's
+          display and container type.
+        - Bleed inside a card used as an inset reaches the card's edges (1326 of 1326, was
+          1294).
+        - Spacing between blocks in an inset block stays 16px (now the gap, was margins).
+        - Clicking in an inset block's gap selects the block, as for a Section (it used to place
+          the text cursor).
+          4b. **Done 2026-10-01: alignment.** On every layout, x is sideways and y is up and down.
+        - Before, on a stack `sl-align-y-*` moved items sideways and `sl-align-x-*` did nothing.
+          Now a stack aligns sideways with `align-items` and up and down with `justify-content`,
+          and a cluster aligns sideways with `justify-content` (`slLayout.ts`).
+        - New class `sl-align-x-center`. Seed descriptions corrected; seed 2.87.0, reseeded.
+        - LayoutSection's `align` is now a class instead of an inline style, so CSS can see it.
+          Saved pages are unchanged (they store `align`).
+        - Spec alignment table updated.
+        - Checked in Chrome: demo page unchanged at full, 600 and 360px. Site nav, toasts and
+          TiptapTest's decoration row are unchanged.
+        - Follow-ups:
+            - `PromptModal.vue`, `StackableSheet.vue` and `TiptapCodeBlock.vue` have comments
+              saying `sl-align-x-*` is grid-only. They could now use `sl-align-x-end`.
+            - LayoutColumns and LayoutSplit still write their `align` (up and down) as an inline
+              style. That's harmless, but it isn't a class.
+    5. **Done 2026-10-01:** rule 3 containers plus ideas A and B. Files: `generateCss.ts`
+       (collapse layer), `nodeViews.ts`, `slLayout.ts` (`SIZED_BY_CONTENT_SELECTOR`,
+       `SWAP_CLASS_SELECTOR`), and `LayoutCard.vue`, which loses its own `container-type`.
+        - The document is a named container (`sf-document`).
+        - A wrapper is a container only when its block collapses.
+        - A layout becomes a container for a collapse anywhere, and for a swap only outside
+          documents.
+        - Inside a document, hide and show query `sf-document`; elsewhere they query the
+          nearest container, as before.
+        - Idea A covers documents only: in app screens, popovers sit inside rows. The
+          Attributes panel's class row, inside the toolbar's cluster, stopped stacking when A
+          applied everywhere.
+        - Checked in Chrome:
+            - Demo page: column counts unchanged at full, 600 and 360px. The only size change is
+              the Lists / Tables row: the table used to overflow its 229px column, and the column
+              now fits it at 238px.
+            - Cases A1–A5, B1, T1, S1, C1, C2 and H1 all fixed or kept (see the design results).
+            - A centred Section with columns now stacks instead of vanishing.
+            - The site nav swap and the open Attributes panel are unchanged.
+    6. **Done 2026-10-01:** placement classes on blocks.
+        - The list lives in its own import-free file, `api/src/domain/css/placementClasses.ts`
+          (with `isPlacementClass`), exported as `@somefreq-app/api/placementClasses`. That's
+          the client's first runtime import from api, and the generator stays out of the client
+          bundle.
+        - `client/src/editor/extensions/placementClasses.ts` (`PlacementClasses`, in
+          `getContentExtensions`) adds a node decoration with the node's placement tokens. The
+          decorations are rebuilt only when the doc changes.
+        - Pin (`slLayout.ts`) and hide/show in documents (collapse layer) go through
+          `forPlacement`. Row and bleed apply as before.
+        - The helper now sees that `:is()` / `:where()` naming a class rule the wrapper out
+          (9 tests).
+        - Checked in Chrome:
+            - wrappers get the tokens; saved JSON unchanged; `ProseMirror-selectednode` kept
+              alongside;
+            - pin sticks (0 from the scroll area's top after scrolling 120, was −120);
+            - a hidden card leaves a 16px gap (was 32);
+            - a row's cells line up with the parent's 3 columns (were all in the first);
+            - bleed reaches 1326 (was 1278);
+            - demo page unchanged.
+        - Not checked on a published page (same extensions, so expected to match).
+          6b. **Done 2026-10-01: toolbar.** A popover is laid out on its own, so what's inside one no
+          longer makes the layouts around it measure; inside a popover, layouts measure as before
+          (`hostsFor` in the collapse layer).
+        - Fixes the node toolbar that shrank to its handle: 878px with every tool, was 52px with
+          826px hidden.
+        - The open Attributes panel is unchanged: its class row stacks in the 300px panel.
+        - Site nav swap and demo page unchanged.
+    7. **Done 2026-10-01: the spec** (`sf-system.md`).
+        - "Container-responsive collapse" rewritten: what each box measures, content-sized spots,
+          popovers, hide/show in documents. The line saying a typed `sl-columns` in a split
+          measures its own space is gone; the typed-layout limit is stated instead.
+        - "Editor integration" gains "Component blocks": the three boxes, how rules are
+          rewritten, placement classes on the outer box, and the component rules.
+        - New "Validator and linter (not built)" section, which replaces item 11's list.
+        - The side-margins limit "a block can't be a direct child of an inset yet" is gone.
+        - Two corrections, checked in Chrome: a named container still answers unnamed queries
+          and is still 0 wide in a row, so the component rule says to avoid width containers
+          and name any you add (the lint candidate was "no unnamed container on the root").
+          `overflow: hidden` around a pinned element stops it sticking (−120 vs 0 with `clip`).
+          The sibling-rule lint candidate was dropped: the helper handles `.x + .y` between
+          component blocks.
+
+    **Open, decide when reached:**
+    - Names approved: `nodeViewSelectors.ts`, `throughNodeViews`, `forLooks` / `forPlacement`,
+      `PLACEMENT_CLASSES`, `SIZED_BY_CONTENT_SELECTOR`, `sf-document` and `PlacementClasses`.
+    - Resolved: Section's align is a class (step 4b). The `auto` split column is spotted by the
+      missing inline `--sl-template`, as agreed.
+
+    **Known limits, to document:**
+    - Typed layouts measure the layout around them; layout blocks measure their own space. In a
+      narrow split side, a typed grid stacks only when the whole split is narrow.
+    - A component whose own CSS sizes its slot by content, without `sl-` classes, still makes a
+      collapsing block inside it 0 wide. In the component rules and the validator section.
+
+    **Component-creator contract, for the spec:**
+    - Render one root element and let attributes fall through (Vue's default).
+    - The blocks are your root's items only if `<slot />` is a direct child of it.
+    - Don't bake placement classes on your root; give the node a default class.
+    - Use a named container for your own width rules.
+    - Prefer `overflow: clip`.
+
+    **Alternatives ranked worse:**
+    - Layout blocks as one-box nodes: rejected. It makes two kinds of block and loses
+      selecting a block by clicking outside its content.
+    - Classes on the content box: rejected.
+    - Separate HTML for published pages: two paths, and the editor still needs the fix.
+    - Copying classes onto the wrapper from code: a Vue class binding would clear
+      ProseMirror's selection class. Decorations are TipTap's own path.
+    - The wrapper as `display: contents`: this removes rule 2, but the wrapper's rect becomes
+      0×0, and the drag handle, floating toolbar, block menu and drag image all read it.
+    - Every wrapper a container (today): blocks vanish in content-sized spots.
+    - Chrome boxes as hosts.
+    - Own-width collapse by grid maths: equal columns only, and it can't express a split.
+
+    **Logged, outside this change** (found in review; these predate it):
+    - ~~App screens: with a block selected, the floating toolbar shrinks to its handle.~~
+      Fixed in step 6b.
+    - ~~`vue-tsc` reports TS6307 for `client/src/components/siteNav.ts`.~~ Fixed 2026-10-01:
+      the name clashed with `SiteNav.vue` (they differ only in case, the same name on macOS),
+      so the pre-commit type check failed on any client change. It's now `navItems.ts`.
+    - `sl-row` or `sl-inset` on a Section or Center loses to its baked `sl-stack`.
+    - A component root doesn't fill its stretched wrapper (TiptapTest is 235 of 520px).
+      LayoutCard patches this with `height: 100%`.
+    - TiptapCodeBlock puts the author's classes on a nested `pre`. That node view is editor
+      only, so placement and looks differ from published pages.
+    - Scroll-frame arrows can't show in documents: the `sf-is-overflow-*` script runs only in
+      admin lists and toolbars.
+    - Atom components can't be selected by clicking.
+    - A hidden last block leaves the previous block's bottom space (plain elements too).
+    - Non-root themes use `@scope`, which needs Safari 17.4.
+    - The class picker offers only gap, padding, radius and collapse.
+
+11. **Linter / validator (not built).** The rules are in the spec, "Validator and linter (not
+    built)"; add new candidates there.
 
 ## Schema notes
 

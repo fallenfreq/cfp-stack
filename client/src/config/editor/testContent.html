@@ -1,0 +1,290 @@
+<!--
+	Layout test cases, opened with /editor?seed=tests. Each heading says what you should see; the
+	checks in client/e2e find the cases by id and measure the same things (pnpm test:ui).
+	Every case here is known to work; add a case when you fix something.
+-->
+<h1>Layout test cases</h1>
+<p>
+	Each heading says what you should see. The checks in <code>client/e2e</code> measure the same
+	things at several widths, under the root theme and a deliberately different test theme.
+</p>
+
+<h2>Blocks rendered by a component</h2>
+
+<h3>Divide lines in a Section look like those in a plain stack, and the card's is on the card</h3>
+<layout-section id="divide-section" class="sf-gap-sm sf-divide-y">
+	<p>One</p>
+	<p>Two</p>
+	<layout-card class="sf-size-md"><p>A card</p></layout-card>
+</layout-section>
+<div data-container id="divide-section-twin" class="sl-stack sf-gap-sm sf-divide-y">
+	<p>One</p>
+	<p>Two</p>
+	<div data-container class="sf-depth-1 sf-size-md"><p>A plain card</p></div>
+</div>
+
+<h3>Divide lines in a Card look like those in a plain card</h3>
+<layout-card id="divide-card" class="sf-size-md sf-divide-y">
+	<p>One</p>
+	<p>Two</p>
+	<p>Three</p>
+</layout-card>
+<div data-container id="divide-card-twin" class="sf-depth-1 sf-size-md sf-divide-y">
+	<p>One</p>
+	<p>Two</p>
+	<p>Three</p>
+</div>
+
+<h3>Divide lines in a component with parts of its own: its slot's blocks get the same line</h3>
+<tiptap-test id="divide-slot" class="sf-divide-y">
+	<p>Slot one</p>
+	<p>Slot two</p>
+</tiptap-test>
+
+<h3>A scroll frame works around a block that scrolls, as around a plain box</h3>
+<div data-container id="frame-block" class="sl-scroll-frame">
+	<layout-section class="sl-scroll-x"><p>A Section that scrolls sideways</p></layout-section>
+</div>
+<div data-container id="frame-plain" class="sl-scroll-frame">
+	<div data-container class="sl-scroll-x"><p>A plain box that scrolls sideways</p></div>
+</div>
+
+<h3>A Card that scrolls sideways keeps each item on one line</h3>
+<layout-card id="scroll-card" class="sf-size-md sl-cluster sl-scroll-x sf-gap-sm">
+	<p>Item one, with a line of text long enough to wrap if it were squeezed</p>
+	<p>Item two, with a line of text long enough to wrap if it were squeezed</p>
+	<p>Item three, with a line of text long enough to wrap if it were squeezed</p>
+</layout-card>
+
+<h3>An image set to cover fills its Card</h3>
+<layout-card id="cover-card" class="sl-stack sl-aspect-16-9 sl-object-cover">
+	<img src="/favicon.png" />
+</layout-card>
+
+<h3>A Card set to bleed reaches the edges of the inset around it</h3>
+<div data-container id="inset" class="sl-inset">
+	<p id="inset-first">On the line</p>
+	<layout-card id="inset-bleed" class="sf-size-md sl-bleed"><p>Edge to edge</p></layout-card>
+	<p id="inset-last">On the line</p>
+</div>
+
+<h3>A Card used as an inset: a block set to bleed reaches the card's edges</h3>
+<layout-card id="card-inset" class="sf-size-md sl-inset">
+	<p id="card-inset-first">On the card's line</p>
+	<div data-container id="card-inset-bleed" class="sl-bleed sf-depth-2">
+		<p>Edge to edge of the card</p>
+	</div>
+	<p id="card-inset-last">On the card's line</p>
+</layout-card>
+
+<h3>A pinned Card stays at the top of its scroll area</h3>
+<div data-container id="pin-area" class="sl-scroll-y" style="height: 200px">
+	<layout-card id="pin-card" class="sf-size-md sl-pin-top"><p>Pinned</p></layout-card>
+	<p>Filler</p>
+	<p>Filler</p>
+	<p>Filler</p>
+	<p>Filler</p>
+	<p>Filler</p>
+	<p>Filler</p>
+	<p>Filler</p>
+	<p>Filler</p>
+	<p>Filler</p>
+	<p>Filler</p>
+	<p>Filler</p>
+	<p>Filler</p>
+</div>
+
+<h3>A block pinned inside a Card stays at the top of the scroll area around the card</h3>
+<div data-container id="pin-in-card-area" class="sl-scroll-y" style="height: 200px">
+	<layout-card class="sf-size-md">
+		<p id="pin-in-card" class="sl-pin-top">Pinned inside the card</p>
+		<p>Filler</p>
+		<p>Filler</p>
+		<p>Filler</p>
+		<p>Filler</p>
+		<p>Filler</p>
+		<p>Filler</p>
+		<p>Filler</p>
+		<p>Filler</p>
+		<p>Filler</p>
+		<p>Filler</p>
+		<p>Filler</p>
+		<p>Filler</p>
+	</layout-card>
+</div>
+
+<h3>Below md the Card is hidden and leaves one gap, not two</h3>
+<layout-section id="hide-section" class="sf-gap-md">
+	<p id="hide-above">Above</p>
+	<layout-card id="hide-card" class="sf-size-md sl-hide-below-md"
+		><p>Hidden below md</p></layout-card
+	>
+	<p id="hide-below">Below</p>
+</layout-section>
+
+<h3>A Card set as a row puts its blocks in the parent's columns</h3>
+<layout-columns id="row-parent" columns="3" class="sf-gap-md">
+	<p id="row-column-1">Column 1</p>
+	<p id="row-column-2">Column 2</p>
+	<p id="row-column-3">Column 3</p>
+	<layout-card id="row-card" class="sl-row">
+		<p id="row-cell-1">Cell 1</p>
+		<p id="row-cell-2">Cell 2</p>
+		<p id="row-cell-3">Cell 3</p>
+	</layout-card>
+</layout-columns>
+
+<h2>Collapse</h2>
+<p>
+	Columns stack when the box they measure is at or below their breakpoint; each heading says which
+	box that is. Nothing is 0 wide.
+</p>
+
+<h3>A1: Columns of Cards in a Cover measure the page</h3>
+<layout-cover minHeight="compact">
+	<h2>Hero</h2>
+	<layout-columns id="a1-columns" columns="3" class="sf-gap-md sl-collapse-sm">
+		<layout-card class="sf-size-md"><p>Feature one</p></layout-card>
+		<layout-card class="sf-size-md"><p>Feature two</p></layout-card>
+		<layout-card class="sf-size-md"><p>Feature three</p></layout-card>
+	</layout-columns>
+</layout-cover>
+
+<h3>A2: Columns in a centred Section measure the Section</h3>
+<layout-section id="a2-section" align="center">
+	<p>Intro</p>
+	<layout-columns id="a2-columns" columns="3" class="sf-gap-md sl-collapse-sm">
+		<p>One</p>
+		<p>Two</p>
+		<p>Three</p>
+	</layout-columns>
+</layout-section>
+
+<h3>A3: Columns in a row measure the row</h3>
+<div data-container id="a3-row" class="sl-cluster">
+	<p>Label</p>
+	<layout-columns id="a3-columns" columns="3" class="sf-gap-md sl-collapse-sm">
+		<p>One</p>
+		<p>Two</p>
+		<p>Three</p>
+	</layout-columns>
+</div>
+
+<h3>A4: a typed grid in a Section in a plain card in a row measures the row</h3>
+<div data-container id="a4-row" class="sl-cluster">
+	<div data-container id="a4-card" class="sf-depth-1">
+		<layout-section class="sf-gap-sm">
+			<p>In a section</p>
+			<div data-container id="a4-columns" class="sl-columns sl-collapse-sm">
+				<p>a</p>
+				<p>b</p>
+				<p>c</p>
+			</div>
+		</layout-section>
+	</div>
+</div>
+
+<h3>A5: a tagline in a Cover hides when the page is below sm</h3>
+<layout-cover minHeight="compact">
+	<layout-section class="sf-gap-sm">
+		<h1>Big title</h1>
+		<p id="a5-tagline" class="sl-hide-below-sm">Tagline that hides on small screens</p>
+	</layout-section>
+</layout-cover>
+
+<h3>B1: in a narrow Centre, a paragraph hides only when the page is below md</h3>
+<layout-center maxWidth="3xl" class="sf-gap-md">
+	<p>Always shown</p>
+	<p id="b1-hidden" class="sl-hide-below-md">Hidden below md</p>
+</layout-center>
+
+<h3>T1 and T2: a Section and Columns in table cells measure the page</h3>
+<table>
+	<tbody>
+		<tr>
+			<td><p>Short</p></td>
+			<td>
+				<layout-section id="t1-section" class="sf-gap-sm">
+					<p>In a cell</p>
+					<div data-container id="t1-columns" class="sl-columns sl-collapse-sm">
+						<p>a</p>
+						<p>b</p>
+						<p>c</p>
+					</div>
+				</layout-section>
+			</td>
+			<td>
+				<layout-columns id="t2-columns" columns="3" class="sf-gap-md sl-collapse-sm">
+					<p>One</p>
+					<p>Two</p>
+					<p>Three</p>
+				</layout-columns>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<h3>S1: Columns in the first column of a typed split with no column widths measure the split</h3>
+<div data-container id="s1-split" class="sl-split">
+	<layout-columns id="s1-columns" columns="3" class="sf-gap-md sl-collapse-sm">
+		<p>One</p>
+		<p>Two</p>
+		<p>Three</p>
+	</layout-columns>
+	<p>Main column text that takes the rest of the row.</p>
+</div>
+
+<h3>C1: a Card in a row</h3>
+<div data-container class="sl-cluster">
+	<layout-card id="c1-card" class="sf-size-md"><p>A card in a row</p></layout-card>
+	<p>Next</p>
+</div>
+
+<h3>C2: Columns in the narrow side of a Split measure that side, so they stack</h3>
+<layout-split split="2/3" class="sf-gap-md">
+	<p>Narrow side text</p>
+	<layout-columns id="c2-columns" columns="3" class="sf-gap-md sl-collapse-sm">
+		<p>x</p>
+		<p>y</p>
+		<p>z</p>
+	</layout-columns>
+</layout-split>
+
+<h3>H1: a top-level paragraph hides when the page is below md</h3>
+<p id="h1-hidden" class="sl-hide-below-md">Top-level text hidden below md</p>
+
+<h2>Alignment</h2>
+<p>On every layout, x is sideways and y is up and down.</p>
+
+<h3>A stack aligned x end: its item sits on the right</h3>
+<div data-container id="align-stack-x-end" class="sl-stack sl-align-x-end">
+	<p id="align-stack-x-end-item">Right</p>
+</div>
+
+<h3>A stack aligned x centre: its item sits in the middle</h3>
+<div data-container id="align-stack-x-center" class="sl-stack sl-align-x-center">
+	<p id="align-stack-x-center-item">Centre</p>
+</div>
+
+<h3>A stack aligned y centre: its item sits halfway down</h3>
+<div
+	data-container
+	id="align-stack-y-center"
+	class="sl-stack sl-align-y-center"
+	style="min-height: 120px"
+>
+	<p id="align-stack-y-center-item">Middle</p>
+</div>
+
+<h3>A Section aligned centre: its item sits in the middle</h3>
+<layout-section id="align-section" align="center">
+	<p id="align-section-item">Centre</p>
+</layout-section>
+
+<h3>A row aligned x end: its items sit on the right</h3>
+<div data-container id="align-cluster-x-end" class="sl-cluster sl-align-x-end">
+	<p>A</p>
+	<p id="align-cluster-x-end-last">B</p>
+</div>
+
+<p>End of the test cases.</p>

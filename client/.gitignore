@@ -17,6 +17,11 @@ coverage
 /cypress/videos/
 /cypress/screenshots/
 
+# Playwright (e2e)
+/test-results/
+/playwright-report/
+/blob-report/
+
 **/_demos
 
 # Editor directories and files

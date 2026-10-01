@@ -48,6 +48,8 @@ The full-stack experience runs at **8788** (wrangler serves both the API and the
 | `pnpm dev`                    | Start both servers                                                      |
 | `pnpm build`                  | Build client + API                                                      |
 | `pnpm typecheck`              | Type-check staged packages (`--all`: every package). Pre-commit runs it |
+| `pnpm test`                   | Unit tests (`api/test`, Node's built-in runner)                         |
+| `pnpm test:ui`                | Layout checks in Chrome (`client/e2e`, Playwright)                      |
 | `pnpm migrate:api`            | Generate Drizzle migration files                                        |
 | `pnpm migrate:push:local:api` | Apply migrations to local D1                                            |
 | `pnpm migrate:push:api`       | Apply migrations to production D1                                       |
@@ -98,5 +100,12 @@ The theme system's spec is `client/src/assets/sf-system.md`; open work and where
   `cd api && ../node_modules/.bin/tsc --noEmit -p tsconfig.src.json` (and
   `tsconfig.functions.json`; `tsc -p .` checks nothing).
 - Component preview: `node --no-warnings client/preview/build.mjs` (`--serve` → :4173).
+- Layout checks: `pnpm test:ui` runs `client/e2e` in the installed Chrome against the dev
+  server (8788, started if needed), with a stylesheet built from the seed in memory. Each runs
+  under the root theme and a deliberately different test theme (`e2e/testTheme.ts`, never
+  seeded), so checks state behaviour, not looks or pixels. The cases are on
+  `/editor?seed=tests`; add one for each layout fix. The demo-page snapshot fails on any move;
+  accept an intended one with `pnpm test:ui --update-snapshots`. `SF_SYSTEM_CSS=<file>` checks
+  another stylesheet.
 - Commit only when asked. Browser floor is Safari 17; no compat code below it.
 - Bumping `api/src/domain/seedVersion.ts` needs a reseed (`pnpm seed:local`).

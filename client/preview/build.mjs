@@ -11,13 +11,13 @@
 // Pages carry a small script that switches themes and emulates useScrollOverflow
 // (toggles sf-is-overflow-* on sl-scroll-x / sl-scroll-y) so overflow treatments show.
 import vue from '@vitejs/plugin-vue'
-import { cpSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 import Components from 'unplugin-vue-components/vite'
 import { createServer, preprocessCSS } from 'vite'
 import { compileStyle, parse } from 'vue/compiler-sfc'
-import { createMemoryD1 } from './d1Memory.mjs'
+import { memoryDatabase } from '../e2e/d1Memory.mjs'
 
 const previewDir = dirname(fileURLToPath(import.meta.url))
 const clientDir = dirname(previewDir)
@@ -27,15 +27,6 @@ const outDir = join(previewDir, 'out')
 
 const started = Date.now()
 const log = (msg) => console.log(`[preview] ${msg}`)
-
-// drizzle-orm is an api dependency; import its ESM d1 entry from there.
-async function importDrizzleD1() {
-	const pkgDir = realpathSync(join(apiDir, 'node_modules/drizzle-orm'))
-	const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'))
-	const entry = pkg.exports['./d1'].import
-	const file = typeof entry === 'string' ? entry : entry.default
-	return import(pathToFileURL(join(pkgDir, file)).href)
-}
 
 const renderedSfcs = new Set()
 const server = await createServer({
@@ -81,8 +72,7 @@ async function main() {
 		cpSync(join(clientDir, 'public'), outDir, { recursive: true })
 
 		// 1. sf-system.css
-		const { drizzle } = await importDrizzleD1()
-		const db = drizzle(createMemoryD1(join(apiDir, 'migrations')))
+		const db = await memoryDatabase(apiDir)
 		const { seed } = await load(join(apiDir, 'src/domain/seed.ts'))
 		await seed(db)
 		const { emitStylesheet } = await load(join(apiDir, 'src/domain/generateCss.ts'))

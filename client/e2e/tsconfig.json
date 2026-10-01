@@ -1,0 +1,19 @@
+{
+	"extends": "@tsconfig/node20/tsconfig.json",
+	"include": ["./**/*", "../playwright.config.ts"],
+	"compilerOptions": {
+		"composite": true,
+		"noEmit": true,
+		"tsBuildInfoFile": "../node_modules/.tmp/tsconfig.e2e.tsbuildinfo",
+
+		// Checks run in Node, and the functions they pass to the page run in the browser.
+		"lib": ["ES2023", "DOM", "DOM.Iterable"],
+		"types": ["node"],
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"verbatimModuleSyntax": true,
+		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": true,
+		"isolatedModules": true
+	}
+}
