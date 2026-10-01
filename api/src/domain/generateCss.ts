@@ -16,7 +16,15 @@ import { EMBEDS } from './css/embeds.js'
 import { NODE_VIEWS } from './css/nodeViews.js'
 import { RESET } from './css/reset.js'
 import { SL_COMBINED } from './css/slCombined.js'
-import { COLLAPSE_CLASS_SELECTOR, COLLAPSE_HOST_SELECTOR, SL_LAYOUT } from './css/slLayout.js'
+import {
+	COLLAPSE_CLASS_SELECTOR,
+	COLLAPSE_HOST_SELECTOR,
+	SIZED_BY_CONTENT_SELECTOR,
+	SL_LAYOUT,
+	SWAP_CLASS_SELECTOR,
+	forLooks,
+	forPlacement,
+} from './css/slLayout.js'
 import { SL_OBJECT } from './css/slObject.js'
 import { ValidationError } from './errors.js'
 import { SEED_VERSION } from './seedVersion.js'
@@ -374,11 +382,25 @@ function emitThemeBlocks(rules: Map<string, SelectorBlock>, indent: string): str
 		([a, ba], [b, bb]) => ba.order - bb.order || a.localeCompare(b),
 	)
 	for (const [sel, { props }] of sorted) {
-		out += `${indent}${sel} {\n`
+		out += `${indent}${forNodeViews(sel)} {\n`
 		for (const { property, value } of props) out += `${indent}\t${property}: ${value};\n`
 		out += `${indent}}\n`
 	}
 	return out
+}
+
+// A theme rule is written for the content tree; a block a component renders has boxes around
+// and inside it (nodeViewSelectors.ts). Every theme rule is a look, so it lands on the element
+// wearing the classes. Rewritten after sorting, so ties keep the order of the selector as
+// written. A selector the helper can't rewrite is emitted as written — it still works for plain
+// blocks, as before — and reported, rather than failing the whole stylesheet.
+function forNodeViews(selector: string): string {
+	try {
+		return forLooks(selector)
+	} catch (error) {
+		console.warn(`[sf-system] ${(error as Error).message}; emitted as written`)
+		return selector
+	}
 }
 
 // ─── Auto-derived layers (semantic + utility + editor) ───────────────────
@@ -454,38 +476,72 @@ const section = (title: string): string =>
 
 // ─── Collapse layer ──────────────────────────────────────────────────────
 // sl-collapse-* is vocabulary-only in the DB (var() is not valid in @container
-// conditions). CSS is generated here from the resolved breakpoint token values
-// so the pixel widths can be embedded directly in @container conditions.
+// conditions). CSS is generated here from the collapse thresholds so the pixel widths
+// can be embedded directly in @container conditions.
 // Each collapsible layout primitive gets a compound selector per breakpoint.
-// A primitive holding a collapsing element becomes a size container — only there, since
-// container-type collapses primitives that sit in size-to-content spots (table cells,
-// buttons, dropdowns). sl-collapse-* queries its nearest container, so only an ancestor
-// of a collapsing element needs to be one.
-// sl-hide-below-* / sl-show-below-* use the same widths to swap what shows: hidden at or
-// below the width, or shown only then (a hamburger in place of inline links). Without a
-// container around it, neither query matches and the element always shows.
+//   Collapse measures the space a block has: the nearest width container around it. A
+//     layout holding a collapsing element is one, and so is a component block's wrapper
+//     when the block itself collapses (nodeViews.ts), so a layout block measures its own
+//     space. A width container takes no width from its content, so nothing sized by its
+//     content becomes one (SIZED_BY_CONTENT_SELECTOR) — it would be 0 wide; what it holds
+//     measures the next box out.
+//   sl-hide-below-* / sl-show-below-* use the same widths to swap what shows: hidden at or
+//     below the width, or shown only then (a menu button in place of inline links). In a
+//     document (the editor and published pages) they measure the document: "hide below md"
+//     means the page is narrower than md, so a layout there doesn't become a container for
+//     them. On app screens they measure their container; with none around them they always
+//     show.
+//   The document is always a width container, named so the swap finds it past nearer ones;
+//     a top-level block collapses against it.
 
 const COLLAPSE_GRID = ['.sl-columns', '.sl-split', '.sl-grid']
 const COLLAPSE_FLEX = ['.sl-cluster']
+const DOCUMENT = '.tiptap.ProseMirror'
+const OUTSIDE_DOCUMENTS = `:where(:not(${DOCUMENT} *))`
 
 function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
 	if (collapseThresholds.length === 0) return ''
 
-	let body = `\t:is(${COLLAPSE_HOST_SELECTOR}):has(${COLLAPSE_CLASS_SELECTOR}) { container-type: inline-size; }\n`
+	const notSized = `:where(:not(${SIZED_BY_CONTENT_SELECTOR}))`
+	let body = `\t${DOCUMENT} { container: sf-document / inline-size; }\n`
+	for (const host of [
+		...hostsFor(notSized, COLLAPSE_CLASS_SELECTOR),
+		...hostsFor(`${notSized}${OUTSIDE_DOCUMENTS}`, SWAP_CLASS_SELECTOR),
+	])
+		body += `\t${host} { container-type: inline-size; }\n`
 	for (const { name, value } of collapseThresholds) {
 		const gridSels = COLLAPSE_GRID.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')
 		const flexSels = COLLAPSE_FLEX.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')
 		body += `\t@container (width <= ${value}) {\n`
 		body += `${gridSels} { grid-template-columns: 1fr; }\n`
 		body += `${flexSels} { flex-direction: column; align-items: stretch; }\n`
-		body += `\t\t.sl-hide-below-${name} { display: none; }\n`
+		body += `\t\t.sl-hide-below-${name}${OUTSIDE_DOCUMENTS} { display: none; }\n`
 		body += '\t}\n'
 		// Emitted after the layout primitives, so it wins over their display on the same element.
 		body += `\t@container (width > ${value}) {\n`
-		body += `\t\t.sl-show-below-${name} { display: none; }\n`
+		body += `\t\t.sl-show-below-${name}${OUTSIDE_DOCUMENTS} { display: none; }\n`
+		body += '\t}\n'
+		// In a document it's the box the parent places that hides, so a component block's
+		// wrapper goes and leaves no gap.
+		body += `\t@container sf-document (width <= ${value}) {\n`
+		body += `\t\t${forPlacement(`:where(${DOCUMENT}) .sl-hide-below-${name}`)} { display: none; }\n`
+		body += '\t}\n'
+		body += `\t@container sf-document (width > ${value}) {\n`
+		body += `\t\t${forPlacement(`:where(${DOCUMENT}) .sl-show-below-${name}`)} { display: none; }\n`
 		body += '\t}\n'
 	}
 	return `@layer sl-layout {\n${body}}\n`
+}
+
+// The layouts that measure for what's inside them. A popover is laid out on its own (the top
+// layer), wherever it sits in the page: what's inside one doesn't make the boxes around it
+// measure — a toolbar row holding a closed panel would otherwise be 0 wide — and inside it,
+// layouts measure as usual.
+function hostsFor(scope: string, inside: string): string[] {
+	return [
+		`:is(${COLLAPSE_HOST_SELECTOR})${scope}:where(:not([popover] *)):has(:is(${inside}):not([popover] *))`,
+		`[popover] :is(${COLLAPSE_HOST_SELECTOR})${scope}:has(${inside})`,
+	]
 }
 
 function emitEditorLayer(b: Buckets): string {

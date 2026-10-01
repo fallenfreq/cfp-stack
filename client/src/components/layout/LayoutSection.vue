@@ -1,5 +1,13 @@
 <template>
-	<div class="sl-stack" :style="{ 'align-items': align, padding: 'var(--sf-padding, 0)' }">
+	<div
+		class="sl-stack"
+		:class="{
+			'sl-align-x-start': align === 'start',
+			'sl-align-x-center': align === 'center',
+			'sl-align-x-end': align === 'end',
+		}"
+		:style="{ padding: 'var(--sf-padding, 0)' }"
+	>
 		<slot />
 	</div>
 </template>

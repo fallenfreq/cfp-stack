@@ -3,6 +3,7 @@ import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExt
 import { CustomTaskItem } from '@/editor/extensions/customTaskItem'
 import Div from '@/editor/extensions/divExtension'
 import FontStyle from '@/editor/extensions/fontStyleMark'
+import { PlacementClasses } from '@/editor/extensions/placementClasses'
 import Span from '@/editor/extensions/spanExtension'
 import TextColor from '@/editor/extensions/textColorMark'
 import Heading, { type Level } from '@tiptap/extension-heading'
@@ -105,6 +106,7 @@ export function getContentExtensions({
 		Div,
 		...registerCustomNodes(),
 		AllowAttributesExtension,
+		PlacementClasses,
 		TaskList.configure(),
 		CustomTaskItem.configure({
 			// Checkbox beside the item's content: fixed side + flexible side.

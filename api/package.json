@@ -6,6 +6,9 @@
 	"exports": {
 		"./appRouter": {
 			"import": "./dist/routes/appRouter.js"
+		},
+		"./placementClasses": {
+			"import": "./dist/domain/css/placementClasses.js"
 		}
 	},
 	"files": [
@@ -17,6 +20,7 @@
 		"build:watch": "tsc --build -w --noCheck",
 		"build": "rm -rf dist functions .tsbuildinfo && tsc --build --noCheck",
 		"type-check": "tsc -p tsconfig.check.json",
+		"test": "node --test 'test/*.test.mjs'",
 		"build:all": "pnpm --filter @somefreq-app/* --parallel build",
 		"migrate": "pnpm drizzle-kit generate:sqlite",
 		"migrate:custom": "pnpm drizzle-kit generate:sqlite --custom",

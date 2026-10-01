@@ -831,7 +831,7 @@ are in the DB vocabulary. A theme's own rules on `sl-` classes set looks only �
 hidden scrollbar on `sl-scroll-x`, a scroll frame's arrows. Nothing enforces that yet: a
 non-root theme's rules are scoped (`@scope`), and a scoped rule beats an unscoped one of
 equal specificity, so a theme rule setting an `sl-` class's layout would win. Holding
-themes to looks is a job for the validator (not built).
+themes to looks is a job for the validator (not built; see Validator and linter).
 
 ### Layout primitives
 
@@ -852,15 +852,20 @@ sl-grid       auto-responsive — fills with as many columns as fit at a minimum
 sl-aspect     aspect-ratio container — ratio configured via --sl-aspect
 ```
 
-Alignment modifiers compose with any grid/flex primitive (default centre on `sl-cover`):
+Alignment modifiers compose with any layout. On every layout x is sideways and y is up and
+down. `sl-cover` centres by default.
 
 ```
 sl-align-y-start   top
 sl-align-y-center  middle
 sl-align-y-end     bottom
-sl-align-x-start   left      (grid-based; flex containers ignore justify-items)
-sl-align-x-end     right     (grid-based; flex containers ignore justify-items)
+sl-align-x-start   left
+sl-align-x-center  centre
+sl-align-x-end     right
 ```
+
+Aligned sideways, a layout's items take their content's width instead of the full width.
+On a stack, y alignment shows only when the stack is taller than its content.
 
 **Rows that share columns** — `sl-row` on a child of a grid layout (`sl-split`,
 `sl-columns`, `sl-grid`) makes it span every column and put its own children on the
@@ -969,8 +974,6 @@ pinning wins over the line.
 
 Not yet covered:
 
-- **Editor content.** Blocks sit inside node-view wrappers, so a block can't be a direct
-  child of an inset yet.
 - **Theme choice.** Whether an element actually goes edge to edge (and when) is decided
   by the component today. Making it a theme decision needs a meaning marker plus a way
   for rules to depend on width.
@@ -1055,13 +1058,7 @@ always fixed-plus-flexible. No theme can make `sl-stack` horizontal.
 
 ### Container-responsive collapse
 
-Collapse responds to the node's own container width, not the viewport. A `sl-columns`
-nested inside a `sl-split` responds to the space it actually has.
-
-A layout primitive only becomes a width container when it contains an `sl-collapse-*`,
-`sl-hide-below-*` or `sl-show-below-*` element. Being a container makes a box ignore its own content when sizing its width, so
-primitives without collapsing content stay out of it — otherwise an `sl-cluster` in a
-table cell, button or dropdown would shrink to nothing.
+Collapse responds to the space around a layout, not the screen width.
 
 ```
 sl-collapse-xs   collapse below xs breakpoint
@@ -1069,15 +1066,52 @@ sl-collapse-sm   collapse below sm breakpoint
 sl-collapse-md   collapse below md breakpoint
 ```
 
-The same widths swap what shows. `sl-hide-below-*` hides an element when its container is
-at or below the width; `sl-show-below-*` shows it only then. Pair them to put a menu button
-in place of a row of links. With no container around it the element always shows.
+The same widths swap what shows. `sl-hide-below-*` hides an element at or below the width;
+`sl-show-below-*` shows it only then. Pair them to put a menu button in place of a row of
+links.
 
 ```
 sl-hide-below-xs   sl-show-below-xs
 sl-hide-below-sm   sl-show-below-sm
 sl-hide-below-md   sl-show-below-md
 ```
+
+**What is measured.** A box can't measure itself, so it measures the nearest width container
+around it. A width container takes no width from its content, so only these boxes become one:
+
+- **A layout block** (a block rendered by a component, such as Columns or Split) measures its
+  own space: its outer box becomes a width container when the block itself collapses.
+  Columns in the narrow side of a Split stack when that side is narrow.
+- **Classes typed on an element** (a plain block, or a component's own markup) measure the
+  nearest layout around it: a layout holding a collapsing element becomes a width container.
+  So a typed `sl-columns sl-collapse-md` in the narrow side of a split stacks only when the
+  whole split is narrow, unless the side is a layout itself.
+- **The document** (the editor and published pages) is always a width container, so a layout
+  at the top of a page measures the page.
+
+**Nothing in a spot sized by its content measures** (in a document). A width container there
+would be 0 wide. These spots are table cells, a cluster's items, a cover's items, anything in
+a layout aligned sideways (`sl-align-x-*`), and the first column of a split with no column
+widths set. Nothing in them becomes a width container; what they hold measures the next box
+out. App screens leave this out because their popovers and menus sit inside rows, so a
+component there keeps collapsing content out of such spots.
+
+**A popover is laid out on its own.** What's inside one doesn't make the layouts around it
+measure, so a toolbar holding a closed panel keeps its width. Inside the popover, layouts
+measure as usual.
+
+**In a document, hide and show measure the page.** "Hide below md" means the page is
+narrower than md, wherever the element sits, so the layouts around it don't become width
+containers for it. The block's outer box hides, so a hidden block leaves no gap. On app
+screens they measure the nearest layout around them; with none, the element always shows.
+
+**Nothing else is a width container.** Chrome boxes (a card, a toolbar) aren't: one sized by
+its content would be 0 wide. A component with width rules of its own follows the component
+rules (Editor integration).
+
+The CSS is generated from the theme's breakpoints (the collapse layer in `generateCss.ts`);
+the lists it reads are in `slLayout.ts` (`COLLAPSE_HOST_SELECTOR`,
+`SIZED_BY_CONTENT_SELECTOR`).
 
 ---
 
@@ -1160,11 +1194,101 @@ their items with a gap (`GAP_LAYOUTS` in `slLayout.ts`):
   renders but never stores: a responsive video fills its width at 16:9
   (`embeds.ts`) until an `sl-aspect-*` choice or its own style says
   otherwise.
-- **Node views** (blocks rendered by a Vue component, such as the layout blocks) add a
-  wrapper outside the component and a content box inside it. `nodeViews.ts` makes each
-  wrapper a width container (for collapse) and has a layout's content box step aside
-  (`display: contents`), so the blocks inside are the layout's own items. `sl-inset` is the exception: it places its own children, so its content box stays
-  as its one item and spaces its blocks like running text.
+- **Component blocks** (blocks rendered by a Vue component, such as the layout blocks) are
+  three boxes; the next section covers how rules reach through them.
+
+### Component blocks
+
+A block rendered by a Vue component (a TipTap node view) is three boxes, in the editor and on
+published pages:
+
+```
+[data-node-view-wrapper]      outer box: the one its parent places
+  component root              wears the node's classes
+    [data-node-view-content]  content box, rendered where the component puts <slot />
+      the child blocks
+```
+
+**Rules are written for the content tree.** Theme rules and fixed `sl-` CSS are written as if
+a block's child blocks were its children (`.sf-divide-y > * + *`, `.sl-inset > .sl-bleed`).
+The generator rewrites each rule as it emits the stylesheet, so it also reaches through
+component blocks (`throughNodeViews` in `api/src/domain/css/nodeViewSelectors.ts`):
+
+- **Looks land on the element wearing the classes**: a plain block, or a component's root,
+  never its outer box. Every theme rule is a look.
+- **Where an item sits is about its outer box.** Position and sibling tests (`:first-child`,
+  `:nth-*`, `+`, `~`) are tested on the box the parent places. Fixed CSS that places an item
+  (an inset's items, bleed, a scrolling cluster's items, pin, hide and show) styles that box.
+- **A layout's content box steps aside** (`display: contents`, `nodeViews.ts`), so the blocks
+  inside are the layout's own items. They follow the component's own parts as siblings: in a
+  divided layout with a heading of its own, the first block gets a line.
+- Rewritten rules keep their weight.
+- **What can't be rewritten:** a `:has()` inside another `:has()` (the browser would drop the
+  whole rule), a child or sibling step inside `:not()`, `:is()` or `:where()`, and a sibling
+  step straight inside `:has()`. A theme rule like that is emitted as written, with a
+  warning, and misses component blocks; fixed CSS like that throws as soon as the code loads.
+
+**Placement classes are on the outer box too.** `sl-row`, `sl-bleed`, `sl-pin-*`,
+`sl-hide-below-*` and `sl-show-below-*` say where a block sits among its siblings, so the box
+its parent places has to wear them. The `PlacementClasses` editor extension
+(`client/src/editor/extensions/placementClasses.ts`) adds a block's placement classes to its
+outer box, in the editor and on published pages; they aren't saved. The list is
+`PLACEMENT_CLASSES` (`api/src/domain/css/placementClasses.ts`).
+
+- Pin, hide and show act only on the outer box.
+- Row and bleed act on the root as well, so its own children still use the parent's columns
+  and line.
+- A theme rule naming a placement class skips the outer box, so a pinned block's shadow
+  draws once.
+
+Which boxes measure width for collapse is under Container-responsive collapse.
+
+**Writing a component block** (component author). Content authors put blocks in your
+component, so these keep the system's layout working around and inside it:
+
+- **Render one root element and let attributes fall through** (Vue's default, no
+  `inheritAttrs: false`). The root then wears the node's classes.
+- **Put `<slot />` directly in the root** when the blocks should be your layout's items.
+  Anything in between makes them that box's items instead.
+- **Don't bake placement classes on the root.** The outer box gets only the node's classes,
+  so a baked pin, hide or show does nothing. Give the node a default class instead.
+- **Avoid width containers of your own.** A width container takes no width from its content,
+  so your block is 0 wide wherever its width comes from its content (a cluster, a table
+  cell). If you need one, name it and query it by name
+  (`container: my-card / inline-size`, `@container my-card (…)`). A name doesn't stop the
+  system's queries from finding it; it makes sure yours find it.
+- **Don't size the slot by its content in your own CSS** (a flex row, `fit-content`): a
+  collapsing block inside it would be 0 wide. Use `sl-` classes for that; the system knows
+  their content-sized spots.
+- **Prefer `overflow: clip` to `overflow: hidden`.** `hidden` makes the box a scroll area,
+  so a pinned block inside stops sticking.
+
+---
+
+## Validator and linter (not built)
+
+Rules the system relies on that nothing checks yet. The validator would check a theme when it
+is saved; the linter would check component code. Each rule's reason is in the section named.
+
+**Themes**
+
+- No rule sets layout on an `sl-` class: themes set looks only (sl- layout subsystem).
+- Selectors come from a closed set of shapes, since they are free text today. That includes
+  rejecting the shapes that can't reach through component blocks (Component blocks).
+- No container units (`cqw`, `cqi`) in values: what they measure depends on where the system
+  puts width containers (Container-responsive collapse).
+- `var(--sf-gap)` and `var(--sf-padding)` are read with a fallback, unless unset means none.
+
+**Components** (Component blocks, "Writing a component block")
+
+- One root element, with Vue's default attribute handling (no `inheritAttrs: false`); the
+  root wears the node's classes.
+- `<slot />` is a direct child of the root.
+- No placement class baked on the root.
+- Warn on a width container in the component's CSS, and on an `@container` query without a
+  name.
+- Warn when the component's own CSS sizes the slot by its content.
+- Warn on `overflow: hidden` around the slot.
 
 ---
 

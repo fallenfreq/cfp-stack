@@ -669,30 +669,37 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sl-align-y-start',
 		kind: 'layout',
 		description:
-			'Aligns content to the start of the block axis (top in LTR). Composable with any grid/flex primitive (sl-cover, sl-stack).',
+			'Puts content at the top of the layout (the start of the block axis). Works on any layout; on a stack it shows only when the stack is taller than its content.',
 	},
 	{
 		name: 'sl-align-y-center',
 		kind: 'layout',
-		description: 'Centres content on the block axis. Composable with any grid/flex primitive.',
+		description:
+			'Centres content up and down (the block axis). Works on any layout; on a stack it shows only when the stack is taller than its content.',
 	},
 	{
 		name: 'sl-align-y-end',
 		kind: 'layout',
 		description:
-			'Aligns content to the end of the block axis (bottom in LTR). Composable with any grid/flex primitive.',
+			'Puts content at the bottom of the layout (the end of the block axis). Works on any layout; on a stack it shows only when the stack is taller than its content.',
 	},
 	{
 		name: 'sl-align-x-start',
 		kind: 'layout',
 		description:
-			'Aligns content to the start of the inline axis (left in LTR). Grid-based; on flex containers use justify-content directly (limitation).',
+			'Puts content at the left (the start of the inline axis). Works on any layout; each item takes its content’s width instead of the full width.',
+	},
+	{
+		name: 'sl-align-x-center',
+		kind: 'layout',
+		description:
+			'Centres content sideways (the inline axis). Works on any layout; each item takes its content’s width instead of the full width.',
 	},
 	{
 		name: 'sl-align-x-end',
 		kind: 'layout',
 		description:
-			'Aligns content to the end of the inline axis (right in LTR). Grid-based; on flex containers use justify-content directly (limitation).',
+			'Puts content at the right (the end of the inline axis). Works on any layout; each item takes its content’s width instead of the full width.',
 	},
 	{
 		name: 'sl-row',

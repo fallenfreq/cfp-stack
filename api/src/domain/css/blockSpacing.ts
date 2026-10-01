@@ -1,4 +1,4 @@
-import { GAP_LAYOUT_SELECTOR, STEP_ASIDE_LAYOUT_SELECTOR } from './slLayout.js'
+import { GAP_LAYOUT_SELECTOR } from './slLayout.js'
 
 // Space between blocks in a TipTap document: the editor and published pages. The sizes are
 // the theme's spacing steps. A default, so it sits in the lowest layer: any theme or
@@ -10,8 +10,7 @@ import { GAP_LAYOUT_SELECTOR, STEP_ASIDE_LAYOUT_SELECTOR } from './slLayout.js'
 //     a table cell. Each block but the last gets space below it.
 //   A container that wears a layout class isn't a flow container (its gap spaces its
 //     children) — the document included (a drag preview is .tiptap.sl-stack) — nor is a
-//     layout's content box that steps aside for it (nodeViews.ts). Inside sl-inset the
-//     content box stays, as the inset's one item, and spaces its blocks like any other.
+//     layout's content box, which steps aside for it (nodeViews.ts).
 //   ProseMirror's gap cursor is a widget, not a block: it's skipped, and a block followed
 //     only by it still counts as last.
 
@@ -19,7 +18,7 @@ const BLOCK =
 	':where(:not(:last-child, :has(+ .ProseMirror-widget:last-child), .ProseMirror-widget))'
 const FLOW_CONTAINER =
 	':where([data-node-view-content], [data-container], blockquote, li, li[data-checked] > div, td, th)'
-	+ `:where(:not(${GAP_LAYOUT_SELECTOR}, :is(${STEP_ASIDE_LAYOUT_SELECTOR}) > [data-node-view-content]))`
+	+ `:where(:not(${GAP_LAYOUT_SELECTOR}, :is(${GAP_LAYOUT_SELECTOR}) > [data-node-view-content]))`
 
 export const BLOCK_SPACING = `@layer reset {
 	.tiptap:where(:not(${GAP_LAYOUT_SELECTOR})) > ${BLOCK},
