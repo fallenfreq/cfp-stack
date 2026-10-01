@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { isAncestor, NavIcon, type NavItem } from './siteNav'
+import { isAncestor, NavIcon, type NavItem } from './navItems'
 
 // One item in SiteNav's bar: a link, a command, or a group that opens as a dropdown.
 defineProps<{ item: NavItem }>()

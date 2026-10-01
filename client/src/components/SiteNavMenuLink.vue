@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { NavIcon, type NavLink } from './siteNav'
+import { NavIcon, type NavLink } from './navItems'
 
 // One row in a SiteNav dropdown or narrow menu: icon and title, a link or a command.
 defineProps<{ item: NavLink }>()

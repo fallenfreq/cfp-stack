@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AccountIcon from '@/components/account/AccountIcon.vue'
-import type { NavItem } from '@/components/siteNav'
+import type { NavItem } from '@/components/navItems'
 import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
 import zitadelAuth from '@/services/zitadelAuth'
 import { computed, markRaw } from 'vue'

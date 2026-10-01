@@ -8,7 +8,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AccountDetailsCard: typeof import('./src/components/account/AccountDetailsCard.vue')['default']
     AccountHeader: typeof import('./src/components/account/AccountHeader.vue')['default']
+    AccountIcon: typeof import('./src/components/account/AccountIcon.vue')['default']
     AddMarkerSwitch: typeof import('./src/components/demos/map/AddMarkerSwitch.vue')['default']
     AdminList: typeof import('./src/components/admin/AdminList.vue')['default']
     AdminListItem: typeof import('./src/components/admin/AdminListItem.vue')['default']
@@ -16,7 +18,6 @@ declare module 'vue' {
     BasicFooter: typeof import('./src/components/BasicFooter.vue')['default']
     CodeViewToggle: typeof import('./src/components/editor/CodeViewToggle.vue')['default']
     CollectionGrid: typeof import('./src/components/CollectionGrid.vue')['default']
-    CollectionNav: typeof import('./src/components/CollectionNav.vue')['default']
     ColorPicker: typeof import('./src/components/editor/toolbar/ColorPicker.vue')['default']
     ComingSoon: typeof import('./src/components/ComingSoon.vue')['default']
     CurrentLocation: typeof import('./src/components/demos/map/currentLocation.vue')['default']
@@ -40,6 +41,7 @@ declare module 'vue' {
     MothWordmark: typeof import('./src/components/brand/MothWordmark.vue')['default']
     NodePath: typeof import('./src/components/editor/NodePath.vue')['default']
     OverflowRow: typeof import('./src/components/editor/OverflowRow.vue')['default']
+    PageContent: typeof import('./src/components/PageContent.vue')['default']
     PromptModal: typeof import('./src/components/input/PromptModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

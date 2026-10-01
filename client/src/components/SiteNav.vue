@@ -64,7 +64,7 @@
 <script setup lang="ts">
 import { computed, useSlots } from 'vue'
 import { useRoute } from 'vue-router'
-import { isAncestor, NavIcon, type NavItem } from './siteNav'
+import { isAncestor, NavIcon, type NavItem } from './navItems'
 
 // A site's main navigation. Items go in as data: a link (to), a command (action) or a
 // group (children), which opens as a dropdown. On a narrow nav every item but the
