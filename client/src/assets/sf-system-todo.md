@@ -481,6 +481,11 @@ What's pending:
     - ~~`vue-tsc` reports TS6307 for `client/src/components/siteNav.ts`.~~ Fixed 2026-10-01:
       the name clashed with `SiteNav.vue` (they differ only in case, the same name on macOS),
       so the pre-commit type check failed on any client change. It's now `navItems.ts`.
+    - `pnpm typecheck` for api fails in a fresh checkout until the api has been built:
+      `functions_src` imports `../../dist/…` by relative path, though `tsconfig.check.json`
+      says it doesn't need `dist/` (its `@/*` path only helps imports written with `@/`). The
+      pre-commit hook passes locally because `pnpm dev` keeps `api/dist` built. Found
+      2026-10-01 checking each commit in a clean copy; predates item 10.
     - `sl-row` or `sl-inset` on a Section or Center loses to its baked `sl-stack`.
     - A component root doesn't fill its stretched wrapper (TiptapTest is 235 of 520px).
       LayoutCard patches this with `height: 100%`.
