@@ -1,6 +1,6 @@
 # cfp-stack
 
-pnpm monorepo running on Cloudflare Pages. Vue 3 + Vite frontend (`client/`), Cloudflare Pages Functions backend (`api/`), tRPC for the API layer, Drizzle ORM with Cloudflare D1 (SQLite), Zitadel for auth.
+pnpm monorepo running on Cloudflare Pages. Vue 3 + Vite frontend (`client/`), Cloudflare Pages Functions backend (`api/`), code both use as is with no build (`shared/`), tRPC for the API layer, Drizzle ORM with Cloudflare D1 (SQLite), Zitadel for auth.
 
 ## First-time setup
 

@@ -450,7 +450,9 @@ What's pending:
         - The list lives in its own import-free file, `api/src/domain/css/placementClasses.ts`
           (with `isPlacementClass`), exported as `@somefreq-app/api/placementClasses`. That's
           the client's first runtime import from api, and the generator stays out of the client
-          bundle.
+          bundle. Moved the same day to `shared/placementClasses.js` (`@somefreq-app/shared`,
+          plain JS beside its types): importing it from api's build made the client's build
+          wait for the api's, and the first deploy of main failed on that race.
         - `client/src/editor/extensions/placementClasses.ts` (`PlacementClasses`, in
           `getContentExtensions`) adds a node decoration with the node's placement tokens. The
           decorations are rebuilt only when the doc changes.

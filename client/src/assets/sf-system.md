@@ -1234,7 +1234,7 @@ component blocks (`throughNodeViews` in `api/src/domain/css/nodeViewSelectors.ts
 its parent places has to wear them. The `PlacementClasses` editor extension
 (`client/src/editor/extensions/placementClasses.ts`) adds a block's placement classes to its
 outer box, in the editor and on published pages; they aren't saved. The list is
-`PLACEMENT_CLASSES` (`api/src/domain/css/placementClasses.ts`).
+`PLACEMENT_CLASSES` (`shared/placementClasses.js`), which the stylesheet uses too.
 
 - Pin, hide and show act only on the outer box.
 - Row and bleed act on the root as well, so its own children still use the parent's columns

@@ -25,6 +25,7 @@
 		"@fortawesome/vue-fontawesome": "^3.0.8",
 		"@googlemaps/js-api-loader": "^1.16.8",
 		"@somefreq-app/api": "workspace:*",
+		"@somefreq-app/shared": "workspace:*",
 		"@tanstack/vue-query": "^5.79.0",
 		"@tiptap/extension-code-block-lowlight": "^3.4.1",
 		"@tiptap/extension-dropcursor": "^3.4.1",

@@ -1,4 +1,4 @@
-import { isPlacementClass } from '@somefreq-app/api/placementClasses'
+import { isPlacementClass } from '@somefreq-app/shared/placementClasses'
 import type { Node as PMNode } from '@tiptap/pm/model'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
@@ -9,7 +9,7 @@ import { Extension } from '@tiptap/vue-3'
 // author's classes land on the component; a node decoration puts the placement classes on the
 // node's outer box too (TipTap binds a Vue node view wrapper's class to its decorations). In
 // the editor and on published pages; never saved. The list is the stylesheet's own
-// (api/src/domain/css/placementClasses.ts).
+// (shared/placementClasses.js).
 
 const placementClassesKey = new PluginKey<DecorationSet>('placementClasses')
 

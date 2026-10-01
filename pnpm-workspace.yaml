@@ -1,6 +1,7 @@
 packages:
     - client
     - api
+    - shared
 
 onlyBuiltDependencies:
     - core-js

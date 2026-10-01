@@ -1,5 +1,5 @@
+import { PLACEMENT_CLASSES } from '@somefreq-app/shared/placementClasses'
 import { throughNodeViews } from './nodeViewSelectors.js'
-import { PLACEMENT_CLASSES } from './placementClasses.js'
 
 // What each sl- class does: how it moves, flows and aligns what's inside it. Arrangement is
 // the maintainer's to decide, not a theme's, so it's written here rather than as rules; the
