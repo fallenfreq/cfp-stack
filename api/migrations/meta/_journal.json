@@ -1,0 +1,13 @@
+{
+	"version": "5",
+	"dialect": "sqlite",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "5",
+			"when": 1790807375809,
+			"tag": "0000_fearless_gabe_jones",
+			"breakpoints": true
+		}
+	]
+}
