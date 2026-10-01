@@ -9,8 +9,8 @@ import {
 	taskItemLayout,
 } from './helpers'
 
-// The editor around the test cases: what's saved, selecting blocks, editing a to-do item, and
-// the toolbar.
+// The editor around the test cases: what's saved, selecting blocks, editing a to-do item,
+// the toolbar, and coming back to the editor.
 
 test.beforeEach(async ({ page, themeClass }) => {
 	await openTests(page, themeClass)
@@ -94,4 +94,24 @@ test('ticking a to-do item updates it without redrawing it', async ({ page }) =>
 	await item.locator(':scope > label input').check()
 	await expect(item).toHaveAttribute('data-checked', 'true')
 	expect(await item.evaluate((el) => (el as any).drawnBeforeTicking)).toBe(true)
+})
+
+test('leaving the editor and coming back shows its content again, without a reload', async ({
+	page,
+}) => {
+	const lastCase = page.locator('#align-cluster-x-end-last')
+	await expect(lastCase).toBeAttached()
+	// As the site nav does: moving between pages without loading the app again.
+	const go = (to: string) =>
+		page.evaluate(
+			(to) =>
+				(
+					document.querySelector('#app') as any
+				).__vue_app__.config.globalProperties.$router.push(to),
+			to,
+		)
+	await go('/contact')
+	await expect(page.locator('main h1')).toHaveText('Contact')
+	await go('/editor?seed=tests')
+	await expect(lastCase).toBeAttached()
 })

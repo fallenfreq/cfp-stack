@@ -26,6 +26,16 @@ export const useEditorStore = defineStore('editor', () => {
 		editor.value = newEditor
 		isCodeView.value = codeViewDefault
 		generateBlueprintHTML = null
+		// No editor, no page being edited: what opens next starts unnamed and unsaved, so Save
+		// can't write it over the page edited before.
+		if (!newEditor) {
+			currentPageId.value = null
+			currentSlug.value = null
+			currentName.value = null
+			currentPublished.value = false
+			pendingAutoTag.value = null
+			saveStatus.value = 'idle'
+		}
 	}
 
 	const toggleCodeView = async () => {

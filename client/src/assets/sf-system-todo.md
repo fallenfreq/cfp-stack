@@ -46,9 +46,12 @@ Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a 
 test page logs 171 TipTap warnings ("setNode() only supports text block nodes"); editing
 to-do items logs none. In the editor, a document's content sits against the screen's left
 edge (the editor shows it without the page shell); content that wraps itself (the demo) is fine.
+Moving between two editor addresses (`/editor/home` to `/editor?seed=true`, say, or the Demo
+link while a page is open) reuses the open editor, so nothing loads; the page view doesn't
+follow its address. Found 2026-10-01 while fixing the stale editor store, not fixed.
 
 **Layout checks** (added 2026-10-01): `pnpm test:ui` runs
-`client/e2e` with Playwright in the installed Chrome, against the dev server. 70 checks (14 of them
+`client/e2e` with Playwright in the installed Chrome, against the dev server. 72 checks (14 of them
 expected to fail), about 20 seconds.
 
 - **The stylesheet** is built from the seed in a throwaway database in memory

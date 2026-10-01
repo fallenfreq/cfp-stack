@@ -28,7 +28,7 @@ import { useEditorStore } from '@/stores/editorStore.js'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor, VueNodeViewRenderer, type NodeViewProps } from '@tiptap/vue-3'
-import { watch, type Component } from 'vue'
+import { onBeforeUnmount, watch, type Component } from 'vue'
 import CodeViewToggle from './CodeViewToggle.vue'
 import EditorTopBar from './EditorTopBar.vue'
 import FloatingDragHandle from './FloatingDragHandle.vue'
@@ -91,6 +91,11 @@ watch(editor, (newEditor) => {
 			multiSelectStore.sync(state?.positions ?? [])
 		})
 	}
+})
+// The store points at the editor on screen. Leaving the page closes it, so clear it too, or
+// the next page to wait for an editor gets this closed one and its content goes nowhere.
+onBeforeUnmount(() => {
+	if (editorStore.editor === editor.value) editorStore.setEditor(null)
 })
 </script>
 
