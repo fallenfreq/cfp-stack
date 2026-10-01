@@ -12,7 +12,19 @@ is fixed (2026-10-01). The room under the site nav is back (2026-10-01): it went
 was rebuilt (27 Sep, the header's all-round margin became top padding), so the editor's bar
 touched the nav. The app frame now puts the page margin between header, page and footer, and
 pages add no top room of their own (`SfPageShell`, the map). Margins that merge were tried
-and rejected: they add up in the frame's flex column and inside any sl layout. Candidates:
+and rejected: they add up in the frame's flex column and inside any sl layout. A stored page
+(home, preview) now sits in the page shell, which gives it the page margin; its content has no
+spacing of its own, so it can be shown anywhere (a collection's sheet shows it bare). Picking a
+shell per page comes later (decided with the user, 2026-10-01). The editor demo opens the demo
+content built into the app (`/editor?seed=true`), the same locally and live.
+
+**Live database** (2026-10-01): migration files are gitignored, so each machine generates its
+own. Production's history holds three other sets (last applied 16 Jun) and lacked the 7 theme
+tables; `pnpm migrate:push:api` from this Mac would try to create every table again. Going
+live uses a one-off add-only SQL file (the 7 tables, the seeded themes copied from a fresh local
+seed, the brand user, the home page, and this Mac's migration marked applied). Not solved: the
+seed has no way to reach live (it runs through `/dev/seed`, off in production), and migration
+files should be committed so every machine shares one history. Candidates:
 
 1. **Scroll-frame arrows in documents:** the `sf-is-overflow-*` script doesn't run in pages
    (item 10, logged).
@@ -32,11 +44,11 @@ and rejected: they add up in the frame's flex column and inside any sl layout. C
 
 Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a Section on the
 test page logs 171 TipTap warnings ("setNode() only supports text block nodes"); editing
-to-do items logs none. On the demo editor with an empty document (`/editor/demo`), the
-placeholder paragraph sits against the screen's left edge, with no page margin.
+to-do items logs none. In the editor, a document's content sits against the screen's left
+edge (the editor shows it without the page shell); content that wraps itself (the demo) is fine.
 
 **Layout checks** (added 2026-10-01): `pnpm test:ui` runs
-`client/e2e` with Playwright in the installed Chrome, against the dev server. 68 checks (14 of them
+`client/e2e` with Playwright in the installed Chrome, against the dev server. 70 checks (14 of them
 expected to fail), about 20 seconds.
 
 - **The stylesheet** is built from the seed in a throwaway database in memory

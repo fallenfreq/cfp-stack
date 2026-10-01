@@ -1,6 +1,10 @@
 <template>
 	<div class="page-shell sl-inset sf-gap-lg">
-		<div class="page-header sl-cluster sf-gap-sm">
+		<!-- None for a stored page: its content brings its own title. -->
+		<div
+			v-if="title || $slots.header || $slots.actions"
+			class="page-header sl-cluster sf-gap-sm"
+		>
 			<!-- `header` replaces the plain title when a page needs more (e.g. an avatar). -->
 			<slot name="header">
 				<h1 class="sf-heading-1">{{ title }}</h1>

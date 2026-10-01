@@ -43,3 +43,46 @@ test('a page starts as far below the site nav as the nav sits below the top', as
 	await useTheme(page, themeClass)
 	await roomBelowNav('main h1')
 })
+
+test("a stored page sits on the page's line, as an app screen does", async ({
+	page,
+	themeClass,
+}) => {
+	// The home page, whatever the database holds: a plain heading and paragraph, with no
+	// spacing of their own.
+	const content = {
+		type: 'doc',
+		content: [
+			{ type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: 'Home' }] },
+			{ type: 'paragraph', content: [{ type: 'text', text: 'A paragraph.' }] },
+		],
+	}
+	await steadyRequests(page)
+	await page.route('**/trpc/**', async (route) => {
+		const calls = new URL(route.request().url()).pathname.replace('/trpc/', '').split(',')
+		const at = calls.findIndex((call) => call.endsWith('Pages.getBySlug'))
+		if (at < 0) return route.fallback()
+		const response = await route.fetch()
+		const replies = await response.json()
+		replies[at] = {
+			result: {
+				data: {
+					json: {
+						slug: 'home',
+						name: 'Home',
+						published: true,
+						contentJson: JSON.stringify(content),
+					},
+				},
+			},
+		}
+		return route.fulfill({ response, json: replies })
+	})
+	await page.goto('/')
+	await useTheme(page, themeClass)
+	const title = page.locator('main h1')
+	await expect(title).toHaveText('Home')
+	const nav = await box(page.locator('.site-nav'))
+	expect((await box(title)).left, 'off the screen edge').toBeGreaterThan(0)
+	expect(Math.abs((await box(title)).left - nav.left)).toBeLessThanOrEqual(1)
+})

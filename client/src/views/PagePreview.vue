@@ -9,7 +9,9 @@
 		>
 			Edit
 		</RouterLink>
-		<PageContent :page="page" />
+		<SfPageShell>
+			<PageContent :page="page" />
+		</SfPageShell>
 	</template>
 </template>
 

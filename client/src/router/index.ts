@@ -79,8 +79,10 @@ const router = createRouter({
 			component: () => import('../views/TiptapEditorDemo.vue'),
 		},
 		{
+			// The demo content built into the app, so it's the same locally and live and reads
+			// nothing from the database.
 			path: '/demo/editor',
-			redirect: { name: 'editor', params: { slug: 'demo' } },
+			redirect: { name: 'editor', query: { seed: 'true' } },
 		},
 		{
 			path: '/preview/:slug',

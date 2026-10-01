@@ -1,5 +1,7 @@
 <template>
-	<PageContent v-if="page" :page="page" />
+	<SfPageShell v-if="page">
+		<PageContent :page="page" />
+	</SfPageShell>
 	<div v-else-if="notFound" class="sl-cover" style="--sl-cover-min: 20rem">
 		<div class="sl-stack sf-gap-sm">
 			<p class="sf-loudness-1">Nothing here yet.</p>
