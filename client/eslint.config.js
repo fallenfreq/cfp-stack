@@ -8,7 +8,8 @@ import base from '../eslint.config.js'
 
 export default defineConfig([
 	...base,
-	{ files: ['**/*.{mts,cts,vue}'], plugins: { js }, extends: ['js/recommended'] },
+	// The base config covers the script files; this adds .vue.
+	{ files: ['**/*.vue'], plugins: { js }, extends: ['js/recommended'] },
 	{ files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'], languageOptions: { globals: globals.browser } },
 	{
 		// Apply Vue configs only to Vue files as they conflict with md and json files.
@@ -26,9 +27,25 @@ export default defineConfig([
 		},
 		rules: {
 			'vue/multi-word-component-names': ['error', { ignores: ['Button', 'Tooltip'] }],
+			// Prettier owns these (eslint-config-prettier's list of Vue rules it replaces).
+			'vue/html-closing-bracket-newline': 'off',
+			'vue/html-closing-bracket-spacing': 'off',
+			'vue/html-end-tags': 'off',
 			'vue/html-indent': 'off',
+			'vue/html-quotes': 'off',
 			'vue/max-attributes-per-line': 'off',
+			'vue/multiline-html-element-content-newline': 'off',
+			'vue/mustache-interpolation-spacing': 'off',
+			'vue/no-multi-spaces': 'off',
+			'vue/no-spaces-around-equal-signs-in-attribute': 'off',
 			'vue/singleline-html-element-content-newline': 'off',
+			// Prettier always writes void elements as <img />; the rule still self-closes empty
+			// elements and components, which Prettier leaves as written.
+			'vue/html-self-closing': ['error', { html: { void: 'any' } }],
+			// An optional prop is left out rather than defaulted to undefined: with
+			// exactOptionalPropertyTypes that stops undefined being passed by accident, and
+			// left out and undefined can differ at runtime (a boolean prop left out is false).
+			'vue/require-default-prop': 'off',
 			// no-unused-vars set in the base is overridden by extending pluginVue.configs[...]
 			'no-unused-vars': 'off',
 			'vue/no-unused-vars': [

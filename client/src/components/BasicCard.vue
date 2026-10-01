@@ -14,7 +14,7 @@
 				class="basic-card-logo sf-opacity-1"
 				aria-hidden="true"
 			/>
-			<img v-else :src="imageUrl" alt="">
+			<img v-else :src="imageUrl" alt="" />
 		</div>
 		<h2>{{ title }}</h2>
 	</component>

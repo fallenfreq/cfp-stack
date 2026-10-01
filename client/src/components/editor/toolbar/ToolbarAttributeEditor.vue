@@ -43,7 +43,7 @@
 			</div>
 
 			<template v-if="allAddableCount">
-				<hr v-if="allRowCount" class="sf">
+				<hr v-if="allRowCount" class="sf" />
 				<SfButton
 					v-for="key in classAddableKeys"
 					:key="key"

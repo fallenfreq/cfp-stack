@@ -35,7 +35,7 @@
 					:autocapitalize="request.transform ? 'none' : undefined"
 					:autocorrect="request.transform ? 'off' : undefined"
 					autofocus
-				>
+				/>
 				<div class="button-group sl-cluster sf-gap-xs">
 					<SfButton
 						type="submit"

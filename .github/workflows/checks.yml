@@ -1,6 +1,7 @@
-# Every push to main and every pull request: build, then type-check every package and run the
-# unit tests. The build comes first because the api's type check reads its dist/. Cloudflare
-# deploys main on its own; this says whether what it deployed checks out.
+# Every push to main and every pull request: lint and check formatting across the repo, then
+# build, type-check every package and run the unit tests. The build comes before the type
+# check because the api's check reads its dist/. Cloudflare deploys main on its own; this
+# says whether what it deployed checks out.
 name: Checks
 
 on:
@@ -21,6 +22,8 @@ jobs:
                   node-version: 24
                   cache: pnpm
             - run: pnpm install --frozen-lockfile
+            - run: pnpm exec eslint --flag v10_config_lookup_from_file .
+            - run: pnpm exec prettier --check .
             - run: pnpm build
             - run: node scripts/typecheck.mjs --all
             - run: pnpm test

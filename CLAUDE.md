@@ -58,8 +58,9 @@ The full-stack experience runs at **8788** (wrangler serves both the API and the
 
 Checks run at two points. On commit, the hook lints and formats the staged files and
 type-checks the packages they touch. On every push to `main` and every pull request, GitHub
-Actions (`.github/workflows/checks.yml`) builds, type-checks every package and runs the unit
-tests. Cloudflare only builds: it deploys `main` on its own, without waiting for the checks.
+Actions (`.github/workflows/checks.yml`) lints and checks formatting across the repo, then
+builds, type-checks every package and runs the unit tests. Cloudflare only builds: it
+deploys `main` on its own, without waiting for the checks.
 
 ## Auth setup (Zitadel)
 

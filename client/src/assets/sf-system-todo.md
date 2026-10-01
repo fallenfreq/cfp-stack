@@ -538,13 +538,12 @@ What's pending:
       at api source (46 errors in a fresh checkout before, 0 after). CI (2026-10-01,
       `.github/workflows/checks.yml`) builds before it type-checks, so the api's check has
       its `dist/`; the order is the workaround, not a fix.
-    - Not in CI yet (2026-10-01): lint and the format check fail on the whole repo, from
-      before. ESLint: 68 errors, 6 warnings — 47 `markdown/no-missing-label-refs` and 20
-      `markdown/fenced-code-language` (in `sf-system.md` and this file), 5
-      `vue/require-default-prop`, 1 `vue/html-self-closing`, 1 `no-unused-vars`
-      (`e2e/d1Memory.d.mts`). Prettier: 14 files. The hook only lints and formats the files a
-      commit touches. Clean up, then add `eslint .` and `prettier --check .` to CI. The layout
-      checks (Playwright) aren't in CI either: they need Chrome and the dev server.
+    - Lint and the format check run in CI since the cleanup (2026-10-01): markdown is linted
+      as GitHub's (task lists), and .vue files get Vue's recommended rules minus the 11 that
+      `eslint-config-prettier` lists as Prettier's (switched off by hand, no dependency);
+      `html-self-closing` stays with `void: 'any'`, and `require-default-prop` is off (an
+      optional prop is left out, not defaulted to undefined). The layout checks (Playwright)
+      aren't in CI: they need Chrome and the dev server.
     - `sl-row` or `sl-inset` on a Section or Center loses to its baked `sl-stack`: a Section's
       blocks don't line up with the parent's columns, and an inset Section or Centre has no
       side margins. Checks K2 and K3.

@@ -36,7 +36,7 @@
 				class="attr-checkbox sf"
 				:checked="!!value"
 				@change="emit('update', attrKey, ($event.target as HTMLInputElement).checked)"
-			>
+			/>
 			<input
 				v-else-if="typeof specDefault === 'number'"
 				:id="controlId"
@@ -48,7 +48,7 @@
 					emit('update', attrKey, ($event.target as HTMLInputElement).valueAsNumber || 0)
 				"
 				@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-			>
+			/>
 			<input
 				v-else
 				:id="controlId"
@@ -59,7 +59,7 @@
 				@input="onTextInput(($event.target as HTMLInputElement).value)"
 				@blur="onTextBlur(($event.target as HTMLInputElement).value)"
 				@keydown.enter.prevent="($event.target as HTMLInputElement).blur()"
-			>
+			/>
 
 			<span v-if="isAtDefault" class="attr-default-badge sf-loudness-1">default</span>
 

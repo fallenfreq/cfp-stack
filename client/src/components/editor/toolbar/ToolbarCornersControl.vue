@@ -41,7 +41,7 @@
 							class="cp-input sf sf-field sf-size-2xs sf-on-focus sf-on-disabled"
 							:disabled="individualized"
 							@change="commit"
-						>
+						/>
 						<span class="cp-unit sf-loudness-1">px</span>
 					</div>
 					<label class="cp-check-label">
@@ -50,7 +50,7 @@
 							type="checkbox"
 							class="sf"
 							@change="onIndividualizeToggle"
-						>
+						/>
 						Individualize
 					</label>
 				</div>
@@ -64,7 +64,7 @@
 							min="0"
 							class="cp-input sf sf-field sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
-						>
+						/>
 					</div>
 					<div class="cp-corner">
 						<span class="cp-label sf-loudness-1">TR</span>
@@ -74,7 +74,7 @@
 							min="0"
 							class="cp-input sf sf-field sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
-						>
+						/>
 					</div>
 					<div class="cp-corner">
 						<span class="cp-label sf-loudness-1">BL</span>
@@ -84,7 +84,7 @@
 							min="0"
 							class="cp-input sf sf-field sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
-						>
+						/>
 					</div>
 					<div class="cp-corner">
 						<span class="cp-label sf-loudness-1">BR</span>
@@ -94,7 +94,7 @@
 							min="0"
 							class="cp-input sf sf-field sf-size-2xs sf-on-focus sf-on-disabled"
 							@change="commit"
-						>
+						/>
 					</div>
 				</div>
 			</template>

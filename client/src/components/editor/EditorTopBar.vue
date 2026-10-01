@@ -12,7 +12,7 @@
 			@blur="commitRename"
 			@keyup.enter="nameInput?.blur()"
 			@keyup.escape="cancelRename"
-		>
+		/>
 		<NodePath :editor="editor" />
 		<SfIconButton
 			icon="three-dot"

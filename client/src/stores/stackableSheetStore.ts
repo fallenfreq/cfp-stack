@@ -2,7 +2,10 @@ import type { MapMarkerItem } from '@/components/demos/map/AddMarkerSwitch.vue'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-interface StackableItem { id: 'mapMarker'; content: MapMarkerItem }
+interface StackableItem {
+	id: 'mapMarker'
+	content: MapMarkerItem
+}
 
 export const useStackableSheetStore = defineStore('stackableSheet', () => {
 	const sheetContent = ref<StackableItem | null>(null)

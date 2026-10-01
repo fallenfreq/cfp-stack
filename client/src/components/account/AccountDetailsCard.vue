@@ -19,19 +19,19 @@ const { form, saving, saveSuccess, saveError, saveWarning, saveAccount } = useAc
 		>
 			<label class="sl-stack sf-gap-2xs">
 				<span class="sf-text-sm">First name</span>
-				<input v-model="form.firstName" class="sf sf-field sf-on-focus">
+				<input v-model="form.firstName" class="sf sf-field sf-on-focus" />
 			</label>
 			<label class="sl-stack sf-gap-2xs">
 				<span class="sf-text-sm">Last name</span>
-				<input v-model="form.lastName" class="sf sf-field sf-on-focus">
+				<input v-model="form.lastName" class="sf sf-field sf-on-focus" />
 			</label>
 			<label class="sl-stack sf-gap-2xs">
 				<span class="sf-text-sm">Display name</span>
-				<input v-model="form.displayName" class="sf sf-field sf-on-focus">
+				<input v-model="form.displayName" class="sf sf-field sf-on-focus" />
 			</label>
 			<label class="sl-stack sf-gap-2xs">
 				<span class="sf-text-sm">Nickname</span>
-				<input v-model="form.nickName" class="sf sf-field sf-on-focus">
+				<input v-model="form.nickName" class="sf sf-field sf-on-focus" />
 			</label>
 			<label class="sl-stack sf-gap-2xs">
 				<span class="sf-text-sm">Preferred language</span>

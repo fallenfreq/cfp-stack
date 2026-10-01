@@ -101,7 +101,7 @@ onMounted(() => {
 			aria-label="Go to a place"
 			class="sf sf-field"
 			@input="makeAcRequest"
-		>
+		/>
 		<ul v-if="showDropdown" class="place-search__results sl-stack sf-gap-none sf-depth-2">
 			<li v-for="(result, index) in results" :key="index">
 				<SfButton

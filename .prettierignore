@@ -9,3 +9,7 @@ pnpm-lock.yaml
 client/src/assets/generated-tokens.css
 client/src/assets/generated-classes.css
 client/src/assets/generated-editor-classes.css
+# Generated locally, ignored by git: Playwright's output and the built component preview.
+test-results/
+playwright-report/
+client/preview/out/

@@ -10,7 +10,7 @@
 			class="sf sf-field sf-on-focus"
 			placeholder="Search by name or slug…"
 			aria-label="Search pages"
-		>
+		/>
 
 		<AdminList :loading="isPending" :empty="!filteredPages.length">
 			<template #header>
@@ -41,17 +41,20 @@
 								<span
 									v-if="!pageTags.get(page.pageId)?.length"
 									class="sf-text-xs sf-loudness-1"
-									>—</span>
+									>—</span
+								>
 								<template v-else>
 									<span
 										v-for="t in (pageTags.get(page.pageId) ?? []).slice(0, 2)"
 										:key="t.tagId"
 										class="sf-tag sf-single-line sf-size-2xs sf-loudness-2 sf-variant-primary"
-										>{{ t.name }}</span>
+										>{{ t.name }}</span
+									>
 									<span
 										v-if="(pageTags.get(page.pageId)?.length ?? 0) > 2"
 										class="sf-counter sf-single-line sf-size-2xs sf-loudness-1"
-										>+{{ (pageTags.get(page.pageId)?.length ?? 0) - 2 }}</span>
+										>+{{ (pageTags.get(page.pageId)?.length ?? 0) - 2 }}</span
+									>
 								</template>
 							</SfButton>
 						</template>
@@ -83,7 +86,7 @@
 												.get(page.pageId)
 												?.some((a) => a.tagId === t.tagId)
 										"
-									>
+									/>
 									{{ t.name }}
 								</label>
 							</div>

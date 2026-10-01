@@ -52,7 +52,7 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 			<div class="sl-columns sl-collapse-sm sf-gap-sm">
 				<label class="sl-stack sf-gap-2xs">
 					<span class="sf-text-sm">New email address</span>
-					<input v-model="newEmail" type="email" class="sf sf-field sf-on-focus">
+					<input v-model="newEmail" type="email" class="sf sf-field sf-on-focus" />
 				</label>
 				<label class="sl-stack sf-gap-2xs">
 					<span class="sf-text-sm">Confirm new email address</span>
@@ -62,7 +62,7 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 						class="sf sf-field sf-on-focus"
 						:class="{ 'sf-is-error': mismatch }"
 						:aria-invalid="mismatch"
-					>
+					/>
 					<span v-if="mismatch" class="sf-text-sm sf-variant-danger">
 						Addresses do not match
 					</span>
@@ -93,7 +93,8 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 
 		<template v-else-if="emailStatus === 'code' || emailStatus === 'verifying'">
 			<p class="sf-text-sm sf-loudness-1">
-				A verification code has been sent to <strong>{{ pendingEmail }}</strong>. Your current email remains active until you verify the new one.
+				A verification code has been sent to <strong>{{ pendingEmail }}</strong
+				>. Your current email remains active until you verify the new one.
 			</p>
 			<div class="sl-cluster sl-align-y-end sf-gap-sm">
 				<label class="code-field sl-stack sf-gap-2xs">
@@ -102,7 +103,7 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 						v-model="verificationCode"
 						class="sf sf-field sf-on-focus"
 						autocomplete="one-time-code"
-					>
+					/>
 				</label>
 				<SfButton
 					:loudness="3"

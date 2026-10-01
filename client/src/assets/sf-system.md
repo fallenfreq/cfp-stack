@@ -284,7 +284,7 @@ tokens are prefixed `--sf-`. Two kinds, distinguished by separator:
 
 **Range tokens** (hyphen): a fixed scale of slots.
 
-```
+```text
 --sf-text-*       font size        (xs..9xl)
 --sf-spacing-*    spacing scale    (none, xs..xl)
 --sf-leading-*    line height      (none, tight, snug, normal, relaxed, loose)
@@ -305,7 +305,7 @@ A theme sets the values; the slot set itself is fixed.
 **Semantic tokens**: single shared values with a named meaning. Composite names use
 underscores (`--sf-fg_primary`); single-word names don't (`--sf-primary`).
 
-```
+```text
 --sf-fg_primary      default foreground
 --sf-fg_inverted     foreground on brand/inverse surfaces
 --sf-primary         brand colour
@@ -434,7 +434,7 @@ UI hierarchy so adjacent layers look correct together. A depth-2 dropdown sittin
 depth-1 card needs to read as above it — depth coordinates that relationship regardless
 of how CSS implements the actual stacking.
 
-```
+```text
 sf-depth-0   canvas / page
 sf-depth-1   cards, wells
 sf-depth-2   dropdowns, popovers
@@ -445,7 +445,7 @@ sf-depth-3   modals
 classes carry visual prominence, which does not always align — a deeply nested section's
 h1 may need heading-2 treatment:
 
-```
+```text
 sf-heading-1   most prominent
 sf-heading-2   secondary
 sf-heading-3   tertiary
@@ -454,7 +454,7 @@ sf-heading-3   tertiary
 **Loudness** — attention hierarchy among sibling content blocks. Higher number = more
 attention, consistent with the rest of the numbered scales in the system:
 
-```
+```text
 sf-loudness-1   lowest attention — de-emphasised, supporting content
 sf-loudness-2   moderate attention
 sf-loudness-3   highest attention — most visual weight, spacing, prominence
@@ -481,7 +481,7 @@ scale but different radii, so `border-radius` comes from the element's own rule 
 `<button>`, `<input>`) or an explicit `sf-radius-*` utility. Decoupling lets an author
 pick scale and shape independently rather than getting one when they wanted the other.
 
-```
+```text
 sf-size-2xs  very tight — breadcrumb, dense chip
 sf-size-xs   compact — icon button, small tag
 sf-size-sm   small — small button
@@ -501,7 +501,7 @@ treatment; the default is a themed border, but themes may compose multi-property
 weight, style, colour, spacing increase). No scale step is involved; the hyphen is a
 positional qualifier, not a scale selector.
 
-```
+```text
 sf-boundary-top
 sf-boundary-bottom
 sf-boundary-left
@@ -515,7 +515,7 @@ sf-boundary        all four
 Targets `> * + *`. `sf-divide-y` pairs naturally with `sl-stack`; `sf-divide-x` with
 `sl-cluster` or `sl-columns`.
 
-```
+```text
 sf-divide-x    between horizontally arranged children
 sf-divide-y    between vertically arranged children
 ```
@@ -532,7 +532,7 @@ something to decorate. Markers sit in their own cascade layer (`sf-element`, bel
 `sf-bundle`) so they behave the way HTML elements do — a baseline that bundles, variants
 and states override predictably, without depending on source order to break ties.
 
-```
+```text
 sf-chip          compact unit standing for an input, attribute or action — an
                  entered item, a filter, a choice, a suggestion. Any element:
                  static on a <span>, or with sf on a <button> / <a>
@@ -626,7 +626,7 @@ Semantic intent modifiers. The variant overrides only the bundle properties it t
 every other bundle property survives. The variant tells the theme what role this element
 plays so it can be expressed appropriately — a star, a colour, a badge, whatever fits.
 
-```
+```text
 sf-variant-featured   editorially selected or promoted — a featured product, a highlight
 sf-variant-primary    primary colour role — the theme's brand colour; a main action is
                       `sf-loudness-3 sf-variant-primary`, a quieter one a lower loudness
@@ -672,7 +672,7 @@ Runtime conditions applied as classes — either by JavaScript measuring the DOM
 author declaring a known context. They reflect facts about the current state of the
 environment, not authored intent.
 
-```
+```text
 sf-is-edge-top         element is flush with the top viewport edge
 sf-is-edge-right       element is flush with the right viewport edge
 sf-is-edge-bottom      element is flush with the bottom viewport edge
@@ -705,7 +705,7 @@ card-shaped `<div>`, or anything else that would otherwise draw its own containe
 
 `sf-flush` opts out of the chrome-class padding default — wear alongside `sf-depth-*`
 when the child touches the container's inner edge (image cards, toolbar slots).
-**Follow-up ([[project-sl-padding]]):** move padding to an `sl-pad-*` layout family
+**Follow-up:** move padding to an `sl-pad-*` layout family
 so `sf-flush` isn't needed — an image card becomes bare `sf-depth-1`, a padded card
 becomes `sf-depth-1 sl-pad-md`.
 
@@ -738,7 +738,7 @@ both-edges case at higher specificity than either alone.
 Single-property classes that bind one CSS property to a shared semantic token (underscore
 naming, mirroring the token name).
 
-```
+```text
 sf-fg_primary    color:        rgb(var(--sf-fg_primary))
 sf-border_color    border-color: rgb(var(--sf-border_color))
 ```
@@ -751,7 +751,7 @@ value.
 Single-property classes that bind one CSS property to a specific scale step (hyphen
 naming, mirroring the token name).
 
-```
+```text
 sf-radius-3        border-radius:   var(--sf-radius-3)
 sf-shadow-md       box-shadow:      var(--sf-shadow-md)
 sf-text-xl         font-size:       var(--sf-text-xl)
@@ -782,7 +782,7 @@ selector overrides it at higher specificity. Write one bare fallback, then only 
 combinations that need a different treatment — the full depth × variant matrix does
 not need to be specified explicitly.
 
-```
+```text
 sf-on-hover
 sf-on-focus
 sf-on-active
@@ -837,7 +837,7 @@ themes to looks is a job for the validator (not built; see Validator and linter)
 
 Nine structural patterns:
 
-```
+```text
 sl-stack      vertical stack
 sl-cluster    horizontal wrap
 sl-columns    grid — equal or custom ratio via --sl-cols
@@ -855,7 +855,7 @@ sl-aspect     aspect-ratio container — ratio configured via --sl-aspect
 Alignment modifiers compose with any layout. On every layout x is sideways and y is up and
 down. `sl-cover` centres by default.
 
-```
+```text
 sl-align-y-start   top
 sl-align-y-center  middle
 sl-align-y-end     bottom
@@ -981,7 +981,7 @@ Not yet covered:
 
 ### Scroll areas and pinned elements
 
-```
+```text
 sl-scroll-x    horizontal scroll area
 sl-scroll-y    vertical scroll area
 sl-pin-top     stays at the top edge of its scroll area while content scrolls under it
@@ -1061,7 +1061,7 @@ always fixed-plus-flexible. No theme can make `sl-stack` horizontal.
 
 Collapse responds to the space around a layout, not the screen width.
 
-```
+```text
 sl-collapse-xs   collapse below xs breakpoint
 sl-collapse-sm   collapse below sm breakpoint
 sl-collapse-md   collapse below md breakpoint
@@ -1071,7 +1071,7 @@ The same widths swap what shows. `sl-hide-below-*` hides an element at or below 
 `sl-show-below-*` shows it only then. Pair them to put a menu button in place of a row of
 links.
 
-```
+```text
 sl-hide-below-xs   sl-show-below-xs
 sl-hide-below-sm   sl-show-below-sm
 sl-hide-below-md   sl-show-below-md
@@ -1203,7 +1203,7 @@ their items with a gap (`GAP_LAYOUTS` in `slLayout.ts`):
 A block rendered by a Vue component (a TipTap node view) is three boxes, in the editor and on
 published pages:
 
-```
+```text
 [data-node-view-wrapper]      outer box: the one its parent places
   component root              wears the node's classes
     [data-node-view-content]  content box, rendered where the component puts <slot />

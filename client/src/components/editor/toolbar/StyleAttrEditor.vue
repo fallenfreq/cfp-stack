@@ -36,7 +36,9 @@
 					@mousedown.prevent
 					@click="closeFullscreen"
 				>
-					<span class="material-symbols-rounded sf-icon sf-text-lg">close_fullscreen</span>
+					<span class="material-symbols-rounded sf-icon sf-text-lg"
+						>close_fullscreen</span
+					>
 				</SfButton>
 			</div>
 		</div>

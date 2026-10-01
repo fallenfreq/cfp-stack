@@ -47,7 +47,7 @@
 				step="1"
 				:value="alphaIndex"
 				@input="onAlphaInput"
-			>
+			/>
 			<span class="cp-alpha-val sf-loudness-1">{{ Math.round(alpha * 100) }}%</span>
 		</div>
 
@@ -57,7 +57,7 @@
 				class="cp-color-input sf-swatch sf-size-2xs sf-on-hover"
 				:value="freeformHex"
 				@input="onFreeformInput"
-			>
+			/>
 		</div>
 	</div>
 </template>

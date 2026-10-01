@@ -15,6 +15,10 @@ export default defineConfig([
 			'./api/{client_dist,functions}',
 			'**/.wrangler',
 			'**/components.d.ts',
+			// Generated locally, ignored by git: Playwright's output and the built component preview.
+			'**/test-results',
+			'**/playwright-report',
+			'**/preview/out',
 		],
 		'Global Ignores',
 	),
@@ -42,7 +46,8 @@ export default defineConfig([
 	{
 		files: ['**/*.md'],
 		plugins: { markdown },
-		language: 'markdown/commonmark',
+		// The docs use GitHub's markdown (task lists, tables).
+		language: 'markdown/gfm',
 		extends: ['markdown/recommended'],
 	},
 	// This can be used isolated to add individual rules over prettier
