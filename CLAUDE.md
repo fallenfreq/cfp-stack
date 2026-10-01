@@ -109,5 +109,6 @@ The theme system's spec is `client/src/assets/sf-system.md`; open work and where
   another stylesheet. Known limits are checks marked expected to fail (`e2e/known.spec.ts`).
   After editing client code, let the dev build finish first: a page loaded mid-rebuild times
   out.
-- Commit only when asked. Browser floor is Safari 17; no compat code below it.
+- Commit only when asked. Browser floor is Safari 17.4 (themes are emitted in `@scope`); no
+  compat code below it.
 - Bumping `api/src/domain/seedVersion.ts` needs a reseed (`pnpm seed:local`).

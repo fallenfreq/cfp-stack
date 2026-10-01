@@ -6,17 +6,21 @@ describes the target design; this file enumerates what needs to change in code t
 ## Current state (resume here)
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
-committed (2026-10-01). Pick the next piece with the user. Candidates, the first recommended:
+committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
+the user), so themes in `@scope` apply on every supported browser. Candidates, the first
+agreed as next:
 
-1. **Themes on Safari 17.0–17.3.** Non-root themes are emitted in `@scope`, which Safari
-   supports from 17.4; the stated floor is Safari 17, so Dark, Pink and user themes silently
-   don't apply there. Either raise the floor to 17.4 (CLAUDE.md, a decision) or emit themes
-   without `@scope` (generator work; keep "a theme rule beats the root rule for the same
-   class").
-2. **Item 8:** a task item with its own `class` loses its layout classes (`CustomTaskItem`).
+1. **Item 8:** a task item with its own `class` loses its layout classes (`CustomTaskItem`).
    Add a test case.
-3. **Scroll-frame arrows in documents:** the `sf-is-overflow-*` script doesn't run in pages
+2. **Scroll-frame arrows in documents:** the `sf-is-overflow-*` script doesn't run in pages
    (item 10, logged).
+3. **Tooltips on Safari before 26** (found 2026-10-01, not fixed): `SfTooltip` is placed only
+   by anchor positioning, which Safari has from 26, with no fallback, so there it sits in the
+   screen's top-left corner. Checked in Chrome with the placement switched off: the Account
+   tooltip moves from under its button (1239, 99) to (0, 8). `SfPopover` has a fallback
+   (centred on screen). Not checked: the seed's `sl-scroll-x` hides its scrollbar only with
+   `scrollbar-width`, so older Safari may show it while scrolling (the components that hide
+   theirs also set `::-webkit-scrollbar`).
 4. Bigger: the validator / linter (item 11); WebKit in the layout checks.
 
 **Layout checks** (added 2026-10-01): `pnpm test:ui` runs
@@ -503,7 +507,6 @@ What's pending:
     - Atom components can't be selected by clicking.
     - A hidden last block leaves the previous block's bottom space (plain elements too): 32px
       under the last shown block in a Card instead of 16px. Check K5.
-    - Non-root themes use `@scope`, which needs Safari 17.4.
     - The class picker offers only gap, padding, radius and collapse.
 
 11. **Linter / validator (not built).** The rules are in the spec, "Validator and linter (not
