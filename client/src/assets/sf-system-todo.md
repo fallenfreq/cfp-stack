@@ -533,7 +533,9 @@ What's pending:
       `functions_src` imports `../../dist/…` by relative path, though `tsconfig.check.json`
       says it doesn't need `dist/` (its `@/*` path only helps imports written with `@/`). The
       pre-commit hook passes locally because `pnpm dev` keeps `api/dist` built. Found
-      2026-10-01 checking each commit in a clean copy; predates item 10.
+      2026-10-01 checking each commit in a clean copy; predates item 10. The client's check
+      no longer needs it (2026-10-01): `@somefreq-app/api/appRouter` is types only and points
+      at api source (46 errors in a fresh checkout before, 0 after).
     - `sl-row` or `sl-inset` on a Section or Center loses to its baked `sl-stack`: a Section's
       blocks don't line up with the parent's columns, and an inset Section or Centre has no
       side margins. Checks K2 and K3.
