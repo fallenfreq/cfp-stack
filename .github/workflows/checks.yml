@@ -1,0 +1,26 @@
+# Every push to main and every pull request: build, then type-check every package and run the
+# unit tests. The build comes first because the api's type check reads its dist/. Cloudflare
+# deploys main on its own; this says whether what it deployed checks out.
+name: Checks
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+
+jobs:
+    checks:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v4
+            # pnpm's version comes from packageManager in package.json.
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: pnpm
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm build
+            - run: node scripts/typecheck.mjs --all
+            - run: pnpm test

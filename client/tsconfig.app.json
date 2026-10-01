@@ -9,7 +9,7 @@
 		"./src/**/*.ts",
 		"./src/**/*.d.ts",
 		"components.d.ts",
-		"../api/src/schemas/**/*"
+		"../api/src/**/*"
 	],
 	"exclude": ["src/**/__tests__/*"],
 	"compilerOptions": {

@@ -18,7 +18,6 @@
 		"build": "rm -rf dist functions .tsbuildinfo && tsc --build --noCheck",
 		"type-check": "tsc -p tsconfig.check.json",
 		"test": "node --test 'test/*.test.mjs'",
-		"build:all": "pnpm --filter @somefreq-app/* --parallel build",
 		"migrate": "pnpm drizzle-kit generate:sqlite",
 		"migrate:custom": "pnpm drizzle-kit generate:sqlite --custom",
 		"migrate:push:local": "npx wrangler d1 migrations apply somefreq-db --local",

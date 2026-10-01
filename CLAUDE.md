@@ -46,7 +46,7 @@ The full-stack experience runs at **8788** (wrangler serves both the API and the
 | Script                        | What it does                                                            |
 | ----------------------------- | ----------------------------------------------------------------------- |
 | `pnpm dev`                    | Start both servers                                                      |
-| `pnpm build`                  | Build client + API                                                      |
+| `pnpm build`                  | Build client + API side by side, no type check. Cloudflare's build      |
 | `pnpm typecheck`              | Type-check staged packages (`--all`: every package). Pre-commit runs it |
 | `pnpm test`                   | Unit tests (`api/test`, Node's built-in runner)                         |
 | `pnpm test:ui`                | Layout checks in Chrome (`client/e2e`, Playwright)                      |
@@ -55,6 +55,11 @@ The full-stack experience runs at **8788** (wrangler serves both the API and the
 | `pnpm migrate:push:api`       | Apply migrations to production D1                                       |
 | `pnpm lint`                   | ESLint with auto-fix                                                    |
 | `pnpm format`                 | Prettier                                                                |
+
+Checks run at two points. On commit, the hook lints and formats the staged files and
+type-checks the packages they touch. On every push to `main` and every pull request, GitHub
+Actions (`.github/workflows/checks.yml`) builds, type-checks every package and runs the unit
+tests. Cloudflare only builds: it deploys `main` on its own, without waiting for the checks.
 
 ## Auth setup (Zitadel)
 

@@ -1,5 +1,5 @@
-// Type-checks the packages touched by staged files (pre-commit), or every package with --all.
-// Builds don't type-check; this is where type errors surface. Prints only errors.
+// Type-checks the packages touched by staged files (pre-commit), or every package with --all
+// (CI, after it builds). Builds themselves don't type-check. Prints only errors.
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 
@@ -18,8 +18,13 @@ function touched() {
 	for (const f of files) {
 		if (f.startsWith('api/')) out.add('api')
 		if (f.startsWith('client/')) out.add('client')
-		// The client type-checks against the api schemas.
-		if (f.startsWith('api/src/schemas/')) out.add('client')
+		// The client's types come from api source (AppRouter, the schemas), so an api change
+		// can break the client; shared/ is used by both.
+		if (f.startsWith('api/src/')) out.add('client')
+		if (f.startsWith('shared/')) {
+			out.add('api')
+			out.add('client')
+		}
 	}
 	return out
 }

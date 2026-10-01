@@ -19,8 +19,7 @@
 	"scripts": {
 		"prepare": "husky",
 		"dev": "pnpm --filter @somefreq-app/* --parallel dev",
-		"build": "pnpm --filter @somefreq-app/* build",
-		"build:deploy": "node scripts/typecheck.mjs --all && pnpm build",
+		"build": "pnpm --filter @somefreq-app/* --parallel build",
 		"typecheck": "node scripts/typecheck.mjs",
 		"test": "pnpm --filter @somefreq-app/api test",
 		"test:ui": "pnpm --filter @somefreq-app/client test:ui",

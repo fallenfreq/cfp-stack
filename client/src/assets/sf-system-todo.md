@@ -535,7 +535,16 @@ What's pending:
       pre-commit hook passes locally because `pnpm dev` keeps `api/dist` built. Found
       2026-10-01 checking each commit in a clean copy; predates item 10. The client's check
       no longer needs it (2026-10-01): `@somefreq-app/api/appRouter` is types only and points
-      at api source (46 errors in a fresh checkout before, 0 after).
+      at api source (46 errors in a fresh checkout before, 0 after). CI (2026-10-01,
+      `.github/workflows/checks.yml`) builds before it type-checks, so the api's check has
+      its `dist/`; the order is the workaround, not a fix.
+    - Not in CI yet (2026-10-01): lint and the format check fail on the whole repo, from
+      before. ESLint: 68 errors, 6 warnings — 47 `markdown/no-missing-label-refs` and 20
+      `markdown/fenced-code-language` (in `sf-system.md` and this file), 5
+      `vue/require-default-prop`, 1 `vue/html-self-closing`, 1 `no-unused-vars`
+      (`e2e/d1Memory.d.mts`). Prettier: 14 files. The hook only lints and formats the files a
+      commit touches. Clean up, then add `eslint .` and `prettier --check .` to CI. The layout
+      checks (Playwright) aren't in CI either: they need Chrome and the dev server.
     - `sl-row` or `sl-inset` on a Section or Center loses to its baked `sl-stack`: a Section's
       blocks don't line up with the parent's columns, and an inset Section or Centre has no
       side margins. Checks K2 and K3.
