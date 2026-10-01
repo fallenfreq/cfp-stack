@@ -287,4 +287,69 @@
 	<p id="align-cluster-x-end-last">B</p>
 </div>
 
+<h2>Known not to work yet</h2>
+<p>
+	Each heading says what should happen; today it doesn't. The checks expect these to fail, and
+	report when one starts working, so its check can become a normal one.
+</p>
+
+<h3>K1: typed columns in a narrow side of a Split should stack, as a Columns block does</h3>
+<layout-split split="2/3">
+	<p>Wide side</p>
+	<div
+		data-container
+		id="k1-columns"
+		class="sl-columns sl-collapse-sm"
+		style="--sl-cols: repeat(3, 1fr)"
+	>
+		<p>a</p>
+		<p>b</p>
+		<p>c</p>
+	</div>
+</layout-split>
+
+<h3>K2: a Section set as a row should put its blocks in the parent's columns</h3>
+<layout-columns columns="3" class="sf-gap-md">
+	<p id="k2-column-1">Column 1</p>
+	<p id="k2-column-2">Column 2</p>
+	<p id="k2-column-3">Column 3</p>
+	<layout-section id="k2-section" class="sl-row">
+		<p id="k2-cell-1">Cell 1</p>
+		<p id="k2-cell-2">Cell 2</p>
+		<p id="k2-cell-3">Cell 3</p>
+	</layout-section>
+</layout-columns>
+
+<h3>K3: a Section or Centre used as an inset should give its blocks side margins</h3>
+<layout-section id="k3-section" class="sl-inset">
+	<p id="k3-section-line">On the line</p>
+	<div data-container class="sl-bleed sf-depth-2"><p>Edge to edge</p></div>
+</layout-section>
+<layout-center id="k3-center" class="sl-inset">
+	<p id="k3-center-line">On the line</p>
+	<div data-container class="sl-bleed sf-depth-2"><p>Edge to edge</p></div>
+</layout-center>
+
+<h3>K4: a Section with a background should stretch to its row's height, as a Card does</h3>
+<layout-columns columns="2" class="sf-gap-md">
+	<layout-section id="k4-section" class="sf-depth-1"><p id="k4-content">Short</p></layout-section>
+	<layout-card id="k4-card">
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+	</layout-card>
+</layout-columns>
+
+<h3>K5: hiding a Card's last block should leave no extra space under the block above it</h3>
+<layout-card id="k5-card" class="sf-size-md">
+	<p id="k5-last-shown">Shown</p>
+	<p id="k5-hidden" class="sl-hide-below-md">Hidden below md</p>
+</layout-card>
+<layout-card id="k5-reference" class="sf-size-md"><p id="k5-only">The only block</p></layout-card>
+
 <p>End of the test cases.</p>

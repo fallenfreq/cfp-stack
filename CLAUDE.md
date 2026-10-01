@@ -106,6 +106,8 @@ The theme system's spec is `client/src/assets/sf-system.md`; open work and where
   seeded), so checks state behaviour, not looks or pixels. The cases are on
   `/editor?seed=tests`; add one for each layout fix. The demo-page snapshot fails on any move;
   accept an intended one with `pnpm test:ui --update-snapshots`. `SF_SYSTEM_CSS=<file>` checks
-  another stylesheet.
+  another stylesheet. Known limits are checks marked expected to fail (`e2e/known.spec.ts`).
+  After editing client code, let the dev build finish first: a page loaded mid-rebuild times
+  out.
 - Commit only when asked. Browser floor is Safari 17; no compat code below it.
 - Bumping `api/src/domain/seedVersion.ts` needs a reseed (`pnpm seed:local`).

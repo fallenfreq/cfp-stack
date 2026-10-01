@@ -20,8 +20,8 @@ committed (2026-10-01). Pick the next piece with the user. Candidates, the first
 4. Bigger: the validator / linter (item 11); WebKit in the layout checks.
 
 **Layout checks** (added 2026-10-01): `pnpm test:ui` runs
-`client/e2e` with Playwright in the installed Chrome, against the dev server. 46 checks, about
-15 seconds.
+`client/e2e` with Playwright in the installed Chrome, against the dev server. 60 checks (14 of them
+expected to fail), about 15 seconds.
 
 - **The stylesheet** is built from the seed in a throwaway database in memory
   (`e2e/globalSetup.ts`, using `e2e/d1Memory.mjs`, which the component preview now imports
@@ -37,6 +37,10 @@ committed (2026-10-01). Pick the next piece with the user. Candidates, the first
 - **The demo page** is snapshotted under the root theme only (`e2e/__snapshots__`).
 - **The cases** are on `/editor?seed=tests` (`client/src/config/editor/testContent.html`).
   Add a case for each layout fix.
+- **Known not to work yet** (K1–K5, `e2e/known.spec.ts`): each checks what should happen and
+  is marked as expected to fail, with a normal check that every case is set up as described.
+  When one is fixed, Playwright reports "expected to fail, but passed": remove its
+  `test.fail()` and move the case up the test page.
 - **Proved against old stylesheets** (`SF_SYSTEM_CSS=<file>`): the pre-item-10 stylesheet
   fails 19 of the 25 root-theme checks, and the pre-6b one fails only the toolbar check (plus
   the theme check, since old stylesheets have no test theme).
@@ -451,7 +455,7 @@ What's pending:
 
     **Known limits, to document:**
     - Typed layouts measure the layout around them; layout blocks measure their own space. In a
-      narrow split side, a typed grid stacks only when the whole split is narrow.
+      narrow split side, a typed grid stacks only when the whole split is narrow. Check K1.
     - A component whose own CSS sizes its slot by content, without `sl-` classes, still makes a
       collapsing block inside it 0 wide. In the component rules and the validator section.
 
@@ -486,15 +490,19 @@ What's pending:
       says it doesn't need `dist/` (its `@/*` path only helps imports written with `@/`). The
       pre-commit hook passes locally because `pnpm dev` keeps `api/dist` built. Found
       2026-10-01 checking each commit in a clean copy; predates item 10.
-    - `sl-row` or `sl-inset` on a Section or Center loses to its baked `sl-stack`.
-    - A component root doesn't fill its stretched wrapper (TiptapTest is 235 of 520px).
-      LayoutCard patches this with `height: 100%`.
+    - `sl-row` or `sl-inset` on a Section or Center loses to its baked `sl-stack`: a Section's
+      blocks don't line up with the parent's columns, and an inset Section or Centre has no
+      side margins. Checks K2 and K3.
+    - A component root doesn't fill its stretched wrapper: a Section with a background in a row
+      of columns is 58px tall beside a 394px Card (TiptapTest: 235 of 520px). LayoutCard
+      patches this with `height: 100%`. Check K4.
     - TiptapCodeBlock puts the author's classes on a nested `pre`. That node view is editor
       only, so placement and looks differ from published pages.
     - Scroll-frame arrows can't show in documents: the `sf-is-overflow-*` script runs only in
       admin lists and toolbars.
     - Atom components can't be selected by clicking.
-    - A hidden last block leaves the previous block's bottom space (plain elements too).
+    - A hidden last block leaves the previous block's bottom space (plain elements too): 32px
+      under the last shown block in a Card instead of 16px. Check K5.
     - Non-root themes use `@scope`, which needs Safari 17.4.
     - The class picker offers only gap, padding, radius and collapse.
 
