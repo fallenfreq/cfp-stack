@@ -144,6 +144,69 @@
 	</li>
 </ul>
 
+<h2>The page's line</h2>
+<p>
+	This page sits in the page shell, an inset, as a stored page does. Its own blocks sit on the
+	shell's line, and a block set to bleed reaches the shell's edges, as the shell's own items
+	would.
+</p>
+
+<h3>A paragraph sits on the line</h3>
+<p id="line-paragraph">On the line</p>
+
+<h3>An image set to bleed reaches the edges</h3>
+<img id="line-image" class="sl-bleed" src="https://placehold.co/1200x100/png" style="width: 100%" />
+
+<h3>A block and a Card set to bleed reach the edges</h3>
+<div data-container id="line-block-bleed" class="sl-bleed sf-depth-1"><p>Edge to edge</p></div>
+<layout-card id="line-card-bleed" class="sf-size-md sl-bleed"><p>Edge to edge</p></layout-card>
+
+<h3>A bar set to bleed reaches the edges, its content on the line</h3>
+<div data-container id="line-bar" class="sl-bleed sl-inset-line sf-depth-1">
+	<p id="line-bar-text">On the line</p>
+</div>
+
+<h3>Bands set to bleed reach the edges, their content on the line</h3>
+<div data-container id="line-band" class="sl-bleed sl-inset">
+	<p id="line-band-text">On the line</p>
+</div>
+<div data-container id="line-card-band" class="sl-bleed sl-inset sf-depth-1">
+	<p id="line-card-band-text">On the line</p>
+</div>
+<layout-card id="line-component-band" class="sl-bleed sl-inset">
+	<p id="line-component-band-text">On the line</p>
+</layout-card>
+
+<h3>Columns in a block set to bleed stack below sm at their own width</h3>
+<div data-container class="sl-bleed sf-depth-1">
+	<div data-container id="line-columns-in-bleed" class="sl-columns sl-collapse-sm">
+		<p>One</p>
+		<p>Two</p>
+	</div>
+</div>
+
+<h3>Columns stack below sm at their own width, set to bleed or not</h3>
+<div data-container id="line-columns" class="sl-columns sl-collapse-sm">
+	<p>One</p>
+	<p>Two</p>
+</div>
+<div data-container id="line-columns-bleed" class="sl-columns sl-collapse-sm sl-bleed">
+	<p>One</p>
+	<p>Two</p>
+</div>
+<layout-columns id="line-component-columns" columns="2" class="sf-gap-md sl-collapse-sm">
+	<p>One</p>
+	<p>Two</p>
+</layout-columns>
+<layout-columns
+	id="line-component-columns-bleed"
+	columns="2"
+	class="sf-gap-md sl-collapse-sm sl-bleed"
+>
+	<p>One</p>
+	<p>Two</p>
+</layout-columns>
+
 <h2>Collapse</h2>
 <p>
 	Columns stack when the box they measure is at or below their breakpoint; each heading says which

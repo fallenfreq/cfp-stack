@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures'
-import { documentWidths, openSeeded, setDocumentWidth } from './helpers'
+import { openSeeded, setShellWidth, shellWidths } from './helpers'
 
 // The demo page (/editor?seed=true) laid out as last accepted, under the seed's root theme: every
 // element's box, display and container type, one line per element. A change fails with the lines
@@ -15,7 +15,7 @@ for (const widthName of ['wide', 'just below sm', 'just below xs'])
 			'.tiptap.ProseMirror li:has-text("HTML source (code view) toggle")',
 			null,
 		)
-		await setDocumentWidth(page, documentWidths().find((w) => w.name === widthName)!.px)
+		await setShellWidth(page, shellWidths().find((w) => w.name === widthName)!.px)
 		const lines = await page.evaluate(() => {
 			for (const el of document.querySelectorAll('*'))
 				if (el.scrollTop || el.scrollLeft) el.scrollTo(0, 0)

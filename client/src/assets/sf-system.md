@@ -960,6 +960,24 @@ A padded box between the line's owner and an `sl-inset-line` element adds its pa
 top — the content ends up one padding further in. A pinned edge (`sl-pin-*`) stays flush:
 pinning wins over the line.
 
+**A document in an inset.** The editor, the home page and the preview show a page's document
+in the page shell, an inset. A collection's sheet is an inset too, its padding the margin.
+Whatever shows a document decides whether it sits in an inset. The document's own blocks count
+as the inset's children:
+
+- They sit on its line, and one set to bleed reaches its edges.
+- A band or bar keeps its content on the line, as in the table above.
+- Outside an inset, a document has no margins of its own, so it can be shown anywhere.
+
+TipTap puts two boxes between the inset and the blocks, so it works differently underneath
+(`slLayout.ts`, `slCombined.ts`). The box TipTap mounts the document in wears `page-content`
+and must be the inset's own child. `PageContent` adds the class; a component that uses
+TipTap's `EditorContent` directly adds it itself. The document pads itself to the line. A bleeding block
+pulls out of that padding to the width of TipTap's box around the document, which is
+measured. A plain block that is both `sl-center` and `sl-bleed` differs: it goes edge to
+edge instead of staying centred. That combination isn't supported (Validator and linter,
+Content).
+
 **Rules**
 
 - **Nothing is assumed.** A plain inset only reads the margin; only boxes that set their
@@ -967,7 +985,8 @@ pinning wins over the line.
 - **One arrangement per box.** `sl-inset` arranges its children, so it doesn't share an
   element with `sl-stack`, `sl-cluster`, `sl-columns`, `sl-split` or `sl-grid`. Add a
   wrapper if needed.
-- **Direct children only.** Bleed reaches the nearest inset.
+- **Direct children only.** Bleed reaches the nearest inset. A document's own blocks count
+  as its children.
 - **The page margin and page width are lengths**, not percentages — tracks and padding
   resolve percentages against different widths. `clamp()` and `vw` are fine.
 - `sf-is-edge-*` only says a box touches the screen edge; the theme decides the look
@@ -1089,6 +1108,9 @@ around it. A width container takes no width from its content, so only these boxe
   whole split is narrow, unless the side is a layout itself.
 - **The document** (the editor and published pages) is always a width container, so a layout
   at the top of a page measures the page.
+- **A layout that bleeds out of a document** (a top-level block set to bleed in an inset) is
+  wider than the document, so it measures the box it bleeds into instead. A block that bleeds
+  becomes a width container when it holds a collapsing element, so what's inside measures it.
 
 **Nothing in a spot sized by its content measures** (in a document). A width container there
 would be 0 wide. These spots are table cells, a cluster's items, a cover's items, anything in
@@ -1179,7 +1201,10 @@ Picker choices land in storage by a uniform pattern:
   vars.
 
 Content renders through TipTap both in the editor and on published pages (a read-only
-editor), so the same rules apply to both. How a document's blocks sit is fixed CSS served
+editor), so the same rules apply to both. The editor, the home page and the preview show it
+in the page shell (`SfPageShell`), so a page is edited as it sits there. A collection's sheet
+(`StackableSheet`) is an inset whose margin is its padding, so a page there sits on the
+sheet's line and bleeds to its edges. How a document's blocks sit is fixed CSS served
 with the theme (`api/src/domain/css/`), so it can read the one list of layouts that space
 their items with a gap (`GAP_LAYOUTS` in `slLayout.ts`):
 
@@ -1268,8 +1293,13 @@ component, so these keep the system's layout working around and inside it:
 
 ## Validator and linter (not built)
 
-Rules the system relies on that nothing checks yet. The validator would check a theme when it
-is saved; the linter would check component code. Each rule's reason is in the section named.
+Rules the system relies on that nothing checks yet:
+
+- The validator would check a theme when it is saved, and a page's content when it is saved.
+- The class panel would flag a content rule as the classes are typed.
+- The linter would check component code.
+
+Each rule's reason is in the section named.
 
 **Themes**
 
@@ -1279,6 +1309,14 @@ is saved; the linter would check component code. Each rule's reason is in the se
 - No container units (`cqw`, `cqi`) in values: what they measure depends on where the system
   puts width containers (Container-responsive collapse).
 - `var(--sf-gap)` and `var(--sf-padding)` are read with a fallback, unless unset means none.
+
+**Content** (classes on a page's blocks, from the class panel or code view)
+
+- One arrangement per box: `sl-inset` doesn't share a block with `sl-stack`, `sl-cluster`,
+  `sl-columns`, `sl-split` or `sl-grid` (Side margins and full-bleed).
+- `sl-center` doesn't share a block with `sl-bleed`. A centred reading column that also spans
+  edge to edge has no clear meaning. A Centre block set to bleed is fine: its outer box takes
+  the bleed (Side margins and full-bleed).
 
 **Components** (Component blocks, "Writing a component block")
 

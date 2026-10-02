@@ -35,8 +35,11 @@ export function breakpoints(): Record<string, number> {
 	return found
 }
 
-/** Document widths the layout checks run at: as wide as the window, then below sm and xs. */
-export function documentWidths(): { name: string; px: number | null }[] {
+/**
+ * Page shell widths the layout checks run at: as wide as the window, then below sm and xs. The
+ * document inside is narrower by the shell's margins, so below sm stays below sm.
+ */
+export function shellWidths(): { name: string; px: number | null }[] {
 	const { sm, xs } = breakpoints() as { sm: number; xs: number }
 	return [
 		{ name: 'wide', px: null },
@@ -100,11 +103,17 @@ export async function openSeeded(
 export const openTests = (page: Page, themeClass: string | null) =>
 	openSeeded(page, 'tests', '#align-cluster-x-end-last', themeClass)
 
-/** Narrow the document to `px` (null: as wide as the window), as an author's page would be. */
-export async function setDocumentWidth(page: Page, px: number | null): Promise<void> {
+/**
+ * Narrow the page shell the document sits in to `px`, as a narrower screen would; null: as wide
+ * as the window. The document keeps its margins inside it.
+ */
+export async function setShellWidth(page: Page, px: number | null): Promise<void> {
 	await page.evaluate((px) => {
-		const doc = document.querySelector<HTMLElement>('.tiptap.ProseMirror')!
-		doc.style.maxWidth = px === null ? '' : `${px}px`
+		const shell = document
+			.querySelector('.tiptap.ProseMirror')
+			?.closest<HTMLElement>('.page-shell')
+		if (!shell) throw new Error('setShellWidth: the document is not in a page shell')
+		shell.style.maxWidth = px === null ? '' : `${px}px`
 	}, px)
 	await settle(page)
 }

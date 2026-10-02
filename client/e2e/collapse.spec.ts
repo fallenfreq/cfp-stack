@@ -3,13 +3,13 @@ import {
 	box,
 	breakpoints,
 	columnCount,
-	documentWidths,
 	isShown,
 	measuredBox,
 	openTests,
 	pageWidth,
 	placed,
-	setDocumentWidth,
+	setShellWidth,
+	shellWidths,
 } from './helpers'
 
 // Collapse and hide/show measure the space around a layout (sf-system.md, "Container-responsive
@@ -53,7 +53,7 @@ const NOT_ZERO = [
 for (const widthName of ['wide', 'just below sm', 'just below xs'])
 	test(`collapse measures the right box, ${widthName}`, async ({ page, themeClass }) => {
 		await openTests(page, themeClass)
-		await setDocumentWidth(page, documentWidths().find((w) => w.name === widthName)!.px)
+		await setShellWidth(page, shellWidths().find((w) => w.name === widthName)!.px)
 		const bp = breakpoints()
 
 		for (const c of COLUMNS) {

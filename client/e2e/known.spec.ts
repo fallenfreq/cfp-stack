@@ -7,7 +7,7 @@ import {
 	isShown,
 	openTests,
 	placed,
-	setDocumentWidth,
+	setShellWidth,
 } from './helpers'
 
 // Known not to work yet (sf-system-todo.md, item 10, "Logged"; the typed-layout limit is in
@@ -40,7 +40,7 @@ test('the known-limit cases are set up as described', async ({ page }) => {
 		(await box(page.locator('#k4-card'))).height,
 		"K4: the Card beside it is taller than the Section's content",
 	).toBeGreaterThan(content.height + 20)
-	await setDocumentWidth(page, md - 40)
+	await setShellWidth(page, md - 40)
 	expect(await isShown(page.locator('#k5-hidden')), 'K5: the last block is hidden').toBe(false)
 	expect(await isShown(page.locator('#k5-last-shown')), 'K5: the block above it shows').toBe(true)
 })
@@ -83,7 +83,7 @@ test("K5: hiding a Card's last block leaves no extra space under the block above
 	page,
 }) => {
 	test.fail()
-	await setDocumentWidth(page, breakpoints().md! - 40)
+	await setShellWidth(page, breakpoints().md! - 40)
 	const card = await box(page.locator('#k5-card'))
 	const lastShown = await box(page.locator('#k5-last-shown'))
 	const reference = await box(page.locator('#k5-reference'))

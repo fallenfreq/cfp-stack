@@ -18,6 +18,55 @@ spacing of its own, so it can be shown anywhere (a collection's sheet shows it b
 shell per page comes later (decided with the user, 2026-10-01). The editor demo opens the demo
 content built into the app (`/editor?seed=true`), the same locally and live.
 
+**The editor shows the page in the page shell** (2026-10-02, not committed). A document in an
+inset now has its top-level blocks as the inset's items. They sit on its line; one set to bleed
+reaches its edges; bands and bars keep the line; a layout that bleeds collapses at its own
+width. See `sf-system.md`, "A document in an inset".
+
+- **Rejected:** two designs that make the document a grid.
+    - Sharing the inset's columns (subgrid): a width container can't.
+    - Copying the inset's columns: hand-made layouts on the page then measured the full width,
+      the gap cursor jumped to the top, and lists grew.
+- **Reviewed** by a separate agent. Its fix (measure the bleed's width, not the margin) is what
+  shipped; mine broke cards used as insets, card bands and bars.
+- **Code review of the change** (`/code-review high`): eight findings. Seven are done; Safari
+  waits (candidate 4 below).
+    - Columns inside a plain block that bleeds measured the narrower document: up to two
+      margins less than their width, so they stacked early. A block that bleeds now measures
+      for what it holds.
+    - A collection's sheet showed a page bare (no margins, no bleed). Decided with the user:
+      ours should be an inset. `StackableSheet` is now one, its padding the margin, with its
+      scrolling body a band, so a page there gets the sheet's line and bleeds to its edges.
+      Checked by `app.spec.ts`, which fails on the old sheet.
+    - The CSS found TipTap's mount box by its shape; it now wears a class, `page-content`
+      (decided with the user), set by `PageContent` and the editor.
+    - The component band's rule weighed one class more than the plain band's.
+    - Every collapse rule carried a `:has()`; the document selector no longer needs one.
+    - The test helpers were renamed for what they narrow (`setShellWidth`, `shellWidths`).
+    - Formatting.
+- **New names:** `--sfx-bleed-width`, `sf-bleed-area` and `page-content`.
+- **Next: review what came after the code review.** It's committed but not pushed (2026-10-02).
+  Run `/code-review` on that commit, fix what it finds, then push. Nobody but the author has
+  reviewed:
+    - the fixes made after the review: a block that bleeds measuring for what it holds
+      (`generateCss.ts`), the simpler selectors and the matching weights (`slLayout.ts`,
+      `slCombined.ts`);
+    - the sheet as an inset (`StackableSheet.vue`);
+    - the `page-content` class (`PageContent.vue`, `TiptapEditor.vue`, `slLayout.ts`);
+    - the sheet check and its faked API replies (`app.spec.ts`), and the "document at sm"
+      width (`line.spec.ts`).
+- **The demo:** its image and code sample set to bleed; its Center blocks lost
+  `sf-padding-lg`, which doubled the margin. On wide screens its reading column is 48px wider.
+- **Checks:** `e2e/line.spec.ts` compares every case in "The page's line" with a reference
+  that's the shell's own item, in five shells at four widths. One width puts the document at
+  exactly sm, where a block that bleeds is still wider. It failed on the old rules, and
+  without the rule for columns inside a block that bleeds. `setShellWidth` narrows the page
+  shell, not the document.
+- **Not checked:**
+    - Safari (candidate 4 below).
+    - Whether clicking in the margin beside a block places the cursor.
+    - The drag handle beside a bleeding block.
+
 **Live database** (2026-10-01): migration files are gitignored, so each machine generates its
 own. Production's history holds three other sets (last applied 16 Jun) and lacked the 7 theme
 tables; `pnpm migrate:push:api` from this Mac would try to create every table again. Going
@@ -40,19 +89,30 @@ files should be committed so every machine shares one history. Candidates:
    (centred on screen). Not checked: the seed's `sl-scroll-x` hides its scrollbar only with
    `scrollbar-width`, so older Safari may show it while scrolling (the components that hide
    theirs also set `::-webkit-scrollbar`).
-4. Bigger: the validator / linter (item 11); WebKit in the layout checks.
+4. **Check the page's line in Safari** (added 2026-10-02; not checked yet, no Safari to hand).
+   The bleed width is a registered length worked out from `100cqi` (`--sfx-bleed-width`,
+   `slCombined.ts`). The layout checks only run in Chrome. Nobody has seen whether Safari
+   recomputes it when the window resizes, rotates, or gains a scrollbar.
+    - **To check:** open `/editor?seed=true` and resize the window, wide to narrow and back.
+      The hero image and the code sample should stay edge to edge, with nothing sticking out
+      sideways. Do the same with a page open in a collection's sheet.
+    - **If it's wrong:** bleeding blocks stop short of the edges or push the page sideways.
+      Running the layout checks in WebKit (candidate 5) would catch it from then on.
+5. Bigger: the validator / linter (item 11); WebKit in the layout checks.
 
 Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a Section on the
 test page logs 171 TipTap warnings ("setNode() only supports text block nodes"); editing
-to-do items logs none. In the editor, a document's content sits against the screen's left
-edge (the editor shows it without the page shell); content that wraps itself (the demo) is fine.
-Moving between two editor addresses (`/editor/home` to `/editor?seed=true`, say, or the Demo
-link while a page is open) reuses the open editor, so nothing loads; the page view doesn't
+to-do items logs none. A plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
+text instead of being a reading column: one sentence measured 242px at 1440 (checked in
+Playwright, 2026-10-02). Grid items with auto side margins shrink to fit. Nothing in the app
+does this: the Centre block's wrapper is the inset's item, and only `LayoutCenter.vue` wears
+`sl-center`. Found 2026-10-02, not fixed. Moving between two editor addresses
+(`/editor/home` to `/editor?seed=true`, say, or the Demo link while a page is open) reuses the open editor, so nothing loads; the page view doesn't
 follow its address. Found 2026-10-01 while fixing the stale editor store, not fixed.
 
 **Layout checks** (added 2026-10-01): `pnpm test:ui` runs
-`client/e2e` with Playwright in the installed Chrome, against the dev server. 72 checks (14 of them
-expected to fail), about 20 seconds.
+`client/e2e` with Playwright in the installed Chrome, against the dev server. 84 checks (14 of them
+expected to fail), about a minute.
 
 - **The stylesheet** is built from the seed in a throwaway database in memory
   (`e2e/globalSetup.ts`, using `e2e/d1Memory.mjs`, which the component preview now imports
@@ -543,7 +603,7 @@ What's pending:
       `eslint-config-prettier` lists as Prettier's (switched off by hand, no dependency);
       `html-self-closing` stays with `void: 'any'`, and `require-default-prop` is off (an
       optional prop is left out, not defaulted to undefined). The layout checks (Playwright)
-      aren't in CI: they need Chrome and the dev server.
+      stay out of CI by choice (decided with the user, 2026-10-01): they're run locally.
     - `sl-row` or `sl-inset` on a Section or Center loses to its baked `sl-stack`: a Section's
       blocks don't line up with the parent's columns, and an inset Section or Centre has no
       side margins. Checks K2 and K3.
@@ -841,6 +901,15 @@ These are not bugs but unresolved tensions in the current design:
       `sf-on-hover × sf-loudness-3` darken compounds added per variant; toolbar chip buttons
       (`ToolbarAspectControl`, `FontPicker`, `ToolbarShadowControl`, `ToolbarCornersControl`)
       migrated from local `.ap/.fp/.sp/.cp-chip` CSS to `sf sf-chip sf-size-xs sf-on-hover sf-on-selected`.
+- [ ] **Idea: collapse by a layout's own width** (2026-10-02, not decided). Layouts that work
+      out their columns from their own width (`sf-references.md`, "Layouts that switch by
+      their own width") would stack without a container query.
+    - What it would fix: plain div blocks and component blocks would stack alike, bleeding or
+      not. Most of the collapse layer's measuring boxes would go, including boxes sized by
+      their content (which measure 0 wide), the popover exceptions and wrappers as
+      containers.
+    - What it must keep: `sl-row` (so the grid version, not flex), gaps, and container
+      queries for hide/show.
 
 ## Deferred (decided in spec review, not done)
 

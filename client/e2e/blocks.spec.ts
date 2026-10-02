@@ -6,7 +6,7 @@ import {
 	css,
 	openTests,
 	placed,
-	setDocumentWidth,
+	setShellWidth,
 	settle,
 	taskItemLayout,
 } from './helpers'
@@ -107,7 +107,7 @@ test('a scroll frame works around a block that scrolls, as around a plain box', 
 })
 
 test('a Card that scrolls sideways keeps each item on one line', async ({ page }) => {
-	await setDocumentWidth(page, breakpoints().sm! - 40)
+	await setShellWidth(page, breakpoints().sm! - 40)
 	const card = page.locator('#scroll-card')
 	const items = card.locator(':scope > [data-node-view-content] > p')
 	await expect(items).toHaveCount(3)
@@ -183,7 +183,7 @@ test('a block pinned inside a Card stays at the top of the scroll area around th
 })
 
 test('below md a hidden Card leaves one gap, not two', async ({ page }) => {
-	await setDocumentWidth(page, breakpoints().md! - 40)
+	await setShellWidth(page, breakpoints().md! - 40)
 	expect(await placed(page, 'hide-card').evaluate((el) => el.checkVisibility())).toBe(false)
 	const gap = parseFloat(await css(page.locator('#hide-section'), 'row-gap'))
 	const above = await box(page.locator('#hide-above'))

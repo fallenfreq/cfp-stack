@@ -3,7 +3,7 @@
 		<div
 			v-if="isOpen"
 			ref="sheetEl"
-			class="sheet sl-stack sf-depth-3 sf-size-lg"
+			class="sheet sl-inset sf-depth-3 sf-size-lg"
 			role="dialog"
 			aria-modal="false"
 			:aria-labelledby="label ? titleId : undefined"
@@ -30,7 +30,10 @@
 				/>
 			</div>
 
-			<div class="sheet-body sl-scroll-y">
+			<!-- The sheet is an inset whose margin is its padding. The body spans its edges and
+			     carries the line on, so what it shows sits on the sheet's line and a page's blocks
+			     can bleed to the sheet's edges. -->
+			<div class="sheet-body sl-bleed sl-inset sl-scroll-y">
 				<slot />
 			</div>
 		</div>
@@ -99,10 +102,12 @@ onMounted(() => {
 
 <style scoped>
 @layer ui {
+	/* The top row, then the body taking the rest of the height (it scrolls inside it). */
 	.sheet {
 		position: fixed;
 		z-index: var(--z-panel);
 		transition: transform 0.3s ease-in-out;
+		grid-template-rows: auto minmax(0, 1fr);
 	}
 
 	/* Flex rows right-align with justify-content (sl-align-x-* is grid-only). */
@@ -114,12 +119,6 @@ onMounted(() => {
 	.sheet-title {
 		flex: 1;
 		min-width: 0;
-	}
-
-	/* The body takes the rest of the sheet's height and scrolls inside it. */
-	.sheet-body {
-		flex: 1;
-		min-height: 0;
 	}
 
 	/* Layout driven by isBelowThreshold (md collapse threshold from DB) — no hardcoded breakpoints */

@@ -15,7 +15,7 @@ import { SF_ELEMENT_DEFAULTS } from './css/elementDefaults.js'
 import { EMBEDS } from './css/embeds.js'
 import { NODE_VIEWS } from './css/nodeViews.js'
 import { RESET } from './css/reset.js'
-import { SL_COMBINED } from './css/slCombined.js'
+import { BLEEDS_FROM_DOCUMENT, SL_COMBINED } from './css/slCombined.js'
 import {
 	COLLAPSE_CLASS_SELECTOR,
 	COLLAPSE_HOST_SELECTOR,
@@ -493,11 +493,27 @@ const section = (title: string): string =>
 //     show.
 //   The document is always a width container, named so the swap finds it past nearer ones;
 //     a top-level block collapses against it.
+//   A top-level block that bleeds out of a document in an inset is wider than the document,
+//     so a layout there collapses by the box it bleeds into (sf-bleed-area, slCombined.ts)
+//     instead. A component block's wrapper bleeds with it, so its root measures it as usual.
+//     A block that bleeds is a width container when it holds a collapsing element, so what's
+//     inside measures it, not the narrower document; it's never sized by its content.
 
 const COLLAPSE_GRID = ['.sl-columns', '.sl-split', '.sl-grid']
 const COLLAPSE_FLEX = ['.sl-cluster']
 const DOCUMENT = '.tiptap.ProseMirror'
 const OUTSIDE_DOCUMENTS = `:where(:not(${DOCUMENT} *))`
+
+// A collapsing layout at a breakpoint stacks: a grid goes to one column, a cluster to a
+// column. `scope` narrows which ones, without adding weight.
+function stackRules(name: string, scope: string): string {
+	const at = (layouts: string[]) =>
+		layouts.map((s) => `\t\t${s}.sl-collapse-${name}${scope}`).join(',\n')
+	return (
+		`${at(COLLAPSE_GRID)} { grid-template-columns: 1fr; }\n`
+		+ `${at(COLLAPSE_FLEX)} { flex-direction: column; align-items: stretch; }\n`
+	)
+}
 
 function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
 	if (collapseThresholds.length === 0) return ''
@@ -507,15 +523,16 @@ function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
 	for (const host of [
 		...hostsFor(notSized, COLLAPSE_CLASS_SELECTOR),
 		...hostsFor(`${notSized}${OUTSIDE_DOCUMENTS}`, SWAP_CLASS_SELECTOR),
+		`${BLEEDS_FROM_DOCUMENT}:has(${COLLAPSE_CLASS_SELECTOR})`,
 	])
 		body += `\t${host} { container-type: inline-size; }\n`
 	for (const { name, value } of collapseThresholds) {
-		const gridSels = COLLAPSE_GRID.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')
-		const flexSels = COLLAPSE_FLEX.map((s) => `\t\t${s}.sl-collapse-${name}`).join(',\n')
 		body += `\t@container (width <= ${value}) {\n`
-		body += `${gridSels} { grid-template-columns: 1fr; }\n`
-		body += `${flexSels} { flex-direction: column; align-items: stretch; }\n`
+		body += stackRules(name, `:where(:not(${BLEEDS_FROM_DOCUMENT}))`)
 		body += `\t\t.sl-hide-below-${name}${OUTSIDE_DOCUMENTS} { display: none; }\n`
+		body += '\t}\n'
+		body += `\t@container sf-bleed-area (width <= ${value}) {\n`
+		body += stackRules(name, `:where(${BLEEDS_FROM_DOCUMENT})`)
 		body += '\t}\n'
 		// Emitted after the layout primitives, so it wins over their display on the same element.
 		body += `\t@container (width > ${value}) {\n`

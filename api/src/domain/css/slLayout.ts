@@ -23,6 +23,14 @@ import { throughNodeViews } from './nodeViewSelectors.js'
 //     width) and passes down the same way; each margin is the larger of the set margin and
 //     half the leftover width, so the column centres. sl-bleed only means something inside
 //     an sl-inset, so its rules are in slCombined.ts.
+//   A document in an inset — its blocks are the inset's items, though TipTap puts two boxes
+//     between: the box it mounts the document in, and the document. The mount box spans the
+//     inset's edges and the document pads itself to the line (the same sum, its % reading the
+//     mount box), so the blocks sit on the line. The document isn't a grid: it stays a width
+//     container (hide/show and collapse measure it, a size container can't take its parent's
+//     columns) and its blocks keep their own flow. So a block bleeds by pulling out of the
+//     padding instead of spanning a track (slCombined.ts). The mount box, marked page-content,
+//     has to be the inset's own item. Outside an inset, a document has no margins of its own.
 //   Chrome box as inset — the box's own padding (a theme decision) becomes the margins, for
 //     it and everything inside, so a card looks unchanged and its children can bleed to its
 //     edges. Relies on the theme contract that chrome padding goes through --sf-padding, which
@@ -81,6 +89,19 @@ export const forLooks = (selector: string): string => throughNodeViews(selector,
 export const forPlacement = (selector: string): string =>
 	throughNodeViews(selector, { ...NODE_VIEW_OPTIONS, subject: 'placed' })
 
+// The margin before an inset's line: the set margin, or half the width left over past the
+// column's limit if that's more. One sum for an inset's tracks, sl-inset-line's padding and a
+// document's padding, so they share one line. An inset sets its own width; elsewhere, no
+// width set means no limit (100%).
+const LINE_MARGIN =
+	'max(var(--sfx-inset-margin, var(--sf-spacing_page)), (100% - var(--sfx-inset-width, 100%)) / 2)'
+
+// A document that's an inset's item: TipTap's mount box, which whatever shows a page marks
+// page-content (PageContent.vue, TiptapEditor.vue), as the inset's own item, and the document in
+// it. Its top-level blocks are the inset's items (slCombined.ts, the collapse layer).
+export const INSET_DOCUMENT_MOUNT = '.sl-inset > .page-content'
+export const INSET_DOCUMENT = `${INSET_DOCUMENT_MOUNT} > .tiptap.ProseMirror`
+
 // Anything that collapses by its container's width, and anything that swaps (hides or shows)
 // by it.
 export const COLLAPSE_CLASS_SELECTOR = '[class*="sl-collapse-"]'
@@ -127,12 +148,14 @@ export const SL_LAYOUT = `@layer sl-layout {
 	.sl-inset {
 		display: grid;
 		--sfx-inset-width: var(--sf-width_page);
-		grid-template-columns: [full-start] max(var(--sfx-inset-margin, var(--sf-spacing_page)), (100% - var(--sfx-inset-width)) / 2) [content-start] minmax(0, 1fr) [content-end] max(var(--sfx-inset-margin, var(--sf-spacing_page)), (100% - var(--sfx-inset-width)) / 2) [full-end];
+		grid-template-columns: [full-start] ${LINE_MARGIN} [content-start] minmax(0, 1fr) [content-end] ${LINE_MARGIN} [full-end];
 		padding-inline: 0;
 		row-gap: var(--sf-gap, var(--sf-spacing-md));
 		align-content: start;
 	}
 	${forPlacement('.sl-inset > *')} { grid-column: content; }
+	${INSET_DOCUMENT_MOUNT} { grid-column: full; }
+	${INSET_DOCUMENT} { padding-inline: ${LINE_MARGIN}; }
 	:is(.sf-depth-1, .sf-depth-2, .sf-depth-3).sl-inset { --sfx-inset-margin: var(--sf-padding, 0px); --sfx-inset-width: 100%; }
 	${forPlacement('.sl-pin-bottom')} { position: sticky; bottom: 0; z-index: 1; }
 	${forPlacement('.sl-pin-left')} { position: sticky; left: 0; z-index: 1; }
@@ -160,6 +183,6 @@ export const SL_LAYOUT = `@layer sl-layout {
 	.sl-cluster.sl-align-x-center { justify-content: center; }
 	.sl-cluster.sl-align-x-end { justify-content: end; }
 	.sl-cluster.sl-align-x-start { justify-content: start; }
-	.sl-inset-line { padding-inline: max(var(--sfx-inset-margin, var(--sf-spacing_page)), (100% - var(--sfx-inset-width, 100%)) / 2); }
+	.sl-inset-line { padding-inline: ${LINE_MARGIN}; }
 }
 `

@@ -6,7 +6,11 @@
 		<ToolbarScrollHint :editor="editor" />
 		<FloatingDragHandle :editor="editor" />
 		<CodeViewToggle />
-		<EditorContent :editor="editor" />
+		<!-- The document sits in the page shell, as a stored page does; the bars are the editor's.
+		     page-content: in an inset, its blocks become the inset's items (slLayout.ts). -->
+		<SfPageShell>
+			<EditorContent class="page-content" :editor="editor" />
+		</SfPageShell>
 	</div>
 </template>
 

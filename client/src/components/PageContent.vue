@@ -1,6 +1,7 @@
 <template>
 	<SfStatusDisplay v-if="invalid" state="error" message="This page can't be shown." />
-	<EditorContent v-else-if="editor" :editor="editor" />
+	<!-- page-content: in an inset, its blocks become the inset's items (slLayout.ts). -->
+	<EditorContent v-else-if="editor" class="page-content" :editor="editor" />
 </template>
 
 <script setup lang="ts">
