@@ -54,12 +54,13 @@ async function fakeReplies(page: Page, replies: Record<string, unknown>): Promis
 		const calls = new URL(route.request().url()).pathname.replace('/trpc/', '').split(',')
 		const faked = calls.map((call) => Object.keys(replies).find((name) => call.endsWith(name)))
 		if (!faked.some(Boolean)) return route.fallback()
-		const response = await route.fetch()
-		const answers = await response.json()
+		// A batch with real calls in it goes to the API for their answers; one of faked calls only
+		// never reaches it.
+		const answers = faked.every(Boolean) ? [] : await (await route.fetch()).json()
 		faked.forEach((name, at) => {
 			if (name) answers[at] = { result: { data: { json: replies[name] } } }
 		})
-		return route.fulfill({ response, json: answers })
+		return route.fulfill({ json: answers })
 	})
 }
 

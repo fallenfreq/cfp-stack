@@ -197,7 +197,8 @@ export const taskItemLayout = (target: Locator) =>
 export const pageWidth = (page: Page): Promise<number> =>
 	page.locator('.tiptap.ProseMirror').evaluate((doc) => {
 		const style = getComputedStyle(doc)
-		return doc.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+		const width = doc.getBoundingClientRect().width
+		return width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
 	})
 
 // ─── Selecting ──────────────────────────────────────────────────────────

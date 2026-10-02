@@ -85,11 +85,16 @@ for (const shell of SHELLS)
 		await setUpShell(page, shell)
 		const { sm } = breakpoints() as { sm: number }
 		await setShellWidth(page, sm)
-		const documentAtSm = sm + (sm - (await pageWidth(page)))
+		const documentAtSm = { name: 'the document at sm', px: sm + (sm - (await pageWidth(page))) }
 
-		for (const width of [...shellWidths(), { name: 'the document at sm', px: documentAtSm }]) {
+		for (const width of [...shellWidths(), documentAtSm]) {
 			await setShellWidth(page, width.px)
 			const at = `${shell.name}, ${width.name}`
+			if (width === documentAtSm)
+				expect(
+					await pageWidth(page),
+					`${at}: the document isn't over sm`,
+				).toBeLessThanOrEqual(sm)
 
 			const line = await box(page.locator('#ref-line'))
 			const edges = await box(page.locator('#ref-bleed'))

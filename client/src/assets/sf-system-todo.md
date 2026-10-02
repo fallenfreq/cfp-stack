@@ -18,8 +18,8 @@ spacing of its own, so it can be shown anywhere (a collection's sheet shows it b
 shell per page comes later (decided with the user, 2026-10-01). The editor demo opens the demo
 content built into the app (`/editor?seed=true`), the same locally and live.
 
-**The editor shows the page in the page shell** (2026-10-02, not committed). A document in an
-inset now has its top-level blocks as the inset's items. They sit on its line; one set to bleed
+**The editor shows the page in the page shell** (2026-10-02, pushed 2026-10-03). A document in
+an inset now has its top-level blocks as the inset's items. They sit on its line; one set to bleed
 reaches its edges; bands and bars keep the line; a layout that bleeds collapses at its own
 width. See `sf-system.md`, "A document in an inset".
 
@@ -45,16 +45,25 @@ width. See `sf-system.md`, "A document in an inset".
     - The test helpers were renamed for what they narrow (`setShellWidth`, `shellWidths`).
     - Formatting.
 - **New names:** `--sfx-bleed-width`, `sf-bleed-area` and `page-content`.
-- **Next: review what came after the code review.** It's committed but not pushed (2026-10-02).
-  Run `/code-review` on that commit, fix what it finds, then push. Nobody but the author has
-  reviewed:
-    - the fixes made after the review: a block that bleeds measuring for what it holds
-      (`generateCss.ts`), the simpler selectors and the matching weights (`slLayout.ts`,
-      `slCombined.ts`);
-    - the sheet as an inset (`StackableSheet.vue`);
-    - the `page-content` class (`PageContent.vue`, `TiptapEditor.vue`, `slLayout.ts`);
-    - the sheet check and its faked API replies (`app.spec.ts`), and the "document at sm"
-      width (`line.spec.ts`).
+- **Second code review** (`/code-review high`, of what came after the first): eight findings.
+    - Checks: the faked API replies no longer reach the API when every call in a batch is
+      faked. The document's width is measured exactly, and the "document at sm" width checks
+      that the document is at or below sm.
+    - Columns placed straight in an inset stack late: logged (candidate 5 below). It predates
+      this change.
+    - Not patched, agreed with the user: a page in an inset that centres its items is 0 wide
+      (proved). It already was, as the document measures itself. Centring the other items
+      one by one gives the same layout.
+    - No change:
+        - The editor's top bar keeps its controls one page margin from the screen edge, while
+          the page and the nav sit on the page's line (24px against 160px in a 1600px window).
+          Decided with the user: it's the editor's tool bar, not part of the page, so it stays
+          put whatever shell a page uses.
+        - "Nothing sticks out sideways" can't see overflow to the left. The position checks
+          still catch the blocks that could.
+        - The rule for a block that bleeds skips the popover and sized-by-content guards. Such
+          a block takes its width from the page, never from what it holds.
+        - The sheet's rows rely on `sl-inset` never setting `grid-template`. Nothing does.
 - **The demo:** its image and code sample set to bleed; its Center blocks lost
   `sf-padding-lg`, which doubled the margin. On wide screens its reading column is 48px wider.
 - **Checks:** `e2e/line.spec.ts` compares every case in "The page's line" with a reference
@@ -97,8 +106,19 @@ files should be committed so every machine shares one history. Candidates:
       The hero image and the code sample should stay edge to edge, with nothing sticking out
       sideways. Do the same with a page open in a collection's sheet.
     - **If it's wrong:** bleeding blocks stop short of the edges or push the page sideways.
-      Running the layout checks in WebKit (candidate 5) would catch it from then on.
-5. Bigger: the validator / linter (item 11); WebKit in the layout checks.
+      Running the layout checks in WebKit (candidate 6) would catch it from then on.
+5. **Columns placed straight in an inset stack late** (found 2026-10-02 by the second code
+   review; predates the page shell work, not fixed). An inset holding a collapsing layout is
+   the box that layout measures, but the inset's margins are grid tracks. So it measures wider
+   than the line its items sit on, by both margins. Checked in Playwright: plain columns 640px
+   wide in a band that bleeds (688px) stay side by side with the document at sm. It happens
+   in every inset (the page shell, a card, a band) when the collapsing layout is the inset's
+   own item. One inside another layout, such as a component block's wrapper or a stack,
+   measures that box and is right. There's no one-line fix: no box is as wide as the line.
+   `line.spec.ts` has no columns-in-a-band case yet. Collapsing by a layout's own width (an idea
+   under Deferred) would fix it too. Until then: put the columns in a stack (examples under
+   "For the docs").
+6. Bigger: the validator / linter (item 11); WebKit in the layout checks.
 
 Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a Section on the
 test page logs 171 TipTap warnings ("setNode() only supports text block nodes"); editing
@@ -924,3 +944,53 @@ These are not bugs but unresolved tensions in the current design:
 - Status colour classes (`sf-variant-success`, `sf-variant-info`, `sf-variant-warning`)
   not added — only `featured`, `subtle`, `danger` are in the variant set. Status
   semantics may want their own treatment when Vuestic is removed.
+
+## For the docs (when there are some)
+
+Examples worth keeping for page builders and component makers (checked in Chrome, 2026-10-03).
+
+- **Columns placed straight in an inset stack late** (candidate 5 above). They measure the
+  whole inset, margins included: with the page at 640px (sm) they stay side by side, and only
+  stack once the inset itself is 640px or less. Put them in a stack, which is as wide as the
+  line, or use the editor's Columns block, which measures its own space:
+
+    ```html
+    <!-- Stacks late -->
+    <div class="sl-bleed sl-inset">
+    	<div class="sl-columns sl-collapse-sm">
+    		<p>One</p>
+    		<p>Two</p>
+    	</div>
+    </div>
+
+    <!-- Stacks at sm -->
+    <div class="sl-bleed sl-inset">
+    	<div class="sl-stack">
+    		<div class="sl-columns sl-collapse-sm">
+    			<p>One</p>
+    			<p>Two</p>
+    		</div>
+    	</div>
+    </div>
+    <div class="sl-bleed sl-inset">
+    	<layout-columns columns="2" class="sl-collapse-sm">…</layout-columns>
+    </div>
+    ```
+
+- **Don't centre the items of an inset that holds a page.** The page shrinks to its margins
+  (48px). Centre the other items in a layout of their own; `page-content` is TipTap's mount
+  box:
+
+    ```html
+    <!-- The page is 48px wide -->
+    <div class="sl-inset sl-align-x-center">
+    	<h1>A title</h1>
+    	<div class="page-content">…</div>
+    </div>
+
+    <!-- The title is centred, the page full width -->
+    <div class="sl-inset">
+    	<div class="sl-stack sl-align-x-center"><h1>A title</h1></div>
+    	<div class="page-content">…</div>
+    </div>
+    ```
