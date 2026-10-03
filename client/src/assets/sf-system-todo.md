@@ -191,8 +191,8 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
    the whole list and scrolled there instead.
     - **Decided:** drop the scrolling place and let the page scroll instead, as Chrome already
       did. A panel is never taller than the screen less its button, so it fits once its button
-      nears a screen edge. Where it fits nowhere, it stays where it last fitted (else below),
-      and scrolling the page brings it into view.
+      reaches a screen edge. Where it fits nowhere, it stays where it last fitted (else below),
+      and scrolling the page brings it into view (not at the very end of a page, below).
     - **Rejected:**
         - Dropping another place. A panel would centre on its button in one more case, or wide
           panels on phones would open above.
@@ -212,9 +212,38 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       any button. The footer follows the content, then stays at the bottom of the screen
       (`App.vue`, only while an editor is editable). The bar's height comes from the theme, so
       the bar publishes it while it's shown.
-    - **New names:** `fitScreen` in `useAnchorFallback`'s placement (approved by the user):
+    - **New names** (approved by the user): `fitScreen` in `useAnchorFallback`'s placement:
       tooltips have no height limit, so the script needs telling which boxes do.
-      `--editor-top-bar-height`, set by `EditorTopBar` (for approval).
+      `--editor-top-bar-height`, set by `EditorTopBar`. `app-end` and `app-footer` in `App.vue`:
+      the footer, and the box around it that holds the room past the end.
+    - **Code review** (`/code-review high`): ten findings, checked.
+        - Fixed: the script also watches the page's height. Where a panel fits nowhere it's
+          slid up only on a page that doesn't scroll, so a page that starts or stops scrolling
+          while it's open has it placed again. Proved in Chrome at 1440×330, the page made to
+          stop and then start scrolling with the button still: the script lands where Chrome
+          does both times (slid up to 146–330px, then below at 188–372px); without the fix it
+          stayed below both times, off the bottom of a page that couldn't scroll. Checked by
+          `anchorFallback.spec.ts`, which fails without the fix.
+        - Fixed: the new names above weren't flagged. A panel at its full height fits once its
+          button reaches the screen's edge (within the gap), not nears it.
+        - Logged, left as is (decided with the user): a panel too tall for the room above and
+          below its button, at the very end of a page other than the editor, runs off the
+          bottom where the page can't scroll to it. Proved in Chrome at 1440×330: it ended at
+          380px with the page at its end. Chrome already did this; Safari before 26 shrank it
+          to fit and scrolled it, so there it's new. Today only the admin list's last rows, on
+          a short screen. If it's needed: every page gets the room past its end while a panel
+          is open (closing it after scrolling into the room jumps the page back).
+        - Logged: on a right-to-left page, a panel wider than the screen that fits nowhere
+          keeps its left edge on screen from the script, its right (start) edge in Chrome (bare
+          page, 300px screen: 0–500 against −200–300). The older centring (`slid`) does the
+          same and predates this. The site has no right-to-left pages.
+        - Not real: no page locks its scrolling. The editor always ends in an empty paragraph
+          (TipTap adds one back; checked in Chrome) with the app's line height under both
+          themes, so the room's `1lh` matches. When a phone's bar hides, only the room's
+          length changes (not checked on a phone). The repeated measuring re-reads an
+          unchanged size, so the page isn't laid out again.
+        - After the fixes: `anchorFallback.spec.ts` and `app.spec.ts` pass (22); a review of
+          the fixes (`/code-review low`) found nothing.
     - **Checked:**
         - `anchorFallback.spec.ts`: a panel on a short screen with its button at the top, the
           middle and the bottom in turn, and a wide one at 400px, land the same with the CSS

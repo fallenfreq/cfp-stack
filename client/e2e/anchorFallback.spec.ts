@@ -253,6 +253,74 @@ for (const c of SHORT_SCREEN)
 		})
 	})
 
+// Where a panel fits nowhere, it's slid up onto the screen only on a page that doesn't scroll. So
+// when the page stops scrolling, and then starts again, with its button still, it's placed again:
+// slid up, then off the bottom, the same with the CSS or the script.
+test('a panel that fits nowhere is placed again when the page stops or starts scrolling', async ({
+	browser,
+	themeClass,
+}) => {
+	const steps = ['the page stops scrolling', 'the page scrolls again'] as const
+	const measure = async (script: boolean) => {
+		const page = await browser.newPage({ viewport: { width: 1440, height: 330 } })
+		if (script) await page.addInitScript({ content: WITHOUT_ANCHOR_POSITIONING })
+		await openSeeded(page, 'true', DEMO_END, themeClass)
+		if (script) await page.addStyleTag({ content: NO_CSS_PLACEMENT })
+		await panelBeside(0.6, 'first')(page)
+		const box = page.locator(OPEN_BOX)
+		await expect(box).toBeVisible()
+		await moveButton(page, 'middle')
+		await settle(page)
+		const buttonTop = () =>
+			box.evaluate(
+				(el) =>
+					document
+						.querySelector(`[popovertarget="${CSS.escape(el.id)}"]`)!
+						.getBoundingClientRect().top,
+			)
+		const before = await buttonTop()
+		const found: number[][] = []
+		for (const step of steps) {
+			await page.evaluate((step) => {
+				if (step === 'the page stops scrolling') {
+					// The frame pinned to the screen, scrolled to where the page was.
+					const y = scrollY
+					const frame = document.querySelector<HTMLElement>('.app-frame')!
+					Object.assign(frame.style, {
+						position: 'fixed',
+						inset: '0',
+						overflow: 'hidden',
+					})
+					frame.scrollTop = y
+				} else {
+					const more = document.createElement('div')
+					more.style.blockSize = '200vh'
+					document.body.append(more)
+				}
+			}, step)
+			await settle(page)
+			expect(await buttonTop(), `${step}: the button still`).toBe(before)
+			const r = (await box.boundingBox())!
+			found.push([r.x, r.y, r.width, r.height])
+		}
+		await page.close()
+		return found
+	}
+	const css = await measure(false)
+	const script = await measure(true)
+	css.forEach((want, step) => {
+		const [, y, , height] = want as [number, number, number, number]
+		expect.soft(y + height <= 330 + 1, `${steps[step]}: all on screen`).toBe(step === 0)
+		const got = script[step]!
+		expect
+			.soft(
+				Math.max(...want.map((n, i) => Math.abs(n - got[i]!))),
+				`${steps[step]}: CSS ${want.map(Math.round)}, script ${got.map(Math.round)}`,
+			)
+			.toBeLessThanOrEqual(1)
+	})
+})
+
 // A panel taller than the screen less its button stops at that height and scrolls, the same with
 // the CSS or the script, and the script keeps its scroll position when it places it again.
 test('a panel too tall for the screen stops at its height and scrolls', async ({

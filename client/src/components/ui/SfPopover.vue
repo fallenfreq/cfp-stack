@@ -95,7 +95,8 @@ const onClick = (event: MouseEvent) => {
 	   slid back on screen at the edges. The box keeps its content width, so it moves on
 	   rather than squeezing into a narrow gap. Where it fits nowhere, it stays where it last
 	   fitted (else below) and scrolling the page brings it into view: it's never taller than
-	   the screen less its trigger, so it fits once the trigger nears a screen edge. Chrome
+	   the screen less its trigger, so it fits once the trigger reaches a screen edge. Not at
+	   the end of a page, which only the editor lets you scroll past (App.vue). Chrome
 	   tries only five fallbacks, the fewest the spec allows, so the list stops at five.
 	   Without anchor positioning, useAnchorFallback places it by the same rules. */
 	@supports (position-area: block-end) {

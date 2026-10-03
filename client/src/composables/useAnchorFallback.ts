@@ -12,8 +12,8 @@ import { onBeforeUnmount, watch, type Ref } from 'vue'
  * the last place it fitted since it opened (else its first), slid onto the screen at the sides and
  * the top; it runs off the bottom, where scrolling the page brings it into view, unless the page
  * doesn't scroll. While it's open it's checked every frame, before the frame is drawn, as CSS
- * anchoring is: it's placed again when the trigger moves, its content changes size or the screen
- * does.
+ * anchoring is: it's placed again when the trigger moves, or its content, the screen or the page
+ * changes size.
  */
 export interface AnchorPlacement {
 	// The side of the trigger it goes on; the other side when there's no room.
@@ -62,12 +62,13 @@ export function useAnchorFallback(
 			frame = 0
 			return
 		}
-		// Where the trigger is, how big the box's content is, and the screen's size.
+		// Where the trigger is, how big the box's content is, the screen's size, and the page's
+		// height (where the box fits nowhere, it's slid up only on a page that doesn't scroll).
 		const state = () => {
 			const t = anchor.getBoundingClientRect()
 			const screen = document.documentElement
 			return [t.left, t.top, t.width, t.height, el.scrollWidth, el.scrollHeight]
-				.concat(screen.clientWidth, screen.clientHeight)
+				.concat(screen.clientWidth, screen.clientHeight, screen.scrollHeight)
 				.join()
 		}
 		if (state() !== placedFor) {
