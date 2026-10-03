@@ -1,5 +1,6 @@
 <template>
 	<div
+		ref="bar"
 		class="editor-top-bar sf-depth-1 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right sl-inset-line sf-text-xs"
 		:class="{ 'is-renaming': renamingName }"
 	>
@@ -59,10 +60,23 @@
 import { useEditorStore } from '@/stores/editorStore'
 import type { Editor } from '@tiptap/vue-3'
 import { storeToRefs } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import NodePath from './NodePath.vue'
 
 defineProps<{ editor: Editor }>()
+
+// The bar's height while it's shown: the page frame leaves room past the end of the page for
+// the last line to sit under it.
+const bar = ref<HTMLElement | null>(null)
+const page = document.documentElement.style
+const barHeight = new ResizeObserver(([entry]) =>
+	page.setProperty('--editor-top-bar-height', `${entry!.borderBoxSize[0]!.blockSize}px`),
+)
+onMounted(() => barHeight.observe(bar.value!))
+onBeforeUnmount(() => {
+	barHeight.disconnect()
+	page.removeProperty('--editor-top-bar-height')
+})
 
 const store = useEditorStore()
 const { saveStatus, currentName } = storeToRefs(store)

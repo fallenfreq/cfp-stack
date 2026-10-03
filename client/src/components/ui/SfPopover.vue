@@ -78,6 +78,7 @@ useAnchorFallback(
 		gap: 'var(--sf-spacing-2xs)',
 		edge: 'var(--sf-spacing_page)',
 		wide: true,
+		fitScreen: true,
 	}),
 )
 
@@ -91,22 +92,25 @@ const onClick = (event: MouseEvent) => {
 @layer ui {
 	/* Below the trigger, lined up with its edge; else the other edge, else above. A box
 	   too wide for either side spans the screen width instead, centred on the trigger and
-	   slid back on screen at the edges; the last option always fits (it scrolls). The box
-	   keeps its content width, so it moves on rather than squeezing into a narrow gap.
+	   slid back on screen at the edges. The box keeps its content width, so it moves on
+	   rather than squeezing into a narrow gap. Where it fits nowhere, it stays where it last
+	   fitted (else below) and scrolling the page brings it into view: it's never taller than
+	   the screen less its trigger, so it fits once the trigger nears a screen edge. Chrome
+	   tries only five fallbacks, the fewest the spec allows, so the list stops at five.
 	   Without anchor positioning, useAnchorFallback places it by the same rules. */
 	@supports (position-area: block-end) {
 		.popover-box {
 			margin: 0;
 			margin-block-start: var(--sf-spacing-2xs);
 			inline-size: max-content;
+			max-block-size: calc(100dvh - anchor-size(block) - 2 * var(--sf-spacing-2xs));
 			position-area: block-end span-inline-end;
 			position-try-fallbacks:
 				flip-inline,
 				flip-block,
 				flip-block flip-inline,
 				--popover-below-wide,
-				--popover-above-wide,
-				--popover-below-wide-scroll;
+				--popover-above-wide;
 		}
 
 		.popover-box[data-align='end'] {
@@ -126,12 +130,5 @@ const onClick = (event: MouseEvent) => {
 	position-area: block-start span-all;
 	margin: 0 var(--sf-spacing_page) var(--sf-spacing-2xs);
 	max-inline-size: calc(100% - 2 * var(--sf-spacing_page));
-}
-
-@position-try --popover-below-wide-scroll {
-	position-area: block-end span-all;
-	margin: var(--sf-spacing-2xs) var(--sf-spacing_page) 0;
-	max-inline-size: calc(100% - 2 * var(--sf-spacing_page));
-	max-block-size: calc(100% - var(--sf-spacing-2xs));
 }
 </style>

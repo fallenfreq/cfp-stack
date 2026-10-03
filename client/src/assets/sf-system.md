@@ -923,7 +923,9 @@ back on the line.
 - The outermost inset uses the page margin, `--sf-spacing_page` — a theme value for the
   room between the screen's side edges and content. The app uses the same room above the
   header and between the header, the page and the footer, so a page has no top or bottom
-  room of its own to add.
+  room of its own to add. While an editor is editable, the page also scrolls on until its last
+  line sits under the editor's top bar, the footer staying at the bottom; that room isn't the
+  theme's.
 - The page's content column stops growing at the page width, `--sf-width_page` — a theme
   value (default 80rem). Past it the column centres and the margins grow to fill the rest;
   bleeding children still reach the screen edges, and the line moves with the column. A

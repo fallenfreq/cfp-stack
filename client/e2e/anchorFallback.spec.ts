@@ -150,34 +150,154 @@ for (const width of [1440, 400])
 		})
 	})
 
-// Only the script reaches the last place, so it's checked on its own: a panel too tall for the
-// room above and below its button stays on screen and scrolls, and keeps its scroll position
-// when it's placed again.
-test('without anchor positioning, a panel too tall for the screen scrolls, and stays scrolled', async ({
+// On a screen too short for a panel above or below its button, it stays where it last fitted
+// (else below), and scrolling the page brings it into view. Each case opens a panel, then scrolls
+// the page to put its button at each place in turn: at the top of the screen, in the middle or at
+// the bottom. At an edge it fits beside the button (it's never taller than the screen less the
+// button); in the middle there's too little room above or below it, under either theme.
+// `onScreen` says whether all of the panel shows at each.
+type ButtonAt = 'top' | 'middle' | 'bottom'
+const SHORT_SCREEN: {
+	name: string
+	viewport: { width: number; height: number }
+	open: (page: Page) => Promise<void>
+	steps: ButtonAt[]
+	onScreen: boolean[]
+}[] = [
+	{
+		// Off the bottom; scrolled into view; off it again; above once there's room above; then
+		// it fits nowhere, so it stays above, stopped at the top of the screen.
+		name: 'a panel on a short screen',
+		viewport: { width: 1440, height: 330 },
+		open: panelBeside(0.6, 'first'),
+		steps: ['middle', 'top', 'middle', 'bottom', 'middle'],
+		onScreen: [false, true, false, true, true],
+	},
+	{
+		// Too wide for either edge of its button, and fits nowhere: below, slid onto the screen
+		// at the side. At the top, it spreads across the screen below the button.
+		name: 'a wide panel on a short narrow screen',
+		viewport: { width: 400, height: 330 },
+		open: panelBeside(0.6, 1),
+		steps: ['middle', 'top'],
+		onScreen: [false, true],
+	},
+]
+
+/** Scroll the page to put the open box's button at the top of the screen, in the middle or at
+ * the bottom. */
+const moveButton = (page: Page, to: ButtonAt) =>
+	page.locator(OPEN_BOX).evaluate((box, to) => {
+		const button = document
+			.querySelector(`[popovertarget="${CSS.escape(box.id)}"]`)!
+			.getBoundingClientRect()
+		const at = {
+			top: 0,
+			middle: (innerHeight - button.height) / 2,
+			bottom: innerHeight - button.height,
+		}[to]
+		window.scrollBy(0, button.top - at)
+	}, to)
+
+/** Where a box lands at each step, with the CSS placing it or the script. */
+async function placementsWhileScrolling(
+	browser: Browser,
+	c: (typeof SHORT_SCREEN)[number],
+	themeClass: string | null,
+	script: boolean,
+): Promise<number[][]> {
+	const page = await browser.newPage({ viewport: c.viewport })
+	if (script) await page.addInitScript({ content: WITHOUT_ANCHOR_POSITIONING })
+	await openSeeded(page, 'true', DEMO_END, themeClass)
+	if (script) await page.addStyleTag({ content: NO_CSS_PLACEMENT })
+	await c.open(page)
+	const box = page.locator(OPEN_BOX)
+	await expect(box, c.name).toBeVisible()
+	const found: number[][] = []
+	for (const to of c.steps) {
+		await moveButton(page, to)
+		await settle(page)
+		const r = (await box.boundingBox())!
+		found.push([r.x, r.y, r.width, r.height])
+	}
+	await page.close()
+	return found
+}
+
+for (const c of SHORT_SCREEN)
+	test(`${c.name}: scrolling the page brings it into view, without anchor positioning too`, async ({
+		browser,
+		themeClass,
+	}) => {
+		const css = await placementsWhileScrolling(browser, c, themeClass, false)
+		const script = await placementsWhileScrolling(browser, c, themeClass, true)
+		css.forEach((want, step) => {
+			const [x, y, width, height] = want as [number, number, number, number]
+			const name = `step ${step + 1}, its button ${c.steps[step]}`
+			expect
+				.soft(
+					x >= 0
+						&& y >= 0
+						&& x + width <= c.viewport.width + 1
+						&& y + height <= c.viewport.height + 1,
+					`${name}: all on screen`,
+				)
+				.toBe(c.onScreen[step])
+			const got = script[step]!
+			expect
+				.soft(
+					Math.max(...want.map((n, i) => Math.abs(n - got[i]!))),
+					`${name}: CSS ${want.map(Math.round)}, script ${got.map(Math.round)}`,
+				)
+				.toBeLessThanOrEqual(1)
+		})
+	})
+
+// A panel taller than the screen less its button stops at that height and scrolls, the same with
+// the CSS or the script, and the script keeps its scroll position when it places it again.
+test('a panel too tall for the screen stops at its height and scrolls', async ({
 	browser,
 	themeClass,
 }) => {
-	const page = await browser.newPage({ viewport: { width: 1440, height: 330 } })
-	await page.addInitScript({ content: WITHOUT_ANCHOR_POSITIONING })
-	await openSeeded(page, 'true', DEMO_END, themeClass)
-	await page.addStyleTag({ content: NO_CSS_PLACEMENT })
-	await panelBeside(0.6, 'first')(page)
-	const box = page.locator(OPEN_BOX)
-	await expect(box).toBeVisible()
-	await settle(page)
-	const panel = () =>
-		box.evaluate((el) => ({
-			bottom: el.getBoundingClientRect().bottom,
-			scrolls: el.scrollHeight > el.clientHeight,
-			scrollTop: el.scrollTop,
-		}))
-	const before = await panel()
-	expect(before.scrolls, 'it scrolls').toBe(true)
-	expect(before.bottom, 'it ends on screen').toBeLessThanOrEqual(330 + 1)
-
-	await box.evaluate((el) => (el.scrollTop = 30))
-	await page.evaluate(() => window.scrollBy(0, 1))
-	await settle(page)
-	expect((await panel()).scrollTop, 'placed again, it keeps its scroll position').toBe(30)
-	await page.close()
+	const measure = async (script: boolean) => {
+		const page = await browser.newPage({ viewport: { width: 1440, height: 200 } })
+		if (script) await page.addInitScript({ content: WITHOUT_ANCHOR_POSITIONING })
+		await openSeeded(page, 'true', DEMO_END, themeClass)
+		if (script) await page.addStyleTag({ content: NO_CSS_PLACEMENT })
+		await panelBeside(0.6, 'first')(page)
+		const box = page.locator(OPEN_BOX)
+		await expect(box).toBeVisible()
+		await settle(page)
+		const panel = () =>
+			box.evaluate((el) => {
+				const button = document.querySelector(`[popovertarget="${CSS.escape(el.id)}"]`)!
+				return {
+					room: innerHeight - button.getBoundingClientRect().height,
+					height: el.getBoundingClientRect().height,
+					scrolls: el.scrollHeight > el.clientHeight,
+					scrollTop: el.scrollTop,
+				}
+			})
+		const first = await panel()
+		expect(first.scrolls, 'it scrolls').toBe(true)
+		expect(first.height, 'no taller than the screen less its button').toBeLessThanOrEqual(
+			first.room,
+		)
+		if (script) {
+			const halfway = await box.evaluate(
+				(el) => (el.scrollTop = Math.round((el.scrollHeight - el.clientHeight) / 2)),
+			)
+			await page.evaluate(() => window.scrollBy(0, 1))
+			await settle(page)
+			expect((await panel()).scrollTop, 'placed again, it keeps its scroll position').toBe(
+				halfway,
+			)
+		}
+		await page.close()
+		return first.height
+	}
+	expect(
+		Math.abs((await measure(false)) - (await measure(true))),
+		'the same height',
+	).toBeLessThanOrEqual(1)
 })

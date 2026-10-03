@@ -73,7 +73,9 @@ const navItems = computed<NavItem[]>(() => {
 			<RouterView />
 		</main>
 
-		<BasicFooter />
+		<div class="app-end">
+			<BasicFooter class="app-footer" />
+		</div>
 	</div>
 	<PromptModal />
 	<SfToasts />
@@ -96,6 +98,23 @@ const navItems = computed<NavItem[]>(() => {
 	}
 	.app-header {
 		padding-block-start: var(--sf-spacing_page);
+	}
+
+	/* While writing, the page scrolls on past its end until its last line sits under the
+	   editor's top bar: room to bring the line being written up the screen, and for a panel to
+	   open below its button. The footer follows the content, then stays at the bottom of the
+	   screen while the room scrolls up. */
+	.app-frame:has(.tiptap[contenteditable='true']) .app-end {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		min-block-size: calc(
+			100dvh - var(--sf-spacing_page) - var(--editor-top-bar-height, 0px) - 1lh
+		);
+	}
+	.app-frame:has(.tiptap[contenteditable='true']) .app-footer {
+		position: sticky;
+		inset-block-end: 0;
 	}
 }
 </style>

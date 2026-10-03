@@ -45,6 +45,69 @@ test('a page starts as far below the site nav as the nav sits below the top', as
 	await roomBelowNav('main h1')
 })
 
+test('while writing, the page scrolls on until its last line sits under the bar, the footer at the bottom', async ({
+	page,
+	themeClass,
+}) => {
+	// The page's end, the footer and the room between them (the page margin, with none added).
+	const end = () =>
+		page.evaluate(() => {
+			const content = document.querySelector('main')!.getBoundingClientRect()
+			const footer = document.querySelector('.app-footer')!.getBoundingClientRect()
+			const margin = parseFloat(
+				getComputedStyle(document.querySelector('.app-frame')!).rowGap,
+			)
+			const bar = document.querySelector('.editor-top-bar')?.getBoundingClientRect()
+			const last = document
+				.querySelector('.tiptap')!
+				.lastElementChild!.getBoundingClientRect()
+			return { content: content.bottom, footer, margin, screen: innerHeight, bar, last }
+		})
+	const scrollTo = (to: 'its end mid-screen' | 'the end') =>
+		page.evaluate((to) => {
+			const content = document.querySelector('main')!.getBoundingClientRect()
+			if (to === 'the end') window.scrollTo(0, document.documentElement.scrollHeight)
+			else window.scrollBy(0, content.bottom - innerHeight / 2)
+		}, to)
+
+	await openTests(page, themeClass)
+	await scrollTo('its end mid-screen')
+	await settle(page)
+	let at = await end()
+	expect(at.footer.top, 'the footer below the content, with room between').toBeGreaterThan(
+		at.content + at.margin,
+	)
+	expect(
+		Math.abs(at.footer.bottom - at.screen),
+		'at the bottom of the screen',
+	).toBeLessThanOrEqual(1)
+	await scrollTo('the end')
+	await settle(page)
+	at = await end()
+	expect(
+		Math.abs(at.last.top - at.bar!.bottom),
+		'the last line just under the bar',
+	).toBeLessThanOrEqual(1)
+	expect(
+		Math.abs(at.footer.bottom - at.screen),
+		'the footer still at the bottom',
+	).toBeLessThanOrEqual(1)
+
+	// A published page ends with the footer, straight after the content.
+	await fakeReplies(page, {
+		'Pages.getBySlug': storedPage('home', 'Home', [
+			{ type: 'paragraph', content: [{ type: 'text', text: 'A paragraph.' }] },
+		]),
+	})
+	await page.goto('/')
+	await useTheme(page, themeClass)
+	await expect(page.locator('main p')).toHaveText('A paragraph.')
+	await scrollTo('the end')
+	await settle(page)
+	at = await end()
+	expect(Math.abs(at.footer.top - at.content - at.margin), 'no room added').toBeLessThanOrEqual(1)
+})
+
 /**
  * Answer these API calls (by the end of their name) with the data given, whatever the database
  * holds; other calls go through.

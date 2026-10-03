@@ -143,8 +143,7 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
           button (too wide for either edge at 400px, so spread across); with no room below
           (above); after the page scrolls; after an edit above.
         - Tooltips: above; slid back at the screen edge.
-        - A panel too tall for the screen, on its own, as only the script reaches that
-          place: it scrolls and keeps its scroll position when placed again.
+        - A panel on a short screen, and one too tall for it: candidate 6.
 
         Every case fails with the script off. The user saw the nav menu and a toolbar tooltip
         right in Safari 18.3.1, before the review's changes and again after them.
@@ -184,13 +183,47 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
    `line.spec.ts` has no columns-in-a-band case yet. Collapsing by a layout's own width (an idea
    under Deferred) would fix it too. Until then: put the columns in a stack (examples under
    "For the docs"). Fine for now (decided with the user, 2026-10-03).
-6. **A panel on a short screen runs off the bottom in Chrome** (found 2026-10-03; predates this
-   work, not fixed). `SfPopover` lists six places to try. Chrome seems to try only five: any
-   list of five reaches its last place, and the list of six doesn't. So the last place, which
-   scrolls, never applies. On a screen too short for a panel above or below its button, the
-   panel runs off the bottom instead of scrolling. The fallback script follows the whole
-   list, so older Safari scrolls there. A fix needs one place fewer; which one to drop is a
-   choice.
+6. **A panel on a short screen** (found 2026-10-03; decided with the user and done the same
+   day). `SfPopover` listed six places to try, and Chrome tries only five, the fewest the spec
+   allows ("Applying Position Fallback"; proved on a bare page: a list of five reaches its last
+   place, six doesn't). So its last place, which scrolls, never applied: on a screen too short
+   for a panel above or below its button, it ran off the bottom. Older Safari's script followed
+   the whole list and scrolled there instead.
+    - **Decided:** drop the scrolling place and let the page scroll instead, as Chrome already
+      did. A panel is never taller than the screen less its button, so it fits once its button
+      nears a screen edge. Where it fits nowhere, it stays where it last fitted (else below),
+      and scrolling the page brings it into view.
+    - **Rejected:**
+        - Dropping another place. A panel would centre on its button in one more case, or wide
+          panels on phones would open above.
+        - A list for each direction. CSS has one list per box. A box lined up with its button's
+          edge that has to slide counts as not fitting, so only centred boxes could split off.
+        - The height limit with Chrome sliding the panel up onto the screen. It does that only
+          on a page that doesn't scroll.
+    - **Where nothing fits, Chrome** (measured; the script now does the same):
+        - keeps the last place that fitted, else its first;
+        - slides the panel onto the screen at the sides and the top (above, it can cover its
+          button), but lets it run off the bottom unless the page doesn't scroll.
+
+        While the page scrolls, it goes back to the first place that fits.
+
+    - **Room past the end** (decided with the user): while writing, the page scrolls on until
+      its last line sits under the editor's top bar, as code editors do, so there's room below
+      any button. The footer follows the content, then stays at the bottom of the screen
+      (`App.vue`, only while an editor is editable). The bar's height comes from the theme, so
+      the bar publishes it while it's shown.
+    - **New names:** `fitScreen` in `useAnchorFallback`'s placement (approved by the user):
+      tooltips have no height limit, so the script needs telling which boxes do.
+      `--editor-top-bar-height`, set by `EditorTopBar` (for approval).
+    - **Checked:**
+        - `anchorFallback.spec.ts`: a panel on a short screen with its button at the top, the
+          middle and the bottom in turn, and a wide one at 400px, land the same with the CSS
+          and the script at every step. A panel taller than the screen stops at its height and
+          scrolls.
+        - `app.spec.ts`: in the editor, the page scrolls until the last line sits under the
+          bar, with the footer at the bottom; a published page has no room added.
+        - The user, in Safari 18.3.1: right.
+
 7. Bigger: the validator / linter (item 11); WebKit in the layout checks.
 
 Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a Section on the
