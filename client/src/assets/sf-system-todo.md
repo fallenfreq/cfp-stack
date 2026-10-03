@@ -82,6 +82,37 @@ width. See `sf-system.md`, "A document in an inset".
     - The drag handle of a block that bleeds sits above the block's top-left corner, so at the
       screen's edge, in Chrome and Safari alike. Left as is.
 
+**Seeding can't run inside a request** (found 2026-10-03, not fixed; pick up here next). One seed
+makes 3,324 queries (1,533 selects, 1,183 inserts, 606 updates; counted on a copy of the local
+database). D1 allows 1,000 per request on Workers Paid and 50 on Free; the local dev server
+doesn't enforce it. So, going by the docs (not tried live):
+
+- The stylesheet (`api/functions_src/styles/sf-system.ts`) seeds on first boot, inside a public
+  GET. On an empty live database it would stop partway with a root theme in place, so it never
+  retries and serves a partial stylesheet.
+- It seeds on any `NotFoundError` raised while building the stylesheet, not only a missing root
+  theme, and `seed()` starts by wiping the design system. Safe today (the root theme lookup is
+  the only one the build reaches), but a lookup added there later would wipe the themes from a
+  public request. Fix proposed, not yet approved: check `getRootTheme` first instead of the
+  error's type.
+- The admin `seed.run` route (the client never calls it) wipes first, then would stop partway.
+- Two first-boot requests at once both seed and cut across each other.
+
+Proposed: the seed works out its rows in memory and sends them as one `db.batch()`: one
+transaction, all or nothing, and D1 runs batches one at a time. Inserts of many rows each (up
+to the 100 bound values a statement allows) bring ~1,180 rows to well under 100 statements,
+under the limit even if a batch's statements count one by one (the docs don't say). First boot
+starts the batch with the root theme's insert (fixed id) and wipes nothing: a second request
+racing it fails on that insert and rolls back, then uses the first one's seed. A reseed puts
+the wipe in the same batch. The same batch is a way for the seed to reach live (below). Cost:
+`setToken`, `applyRule` and the rest check their input by reading the database (the 1,533
+selects); the seed needs those checks run on its own data in memory, and the 606 updates (themes
+marked as changed) aren't needed. Next step: read those functions, then a file-by-file plan for
+sign-off.
+
+Rule errors now reach the user with their message (`f91217f`, 2026-10-03). Some read like
+developer text, e.g. the class-name check prints its pattern; rewording them is open.
+
 **Live database** (2026-10-01): migration files are gitignored, so each machine generates its
 own. Production's history holds three other sets (last applied 16 Jun) and lacked the 7 theme
 tables; `pnpm migrate:push:api` from this Mac would try to create every table again. Going
