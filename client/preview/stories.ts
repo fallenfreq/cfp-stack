@@ -314,7 +314,7 @@ const navItems: NavItem[] = [
 		icon: 'dashboard',
 		children: [
 			{ title: 'Branding', icon: 'view_comfy', to: '/c/branding' },
-			{ title: 'Web & App Design', icon: 'view_comfy', to: '/c/web-design' },
+			{ title: 'Software Development', icon: 'view_comfy', to: '/c/software-development' },
 		],
 	},
 	{

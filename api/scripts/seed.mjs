@@ -7,9 +7,9 @@
 //   node scripts/seed.mjs live    the live database, after saying what it replaces and asking
 //
 // The file replaces the whole design (themes and everything under them, the class vocabulary),
-// writes the collapse thresholds it names, and adds the brand user if missing. Wrangler applies
-// it in one go: a statement that fails leaves the database as it was (checked locally; wrangler
-// says so for live), so a failed run can be retried.
+// writes the collapse thresholds it names, and adds the brand user and the menu's collections if
+// missing. Wrangler applies it in one go: a statement that fails leaves the database as it was
+// (checked locally; wrangler says so for live), so a failed run can be retried.
 import { drizzle } from 'drizzle-orm/d1'
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -30,6 +30,12 @@ const DATABASE = 'somefreq-db'
 const OUTPUT = join(apiDir, `.wrangler/seed-${target}.sql`)
 // D1 refuses a statement over 100 KB; inserts are split well below that.
 const MAX_STATEMENT_BYTES = 50_000
+// The collections the site's menu links to (client/src/App.vue), published and empty. One whose
+// address is taken is left as it is: its name, its pages, published or not.
+const MENU_COLLECTIONS = [
+	{ name: 'Branding', slug: 'branding' },
+	{ name: 'Software Development', slug: 'software-development' },
+]
 
 // With `quiet`, the command's output is shown only if it fails.
 function run(command, args, { quiet = false, ...options } = {}) {
@@ -123,6 +129,11 @@ const statements = [
 			`INSERT INTO users (name, email) SELECT ${quote(u.name)}, ${quote(u.email)} `
 			+ `WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = ${quote(u.email)});`,
 	),
+	'INSERT OR IGNORE INTO site_tags (name, slug, published, created_at, updated_at) VALUES\n'
+		+ MENU_COLLECTIONS.map(
+			(c) => `(${quote(c.name)}, ${quote(c.slug)}, 1, unixepoch(), unixepoch())`,
+		).join(',\n')
+		+ ';',
 	// Themes cascade: theme_tokens, class_rules → class_rule_classes, user_theme_aliases.
 	// The vocabulary stands alone once the rules are gone.
 	'DELETE FROM themes;',
@@ -167,6 +178,10 @@ if (target === 'local') {
 		live
 			? `\nLive has seed ${live}. This replaces the whole live design with seed ${SEED_VERSION}.`
 			: `\nLive has no design yet. This adds seed ${SEED_VERSION}.`,
+	)
+	console.log(
+		`It adds the menu's collections (${MENU_COLLECTIONS.map((c) => `/c/${c.slug}`).join(', ')}) `
+			+ 'where live has none at that address yet.',
 	)
 	// Input that ends without an answer (not run from a terminal) counts as no.
 	const prompt = createInterface({ input: process.stdin, output: process.stdout })

@@ -18,9 +18,10 @@ const router = createRouter({
 			// which is lazy-loaded when the route is visited.
 			component: () => import('../views/ContactView.vue'),
 		},
-		// The portfolios are collections now; the old addresses keep working.
+		// The portfolios are collections now, and web design became software development; the old
+		// addresses keep working.
 		{ path: '/portfolio/branding', redirect: '/c/branding' },
-		{ path: '/portfolio/web-design', redirect: '/c/web-design' },
+		{ path: '/portfolio/web-design', redirect: '/c/software-development' },
 		{
 			path: '/account',
 			name: 'account',

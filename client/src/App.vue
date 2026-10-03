@@ -16,9 +16,14 @@ const navItems = computed<NavItem[]>(() => {
 		{
 			title: 'Portfolio',
 			icon: 'dashboard',
+			// The seed adds these collections if missing (MENU_COLLECTIONS in api/scripts/seed.mjs).
 			children: [
 				{ title: 'Branding', icon: 'view_comfy', to: '/c/branding' },
-				{ title: 'Web & App Design', icon: 'view_comfy', to: '/c/web-design' },
+				{
+					title: 'Software Development',
+					icon: 'view_comfy',
+					to: '/c/software-development',
+				},
 			],
 		},
 		...(signedIn

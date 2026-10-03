@@ -95,9 +95,9 @@ first, two requests could race), and the admin `seed.run` route wiped then would
 
 - `pnpm seed:local` / `pnpm seed:live` (`api/scripts/seed.mjs`) run the seed here, in a
   throwaway database in memory with all its checks, and write its rows to
-  `api/.wrangler/seed-local.sql` / `seed-live.sql`: 10 statements (wipe the design, multi-row
-  inserts, add the brand user if missing, found by email). Wrangler applies the file. Live first
-  says which seed version it replaces and asks.
+  `api/.wrangler/seed-local.sql` / `seed-live.sql`: 11 statements (wipe the design, multi-row
+  inserts, add the brand user (found by email) and the menu's collections if missing). Wrangler
+  applies the file. Live first says which seed version it replaces and asks.
 - Nothing seeds inside a request: an empty database's stylesheet answers 500 until a seed is
   run. The admin `seed.run` route and `POST /dev/seed` (with `DEV_SEED_SECRET`) are gone. A
   machine that built before this keeps a working `/dev/seed` locally (`tsc --build` leaves
@@ -1022,6 +1022,11 @@ These are not bugs but unresolved tensions in the current design:
       wraps them externally so the components themselves have no editor dependency. Call sites
       outside the editor use them directly with `sf-gap-*` as a class attribute.
 - [x] `LayoutCard.vue` — wears `sf-depth-1`; background inherited from bundle (5a95dfe).
+- [ ] `CollectionView.vue` reads its address once: going from one collection to another (the
+      menu's Branding, then Software Development) shows the first one's pages under the second
+      one's title. `usePagesByCollection(Admin)` takes a plain string, and `<RouterView />` keeps
+      the view when only the address changes. Found in review 2026-10-03; predates the menu's
+      collections being seeded.
 
 ## Deferred (pending design pass)
 

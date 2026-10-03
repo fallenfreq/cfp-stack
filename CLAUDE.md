@@ -29,7 +29,7 @@ pnpm migrate:push:local:api
 pnpm seed:local
 ```
 
-The first creates `.wrangler/state/v3/d1/` (local SQLite) and applies all migrations. Re-run whenever `api/src/schemas` changes. The second puts the design (themes, rules) in; without it the site has no styles.
+The first creates `.wrangler/state/v3/d1/` (local SQLite) and applies all migrations. Re-run whenever `api/src/schemas` changes. The second puts the design (themes, rules) in, and the collections the menu links to if they're missing; without it the site has no styles.
 
 ## Development
 
@@ -54,7 +54,7 @@ The full-stack experience runs at **8788** (wrangler serves both the API and the
 | `pnpm migrate:api`            | Generate Drizzle migration files                                        |
 | `pnpm migrate:push:local:api` | Apply migrations to local D1                                            |
 | `pnpm migrate:push:api`       | Apply migrations to production D1                                       |
-| `pnpm seed:local`             | Replace local D1's design (themes, rules) with the seed's               |
+| `pnpm seed:local`             | Replace local D1's design with the seed's; add missing menu collections |
 | `pnpm seed:live`              | The same for production D1: says what it replaces and asks first        |
 | `pnpm lint`                   | ESLint with auto-fix                                                    |
 | `pnpm format`                 | Prettier                                                                |
