@@ -104,8 +104,8 @@ first, two requests could race), and the admin `seed.run` route wiped then would
   `api/functions/dev/seed.js`) until `pnpm build`; remove `DEV_SEED_SECRET` from its `.dev.vars`.
 - Checked locally: a file that fails partway leaves the database as it was, and seeding an empty
   database or a seeded one both serve exactly the seed's stylesheet. Wrangler says the same for
-  live (a failed run returns the database to how it was, safe to retry). `seed:live` hasn't been
-  run yet.
+  live (a failed run returns the database to how it was, safe to retry). `seed:live` first ran
+  2026-10-03: the design stayed at 2.87.0 and the menu's two collections went in.
 - Later: seed on deploy, right after migrations, once migrations run on deploy (today both are
   run by hand). Only when the seed version changes, and not once themes are edited live: a seed
   replaces the whole design.
@@ -262,8 +262,7 @@ text instead of being a reading column: one sentence measured 242px at 1440 (che
 Playwright, 2026-10-02). Grid items with auto side margins shrink to fit. Nothing in the app
 does this: the Centre block's wrapper is the inset's item, and only `LayoutCenter.vue` wears
 `sl-center`. Found 2026-10-02, not fixed. Moving between two editor addresses
-(`/editor/home` to `/editor?seed=true`, say, or the Demo link while a page is open) reuses the open editor, so nothing loads; the page view doesn't
-follow its address. Found 2026-10-01 while fixing the stale editor store, not fixed.
+kept the page open (found 2026-10-01; fixed 2026-10-03, see "Editor + Vue components").
 
 On a narrow window the floating toolbar differs between browsers (seen 2026-10-03). Chrome
 starts it at the block and cuts its last tools, which scroll. Safari slides it left so they
@@ -1055,10 +1054,57 @@ These are not bugs but unresolved tensions in the current design:
       menu's Branding, then Software Development) showed the first one's pages under the second
       one's title, as `<RouterView />` keeps the view when only the address changes. Fixed
       2026-10-03: `usePagesByCollection(Admin)` take the address as it changes, as `usePage` does.
-- [ ] `CollectionView.vue` picks the admin or the public page list once, as it opens. Sign-in
-      is restored in the background after the app mounts (`main.ts`), so an admin whose sign-in
-      lands a moment late sees the public list (no unpublished pages) until a reload. `usePage`
-      keys on `isAdmin` and follows it. Found in review 2026-10-03; predates the fix above.
+- [x] `CollectionView.vue` picked the admin or the public page list once, as it opened. Live
+      keeps sign-in for the tab only (`zitadelAuth.ts`), so a new tab starts signed out and
+      silent sign-in lands after the app mounts (`main.ts`): an admin opening a collection in a
+      new tab on live got the public list (no unpublished pages). Locally sign-in is kept
+      across tabs, so it hardly showed. Fixed 2026-10-03: `usePagesByCollection` picks the
+      list itself and follows sign-in, as `usePage` does, keeping the list shown until the
+      other arrives (checked in Chrome: sign-in landing on an open collection brings in its
+      unpublished pages and its admin links).
+- [x] The editor read its address once (found 2026-10-01): going from one editor address to
+      another (`/editor/home` to the Demo link, or back) kept the page open. Fixed 2026-10-03:
+      each address opens in a new editor (`TiptapEditorDemo.vue`), as arriving does, so undo
+      and Save can't reach the page before. Saving a new page gives it an address; that's the
+      page already open, so it keeps its editor and undo. A page or a save that comes back
+      after the address has moved on leaves the new editor alone (`loadPage`, `save`). A
+      change to the hash alone opens nothing. Checked in Chrome against faked replies: page,
+      Demo, back, a slow page overtaken by the Demo, a new page saved.
+- [x] **The practice** (2026-10-03): a view follows its address and sign-in; shared code takes
+      what changes (a getter or ref, `MaybeRefOrGetter`), not its value at the time. Vue Router
+      keeps a view while only its address changes, and live's sign-in lands after the app
+      mounts. A fresh view for every address was rejected: a collection's `?open=` would
+      rebuild it, and a saved new page's address would rebuild the editor mid-edit. Lint:
+      `vue/no-ref-object-reactivity-loss` (client `.vue` and `.ts`) flags reading a ref's value
+      in the file that made it (it flags the collection bug above). It can't see refs a
+      composable or store hands over (`useIsAdmin()`, `useQuery`), so a choice made once from
+      `isAdmin.value`, or `route.query` read once, passes.
+- **Code review of the above** (separate agent, 2026-10-03): four findings from the change,
+  fixed. A save of a new page that came back after the address moved on wrote its page into
+  the next editor (the next Save overwrote it, and the page missed its collection); a hash
+  change reset a page with no address of its own; sign-in landing blanked the collection to
+  placeholders; a comment in `TiptapEditor.vue` described the removed wait for an editor.
+  Logged below, predating it.
+- [ ] The editor doesn't follow sign-in. On live, a new tab at `/editor/<page>` starts signed
+      out: the page fails to load (no message), stays empty once sign-in lands, and Save makes
+      a new page instead of updating it. Proved in Chrome by the review. Either the route
+      asks for sign-in first (`meta.authName`, as `/admin`; the demo would need it too) or
+      the editor fills again when sign-in lands. To decide.
+- [ ] `usePage` blanks when sign-in lands: the home page and a page preview show nothing until
+      the admin copy arrives (the collection list keeps its own now).
+- [ ] Undo straight after a page opens empties it: loading the content counts as an edit
+      (TipTap's `setContent` is recorded for undo), so Save would then store an empty page.
+      The same for the demo. Checked in Chrome 2026-10-03; predates the fix above.
+- [ ] Nothing warns before unsaved edits are lost. Leaving the editor drops them (predates);
+      moving to another editor address now does too, where it used to keep the page open.
+- [ ] A new page whose collection fails to be set after it's made never gets it: the next Save
+      updates the page without its collection. Read in code, not tried.
+- [ ] `FloatingToolbar.vue`'s unmount reads the closed editor's view, logging "[tiptap error]
+      The editor view is not available". It removes its listeners first, so nothing leaks.
+      Predates; it now also shows on every move between editor addresses.
+- [ ] `useCollapseBreakpoint.ts` calls `stopWatch()` from its first run, before `stopWatch` is
+      set: a collection opened with the theme already loaded logs "Cannot access … before
+      initialization". Found by the review; unrelated.
 
 ## Deferred (pending design pass)
 

@@ -22,6 +22,7 @@ export const useDarkModeStore = defineStore('darkMode', () => {
 	const isPinkMode = computed(() => mode.value === 'pink')
 
 	// Secret pink mode: toggles back to whichever mode was on before.
+	// eslint-disable-next-line vue/no-ref-object-reactivity-loss -- the mode as it was, on purpose
 	let previousMode: Theme = mode.value
 	function togglePinkMode(): void {
 		if (isPinkMode.value) {

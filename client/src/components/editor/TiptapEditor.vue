@@ -96,8 +96,9 @@ watch(editor, (newEditor) => {
 		})
 	}
 })
-// The store points at the editor on screen. Leaving the page closes it, so clear it too, or
-// the next page to wait for an editor gets this closed one and its content goes nowhere.
+// The store points at the editor on screen. Leaving the page closes it, so clear it too: the
+// next editor starts with no page (Save can't write over this one), and a page or a save still
+// on its way for this one leaves the next alone (`loadPage`, `save`).
 onBeforeUnmount(() => {
 	if (editorStore.editor === editor.value) editorStore.setEditor(null)
 })

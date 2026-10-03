@@ -48,7 +48,7 @@
 import { useIsAdmin } from '@/composables/useIsAdmin'
 import { useOpenItem } from '@/composables/useOpenItem'
 import { usePage } from '@/composables/usePage'
-import { usePagesByCollection, usePagesByCollectionAdmin } from '@/services/pages'
+import { usePagesByCollection } from '@/services/pages'
 import { trpc } from '@/trpc'
 import type { GridItem } from '@/utils/collectionPlaceholders'
 import { paramString } from '@/utils/router'
@@ -65,9 +65,7 @@ const { data: tag, isPending: tagPending } = useQuery({
 	queryFn: () => trpc.publicTags.getBySlug.query({ slug: collectionSlug.value }),
 })
 
-const { data: pages, isPending: pagesPending } = isAdmin.value
-	? usePagesByCollectionAdmin(collectionSlug)
-	: usePagesByCollection(collectionSlug)
+const { data: pages, isPending: pagesPending } = usePagesByCollection(collectionSlug)
 
 const gridItems = computed<GridItem[]>(() =>
 	(pages.value ?? []).map((p) => ({

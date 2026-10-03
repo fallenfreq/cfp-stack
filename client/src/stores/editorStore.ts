@@ -7,7 +7,7 @@ import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
 import { escapeHTML } from '@/utils/stringUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { defineStore } from 'pinia'
-import { ref, shallowRef, watch, type ShallowRef } from 'vue'
+import { ref, shallowRef, type ShallowRef } from 'vue'
 
 export const useEditorStore = defineStore('editor', () => {
 	const codeViewDefault = false
@@ -62,8 +62,13 @@ export const useEditorStore = defineStore('editor', () => {
 		}
 	}
 
+	// Into the editor on screen. If another has opened by the time the page arrives (the address
+	// moved on), the page goes nowhere.
 	const loadPage = async (slug: string) => {
+		const into = editor.value
+		if (!into) return
 		const page = await trpc.adminPages.getBySlug.query({ slug })
+		if (editor.value !== into) return
 		if (!page) {
 			notify({
 				duration: 5000,
@@ -72,40 +77,32 @@ export const useEditorStore = defineStore('editor', () => {
 			})
 			return
 		}
-		const applyContent = () => {
-			try {
-				editor.value!.commands.setContent(JSON.parse(page.contentJson), {
-					errorOnInvalidContent: true,
-				})
-			} catch (err) {
-				notify({
-					duration: 8000,
-					variant: 'danger',
-					message: err instanceof Error ? err.message : 'Failed to load page content',
-				})
-				return
-			}
-			currentPageId.value = page.pageId
-			currentSlug.value = slug
-			currentName.value = page.name || null
-			currentPublished.value = page.published
-		}
-		if (editor.value) {
-			applyContent()
-		} else {
-			const stop = watch(editor, (e) => {
-				if (e) {
-					stop()
-					applyContent()
-				}
+		try {
+			into.commands.setContent(JSON.parse(page.contentJson), {
+				errorOnInvalidContent: true,
 			})
+		} catch (err) {
+			notify({
+				duration: 8000,
+				variant: 'danger',
+				message: err instanceof Error ? err.message : 'Failed to load page content',
+			})
+			return
 		}
+		currentPageId.value = page.pageId
+		currentSlug.value = slug
+		currentName.value = page.name || null
+		currentPublished.value = page.published
 	}
 
+	// Saves the editor on screen. If another opens while it saves (the address moved on), the save
+	// still finishes, but the page it made stays out of the editor now on screen.
 	const save = async () => {
-		if (!editor.value) return
+		const from = editor.value
+		if (!from) return
+		const stillOpen = () => editor.value === from
 		saveStatus.value = 'saving'
-		const json = editor.value.getJSON()
+		const json = from.getJSON()
 		const contentJson = JSON.stringify(
 			json.content?.length ? json : { type: 'doc', content: [{ type: 'paragraph' }] },
 		)
@@ -113,6 +110,7 @@ export const useEditorStore = defineStore('editor', () => {
 			if (currentPageId.value !== null) {
 				await trpc.adminPages.update.mutate({ pageId: currentPageId.value, contentJson })
 			} else {
+				const autoTag = pendingAutoTag.value
 				let name = currentName.value?.trim() || null
 				if (!name) {
 					name = await showPrompt('Page name')
@@ -123,17 +121,19 @@ export const useEditorStore = defineStore('editor', () => {
 				}
 				const result = await trpc.adminPages.create.mutate({ name, contentJson })
 				if (!result?.pageId) throw new Error('Failed to create page: no ID returned')
-				currentPageId.value = result.pageId
-				currentSlug.value = result.slug
-				currentName.value = name
-				if (pendingAutoTag.value !== null) {
+				if (stillOpen()) {
+					currentPageId.value = result.pageId
+					currentSlug.value = result.slug
+					currentName.value = name
+				}
+				if (autoTag !== null) {
 					await trpc.adminPages.update.mutate({
 						pageId: result.pageId,
-						tagIds: [pendingAutoTag.value],
+						tagIds: [autoTag],
 					})
-					pendingAutoTag.value = null
+					if (stillOpen()) pendingAutoTag.value = null
 				}
-				router.replace({ name: 'editor', params: { slug: result.slug } })
+				if (stillOpen()) router.replace({ name: 'editor', params: { slug: result.slug } })
 			}
 			saveStatus.value = 'saved'
 			setTimeout(() => {

@@ -56,4 +56,12 @@ export default defineConfig([
 			],
 		},
 	},
+	{
+		// A ref's value read once doesn't follow it: a view that passed its address's value kept
+		// the first collection's pages under the next one's title. It sees refs made in the same
+		// file, not ones a composable or store hands over.
+		files: ['**/*.{ts,vue}'],
+		plugins: { vue: pluginVue },
+		rules: { 'vue/no-ref-object-reactivity-loss': 'error' },
+	},
 ])
