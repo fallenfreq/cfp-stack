@@ -3,6 +3,7 @@ import axios from 'axios'
 import { type DrizzleD1Database } from 'drizzle-orm/d1'
 import superjson from 'superjson'
 import { getAllEnvs } from '../config/envs.js'
+import { ConflictError, NotFoundError, ValidationError } from '../domain/errors.js'
 
 // TODO: importing schemas from ../schemas/index.js causes type issues on query
 // but not if I do the same thing here. and here it breaks if I add mapMarkers
@@ -79,9 +80,27 @@ const adminMiddleware = t.middleware(({ next, ctx }) => {
 	return next()
 })
 
+function domainErrorCode(error: unknown) {
+	if (error instanceof ValidationError) return 'BAD_REQUEST'
+	if (error instanceof NotFoundError) return 'NOT_FOUND'
+	if (error instanceof ConflictError) return 'CONFLICT'
+	return undefined
+}
+
+// Domain errors are written for the user, so they go out with their message and a matching
+// code. Anything else stays INTERNAL_SERVER_ERROR, which onError in [[trpc]].ts hides.
+const domainErrors = t.middleware(async ({ next }) => {
+	const result = await next()
+	if (result.ok) return result
+	const { cause } = result.error
+	const code = domainErrorCode(cause)
+	if (code) throw new TRPCError({ code, message: result.error.message, cause })
+	return result
+})
+
 const router = t.router
-const publicProcedure = t.procedure
-const secureProcedure = t.procedure.use(secure)
-const adminProcedure = t.procedure.use(secure).use(adminMiddleware)
+const publicProcedure = t.procedure.use(domainErrors)
+const secureProcedure = publicProcedure.use(secure)
+const adminProcedure = secureProcedure.use(adminMiddleware)
 
 export { adminProcedure, publicProcedure, router, secureProcedure, type Context, type schemas }
