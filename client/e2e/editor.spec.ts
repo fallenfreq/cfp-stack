@@ -96,6 +96,84 @@ test('ticking a to-do item updates it without redrawing it', async ({ page }) =>
 	expect(await item.evaluate((el) => (el as any).drawnBeforeTicking)).toBe(true)
 })
 
+// With blocks selected the toolbar shows only the selection's tools, but a selected block can
+// still change in place: ticked, or turned into a heading by typing or a shortcut. It stays
+// selected. Deleting one drops just that one, even when the block after it is just like it.
+test('selected blocks stay selected when they change in place', async ({ page }) => {
+	// Two dividers after the to-do list, for the last step.
+	const listEnd = async () =>
+		page.evaluate(
+			(at) => (document.querySelector('.tiptap') as any).editor.state.doc.resolve(at).after(),
+			await nodePosition(page, 'task-plain'),
+		)
+	await page.evaluate(
+		(at) => {
+			const editor = (document.querySelector('.tiptap') as any).editor
+			const divider = () => editor.schema.nodes.horizontalRule.create()
+			editor.view.dispatch(editor.state.tr.insert(at, [divider(), divider()]))
+		},
+		await listEnd(),
+	)
+
+	const ids = ['row-column-1', 'row-column-2', 'task-plain', 'task-own']
+	const positions = await Promise.all(ids.map((id) => nodePosition(page, id)))
+	await page.evaluate(
+		(positions) => {
+			const editor = (document.querySelector('.tiptap') as any).editor
+			const key = editor.state.plugins.find((p: any) => p.key.startsWith('multiSelect$')).spec
+				.key
+			editor.view.dispatch(editor.state.tr.setMeta(key, { action: 'addMany', positions }))
+		},
+		[...positions, await listEnd()],
+	)
+	const selected = page.locator('.tiptap .sf-on-selected:not(hr)')
+	const selectedDivider = page.locator('.tiptap hr.sf-on-selected')
+	const texts = ['Column 1', 'Column 2', 'Plain item', 'Item with a class of its own']
+	await expect(selected).toHaveText(texts)
+	await expect(selectedDivider).toHaveCount(1)
+
+	await page.locator('#task-plain > label input').check()
+	await expect(page.locator('#task-plain')).toHaveAttribute('data-checked', 'true')
+	await expect(selected, 'a to-do ticked').toHaveText(texts)
+
+	// The cursor at the start of a block's text (Home doesn't go there on a Mac).
+	const cursorIn = async (id: string) =>
+		page.evaluate(
+			(at) => {
+				const editor = (document.querySelector('.tiptap') as any).editor
+				editor
+					.chain()
+					.focus()
+					.setTextSelection(at + 1)
+					.run()
+			},
+			await nodePosition(page, id),
+		)
+	await cursorIn('row-column-1')
+	await page.keyboard.type('## ')
+	await expect(page.locator('#row-parent h2')).toHaveText('Column 1')
+	await expect(selected, '"## " typed').toHaveText(texts)
+
+	await cursorIn('row-column-2')
+	await page.keyboard.press('ControlOrMeta+Alt+3')
+	await expect(page.locator('#row-parent h3')).toHaveText('Column 2')
+	await expect(selected, 'the heading shortcut').toHaveText(texts)
+
+	// The first divider, selected as its node-path crumb does, then Backspace.
+	const dividers = await page.locator('.tiptap hr').count()
+	await page.evaluate(
+		(at) => {
+			const editor = (document.querySelector('.tiptap') as any).editor
+			editor.chain().focus().setNodeSelection(at).run()
+		},
+		await listEnd(),
+	)
+	await page.keyboard.press('Backspace')
+	await expect(page.locator('.tiptap hr')).toHaveCount(dividers - 1)
+	await expect(selectedDivider, 'a divider deleted: the next one stays unselected').toHaveCount(0)
+	await expect(selected, 'a divider deleted').toHaveText(texts)
+})
+
 test('leaving the editor and coming back shows its content again, without a reload', async ({
 	page,
 }) => {

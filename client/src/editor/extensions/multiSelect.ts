@@ -1,6 +1,7 @@
 import { findBlockAtCoords, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
-import { Fragment } from '@tiptap/pm/model'
+import { Fragment, type Node as PMNode } from '@tiptap/pm/model'
 import { NodeSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state'
+import { ReplaceAroundStep, ReplaceStep, type Step } from '@tiptap/pm/transform'
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
 
@@ -15,6 +16,27 @@ export type MultiSelectAction =
 	| { action: 'clear' }
 
 export const multiSelectPluginKey = new PluginKey<MultiSelectState>('multiSelect')
+
+// Whether a step changes the block at pos in place, as a change to its attributes or type does
+// (a to-do ticked, a paragraph turned into a heading): it rewrites only the block's start and
+// end, around its content, or swaps a block with no content (an image) for one of its type.
+// Tracking its position alone counts that as deleting it.
+const changedInPlace = (step: Step, pos: number, doc: PMNode): boolean => {
+	if (!(step instanceof ReplaceStep || step instanceof ReplaceAroundStep) || step.from !== pos)
+		return false
+	const node = doc.nodeAt(pos)
+	const { content, openStart, openEnd } = step.slice
+	const swap =
+		openStart === 0 && openEnd === 0 && content.childCount === 1 ? content.firstChild : null
+	if (!node || !swap || step.to !== pos + node.nodeSize) return false
+	if (step instanceof ReplaceStep) return node.isLeaf && swap.type === node.type
+	return (
+		step.gapFrom === pos + 1
+		&& step.gapTo === step.to - 1
+		&& step.insert === 1
+		&& swap.content.size === 0
+	)
+}
 
 const MultiSelectExtension = Extension.create({
 	name: 'multiSelect',
@@ -32,9 +54,13 @@ const MultiSelectExtension = Extension.create({
 
 					apply(tr, prev) {
 						let positions = prev.positions
-							.map((pos) => tr.mapping.mapResult(pos, 1))
-							.filter((result) => !result.deleted)
-							.map((result) => result.pos as NodePos)
+						tr.steps.forEach((step, i) => {
+							positions = positions.flatMap((pos) => {
+								if (changedInPlace(step, pos, tr.docs[i]!)) return [pos]
+								const result = step.getMap().mapResult(pos, 1)
+								return result.deleted ? [] : [result.pos as NodePos]
+							})
+						})
 
 						const meta = tr.getMeta(multiSelectPluginKey) as
 							| MultiSelectAction

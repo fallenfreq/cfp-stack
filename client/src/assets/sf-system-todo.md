@@ -122,11 +122,42 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
 
 1. **Scroll-frame arrows in documents:** the `sf-is-overflow-*` script doesn't run in pages
    (item 10, logged).
-2. **Multi-select drops a block whose attributes change** (found 2026-10-01, not fixed):
-   multi-select a block, change its class, and it's no longer selected or highlighted. Its
-   position maps as deleted through `setNodeMarkup` (`multiSelect.ts`, `mapResult(pos, 1)`).
-   Checked in Chrome on a to-do item and a paragraph. Not checked: whether the toolbar lets
-   you change attributes while several blocks are selected.
+2. **Multi-select dropped a block that changed in place** (found 2026-10-01; fixed
+   2026-10-03): ticking a selected to-do item, typing "## " in a selected paragraph or a
+   heading shortcut took the block out of the selection. A change to a block's attributes or
+   type rewrites only its start and end around its content (a block with no content, such as
+   an image, is swapped whole), and position mapping counts that as deleting it. TipTap's own
+   commands work so (ticking, `setNode`, `updateAttributes`), so the toolbar's code couldn't
+   fix it. The toolbar can't make such a change itself: while any block is selected it shows
+   only the selection's tools (`FloatingToolbar.vue`).
+    - **Fix:** `multiSelect.ts` follows an edit step by step and keeps a block selected
+      through a step that changes it in place (`changedInPlace`): one that rewrites only its
+      start and end, or swaps a block with no content for one of its type. It goes by the
+      step, not by what's left at the block's place. Unwrapping a selected block still drops
+      it; undo, redo, typing and wrapping keep it (checked in Chrome).
+    - **Checked:** `editor.spec.ts` ticks, types "## " and uses the shortcut on selected
+      blocks, then deletes a selected divider with another after it; it fails without the fix
+      and with the first fix below.
+    - **Code review** (`/code-review high`, 2026-10-03): ten findings, checked.
+        - Fixed, a regression in the first fix (proven in Chrome): it kept a block when what
+          was left at its place had the same content, so deleting a selected divider (selected
+          by its crumb, then Backspace) moved the selection to the divider after it. With both
+          selected, the one left was listed twice, and moving the selection would then delete
+          a block nobody selected. The review's Backspace in an empty paragraph didn't
+          reproduce (it's dropped). The fix now goes by the step, as above.
+        - Fixed: the test reads each block's place when it uses it, and covers that deletion;
+          the cheap checks come first, without the throwaway array; this note said every
+          change rewrites only a block's start and end (not so for an image).
+        - Not real today: mapping step by step ignores mirrored steps (`Mapping.setMirror`),
+          which only collaborative editing sets; this app has none (history keeps its mirrors
+          to itself).
+        - Left as is: a shared helper for selecting several blocks in the layout checks, until
+          a second check needs one.
+        - After the fixes: `editor.spec.ts` passes (16); a review of the fixes
+          (`/code-review low`, which reads only `multiSelect.ts`) found nothing.
+    - Logged, predates: Colour, Font, Aspect, Corners and Shadow check how many blocks are
+      selected (`defaultItemsStyle.ts`), but the toolbar hides them whenever any is, so the
+      checks never apply.
 3. **Popovers and tooltips on Safari before 26** (found 2026-10-01; fixed and pushed 2026-10-03). They're placed by anchor positioning, which Safari has from 26. Before it, a
    popover sat in the middle of the screen (the user saw the nav's menu there in Safari
    18.3.1) and a tooltip in the top-left corner. The toolbar's panels and the tooltips had
@@ -254,6 +285,15 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
         - The user, in Safari 18.3.1: right.
 
 7. Bigger: the validator / linter (item 11); WebKit in the layout checks.
+8. **Settings for every selected block** (proposed 2026-10-03, not designed): with blocks
+   selected, the toolbar's settings would change all of them, as in Notion, Google Docs or
+   Figma; today it shows none. To decide: which settings show (only those every selected
+   block has), how differing values show ("mixed"), and how the class row works when the
+   classes differ. Relies on candidate 2's fix: each block changes in place.
+9. **Pickers name custom blocks by their ID** (seen 2026-10-01 in Wrap in, 2026-10-03 in Wrap
+   selection; not fixed): a custom block shows as e.g. "a47e28a5-…". Turn into, Wrap in and
+   Insert (`defaultItemsBlock.ts`) and Wrap selection take a block's name from `NODE_META`,
+   else its type's name, which for a custom block is its ID (`blockNodeEntries`).
 
 Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a Section on the
 test page logs 171 TipTap warnings ("setNode() only supports text block nodes"); editing
