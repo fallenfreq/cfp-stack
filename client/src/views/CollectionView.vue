@@ -62,7 +62,8 @@ const isAdmin = useIsAdmin()
 
 const { data: tag, isPending: tagPending } = useQuery({
 	queryKey: computed(() => ['tags', 'slug', collectionSlug.value]),
-	queryFn: () => trpc.publicTags.getBySlug.query({ slug: collectionSlug.value }),
+	queryFn: async () =>
+		(await trpc.publicTags.getBySlug.query({ slug: collectionSlug.value })) ?? null,
 })
 
 const { data: pages, isPending: pagesPending } = isAdmin.value

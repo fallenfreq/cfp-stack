@@ -96,8 +96,7 @@ files should be committed so every machine shares one history. Candidates:
    position maps as deleted through `setNodeMarkup` (`multiSelect.ts`, `mapResult(pos, 1)`).
    Checked in Chrome on a to-do item and a paragraph. Not checked: whether the toolbar lets
    you change attributes while several blocks are selected.
-3. **Popovers and tooltips on Safari before 26** (found 2026-10-01; fixed 2026-10-03, committed,
-   not pushed). They're placed by anchor positioning, which Safari has from 26. Before it, a
+3. **Popovers and tooltips on Safari before 26** (found 2026-10-01; fixed and pushed 2026-10-03). They're placed by anchor positioning, which Safari has from 26. Before it, a
    popover sat in the middle of the screen (the user saw the nav's menu there in Safari
    18.3.1) and a tooltip in the top-left corner. The toolbar's panels and the tooltips had
    their own placement scripts until 27 Sep (`e304d60`).
