@@ -71,8 +71,9 @@ width. See `sf-system.md`, "A document in an inset".
   exactly sm, where a block that bleeds is still wider. It failed on the old rules, and
   without the rule for columns inside a block that bleeds. `setShellWidth` narrows the page
   shell, not the document.
-- **Not checked:** resizing the window in Safari (candidate 4 below).
 - **Checked** (2026-10-03):
+    - The user, in Safari 18.3.1: the image and the code sample stay touching both sides of
+      the window while it's resized, wide to narrow and back (candidate 4 below).
     - In Chrome, at 1440px and 400px: clicking in the page margin beside a block puts the
       cursor on that line, at its start on the left and its end on the right. Tried beside a
       paragraph, plain and component Columns, and inside a card band's margin.
@@ -116,7 +117,7 @@ files should be committed so every machine shares one history. Candidates:
           place: it scrolls and keeps its scroll position when placed again.
 
         Every case fails with the script off. The user saw the nav menu and a toolbar tooltip
-        right in Safari 18.3.1, before the review's changes.
+        right in Safari 18.3.1, before the review's changes and again after them.
 
     - **Code review** (`/code-review high`): ten findings, all real. Checking every frame,
       instead of scroll and resize events and a size observer, fixed five:
@@ -132,14 +133,11 @@ files should be committed so every machine shares one history. Candidates:
         scrolling height can't go below 0; tooltips no longer try each place twice. The checks
         gained the cases above.
 
-    - **Not checked:** the seed's `sl-scroll-x` hides its scrollbar only with
-      `scrollbar-width`, so older Safari may show it while scrolling (the components that hide
-      theirs also set `::-webkit-scrollbar`).
-
-4. **Check the page's line in Safari** (added 2026-10-02; not checked yet, no Safari to hand).
+4. **Check the page's line in Safari** (added 2026-10-02; checked by the user in Safari 18.3.1,
+   2026-10-03: right, see "Checked" above).
    The bleed width is a registered length worked out from `100cqi` (`--sfx-bleed-width`,
-   `slCombined.ts`). The layout checks only run in Chrome. Nobody has seen whether Safari
-   recomputes it when the window resizes, rotates, or gains a scrollbar.
+   `slCombined.ts`). The layout checks only run in Chrome. Safari recomputes it when the
+   window resizes; rotating and gaining a scrollbar weren't tried.
     - **To check:** open `/editor?seed=true` and resize the window, wide to narrow and back.
       The hero image and the code sample should stay edge to edge, with nothing sticking out
       sideways. Do the same with a page open in a collection's sheet.
