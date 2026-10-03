@@ -26,9 +26,10 @@ cp api/.dev.vars.example api/.dev.vars
 
 ```bash
 pnpm migrate:push:local:api
+pnpm seed:local
 ```
 
-Creates `.wrangler/state/v3/d1/` (local SQLite) and applies all migrations. Re-run whenever `api/src/schemas` changes.
+The first creates `.wrangler/state/v3/d1/` (local SQLite) and applies all migrations. Re-run whenever `api/src/schemas` changes. The second puts the design (themes, rules) in; without it the site has no styles.
 
 ## Development
 
@@ -53,6 +54,8 @@ The full-stack experience runs at **8788** (wrangler serves both the API and the
 | `pnpm migrate:api`            | Generate Drizzle migration files                                        |
 | `pnpm migrate:push:local:api` | Apply migrations to local D1                                            |
 | `pnpm migrate:push:api`       | Apply migrations to production D1                                       |
+| `pnpm seed:local`             | Replace local D1's design (themes, rules) with the seed's               |
+| `pnpm seed:live`              | The same for production D1: says what it replaces and asks first        |
 | `pnpm lint`                   | ESLint with auto-fix                                                    |
 | `pnpm format`                 | Prettier                                                                |
 
@@ -117,4 +120,5 @@ The theme system's spec is `client/src/assets/sf-system.md`; open work and where
   out.
 - Commit only when asked. Browser floor is Safari 17.4 (themes are emitted in `@scope`); no
   compat code below it.
-- Bumping `api/src/domain/seedVersion.ts` needs a reseed (`pnpm seed:local`).
+- Bumping `api/src/domain/seedVersion.ts` needs a reseed (`pnpm seed:local`; `pnpm seed:live`
+  after the change is deployed: live builds the stylesheet with its own code).

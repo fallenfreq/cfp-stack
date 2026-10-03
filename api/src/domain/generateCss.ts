@@ -41,7 +41,7 @@ export async function emitStylesheet(db: Db): Promise<string> {
 	const rootTheme = await getRootThemeOrThrow(db)
 	if (rootTheme.version !== SEED_VERSION)
 		console.warn(
-			`[sf-system] DB seed version ${rootTheme.version} !== code version ${SEED_VERSION} — run pnpm seed:local`,
+			`[sf-system] DB seed version ${rootTheme.version} !== code version ${SEED_VERSION} — run pnpm seed:local (seed:live for live)`,
 		)
 	const [themesList, allTokens, allRules, collapseThresholds] = await Promise.all([
 		listThemes(db),

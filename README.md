@@ -64,7 +64,7 @@ Go back to your development project and follow the same instructions again, addi
 
 ### Database
 
-Configure the D1 database via the `api/wrangler.toml` file under `[[d1_databases]]`. Create a D1 database by going to `https://dash.cloudflare.com/`, selecting Workers & Pages > D1 SQL Database, and clicking `+create`. Then add the database name and ID to `api/wrangler.toml`. Once you have a database, run `pnpm migrate:api` to generate the migrate files and `pnpm migrate:push:api` to push them to the database. Use `pnpm migrate:push:local:api` to push to a local copy of the database for development. You'll also need to do this when you change the `api/src/schemas` files.
+Configure the D1 database via the `api/wrangler.toml` file under `[[d1_databases]]`. Create a D1 database by going to `https://dash.cloudflare.com/`, selecting Workers & Pages > D1 SQL Database, and clicking `+create`. Then add the database name and ID to `api/wrangler.toml`. Once you have a database, run `pnpm migrate:api` to generate the migrate files and `pnpm migrate:push:api` to push them to the database. Use `pnpm migrate:push:local:api` to push to a local copy of the database for development. You'll also need to do this when you change the `api/src/schemas` files. Then put the design system in with `pnpm seed:local` (`pnpm seed:live` for production); without it the site has no styles.
 
 ## Development Commands
 
@@ -77,6 +77,8 @@ More information can be found on Corepack [here](https://nodejs.org/api/corepack
 - **Generate migrate files:** `pnpm migrate:api`
 - **Push generated migrate files to the production database:** `pnpm migrate:push:api`
 - **Push generated migrate files to the development database:** `pnpm migrate:push:local:api`
+- **Seed the design system (themes, rules) into the development database:** `pnpm seed:local`
+- **Seed the design system into the production database:** `pnpm seed:live`
 - **Start Wrangler pages dev server:** `pnpm dev`
 - **Start Vite Dev Server for front end HMR:** `pnpm dev:vite:client`
 

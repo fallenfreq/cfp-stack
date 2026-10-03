@@ -1,8 +1,6 @@
 import { drizzle } from 'drizzle-orm/d1'
 import { initEnvs, type Envs } from '../../dist/config/envs.js'
-import { NotFoundError } from '../../dist/domain/errors.js'
 import { getStylesheet } from '../../dist/domain/generateCss.js'
-import { seed } from '../../dist/domain/seed.js'
 
 // GET /styles/sf-system — DB-driven sf/sl stylesheet.
 // Two-layer cache:
@@ -12,9 +10,9 @@ import { seed } from '../../dist/domain/seed.js'
 //      TTL matches Cache-Control max-age. Populated fire-and-forget so the first
 //      request after a cold-start isn't delayed by cache.put.
 //
-// Auto-seeds only on first boot (no root theme in DB). For seed data updates,
-// run `pnpm seed:local` — never auto-reseed on version mismatch to avoid
-// seeding with stale compiled code during a dev server restart race.
+// Never seeds: a request can't make the seed's queries (scripts/seed.mjs says why). A database
+// without a design answers 500 until `pnpm seed:local` or `pnpm seed:live` is run.
+//
 // If-None-Match compares weakly (RFC 9110): Cloudflare marks the ETag weak (W/"…") when it
 // compresses the response, and the header may list several tags.
 function matchesEtag(request: Request, etag: string): boolean {
@@ -47,16 +45,7 @@ export const onRequest: PagesFunction<Envs> = async ({ request, env, waitUntil }
 			return cached
 		}
 
-		const db = drizzle(env.DB)
-		const { css, etag } = await getStylesheet(db).catch(async (err) => {
-			// Only auto-seed when the DB has no root theme at all (first-time setup).
-			// Version mismatches are warned in generateCss.ts — fix with pnpm seed:local.
-			if (err instanceof NotFoundError) {
-				await seed(db)
-				return getStylesheet(db)
-			}
-			throw err
-		})
+		const { css, etag } = await getStylesheet(drizzle(env.DB))
 
 		if (matchesEtag(request, etag))
 			return new Response(null, { status: 304, headers: cacheHeaders(etag) })

@@ -88,33 +88,27 @@ width. See `sf-system.md`, "A document in an inset".
     - The drag handle of a block that bleeds sits above the block's top-left corner, so at the
       screen's edge, in Chrome and Safari alike. Left as is.
 
-**Seeding can't run inside a request** (found 2026-10-03, not fixed; pick up here next). One seed
-makes 3,324 queries (1,533 selects, 1,183 inserts, 606 updates; counted on a copy of the local
-database). D1 allows 1,000 per request on Workers Paid and 50 on Free; the local dev server
-doesn't enforce it. So, going by the docs (not tried live):
+**Seeding runs outside requests** (2026-10-03). One seed makes 3,324 queries; D1 allows 1,000
+per request (50 on Workers Free) and the local dev server doesn't enforce it, so seeding inside a
+request would stop partway live. The stylesheet seeded on first boot inside a public GET (wiping
+first, two requests could race), and the admin `seed.run` route wiped then would stop. Now:
 
-- The stylesheet (`api/functions_src/styles/sf-system.ts`) seeds on first boot, inside a public
-  GET. On an empty live database it would stop partway with a root theme in place, so it never
-  retries and serves a partial stylesheet.
-- It seeds on any `NotFoundError` raised while building the stylesheet, not only a missing root
-  theme, and `seed()` starts by wiping the design system. Safe today (the root theme lookup is
-  the only one the build reaches), but a lookup added there later would wipe the themes from a
-  public request. Fix proposed, not yet approved: check `getRootTheme` first instead of the
-  error's type.
-- The admin `seed.run` route (the client never calls it) wipes first, then would stop partway.
-- Two first-boot requests at once both seed and cut across each other.
-
-Proposed: the seed works out its rows in memory and sends them as one `db.batch()`: one
-transaction, all or nothing, and D1 runs batches one at a time. Inserts of many rows each (up
-to the 100 bound values a statement allows) bring ~1,180 rows to well under 100 statements,
-under the limit even if a batch's statements count one by one (the docs don't say). First boot
-starts the batch with the root theme's insert (fixed id) and wipes nothing: a second request
-racing it fails on that insert and rolls back, then uses the first one's seed. A reseed puts
-the wipe in the same batch. The same batch is a way for the seed to reach live (below). Cost:
-`setToken`, `applyRule` and the rest check their input by reading the database (the 1,533
-selects); the seed needs those checks run on its own data in memory, and the 606 updates (themes
-marked as changed) aren't needed. Next step: read those functions, then a file-by-file plan for
-sign-off.
+- `pnpm seed:local` / `pnpm seed:live` (`api/scripts/seed.mjs`) run the seed here, in a
+  throwaway database in memory with all its checks, and write its rows to
+  `api/.wrangler/seed-local.sql` / `seed-live.sql`: 10 statements (wipe the design, multi-row
+  inserts, add the brand user if missing, found by email). Wrangler applies the file. Live first
+  says which seed version it replaces and asks.
+- Nothing seeds inside a request: an empty database's stylesheet answers 500 until a seed is
+  run. The admin `seed.run` route and `POST /dev/seed` (with `DEV_SEED_SECRET`) are gone. A
+  machine that built before this keeps a working `/dev/seed` locally (`tsc --build` leaves
+  `api/functions/dev/seed.js`) until `pnpm build`; remove `DEV_SEED_SECRET` from its `.dev.vars`.
+- Checked locally: a file that fails partway leaves the database as it was, and seeding an empty
+  database or a seeded one both serve exactly the seed's stylesheet. Wrangler says the same for
+  live (a failed run returns the database to how it was, safe to retry). `seed:live` hasn't been
+  run yet.
+- Later: seed on deploy, right after migrations, once migrations run on deploy (today both are
+  run by hand). Only when the seed version changes, and not once themes are edited live: a seed
+  replaces the whole design.
 
 Rule errors now reach the user with their message (`f91217f`, 2026-10-03). Some read like
 developer text, e.g. the class-name check prints its pattern; rewording them is open.
@@ -123,9 +117,8 @@ developer text, e.g. the class-name check prints its pattern; rewording them is 
 own. Production's history holds three other sets (last applied 16 Jun) and lacked the 7 theme
 tables; `pnpm migrate:push:api` from this Mac would try to create every table again. Going
 live uses a one-off add-only SQL file (the 7 tables, the seeded themes copied from a fresh local
-seed, the brand user, the home page, and this Mac's migration marked applied). Not solved: the
-seed has no way to reach live (it runs through `/dev/seed`, off in production), and migration
-files should be committed so every machine shares one history. Candidates:
+seed, the brand user, the home page, and this Mac's migration marked applied). The seed now
+reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
 
 1. **Scroll-frame arrows in documents:** the `sf-is-overflow-*` script doesn't run in pages
    (item 10, logged).
@@ -273,11 +266,10 @@ What's in place:
   before Vite injects `main.css`.
 - Seed (`api/src/domain/seed.ts`): Root/Dark/Pink themes + all tokens + full vocabulary +
   rules for depth/heading/variants/layout/overflow-context. Collapse thresholds seeded idempotently.
-- Auto-reseed system: `api/src/domain/seedVersion.ts` exports `SEED_VERSION`; `generateCss.ts`
-  warns on version mismatch but does NOT auto-reseed (avoids seeding with stale compiled code
-  during a dev server restart race). First-boot only: `sf-system.ts` seeds when no root theme
-  exists in D1. Dev endpoint `POST /dev/seed` (bearer-auth, absent in prod) + `pnpm seed:local`
-  script for on-demand forced reseeds after seed.ts changes.
+- Reseeding: `api/src/domain/seedVersion.ts` exports `SEED_VERSION`; `generateCss.ts` warns on
+  a version mismatch and nothing reseeds on its own. `pnpm seed:local` / `pnpm seed:live`
+  (`api/scripts/seed.mjs`) reseed; the first-boot seed and `POST /dev/seed` were removed
+  2026-10-03.
 - `--sf-breakpoint-*` removed from tokens entirely; "breakpoint" term dropped.
   Collapse thresholds live in `collapse_thresholds` table; generator embeds pixel
   values directly in `@container` conditions.
