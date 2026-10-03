@@ -18,8 +18,11 @@ export const publicTagsRouter = router({
 
 	getBySlug: publicProcedure
 		.input(z.object({ slug: slugSchema }))
-		.query(({ input, ctx }) =>
-			ctx.db.select().from(siteTags).where(eq(siteTags.slug, input.slug)).get(),
+		// A lookup that finds nothing returns null: TanStack Query treats undefined data as an error.
+		.query(
+			async ({ input, ctx }) =>
+				(await ctx.db.select().from(siteTags).where(eq(siteTags.slug, input.slug)).get())
+				?? null,
 		),
 })
 

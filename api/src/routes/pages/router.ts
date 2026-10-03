@@ -45,12 +45,14 @@ const listColumns = {
 }
 
 export const publicPagesRouter = router({
-	getBySlug: publicProcedure.input(z.object({ slug: slugSchema })).query(({ input, ctx }) =>
-		ctx.db
-			.select()
-			.from(sitePages)
-			.where(and(eq(sitePages.slug, input.slug), eq(sitePages.published, true)))
-			.get(),
+	// A lookup that finds nothing returns null: TanStack Query treats undefined data as an error.
+	getBySlug: publicProcedure.input(z.object({ slug: slugSchema })).query(
+		async ({ input, ctx }) =>
+			(await ctx.db
+				.select()
+				.from(sitePages)
+				.where(and(eq(sitePages.slug, input.slug), eq(sitePages.published, true)))
+				.get()) ?? null,
 	),
 
 	list: publicProcedure.query(({ ctx }) =>
@@ -83,8 +85,10 @@ export const publicPagesRouter = router({
 export const adminPagesRouter = router({
 	getBySlug: adminProcedure
 		.input(z.object({ slug: slugSchema }))
-		.query(({ input, ctx }) =>
-			ctx.db.select().from(sitePages).where(eq(sitePages.slug, input.slug)).get(),
+		.query(
+			async ({ input, ctx }) =>
+				(await ctx.db.select().from(sitePages).where(eq(sitePages.slug, input.slug)).get())
+				?? null,
 		),
 
 	list: adminProcedure.query(({ ctx }) =>

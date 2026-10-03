@@ -9,12 +9,11 @@ export const usePage = (slug: MaybeRefOrGetter<string | null>) => {
 	const isAdmin = useIsAdmin()
 	const query = useQuery({
 		queryKey: computed(() => ['page', toValue(slug), isAdmin.value]),
-		queryFn: async () => {
+		queryFn: () => {
 			const input = { slug: toValue(slug) ?? '' }
-			const page = await (isAdmin.value
+			return isAdmin.value
 				? trpc.adminPages.getBySlug.query(input)
-				: trpc.publicPages.getBySlug.query(input))
-			return page ?? null
+				: trpc.publicPages.getBySlug.query(input)
 		},
 		enabled: computed(() => !!toValue(slug)),
 		retry: false,
