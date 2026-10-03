@@ -28,6 +28,7 @@
 </template>
 
 <script setup lang="ts">
+import { useAnchorFallback } from '@/composables/useAnchorFallback'
 import { onUnmounted, ref, useId, watch } from 'vue'
 
 const props = defineProps<{
@@ -92,6 +93,18 @@ const onTouchEnd = () => {
 onUnmounted(() => {
 	if (timer) clearTimeout(timer)
 })
+
+// Browsers without anchor positioning get the CSS's placement from script.
+useAnchorFallback(
+	popupEl,
+	() => popupEl.value?.parentElement ?? null,
+	() => ({
+		side: props.placement ?? 'top',
+		align: 'center',
+		gap: 'var(--tooltip-gap)',
+		edge: '0px',
+	}),
+)
 </script>
 
 <style scoped>

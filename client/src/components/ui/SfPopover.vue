@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+import { useAnchorFallback } from '@/composables/useAnchorFallback'
 import { onMounted, ref, useId, watch } from 'vue'
 
 // A box that opens from a button, over everything, and closes on Esc or a click outside
@@ -67,6 +68,19 @@ const sync = () => {
 watch(open, sync)
 onMounted(sync)
 
+// Browsers without anchor positioning get the CSS's placement from script, with its spacing.
+useAnchorFallback(
+	box,
+	() => document.querySelector(`[popovertarget="${CSS.escape(id)}"]`),
+	() => ({
+		side: 'bottom',
+		align: props.align,
+		gap: 'var(--sf-spacing-2xs)',
+		edge: 'var(--sf-spacing_page)',
+		wide: true,
+	}),
+)
+
 const onClick = (event: MouseEvent) => {
 	if (props.closeOnClick && (event.target as Element).closest('a, button'))
 		(event.currentTarget as HTMLElement).hidePopover()
@@ -79,8 +93,7 @@ const onClick = (event: MouseEvent) => {
 	   too wide for either side spans the screen width instead, centred on the trigger and
 	   slid back on screen at the edges; the last option always fits (it scrolls). The box
 	   keeps its content width, so it moves on rather than squeezing into a narrow gap.
-	   Without anchor positioning the browser centres the box on screen instead, so the
-	   margin reset lives in here too. */
+	   Without anchor positioning, useAnchorFallback places it by the same rules. */
 	@supports (position-area: block-end) {
 		.popover-box {
 			margin: 0;

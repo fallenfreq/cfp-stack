@@ -71,10 +71,15 @@ width. See `sf-system.md`, "A document in an inset".
   exactly sm, where a block that bleeds is still wider. It failed on the old rules, and
   without the rule for columns inside a block that bleeds. `setShellWidth` narrows the page
   shell, not the document.
-- **Not checked:**
-    - Safari (candidate 4 below).
-    - Whether clicking in the margin beside a block places the cursor.
-    - The drag handle beside a bleeding block.
+- **Not checked:** resizing the window in Safari (candidate 4 below).
+- **Checked** (2026-10-03):
+    - In Chrome, at 1440px and 400px: clicking in the page margin beside a block puts the
+      cursor on that line, at its start on the left and its end on the right. Tried beside a
+      paragraph, plain and component Columns, and inside a card band's margin.
+    - In Safari 18.3.1, from the user's screenshot: the hero image reaches both sides of a
+      narrow window.
+    - The drag handle of a block that bleeds sits above the block's top-left corner, so at the
+      screen's edge, in Chrome and Safari alike. Left as is.
 
 **Live database** (2026-10-01): migration files are gitignored, so each machine generates its
 own. Production's history holds three other sets (last applied 16 Jun) and lacked the 7 theme
@@ -91,13 +96,47 @@ files should be committed so every machine shares one history. Candidates:
    position maps as deleted through `setNodeMarkup` (`multiSelect.ts`, `mapResult(pos, 1)`).
    Checked in Chrome on a to-do item and a paragraph. Not checked: whether the toolbar lets
    you change attributes while several blocks are selected.
-3. **Tooltips on Safari before 26** (found 2026-10-01, not fixed): `SfTooltip` is placed only
-   by anchor positioning, which Safari has from 26, with no fallback, so there it sits in the
-   screen's top-left corner. Checked in Chrome with the placement switched off: the Account
-   tooltip moves from under its button (1239, 99) to (0, 8). `SfPopover` has a fallback
-   (centred on screen). Not checked: the seed's `sl-scroll-x` hides its scrollbar only with
-   `scrollbar-width`, so older Safari may show it while scrolling (the components that hide
-   theirs also set `::-webkit-scrollbar`).
+3. **Popovers and tooltips on Safari before 26** (found 2026-10-01; fixed 2026-10-03, committed,
+   not pushed). They're placed by anchor positioning, which Safari has from 26. Before it, a
+   popover sat in the middle of the screen (the user saw the nav's menu there in Safari
+   18.3.1) and a tooltip in the top-left corner. The toolbar's panels and the tooltips had
+   their own placement scripts until 27 Sep (`e304d60`).
+    - **Fix:** `useAnchorFallback` (new name, approved by the user) places both from script,
+      only in browsers without anchor positioning, by the same rules as the CSS. Chrome and
+      Safari 26 keep the CSS. While a box is open it's checked every frame, as CSS anchoring
+      is, and placed again when its button moves, its content changes size or the screen
+      does.
+    - **Checked:** `anchorFallback.spec.ts` fakes such a browser and checks each box lands
+      exactly where Chrome's CSS puts it, at 1440px and 400px.
+        - The nav menu.
+        - Toolbar panels: below; from the last button (the other edge); from the second
+          button (too wide for either edge at 400px, so spread across); with no room below
+          (above); after the page scrolls; after an edit above.
+        - Tooltips: above; slid back at the screen edge.
+        - A panel too tall for the screen, on its own, as only the script reaches that
+          place: it scrolls and keeps its scroll position when placed again.
+
+        Every case fails with the script off. The user saw the nav menu and a toolbar tooltip
+        right in Safari 18.3.1, before the review's changes.
+
+    - **Code review** (`/code-review high`): ten findings, all real. Checking every frame,
+      instead of scroll and resize events and a size observer, fixed five:
+        - a tall panel lost its scroll position whenever it was placed again;
+        - a panel lagged behind a toolbar moved by an edit (reproduced in a separate run: it
+          stayed at 310px instead of moving to 394px; inside the layout check something
+          else happens to place it again, so the check guards this but missed the old bug);
+        - the observer reported a loop error;
+        - listeners stayed on when a box went without a close event;
+        - every scroll did the full placement.
+
+        Also fixed: start and end now follow the screen's direction, as the CSS's do; the
+        scrolling height can't go below 0; tooltips no longer try each place twice. The checks
+        gained the cases above.
+
+    - **Not checked:** the seed's `sl-scroll-x` hides its scrollbar only with
+      `scrollbar-width`, so older Safari may show it while scrolling (the components that hide
+      theirs also set `::-webkit-scrollbar`).
+
 4. **Check the page's line in Safari** (added 2026-10-02; not checked yet, no Safari to hand).
    The bleed width is a registered length worked out from `100cqi` (`--sfx-bleed-width`,
    `slCombined.ts`). The layout checks only run in Chrome. Nobody has seen whether Safari
@@ -106,7 +145,7 @@ files should be committed so every machine shares one history. Candidates:
       The hero image and the code sample should stay edge to edge, with nothing sticking out
       sideways. Do the same with a page open in a collection's sheet.
     - **If it's wrong:** bleeding blocks stop short of the edges or push the page sideways.
-      Running the layout checks in WebKit (candidate 6) would catch it from then on.
+      Running the layout checks in WebKit (candidate 7) would catch it from then on.
 5. **Columns placed straight in an inset stack late** (found 2026-10-02 by the second code
    review; predates the page shell work, not fixed). An inset holding a collapsing layout is
    the box that layout measures, but the inset's margins are grid tracks. So it measures wider
@@ -117,8 +156,15 @@ files should be committed so every machine shares one history. Candidates:
    measures that box and is right. There's no one-line fix: no box is as wide as the line.
    `line.spec.ts` has no columns-in-a-band case yet. Collapsing by a layout's own width (an idea
    under Deferred) would fix it too. Until then: put the columns in a stack (examples under
-   "For the docs").
-6. Bigger: the validator / linter (item 11); WebKit in the layout checks.
+   "For the docs"). Fine for now (decided with the user, 2026-10-03).
+6. **A panel on a short screen runs off the bottom in Chrome** (found 2026-10-03; predates this
+   work, not fixed). `SfPopover` lists six places to try. Chrome seems to try only five: any
+   list of five reaches its last place, and the list of six doesn't. So the last place, which
+   scrolls, never applies. On a screen too short for a panel above or below its button, the
+   panel runs off the bottom instead of scrolling. The fallback script follows the whole
+   list, so older Safari scrolls there. A fix needs one place fewer; which one to drop is a
+   choice.
+7. Bigger: the validator / linter (item 11); WebKit in the layout checks.
 
 Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a Section on the
 test page logs 171 TipTap warnings ("setNode() only supports text block nodes"); editing
@@ -130,9 +176,15 @@ does this: the Centre block's wrapper is the inset's item, and only `LayoutCente
 (`/editor/home` to `/editor?seed=true`, say, or the Demo link while a page is open) reuses the open editor, so nothing loads; the page view doesn't
 follow its address. Found 2026-10-01 while fixing the stale editor store, not fixed.
 
+On a narrow window the floating toolbar differs between browsers (seen 2026-10-03). Chrome
+starts it at the block and cuts its last tools, which scroll. Safari slides it left so they
+all show. Its script measures the toolbar's width, which Chrome limits to the room right of
+where it starts. Left as is (decided with the user).
+
 **Layout checks** (added 2026-10-01): `pnpm test:ui` runs
-`client/e2e` with Playwright in the installed Chrome, against the dev server. 84 checks (14 of them
-expected to fail), about a minute.
+`client/e2e` with Playwright in the installed Chrome, against the dev server. 90 checks (14 of them
+expected to fail), about a minute. On battery, four at once get throttled and time out
+(2026-10-03); `pnpm test:ui --workers 2` passes.
 
 - **The stylesheet** is built from the seed in a throwaway database in memory
   (`e2e/globalSetup.ts`, using `e2e/d1Memory.mjs`, which the component preview now imports
