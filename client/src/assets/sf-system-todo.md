@@ -79,6 +79,12 @@ width. See `sf-system.md`, "A document in an inset".
       paragraph, plain and component Columns, and inside a card band's margin.
     - In Safari 18.3.1, from the user's screenshot: the hero image reaches both sides of a
       narrow window.
+    - A long line of code wraps, in the editor and on a published page alike (the user saw it
+      in Chrome and Safari; measured in Chrome on the home page at 1440px and 400px: nothing
+      runs past its box and the page doesn't scroll sideways). Published pages use the same
+      read-only editor, and the editor library's own style wraps code
+      (`.ProseMirror pre { white-space: pre-wrap }`). The theme says nothing about it, so a page
+      shown without the editor would not wrap. Nothing does that today.
     - The drag handle of a block that bleeds sits above the block's top-left corner, so at the
       screen's edge, in Chrome and Safari alike. Left as is.
 
