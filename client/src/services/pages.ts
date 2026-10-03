@@ -1,5 +1,6 @@
 import { trpc } from '@/trpc'
 import { useQuery } from '@tanstack/vue-query'
+import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 
 const usePublicPages = () =>
 	useQuery({
@@ -13,16 +14,19 @@ const useAllPages = () =>
 		queryFn: () => trpc.adminPages.list.query(),
 	})
 
-const usePagesByCollection = (collectionSlug: string) =>
+// The address can change while the page stays (one collection to the next); the pages follow it.
+const usePagesByCollection = (collectionSlug: MaybeRefOrGetter<string>) =>
 	useQuery({
-		queryKey: ['pages', 'collection', collectionSlug],
-		queryFn: () => trpc.publicPages.listByCollection.query({ collectionSlug }),
+		queryKey: computed(() => ['pages', 'collection', toValue(collectionSlug)]),
+		queryFn: () =>
+			trpc.publicPages.listByCollection.query({ collectionSlug: toValue(collectionSlug) }),
 	})
 
-const usePagesByCollectionAdmin = (collectionSlug: string) =>
+const usePagesByCollectionAdmin = (collectionSlug: MaybeRefOrGetter<string>) =>
 	useQuery({
-		queryKey: ['pages', 'collection-admin', collectionSlug],
-		queryFn: () => trpc.adminPages.listByCollection.query({ collectionSlug }),
+		queryKey: computed(() => ['pages', 'collection-admin', toValue(collectionSlug)]),
+		queryFn: () =>
+			trpc.adminPages.listByCollection.query({ collectionSlug: toValue(collectionSlug) }),
 	})
 
 export { useAllPages, usePagesByCollection, usePagesByCollectionAdmin, usePublicPages }

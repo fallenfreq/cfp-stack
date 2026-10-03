@@ -1051,11 +1051,14 @@ These are not bugs but unresolved tensions in the current design:
       wraps them externally so the components themselves have no editor dependency. Call sites
       outside the editor use them directly with `sf-gap-*` as a class attribute.
 - [x] `LayoutCard.vue` — wears `sf-depth-1`; background inherited from bundle (5a95dfe).
-- [ ] `CollectionView.vue` reads its address once: going from one collection to another (the
-      menu's Branding, then Software Development) shows the first one's pages under the second
-      one's title. `usePagesByCollection(Admin)` takes a plain string, and `<RouterView />` keeps
-      the view when only the address changes. Found in review 2026-10-03; predates the menu's
-      collections being seeded.
+- [x] `CollectionView.vue` read its address once: going from one collection to another (the
+      menu's Branding, then Software Development) showed the first one's pages under the second
+      one's title, as `<RouterView />` keeps the view when only the address changes. Fixed
+      2026-10-03: `usePagesByCollection(Admin)` take the address as it changes, as `usePage` does.
+- [ ] `CollectionView.vue` picks the admin or the public page list once, as it opens. Sign-in
+      is restored in the background after the app mounts (`main.ts`), so an admin whose sign-in
+      lands a moment late sees the public list (no unpublished pages) until a reload. `usePage`
+      keys on `isAdmin` and follows it. Found in review 2026-10-03; predates the fix above.
 
 ## Deferred (pending design pass)
 

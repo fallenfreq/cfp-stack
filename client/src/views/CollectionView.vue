@@ -66,8 +66,8 @@ const { data: tag, isPending: tagPending } = useQuery({
 })
 
 const { data: pages, isPending: pagesPending } = isAdmin.value
-	? usePagesByCollectionAdmin(collectionSlug.value)
-	: usePagesByCollection(collectionSlug.value)
+	? usePagesByCollectionAdmin(collectionSlug)
+	: usePagesByCollection(collectionSlug)
 
 const gridItems = computed<GridItem[]>(() =>
 	(pages.value ?? []).map((p) => ({
