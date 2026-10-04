@@ -98,7 +98,7 @@
 					<li>
 						<RouterLink
 							class="sf sf-is-contained sf-size-xs sf-text-sm sf-single-line sf-on-hover"
-							:to="{ name: 'editor', params: { slug: page.slug } }"
+							:to="{ name: 'editor-page', params: { slug: page.slug } }"
 						>
 							Edit
 						</RouterLink>
@@ -235,7 +235,7 @@ const onNewPage = async () => {
 		contentJson: JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] }),
 	})
 	if (result?.slug) {
-		router.push({ name: 'editor', params: { slug: result.slug } })
+		router.push({ name: 'editor-page', params: { slug: result.slug } })
 	}
 }
 </script>

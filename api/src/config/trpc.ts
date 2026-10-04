@@ -1,8 +1,8 @@
 import { TRPCError, initTRPC } from '@trpc/server'
-import axios from 'axios'
 import { type DrizzleD1Database } from 'drizzle-orm/d1'
 import superjson from 'superjson'
-import { getAllEnvs } from '../config/envs.js'
+import type { RequestSession } from '../auth/index.js'
+import { SessionUnavailable } from '../auth/sessions.js'
 import { ConflictError, NotFoundError, ValidationError } from '../domain/errors.js'
 
 // TODO: importing schemas from ../schemas/index.js causes type issues on query
@@ -17,68 +17,39 @@ import * as collection from '../schemas/collectionEntry.js'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const schemas = { ...user, ...collection }
 
-const { ZITADEL_INTROSPECTION_ENDPOINT, ZITADEL_CLIENT_ID, ZITADEL_CLIENT_SECRET } = getAllEnvs()
-
 interface Context {
 	db: DrizzleD1Database<typeof schemas>
-	req: Request
-	roles?: string[]
+	session: RequestSession
 }
 
 const t = initTRPC.context<Context>().create({
 	transformer: superjson,
 })
 
-const secure = t.middleware(async ({ next, ctx }) => {
-	const authHeader = ctx.req.headers.get('Authorization')
-	if (!authHeader) {
-		throw new TRPCError({
-			code: 'UNAUTHORIZED',
-			message: 'Please log in to continue',
-		})
-	}
+// Signed in, vouched for by the provider in the last 10 minutes (docs/auth.md, "Re-checking
+// with the provider"), so a user the provider has ended loses access within them.
+const signedIn = t.middleware(async ({ next, ctx }) =>
+	next({ ctx: { user: required(await ctx.session.checkedUser()) } }),
+)
 
-	const token = authHeader.split(' ')[1]
-	try {
-		const response = await axios.post<{
-			active: boolean
-			// Zitadel project roles: { [roleKey]: { [orgId]: orgDomain } }
-			'urn:zitadel:iam:org:project:roles'?: Record<string, Record<string, string>>
-		}>(ZITADEL_INTROSPECTION_ENDPOINT, `token=${token}`, {
-			adapter: 'fetch',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-				Authorization: `Basic ${btoa(`${ZITADEL_CLIENT_ID}:${ZITADEL_CLIENT_SECRET}`)}`,
-			},
-		})
-		if (!response.data.active) {
-			throw new TRPCError({
-				code: 'UNAUTHORIZED',
-				message: 'Session expired, please log in again',
-			})
-		}
-		const rolesObj = response.data['urn:zitadel:iam:org:project:roles']
-		const roles = rolesObj ? Object.keys(rolesObj) : []
-		return next({ ctx: { secure: true, roles } })
-	} catch (error: any) {
-		if (error instanceof TRPCError) throw error
-		// Network or Zitadel HTTP error — server-side problem, not a client auth failure.
-		// onError in [[trpc]].ts logs this and replaces the message before sending to client.
-		const message = error.response ? JSON.stringify(error.response.data) : error.message
-		console.error('Introspection error:', message)
-		throw new TRPCError({
-			code: 'INTERNAL_SERVER_ERROR',
-			message: `Introspection failed: ${message}`,
-		})
-	}
-})
-
-const adminMiddleware = t.middleware(({ next, ctx }) => {
-	if (!ctx.roles?.includes('admin')) {
+// Admins, vouched for the same way.
+const admin = t.middleware(async ({ next, ctx }) => {
+	const user = required(await ctx.session.checkedUser())
+	if (!user.roles.includes('admin'))
 		throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' })
-	}
-	return next()
+	return next({ ctx: { user } })
 })
+
+// Your own account at the provider, with the session's token ("Adding account features").
+const account = t.middleware(async ({ next, ctx }) =>
+	next({ ctx: required(await ctx.session.account()) }),
+)
+
+function required<T>(signedInAs: T | null): T {
+	if (signedInAs === null)
+		throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Please sign in to continue' })
+	return signedInAs
+}
 
 function domainErrorCode(error: unknown) {
 	if (error instanceof ValidationError) return 'BAD_REQUEST'
@@ -88,11 +59,20 @@ function domainErrorCode(error: unknown) {
 }
 
 // Domain errors are written for the user, so they go out with their message and a matching
-// code. Anything else stays INTERNAL_SERVER_ERROR, which onError in [[trpc]].ts hides.
+// code; a sign-in that can't be checked just now asks you to try again. Anything else stays
+// INTERNAL_SERVER_ERROR, which onError in [[trpc]].ts hides.
 const domainErrors = t.middleware(async ({ next }) => {
 	const result = await next()
 	if (result.ok) return result
 	const { cause } = result.error
+	if (cause instanceof SessionUnavailable) {
+		console.warn('Sign-in not checked:', cause.message)
+		throw new TRPCError({
+			code: 'TIMEOUT',
+			message: "Your sign-in couldn't be checked just now. Please try again.",
+			cause,
+		})
+	}
 	const code = domainErrorCode(cause)
 	if (code) throw new TRPCError({ code, message: result.error.message, cause })
 	return result
@@ -100,7 +80,16 @@ const domainErrors = t.middleware(async ({ next }) => {
 
 const router = t.router
 const publicProcedure = t.procedure.use(domainErrors)
-const secureProcedure = publicProcedure.use(secure)
-const adminProcedure = secureProcedure.use(adminMiddleware)
+const secureProcedure = publicProcedure.use(signedIn)
+const adminProcedure = publicProcedure.use(admin)
+const accountProcedure = publicProcedure.use(account)
 
-export { adminProcedure, publicProcedure, router, secureProcedure, type Context, type schemas }
+export {
+	accountProcedure,
+	adminProcedure,
+	publicProcedure,
+	router,
+	secureProcedure,
+	type Context,
+	type schemas,
+}

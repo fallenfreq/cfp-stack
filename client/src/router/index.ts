@@ -1,6 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import zitadelAuth from '../services/zitadelAuth'
+import { hasRole, signedIn, signIn, whenSignInKnown } from '../services/session'
+import { notify } from '../services/toast'
 import HomeView from '../views/HomeView.vue'
+
+declare module 'vue-router' {
+	interface RouteMeta {
+		// The page needs sign-in.
+		signIn?: boolean
+		// The page needs this role too: anyone signed in without it goes to No access.
+		role?: string
+	}
+}
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,23 +35,14 @@ const router = createRouter({
 		{
 			path: '/account',
 			name: 'account',
-			meta: {
-				authName: zitadelAuth.oidcAuth.authName,
-			},
+			meta: { signIn: true },
 			component: () => import('../views/AccountView.vue'),
 		},
 		{
 			path: '/admin',
 			name: 'admin',
-			meta: {
-				authName: zitadelAuth.oidcAuth.authName,
-			},
-			component: () => {
-				if (zitadelAuth.hasRole('admin')) {
-					return import('../views/AdminView.vue')
-				}
-				return import('../views/NoAccess.vue')
-			},
+			meta: { signIn: true, role: 'admin' },
+			component: () => import('../views/AdminView.vue'),
 		},
 		{
 			path: '/c/:collectionSlug',
@@ -51,32 +52,26 @@ const router = createRouter({
 		{
 			path: '/admin/pages',
 			name: 'admin-pages',
-			meta: {
-				authName: zitadelAuth.oidcAuth.authName,
-			},
-			component: () => {
-				if (zitadelAuth.hasRole('admin')) {
-					return import('../views/admin/AdminPagesView.vue')
-				}
-				return import('../views/NoAccess.vue')
-			},
+			meta: { signIn: true, role: 'admin' },
+			component: () => import('../views/admin/AdminPagesView.vue'),
 		},
 		{
 			path: '/admin/collections',
 			name: 'admin-collections',
-			meta: {
-				authName: zitadelAuth.oidcAuth.authName,
-			},
-			component: () => {
-				if (zitadelAuth.hasRole('admin')) {
-					return import('../views/admin/AdminCollectionsView.vue')
-				}
-				return import('../views/NoAccess.vue')
-			},
+			meta: { signIn: true, role: 'admin' },
+			component: () => import('../views/admin/AdminCollectionsView.vue'),
 		},
 		{
-			path: '/editor/:slug?',
+			// The demo and the layout test cases, open to anyone, and a new page.
+			path: '/editor',
 			name: 'editor',
+			component: () => import('../views/TiptapEditorDemo.vue'),
+		},
+		{
+			// A stored page, for admins. The same view as /editor: moving between the two keeps it.
+			path: '/editor/:slug',
+			name: 'editor-page',
+			meta: { signIn: true, role: 'admin' },
 			component: () => import('../views/TiptapEditorDemo.vue'),
 		},
 		{
@@ -93,19 +88,35 @@ const router = createRouter({
 		{
 			path: '/demo/map',
 			name: 'map',
-			meta: {
-				authName: zitadelAuth.oidcAuth.authName,
-			},
-			component: () => {
-				if (zitadelAuth.oidcAuth.isAuthenticated) {
-					return import('../views/demo/GoogleMap.vue')
-				}
-				return import('../views/NoAccess.vue')
-			},
+			meta: { signIn: true },
+			component: () => import('../views/demo/GoogleMap.vue'),
+		},
+		{
+			path: '/no-access',
+			name: 'no-access',
+			component: () => import('../views/NoAccess.vue'),
 		},
 	],
 })
 
-zitadelAuth.oidcAuth.useRouter(router)
+// A page that needs sign-in waits until it's known whether you're signed in. Not signed in: off to
+// sign in, coming back here. Signed in without the page's role: No access. Not known (the server
+// didn't answer): home, saying so. Decided on every visit, not when a page's code first loads (the
+// router keeps that until a reload).
+router.beforeEach(async (to) => {
+	if (!to.meta.signIn) return
+	if (!(await whenSignInKnown())) {
+		notify({
+			message: "Signing in isn't working right now. Please try again later.",
+			variant: 'danger',
+		})
+		return { name: 'home' }
+	}
+	if (!signedIn.value) {
+		signIn(to.fullPath)
+		return false
+	}
+	if (to.meta.role && !hasRole(to.meta.role)) return { name: 'no-access' }
+})
 
 export default router

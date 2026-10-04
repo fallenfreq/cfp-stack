@@ -1,9 +1,9 @@
 <script lang="ts" setup>
+import { type AccountProfile } from '@/composables/useAccountProfile'
 import { useEmailChange } from '@/composables/useEmailChange'
-import { type ZitadelProfile } from '@/composables/useZitadelProfile'
 import { computed } from 'vue'
 
-const props = defineProps<{ profile: ZitadelProfile }>()
+const props = defineProps<{ profile: AccountProfile }>()
 const {
 	newEmail,
 	confirmEmail,
@@ -13,6 +13,7 @@ const {
 	emailError,
 	resendSent,
 	requestEmailChange,
+	confirmIdentity,
 	verifyEmailCode,
 	resendEmailCode,
 	cancelEmailChange,
@@ -35,7 +36,7 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 		<div class="sl-cluster sf-gap-sm">
 			<span>{{ profile.email }}</span>
 			<span
-				v-if="profile.email_verified"
+				v-if="profile.emailVerified"
 				class="sf-status sf-single-line sf-size-2xs sf-loudness-3 sf-variant-success"
 			>
 				Verified
@@ -91,6 +92,18 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 			</p>
 		</template>
 
+		<template v-else-if="emailStatus === 'confirm'">
+			<p class="sf-text-sm sf-loudness-1">
+				To change your email, confirm it's you first: sign in again, then make the change.
+			</p>
+			<div class="sl-cluster sf-gap-sm">
+				<SfButton :loudness="3" variant="primary" @click="confirmIdentity">
+					Confirm it's you
+				</SfButton>
+				<SfButton :loudness="2" @click="cancelEmailChange"> Cancel </SfButton>
+			</div>
+		</template>
+
 		<template v-else-if="emailStatus === 'code' || emailStatus === 'verifying'">
 			<p class="sf-text-sm sf-loudness-1">
 				A verification code has been sent to <strong>{{ pendingEmail }}</strong
@@ -129,8 +142,7 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 
 		<div v-else-if="emailStatus === 'done'" class="sl-cluster sl-align-y-center sf-gap-sm">
 			<p class="sf-text-sm sf-variant-success" role="status">
-				Email updated to {{ pendingEmail }}. Sign out and back in to see the change
-				reflected here.
+				Email updated to {{ pendingEmail }}.
 			</p>
 			<SfButton :loudness="2" size="xs" @click="cancelEmailChange"> Change again </SfButton>
 		</div>

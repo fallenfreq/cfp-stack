@@ -1,6 +1,6 @@
 import './assets/main.css'
 
-import zitadelAuth from '@/services/zitadelAuth'
+import { whenSignInKnown } from '@/services/session'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import App from './App.vue'
@@ -9,46 +9,21 @@ import router from './router'
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { queryClient } from './config/queryClient'
 
-declare module 'vue' {
-	interface ComponentCustomProperties {
-		$zitadel: typeof zitadelAuth
-	}
-}
-
 import globalKeyPlugin from './plugins/globalKeyPlugin'
 import { useThemeTokensStore } from './stores/themeTokensStore'
 
-zitadelAuth.oidcAuth.startup().then((ok: boolean) => {
-	if (!ok) {
-		// ok=false means this window is a callback page (silent renew iframe or popup); don't mount.
-		return
-	}
+// Not waited for: the app shows now and follows sign-in when it's known; pages that need it
+// wait for it themselves (router).
+whenSignInKnown()
 
-	// Prune stale PKCE state entries (abandoned login attempts). Using
-	// clearStaleState instead of a manual wipe preserves any active state
-	// entry needed by an in-flight redirect callback — the manual approach
-	// deleted the code verifier before the router's signinRedirectCallback
-	// could read it, breaking every fresh login via redirect.
-	zitadelAuth.oidcAuth.mgr.clearStaleState()
+const app = createApp(App)
+app.use(globalKeyPlugin)
+app.use(createPinia())
+app.use(VueQueryPlugin, { queryClient })
+app.use(router)
 
-	if (!zitadelAuth.oidcAuth.isAuthenticated) {
-		// Fire-and-forget: uses the Zitadel SSO cookie to restore tokens without
-		// a new login. user.value is reactive so the UI updates when it resolves.
-		zitadelAuth.oidcAuth.mgr.signinSilent().catch(() => {
-			// Zitadel session also expired; user must log in manually.
-		})
-	}
+// Fire-and-forget — palette computed refs update reactively when tokens arrive.
+// /styles/sf-system CSS is served from edge cache so the stylesheet itself is instant.
+useThemeTokensStore().hydrate().catch(console.error)
 
-	const app = createApp(App)
-	app.config.globalProperties.$zitadel = zitadelAuth
-	app.use(globalKeyPlugin)
-	app.use(createPinia())
-	app.use(VueQueryPlugin, { queryClient })
-	app.use(router)
-
-	// Fire-and-forget — palette computed refs update reactively when tokens arrive.
-	// /styles/sf-system CSS is served from edge cache so the stylesheet itself is instant.
-	useThemeTokensStore().hydrate().catch(console.error)
-
-	app.mount('#app')
-})
+app.mount('#app')

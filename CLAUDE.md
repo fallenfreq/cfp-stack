@@ -18,9 +18,7 @@ Copy the example and fill in credentials when available:
 cp api/.dev.vars.example api/.dev.vars
 ```
 
-`api/.dev.vars` holds dev secrets (Zitadel client secret, SMTP password, Google Maps key). Without these, the app loads but auth and protected tRPC routes fail. The non-secret vars (`ZITADEL_CLIENT_ID`, `ZITADEL_INTROSPECTION_ENDPOINT`) are already set in `api/wrangler.toml`.
-
-`client/.env.development` is already configured for local dev.
+`api/.dev.vars` holds dev settings and secrets (the dev Zitadel app's id and secret, the session secret, SMTP password, Google Maps key). Without these, the app loads but signing in and protected tRPC routes fail. The live non-secret settings (`OIDC_ISSUER`, `OIDC_CLIENT_ID`, `APP_ORIGINS`, `ZITADEL_PROJECT_ID`) are in `api/wrangler.toml`. The client has no settings of its own.
 
 ### 3. Local D1 database
 
@@ -67,14 +65,21 @@ deploys `main` on its own, without waiting for the checks.
 
 ## Auth setup (Zitadel)
 
-Requires a [Zitadel](https://zitadel.com/) instance. Two apps per environment (dev/prod):
+Our server signs you in and keeps the session; the browser only gets our cookie (design and
+progress: `docs/auth.md`). Requires a [Zitadel](https://zitadel.com/) instance with a project per
+environment (dev, prod), each with a **Web app**: Code flow, Basic client secret, Authorization
+Code + Refresh Token grants.
 
-- **User Agent app (PKCE)** — for the Vue frontend login flow. Client ID → `VITE_API_ZITADEL_CLIENT_ID` in `client/.env.development`.
-- **API app (Basic)** — for token introspection. Client ID + secret → `api/.dev.vars`.
+- Redirect URI `/auth/callback`, post-logout URI `/`. Dev: on both ports (`http://localhost:8788`,
+  `http://localhost:5173`), with development mode on (plain http).
+- Dev: the app's client id and secret and the project id go in `api/.dev.vars` (`OIDC_CLIENT_ID`,
+  `OIDC_CLIENT_SECRET`, `ZITADEL_PROJECT_ID`), with a `SESSION_SECRET` of 32 random bytes
+  (`openssl rand -base64 32`).
+- Prod: the client id and project id are in `api/wrangler.toml`; `OIDC_CLIENT_SECRET` and
+  `SESSION_SECRET` are Production secrets.
 
-Redirect URIs for dev: `http://localhost:5173/auth/signinwin/zitadel` and `http://localhost:8788/auth/signinwin/zitadel`.
-
-Production secrets go in the Cloudflare dashboard or via `wrangler pages secret put SECRET_NAME`.
+Production secrets go in the Cloudflare dashboard or via `wrangler pages secret put SECRET_NAME
+--project-name cfp-stack` (the Pages project's name, not the one in `wrangler.toml`).
 
 ## Migration order
 

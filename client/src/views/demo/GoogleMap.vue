@@ -15,9 +15,6 @@ import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
 import { storeToRefs } from 'pinia'
 import { nextTick, onMounted, ref, useCssModule, watch } from 'vue'
 
-// import zitadelAuth from '@/services/zitadelAuth'
-// const user = computed(() => zitadelAuth.oidcAuth.userProfile)
-
 const markerStore = useMarkerStore()
 
 const clearFilter = (tag?: string) => {

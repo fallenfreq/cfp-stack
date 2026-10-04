@@ -3,9 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import zitadelAuth from '@/services/zitadelAuth'
-import { computed } from 'vue'
+import { signedIn } from '@/services/session'
 
 // The account icon, in the brand colour while you're signed in.
-const signedIn = computed(() => zitadelAuth.oidcAuth.isAuthenticated)
 </script>

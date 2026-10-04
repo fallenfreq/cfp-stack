@@ -11,14 +11,15 @@ import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-	// In dev, the stylesheet and the API live on the wrangler server (8788) — proxy
-	// from vite (5173) so the page calls its own origin in both modes. Prod:
-	// cloudflare pages serves both on one origin. The API keeps the Host the
-	// browser used: the server builds addresses and checks origins from it.
+	// In dev, the stylesheet, the API and signing in live on the wrangler server (8788) —
+	// proxy from vite (5173) so the page calls its own origin in both modes. Prod:
+	// cloudflare pages serves them all on one origin. The API and signing in keep the
+	// Host the browser used: the server builds addresses and checks origins from it.
 	server: {
 		proxy: {
 			'/styles': 'http://localhost:8788',
 			'/trpc': { target: 'http://localhost:8788', changeOrigin: false },
+			'/auth/': { target: 'http://localhost:8788', changeOrigin: false },
 		},
 	},
 	build: {

@@ -15,7 +15,15 @@ interface AuthCall {
 }
 
 const SIGNIN_SECONDS = 10 * 60
-const savedSignIn = z.object({ checks: z.record(z.string()), returnTo: z.string() })
+// What `recent=1` asks the provider for: proof from the last minute, well inside the 10 minutes a
+// sensitive change allows (sessions.ts), so there's time left to make it.
+const RECENT_PROOF_SECONDS = 60
+const savedSignIn = z.object({
+	checks: z.record(z.string()),
+	returnTo: z.string(),
+	// The session this browser had when it set out, ended once the new one exists.
+	earlier: z.string().nullable(),
+})
 
 const actions: Record<string, (call: AuthCall) => Promise<Response>> = {
 	'GET login': login,
@@ -40,14 +48,23 @@ export const onRequest: PagesFunction<{ DB: D1Database }> = async (context) => {
 }
 
 // Sends you to the provider, keeping what the way back must check in a short-lived cookie.
-async function login({ url, auth }: AuthCall) {
+// `recent=1`: you prove who you are again (before a sensitive change).
+async function login({ request, url, auth }: AuthCall) {
 	const returnTo = returnAddress(url.searchParams.get('returnTo'), url.origin)
+	const recent = url.searchParams.get('recent') === '1'
 	const { address, state, checks } = await auth
 		.provider()
-		.startSignIn(url.origin + '/auth/callback')
+		.startSignIn(
+			url.origin + '/auth/callback',
+			recent ? { maxAgeSeconds: RECENT_PROOF_SECONDS } : {},
+		)
 	const cookie = auth.cookies.signIn(state)
 	if (!cookie) throw new Error("The provider's state can't name a cookie")
-	const saved = JSON.stringify({ checks, returnTo })
+	// The callback can't read the session cookie (Strict; the provider's redirect is cross-site),
+	// so the earlier session goes with the sign-in. Its id, not its hash: only a browser that held
+	// the session can end it this way.
+	const earlier = auth.cookies.session.read(request.headers.get('Cookie'))
+	const saved = JSON.stringify({ checks, returnTo, earlier })
 	return reply(302, { Location: address }, [cookie.set(saved, SIGNIN_SECONDS)])
 }
 
@@ -73,9 +90,10 @@ async function callback({ request, url, auth, waitUntil }: AuthCall) {
 		return signInFailed(cookie.clear())
 	}
 	const { subject } = finished.user
+	const sessions = auth.sessions()
 	let id
 	try {
-		id = await (await auth.sessions()).create(finished.user, finished.tokens)
+		id = await (await sessions).create(finished.user, finished.tokens)
 	} catch (error) {
 		// Not kept, so not left usable at the provider either.
 		console.error('Saving a session failed:', { subject, error: message(error) })
@@ -83,6 +101,18 @@ async function callback({ request, url, auth, waitUntil }: AuthCall) {
 		return signInFailed(cookie.clear())
 	}
 	console.log('Signed in:', { subject })
+	// The new session's cookie replaces the earlier one's, so that session goes too, in the
+	// background: signing in has worked either way.
+	const { earlier } = saved.data
+	if (earlier)
+		waitUntil(
+			(async () => {
+				const ended = await (await sessions).end(earlier)
+				if (ended?.refreshToken) await provider.revoke(ended.refreshToken)
+			})().catch((error) => {
+				console.warn('Ending the earlier session failed:', message(error))
+			}),
+		)
 	return reply(302, { Location: returnAddress(saved.data.returnTo, url.origin) }, [
 		auth.cookies.session.set(id, SESSION_SECONDS),
 		cookie.clear(),

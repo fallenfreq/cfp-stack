@@ -38,10 +38,10 @@ const server = await createServer({
 	optimizeDeps: { noDiscovery: true, include: [] },
 	resolve: {
 		alias: [
-			// Auth never runs in the preview; its library chain doesn't load under Node either.
+			// Sign-in never runs in the preview: no server to ask.
 			{
-				find: /^@\/services\/zitadelAuth$/,
-				replacement: join(previewDir, 'stubs/zitadelAuth.ts'),
+				find: /^@\/services\/session$/,
+				replacement: join(previewDir, 'stubs/session.ts'),
 			},
 			// The attribute row's style editor needs a browser; the preview never shows it.
 			{

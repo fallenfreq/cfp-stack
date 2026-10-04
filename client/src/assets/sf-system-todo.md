@@ -1199,11 +1199,12 @@ These are not bugs but unresolved tensions in the current design:
   change reset a page with no address of its own; sign-in landing blanked the collection to
   placeholders; a comment in `TiptapEditor.vue` described the removed wait for an editor.
   Logged below, predating it.
-- [ ] The editor doesn't follow sign-in: a new tab at `/editor/<page>` on live starts signed
+- [x] The editor doesn't follow sign-in: a new tab at `/editor/<page>` on live starts signed
       out, so the page fails to load (no message) and Save makes a new page instead of
       updating it (proved in Chrome by the review). Decided with the user: fix it at the router,
-      for every page that needs sign-in. Built 2026-10-03, uncommitted; it ships with step 3 of
-      `docs/auth.md`, since it waits for sign-in to be known (saved as `refs/wip/router-check`).
+      for every page that needs sign-in. Built 2026-10-03; shipped with step 3 of `docs/auth.md`
+      (2026-10-04), where `meta.authName` became `meta.signIn` and sign-in is known after one
+      question to our server.
     - **The router decides access, on every visit.** A page that needs sign-in waits until
       it's known whether you're signed in (`whenSignInKnown()`), then lets you in or sends
       you to sign in; a page with `meta.role` sends anyone signed in without it to
@@ -1231,10 +1232,11 @@ These are not bugs but unresolved tensions in the current design:
       by three agents and checked against Zitadel's own examples). Our server signs you in,
       keeps Zitadel's tokens sealed in D1 and refreshes them; the browser gets only our own
       cookie, so every tab is signed in, in every browser, and the account page's Zitadel calls
-      move to our API. Built in the steps listed there; its "Progress" section says where it's up to.
-- [ ] The sign-in libraries are unmaintained: `oidc-client` 1.11 (its successor is
+      move to our API. Built in the steps listed there; its "Progress" section says where it's up
+      to (steps 0–3 done 2026-10-04; step 4, retiring the old Zitadel apps, left).
+- [x] The sign-in libraries are unmaintained: `oidc-client` 1.11 (its successor is
       `oidc-client-ts`) under `vue-oidc-client` 1.0.0-alpha.5 (last released 2022), both used
-      by Zitadel's own `@zitadel/vue`. Left as is; the server sign-in above would remove them.
+      by Zitadel's own `@zitadel/vue`. Removed with the server sign-in above (step 3, 2026-10-04).
 - [ ] `usePage` blanks when sign-in lands: the home page and a page preview show nothing until
       the admin copy arrives (the collection list keeps its own now).
 - [ ] Undo straight after a page opens empties it: loading the content counts as an edit

@@ -1,19 +1,16 @@
-# These come from the API application that you create in Zitadel
-# Anything in here will override the values in wrangler for development
+# Dev settings and secrets: anything in here overrides the values in wrangler.toml for development
 
 # For production
 # https://developers.cloudflare.com/pages/functions/bindings/#secrets
 # https://developers.cloudflare.com/workers/wrangler/commands/#pages
 # Production secrets should be set in via the cloudflare dashboard
 # or via `wrangler pages secret put API_KEY`
-# Production secrets are just here for reference 
-# ZITADEL_CLIENT_SECRET = ""
+# Production secrets are just here for reference
+# OIDC_CLIENT_SECRET = ""
+# SESSION_SECRET = ""
 
 
 # For local development
-ZITADEL_CLIENT_SECRET = ""
-ZITADEL_CLIENT_ID = ""
-ZITADEL_INTROSPECTION_ENDPOINT = ""
 GOOGLE_MAPS_API_KEY = ""
 
 SMTP_PASSWORD = ""

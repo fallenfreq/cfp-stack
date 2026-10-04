@@ -1,6 +1,6 @@
-import zitadelAuth from '@/services/zitadelAuth'
+import { hasRole } from '@/services/session'
 import { computed } from 'vue'
 
 export function useIsAdmin() {
-	return computed(() => zitadelAuth.hasRole('admin'))
+	return computed(() => hasRole('admin'))
 }

@@ -5,7 +5,7 @@
 		<RouterLink
 			v-if="isAdmin"
 			class="preview-edit sf sf-depth-2 sf-is-overlay sf-size-xs sf-on-hover"
-			:to="{ name: 'editor', params: { slug: route.params.slug } }"
+			:to="{ name: 'editor-page', params: { slug: route.params.slug } }"
 		>
 			Edit
 		</RouterLink>

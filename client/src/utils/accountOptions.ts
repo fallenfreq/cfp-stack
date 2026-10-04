@@ -1,9 +1,8 @@
 import { splitFirst } from './stringUtils'
 
-// Zitadel's officially supported UI/email languages — the only values that affect
-// login page and email templates. Fetching the allowed list requires admin auth
-// (GET /admin/v1/languages/allowed or GET /management/v1/languages), so we hardcode
-// the known set here instead.
+// The choices on the account form. The languages are those the sign-in provider (Zitadel) has
+// sign-in pages and emails in — the only ones that change anything. Fetching its allowed list
+// needs admin rights, so the known set is here instead.
 export const languageOptions = [
 	{ text: 'Not set', value: '' },
 	{ text: 'Bulgarian', value: 'bg' },
@@ -30,17 +29,14 @@ export const languageOptions = [
 
 export const genderOptions = [
 	{ text: 'Unspecified', value: '' },
-	{ text: 'Male', value: 'GENDER_MALE' },
-	{ text: 'Female', value: 'GENDER_FEMALE' },
-	{ text: 'Diverse', value: 'GENDER_DIVERSE' },
-]
+	{ text: 'Male', value: 'male' },
+	{ text: 'Female', value: 'female' },
+	{ text: 'Diverse', value: 'diverse' },
+] as const
 
-// Zitadel stores locales with BCP47 Unicode extensions (e.g. en-u-rg-uszzzz).
-// Strip the extension, then fall back to the base language if the result isn't
-// in our known list (e.g. de-AT → de).
-export function normalizeLocale(locale: string): string {
-	const stripped = locale.replace(/-u-.*/i, '')
-	if (languageOptions.some((o) => o.value === stripped)) return stripped
-	const base = splitFirst(stripped, '-')
+// A language the list has: as it is, else its base language (de-AT → de), else not set.
+export function knownLanguage(language: string): string {
+	if (languageOptions.some((o) => o.value === language)) return language
+	const base = splitFirst(language, '-')
 	return languageOptions.some((o) => o.value === base) ? base : ''
 }

@@ -1,17 +1,20 @@
-import zitadelAuth from '@/services/zitadelAuth'
-import axios from 'axios'
+import { accountProfileKey, refusalOf, type AccountProfile } from '@/composables/useAccountProfile'
+import { queryClient } from '@/config/queryClient'
+import { signIn } from '@/services/session'
+import { trpc } from '@/trpc'
+import { TRPCClientError } from '@trpc/client'
 import { ref } from 'vue'
-import { type ZitadelProfile } from './useZitadelProfile'
 
-export function useEmailChange(profile: ZitadelProfile) {
-	const PENDING_EMAIL_KEY = `cfp_pending_email_${profile.sub}`
+export function useEmailChange(profile: AccountProfile) {
+	const PENDING_EMAIL_KEY = `cfp_pending_email_${profile.userId}`
 
 	const stored = sessionStorage.getItem(PENDING_EMAIL_KEY)
 	const newEmail = ref('')
 	const confirmEmail = ref('')
 	const pendingEmail = ref(stored ?? '')
 	const verificationCode = ref('')
-	const emailStatus = ref<'idle' | 'sending' | 'code' | 'verifying' | 'done'>(
+	// 'confirm': the change needs a recent sign-in first.
+	const emailStatus = ref<'idle' | 'sending' | 'confirm' | 'code' | 'verifying' | 'done'>(
 		stored ? 'code' : 'idle',
 	)
 	const emailError = ref<string | null>(null)
@@ -22,72 +25,54 @@ export function useEmailChange(profile: ZitadelProfile) {
 			emailError.value = 'Email addresses do not match'
 			return
 		}
-		const token = zitadelAuth.oidcAuth.accessToken
-		if (!token) {
-			emailError.value = 'No access token — try signing out and back in'
-			return
-		}
 		emailStatus.value = 'sending'
 		emailError.value = null
 		const submittedEmail = newEmail.value
 		try {
-			await axios.post(
-				`${import.meta.env.VITE_API_ZITADEL_ISSUER}v2/users/${profile.sub}/email`,
-				{ email: submittedEmail, sendCode: {} },
-				{ headers: { Authorization: `Bearer ${token}` } },
-			)
+			await trpc.account.changeEmail.mutate({ email: submittedEmail })
 			pendingEmail.value = submittedEmail
 			sessionStorage.setItem(PENDING_EMAIL_KEY, submittedEmail)
 			newEmail.value = ''
 			emailStatus.value = 'code'
-		} catch {
-			emailError.value = 'Failed to request email change. Please try again.'
+		} catch (error) {
+			if (error instanceof TRPCClientError && error.data?.code === 'PRECONDITION_FAILED') {
+				emailStatus.value = 'confirm'
+				return
+			}
+			emailError.value =
+				refusalOf(error) ?? 'Failed to request email change. Please try again.'
 			emailStatus.value = 'idle'
 		}
 	}
 
+	// Signs in again (the password, unless you did in the last few minutes), back to this page.
+	function confirmIdentity() {
+		signIn('/account', { recent: true })
+	}
+
 	async function verifyEmailCode() {
-		const token = zitadelAuth.oidcAuth.accessToken
-		if (!token) {
-			emailError.value = 'No access token — try signing out and back in'
-			return
-		}
 		emailStatus.value = 'verifying'
 		emailError.value = null
 		try {
-			await axios.post(
-				`${import.meta.env.VITE_API_ZITADEL_ISSUER}v2/users/${profile.sub}/email/verify`,
-				{ verificationCode: verificationCode.value },
-				{ headers: { Authorization: `Bearer ${token}` } },
-			)
+			await trpc.account.verifyEmail.mutate({ code: verificationCode.value })
 			sessionStorage.removeItem(PENDING_EMAIL_KEY)
 			verificationCode.value = ''
 			emailStatus.value = 'done'
-			try {
-				await zitadelAuth.oidcAuth.mgr.signinSilent()
-			} catch {
-				// Profile refresh is best-effort
-			}
-		} catch {
-			emailError.value = 'Invalid or expired code. Please check and try again.'
+			await queryClient.invalidateQueries({ queryKey: accountProfileKey })
+		} catch (error) {
+			emailError.value = refusalOf(error) ?? "The code couldn't be checked. Please try again."
 			emailStatus.value = 'code'
 		}
 	}
 
 	async function resendEmailCode() {
-		const token = zitadelAuth.oidcAuth.accessToken
-		if (!token) return
 		emailError.value = null
 		resendSent.value = false
 		try {
-			await axios.post(
-				`${import.meta.env.VITE_API_ZITADEL_ISSUER}v2/users/${profile.sub}/email/resend`,
-				{},
-				{ headers: { Authorization: `Bearer ${token}` } },
-			)
+			await trpc.account.resendEmailCode.mutate()
 			resendSent.value = true
-		} catch {
-			emailError.value = 'Failed to resend code. Please try again.'
+		} catch (error) {
+			emailError.value = refusalOf(error) ?? 'Failed to resend code. Please try again.'
 		}
 	}
 
@@ -111,6 +96,7 @@ export function useEmailChange(profile: ZitadelProfile) {
 		emailError,
 		resendSent,
 		requestEmailChange,
+		confirmIdentity,
 		verifyEmailCode,
 		resendEmailCode,
 		cancelEmailChange,

@@ -32,7 +32,7 @@ import PagePreview from '@/views/PagePreview.vue'
 import { h, markRaw, type VNode } from 'vue'
 
 // EmailChangeCard reads its pending change from sessionStorage, which the server render
-// lacks. Profile sub '2' has a change pending, so it shows the code step.
+// lacks. Profile userId '2' has a change pending, so it shows the code step.
 const stubSessionStorage = () => {
 	const store = new Map([['cfp_pending_email_2', 'ada@new.example']])
 	globalThis.sessionStorage ??= {
@@ -486,15 +486,17 @@ export const stories: Story[] = [
 		render: () => {
 			stubSessionStorage()
 			const profile = {
-				sub: '284719365024',
-				name: 'Ada Lovelace',
-				given_name: 'Ada',
-				family_name: 'Lovelace',
-				preferred_username: 'ada',
+				userId: '284719365024',
+				username: 'ada',
+				firstName: 'Ada',
+				lastName: 'Lovelace',
+				displayName: 'Ada Lovelace',
+				nickname: '',
+				language: 'en',
+				gender: null,
 				email: 'ada@example.com',
-				email_verified: true,
-				locale: 'en',
-			} as never
+				emailVerified: true,
+			}
 			return h(SfPageShell, null, {
 				header: () => h(AccountHeader, { profile }),
 				default: () => [
@@ -539,8 +541,8 @@ export const stories: Story[] = [
 		maxWidth: '640px',
 		render: () => {
 			stubSessionStorage()
-			const profile = (sub: string, verified: boolean) =>
-				({ sub, email: 'ada@example.com', email_verified: verified }) as never
+			const profile = (userId: string, emailVerified: boolean) =>
+				({ userId, email: 'ada@example.com', emailVerified }) as never
 			return h('div', { class: 'sl-stack sf-gap-md' }, [
 				h(EmailChangeCard, { profile: profile('1', true) }),
 				h(EmailChangeCard, { profile: profile('2', false) }),

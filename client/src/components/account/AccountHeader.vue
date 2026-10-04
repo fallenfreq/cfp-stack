@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { type ZitadelProfile } from '@/composables/useZitadelProfile'
+import { type AccountProfile } from '@/composables/useAccountProfile'
 import { computed } from 'vue'
 
-const props = defineProps<{ profile: ZitadelProfile }>()
+const props = defineProps<{ profile: AccountProfile }>()
 
 const initials = computed(() => {
-	const first = props.profile.given_name?.[0] ?? ''
-	const last = props.profile.family_name?.[0] ?? ''
+	const first = props.profile.firstName[0] ?? ''
+	const last = props.profile.lastName[0] ?? ''
 	const combined = (first + last).toUpperCase()
-	return combined || props.profile.name?.[0]?.toUpperCase() || '?'
+	return combined || props.profile.displayName[0]?.toUpperCase() || '?'
 })
 </script>
 
@@ -20,12 +20,10 @@ const initials = computed(() => {
 		</div>
 		<div class="sl-stack sf-gap-2xs">
 			<h1 class="sf-heading-1">
-				{{ profile.name || profile.preferred_username || 'Account' }}
+				{{ profile.displayName || profile.username || 'Account' }}
 			</h1>
-			<p v-if="profile.preferred_username" class="sf-text-sm sf-loudness-1">
-				@{{ profile.preferred_username }}
-			</p>
-			<p class="sf-text-sm sf-loudness-1">User ID: {{ profile.sub }}</p>
+			<p v-if="profile.username" class="sf-text-sm sf-loudness-1">@{{ profile.username }}</p>
+			<p class="sf-text-sm sf-loudness-1">User ID: {{ profile.userId }}</p>
 		</div>
 	</div>
 </template>

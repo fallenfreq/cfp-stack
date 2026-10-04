@@ -15,7 +15,7 @@ const store = useEditorStore()
 // the address opens counts (what fill reads), not its hash.
 const opened = ref(0)
 watch([() => route.params.slug, () => route.query.seed, () => route.query.autoTag], () => {
-	if (route.name !== 'editor') return
+	if (route.name !== 'editor' && route.name !== 'editor-page') return
 	const slug = paramString(route.params.slug)
 	if (!slug || slug !== store.currentSlug) opened.value++
 })

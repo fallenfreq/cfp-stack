@@ -133,7 +133,8 @@ export const useEditorStore = defineStore('editor', () => {
 					})
 					if (stillOpen()) pendingAutoTag.value = null
 				}
-				if (stillOpen()) router.replace({ name: 'editor', params: { slug: result.slug } })
+				if (stillOpen())
+					router.replace({ name: 'editor-page', params: { slug: result.slug } })
 			}
 			saveStatus.value = 'saved'
 			setTimeout(() => {

@@ -22,7 +22,7 @@ You'll need a GitHub account and a Cloudflare account, which can be on the free 
 
 ### Environment Variables
 
-Create a copy of `api/.dev.vars.example` with the `.example` removed and fill in appropriately to set Pages development variables. Production environment variables are set in the `api/wrangler.toml` file. Secrets should be set via the Cloudflare dashboard or via `wrangler pages secret put API_KEY`. `client/.env` is public, so don't add secrets to it. More information can be found below:
+Create a copy of `api/.dev.vars.example` with the `.example` removed and fill in appropriately to set Pages development variables. Production environment variables are set in the `api/wrangler.toml` file. Secrets should be set via the Cloudflare dashboard or via `wrangler pages secret put API_KEY`. More information can be found below:
 
 - [Wrangler config](https://developers.cloudflare.com/pages/functions/wrangler-configuration/)
 - [Pages commands](https://developers.cloudflare.com/workers/wrangler/commands/#pages)
@@ -30,37 +30,21 @@ Create a copy of `api/.dev.vars.example` with the `.example` removed and fill in
 
 ### Authentication
 
-Zitadel needs to be running for the login button to work. You'll also need to log in to the Zitadel console, create a Vue app to log into, create an API app for the API to do token inspection, and add the appropriate `.env` vars to the client and API `.env` files. The stack uses the free tier of the managed service from [Zitadel](https://zitadel.com/), though you can choose to self-host, with a reference for that [here](https://github.com/fallenfreq/mystack). You'll need to create a Zitadel account, an instance, and a user for the instance; instructions for this can be found elsewhere.
+Signing in runs through our own server: it signs you in with Zitadel, keeps Zitadel's tokens itself and gives the browser only its own cookie, so every tab is signed in. The design is in `docs/auth.md`. The stack uses the free tier of the managed service from [Zitadel](https://zitadel.com/), though you can choose to self-host, with a reference for that [here](https://github.com/fallenfreq/mystack). You'll need to create a Zitadel account, an instance, and a user for the instance; instructions for this can be found elsewhere.
 
-#### Create Login App
+#### Create the Web App
 
 - Go to your specific instance URL `https://somefreq-instance.zitadel.cloud`.
-- Create a production project and save the Resource ID as `VITE_API_ZITADEL_PROJECT_RESOURCE_ID` in the `client/.env` file.
-- Add a new application, select User Agent, then PKCE for an SPA.
-- Add `https://some-domain/auth/signinwin/zitadel` as a redirect URI, using the domain used for your Cloudflare page.
-- Add `https://some-domain` as a Post Logout URI, using the domain used for your Cloudflare page.
-- Save the Client ID as `VITE_API_ZITADEL_CLIENT_ID` in the `client/.env` file.
+- Create a production project and save its Resource ID as `ZITADEL_PROJECT_ID` in `api/wrangler.toml`.
+- Add a new application, select Web, then Code with a Basic client secret, and allow the Authorization Code and Refresh Token grants.
+- Add `https://some-domain/auth/callback` as a redirect URI and `https://some-domain/` as a Post Logout URI, using the domain used for your Cloudflare page.
+- Save the Client ID as `OIDC_CLIENT_ID` and the site's address (`https://some-domain`) as `APP_ORIGINS` in `api/wrangler.toml`.
+- Save the client secret as `OIDC_CLIENT_SECRET`, and 32 random bytes (`openssl rand -base64 32`) as `SESSION_SECRET`, to the Cloudflare dashboard or via the `wrangler pages secret put API_KEY` command mentioned in the Environment Variables section above.
+- In the instance's settings, set the refresh token lifetimes to 30 days, how long a session lasts.
 
 ##### For development
 
-Create a development project and follow the same instructions again, only this time using local domains for the redirects and add the environment variables to the `client/.env.development` file instead. You'll need to add multiple domains if you'd like the redirects to work with both the Vite dev port `5173` and the Wrangler dev port `8788`. For example, `http://localhost:5173/auth/signinwin/zitadel` and `http://localhost:8788/auth/signinwin/zitadel`. The dev mode switch will need checking if using HTTP locally.
-
-#### Create Token Inspection App
-
-- Go to your specific instance URL `https://somefreq-instance.zitadel.cloud`.
-- Go to your previously created project.
-- Add a new application, select API, then Basic for the tRPC API.
-- Save the client ID as `ZITADEL_CLIENT_ID` to the `api/wrangler.toml` file and the client secret as `ZITADEL_CLIENT_SECRET` to the Cloudflare dashboard or via the `wrangler pages secret put API_KEY` command mentioned in the Environment Variables section above.
-
-##### For development
-
-Go back to your development project and follow the same instructions again, adding the variables, including secrets, to `api/.dev.vars` instead.
-
-##### More info
-
-- You can see more information on how to log in to a single-page application with Zitadel [here](https://zitadel.com/docs/examples/login/vue).
-
-- You can see more information on how we secure the API routes with Zitadel via token inspection and how to set up the API app in Zitadel [here](https://zitadel.com/blog/testing-token-introspection-with-postman).
+Create a development project and follow the same instructions again, only this time using local addresses, and add the variables, including secrets, to `api/.dev.vars` instead. You'll need both the Wrangler dev port `8788` and the Vite dev port `5173`: `http://localhost:8788/auth/callback` and `http://localhost:5173/auth/callback` as redirect URIs, and `http://localhost:8788/` and `http://localhost:5173/` as Post Logout URIs. The dev mode switch will need checking if using HTTP locally.
 
 ### Database
 

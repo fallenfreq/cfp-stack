@@ -2,7 +2,7 @@
 import AccountIcon from '@/components/account/AccountIcon.vue'
 import type { NavItem } from '@/components/navItems'
 import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
-import zitadelAuth from '@/services/zitadelAuth'
+import { hasRole, signedIn, signOut } from '@/services/session'
 import { computed, markRaw } from 'vue'
 import { RouterView } from 'vue-router'
 
@@ -10,7 +10,6 @@ import { RouterView } from 'vue-router'
 useSyntaxHighlighting()
 
 const navItems = computed<NavItem[]>(() => {
-	const signedIn = zitadelAuth.oidcAuth.isAuthenticated
 	return [
 		{ title: 'Contact', icon: 'info', to: '/contact' },
 		{
@@ -26,7 +25,7 @@ const navItems = computed<NavItem[]>(() => {
 				},
 			],
 		},
-		...(signedIn
+		...(signedIn.value
 			? [
 					{
 						title: 'Demo',
@@ -43,16 +42,16 @@ const navItems = computed<NavItem[]>(() => {
 			icon: markRaw(AccountIcon),
 			iconOnly: true,
 			alwaysShown: true,
-			children: signedIn
+			children: signedIn.value
 				? [
 						{ title: 'Account', icon: 'account_circle', to: '/account' },
-						...(zitadelAuth.hasRole('admin')
+						...(hasRole('admin')
 							? [{ title: 'Admin', icon: 'settings', to: '/admin' }]
 							: []),
 						{
 							title: 'Sign out',
 							icon: 'exit_to_app',
-							action: () => zitadelAuth.oidcAuth.signOut(),
+							action: signOut,
 						},
 					]
 				: [{ title: 'Log in', icon: 'person', to: '/account' }],

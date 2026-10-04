@@ -8,9 +8,6 @@ const d1DatabaseSchema = z.custom<D1Database>(
 
 // Define the schema using zod
 const envSchema = z.object({
-	ZITADEL_CLIENT_ID: z.string(),
-	ZITADEL_CLIENT_SECRET: z.string(),
-	ZITADEL_INTROSPECTION_ENDPOINT: z.string(),
 	SMTP_OUT_SERVER: z.string(),
 	SMTP_OUT_PORT_TLS: z.string(),
 	SMTP_PASSWORD: z.string(),
@@ -35,12 +32,4 @@ function getEnv<Key extends keyof Envs>(key: Key): Envs[Key] {
 	return validatedEnv[key]
 }
 
-// Optionally, you can expose all validated environment variables
-function getAllEnvs() {
-	if (!validatedEnv) {
-		throw new Error('Environment variables have not been initialised')
-	}
-	return validatedEnv
-}
-
-export { getAllEnvs, getEnv, initEnvs, type Envs }
+export { getEnv, initEnvs, type Envs }
