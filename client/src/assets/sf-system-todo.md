@@ -326,8 +326,9 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       page, a paragraph in a Section and in a to-do item, and a code block are the same before
       and after, on the test page and the demo. Typing anywhere logs none. `editor.spec.ts`
       checks that typing in a paragraph logs no warnings from the app's code: it fails without
-      the fix (154) and passes (20).
-    - **Logged, predates:** the menus rebuild their lists on every keystroke (candidate 13).
+      the fix (154) and passes (20). Since 13, a closed menu works out nothing, so the check
+      opens Change Type on the paragraph and types with it open: it fails without the fix (133).
+    - **Logged, predates:** the menus rebuild their lists on every keystroke (fixed, 13).
       Chrome warns that the preloaded icon font (`index.html`) isn't used within a few seconds
       of the editor opening; not looked into.
 12. **The toolbar's context should carry its block's place** (logged 2026-10-04, not
@@ -337,21 +338,38 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
     that lookup lands one level short, and `resolveActivePos` patches it with a Proxy that
     fakes the answer. Carrying the place once would remove the Proxy. It touches every block
     tool, so it needs its own sign-off and checks. Found while fixing 11; no bug seen from it.
-13. **Menus rebuild their lists on every keystroke** (found 2026-10-04; next, agreed with the
-    user): Change Type, Wrap In and Insert rebuild their lists after every change in the
-    editor, even while closed. A typed letter or a cursor move counts; one arrow press is two
-    changes. Each list checks all 22 block types against the toolbar's block. A typed letter
-    builds them twice, though the editor reports one change. Why isn't found yet.
+13. **Menus rebuilt their lists on every keystroke** (found 2026-10-04; fixed 2026-10-04):
+    Change Type, Wrap In, Insert and Wrap selection rebuilt their lists after every change in
+    the editor, even while closed. A typed letter or a cursor move counts; one arrow press is
+    two changes. Each list checks all 22 block types against the toolbar's block.
     - **Why:** the toolbar refreshes every tool after any change, as any change could move it
       to another block (`FloatingToolbar.vue`: `tick` goes up on every transaction, which
-      makes a new context). A menu's rows sit in the page while it's closed: `ToolbarNodePicker`
-      works out its items from the context. Checked in Chrome: after one letter, with every
-      menu closed, Change Type held 4 rows and Wrap In 9.
-    - **Cost:** not measurable today (a keystroke is about 10 ms of script wherever you type).
-      It grows with the component store: each component is one more type in every menu.
-    - **Idea:** build a menu's list when it opens. Watch for: a panel is placed from its size
-      (`SfPopover`, `useAnchorFallback`), so its rows must be there before it's placed. Find
-      the second build first.
+      makes a new context). A closed menu kept its rows in the page, worked out from the
+      context (`ToolbarNodePicker`): after one letter, Change Type held 4 and Wrap In 9. A
+      letter built them twice: TipTap's Vue editor tells Vue about every change again two
+      frames later (its reactive `editor.state`, which the lists read). Proved in Chrome: with
+      that swapped for a plain holder in the page, a letter built them once, and an arrow press
+      once instead of three times.
+    - **Cost:** small. In a profile of 20 letters, a letter took 5–7 ms of script, the lists
+      0.4–0.6 ms of it. It grows with the component store: each component is one more type in
+      every menu.
+    - **Fix:** a menu's list is drawn, and so worked out, only while the menu is open
+      (`ToolbarNodePicker.vue`). One component, so all four menus. An open menu still follows
+      edits.
+    - **Checked:** in Chrome, every menu (a paragraph by its crumb and by the cursor, two
+      paragraphs selected, a to-do list), with room below and without, at 1440 and 400, placed
+      by the browser and by `useAnchorFallback`: place, size and rows are the same before and
+      after (64 cases). Change Type's rows are unchanged on both pages. The lists are gone from
+      the keystroke profile (about 4.2 ms a letter). `editor.spec.ts` checks that typing leaves
+      the closed menus empty, then that Change Type opens with its rows: it fails without the
+      fix (13 rows) and passes; the whole suite passes (106).
+    - **Logged, predates:** TipTap's second notice reaches everything that reads the editor
+      (an open menu, the toolbar's buttons, the node path), so each updates twice per change.
+      Harmless; it's TipTap's design. The scroll hint (`ToolbarScrollHint`) reads where the
+      node path sits after every change, which makes the browser lay out the page there and
+      then. The profile puts 1–2 ms a letter on it, the biggest single item, but some of that
+      layout the browser would do anyway before drawing; not looked into further. Why an arrow
+      press is two changes isn't looked into either.
 
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in

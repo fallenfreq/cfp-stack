@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
 import {
 	box,
@@ -102,17 +103,9 @@ test('the block pickers name every block they offer', async ({ page }) => {
 	expect(await picker('add')).toEqual(['Task Item'])
 })
 
-// The toolbar's lists are worked out on every keystroke. Change Type's made the editor warn once
-// for each block type a paragraph can't become.
-test('typing in a paragraph logs no warnings', async ({ page }) => {
-	const warnings: string[] = []
-	page.on('console', (message) => {
-		// The app's own code: the browser's own warnings (an unused preload) have the page's address.
-		if (message.type() === 'warning' && message.location().url.includes('/assets/'))
-			warnings.push(message.text())
-	})
-	// The cursor at the end of a paragraph straight on the page, so the toolbar acts on it.
-	await page.evaluate(() => {
+/** The cursor at the end of a paragraph straight on the page, so the toolbar acts on it. */
+const cursorInParagraph = (page: Page) =>
+	page.evaluate(() => {
 		const editor = (document.querySelector('.tiptap') as any).editor
 		let end: number | undefined
 		editor.state.doc.forEach((node: any, offset: number) => {
@@ -122,9 +115,48 @@ test('typing in a paragraph logs no warnings', async ({ page }) => {
 		})
 		editor.chain().focus().setTextSelection(end).run()
 	})
+
+/** Opens the toolbar menu with this icon, and returns its panel. */
+const openMenu = async (page: Page, iconName: string) => {
+	const button = page.locator(
+		`.floating-toolbar button[popovertarget]:has(span:text-is("${iconName}"))`,
+	)
+	await button.click()
+	return page.locator(`#${await button.getAttribute('popovertarget')}`)
+}
+
+// Change Type asks the editor whether a paragraph can become each block type, and the editor
+// warned once for each one it can't. An open menu is worked out again on every keystroke.
+test('Change Type on a paragraph logs no warnings', async ({ page }) => {
+	const warnings: string[] = []
+	page.on('console', (message) => {
+		// The app's own code: the browser's own warnings (an unused preload) have the page's address.
+		if (message.type() === 'warning' && message.location().url.includes('/assets/'))
+			warnings.push(message.text())
+	})
+	await cursorInParagraph(page)
+	await expect(
+		(await openMenu(page, 'change_circle')).locator('.picker-item').first(),
+	).toBeVisible()
 	await page.keyboard.type('abc')
 	await settle(page)
 	expect(warnings).toEqual([])
+})
+
+// A menu's list checks every block type against the block the toolbar is on, and the toolbar
+// updates after every change: a closed menu has no list, so typing doesn't work one out for each.
+test("typing doesn't fill the toolbar's closed menus", async ({ page }) => {
+	await cursorInParagraph(page)
+	await page.keyboard.type('abc')
+	await settle(page)
+	await expect(
+		page.locator(
+			'.floating-toolbar .popover-box:not(:popover-open) :is(.picker-item, .picker-empty)',
+		),
+	).toHaveCount(0)
+	await expect(
+		(await openMenu(page, 'change_circle')).locator('.picker-item').first(),
+	).toBeVisible()
 })
 
 test('a class given to a to-do item while editing shows at once', async ({ page }) => {

@@ -1,6 +1,6 @@
 <template>
 	<ToolbarPanelItem v-model:open="open" :icon="iconName" :tooltip="tooltip" align="end">
-		<div class="picker-list sl-stack sf-gap-none">
+		<div v-if="open" class="picker-list sl-stack sf-gap-none">
 			<template v-if="computedItems.length">
 				<SfButton
 					v-for="item in computedItems"
@@ -42,6 +42,8 @@ const props = defineProps<{
 
 const open = ref(false)
 
+// Worked out only while the menu is open, the only time the list is drawn: it checks every block
+// type, and the toolbar updates after every change.
 const computedItems = computed(() => props.getItems(props.editor, props.context))
 
 const select = (item: NodePickerItem) => {
