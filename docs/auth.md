@@ -130,10 +130,9 @@ is updated, so a fresh session can pick up from it.
 - **Step 4, the old setup: kept, by choice** (2026-10-04). The old apps and their secrets stay so
   an older version can still run; "Zitadel" lists them as the old sign-in's. `.npmrc` no longer
   hoists `vue-oidc-client` (gone since step 3).
-- **Next: live.** Checked 2026-10-04: live D1 still has `0001` to apply, and Cloudflare has no
-  `SESSION_SECRET`. Both before pushing, and the user runs them (Claude's permission check
-  stops it changing live): `pnpm migrate:push:api`, and the secret as a Production secret. Then
-  push (the user's call) and check signing in, `/account` and signing out on live.
+- **Live, ready for the push** (2026-10-04): `0001` applied to live D1 (none left to apply), and
+  `SESSION_SECRET` created in Cloudflare (Production; generated straight into it, never shown).
+- **Next:** push (the user's call), then check signing in, `/account` and signing out on live.
 
 ## Why
 
