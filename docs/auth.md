@@ -113,8 +113,13 @@ is updated, so a fresh session can pick up from it.
           server's refusal messages; "not known" isn't "signed out" (no sign-in loop when the
           server can't answer).
     - Found (predates this):
-        - tRPC sends stack traces with errors other than INTERNAL: its `isDev` is true on Workers
-          (`NODE_ENV` unset). `initTRPC.create({ isDev: false })` fixes it.
+        - tRPC sent stack traces with every error but internal ones (`onError` blanked those):
+          its `isDev` is on unless `NODE_ENV` is `production`, which Workers don't set; live's
+          "please log in" answer carried one. Fixed after step 3: `isDev: false` in
+          `config/trpc.ts`.
+        - `[[trpc]].ts` returns `fetchRequestHandler(…)` without `await`, so its outer catch
+          never sees tRPC's own failures (Cloudflare's generic error page, no stack); `onError`
+          logs internal errors without their stack.
         - Any signed-in user can delete any map marker or tag (`markers.delete`, `deleteTag`).
         - `secure.test` logs its input; `user.insert` logs every user.
         - The account page's language list is Zitadel's (kept, by choice); `usePage` still

@@ -24,6 +24,9 @@ interface Context {
 
 const t = initTRPC.context<Context>().create({
 	transformer: superjson,
+	// Answers never carry a stack trace. tRPC adds one to every error unless NODE_ENV is
+	// 'production', which Workers don't set, so live sent them too.
+	isDev: false,
 })
 
 // Signed in, vouched for by the provider in the last 10 minutes (docs/auth.md, "Re-checking

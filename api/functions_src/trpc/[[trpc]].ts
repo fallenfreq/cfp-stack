@@ -39,8 +39,7 @@ export const onRequest: PagesFunction<Envs> = async (context) => {
 						code: error.code,
 						message: error.message,
 					})
-					// Change error
-					error.stack = ''
+					// Change error (no stack goes out with any error: isDev in config/trpc.ts)
 					error.message = 'Internal Server Error'
 				}
 				// throw Error('Will crash if thrown here')
