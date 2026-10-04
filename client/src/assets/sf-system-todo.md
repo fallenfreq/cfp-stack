@@ -5,6 +5,8 @@ describes the target design; this file enumerates what needs to change in code t
 
 ## Current state (resume here)
 
+**Sign-in work** (its own track, 2026-10-04): resume from `docs/auth.md`, "Progress".
+
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
 the user), so themes in `@scope` apply on every supported browser. Item 8's to-do item bug
@@ -1150,8 +1152,8 @@ These are not bugs but unresolved tensions in the current design:
       2026-10-03: `usePagesByCollection(Admin)` take the address as it changes, as `usePage` does.
 - [x] `CollectionView.vue` picked the admin or the public page list once, as it opened. Live
       keeps sign-in for the tab only (`zitadelAuth.ts`), so a new tab starts signed out and
-      silent sign-in lands after the app mounts (`main.ts`): an admin opening a collection in a
-      new tab on live got the public list (no unpublished pages). Locally sign-in is kept
+      a sign-in landing after the app mounts would arrive late: an admin opening a collection in
+      a new tab on live got the public list. Locally sign-in is kept
       across tabs, so it hardly showed. Fixed 2026-10-03: `usePagesByCollection` picks the
       list itself and follows sign-in, as `usePage` does, keeping the list shown until the
       other arrives (checked in Chrome: sign-in landing on an open collection brings in its
@@ -1179,11 +1181,42 @@ These are not bugs but unresolved tensions in the current design:
   change reset a page with no address of its own; sign-in landing blanked the collection to
   placeholders; a comment in `TiptapEditor.vue` described the removed wait for an editor.
   Logged below, predating it.
-- [ ] The editor doesn't follow sign-in. On live, a new tab at `/editor/<page>` starts signed
-      out: the page fails to load (no message), stays empty once sign-in lands, and Save makes
-      a new page instead of updating it. Proved in Chrome by the review. Either the route
-      asks for sign-in first (`meta.authName`, as `/admin`; the demo would need it too) or
-      the editor fills again when sign-in lands. To decide.
+- [ ] The editor doesn't follow sign-in: a new tab at `/editor/<page>` on live starts signed
+      out, so the page fails to load (no message) and Save makes a new page instead of
+      updating it (proved in Chrome by the review). Decided with the user: fix it at the router,
+      for every page that needs sign-in. Built 2026-10-03, uncommitted; it ships with step 3 of
+      `docs/auth.md`, since it waits for sign-in to be known (saved as `refs/wip/router-check`).
+    - **The router decides access, on every visit.** A page that needs sign-in waits until
+      it's known whether you're signed in (`whenSignInKnown()`), then lets you in or sends
+      you to sign in; a page with `meta.role` sends anyone signed in without it to
+      `no-access`. Today a new tab is sent to sign in at once, and `/admin`'s pages pick
+      themselves or No access when their code first loads, which the router keeps until a
+      reload.
+    - **`/editor/:slug` is its own route, `editor-page`**, for admins; `/editor` (the demo,
+      the layout test cases, a new page) stays open to anyone. Moving between the two keeps
+      the same view, so a saved new page keeps its editor.
+    - **New names** (approved by the user): `whenSignInKnown()`, `editor-page`, `meta.role`,
+      `no-access`.
+    - **Checked** in Chrome with a stored sign-in faked: an admin opens `/admin` and a stored
+      page, and saving a new page keeps its editor; someone signed in without the role gets
+      Access denied on `/admin`, `/admin/pages` and a stored page, but opens `/account` and
+      the demo; signed out, the demo opens without asking. Layout checks pass (100).
+- [x] **The hidden sign-in can't work** (found 2026-10-03, settled 2026-10-04). Its return
+      address wasn't registered (Zitadel answered 400); registered on 2026-10-04 in both apps
+      (`/auth/signinsilent/zitadel`), Zitadel still refuses: its login page won't be framed
+      (`X-Frame-Options: DENY`, `frame-ancestors 'none'`) and its cookie is same-site, so the
+      frame always times out after 10 s. Allowing frames loosens Zitadel instance-wide and
+      Safari would still block it; rejected. The router check that waits for sign-in (built,
+      uncommitted) would make a signed-out new tab wait those 10 s, so it ships with the server
+      sign-in below, not before. The addresses go when the old apps do.
+- [ ] **Sign-in through our own server: design agreed 2026-10-04, see `docs/auth.md`** (reviewed
+      by three agents and checked against Zitadel's own examples). Our server signs you in,
+      keeps Zitadel's tokens sealed in D1 and refreshes them; the browser gets only our own
+      cookie, so every tab is signed in, in every browser, and the account page's Zitadel calls
+      move to our API. Built in the steps listed there; its "Progress" section says where it's up to.
+- [ ] The sign-in libraries are unmaintained: `oidc-client` 1.11 (its successor is
+      `oidc-client-ts`) under `vue-oidc-client` 1.0.0-alpha.5 (last released 2022), both used
+      by Zitadel's own `@zitadel/vue`. Left as is; the server sign-in above would remove them.
 - [ ] `usePage` blanks when sign-in lands: the home page and a page preview show nothing until
       the admin copy arrives (the collection list keeps its own now).
 - [ ] Undo straight after a page opens empties it: loading the content counts as an edit

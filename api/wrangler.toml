@@ -32,3 +32,9 @@ SMTP_OUT_PORT_TLS = "587"
 ZITADEL_CLIENT_ID = "282314634059446901"
 ZITADEL_INTROSPECTION_ENDPOINT = "https://somefreq-instance-45dyjl.zitadel.cloud/oauth/v2/introspect"
 NODE_VERSION = "24"
+# Signing in through our server (docs/auth.md, "Settings"). Secrets: OIDC_CLIENT_SECRET,
+# SESSION_SECRET (and SESSION_SECRET_PREVIOUS while rotating). .dev.vars overrides these for dev.
+OIDC_ISSUER = "https://somefreq-instance-45dyjl.zitadel.cloud"
+OIDC_CLIENT_ID = "393641495095256560"
+APP_ORIGINS = "https://somefreq.com"
+ZITADEL_PROJECT_ID = "282310388651981429"
