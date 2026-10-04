@@ -19,10 +19,9 @@ interface ComponentData {
 	alias: string
 	component: Component
 	props: Record<string, PropSpec>
-	// https://tiptap.dev/docs/editor/core-concepts/schema
-	// setting to block will allow inline but will wrap it in a block tag
-	// the default block tag is 'paragraph'
-	content: string // 'inline*' | 'block*'
+	// What the block holds, as a TipTap content expression: 'block*' (text typed straight in
+	// goes into a paragraph) or 'inline*'.
+	content: string
 	atom?: boolean
 	contenteditable?: boolean
 	contentAs?: 'div' | 'span' | 'p'

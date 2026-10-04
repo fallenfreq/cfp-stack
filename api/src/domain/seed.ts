@@ -719,7 +719,8 @@ const VOCABULARY: VocabSpec[] = [
 	{ name: 'sl-aspect-1-1', kind: 'layout', description: 'Aspect ratio 1:1 (square)' },
 	{ name: 'sl-aspect-9-16', kind: 'layout', description: 'Aspect ratio 9:16 (portrait)' },
 
-	// Collapse and show/hide modifiers — vocabulary only; CSS is generated from breakpoint token values (no var() in @container)
+	// Collapse and show/hide modifiers — vocabulary only; CSS is generated from the collapse
+	// thresholds (no var() in @container)
 	{
 		name: 'sl-collapse-xs',
 		kind: 'layout',
@@ -890,7 +891,6 @@ const ROOT_RULES: RuleSpec[] = [
 	// Tight consumers (tooltips, drag handles, floating toolbars) opt in via sf-size-2xs /
 	// sf-size-xs. Flush-content containers opt out via sf-flush. --sf-padding is not
 	// inherited (reset.ts), so a box's padding never reaches what's inside it.
-	// Follow-up: [[project-sl-padding]].
 	{
 		classNames: ['sf-depth-1'],
 		cssProperty: '--sf-padding',
@@ -2522,9 +2522,9 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-drag-handle', 'sf-is-contained'], cssProperty: 'border-radius', value: '0' },
 
 	// ─── Button element ───────────────────────────────────────────────────────
-	// Baseline scoped to button.sf (sf membership marker) — Vuestic and other third-party
-	// buttons are unaffected. Emits to sf-element (below sf-bundle) so bundles/variants/
-	// states layered on top win predictably. Border establishes a visible ghost baseline;
+	// Baseline scoped to button.sf (sf membership marker) — third-party buttons are
+	// unaffected. Emits to sf-element (below sf-bundle) so bundles/variants/states layered
+	// on top win predictably. Border establishes a visible ghost baseline;
 	// sf-is-contained clears it (sf-context > sf-element); sf-loudness-1 also clears it.
 	{
 		elementSelector: 'button',
@@ -2906,8 +2906,8 @@ const ROOT_RULES: RuleSpec[] = [
 	// photo, or icon. Theme decides shape (root theme: fully round via radius-full),
 	// default colours (fg_primary bg + fg_inverted text), and layout (inline-flex
 	// centred). Variant compounds swap the background for semantic colour roles.
-	// Consumer sets specific dimensions (w-*, h-*) since avatar sizes vary widely
-	// per use case (small comment avatar vs large profile avatar).
+	// Consumer sets the size, since avatar sizes vary widely per use case (small
+	// comment avatar vs large profile avatar).
 	{ classNames: ['sf-avatar'], cssProperty: 'display', value: 'inline-flex' },
 	{ classNames: ['sf-avatar'], cssProperty: 'align-items', value: 'center' },
 	{ classNames: ['sf-avatar'], cssProperty: 'justify-content', value: 'center' },

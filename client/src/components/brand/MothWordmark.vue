@@ -1,5 +1,4 @@
 <template>
-	<!-- Generator: Adobe Illustrator 26.3.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 	<svg
 		id="Layer_1"
 		version="1.1"

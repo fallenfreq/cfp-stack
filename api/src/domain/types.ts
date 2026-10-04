@@ -37,9 +37,9 @@ export const TOKEN_KINDS: readonly TokenKind[] = [
 	'shadow-shape',
 ] as const
 
-// Selector composition order within a compound selector. Cosmetic
-// (CSS specificity ignores class order inside an intersection) but
-// keeps generated output deterministic.
+// Kind order, element first. Classes in a selector follow it, which keeps the output
+// deterministic (class order doesn't change specificity), and a rule goes in its last
+// kind's layer (ruleLayerFor in generateCss.ts).
 export const KIND_SORT_ORDER: Record<ClassKind, number> = {
 	element: 0,
 	bundle: 1,

@@ -14,7 +14,6 @@ const prettierOptions = {
 	},
 }
 
-// Type guard to check if the language is a valid PrettierLanguage
 function isPrettierLanguage(lang: any): lang is keyof typeof prettierOptions {
 	return lang in prettierOptions
 }

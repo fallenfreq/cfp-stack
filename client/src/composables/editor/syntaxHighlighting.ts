@@ -1,17 +1,11 @@
 import type { Theme } from '@/constants/theme'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
-// import 'highlight.js/lib/common'
 import { useDarkModeStore } from '@/stores/darkModeStore'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import lightTheme from 'highlight.js/styles/base16/ros-pine-dawn.min.css?url'
 import darkTheme from 'highlight.js/styles/base16/ros-pine-moon.min.css?url'
 
-// best contenders, However they still clash.
-// Using darkTheme for pink mode for now
-// import pinkTheme from 'highlight.js/styles/base16/cupcake.min.css?url'
-// import pinkTheme2 from 'highlight.js/styles/base16/horizon-light.min.css?url'
-// import pinkTheme3 from 'highlight.js/styles/base16/atelier-cave-light.min.css?url'
-
+// Pink mode borrows the dark colours: the nearest highlight.js themes clash with pink.
 const themes: Record<Theme, string> = {
 	light: lightTheme,
 	dark: darkTheme,

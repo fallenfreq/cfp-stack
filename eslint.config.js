@@ -50,7 +50,6 @@ export default defineConfig([
 		language: 'markdown/gfm',
 		extends: ['markdown/recommended'],
 	},
-	// This can be used isolated to add individual rules over prettier
 	{
 		files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
 		plugins: {
@@ -58,8 +57,6 @@ export default defineConfig([
 		},
 		languageOptions: { parser: tseslint.parser, sourceType: 'module', globals: globals.node },
 		rules: {
-			// Handled by prettier's "experimentalOperatorPosition: 'start'" option
-			// '@stylistic/operator-linebreak': ['error', 'before'],
 			'@typescript-eslint/no-explicit-any': 'off',
 			'@typescript-eslint/no-non-null-assertion': 'off',
 			'@typescript-eslint/no-dynamic-delete': 'off',

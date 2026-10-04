@@ -18,16 +18,7 @@ const userValidator = z.object({
 	email: z.string().email('This is not a valid email.'),
 	posts: postValidator.optional(),
 	profile: profileValidator.optional(),
-	// profile: z.object({ create: profileValidator }).optional()
 })
-
-// using this on posts because zod can not distinguish between
-// undefined and the property not being there at all
-// const data = {
-//   ...(sentPosts && { posts: sentPosts }),
-//   ...(sentProfile && { profile: sentProfile }),
-//   ...rest
-// }
 
 const userRouter = router({
 	insert: publicProcedure.input(userValidator).mutation(async ({ input, ctx: { db } }) => {
@@ -60,8 +51,6 @@ const userRouter = router({
 				})
 				.execute()
 
-		// -------------- finding
-
 		const allUsersQ = db.query.users.findMany({
 			with: {
 				posts: true,
@@ -89,8 +78,6 @@ const userRouter = router({
 	select: publicProcedure
 		.input(z.object({ user_id: z.string() }))
 		.query(async ({ input: { user_id }, ctx: { db } }) => {
-			// with lets you select relations set in schemas
-			// columns selects which own columns
 			const postsJunctionSQL = await db.query.posts.findFirst({
 				with: {
 					author: true,

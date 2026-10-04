@@ -17,9 +17,6 @@ const signedOutLink: TRPCLink<AppRouter> =
 			}),
 		)
 
-// Pass AppRouter as generic here. 👇 This lets the `trpc` object know
-// what procedures are available on the server and their input/output types.
-
 const trpc = createTRPCClient<AppRouter>({
 	links: [
 		signedOutLink,

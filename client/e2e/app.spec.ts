@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
 import { box, breakpoints, openTests, settle, steadyRequests, useTheme } from './helpers'
 
-// App screens: outside documents, a layout measures the layout around it, as before.
+// App screens: outside documents, a layout measures the layout around it.
 
 test('the site nav swaps its links for a menu button when it is narrow', async ({
 	page,

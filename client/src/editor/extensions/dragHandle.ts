@@ -276,10 +276,10 @@ const DragHandle = Extension.create<DragHandleOptions>({
 							const newDepth = $insert.depth + 1
 							if (newDepth > 0) options.onDrop(newDepth)
 
-							// Clear drag state BEFORE dispatch so the transaction listener
-							// (updatePixelPos) sees isDragging=false and resolves the handle's
-							// target from the post-drop selection, not the stale frozen source
-							// pos that no longer exists after the delete.
+							// Clear drag state BEFORE dispatch so the handle, which repositions on
+							// every transaction (FloatingDragHandle.vue), sees isDragging=false and
+							// resolves its target from the post-drop selection, not the stale
+							// frozen source pos that no longer exists after the delete.
 							options.onSingleDropConsumed?.()
 							view.dragging = null
 							view.dispatch(tr)

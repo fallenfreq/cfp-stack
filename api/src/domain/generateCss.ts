@@ -110,12 +110,10 @@ async function contentHash(text: string): Promise<string> {
 	return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-// Signature for the in-isolate cache. Captures every change path that affects the
-// generated CSS: theme add/remove (themeCount), token add/remove
-// (tokenCount), rule add/remove (ruleCount), vocabulary add/remove/edit
-// (vocabCount, vocabMax — kind and cascade_order change emit), and any
-// theme-scoped value edit (themeMax — bumped by `touchTheme` from
-// token/rule mutators).
+// Signature for the in-isolate cache: it changes whenever the generated CSS can. Each table
+// gives its row count (an add or remove); themes, vocabulary and collapse thresholds also give
+// their latest `updated_at` (an edit; token and rule changes bump their theme's through
+// `touchTheme`).
 export async function themeSignature(db: Db): Promise<string> {
 	const [themeAgg, tokenAgg, vocabAgg, ruleAgg, collapseThresholdAgg] = await Promise.all([
 		db
@@ -324,7 +322,8 @@ function buildSelector(
 	return base + pseudos + (rulePseudo ?? '')
 }
 
-// Highest kind's layer. Classes are sorted bundle → layout so the last entry wins.
+// Highest kind's layer. Classes are sorted element → layout (KIND_SORT_ORDER), so the last
+// one's kind is the highest.
 // Bare element rules (no classes) go in sf-element — baseline layer, ordered
 // before sf-bundle so any bundle/variant/state layered on top wins predictably.
 // The element analog for class-based markers (sf-chip etc.) lives here too via
@@ -392,8 +391,8 @@ function emitThemeBlocks(rules: Map<string, SelectorBlock>, indent: string): str
 // A theme rule is written for the content tree; a block a component renders has boxes around
 // and inside it (nodeViewSelectors.ts). Every theme rule is a look, so it lands on the element
 // wearing the classes. Rewritten after sorting, so ties keep the order of the selector as
-// written. A selector the helper can't rewrite is emitted as written — it still works for plain
-// blocks, as before — and reported, rather than failing the whole stylesheet.
+// written. A selector the helper can't rewrite is emitted as written (which still works for
+// plain blocks) and reported, rather than failing the whole stylesheet.
 function forNodeViews(selector: string): string {
 	try {
 		return forLooks(selector)

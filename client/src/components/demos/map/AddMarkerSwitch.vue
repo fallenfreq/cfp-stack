@@ -29,11 +29,10 @@ defineExpose({ root })
 
 const markerStore = useMarkerStore()
 
-// State to track if we're in "add marker mode"
+// While on, a click on the map adds a marker there.
 const isAddingMarkers = ref(false)
 const addListenerRef = ref<google.maps.MapsEventListener | null>(null)
 
-// Function to toggle marker adding mode
 const toggleAddingMarkers = () => {
 	isAddingMarkers.value = !isAddingMarkers.value
 
@@ -50,7 +49,6 @@ const toggleAddingMarkers = () => {
 	}
 }
 
-// Handle adding a marker
 const onMapClick = async (event: google.maps.MapMouseEvent) => {
 	if (!event.latLng) return
 	const latLng = event.latLng
@@ -83,12 +81,10 @@ const onMapClick = async (event: google.maps.MapMouseEvent) => {
 	})
 	markerEl.addListener('click', () => onMarkerClick(marker.mapMarkersId))
 
-	// Add the marker to the store
 	markerStore.addMarker({ ...marker, tags: processedTags }, markerEl)
 	toggleAddingMarkers()
 }
 
-// Handle marker click
 const onMarkerClick = async (mapMarkersId: number) => {
 	const markerData = markerStore.allMarkers[mapMarkersId]
 	if (!markerData) return
@@ -100,17 +96,17 @@ const onMarkerClick = async (mapMarkersId: number) => {
 	})
 }
 
-// Render markers based on the store
+// The map shows the filtered markers only.
 const renderMarkers = async () => {
 	const { AdvancedMarkerElement } = (await google.maps.importLibrary(
 		'marker',
 	)) as google.maps.MarkerLibrary
 
-	//  create a LatLngBounds object to fit all markers
+	// The shown markers' bounds, unused: fitting the map to them zooms in too far when only one
+	// marker is shown.
 	const { LatLngBounds } = (await google.maps.importLibrary('core')) as google.maps.CoreLibrary
 	const bounds = new LatLngBounds()
 
-	// Clear existing markers on the map
 	Object.values(markerStore.allMarkers).forEach((markerData) => {
 		if (markerData.markerInstance) {
 			markerData.markerInstance.map = null
@@ -118,7 +114,6 @@ const renderMarkers = async () => {
 		}
 	})
 
-	// Render filtered markers
 	markerStore.filteredMarkers.forEach((markerData) => {
 		const markerEl = new AdvancedMarkerElement({
 			map: toRaw(mapStore.map),
@@ -130,12 +125,9 @@ const renderMarkers = async () => {
 		markerData.markerInstance = markerEl
 		if (markerEl.position) bounds.extend(markerEl.position)
 	})
-
-	// This zooms in too much when there is only one marker on display
-	// mapStore.map?.fitBounds(bounds)
 }
 
-// The queryKey should be text included in a tag or the title of a marker
+// search: text in a title or tag, a marker's id, or a point; none for every marker.
 const selectMarkers = (search?: string | number | google.maps.LatLngLiteral) => {
 	return useQuery({
 		queryKey: ['selectMarkers', search],
@@ -143,12 +135,11 @@ const selectMarkers = (search?: string | number | google.maps.LatLngLiteral) => 
 	})
 }
 
-// Watch for changes to filtered markers and re-render
 watch(() => mapStore.map, renderMarkers)
 watch(() => markerStore.filteredMarkers, renderMarkers)
 const { data: markers } = selectMarkers()
 
-// Load markers from the database on mount
+// Markers from the server go into the store as they arrive.
 onMounted(async () => {
 	watch(
 		markers,

@@ -4,7 +4,6 @@
 		class="floating-toolbar sf-depth-2 sf-is-overlay sl-cluster sf-gap-xs sf-size-xs"
 		:style="{ top: `${position.top}px`, left: `${position.left}px` }"
 	>
-		<!-- Use for when the caret is not in a text block: (placeholder for a future chip) -->
 		<SfChip
 			v-if="isTextNodeType && !editorStore.isCodeView"
 			size="xs"

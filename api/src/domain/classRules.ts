@@ -19,8 +19,6 @@ const VOCAB_PSEUDO_RE = /^::?[a-z][a-z-]*$/
 // Blocks { } ; to prevent CSS injection.
 const RULE_PSEUDO_RE = /^[: >+~][^{};]*$/
 
-// Interactive + structural elements only. Heading/text-scale elements (h1-h6, p) are
-// intentionally excluded — those are handled by sf-heading-* bundles and token utilities.
 // Safe list of HTML elements a theme is allowed to style. Enforced by the
 // untrusted path (`createClassRule`) that user-authored theme content flows
 // through — a theme submitted via the theme store can't target arbitrary tags
@@ -358,10 +356,9 @@ async function assertNoDuplicateRule(
 //   flows through.
 // - `createClassRuleTrusted` — trusted authoring (seed). Skips the element
 //   allowlist because the vocabulary designers add legitimately-needed element
-//   selectors as the design system grows; a whitelist mismatch there aborts the
-//   seed partway through, which has bitten us with hr and span. Every other
-//   guard (property regex, pseudo shape, vocab existence, one-class-per-kind,
-//   duplicate check) still applies.
+//   selectors as the design system grows; a whitelist mismatch there would abort
+//   the seed partway through. Every other guard (property regex, pseudo shape,
+//   vocab existence, one-class-per-kind, duplicate check) still applies.
 //
 // Future theme-store work needs more than the element allowlist — value guards
 // against `url()` (except data:), `expression()`, `attr()` data leaks, length

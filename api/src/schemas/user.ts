@@ -1,4 +1,3 @@
-// https://orm.drizzle.team/docs/column-types/pg
 import { relations } from 'drizzle-orm'
 import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
@@ -77,8 +76,8 @@ export const profiles = sqliteTable('profiles', {
 		.references(() => users.userId),
 })
 
-export type User = typeof users.$inferSelect // return type when queried
-export type NewUser = typeof users.$inferInsert // insert type
+export type User = typeof users.$inferSelect
+export type NewUser = typeof users.$inferInsert
 
-export type Posts = typeof posts.$inferSelect // return type when queried
-export type NewPost = typeof posts.$inferInsert // insert type
+export type Posts = typeof posts.$inferSelect
+export type NewPost = typeof posts.$inferInsert

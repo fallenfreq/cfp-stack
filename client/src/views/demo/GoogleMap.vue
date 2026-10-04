@@ -1,4 +1,3 @@
-<!-- This needs breaking up but I had a tight deadline and added more features than I was originally planning -->
 <script lang="ts" setup>
 /// <reference types="google.maps" />
 import AddMarkerSwitch from '@/components/demos/map/AddMarkerSwitch.vue'
@@ -41,10 +40,8 @@ const mapControlClasses = [mapsControlsStyle['spacing']!, 'sf-font-1', 'sf-text-
 
 const isTagSelected = (tag: string) => markerStore.selectedTags.includes(tag)
 
-// Map container reference
 const mapContainer = ref<HTMLDivElement | null>(null)
 
-// Refs for controls
 const googleAutocomplete = ref<typeof GoogleAutocomplete | null>(null)
 const addMarkerSwitch = ref<typeof AddMarkerSwitch | null>(null)
 
@@ -79,7 +76,6 @@ const renderMap = async (loader: Loader) => {
 	}
 
 	const { ColorScheme } = await google.maps.importLibrary('core')
-	// Map options
 	const mapOptions: google.maps.MapOptions = {
 		center: mapStore.map?.getCenter() || mapStore.defaultCenter,
 		zoom: mapStore.map?.getZoom() || 11,
@@ -93,7 +89,6 @@ const renderMap = async (loader: Loader) => {
 let loader: Loader
 
 onMounted(async () => {
-	// Initialize the Google Maps loader
 	const loaderOptions: LoaderOptions = {
 		apiKey: await trpc.keys.googleMapsApiKey.query(),
 		version: 'weekly',
@@ -116,12 +111,10 @@ watch(
 		await nextTick()
 		if (!mapStore.map || !googleAutocomplete.value || !addMarkerSwitch.value) return
 
-		// Add Autocomplete
 		const autocompleteEl = googleAutocomplete.value.root
 		autocompleteEl.classList.add(...mapControlClasses)
 		mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT]?.push(autocompleteEl)
 
-		// Add Marker Switch
 		const addMarkerSwitchEl = addMarkerSwitch.value.root
 		addMarkerSwitchEl.classList.add(...mapControlClasses)
 		mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT]?.push(addMarkerSwitchEl)
@@ -146,7 +139,6 @@ const deleteMarker = async (markerContent: {
 	const { mapMarkersId: markerId, markerInstance: marker } = markerContent
 	try {
 		await trpc.mapMarker.delete.mutate(markerId)
-		// Remove the marker from the map
 		marker.position = null
 		marker.map = null
 		markerStore.removeMarker(markerId)
@@ -180,21 +172,18 @@ const onMarkerTagClick = async (tag: string) => {
 	}
 }
 
-// Delete a tag from the marker
 const deleteTagFromMarker = async (tag: string) => {
 	if (!sheetContent.value || sheetContent.value.id !== 'mapMarker') return
 	const markerId = sheetContent.value.content.mapMarkersId
 
 	try {
 		await trpc.mapMarker.deleteTagFromMarker.mutate({ markerId, tag })
-		// Update tags locally after deletion
 		sheetContent.value.content.tags = sheetContent.value.content.tags.filter((t) => t !== tag)
 	} catch (error) {
 		console.error('Error deleting tag:', error)
 	}
 }
 
-// Open the prompt for adding tags
 const openAddTagPrompt = async () => {
 	const newTags = await showPrompt('Enter new tags separated by commas:')
 	if (!newTags) return
@@ -203,12 +192,11 @@ const openAddTagPrompt = async () => {
 	const markerId = sheetContent.value.content.mapMarkersId
 
 	try {
-		// this only take one tag need to make it take more than one and return the added tags
+		// The server splits the list and answers with the tags as it saved them.
 		const addedTags = await trpc.mapMarker.addTagsToMarker.mutate({
 			markerId,
 			tags: newTags,
 		})
-		// Update tags locally after addition
 		sheetContent.value.content.tags.push(...addedTags)
 	} catch (error) {
 		console.error('Error adding tags:', error)
@@ -217,27 +205,24 @@ const openAddTagPrompt = async () => {
 
 const onTagClick = (tag: string) => {
 	return markerStore.selectedTags.includes(tag)
-		? clearFilter(tag) // Case 1: Tag is already selected, so clear it.
+		? clearFilter(tag)
 		: [tag, ...markerStore.selectedTags].length === markerStore.allTags.length
-			? clearFilter() // Case 2: Adding this tag selects all tags, so clear everything.
-			: markerStore.selectedTags.push(tag) // Case 3: Add the tag to selectedTags.
+			? clearFilter() // Selecting the last tag clears the filter: all markers again.
+			: markerStore.selectedTags.push(tag)
 }
 
 const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title: string }) => {
 	const newTitle = await showPrompt('Enter the new title:')
 	if (newTitle === null || newTitle.trim() === '') {
-		// User canceled or didn't provide input
 		return
 	}
 
 	try {
-		// Send the new title to the server
 		await trpc.mapMarker.update.mutate({
 			markerId: markerContent.mapMarkersId,
 			title: newTitle,
 		})
 
-		// Update the title locally
 		markerContent.title = newTitle
 
 		notify({
@@ -257,7 +242,6 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 </script>
 
 <template>
-	<!-- Section above the map -->
 	<section class="map-intro sl-inset sf-gap-sm">
 		<div class="sl-cluster sl-align-y-center">
 			<h3 class="map-intro__title sf-heading-2">
@@ -291,7 +275,6 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 		</div>
 	</section>
 
-	<!-- StackableSheet with marker details -->
 	<StackableSheet mobile-height="50%" desktop-width="65%" label="Marker details">
 		<div v-if="sheetContent?.id === 'mapMarker'" class="sl-stack sf-gap-md">
 			<div class="sl-cluster sl-align-y-center sf-gap-xs">
@@ -388,8 +371,8 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 		</div>
 	</StackableSheet>
 
-	<!-- Map container -->
 	<div id="map" ref="mapContainer" />
+	<!-- The map's controls and the location pin wait here, hidden, until the map takes them in. -->
 	<div style="display: none">
 		<GoogleAutocomplete v-if="mapStore.map" ref="googleAutocomplete" :map="mapStore.map" />
 		<AddMarkerSwitch v-if="mapStore.map" ref="addMarkerSwitch" />
@@ -421,5 +404,3 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 	}
 }
 </style>
-
-<!-- add posted by -->

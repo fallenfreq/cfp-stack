@@ -1,5 +1,5 @@
-// Stand-ins for third-party (Vuestic) components. The preview checks sf/sl styling, not
-// Vuestic internals, so each stub renders the smallest honest markup.
+// Stand-ins for third-party components. The preview checks sf/sl styling, not their
+// internals, so each stub renders the smallest honest markup.
 import { defineComponent, h } from 'vue'
 
 export const stubs = {

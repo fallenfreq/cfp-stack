@@ -17,7 +17,7 @@ export const useMarkerStore = defineStore('markerStore', () => {
 	>({})
 	const selectedTags = ref<string[]>([])
 
-	// Filtered markers based on selected tag
+	// Markers with any of the selected tags; every marker when none is selected.
 	const filteredMarkers = computed(() => {
 		if (!selectedTags.value.length) return Object.values(allMarkers.value)
 		const tags = selectedTags.value
@@ -51,7 +51,7 @@ export const useMarkerStore = defineStore('markerStore', () => {
 		delete allMarkers.value[mapMarkersId]
 	}
 
-	// Compute all unique tags
+	// Every tag any marker has. A filter with none of its tags left is cleared.
 	const allTags = computed(() => {
 		const tagsSet = new Set<string>()
 		Object.values(allMarkers.value).forEach((marker) => {

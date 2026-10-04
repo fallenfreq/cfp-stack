@@ -23,13 +23,9 @@ const router = createRouter({
 		{
 			path: '/contact',
 			name: 'contact',
-			// route level code-splitting
-			// this generates a separate chunk (About.[hash].js) for this route
-			// which is lazy-loaded when the route is visited.
 			component: () => import('../views/ContactView.vue'),
 		},
-		// The portfolios are collections now, and web design became software development; the old
-		// addresses keep working.
+		// Earlier portfolio addresses go to the collections that hold that work.
 		{ path: '/portfolio/branding', redirect: '/c/branding' },
 		{ path: '/portfolio/web-design', redirect: '/c/software-development' },
 		{

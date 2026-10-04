@@ -1,4 +1,3 @@
-// the utils file needs editor and lowlight, both from the editor.vue
 import { type Lowlight } from '@/config/editor/lowlight'
 import { notify } from '@/services/toast'
 import { isPrettierLanguage, prettifyCode } from '@/utils/codeFormatting'
@@ -8,8 +7,9 @@ import { type EditorView } from '@tiptap/pm/view'
 import { type Editor } from '@tiptap/vue-3'
 import highlight from 'highlight.js'
 
-// A position guaranteed to be the "before" offset of an existing node in the document.
-// Produced only at verified entry points (resolveActive, NodeSelection.from, plugin mapResult).
+// A position that is the "before" offset of an existing node in the document. Made by a cast
+// where the position comes from such a node: a node selection, `$pos.before()`, the node
+// beside a position, a child's offset, or a mapping that didn't delete it.
 declare const _nodePos: unique symbol
 export type NodePos = number & { readonly [_nodePos]: true }
 
@@ -128,8 +128,7 @@ const getChildBlockPositions = (doc: ProseMirrorNode, nodePos: NodePos): NodePos
 	return positions
 }
 
-// Trusted entry points for creating NodePos values from ProseMirror APIs.
-// All as-NodePos casts in the codebase must live here.
+// NodePos from a node selection, or from a resolved position's ancestor.
 const nodeSelectionPos = (selection: NodeSelection): NodePos => selection.from as NodePos
 const resolvedNodePos = ($pos: ResolvedPos, depth: number): NodePos => $pos.before(depth) as NodePos
 

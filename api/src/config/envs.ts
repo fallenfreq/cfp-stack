@@ -1,12 +1,10 @@
 import { z } from 'zod'
 
-// Custom Zod validator for D1Database
 const d1DatabaseSchema = z.custom<D1Database>(
 	(value) => typeof value === 'object' && value !== null && 'prepare' in value,
 	{ message: 'Invalid D1Database instance' },
 )
 
-// Define the schema using zod
 const envSchema = z.object({
 	SMTP_OUT_SERVER: z.string(),
 	SMTP_OUT_PORT_TLS: z.string(),
@@ -15,16 +13,13 @@ const envSchema = z.object({
 	DB: d1DatabaseSchema,
 })
 
-// Infer the type from the schema
 type Envs = z.infer<typeof envSchema>
 let validatedEnv: Envs | null = null
 
-// Function to initialize and validate environment variables
 function initEnvs(envs: any) {
 	validatedEnv = envSchema.parse(envs)
 }
 
-// Function to retrieve a specific environment variable
 function getEnv<Key extends keyof Envs>(key: Key): Envs[Key] {
 	if (!validatedEnv) {
 		throw new Error('Environment variables have not been initialized')

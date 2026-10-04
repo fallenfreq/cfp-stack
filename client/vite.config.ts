@@ -5,11 +5,9 @@ import touchFileAfterBuild from './plugins/touchFileAfterBuild'
 import createTrackChangesPlugin from './plugins/trackChangesPlugin'
 
 import vue from '@vitejs/plugin-vue'
-// import vueJsx from '@vitejs/plugin-vue-jsx'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 
-// https://vitejs.dev/config/
 export default defineConfig({
 	// In dev, the stylesheet, the API and signing in live on the wrangler server (8788) —
 	// proxy from vite (5173) so the page calls its own origin in both modes. Prod:
@@ -52,13 +50,12 @@ export default defineConfig({
 				},
 			},
 		]),
-		// This is to prevent a bug that stops wrangler pages dev [directory] from working
-		// it is supposed to refresh when static assets change but it doesn't
+		// wrangler pages dev doesn't reload when the built client changes, only when a function
+		// does: touching one after each build makes it pick the new client up.
 		touchFileAfterBuild('../api/functions/trpc/[[trpc]].js'),
 		vue(),
-		// vueJsx(),
 		Components({
-			dts: true, // enabled by default if `typescript` is installed
+			dts: true,
 			resolvers: [],
 		}),
 	],

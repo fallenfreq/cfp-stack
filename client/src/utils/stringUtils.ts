@@ -4,7 +4,6 @@ function splitFirst(str: string, sep: string | RegExp): string {
 	return first
 }
 
-// Utility functions to escape and unescape HTML content
 const escapeHTML = (html: string) => {
 	return html
 		.replace(/&/g, '&amp;')

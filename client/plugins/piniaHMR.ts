@@ -7,7 +7,6 @@ export function piniaHMRPlugin(): Plugin {
 	return {
 		name: 'vite-plugin-pinia-hmr',
 		transform(code, id) {
-			// Only process store files
 			if (id.includes('/stores/') && id.endsWith('.ts')) {
 				const ast = parse(code, {
 					parser: typescriptParser,
@@ -17,12 +16,11 @@ export function piniaHMRPlugin(): Plugin {
 				let hasAcceptHMRImport = false
 				let piniaImportNode: n.ImportDeclaration | null = null
 
-				// Traverse the AST to find `defineStore` calls and check for existing HMR code and imports
+				// A store that already calls acceptHMRUpdate is left as it is.
 				visit(ast, {
 					visitImportDeclaration(path) {
 						if (path.node.source.value === 'pinia') {
-							piniaImportNode = path.node // Save the Pinia import node
-							// Check if `acceptHMRUpdate` is already imported
+							piniaImportNode = path.node
 							path.node.specifiers?.forEach((specifier) => {
 								if (
 									n.ImportSpecifier.check(specifier)
@@ -46,23 +44,21 @@ export function piniaHMRPlugin(): Plugin {
 					},
 				})
 
-				// Only wrap `defineStore` calls if no HMR logic exists
 				if (!hasHMR) {
-					// Add `acceptHMRUpdate` to the existing Pinia import if it exists
 					if (!hasAcceptHMRImport && piniaImportNode) {
 						piniaImportNode = piniaImportNode as n.ImportDeclaration
 						piniaImportNode.specifiers?.push(
 							b.importSpecifier(b.identifier('acceptHMRUpdate')),
 						)
 					} else if (!hasAcceptHMRImport) {
-						// Add a new import statement if no Pinia import exists
 						const importStatement = parse(`import { acceptHMRUpdate } from 'pinia';`, {
 							parser: typescriptParser,
 						})
 						ast.program.body.unshift(importStatement.program.body[0])
 					}
 
-					// Wrap all `defineStore` calls in IIFEs that include HMR logic
+					// Each defineStore(…) becomes (() => { const store = defineStore(…); if (import.meta.hot)
+					// import.meta.hot.accept(acceptHMRUpdate(store, import.meta.hot)); return store })()
 					visit(ast, {
 						visitCallExpression(path) {
 							if (
@@ -112,10 +108,9 @@ export function piniaHMRPlugin(): Plugin {
 									[],
 								)
 
-								// Replace the original `defineStore(...)` call with the IIFE
 								path.replace(storeIIFE)
-								// Stop traversing the children of this node since it now contains the `defineStore` call
-								// which would cause stack overflow as `defineStore` is repeatedly wrapped and replaced
+								// Not into the new node: it holds the same defineStore call, which would be wrapped
+								// again and again.
 								return false
 							}
 							this.traverse(path)
@@ -123,7 +118,6 @@ export function piniaHMRPlugin(): Plugin {
 					})
 				}
 
-				// Generate the updated code
 				const updatedCode = print(ast).code
 				return updatedCode
 			}

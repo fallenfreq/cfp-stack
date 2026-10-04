@@ -1,4 +1,3 @@
-// TODO: separate services from router
 import { and, eq, gte, ilike, lte, or, sql } from 'drizzle-orm'
 import { type DrizzleD1Database } from 'drizzle-orm/d1'
 import { SQLiteColumn } from 'drizzle-orm/sqlite-core'
@@ -43,13 +42,11 @@ const normalizeTags = (tags: string[]) => {
 	return Array.from(new Set(normalized))
 }
 
-// Utility function for tag normalization and insertion
-// normalize tags before calling getOrInsertTag
+// The tag's id, adding the tag if it's new. The tag must be normalized already (normalizeTag).
 async function getOrInsertTag(
 	db: DrizzleD1Database<typeof schemas>,
 	normalizedTag: string,
 ): Promise<{ normalizedTag: string; tagId: number }> {
-	// Check if the tag already exists
 	const existingTag = await db
 		.select({ tagId: tagsSchema.tagId })
 		.from(tagsSchema)
@@ -61,7 +58,6 @@ async function getOrInsertTag(
 		return { normalizedTag, tagId: existingTag.tagId }
 	}
 
-	// Insert the new tag and get its ID
 	const newTag = await db
 		.insert(tagsSchema)
 		.values({ name: normalizedTag })
@@ -84,7 +80,6 @@ export const markersRouter = router({
 				markerData.title = markerData.title.trim()
 			}
 
-			// Insert the marker into the mapMarkers table
 			const newMarker = await db
 				.insert(mapMarkersSchema)
 				.values(markerData)
@@ -105,8 +100,6 @@ export const markersRouter = router({
 				normalizedTags.map((tag) => getOrInsertTag(db, tag)),
 			)
 
-			// Insert into the markerTags join table
-			// normalizedTags, tagIds
 			if (tagsAndIds.length > 0) {
 				await db.insert(markerTagsSchema).values(
 					tagsAndIds.map(({ tagId }) => ({
@@ -140,13 +133,13 @@ export const markersRouter = router({
 			}),
 		)
 		.query(async ({ input: { search, exactSearch }, ctx: { db } }) => {
-			// Function to handle case-insensitive LIKE or exact comparison
+			// Exact: the whole value, ignoring case. Otherwise: anything containing it.
 			const matchString = (column: SQLiteColumn, value: string) =>
 				exactSearch
 					? eq(lower(column), value.toLowerCase())
 					: ilike(column, `%${value.trim()}%`)
 
-			// Function to handle lat/lng matching
+			// Exact: the same point. Otherwise: within 0.01° of it each way.
 			const matchLatLng = (
 				latColumn: SQLiteColumn,
 				lngColumn: SQLiteColumn,
@@ -156,17 +149,17 @@ export const markersRouter = router({
 				exactSearch
 					? and(eq(latColumn, lat), eq(lngColumn, lng))
 					: and(
-							// Adjust tolerance as needed
 							gte(latColumn, lat - 0.01),
 							lte(latColumn, lat + 0.01),
 							gte(lngColumn, lng - 0.01),
 							lte(lngColumn, lng + 0.01),
 						)
 
-			// Build the WHERE condition based on search type
+			// A number is a marker's id; text matches a title or a tag; a point matches markers
+			// at or near it.
 			const whereCondition =
 				search == null
-					? undefined // No search, no condition
+					? undefined
 					: typeof search === 'number'
 						? eq(mapMarkersSchema.mapMarkersId, search)
 						: typeof search === 'string'
@@ -205,7 +198,7 @@ export const markersRouter = router({
 					mapMarkersSchema.lng,
 				)
 
-			// Convert the grouped results to an array
+			// GROUP_CONCAT joins a marker's tags with commas; each row gets them back as a list.
 			return aggregate.map((row) => ({
 				...row,
 				tags: row.tags ? row.tags.split(',') : [],
@@ -219,7 +212,7 @@ export const markersRouter = router({
 
 			const updates = filterUndefined(markerData)
 
-			// Normalize and handle tags if provided
+			// Tags, when given, replace the marker's tags.
 			let updatedTags: number[] = []
 			if (tags) {
 				const normalizedTags = normalizeTags(tags)
@@ -228,7 +221,6 @@ export const markersRouter = router({
 				)
 				updatedTags = tagsAndIds.map(({ tagId }) => tagId)
 
-				// Update markerTags association table
 				await db
 					.delete(markerTagsSchema)
 					.where(eq(markerTagsSchema.markerId, markerId))
@@ -244,7 +236,6 @@ export const markersRouter = router({
 				}
 			}
 
-			// Update markerData if provided
 			if (Object.keys(markerData).length > 0) {
 				await db
 					.update(mapMarkersSchema)
@@ -262,16 +253,6 @@ export const markersRouter = router({
 			}
 		}),
 	delete: secureProcedure.input(z.number()).mutation(async ({ input, ctx: { db } }) => {
-		// Removing all empty tags before deleting the tag
-		// This is only here for development purposes since no empty tags should exist
-		// console.log('Removing empty tags before deleting the tag')
-		// removeEmptyTags(db)
-		//   .then(() => {
-		//     console.log('Empty tags removed successfully')
-		//   })
-		//   .catch((error) => {
-		//     console.error('Error removing empty tags:', error)
-		//   })
 		return db.delete(mapMarkersSchema).where(eq(mapMarkersSchema.mapMarkersId, input)).execute()
 	}),
 
@@ -302,7 +283,6 @@ export const markersRouter = router({
 		.mutation(async ({ input: { markerId, tag }, ctx: { db } }) => {
 			const normalizedTag = normalizeTag(tag)
 
-			// Find the tagId for the provided tag
 			const existingTag = await db
 				.select({ tagId: tagsSchema.tagId })
 				.from(tagsSchema)
@@ -316,7 +296,6 @@ export const markersRouter = router({
 
 			const tagId = existingTag.tagId
 
-			// Delete the association from the markerTags table
 			const result = await db
 				.delete(markerTagsSchema)
 				.where(
@@ -340,24 +319,3 @@ export const markersRouter = router({
 				.execute()
 		}),
 })
-
-// Function to remove empty tags from the database
-// async function removeEmptyTags(db: appDb): Promise<void> {
-//   const emptyTags = await db
-//     .select({ tagId: tagsSchema.tagId })
-//     .from(tagsSchema)
-//     .where(eq(tagsSchema.name, ''))
-//     .execute()
-
-//   if (emptyTags.length > 0) {
-//     await db
-//       .delete(tagsSchema)
-//       .where(
-//         inArray(
-//           tagsSchema.tagId,
-//           emptyTags.map((tag) => tag.tagId)
-//         )
-//       )
-//       .execute()
-//   }
-// }

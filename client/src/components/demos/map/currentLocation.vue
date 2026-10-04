@@ -10,9 +10,8 @@ if (!mapStore.map) {
 }
 
 let currentLocationMarker: google.maps.marker.AdvancedMarkerElement | null = null
-let watchId: number | null = null // Store the watchPosition ID
+let watchId: number | null = null
 
-// Function to create or update the marker
 const updateLocationMarker = async (position: GeolocationPosition) => {
 	const newPosition = {
 		lat: position.coords.latitude,
@@ -43,7 +42,7 @@ const updateLocationMarker = async (position: GeolocationPosition) => {
 	}
 }
 
-// Watch for map changes
+// A new map (the page redraws it when the colour scheme changes) gets the marker too.
 watch(
 	() => mapStore.map,
 	() => {
@@ -59,7 +58,6 @@ onMounted(() => {
 		return
 	}
 
-	// Watch user's location
 	watchId = navigator.geolocation.watchPosition(
 		async (position) => {
 			await updateLocationMarker(position)
@@ -67,10 +65,10 @@ onMounted(() => {
 		(error) => {
 			console.error('Error watching position:', error.message)
 		},
-		{ enableHighAccuracy: true }, // Optional: high-accuracy mode
+		{ enableHighAccuracy: true },
 	)
 
-	// Watch for the first user location to set the map center
+	// The map centres on you once, when your location first arrives.
 	const stopWatching = watch(
 		() => mapStore.userLocation,
 		() => {
@@ -94,9 +92,7 @@ onBeforeUnmount(() => {
 
 <template>
 	<div ref="customPin" class="custom-pin">
-		<!-- Render the circle if heading is not available -->
 		<div class="circle" />
-		<!-- Pulsating background remains for both -->
 		<div class="pulsating-circle" />
 	</div>
 </template>

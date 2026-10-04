@@ -4,16 +4,11 @@ import superjson from 'superjson'
 import type { RequestSession } from '../auth/index.js'
 import { SessionUnavailable } from '../auth/sessions.js'
 import { ConflictError, NotFoundError, ValidationError } from '../domain/errors.js'
-
-// TODO: importing schemas from ../schemas/index.js causes type issues on query
-// but not if I do the same thing here. and here it breaks if I add mapMarkers
-
-import * as user from '../schemas/user.js'
-// import * as mapMarkers from '../schemas/mapMarkers.js'
 import * as collection from '../schemas/collectionEntry.js'
-// import * as schemas from '../schemas/index.js'
+import * as user from '../schemas/user.js'
 
-// adding mapMarkers to schemas is causing the build to fail
+// The tables `db.query` knows; [[trpc]].ts gives drizzle the same ones. Not every table
+// (`schemas/index.ts`): with all of them, type checking doesn't finish.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const schemas = { ...user, ...collection }
 

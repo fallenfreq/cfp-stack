@@ -55,8 +55,8 @@ export function useColorPalette() {
 	}
 
 	// Resolves an alpha string that is either a plain number ("0.2") or a CSS
-	// var reference ("var(--sf-alpha-3)") to a 0–1 number. Missing vars resolve
-	// to 1 (full opacity) — matches the historical fallback.
+	// var reference ("var(--sf-alpha-3)") to a 0–1 number. No value, or a var
+	// with no numeric root token, resolves to 1 (full opacity).
 	function resolveAlpha(raw: string | undefined): number {
 		if (raw === undefined) return 1
 		const varName = raw.match(/^var\((--[\w-]+)\)$/)?.[1]

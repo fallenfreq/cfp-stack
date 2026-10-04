@@ -12,7 +12,7 @@ import { getStylesheet } from '../../dist/domain/generateCss.js'
 //
 // Never seeds: a request can't make the seed's queries (scripts/seed.mjs says why). A database
 // without a design answers 500 until `pnpm seed:local` or `pnpm seed:live` is run.
-//
+
 // If-None-Match compares weakly (RFC 9110): Cloudflare marks the ETag weak (W/"…") when it
 // compresses the response, and the header may list several tags.
 function matchesEtag(request: Request, etag: string): boolean {

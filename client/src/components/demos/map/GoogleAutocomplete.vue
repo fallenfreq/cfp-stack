@@ -12,7 +12,6 @@ defineExpose({
 
 let token: google.maps.places.AutocompleteSessionToken | null = null
 
-// Reactive variables for managing input, results, and request data.
 const input = ref('')
 const results = ref<{ text: string; place: google.maps.places.Place }[]>([])
 const showDropdown = ref(false)
@@ -26,13 +25,11 @@ const request: google.maps.places.AutocompleteRequest = {
 	includedPrimaryTypes: ['(regions)'],
 }
 
-// Function to initialize the session token.
 async function init() {
 	token = new google.maps.places.AutocompleteSessionToken()
 	refreshToken()
 }
 
-// Function to handle input changes and fetch autocomplete suggestions.
 async function makeAcRequest() {
 	if (!input.value.trim()) {
 		results.value = []
@@ -59,7 +56,6 @@ async function makeAcRequest() {
 	}
 }
 
-// Function to handle the selection of a place.
 async function onPlaceSelected(place: google.maps.places.Place) {
 	try {
 		await place.fetchFields({
@@ -70,7 +66,6 @@ async function onPlaceSelected(place: google.maps.places.Place) {
 		console.log(`Selected place coordinates: Lat=${location.lat()}, Lng=${location.lng()}`)
 		props.map.setCenter({ lat: location.lat(), lng: location.lng() })
 
-		// Reset input and dropdown.
 		input.value = ''
 		results.value = []
 		showDropdown.value = false
@@ -81,7 +76,6 @@ async function onPlaceSelected(place: google.maps.places.Place) {
 	}
 }
 
-// Helper function to refresh the session token.
 async function refreshToken() {
 	token = new google.maps.places.AutocompleteSessionToken()
 	request.sessionToken = token

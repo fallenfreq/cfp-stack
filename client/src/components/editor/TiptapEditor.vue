@@ -74,19 +74,17 @@ const editor = useEditor({
 				return 'Type slash for commands'
 			},
 		}),
-		// Renamed to avoid: Duplicate extension names found: ['commands']
+		// TipTap has a core extension called commands, and two extensions can't share a name.
 		Commands.extend({ name: 'slashCommands' }).configure({ suggestion }),
 	],
 	content: '',
 	autofocus: true,
-	parseOptions: {
-		// preserveWhitespace: 'full'
-	},
+	parseOptions: {},
 })
 
 useNodeViewInteractions()
 const editorStore = useEditorStore()
-// editor.value should be undefined at this point until the next tick
+// useEditor makes the editor once the component is mounted; the store gets it when it exists.
 watch(editor, (newEditor) => {
 	if (newEditor) {
 		editorStore.setEditor(newEditor)

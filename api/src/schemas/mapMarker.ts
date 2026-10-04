@@ -1,6 +1,5 @@
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
-// Map Markers Table
 export const mapMarkers = sqliteTable('map_markers', {
 	mapMarkersId: integer('map_markers_id').primaryKey(),
 	title: text('title', { length: 256 }).notNull(),
@@ -8,13 +7,11 @@ export const mapMarkers = sqliteTable('map_markers', {
 	lng: real('lng').notNull(),
 })
 
-// Tags Table
 export const tags = sqliteTable('tags', {
 	tagId: integer('tag_id').primaryKey(),
 	name: text('name', { length: 128 }).notNull(),
 })
 
-// Marker_Tags Join Table
 export const markerTags = sqliteTable('marker_tags', {
 	markerId: integer('marker_id')
 		.notNull()
