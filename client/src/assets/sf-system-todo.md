@@ -312,10 +312,46 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
     two components; the alias is unique on the site). The picker's rows are told apart by
     their label (`ToolbarNodePicker.vue`), which two components named alike would break:
     key them by type.
+11. **Typing logged editor warnings** (seen 2026-10-01; fixed 2026-10-04): typing in a
+    paragraph or heading straight on the page logged 38 TipTap warnings a letter ("setNode()
+    only supports text block nodes"). Not in a Section, as first noted: there the toolbar acts
+    on the Section. Change Type's list is worked out on every keystroke, open or not, and for
+    a text block it dry-ran TipTap's `setNode` for every block type. `setNode` makes text
+    blocks only, and warns for the 19 others.
+    - **Fix:** ask `setNode` only about text block types (`defaultItemsBlock.ts`). It's the
+      command's own first check, so the lists are unchanged.
+    - **Checked:** in Chrome, Change Type's rows on a paragraph and a heading straight on the
+      page, a paragraph in a Section and in a to-do item, and a code block are the same before
+      and after, on the test page and the demo. Typing anywhere logs none. `editor.spec.ts`
+      checks that typing in a paragraph logs no warnings from the app's code: it fails without
+      the fix (154) and passes (20).
+    - **Logged, predates:** the menus rebuild their lists on every keystroke (candidate 13).
+      Chrome warns that the preloaded icon font (`index.html`) isn't used within a few seconds
+      of the editor opening; not looked into.
+12. **The toolbar's context should carry its block's place** (logged 2026-10-04, not
+    designed): `ToolbarItemContext` holds the block and its depth, but not its position or
+    parent. So the block tools find them again: `resolveActivePos`, called 14 times in
+    `defaultItemsBlock.ts` and `defaultItemsShared.ts`. For an image or another leaf block,
+    that lookup lands one level short, and `resolveActivePos` patches it with a Proxy that
+    fakes the answer. Carrying the place once would remove the Proxy. It touches every block
+    tool, so it needs its own sign-off and checks. Found while fixing 11; no bug seen from it.
+13. **Menus rebuild their lists on every keystroke** (found 2026-10-04; next, agreed with the
+    user): Change Type, Wrap In and Insert rebuild their lists after every change in the
+    editor, even while closed. A typed letter or a cursor move counts; one arrow press is two
+    changes. Each list checks all 22 block types against the toolbar's block. A typed letter
+    builds them twice, though the editor reports one change. Why isn't found yet.
+    - **Why:** the toolbar refreshes every tool after any change, as any change could move it
+      to another block (`FloatingToolbar.vue`: `tick` goes up on every transaction, which
+      makes a new context). A menu's rows sit in the page while it's closed: `ToolbarNodePicker`
+      works out its items from the context. Checked in Chrome: after one letter, with every
+      menu closed, Change Type held 4 rows and Wrap In 9.
+    - **Cost:** not measurable today (a keystroke is about 10 ms of script wherever you type).
+      It grows with the component store: each component is one more type in every menu.
+    - **Idea:** build a menu's list when it opens. Watch for: a panel is placed from its size
+      (`SfPopover`, `useAnchorFallback`), so its rows must be there before it's placed. Find
+      the second build first.
 
-Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a Section on the
-test page logs 171 TipTap warnings ("setNode() only supports text block nodes"); editing
-to-do items logs none. A plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
+Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in
 Playwright, 2026-10-02). Grid items with auto side margins shrink to fit. Nothing in the app
 does this: the Centre block's wrapper is the inset's item, and only `LayoutCenter.vue` wears

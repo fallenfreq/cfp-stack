@@ -102,6 +102,31 @@ test('the block pickers name every block they offer', async ({ page }) => {
 	expect(await picker('add')).toEqual(['Task Item'])
 })
 
+// The toolbar's lists are worked out on every keystroke. Change Type's made the editor warn once
+// for each block type a paragraph can't become.
+test('typing in a paragraph logs no warnings', async ({ page }) => {
+	const warnings: string[] = []
+	page.on('console', (message) => {
+		// The app's own code: the browser's own warnings (an unused preload) have the page's address.
+		if (message.type() === 'warning' && message.location().url.includes('/assets/'))
+			warnings.push(message.text())
+	})
+	// The cursor at the end of a paragraph straight on the page, so the toolbar acts on it.
+	await page.evaluate(() => {
+		const editor = (document.querySelector('.tiptap') as any).editor
+		let end: number | undefined
+		editor.state.doc.forEach((node: any, offset: number) => {
+			if (end !== undefined || node.type.name !== 'paragraph' || !node.content.size) return
+			editor.view.nodeDOM(offset).scrollIntoView({ block: 'center' })
+			end = offset + node.nodeSize - 1
+		})
+		editor.chain().focus().setTextSelection(end).run()
+	})
+	await page.keyboard.type('abc')
+	await settle(page)
+	expect(warnings).toEqual([])
+})
+
 test('a class given to a to-do item while editing shows at once', async ({ page }) => {
 	const item = page.locator('#task-plain')
 	const before = await taskItemLayout(item)

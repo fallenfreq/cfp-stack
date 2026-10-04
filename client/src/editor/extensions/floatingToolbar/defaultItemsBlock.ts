@@ -103,11 +103,16 @@ const wrapNodeInType = (editor: Editor, ctx: ToolbarItemContext, typeName: strin
 const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem[] => {
 	const items: NodePickerItem[] = []
 	const sourceItemType = LIST_ITEM_MAP[ctx.activeNode.type.name]
-	for (const { typeName, attrs, label, iconName } of blockNodeEntries(editor)) {
+	for (const { typeName, type, attrs, label, iconName } of blockNodeEntries(editor)) {
 		const hasAttrs = Object.keys(attrs).length > 0
 		// setNode is cursor-based — only use it when the active node IS the textblock
-		// the cursor is in, otherwise it would convert the inner paragraph instead.
-		const canSet = ctx.activeNode.type.isTextblock && editor.can().setNode(typeName, attrs)
+		// the cursor is in, otherwise it would convert the inner paragraph instead. It only
+		// makes textblocks: asked about any other type it refuses with a console warning, and
+		// this list is worked out on every keystroke.
+		const canSet =
+			ctx.activeNode.type.isTextblock
+			&& type.isTextblock
+			&& editor.can().setNode(typeName, attrs)
 		const canReplace = !canSet && canReplaceNodeType(editor, ctx, typeName, attrs)
 		// Cross-item-type list switch (taskList ↔ bulletList/orderedList) — needs
 		// switchListType because canReplaceNodeType's validContent check rejects
