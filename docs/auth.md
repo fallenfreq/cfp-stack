@@ -121,7 +121,9 @@ is updated, so a fresh session can pick up from it.
           never sees tRPC's own failures (Cloudflare's generic error page, no stack); `onError`
           logs internal errors without their stack.
         - Any signed-in user can delete any map marker or tag (`markers.delete`, `deleteTag`).
-        - `secure.test` logs its input; `user.insert` logs every user.
+          Not a priority: the map is a demo and the owner has the only account.
+        - `user.insert` logs every user. (`secure.test`, which logged its input, is gone with
+          the starter's other probes, `test` and `echo`.)
         - The account page's language list is Zitadel's (kept, by choice); `usePage` still
           blanks when sign-in lands (a shorter wait now).
         - The page shows you signed out until `session.get` answers.
