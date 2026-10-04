@@ -24,9 +24,17 @@ interface Context {
 
 const t = initTRPC.context<Context>().create({
 	transformer: superjson,
-	// Answers never carry a stack trace. tRPC adds one to every error unless NODE_ENV is
-	// 'production', which Workers don't set, so live sent them too.
+	// No answer carries a stack trace: tRPC adds one unless NODE_ENV is 'production', which
+	// Workers don't set.
 	isDev: false,
+	// Errors the user can act on go out with their message: domain errors (domainErrors
+	// below), errors a route throws on purpose and tRPC's checks of the request. Anything else is
+	// INTERNAL_SERVER_ERROR and says only "Internal Server Error"; onError in [[trpc]].ts logs
+	// it in full.
+	errorFormatter: ({ shape, error }) =>
+		error.code === 'INTERNAL_SERVER_ERROR'
+			? { ...shape, message: 'Internal Server Error' }
+			: shape,
 })
 
 // Signed in, vouched for by the provider in the last 10 minutes (docs/auth.md, "Re-checking
@@ -63,7 +71,7 @@ function domainErrorCode(error: unknown) {
 
 // Domain errors are written for the user, so they go out with their message and a matching
 // code; a sign-in that can't be checked just now asks you to try again. Anything else stays
-// INTERNAL_SERVER_ERROR, which onError in [[trpc]].ts hides.
+// INTERNAL_SERVER_ERROR, which the errorFormatter above hides.
 const domainErrors = t.middleware(async ({ next }) => {
 	const result = await next()
 	if (result.ok) return result

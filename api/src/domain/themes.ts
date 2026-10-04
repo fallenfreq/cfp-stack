@@ -116,7 +116,11 @@ export async function createTheme(
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err)
 		if (msg.includes('UNIQUE constraint failed'))
-			throw new ConflictError(`Theme conflict: ${msg}`)
+			throw new ConflictError(
+				activationClass
+					? `Theme "${id}" or its activation class "${activationClass}" is already in use`
+					: `Theme "${id}" already exists`,
+			)
 		throw err
 	}
 

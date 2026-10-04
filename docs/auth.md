@@ -117,9 +117,18 @@ is updated, so a fresh session can pick up from it.
           its `isDev` is on unless `NODE_ENV` is `production`, which Workers don't set; live's
           "please log in" answer carried one. Fixed after step 3: `isDev: false` in
           `config/trpc.ts`.
-        - `[[trpc]].ts` returns `fetchRequestHandler(…)` without `await`, so its outer catch
-          never sees tRPC's own failures (Cloudflare's generic error page, no stack); `onError`
-          logs internal errors without their stack.
+        - Error answers (checked 2026-10-04): the allowlist held (`onError` replaced every
+          internal error's message), with three gaps, fixed then:
+            - `onError` both hid and logged, and logged no stack, original error or call. Now
+              `errorFormatter` in `config/trpc.ts` decides what an answer says, and `onError`
+              only logs: the call and the original error, with its stack.
+            - `[[trpc]].ts` returned `fetchRequestHandler(…)` without `await`, so its outer
+              catch missed a throw from our own `onError` or `responseMeta`.
+            - `createTheme` (`domain/themes.ts`) put D1's raw message ("UNIQUE constraint
+              failed: themes.…") in a `ConflictError`, which would go out once a route calls it
+              (only the seed does today); it says which theme clashed now.
+        - A tRPC path with a broken escape (`/trpc/%E0%A4%A`) is a 500 and an error log, though
+          it's the caller's mistake (tRPC's `decodeURIComponent` throws).
         - Any signed-in user can delete any map marker or tag (`markers.delete`, `deleteTag`).
           Not a priority: the map is a demo and the owner has the only account.
         - `user.insert` logs every user. (`secure.test`, which logged its input, is gone with

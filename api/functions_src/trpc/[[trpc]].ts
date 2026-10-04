@@ -17,7 +17,7 @@ export const onRequest: PagesFunction<Envs> = async (context) => {
 		if (refused) return refused
 
 		const session = auth.forRequest(request, (promise) => context.waitUntil(promise))
-		return fetchRequestHandler({
+		return await fetchRequestHandler({
 			endpoint: '/trpc',
 			req: request,
 			router: appRouter,
@@ -30,25 +30,17 @@ export const onRequest: PagesFunction<Envs> = async (context) => {
 			// An answer that depends on who's signed in is never kept by a cache.
 			responseMeta: () =>
 				session.used ? { headers: new Headers({ 'Cache-Control': 'no-store' }) } : {},
-			onError: ({ error }) => {
-				// Change error to hide details from the client and log if required
-				if (error.code == 'INTERNAL_SERVER_ERROR') {
-					// Can log errors from here
-					console.log({
-						name: error.name,
-						code: error.code,
-						message: error.message,
-					})
-					// Change error (no stack goes out with any error: isDev in config/trpc.ts)
-					error.message = 'Internal Server Error'
-				}
-				// throw Error('Will crash if thrown here')
+			// Logs every error the user can't act on, in full; what the answer says is decided
+			// in config/trpc.ts.
+			onError: ({ error, path }) => {
+				if (error.code === 'INTERNAL_SERVER_ERROR')
+					console.error(`tRPC ${path ?? 'request'} failed:`, error)
 			},
 		})
-	} catch (error: any) {
-		// Handle errors that occur outside of tRPC
-		console.log(error)
-		return new Response('Internal Server Error: ', { status: 500 })
+	} catch (error) {
+		// Failures before or around tRPC: settings, sign-in setup, our own hooks.
+		console.error('tRPC handler failed:', error)
+		return new Response('Internal Server Error', { status: 500 })
 	}
 }
 
