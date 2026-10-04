@@ -132,7 +132,12 @@ is updated, so a fresh session can pick up from it.
   hoists `vue-oidc-client` (gone since step 3).
 - **Live, ready for the push** (2026-10-04): `0001` applied to live D1 (none left to apply), and
   `SESSION_SECRET` created in Cloudflare (Production; generated straight into it, never shown).
-- **Next:** push (the user's call), then check signing in, `/account` and signing out on live.
+- **Live: done** (pushed `e9c57d7`, 2026-10-04). Checked on somefreq.com: `/account` signed out
+  sends you to Zitadel; signed in (the user's password), `session.get` and `account.profile`
+  answer `no-store`; a new tab opens `/admin` signed in; signing out goes home, signed out; no
+  stack in error answers.
+- **Left:** delete the old setup listed in "Zitadel" once no older version will run; the
+  "Found (predates this)" items under step 3, each with the user's go-ahead.
 
 ## Why
 
