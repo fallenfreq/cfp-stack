@@ -1,5 +1,6 @@
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import { useEditorStore } from '@/stores/editorStore'
+import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
 import { h } from 'vue'
@@ -33,7 +34,8 @@ export const isNotCodeView = () => !useEditorStore().isCodeView
 // (tableRow, listItem, etc.) are filtered automatically by isLeaf and canReplaceWith/validContent.
 export const EXCLUDED_NODE_TYPES = new Set(['doc', 'text'])
 
-// Display metadata for known types; unknown custom nodes fall back to { label: typeName, iconName: 'widgets' }
+// Display metadata for known types. Others fall back to { label: getNodeAlias(typeName), iconName:
+// 'widgets' }: a custom block's type name is its ID, and its alias is the name it goes by.
 export const NODE_META: Record<string, { label: string; iconName: string }> = {
 	paragraph: { label: 'Paragraph', iconName: 'notes' },
 	heading: { label: 'Heading', iconName: 'title' },
@@ -44,6 +46,12 @@ export const NODE_META: Record<string, { label: string; iconName: string }> = {
 	bulletList: { label: 'Bullet List', iconName: 'format_list_bulleted' },
 	orderedList: { label: 'Numbered List', iconName: 'format_list_numbered' },
 	taskList: { label: 'Task List', iconName: 'checklist' },
+	listItem: { label: 'List Item', iconName: 'list' },
+	taskItem: { label: 'Task Item', iconName: 'check_box' },
+	table: { label: 'Table', iconName: 'table' },
+	tableRow: { label: 'Table Row', iconName: 'table_rows' },
+	tableCell: { label: 'Table Cell', iconName: 'crop_square' },
+	tableHeader: { label: 'Table Header', iconName: 'table_chart' },
 }
 
 // Lists whose items are a different node type can't be converted via the
@@ -160,7 +168,7 @@ export function blockNodeEntries(editor: Editor) {
 	}[] = []
 	for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
 		if (EXCLUDED_NODE_TYPES.has(typeName) || type.isLeaf) continue
-		const meta = NODE_META[typeName] ?? { label: typeName, iconName: 'widgets' }
+		const meta = NODE_META[typeName] ?? { label: getNodeAlias(typeName), iconName: 'widgets' }
 		if (typeName === 'heading') {
 			for (let level = 1; level <= 3; level++)
 				result.push({

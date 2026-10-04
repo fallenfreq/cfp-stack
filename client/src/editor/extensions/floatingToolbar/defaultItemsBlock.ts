@@ -3,6 +3,7 @@ import ToolbarNodePicker, {
 } from '@/components/editor/toolbar/ToolbarNodePicker.vue'
 import { useEditorStore } from '@/stores/editorStore'
 import { prettifySelectedCode } from '@/utils/editor/editorUtils'
+import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { Fragment } from '@tiptap/pm/model'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
@@ -140,7 +141,10 @@ const getWrapInItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem
 		const items: NodePickerItem[] = []
 		for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
 			if (EXCLUDED_NODE_TYPES.has(typeName) || !type.isInline || type.isLeaf) continue
-			const meta = NODE_META[typeName] ?? { label: typeName, iconName: 'widgets' }
+			const meta = NODE_META[typeName] ?? {
+				label: getNodeAlias(typeName),
+				iconName: 'widgets',
+			}
 			items.push({
 				label: meta.label,
 				iconName: meta.iconName,

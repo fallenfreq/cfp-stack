@@ -71,6 +71,37 @@ test("the Attributes panel's class row stacks in the narrow panel", async ({ pag
 	expect((await box(row)).width).toBeGreaterThan(200)
 })
 
+// A custom block goes by its alias (the tag the code view shows), never its ID; a built-in one by
+// its label, never its type's name.
+test('the block pickers name every block they offer', async ({ page }) => {
+	const picker = async (iconName: string) => {
+		const button = page.locator(
+			`.floating-toolbar button[popovertarget]:has(span:text-is("${iconName}"))`,
+		)
+		await button.click()
+		const rows = page.locator(`#${await button.getAttribute('popovertarget')} .picker-item`)
+		await expect(rows.first()).toBeVisible()
+		const names = await rows.locator('span:last-child').allTextContents()
+		await page.keyboard.press('Escape')
+		return names
+	}
+	await selectBlock(page, 'c1-card')
+	const wrapIn = await picker('frame_source')
+	expect(wrapIn).toContain('layout-section')
+	expect(wrapIn.filter((name) => /^[0-9a-f]{8}-/.test(name))).toEqual([])
+
+	// The to-do list, as its node-path crumb selects it, in view.
+	await page.evaluate(
+		(at) => {
+			document.getElementById('task-plain')!.scrollIntoView({ block: 'center' })
+			const editor = (document.querySelector('.tiptap') as any).editor
+			editor.chain().focus().setNodeSelection(editor.state.doc.resolve(at).before()).run()
+		},
+		await nodePosition(page, 'task-plain'),
+	)
+	expect(await picker('add')).toEqual(['Task Item'])
+})
+
 test('a class given to a to-do item while editing shows at once', async ({ page }) => {
 	const item = page.locator('#task-plain')
 	const before = await taskItemLayout(item)

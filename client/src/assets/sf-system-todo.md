@@ -290,10 +290,28 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
    Figma; today it shows none. To decide: which settings show (only those every selected
    block has), how differing values show ("mixed"), and how the class row works when the
    classes differ. Relies on candidate 2's fix: each block changes in place.
-9. **Pickers name custom blocks by their ID** (seen 2026-10-01 in Wrap in, 2026-10-03 in Wrap
-   selection; not fixed): a custom block shows as e.g. "a47e28a5-…". Turn into, Wrap in and
-   Insert (`defaultItemsBlock.ts`) and Wrap selection take a block's name from `NODE_META`,
-   else its type's name, which for a custom block is its ID (`blockNodeEntries`).
+9. **Pickers named custom blocks by their ID** (seen 2026-10-01; fixed 2026-10-04): Change
+   Type, Wrap In, Insert and Wrap selection showed a custom block as e.g. "535f350e-…", and
+   six built-in blocks by their type's name ("table", "listItem", "taskItem", "tableRow",
+   "tableCell", "tableHeader"). They took a block's name from `NODE_META`, else its type's
+   name, which for a custom block is its ID (`blockNodeEntries`).
+    - **Fix:** the fallback goes through `getNodeAlias` (`nodeRegistry.ts`), as the node path
+      does, so a custom block shows its alias ("layout-section", its tag in the code view).
+      `NODE_META` names the six (approved): List Item, Task Item, Table, Table Row, Table
+      Cell, Table Header.
+    - **Checked:** in Chrome, every picker on lists, to-do lists, tables, rows, cells and
+      Sections; the six icons draw from the font. `editor.spec.ts` checks Wrap In and Insert:
+      it fails without the fix (the IDs) and without the six names ("taskItem"); passes (18).
+    - **Logged, predates:** the node path shows built-in blocks by their type's name
+      ("bulletList", "tableRow") where the pickers say "Bullet List".
+10. **Names when the component store comes** (decided 2026-10-04, not designed): saved pages
+    keep only a block's ID; the name is looked up, in one place (`nodeRegistry.ts`), only
+    where it's shown. Today the node path, the slash menu and the pickers each find it their
+    own way. To decide with the store: a `name` on each component (the store's planned
+    field) beside the site's alias, and where each shows (the author's name can be shared by
+    two components; the alias is unique on the site). The picker's rows are told apart by
+    their label (`ToolbarNodePicker.vue`), which two components named alike would break:
+    key them by type.
 
 Also seen 2026-10-01, not looked into: typing three letters in a paragraph in a Section on the
 test page logs 171 TipTap warnings ("setNode() only supports text block nodes"); editing
