@@ -127,7 +127,13 @@ is updated, so a fresh session can pick up from it.
         - The page shows you signed out until `session.get` answers.
     - Still to do for live, before pushing: apply `0001` to live D1 and create `SESSION_SECRET`
       in Cloudflare (Production) (see step 1).
-- **Next: step 4** (retire the old Zitadel apps; see "Rollout").
+- **Step 4, the old setup: kept, by choice** (2026-10-04). The old apps and their secrets stay so
+  an older version can still run; "Zitadel" lists them as the old sign-in's. `.npmrc` no longer
+  hoists `vue-oidc-client` (gone since step 3).
+- **Next: live.** Checked 2026-10-04: live D1 still has `0001` to apply, and Cloudflare has no
+  `SESSION_SECRET`. Both before pushing, and the user runs them (Claude's permission check
+  stops it changing live): `pnpm migrate:push:api`, and the secret as a Production secret. Then
+  push (the user's call) and check signing in, `/account` and signing out on live.
 
 ## Why
 
@@ -333,9 +339,17 @@ cookie, `code`, the verifier, or request bodies.
 - Per project (prod, dev): a Web app, code flow, Basic client secret, Authorization Code + Refresh
   Token grants. Redirect: `/auth/callback` (dev: 8788 and 5173, development mode on). Post-logout:
   `/`.
-- After the switch, delete the User Agent and API apps and the `/auth/signinsilent/zitadel`
-  addresses added 2026-10-03.
 - The absolute refresh token lifetime is 30 days (instance OIDC settings; set in step 0).
+- The old sign-in's, unused since step 3 and kept so an older version of the app can still run
+  (delete them once none will):
+    - A User Agent app per project, which the browser signed in with (`@zitadel/vue`): prod
+      `282311473735258121`, dev `282876108658061416`. Its redirects are
+      `/auth/signinwin/zitadel` and `/auth/signinsilent/zitadel`.
+    - An API app per project, which our server asked about each token (introspection): prod
+      `282314634059446901`, dev in `api/.dev.vars`.
+    - Their secrets: `ZITADEL_CLIENT_SECRET` in Cloudflare (Production); `ZITADEL_CLIENT_ID`,
+      `ZITADEL_CLIENT_SECRET` and `ZITADEL_INTROSPECTION_ENDPOINT` in `api/.dev.vars`. An older
+      version brings its other settings with it (`wrangler.toml`, the client's `.env` files).
 
 ## Settings
 
@@ -344,8 +358,8 @@ cookie, `code`, the verifier, or request bodies.
 - Secrets: `OIDC_CLIENT_SECRET` (the Web app's), `SESSION_SECRET`, optionally
   `SESSION_SECRET_PREVIOUS`.
 - Dev only: `DEV_INSECURE_COOKIES`.
-- Gone: `ZITADEL_INTROSPECTION_ENDPOINT`, and `ZITADEL_CLIENT_ID` / `ZITADEL_CLIENT_SECRET` (the API
-  app's).
+- No longer read: `ZITADEL_INTROSPECTION_ENDPOINT`, and `ZITADEL_CLIENT_ID` /
+  `ZITADEL_CLIENT_SECRET` (the API app's; kept for an older version, see "Zitadel").
 
 The new ones are checked on the auth paths only, so a missing secret breaks sign-in, not the whole
 API. Set them in Cloudflare (Production) before pushing the switch. Preview deployments can't sign
@@ -384,8 +398,9 @@ Each step leaves the site working.
    session-based procedures, the cross-site check, `account.*` with Zitadel's `AccountProvider`,
    the client service, the router check (`refs/wip/router-check`), `/auth/` in the Vite proxy,
    removed packages and settings.
-4. Retire the old Zitadel apps and addresses, and the old `ZITADEL_CLIENT_SECRET` secret in
-   Cloudflare. (CLAUDE.md "Auth setup" and the README were rewritten in step 3.)
+4. The old Zitadel apps and the old `ZITADEL_CLIENT_SECRET` secret in Cloudflare: kept for now, so
+   an older version can still run, and listed in "Zitadel". (CLAUDE.md "Auth setup" and the
+   README were rewritten in step 3.)
 
 Signed-in users sign in once more at step 3. Tabs left open on the old page get UNAUTHORIZED until
 they reload.

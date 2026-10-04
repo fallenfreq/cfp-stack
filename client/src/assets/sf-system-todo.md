@@ -1233,7 +1233,7 @@ These are not bugs but unresolved tensions in the current design:
       keeps Zitadel's tokens sealed in D1 and refreshes them; the browser gets only our own
       cookie, so every tab is signed in, in every browser, and the account page's Zitadel calls
       move to our API. Built in the steps listed there; its "Progress" section says where it's up
-      to (steps 0–3 done 2026-10-04; step 4, retiring the old Zitadel apps, left).
+      to (steps 0–4 done 2026-10-04, the old Zitadel apps kept for now; live is next).
 - [x] The sign-in libraries are unmaintained: `oidc-client` 1.11 (its successor is
       `oidc-client-ts`) under `vue-oidc-client` 1.0.0-alpha.5 (last released 2022), both used
       by Zitadel's own `@zitadel/vue`. Removed with the server sign-in above (step 3, 2026-10-04).

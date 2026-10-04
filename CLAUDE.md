@@ -77,6 +77,9 @@ Code + Refresh Token grants.
   (`openssl rand -base64 32`).
 - Prod: the client id and project id are in `api/wrangler.toml`; `OIDC_CLIENT_SECRET` and
   `SESSION_SECRET` are Production secrets.
+- Each project also has the old sign-in's User Agent and API apps, and its `ZITADEL_CLIENT_ID`,
+  `ZITADEL_CLIENT_SECRET` and `ZITADEL_INTROSPECTION_ENDPOINT` remain: unused, kept so an older
+  version can still run (`docs/auth.md`, "Zitadel").
 
 Production secrets go in the Cloudflare dashboard or via `wrangler pages secret put SECRET_NAME
 --project-name cfp-stack` (the Pages project's name, not the one in `wrangler.toml`).
