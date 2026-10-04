@@ -1249,7 +1249,8 @@ These are not bugs but unresolved tensions in the current design:
       Predates; it now also shows on every move between editor addresses.
 - [ ] `useCollapseBreakpoint.ts` calls `stopWatch()` from its first run, before `stopWatch` is
       set: a collection opened with the theme already loaded logs "Cannot access … before
-      initialization". Found by the review; unrelated.
+      initialization". Found by the review; unrelated. On Vite (5173) Vue's development build
+      rethrows it from setup, so `/admin/pages` shows no list at all.
 
 ## Deferred (pending design pass)
 

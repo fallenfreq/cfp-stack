@@ -58,7 +58,12 @@ is updated, so a fresh session can pick up from it.
     - Still to do for live, before step 3: apply `0001` to live D1 (ask first; wrangler here isn't
       signed in to Cloudflare, `npx wrangler login`), and create `SESSION_SECRET` in Cloudflare
       (Production).
-- **Next: step 2** (tRPC on a relative `/trpc` with the Vite proxy; see "Rollout").
+- **Step 2 done:** tRPC calls the page's own `/trpc`; Vite (5173) proxies it to 8788, keeping
+  the Host. `VITE_API_HOST/PORT` are gone. Before, every call from 5173 asked 8788 for
+  cross-origin permission and was refused, so no data loaded there. `/auth/` joins the proxy in
+  step 3: until then `/auth/signinwin/zitadel` is a page of the client's own. Checked on 8788
+  and 5173 with the old token.
+- **Next: step 3** (the switch; see "Rollout").
 - **The router check** (pages that need sign-in wait for it; admin role checked by the router;
   `/editor/:slug` its own route) is built but uncommitted: it ships with step 3. Saved in git as
   `refs/wip/router-check` (only its 9 files; `git show refs/wip/router-check`), in case the working
@@ -316,7 +321,8 @@ Each step leaves the site working.
 2. tRPC on a relative `/trpc` with the proxy, still sending the old token.
 3. The switch, one commit: reading, refreshing and re-checking in `sessions.ts`, `session.get`,
    session-based procedures, the cross-site check, `account.*` with Zitadel's `AccountProvider`,
-   the client service, the router check (`refs/wip/router-check`), removed packages and settings.
+   the client service, the router check (`refs/wip/router-check`), `/auth/` in the Vite proxy,
+   removed packages and settings.
 4. Retire the old Zitadel apps and addresses; update CLAUDE.md "Auth setup" and the README.
 
 Signed-in users sign in once more at step 3. Tabs left open on the old page get UNAUTHORIZED until

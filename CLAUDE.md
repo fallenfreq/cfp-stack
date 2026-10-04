@@ -20,7 +20,7 @@ cp api/.dev.vars.example api/.dev.vars
 
 `api/.dev.vars` holds dev secrets (Zitadel client secret, SMTP password, Google Maps key). Without these, the app loads but auth and protected tRPC routes fail. The non-secret vars (`ZITADEL_CLIENT_ID`, `ZITADEL_INTROSPECTION_ENDPOINT`) are already set in `api/wrangler.toml`.
 
-`client/.env.development` is already configured for local dev (points to `localhost:8788`).
+`client/.env.development` is already configured for local dev.
 
 ### 3. Local D1 database
 
