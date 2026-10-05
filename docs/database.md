@@ -174,4 +174,10 @@ for each; pushing is the owner's call.
   migration kept every row. On local D1 a taken slug gets `-2`, a taken theme id a conflict, and
   the log line the database's message only. The stylesheet is byte for byte live's, before and
   after a reseed. Type checks, unit tests (21) and layout checks (106) pass.
-- **Next:** step 3 live.
+- **Step 3 live** (2026-10-06): the read-only check found nothing else pointing at the two
+  tables and neither index name taken. With the Time Travel bookmark noted, the three
+  `d1_migrations` rows (ids 18–20) were renamed, after which only `…_keys_and_indexes` waited,
+  and it ran. Every design row is the same (3 themes, 137 tokens, 469 rules, 695 rule classes),
+  both keys are in the schema's order, the indexes are there, the foreign-key check is clean
+  and live's stylesheet is byte for byte the same. Unpushed: `2dd49ba`, `fbdff32`.
+- **Next:** push, then step 4, starting with its plan.
