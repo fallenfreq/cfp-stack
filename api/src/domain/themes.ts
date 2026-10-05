@@ -1,7 +1,7 @@
 import { and, desc, eq, ne } from 'drizzle-orm'
+import type { Db } from '../db.js'
 import { type Theme, type UserThemeAlias, themes, userThemeAliases } from '../schemas/theme.js'
 import { ConflictError, NotFoundError, ValidationError } from './errors.js'
-import { type Db } from './types.js'
 
 const ACTIVATION_CLASS_RE = /^[a-z][a-z0-9-]{0,62}$/
 const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/

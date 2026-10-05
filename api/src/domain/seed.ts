@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm'
+import type { Db } from '../db.js'
 import { classVocabulary, themes } from '../schemas/theme.js'
 import { users } from '../schemas/user.js'
 import {
@@ -11,7 +12,7 @@ import { setCollapseThreshold } from './collapseThresholds.js'
 import { SEED_VERSION } from './seedVersion.js'
 import { createTheme } from './themes.js'
 import { setToken } from './themeTokens.js'
-import { type ClassKind, type Db, type TokenKind } from './types.js'
+import { type ClassKind, type TokenKind } from './types.js'
 
 // ─── Fixture identities ──────────────────────────────────────────────────
 // Brand user owns all default themes. Themes use stable UUIDs so the seed

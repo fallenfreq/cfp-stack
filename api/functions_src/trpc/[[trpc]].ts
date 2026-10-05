@@ -5,8 +5,6 @@ import { authFromEnv } from '../../dist/auth/index.js'
 import { initEnvs, type Envs } from '../../dist/config/envs.js'
 import type { Context } from '../../dist/config/trpc.js'
 import { appRouter } from '../../dist/routes/appRouter.js'
-import * as collectionSchema from '../../dist/schemas/collectionEntry.js'
-import * as userSchema from '../../dist/schemas/user.js'
 
 export const onRequest: PagesFunction<Envs> = async (context) => {
 	const { request, env } = context
@@ -23,7 +21,7 @@ export const onRequest: PagesFunction<Envs> = async (context) => {
 			router: appRouter,
 			createContext: (): Context => {
 				return {
-					db: drizzle(env.DB, { schema: { ...userSchema, ...collectionSchema } }),
+					db: drizzle(env.DB),
 					session,
 				}
 			},

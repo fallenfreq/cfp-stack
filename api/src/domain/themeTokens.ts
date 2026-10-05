@@ -1,8 +1,9 @@
 import { and, eq } from 'drizzle-orm'
+import type { Db } from '../db.js'
 import { type ThemeToken, themeTokens } from '../schemas/theme.js'
 import { NotFoundError, ValidationError } from './errors.js'
 import { getThemeOrThrow, touchTheme } from './themes.js'
-import { type Db, type TokenKind, TOKEN_KINDS } from './types.js'
+import { type TokenKind, TOKEN_KINDS } from './types.js'
 
 const TOKEN_NAME_RE = /^--sf-[a-z][a-z0-9_-]*$/
 

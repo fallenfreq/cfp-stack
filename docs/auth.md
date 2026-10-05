@@ -131,8 +131,9 @@ is updated, so a fresh session can pick up from it.
           it's the caller's mistake (tRPC's `decodeURIComponent` throws).
         - Any signed-in user can delete any map marker or tag (`markers.delete`, `deleteTag`).
           Not a priority: the map is a demo and the owner has the only account.
-        - `user.insert` logs every user. (`secure.test`, which logged its input, is gone with
-          the starter's other probes, `test` and `echo`.)
+        - The starter's `user` router is gone (2026-10-05): it was public, so anyone could add
+          users and posts or read a user's email, and `insert` logged every user. The starter's
+          probes went before it: `secure.test` (which logged its input), `test` and `echo`.
         - The account page's language list is Zitadel's (kept, by choice); `usePage` still
           blanks when sign-in lands (a shorter wait now).
         - The page shows you signed out until `session.get` answers.
@@ -453,8 +454,8 @@ signed out is the real `session.get` (null); fake it only where the signed-in UI
 
 ## Found while designing (predates this)
 
-`user.insert` is a public mutation that writes to the database. `cors` and `jsonwebtoken` were unused
-API dependencies (removed in step 3).
+`user.insert` was a public mutation that wrote to the database (the `user` router, removed
+2026-10-05). `cors` and `jsonwebtoken` were unused API dependencies (removed in step 3).
 
 ## References
 

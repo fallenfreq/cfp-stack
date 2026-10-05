@@ -1,10 +1,3 @@
-import { type DrizzleD1Database } from 'drizzle-orm/d1'
-
-// Loose DB type — domain functions don't care about the relational
-// schema parameter Drizzle is parametrised with; they use the query
-// builder methods that work regardless.
-export type Db = DrizzleD1Database<Record<string, unknown>>
-
 // sf-class kinds. `bundle`/`variant`/`state` live in the sf cascade
 // layers. `layout` is for sl-* classes (the sl-layout layer, after the sf
 // layers). sl- arrangement is fixed CSS (css/slLayout.ts, and css/slCombined.ts for

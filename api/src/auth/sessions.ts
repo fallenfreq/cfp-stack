@@ -1,5 +1,5 @@
 import { and, eq, gt, isNull, lt, or } from 'drizzle-orm'
-import type { DrizzleD1Database } from 'drizzle-orm/d1'
+import type { Db } from '../db.js'
 import { sessions } from '../schemas/session.js'
 import type { IdentityProvider, ProviderTokens, SignedInUser } from './provider.js'
 import type { Sealer } from './sealing.js'
@@ -41,7 +41,7 @@ export type WaitUntil = (promise: Promise<unknown>) => void
 
 type TokenColumn = 'accessToken' | 'refreshToken' | 'idToken'
 
-export function sessionStore(db: DrizzleD1Database, sealer: Sealer, provider: IdentityProvider) {
+export function sessionStore(db: Db, sealer: Sealer, provider: IdentityProvider) {
 	const place = (idHash: string, subject: string, column: TokenColumn) =>
 		[idHash, subject, column].join('\n')
 	const seal = (

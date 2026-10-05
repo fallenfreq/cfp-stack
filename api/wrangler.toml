@@ -27,9 +27,11 @@ migrations_dir = "migrations"
 # You can also set them from the cloudflare dashboard
 
 [vars]
+NODE_VERSION = "24"
+# Mail (Zoho), for when the app sends email; nothing reads these yet. The password is the
+# SMTP_PASSWORD secret.
 SMTP_OUT_SERVER = "smtppro.zoho.eu"
 SMTP_OUT_PORT_TLS = "587"
-NODE_VERSION = "24"
 # Signing in through our server (docs/auth.md, "Settings"). Secrets: OIDC_CLIENT_SECRET,
 # SESSION_SECRET (and SESSION_SECRET_PREVIOUS while rotating). .dev.vars overrides these for dev.
 OIDC_ISSUER = "https://somefreq-instance-45dyjl.zitadel.cloud"

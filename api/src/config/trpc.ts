@@ -1,19 +1,12 @@
 import { TRPCError, initTRPC } from '@trpc/server'
-import { type DrizzleD1Database } from 'drizzle-orm/d1'
 import superjson from 'superjson'
 import type { RequestSession } from '../auth/index.js'
 import { SessionUnavailable } from '../auth/sessions.js'
+import type { Db } from '../db.js'
 import { ConflictError, NotFoundError, ValidationError } from '../domain/errors.js'
-import * as collection from '../schemas/collectionEntry.js'
-import * as user from '../schemas/user.js'
-
-// The tables `db.query` knows; [[trpc]].ts gives drizzle the same ones. Not every table
-// (`schemas/index.ts`): with all of them, type checking doesn't finish.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const schemas = { ...user, ...collection }
 
 interface Context {
-	db: DrizzleD1Database<typeof schemas>
+	db: Db
 	session: RequestSession
 }
 
@@ -90,12 +83,4 @@ const secureProcedure = publicProcedure.use(signedIn)
 const adminProcedure = publicProcedure.use(admin)
 const accountProcedure = publicProcedure.use(account)
 
-export {
-	accountProcedure,
-	adminProcedure,
-	publicProcedure,
-	router,
-	secureProcedure,
-	type Context,
-	type schemas,
-}
+export { accountProcedure, adminProcedure, publicProcedure, router, secureProcedure, type Context }

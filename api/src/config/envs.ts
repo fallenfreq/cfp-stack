@@ -6,9 +6,6 @@ const d1DatabaseSchema = z.custom<D1Database>(
 )
 
 const envSchema = z.object({
-	SMTP_OUT_SERVER: z.string(),
-	SMTP_OUT_PORT_TLS: z.string(),
-	SMTP_PASSWORD: z.string(),
 	GOOGLE_MAPS_API_KEY: z.string(),
 	DB: d1DatabaseSchema,
 })

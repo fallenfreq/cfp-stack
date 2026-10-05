@@ -1,8 +1,8 @@
 import { and, eq, gte, ilike, lte, or, sql } from 'drizzle-orm'
-import { type DrizzleD1Database } from 'drizzle-orm/d1'
 import { SQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { z } from 'zod'
-import { router, secureProcedure, type schemas } from '../../config/trpc.js'
+import { router, secureProcedure } from '../../config/trpc.js'
+import type { Db } from '../../db.js'
 import {
 	mapMarkers as mapMarkersSchema,
 	markerTags as markerTagsSchema,
@@ -44,7 +44,7 @@ const normalizeTags = (tags: string[]) => {
 
 // The tag's id, adding the tag if it's new. The tag must be normalized already (normalizeTag).
 async function getOrInsertTag(
-	db: DrizzleD1Database<typeof schemas>,
+	db: Db,
 	normalizedTag: string,
 ): Promise<{ normalizedTag: string; tagId: number }> {
 	const existingTag = await db

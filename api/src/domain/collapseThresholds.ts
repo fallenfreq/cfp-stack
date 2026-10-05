@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
+import type { Db } from '../db.js'
 import { type CollapseThreshold, collapseThresholds } from '../schemas/layout.js'
-import { type Db } from './types.js'
 
 export type { CollapseThreshold }
 

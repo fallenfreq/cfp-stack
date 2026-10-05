@@ -1,4 +1,5 @@
 import { and, eq, inArray } from 'drizzle-orm'
+import type { Db } from '../db.js'
 import {
 	type ClassRule,
 	type ClassVocabulary,
@@ -8,7 +9,7 @@ import {
 } from '../schemas/theme.js'
 import { ConflictError, NotFoundError, ValidationError } from './errors.js'
 import { getThemeOrThrow, touchTheme } from './themes.js'
-import { CLASS_KINDS, type ClassKind, type Db } from './types.js'
+import { CLASS_KINDS, type ClassKind } from './types.js'
 
 // ─── Vocabulary admin ────────────────────────────────────────────────────
 

@@ -13,6 +13,7 @@
 # For local development
 GOOGLE_MAPS_API_KEY = ""
 
+# Mail (Zoho; server and port in wrangler.toml), for when the app sends email; nothing reads it yet
 SMTP_PASSWORD = ""
 
 # Signing in through our server (docs/auth.md, "Settings"): the dev project's Web app

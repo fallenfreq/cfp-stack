@@ -6,7 +6,6 @@ import { adminPagesRouter, publicPagesRouter } from './pages/router.js'
 import { sessionRouter } from './session/router.js'
 import { adminTagsRouter, publicTagsRouter } from './tags/router.js'
 import { themesRouter } from './themes/router.js'
-import { userRouter } from './user/router.js'
 
 const appRouter = router({
 	session: sessionRouter,
@@ -14,8 +13,6 @@ const appRouter = router({
 	account: accountRouter,
 
 	keys: keysRouter,
-
-	user: userRouter,
 
 	mapMarker: markersRouter,
 

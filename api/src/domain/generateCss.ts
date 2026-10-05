@@ -1,4 +1,5 @@
 import { count, max } from 'drizzle-orm'
+import type { Db } from '../db.js'
 import { collapseThresholds } from '../schemas/layout.js'
 import {
 	type Theme,
@@ -30,7 +31,7 @@ import { ValidationError } from './errors.js'
 import { SEED_VERSION } from './seedVersion.js'
 import { listAllTokens } from './themeTokens.js'
 import { getRootThemeOrThrow, listThemes } from './themes.js'
-import { type ClassKind, type Db, KIND_SORT_ORDER, KIND_TO_LAYER, type Layer } from './types.js'
+import { type ClassKind, KIND_SORT_ORDER, KIND_TO_LAYER, type Layer } from './types.js'
 
 // ─── Public API ──────────────────────────────────────────────────────────
 // `emitStylesheet` is the pure builder. `getStylesheet` wraps it with an
