@@ -107,6 +107,15 @@ for each; pushing is the owner's call.
 ### Decisions
 
 - **The map demo stays** (2026-10-05), so its router is brought up to the same standard.
+- **Live's drift is left as it is** (2026-10-05). Two tables on live differ from what
+  `0000` makes. `site_pages` and `collection_entries` have their columns in another order
+  (harmless: Drizzle names every column). `site_pages.content_json` defaults to `'{}'`, not
+  the empty document, and nothing relies on it (`pages.create` always writes it). From
+  2024-09 to 2026-10-01 migration files weren't in git, so each setup made its own set from
+  `0000` and live applied three of them: later columns came as `ADD COLUMN`, which appends
+  them, and the default change (2026-06-15) needed a rebuild drizzle-kit 0.20 doesn't write.
+  Live was brought in line by adding the missing tables and marking `0000` applied, so the
+  older tables kept their shapes. A future rebuild of either table puts it right.
 
 ## Progress
 
@@ -119,4 +128,10 @@ for each; pushing is the owner's call.
 - **Step 2, code and local done** (2026-10-05): on a copy of the local database every design
   row is the same after the migration and deleting a theme still cascades; applied locally,
   the stylesheet is byte for byte the same, before and after a reseed. Type checks, unit tests
-  and layout checks pass. Live is next: the read-only checks, the push, then the migration.
+  and layout checks pass.
+- **Step 2 live** (2026-10-05): the read-only checks passed (only `0002` waiting; the tables
+  it touches as `0000` and `0001` make them; the starter tables and `user_theme_aliases`
+  empty, `users` holding the brand user only). Pushed `40c2dd0`…`ba44b06`; once `ba44b06` was
+  live, the migration ran (21 statements). The design is intact (3 themes, 137 tokens, 469
+  rules, 695 rule classes, seed 2.87.0) and live's stylesheet is byte for byte the same.
+- **Next:** step 3, starting with its plan.
