@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/d1'
 import { initEnvs, type Envs } from '../../dist/config/envs.js'
+import { databaseError } from '../../dist/db.js'
 import { getStylesheet } from '../../dist/domain/generateCss.js'
 
 // GET /styles/sf-system — DB-driven sf/sl stylesheet.
@@ -61,7 +62,7 @@ export const onRequest: PagesFunction<Envs> = async ({ request, env, waitUntil }
 		waitUntil(edgeCache.put(cacheKey, response.clone()))
 		return response
 	} catch (error) {
-		console.error('sf-system stylesheet error:', error)
+		console.error('sf-system stylesheet error:', databaseError(error))
 		return new Response('/* sf-system stylesheet: generator failed */', {
 			status: 500,
 			headers: { 'Content-Type': 'text/css; charset=utf-8' },

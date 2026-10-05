@@ -21,6 +21,8 @@ binding = "DB" # Makes the database available in the pages functions via env.DB
 database_name = "somefreq-db"
 database_id = "7f2fdab4-d3c2-4418-860b-c9f8817ddbd1"
 migrations_dir = "migrations"
+# drizzle-kit writes each migration as a folder (wrangler 4.98 and later read it)
+migrations_pattern = "migrations/*/migration.sql"
 
 # use "wrangler pages secret put API_KEY" to save a secret
 # .dev.vars file is used for dev environment variables and secrets

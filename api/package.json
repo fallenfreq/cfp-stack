@@ -13,16 +13,16 @@
 		"src"
 	],
 	"scripts": {
-		"dev": "concurrently \"npm run build:watch\" \"npx wrangler pages dev ./client_dist --live-reload\"",
+		"dev": "concurrently \"npm run build:watch\" \"wrangler pages dev ./client_dist --live-reload\"",
 		"build:watch": "tsc --build -w --noCheck",
 		"build": "rm -rf dist functions .tsbuildinfo && tsc --build --noCheck",
 		"type-check": "tsc -p tsconfig.check.json",
 		"test": "node --test 'test/*.test.mjs'",
-		"migrate": "pnpm drizzle-kit generate:sqlite",
-		"migrate:custom": "pnpm drizzle-kit generate:sqlite --custom",
-		"migrate:push:local": "npx wrangler d1 migrations apply somefreq-db --local",
-		"migrate:push": "npx wrangler d1 migrations apply somefreq-db --remote",
-		"logging": "npx wrangler pages deployment tail",
+		"migrate": "drizzle-kit generate",
+		"migrate:custom": "drizzle-kit generate --custom",
+		"migrate:push:local": "wrangler d1 migrations apply somefreq-db --local",
+		"migrate:push": "wrangler d1 migrations apply somefreq-db --remote",
+		"logging": "wrangler pages deployment tail",
 		"seed:local": "node --no-warnings scripts/seed.mjs local",
 		"seed:live": "node --no-warnings scripts/seed.mjs live"
 	},
@@ -31,7 +31,7 @@
 		"@somefreq-app/shared": "workspace:*",
 		"@trpc/server": "11.0.0-rc.402",
 		"@types/node": "^20.1.4",
-		"drizzle-orm": "^0.30.9",
+		"drizzle-orm": "1.0.0-rc.4",
 		"openid-client": "^6.8.8",
 		"zod": "^3.23.5"
 	},
@@ -46,6 +46,7 @@
 	},
 	"license": "MIT",
 	"devDependencies": {
-		"drizzle-kit": "^0.20.17"
+		"drizzle-kit": "1.0.0-rc.4",
+		"wrangler": "4.147.0"
 	}
 }

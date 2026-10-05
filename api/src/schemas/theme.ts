@@ -1,4 +1,4 @@
-import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 // ─── Themes ──────────────────────────────────────────────────────────────
 // UUID-keyed for global uniqueness — themes can be exported, shared, and
@@ -6,19 +6,23 @@ import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 // author's canonical display name. `activation_class` is system-assigned
 // (stable across renames; saved content references it through the cascade).
 
-export const themes = sqliteTable('themes', {
-	id: text('id', { length: 36 }).primaryKey(),
-	version: text('version', { length: 32 }).notNull().default('1.0.0'),
-	name: text('name', { length: 256 }).notNull(),
-	activationClass: text('activation_class', { length: 64 }).unique(),
-	isRoot: integer('is_root', { mode: 'boolean' }).notNull().default(false),
-	createdAt: integer('created_at', { mode: 'timestamp' })
-		.notNull()
-		.$defaultFn(() => new Date()),
-	updatedAt: integer('updated_at', { mode: 'timestamp' })
-		.notNull()
-		.$defaultFn(() => new Date()),
-})
+export const themes = sqliteTable(
+	'themes',
+	{
+		id: text('id', { length: 36 }).primaryKey(),
+		version: text('version', { length: 32 }).notNull().default('1.0.0'),
+		name: text('name', { length: 256 }).notNull(),
+		activationClass: text('activation_class', { length: 64 }),
+		isRoot: integer('is_root', { mode: 'boolean' }).notNull().default(false),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date()),
+		updatedAt: integer('updated_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date()),
+	},
+	(table) => [uniqueIndex('themes_activation_class_unique').on(table.activationClass)],
+)
 
 export const themeTokens = sqliteTable(
 	'theme_tokens',
@@ -30,9 +34,7 @@ export const themeTokens = sqliteTable(
 		value: text('value', { length: 512 }).notNull(),
 		kind: text('kind', { length: 32 }).notNull(),
 	},
-	(table) => ({
-		pk: primaryKey({ columns: [table.themeId, table.name] }),
-	}),
+	(table) => [primaryKey({ columns: [table.themeId, table.name] })],
 )
 
 // ─── Class vocabulary ────────────────────────────────────────────────────
@@ -60,28 +62,33 @@ export const classVocabulary = sqliteTable('class_vocabulary', {
 // suffixes from the state classes involved. The junction's FK on
 // `class_name` guarantees only known vocabulary appears in selectors.
 
-export const classRules = sqliteTable('class_rules', {
-	id: integer('id').primaryKey({ autoIncrement: true }),
-	themeId: text('theme_id', { length: 36 })
-		.notNull()
-		.references(() => themes.id, { onDelete: 'cascade' }),
-	cssProperty: text('css_property', { length: 64 }).notNull(),
-	value: text('value', { length: 512 }).notNull(),
-	// Pseudo-class or pseudo-element appended to the final selector (e.g. ':hover', '::before').
-	// Distinct from classVocabulary.pseudo which carries state pseudo-classes intrinsic to a
-	// class's meaning. Rule-level pseudo controls WHEN/WHERE the CSS applies.
-	pseudo: text('pseudo', { length: 64 }),
-	// HTML element type that AND-chains with the vocabulary classes, placed first in the
-	// compound selector: element='button' + classes=[sf-variant-danger] → button.sf-variant-danger
-	// Analogous to .sf-depth-1.sf-variant-featured but with an element type as the leading part.
-	// Bare element rules (no classes) emit to sf-element — a baseline layer below sf-bundle,
-	// so any bundle/variant/state layered on top wins predictably. Compound rules take the
-	// layer of their highest-kind class. Validated against HTML_ELEMENTS allowlist in code.
-	elementSelector: text('element_selector', { length: 64 }),
-	createdAt: integer('created_at', { mode: 'timestamp' })
-		.notNull()
-		.$defaultFn(() => new Date()),
-})
+export const classRules = sqliteTable(
+	'class_rules',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		themeId: text('theme_id', { length: 36 })
+			.notNull()
+			.references(() => themes.id, { onDelete: 'cascade' }),
+		cssProperty: text('css_property', { length: 64 }).notNull(),
+		value: text('value', { length: 512 }).notNull(),
+		// Pseudo-class or pseudo-element appended to the final selector (e.g. ':hover',
+		// '::before'). Distinct from classVocabulary.pseudo which carries state pseudo-classes
+		// intrinsic to a class's meaning. Rule-level pseudo controls WHEN/WHERE the CSS applies.
+		pseudo: text('pseudo', { length: 64 }),
+		// HTML element type that AND-chains with the vocabulary classes, placed first in the
+		// compound selector: element='button' + classes=[sf-variant-danger] →
+		// button.sf-variant-danger. Analogous to .sf-depth-1.sf-variant-featured but with an
+		// element type as the leading part. Bare element rules (no classes) emit to sf-element —
+		// a baseline layer below sf-bundle, so any bundle/variant/state layered on top wins
+		// predictably. Compound rules take the layer of their highest-kind class. Validated
+		// against HTML_ELEMENTS allowlist in code.
+		elementSelector: text('element_selector', { length: 64 }),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date()),
+	},
+	(table) => [index('class_rules_theme_id_idx').on(table.themeId)],
+)
 
 export const classRuleClasses = sqliteTable(
 	'class_rule_classes',
@@ -93,9 +100,10 @@ export const classRuleClasses = sqliteTable(
 			.notNull()
 			.references(() => classVocabulary.name),
 	},
-	(table) => ({
-		pk: primaryKey({ columns: [table.ruleId, table.className] }),
-	}),
+	(table) => [
+		primaryKey({ columns: [table.ruleId, table.className] }),
+		index('class_rule_classes_class_name_idx').on(table.className),
+	],
 )
 
 // ─── Inferred types ──────────────────────────────────────────────────────

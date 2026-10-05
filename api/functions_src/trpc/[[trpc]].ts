@@ -4,6 +4,7 @@ import { fromOurPages } from '../../dist/auth/http.js'
 import { authFromEnv } from '../../dist/auth/index.js'
 import { initEnvs, type Envs } from '../../dist/config/envs.js'
 import type { Context } from '../../dist/config/trpc.js'
+import { databaseError } from '../../dist/db.js'
 import { appRouter } from '../../dist/routes/appRouter.js'
 
 export const onRequest: PagesFunction<Envs> = async (context) => {
@@ -28,11 +29,14 @@ export const onRequest: PagesFunction<Envs> = async (context) => {
 			// An answer that depends on who's signed in is never kept by a cache.
 			responseMeta: () =>
 				session.used ? { headers: new Headers({ 'Cache-Control': 'no-store' }) } : {},
-			// Logs every error the user can't act on, in full; what the answer says is decided
-			// in config/trpc.ts.
+			// Logs every error the user can't act on, in full, but a failed query as the database
+			// put it (db.ts); what the answer says is decided in config/trpc.ts.
 			onError: ({ error, path }) => {
 				if (error.code === 'INTERNAL_SERVER_ERROR')
-					console.error(`tRPC ${path ?? 'request'} failed:`, error)
+					console.error(
+						`tRPC ${path ?? 'request'} failed:`,
+						databaseError(error.cause ?? error),
+					)
 			},
 		})
 	} catch (error) {

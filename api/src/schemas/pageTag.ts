@@ -12,10 +12,10 @@ export const sitePageTags = sqliteTable(
 			.notNull()
 			.references(() => siteTags.tagId, { onDelete: 'cascade' }),
 	},
-	(t) => ({
-		pk: primaryKey({ columns: [t.pageId, t.tagId] }),
-		tagIdx: index('page_tags_tag_id_idx').on(t.tagId),
-	}),
+	(t) => [
+		primaryKey({ columns: [t.pageId, t.tagId] }),
+		index('page_tags_tag_id_idx').on(t.tagId),
+	],
 )
 
 export type SitePageTag = typeof sitePageTags.$inferSelect

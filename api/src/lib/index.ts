@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
+import { isUniqueViolation } from '../db.js'
 
 export const slugSchema = z
 	.string()
@@ -42,9 +43,8 @@ export async function insertWithUniqueSlug<T>(
 		const slug = attempt === 1 ? baseSlug : `${baseSlug}-${attempt}`
 		try {
 			return await insert(slug)
-		} catch (err: unknown) {
-			const msg = err instanceof Error ? err.message : String(err)
-			if (!msg.includes('UNIQUE constraint failed')) throw err
+		} catch (error) {
+			if (!isUniqueViolation(error)) throw error
 		}
 	}
 	throw new TRPCError({

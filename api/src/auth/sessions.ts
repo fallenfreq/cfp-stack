@@ -1,5 +1,5 @@
 import { and, eq, gt, isNull, lt, or } from 'drizzle-orm'
-import type { Db } from '../db.js'
+import { type Db, databaseError } from '../db.js'
 import { sessions } from '../schemas/session.js'
 import type { IdentityProvider, ProviderTokens, SignedInUser } from './provider.js'
 import type { Sealer } from './sealing.js'
@@ -313,4 +313,8 @@ const idHashOf = async (id: string) =>
 const hex = (bytes: ArrayBuffer | Uint8Array) =>
 	Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('')
 
-const message = (error: unknown) => (error instanceof Error ? error.message : error)
+// For the logs: a failed query as the database put it, without the row's values (db.ts).
+const message = (error: unknown) => {
+	const cause = databaseError(error)
+	return cause instanceof Error ? cause.message : cause
+}

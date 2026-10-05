@@ -1,5 +1,5 @@
 import { and, desc, eq, ne } from 'drizzle-orm'
-import type { Db } from '../db.js'
+import { type Db, isUniqueViolation } from '../db.js'
 import { type Theme, themes } from '../schemas/theme.js'
 import { ConflictError, NotFoundError, ValidationError } from './errors.js'
 
@@ -112,8 +112,7 @@ export async function createTheme(
 			isRoot,
 		})
 	} catch (err) {
-		const msg = err instanceof Error ? err.message : String(err)
-		if (msg.includes('UNIQUE constraint failed'))
+		if (isUniqueViolation(err))
 			throw new ConflictError(
 				activationClass
 					? `Theme "${id}" or its activation class "${activationClass}" is already in use`

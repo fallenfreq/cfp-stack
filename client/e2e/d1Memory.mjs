@@ -43,11 +43,12 @@ function statement(db, sql, params = []) {
 
 export function createMemoryD1(migrationsDir) {
 	const db = new DatabaseSync(':memory:')
-	for (const file of readdirSync(migrationsDir)
-		.filter((f) => f.endsWith('.sql'))
-		.sort()) {
-		db.exec(readFileSync(join(migrationsDir, file), 'utf8'))
-	}
+	// One folder per migration, applied in name order (as wrangler does: api/wrangler.toml).
+	const folders = readdirSync(migrationsDir, { withFileTypes: true })
+		.filter((entry) => entry.isDirectory())
+		.map((entry) => entry.name)
+	for (const name of folders.sort())
+		db.exec(readFileSync(join(migrationsDir, name, 'migration.sql'), 'utf8'))
 	return {
 		prepare: (sql) => statement(db, sql),
 		batch: (stmts) => Promise.all(stmts.map((s) => s.all())),

@@ -89,9 +89,8 @@ Production secrets go in the Cloudflare dashboard or via `wrangler pages secret 
 Schema changes require:
 
 ```bash
-pnpm build:api                  # drizzle reads from dist/schemas/*.js
-pnpm migrate:api                # generate SQL migration files
-pnpm migrate:push:local:api     # apply to local D1
+pnpm migrate:api                # generate the migration from api/src/schemas
+pnpm migrate:push:local:api     # apply to local D1, after reading it (docs/database.md)
 ```
 
 ## Deployment

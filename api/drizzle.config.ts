@@ -1,11 +1,7 @@
-import type { Config } from 'drizzle-kit'
+import { defineConfig } from 'drizzle-kit'
 
-export default {
-	schema: './dist/schemas/*.js',
+export default defineConfig({
+	dialect: 'sqlite',
+	schema: './src/schemas/*.ts',
 	out: './migrations',
-	driver: 'd1',
-	dbCredentials: {
-		wranglerConfigPath: '@somefreq-app/wrangler.toml',
-		dbName: 'DB',
-	},
-} satisfies Config
+})

@@ -1,0 +1,1151 @@
+{
+	"version": "7",
+	"dialect": "sqlite",
+	"id": "3abe3c5c-0f92-4a10-99c3-df1282f9631a",
+	"prevIds": [
+		"30244cff-adb6-4eba-a890-eb76f7cff92c"
+	],
+	"ddl": [
+		{
+			"name": "collection_entries",
+			"entityType": "tables"
+		},
+		{
+			"name": "collapse_thresholds",
+			"entityType": "tables"
+		},
+		{
+			"name": "map_markers",
+			"entityType": "tables"
+		},
+		{
+			"name": "marker_tags",
+			"entityType": "tables"
+		},
+		{
+			"name": "tags",
+			"entityType": "tables"
+		},
+		{
+			"name": "site_pages",
+			"entityType": "tables"
+		},
+		{
+			"name": "site_page_tags",
+			"entityType": "tables"
+		},
+		{
+			"name": "sessions",
+			"entityType": "tables"
+		},
+		{
+			"name": "site_tags",
+			"entityType": "tables"
+		},
+		{
+			"name": "class_rule_classes",
+			"entityType": "tables"
+		},
+		{
+			"name": "class_rules",
+			"entityType": "tables"
+		},
+		{
+			"name": "class_vocabulary",
+			"entityType": "tables"
+		},
+		{
+			"name": "theme_tokens",
+			"entityType": "tables"
+		},
+		{
+			"name": "themes",
+			"entityType": "tables"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "collection_entry_id",
+			"entityType": "columns",
+			"table": "collection_entries"
+		},
+		{
+			"type": "text(256)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "type",
+			"entityType": "columns",
+			"table": "collection_entries"
+		},
+		{
+			"type": "text(256)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "title",
+			"entityType": "columns",
+			"table": "collection_entries"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "description",
+			"entityType": "columns",
+			"table": "collection_entries"
+		},
+		{
+			"type": "text(256)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "image_url",
+			"entityType": "columns",
+			"table": "collection_entries"
+		},
+		{
+			"type": "text(256)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "link",
+			"entityType": "columns",
+			"table": "collection_entries"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "content",
+			"entityType": "columns",
+			"table": "collection_entries"
+		},
+		{
+			"type": "text(16)",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "name",
+			"entityType": "columns",
+			"table": "collapse_thresholds"
+		},
+		{
+			"type": "text(32)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "value",
+			"entityType": "columns",
+			"table": "collapse_thresholds"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "updated_at",
+			"entityType": "columns",
+			"table": "collapse_thresholds"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "map_markers_id",
+			"entityType": "columns",
+			"table": "map_markers"
+		},
+		{
+			"type": "text(256)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "title",
+			"entityType": "columns",
+			"table": "map_markers"
+		},
+		{
+			"type": "real",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "lat",
+			"entityType": "columns",
+			"table": "map_markers"
+		},
+		{
+			"type": "real",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "lng",
+			"entityType": "columns",
+			"table": "map_markers"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "marker_id",
+			"entityType": "columns",
+			"table": "marker_tags"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "tag_id",
+			"entityType": "columns",
+			"table": "marker_tags"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "tag_id",
+			"entityType": "columns",
+			"table": "tags"
+		},
+		{
+			"type": "text(128)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "name",
+			"entityType": "columns",
+			"table": "tags"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": true,
+			"default": null,
+			"generated": null,
+			"name": "page_id",
+			"entityType": "columns",
+			"table": "site_pages"
+		},
+		{
+			"type": "text(256)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "slug",
+			"entityType": "columns",
+			"table": "site_pages"
+		},
+		{
+			"type": "text(256)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": "''",
+			"generated": null,
+			"name": "name",
+			"entityType": "columns",
+			"table": "site_pages"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "image_url",
+			"entityType": "columns",
+			"table": "site_pages"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": "false",
+			"generated": null,
+			"name": "published",
+			"entityType": "columns",
+			"table": "site_pages"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": "'{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}'",
+			"generated": null,
+			"name": "content_json",
+			"entityType": "columns",
+			"table": "site_pages"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "created_at",
+			"entityType": "columns",
+			"table": "site_pages"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "updated_at",
+			"entityType": "columns",
+			"table": "site_pages"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "page_id",
+			"entityType": "columns",
+			"table": "site_page_tags"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "tag_id",
+			"entityType": "columns",
+			"table": "site_page_tags"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "id_hash",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "subject",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "provider_session_id",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "name",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "email",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "roles",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "auth_time",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "access_token",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "refresh_token",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "id_token",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "access_token_expires_at",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "refresh_lease",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "refresh_lease_until",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "checked_at",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "created_at",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "expires_at",
+			"entityType": "columns",
+			"table": "sessions"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": true,
+			"default": null,
+			"generated": null,
+			"name": "tag_id",
+			"entityType": "columns",
+			"table": "site_tags"
+		},
+		{
+			"type": "text(256)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "name",
+			"entityType": "columns",
+			"table": "site_tags"
+		},
+		{
+			"type": "text(256)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "slug",
+			"entityType": "columns",
+			"table": "site_tags"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": "false",
+			"generated": null,
+			"name": "published",
+			"entityType": "columns",
+			"table": "site_tags"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "created_at",
+			"entityType": "columns",
+			"table": "site_tags"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "updated_at",
+			"entityType": "columns",
+			"table": "site_tags"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "rule_id",
+			"entityType": "columns",
+			"table": "class_rule_classes"
+		},
+		{
+			"type": "text(128)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "class_name",
+			"entityType": "columns",
+			"table": "class_rule_classes"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": true,
+			"default": null,
+			"generated": null,
+			"name": "id",
+			"entityType": "columns",
+			"table": "class_rules"
+		},
+		{
+			"type": "text(36)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "theme_id",
+			"entityType": "columns",
+			"table": "class_rules"
+		},
+		{
+			"type": "text(64)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "css_property",
+			"entityType": "columns",
+			"table": "class_rules"
+		},
+		{
+			"type": "text(512)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "value",
+			"entityType": "columns",
+			"table": "class_rules"
+		},
+		{
+			"type": "text(64)",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "pseudo",
+			"entityType": "columns",
+			"table": "class_rules"
+		},
+		{
+			"type": "text(64)",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "element_selector",
+			"entityType": "columns",
+			"table": "class_rules"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "created_at",
+			"entityType": "columns",
+			"table": "class_rules"
+		},
+		{
+			"type": "text(128)",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "name",
+			"entityType": "columns",
+			"table": "class_vocabulary"
+		},
+		{
+			"type": "text(32)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "kind",
+			"entityType": "columns",
+			"table": "class_vocabulary"
+		},
+		{
+			"type": "text(32)",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "pseudo",
+			"entityType": "columns",
+			"table": "class_vocabulary"
+		},
+		{
+			"type": "text(512)",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "description",
+			"entityType": "columns",
+			"table": "class_vocabulary"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": "0",
+			"generated": null,
+			"name": "cascade_order",
+			"entityType": "columns",
+			"table": "class_vocabulary"
+		},
+		{
+			"type": "integer",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "updated_at",
+			"entityType": "columns",
+			"table": "class_vocabulary"
+		},
+		{
+			"type": "text(36)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "theme_id",
+			"entityType": "columns",
+			"table": "theme_tokens"
+		},
+		{
+			"type": "text(128)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "name",
+			"entityType": "columns",
+			"table": "theme_tokens"
+		},
+		{
+			"type": "text(512)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "value",
+			"entityType": "columns",
+			"table": "theme_tokens"
+		},
+		{
+			"type": "text(32)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "kind",
+			"entityType": "columns",
+			"table": "theme_tokens"
+		},
+		{
+			"type": "text(36)",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "id",
+			"entityType": "columns",
+			"table": "themes"
+		},
+		{
+			"type": "text(32)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": "'1.0.0'",
+			"generated": null,
+			"name": "version",
+			"entityType": "columns",
+			"table": "themes"
+		},
+		{
+			"type": "text(256)",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "name",
+			"entityType": "columns",
+			"table": "themes"
+		},
+		{
+			"type": "text(64)",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "activation_class",
+			"entityType": "columns",
+			"table": "themes"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": "false",
+			"generated": null,
+			"name": "is_root",
+			"entityType": "columns",
+			"table": "themes"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "created_at",
+			"entityType": "columns",
+			"table": "themes"
+		},
+		{
+			"type": "integer",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "updated_at",
+			"entityType": "columns",
+			"table": "themes"
+		},
+		{
+			"columns": [
+				"marker_id"
+			],
+			"tableTo": "map_markers",
+			"columnsTo": [
+				"map_markers_id"
+			],
+			"onUpdate": "NO ACTION",
+			"onDelete": "CASCADE",
+			"nameExplicit": false,
+			"name": "marker_tags_marker_id_map_markers_map_markers_id_fk",
+			"entityType": "fks",
+			"table": "marker_tags"
+		},
+		{
+			"columns": [
+				"tag_id"
+			],
+			"tableTo": "tags",
+			"columnsTo": [
+				"tag_id"
+			],
+			"onUpdate": "NO ACTION",
+			"onDelete": "CASCADE",
+			"nameExplicit": false,
+			"name": "marker_tags_tag_id_tags_tag_id_fk",
+			"entityType": "fks",
+			"table": "marker_tags"
+		},
+		{
+			"columns": [
+				"page_id"
+			],
+			"tableTo": "site_pages",
+			"columnsTo": [
+				"page_id"
+			],
+			"onUpdate": "NO ACTION",
+			"onDelete": "CASCADE",
+			"nameExplicit": false,
+			"name": "site_page_tags_page_id_site_pages_page_id_fk",
+			"entityType": "fks",
+			"table": "site_page_tags"
+		},
+		{
+			"columns": [
+				"tag_id"
+			],
+			"tableTo": "site_tags",
+			"columnsTo": [
+				"tag_id"
+			],
+			"onUpdate": "NO ACTION",
+			"onDelete": "CASCADE",
+			"nameExplicit": false,
+			"name": "site_page_tags_tag_id_site_tags_tag_id_fk",
+			"entityType": "fks",
+			"table": "site_page_tags"
+		},
+		{
+			"columns": [
+				"rule_id"
+			],
+			"tableTo": "class_rules",
+			"columnsTo": [
+				"id"
+			],
+			"onUpdate": "NO ACTION",
+			"onDelete": "CASCADE",
+			"nameExplicit": false,
+			"name": "class_rule_classes_rule_id_class_rules_id_fk",
+			"entityType": "fks",
+			"table": "class_rule_classes"
+		},
+		{
+			"columns": [
+				"class_name"
+			],
+			"tableTo": "class_vocabulary",
+			"columnsTo": [
+				"name"
+			],
+			"onUpdate": "NO ACTION",
+			"onDelete": "NO ACTION",
+			"nameExplicit": false,
+			"name": "class_rule_classes_class_name_class_vocabulary_name_fk",
+			"entityType": "fks",
+			"table": "class_rule_classes"
+		},
+		{
+			"columns": [
+				"theme_id"
+			],
+			"tableTo": "themes",
+			"columnsTo": [
+				"id"
+			],
+			"onUpdate": "NO ACTION",
+			"onDelete": "CASCADE",
+			"nameExplicit": false,
+			"name": "class_rules_theme_id_themes_id_fk",
+			"entityType": "fks",
+			"table": "class_rules"
+		},
+		{
+			"columns": [
+				"theme_id"
+			],
+			"tableTo": "themes",
+			"columnsTo": [
+				"id"
+			],
+			"onUpdate": "NO ACTION",
+			"onDelete": "CASCADE",
+			"nameExplicit": false,
+			"name": "theme_tokens_theme_id_themes_id_fk",
+			"entityType": "fks",
+			"table": "theme_tokens"
+		},
+		{
+			"columns": [
+				"page_id",
+				"tag_id"
+			],
+			"nameExplicit": false,
+			"name": "site_page_tags_page_id_tag_id_pk",
+			"entityType": "pks",
+			"table": "site_page_tags"
+		},
+		{
+			"columns": [
+				"rule_id",
+				"class_name"
+			],
+			"nameExplicit": false,
+			"name": "class_rule_classes_pk",
+			"entityType": "pks",
+			"table": "class_rule_classes"
+		},
+		{
+			"columns": [
+				"theme_id",
+				"name"
+			],
+			"nameExplicit": false,
+			"name": "theme_tokens_pk",
+			"entityType": "pks",
+			"table": "theme_tokens"
+		},
+		{
+			"columns": [
+				"collection_entry_id"
+			],
+			"nameExplicit": false,
+			"name": "collection_entries_pk",
+			"table": "collection_entries",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				"name"
+			],
+			"nameExplicit": false,
+			"name": "collapse_thresholds_pk",
+			"table": "collapse_thresholds",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				"map_markers_id"
+			],
+			"nameExplicit": false,
+			"name": "map_markers_pk",
+			"table": "map_markers",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				"tag_id"
+			],
+			"nameExplicit": false,
+			"name": "tags_pk",
+			"table": "tags",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				"page_id"
+			],
+			"nameExplicit": false,
+			"name": "site_pages_pk",
+			"table": "site_pages",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				"id_hash"
+			],
+			"nameExplicit": false,
+			"name": "sessions_pk",
+			"table": "sessions",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				"tag_id"
+			],
+			"nameExplicit": false,
+			"name": "site_tags_pk",
+			"table": "site_tags",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				"id"
+			],
+			"nameExplicit": false,
+			"name": "class_rules_pk",
+			"table": "class_rules",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				"name"
+			],
+			"nameExplicit": false,
+			"name": "class_vocabulary_pk",
+			"table": "class_vocabulary",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				"id"
+			],
+			"nameExplicit": false,
+			"name": "themes_pk",
+			"table": "themes",
+			"entityType": "pks"
+		},
+		{
+			"columns": [
+				{
+					"value": "slug",
+					"isExpression": false
+				}
+			],
+			"isUnique": true,
+			"where": null,
+			"origin": "manual",
+			"name": "site_pages_slug_unique",
+			"entityType": "indexes",
+			"table": "site_pages"
+		},
+		{
+			"columns": [
+				{
+					"value": "tag_id",
+					"isExpression": false
+				}
+			],
+			"isUnique": false,
+			"where": null,
+			"origin": "manual",
+			"name": "page_tags_tag_id_idx",
+			"entityType": "indexes",
+			"table": "site_page_tags"
+		},
+		{
+			"columns": [
+				{
+					"value": "slug",
+					"isExpression": false
+				}
+			],
+			"isUnique": true,
+			"where": null,
+			"origin": "manual",
+			"name": "site_tags_slug_unique",
+			"entityType": "indexes",
+			"table": "site_tags"
+		},
+		{
+			"columns": [
+				{
+					"value": "class_name",
+					"isExpression": false
+				}
+			],
+			"isUnique": false,
+			"where": null,
+			"origin": "manual",
+			"name": "class_rule_classes_class_name_idx",
+			"entityType": "indexes",
+			"table": "class_rule_classes"
+		},
+		{
+			"columns": [
+				{
+					"value": "theme_id",
+					"isExpression": false
+				}
+			],
+			"isUnique": false,
+			"where": null,
+			"origin": "manual",
+			"name": "class_rules_theme_id_idx",
+			"entityType": "indexes",
+			"table": "class_rules"
+		},
+		{
+			"columns": [
+				{
+					"value": "activation_class",
+					"isExpression": false
+				}
+			],
+			"isUnique": true,
+			"where": null,
+			"origin": "manual",
+			"name": "themes_activation_class_unique",
+			"entityType": "indexes",
+			"table": "themes"
+		}
+	],
+	"renames": []
+}

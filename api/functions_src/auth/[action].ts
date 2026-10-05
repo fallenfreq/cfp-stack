@@ -3,6 +3,7 @@ import { fromOurPages, returnAddress } from '../../dist/auth/http.js'
 import { authFromEnv } from '../../dist/auth/index.js'
 import type { IdentityProvider } from '../../dist/auth/provider.js'
 import { SESSION_SECONDS } from '../../dist/auth/sessions.js'
+import { databaseError } from '../../dist/db.js'
 
 // GET /auth/login, GET /auth/callback, POST /auth/logout: signing in and out through our server
 // (docs/auth.md, "Signing in", "Signing out"). Thin: the work is in src/auth.
@@ -165,7 +166,11 @@ function parseJson(json: string | null): unknown {
 	}
 }
 
-const message = (error: unknown) => (error instanceof Error ? error.message : error)
+// For the logs: a failed query as the database put it, without the row's values (db.ts).
+const message = (error: unknown) => {
+	const cause = databaseError(error)
+	return cause instanceof Error ? cause.message : cause
+}
 
 // Nothing about signing in may be cached.
 function reply(
