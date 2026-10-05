@@ -15,6 +15,13 @@
 			"when": 1791127061207,
 			"tag": "0001_petite_bloodscream",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "5",
+			"when": 1791160088998,
+			"tag": "0002_plain_wild_pack",
+			"breakpoints": true
 		}
 	]
 }

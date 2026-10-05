@@ -1,6 +1,6 @@
 import { and, desc, eq, ne } from 'drizzle-orm'
 import type { Db } from '../db.js'
-import { type Theme, type UserThemeAlias, themes, userThemeAliases } from '../schemas/theme.js'
+import { type Theme, themes } from '../schemas/theme.js'
 import { ConflictError, NotFoundError, ValidationError } from './errors.js'
 
 const ACTIVATION_CLASS_RE = /^[a-z][a-z0-9-]{0,62}$/
@@ -67,7 +67,6 @@ export async function touchTheme(db: Db, themeId: string): Promise<void> {
 
 export interface CreateThemeInput {
 	name: string
-	createdBy: number
 	id?: string
 	version?: string
 	isRoot?: boolean
@@ -111,7 +110,6 @@ export async function createTheme(
 			name: input.name.trim(),
 			activationClass,
 			isRoot,
-			createdBy: input.createdBy,
 		})
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err)
@@ -151,47 +149,4 @@ export async function deleteTheme(db: Db, themeId: string): Promise<void> {
 	const theme = await getThemeOrThrow(db, themeId)
 	if (theme.isRoot) throw new ValidationError('Cannot delete the root theme')
 	await db.delete(themes).where(eq(themes.id, themeId))
-}
-
-// ─── User theme aliases (registry) ───────────────────────────────────────
-// Each user can label any theme locally. Per-user local names are unique
-// so a user can pick a theme by their own label unambiguously.
-
-export interface SetLocalAliasInput {
-	userId: number
-	themeId: string
-	localName: string
-}
-
-export async function setLocalAlias(db: Db, input: SetLocalAliasInput): Promise<void> {
-	if (!input.localName.trim()) throw new ValidationError('Local name is required')
-	await getThemeOrThrow(db, input.themeId)
-	try {
-		await db
-			.insert(userThemeAliases)
-			.values({
-				userId: input.userId,
-				themeId: input.themeId,
-				localName: input.localName.trim(),
-			})
-			.onConflictDoUpdate({
-				target: [userThemeAliases.userId, userThemeAliases.themeId],
-				set: { localName: input.localName.trim() },
-			})
-	} catch (err) {
-		const msg = err instanceof Error ? err.message : String(err)
-		if (msg.includes('UNIQUE constraint failed'))
-			throw new ConflictError(`Local name "${input.localName}" already in use`)
-		throw err
-	}
-}
-
-export async function clearLocalAlias(db: Db, userId: number, themeId: string): Promise<void> {
-	await db
-		.delete(userThemeAliases)
-		.where(and(eq(userThemeAliases.userId, userId), eq(userThemeAliases.themeId, themeId)))
-}
-
-export async function listAliasesForUser(db: Db, userId: number): Promise<UserThemeAlias[]> {
-	return db.select().from(userThemeAliases).where(eq(userThemeAliases.userId, userId))
 }

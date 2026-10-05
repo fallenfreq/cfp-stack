@@ -1,12 +1,10 @@
-import { integer, primaryKey, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core'
-import { users } from './user.js'
+import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 // ─── Themes ──────────────────────────────────────────────────────────────
 // UUID-keyed for global uniqueness — themes can be exported, shared, and
 // imported between instances without slug collisions. `name` is the
-// author's canonical display name. Per-user labels live in
-// `user_theme_aliases`. `activation_class` is system-assigned (stable
-// across renames; saved content references it through the cascade).
+// author's canonical display name. `activation_class` is system-assigned
+// (stable across renames; saved content references it through the cascade).
 
 export const themes = sqliteTable('themes', {
 	id: text('id', { length: 36 }).primaryKey(),
@@ -14,7 +12,6 @@ export const themes = sqliteTable('themes', {
 	name: text('name', { length: 256 }).notNull(),
 	activationClass: text('activation_class', { length: 64 }).unique(),
 	isRoot: integer('is_root', { mode: 'boolean' }).notNull().default(false),
-	createdBy: integer('created_by').references(() => users.userId, { onDelete: 'set null' }),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date()),
@@ -101,31 +98,6 @@ export const classRuleClasses = sqliteTable(
 	}),
 )
 
-// ─── User theme aliases (registry) ───────────────────────────────────────
-// Per-user local labels for themes. The canonical theme name travels with
-// the theme on export/import; each user can re-label any theme locally
-// without affecting global identity.
-
-export const userThemeAliases = sqliteTable(
-	'user_theme_aliases',
-	{
-		userId: integer('user_id')
-			.notNull()
-			.references(() => users.userId, { onDelete: 'cascade' }),
-		themeId: text('theme_id', { length: 36 })
-			.notNull()
-			.references(() => themes.id, { onDelete: 'cascade' }),
-		localName: text('local_name', { length: 256 }).notNull(),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.$defaultFn(() => new Date()),
-	},
-	(table) => ({
-		pk: primaryKey({ columns: [table.userId, table.themeId] }),
-		uniqueLocalName: unique().on(table.userId, table.localName),
-	}),
-)
-
 // ─── Inferred types ──────────────────────────────────────────────────────
 
 export type Theme = typeof themes.$inferSelect
@@ -138,5 +110,3 @@ export type ClassRule = typeof classRules.$inferSelect
 export type NewClassRule = typeof classRules.$inferInsert
 export type ClassRuleClass = typeof classRuleClasses.$inferSelect
 export type NewClassRuleClass = typeof classRuleClasses.$inferInsert
-export type UserThemeAlias = typeof userThemeAliases.$inferSelect
-export type NewUserThemeAlias = typeof userThemeAliases.$inferInsert

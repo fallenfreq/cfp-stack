@@ -33,7 +33,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 		const { createClassRuleTrusted } = await load('src/domain/classRules.ts')
 
 		const db = await memoryDatabase(apiDir)
-		const { brandUserId } = await seed(db)
+		await seed(db)
 		const seeded: string = await emitStylesheet(db)
 
 		// The test theme only overrides tokens the seed has; a renamed token would otherwise stop
@@ -49,7 +49,6 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 		const theme = await createTheme(db, {
 			name: 'Test',
 			activationClass: TEST_THEME_CLASS,
-			createdBy: brandUserId,
 		})
 		for (const token of TEST_THEME_TOKENS) await setToken(db, { themeId: theme.id, ...token })
 		for (const rule of TEST_THEME_RULES)

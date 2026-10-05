@@ -97,9 +97,9 @@ first, two requests could race), and the admin `seed.run` route wiped then would
 
 - `pnpm seed:local` / `pnpm seed:live` (`api/scripts/seed.mjs`) run the seed here, in a
   throwaway database in memory with all its checks, and write its rows to
-  `api/.wrangler/seed-local.sql` / `seed-live.sql`: 11 statements (wipe the design, multi-row
-  inserts, add the brand user (found by email) and the menu's collections if missing). Wrangler
-  applies the file. Live first says which seed version it replaces and asks.
+  `api/.wrangler/seed-local.sql` / `seed-live.sql`: 10 statements (wipe the design, multi-row
+  inserts, add the menu's collections if missing). Wrangler applies the file. Live first says
+  which seed version it replaces and asks.
 - Nothing seeds inside a request: an empty database's stylesheet answers 500 until a seed is
   run. The admin `seed.run` route and `POST /dev/seed` (with `DEV_SEED_SECRET`) are gone. A
   machine that built before this keeps a working `/dev/seed` locally (`tsc --build` leaves
@@ -429,7 +429,8 @@ task lists, quotes and videos, and the toolbar panel rows (`2xs`).
 What's in place:
 
 - Theme schema (`api/src/schemas/theme.ts`): `themes`, `theme_tokens`, `class_vocabulary`,
-  `class_rules`, `class_rule_classes`, `user_theme_aliases` — all done.
+  `class_rules`, `class_rule_classes` — all done. (`user_theme_aliases` and the brand user went
+  2026-10-05, as nothing read them: docs/database.md.)
 - Layout schema (`api/src/schemas/layout.ts`): `collapse_thresholds(name, value, updated_at)` —
   system config separate from theme tables; user-editable, not wiped on reseed.
 - Domain layer (`api/src/domain/`): `themes`, `themeTokens`, `classRules`,

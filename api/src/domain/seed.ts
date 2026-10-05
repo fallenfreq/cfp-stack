@@ -1,7 +1,5 @@
-import { eq } from 'drizzle-orm'
 import type { Db } from '../db.js'
 import { classVocabulary, themes } from '../schemas/theme.js'
-import { users } from '../schemas/user.js'
 import {
 	type ClassOnlyRuleInput,
 	type ElementRuleInput,
@@ -15,11 +13,7 @@ import { setToken } from './themeTokens.js'
 import { type ClassKind, type TokenKind } from './types.js'
 
 // ─── Fixture identities ──────────────────────────────────────────────────
-// Brand user owns all default themes. Themes use stable UUIDs so the seed
-// is reproducible across environments.
-
-const BRAND_USER_EMAIL = 'michael@somefreq.com'
-const BRAND_USER_NAME = 'somefreq'
+// Themes use stable UUIDs so the seed is reproducible across environments.
 
 const ROOT_ID = '01000000-0000-7000-8000-000000000000'
 const DARK_ID = '01000000-0000-7000-8000-000000000001'
@@ -3206,31 +3200,14 @@ function applyRule(db: Db, themeId: string, r: RuleSpec) {
 
 // ─── Orchestrator ────────────────────────────────────────────────────────
 
-async function ensureBrandUser(db: Db): Promise<number> {
-	const existing = await db
-		.select({ userId: users.userId })
-		.from(users)
-		.where(eq(users.email, BRAND_USER_EMAIL))
-		.get()
-	if (existing) return existing.userId
-	const created = await db
-		.insert(users)
-		.values({ name: BRAND_USER_NAME, email: BRAND_USER_EMAIL })
-		.returning({ userId: users.userId })
-		.get()
-	return created.userId
-}
-
 async function wipeDesignSystem(db: Db): Promise<void> {
-	// Themes cascade: theme_tokens, class_rules → class_rule_classes, user_theme_aliases
+	// Themes cascade: theme_tokens, class_rules → class_rule_classes
 	await db.delete(themes)
 	// Vocabulary stands alone after rules are gone (no junction rows reference it)
 	await db.delete(classVocabulary)
 }
 
 export async function seed(db: Db) {
-	const brandUserId = await ensureBrandUser(db)
-
 	await wipeDesignSystem(db)
 
 	await createTheme(db, {
@@ -3238,19 +3215,16 @@ export async function seed(db: Db) {
 		name: 'Root',
 		isRoot: true,
 		version: SEED_VERSION,
-		createdBy: brandUserId,
 	})
 	await createTheme(db, {
 		id: DARK_ID,
 		name: 'Dark',
 		activationClass: 'theme-dark',
-		createdBy: brandUserId,
 	})
 	await createTheme(db, {
 		id: PINK_ID,
 		name: 'Pink',
 		activationClass: 'theme-pink',
-		createdBy: brandUserId,
 	})
 
 	let tokensSet = 0
@@ -3282,7 +3256,6 @@ export async function seed(db: Db) {
 	}
 
 	return {
-		brandUserId,
 		themesCreated: 3,
 		tokensSet,
 		vocabularyEntries: VOCABULARY.length,
