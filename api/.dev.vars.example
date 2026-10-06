@@ -1,27 +1,15 @@
-# Dev settings and secrets: anything in here overrides the values in wrangler.toml for development
+# Development's settings and secrets: copied to api/.dev.vars, they override api/wrangler.toml's.
+# What each one is: docs/hosting.md, "Settings".
 
-# For production
-# https://developers.cloudflare.com/pages/functions/bindings/#secrets
-# https://developers.cloudflare.com/workers/wrangler/commands/#pages
-# Production secrets should be set in via the cloudflare dashboard
-# or via `wrangler pages secret put API_KEY`
-# Production secrets are just here for reference
-# OIDC_CLIENT_SECRET = ""
-# SESSION_SECRET = ""
-
-
-# For local development
 GOOGLE_MAPS_API_KEY = ""
 
-# Mail (Zoho; server and port in wrangler.toml), for when the app sends email; nothing reads it yet
+# Mail, unused yet
 SMTP_PASSWORD = ""
 
-# Signing in through our server (docs/auth.md, "Settings"): the dev project's Web app
+# Signing in, with the dev project's Web app (docs/auth.md, "Settings")
 OIDC_CLIENT_ID = ""
 OIDC_CLIENT_SECRET = ""
 ZITADEL_PROJECT_ID = ""
 APP_ORIGINS = "http://localhost:8788,http://localhost:5173"
-# Safari won't keep Secure cookies over http://localhost; dev only
 DEV_INSECURE_COOKIES = "true"
-# 32 random bytes: openssl rand -base64 32
 SESSION_SECRET = ""

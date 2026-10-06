@@ -1,8 +1,7 @@
+# The Pages project's settings (docs/hosting.md). The format:
 # https://developers.cloudflare.com/pages/functions/wrangler-configuration/
-# https://developers.cloudflare.com/workers/wrangler/commands/#pages
-# https://developers.cloudflare.com/pages/functions/bindings/#secrets
 
-# name is optional for cloudflare pages
+# Not the Pages project's name, which is cfp-stack (docs/hosting.md, "The Pages project").
 name = "somefreq-pages"
 pages_build_output_dir = "./client_dist"
 # not needed for cloudflare pages, just workers
@@ -24,18 +23,13 @@ migrations_dir = "migrations"
 # drizzle-kit writes each migration as a folder (wrangler 4.98 and later read it)
 migrations_pattern = "migrations/*/migration.sql"
 
-# use "wrangler pages secret put API_KEY" to save a secret
-# .dev.vars file is used for dev environment variables and secrets
-# You can also set them from the cloudflare dashboard
-
+# What each one is, and where the secrets are: docs/hosting.md, "Settings".
 [vars]
 NODE_VERSION = "24"
-# Mail (Zoho), for when the app sends email; nothing reads these yet. The password is the
-# SMTP_PASSWORD secret.
+# Mail, unused yet.
 SMTP_OUT_SERVER = "smtppro.zoho.eu"
 SMTP_OUT_PORT_TLS = "587"
-# Signing in through our server (docs/auth.md, "Settings"). Secrets: OIDC_CLIENT_SECRET,
-# SESSION_SECRET (and SESSION_SECRET_PREVIOUS while rotating). .dev.vars overrides these for dev.
+# Signing in (docs/auth.md, "Settings").
 OIDC_ISSUER = "https://somefreq-instance-45dyjl.zitadel.cloud"
 OIDC_CLIENT_ID = "393641495095256560"
 APP_ORIGINS = "https://somefreq.com"

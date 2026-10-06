@@ -11,12 +11,12 @@ approves the commit → commit only that step's files → update Progress. Anoth
 
 1. **The guide and its check.** `docs/README.md`: the docs, where each kind of information goes,
    and how a doc is cited. `pnpm test` checks every citation (`test/docReferences.test.mjs`).
-2. **The READMEs and hosting.** The root README takes the setup from `CLAUDE.md`, with its tRPC
-   example and Zitadel address put right. `client/README.md` (Vue's starter text) is replaced and
+2. **The READMEs and hosting.** The root README takes the setup from `CLAUDE.md`; its
+   out-of-date tRPC example and its Zitadel and Cloudflare walkthroughs go. `client/README.md` (Vue's starter text) is replaced and
    a README added in `api/`, each saying what the package is. A hosting doc in `docs/`: what
    lives in Cloudflare (the Pages project `cfp-stack`, D1, the secrets by name, deploying). Zitadel's
-   settings stay in `docs/auth.md`, "Zitadel" only; copies elsewhere go. The owner decides whether
-   the README keeps "contributions welcome".
+   settings stay in `docs/auth.md`, "Zitadel" only; copies elsewhere go. The README no longer
+   invites contributions.
 3. **`database.md` and `auth.md` become reference.** The database's open findings go to "Known
    issues", applying a migration on live is written in (from its steps 2–4), and the map-data
    decision moves there from Claude's memory. Each doc's lasting facts move to their home, then
@@ -27,7 +27,9 @@ approves the commit → commit only that step's files → update Progress. Anoth
 5. **Skills.** `commit-own-hunks`, `verify-findings`, `migrate` (it follows `database.md`), then
    `ship-step`, which lists a step's stages and names the skill for each.
 6. **`CLAUDE.md` trimmed** to the rules for every task and which commands Claude runs when,
-   citing the READMEs for the rest; the sf/sl working method moves to its path rule.
+   citing the READMEs for the rest. The working method's rules for every task (commit only when
+   asked, no lint or build unasked, findings verified, limits kept) stay; its sf/sl ones move to
+   their path rule, and its type-check commands become the ones `pnpm typecheck` runs.
 7. **Comments** (optional): what a caller reads becomes `/** */`, one package at a time.
 8. **Later, with the other session:** the theme spec split into reference, explanation and
    internal design; its todo given a plan's lifecycle; user docs begun.
@@ -48,7 +50,17 @@ pointer to sign-in's progress): each waits for a pause in it.
   files that set it cite.
 - **Skills don't call each other.** A bigger skill lists the stages and names the skill for each.
 - **No user docs folder until there's a user doc.** Content authors' help belongs in the editor.
+- **No contributions invited** (2026-10-06). The owner may make the repository private and split
+  the system (the editor, the theme system) from the site, versioned, to build other sites with
+  it; whether it stays open source is open.
 
 ## Progress
 
 - **Plan written** (2026-10-06).
+- **Step 1 done** (2026-10-06, `7b599af`): the guide, and `pnpm test` checking citations. Every
+  citation already resolved but one into a bold lead, which now counts as a section's name. In a
+  throwaway copy the check failed on a moved doc and on renamed headings, wrapped citations
+  included. Reviewed by an agent; of its nine findings, three were kept on purpose (the guide's
+  "generated", uncommitted files checked too, a file outside the repo failing). Unit tests pass
+  (4 + 24).
+- **Next:** step 2, starting with its plan, at a pause in the other session's work.

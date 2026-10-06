@@ -1,103 +1,71 @@
-# Tech Stack Monorepo
+# cfp-stack
 
-## Overview
+My personal website, somefreq.com, and the system it runs on: pages written in a block editor and
+styled by themes kept in the database. It runs on Cloudflare Pages, and began as a rework of
+[mystack](https://github.com/fallenfreq/mystack).
 
-This is my personal website, which is a refactored version of [/mystack](https://github.com/fallenfreq/mystack) to run on Cloudflare Pages. Zitadel's free plan is now being utilised instead of self-hosting, and Drizzle is still being utilised as an ORM; however, with Cloudflare's D1 serverless database.
+- **`client/`**: the site and its editor, in Vue 3 and Vite (`client/README.md`).
+- **`api/`**: the API, signing in and the themes' stylesheet, as Cloudflare Pages Functions, with
+  tRPC, Drizzle and D1 (`api/README.md`).
+- **`shared/`**: code both use as it is (`shared/README.md`).
+- **`docs/`**: how things work, and where to find the rest (`docs/README.md`).
 
-It includes:
+## Setting it up
 
-- **TypeScript**
-- **Vite**
-- **Vue 3**
-- **sf/sl design system** (own theme system, served from D1)
-- **Drizzle ORM**
-- **tRPC**
-- **Zitadel**
+1. Node 24, and pnpm through Corepack: `corepack enable` (the version is `packageManager` in
+   `package.json`), then `pnpm install`.
+2. The settings: `cp api/.dev.vars.example api/.dev.vars`, then fill it in. Without them the site
+   loads, but signing in and the signed-in API fail. What each one is: `docs/hosting.md`,
+   "Settings".
+3. Signing in needs a Zitadel project for development: `docs/auth.md`, "Zitadel".
+4. The local database: `pnpm migrate:push:local:api` creates it and applies the migrations,
+   and `pnpm seed:local` puts in the design (themes, rules) and the
+   collections the menu links to. Without the seed the site has no styles. After a change to
+   `api/src/schemas`: `docs/database.md`, "Migrations".
 
-## Setup
+Hosting it: `docs/hosting.md`.
 
-### Prerequisite
+## Developing
 
-You'll need a GitHub account and a Cloudflare account, which can be on the free tier. Go to `https://dash.cloudflare.com/`, select `workers & pages`, then click `Create`. Select the `Pages` tab and click `Connect to git`. More information on Git integration can be found [here](https://developers.cloudflare.com/pages/configuration/git-integration/). There are plenty of tutorials online for setting up Cloudflare pages, your domain name, GitHub, etc., so this document doesn't go into too much detail in that regard.
+`pnpm dev` builds the client and the API as you edit, and serves the whole site at
+http://localhost:8788. For hot reload as well, `pnpm dev:vite:client` serves the client at
+http://localhost:5173 and passes `/trpc`, `/auth/` and `/styles` to 8788. `pnpm dev:api` serves
+the API with the client as last built.
 
-### Environment Variables
+## Commands
 
-Create a copy of `api/.dev.vars.example` with the `.example` removed and fill in appropriately to set Pages development variables. Production environment variables are set in the `api/wrangler.toml` file. Secrets should be set via the Cloudflare dashboard or via `wrangler pages secret put API_KEY`. More information can be found below:
+| Command                       | What it does                                                            |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| `pnpm dev`                    | Build the client and API as you edit; serve the site at 8788            |
+| `pnpm dev:vite:client`        | Vite at 5173, with hot reload, passing API calls to 8788                |
+| `pnpm build`                  | Build client + API side by side, no type check. Cloudflare's build      |
+| `pnpm typecheck`              | Type-check staged packages (`--all`: every package). Pre-commit runs it |
+| `pnpm test`                   | Unit tests (`test`, `api/test`; Node's built-in runner)                 |
+| `pnpm test:ui`                | Layout checks in Chrome (`client/e2e`, Playwright)                      |
+| `pnpm preview:components`     | Build the component preview (`--serve`: at http://localhost:4173)       |
+| `pnpm migrate:api`            | Generate Drizzle migration files                                        |
+| `pnpm migrate:push:local:api` | Apply migrations to local D1                                            |
+| `pnpm migrate:push:api`       | Apply migrations to production D1                                       |
+| `pnpm seed:local`             | Replace local D1's design with the seed's; add missing menu collections |
+| `pnpm seed:live`              | The same for production D1: says what it replaces and asks first        |
+| `pnpm lint`                   | ESLint with auto-fix                                                    |
+| `pnpm format`                 | Prettier                                                                |
 
-- [Wrangler config](https://developers.cloudflare.com/pages/functions/wrangler-configuration/)
-- [Pages commands](https://developers.cloudflare.com/workers/wrangler/commands/#pages)
-- [Binding secrets](https://developers.cloudflare.com/pages/functions/bindings/#secrets)
+## Checks
 
-### Authentication
+Checks run at two points. On commit, the hook lints and formats the staged files and
+type-checks the packages they touch. On every push to `main` and every pull request, GitHub
+Actions (`.github/workflows/checks.yml`) lints and checks formatting across the repo, then
+builds, type-checks every package and runs the unit tests.
 
-Signing in runs through our own server: it signs you in with Zitadel, keeps Zitadel's tokens itself and gives the browser only its own cookie, so every tab is signed in. The design is in `docs/auth.md`. The stack uses the free tier of the managed service from [Zitadel](https://zitadel.com/), though you can choose to self-host, with a reference for that [here](https://github.com/fallenfreq/mystack). You'll need to create a Zitadel account, an instance, and a user for the instance; instructions for this can be found elsewhere.
+## Deploying
 
-#### Create the Web App
+A push to `main` deploys it: `docs/hosting.md`, "The Pages project".
 
-- Go to your specific instance URL `https://somefreq-instance.zitadel.cloud`.
-- Create a production project and save its Resource ID as `ZITADEL_PROJECT_ID` in `api/wrangler.toml`.
-- Add a new application, select Web, then Code with a Basic client secret, and allow the Authorization Code and Refresh Token grants.
-- Add `https://some-domain/auth/callback` as a redirect URI and `https://some-domain/` as a Post Logout URI, using the domain used for your Cloudflare page.
-- Save the Client ID as `OIDC_CLIENT_ID` and the site's address (`https://some-domain`) as `APP_ORIGINS` in `api/wrangler.toml`.
-- Save the client secret as `OIDC_CLIENT_SECRET`, and 32 random bytes (`openssl rand -base64 32`) as `SESSION_SECRET`, to the Cloudflare dashboard or via the `wrangler pages secret put API_KEY` command mentioned in the Environment Variables section above.
-- In the instance's settings, set the refresh token lifetimes to 30 days, how long a session lasts.
+## The theme system
 
-##### For development
-
-Create a development project and follow the same instructions again, only this time using local addresses, and add the variables, including secrets, to `api/.dev.vars` instead. You'll need both the Wrangler dev port `8788` and the Vite dev port `5173`: `http://localhost:8788/auth/callback` and `http://localhost:5173/auth/callback` as redirect URIs, and `http://localhost:8788/` and `http://localhost:5173/` as Post Logout URIs. The dev mode switch will need checking if using HTTP locally.
-
-### Database
-
-Configure the D1 database via the `api/wrangler.toml` file under `[[d1_databases]]`. Create a D1 database by going to `https://dash.cloudflare.com/`, selecting Workers & Pages > D1 SQL Database, and clicking `+create`. Then add the database name and ID to `api/wrangler.toml`. Once you have a database, run `pnpm migrate:api` to generate the migrate files and `pnpm migrate:push:api` to push them to the database. Use `pnpm migrate:push:local:api` to push to a local copy of the database for development. You'll also need to do this when you change the `api/src/schemas` files. Then run `pnpm seed:local` (`pnpm seed:live` for production) to put in the design system and the collections the menu links to; without it the site has no styles.
-
-## Development Commands
-
-PNPM is used to make this a monorepo with PNPM workspaces. Corepack is required for the `packageManager` field in the `package.json` to be acknowledged. It may or may not have been included with your install of Node.js. Corepack also needs enabling by running `corepack enable`.
-
-More information can be found on Corepack [here](https://nodejs.org/api/corepack.html).
-
-- **Install Dependencies:** `pnpm install`
-- **Build API and Client:** `pnpm build`
-- **Generate migrate files:** `pnpm migrate:api`
-- **Push generated migrate files to the production database:** `pnpm migrate:push:api`
-- **Push generated migrate files to the development database:** `pnpm migrate:push:local:api`
-- **Seed the design system (themes, rules) and the menu's collections into the development database:** `pnpm seed:local`
-- **Seed the design system and the menu's collections into the production database:** `pnpm seed:live`
-- **Start Wrangler pages dev server:** `pnpm dev`
-- **Start Vite Dev Server for front end HMR:** `pnpm dev:vite:client`
-
-## Deployment
-
-Simply push your changes to GitHub to have your project automatically publish to Cloudflare Pages.
-
-### Ports
-
-- Wrangler pages dev server: `8788`
-- Vite Dev Server: `5173`
-
-### tRPC Endpoints
-
-The tRPC API endpoints are prefixed with `/trpc`. Unprefixed URLs will serve the client and client assets. There is, however, no need to visit tRPC endpoints manually since you make queries using tRPC instead of something like Axios.
-
-```typescript
-trpc.secure.test
-	.query('Sending data to tRPC secure endpoint from Vue client')
-	.then((response) => {
-		console.log('tRPC secure response', response)
-	})
-	.catch((error) => {
-		console.log(error)
-	})
-```
-
-## Styling
-
-Styling comes from the sf/sl design system: `sf-` classes say what something is (a card, a tag, a loud button) and the active theme decides how it looks; `sl-` classes arrange things. Themes, tokens and rules live in D1, seeded from `api/src/domain/seed.ts`, and are served as one stylesheet at `/styles/sf-system`. The spec is `client/src/assets/sf-system.md`. Components wrap their own CSS in `@layer ui` so every theme class wins over it.
-
-### Themes
-
-There's currently a dark mode, light mode, and secret pink mode. Press `ctr+shift+k` to toggle pink mode. The secret pink mode was just to test if more than two themes could be implemented efficiently with the current configuration without changing the dark mode switch, which starts based on OS preference.
-
-## Contributions
-
-We welcome contributions! Please feel free to fork this repository, submit pull requests, make feature requests, report bugs, or ask questions.
+`sf-` classes say what something is (a card, a tag, a loud button) and the active theme decides
+how it looks; `sl-` classes arrange things. Themes live in D1, seeded from
+`api/src/domain/seed.ts`, and are served as one stylesheet at `/styles/sf-system`. The spec is
+`client/src/assets/sf-system.md`. There's a dark theme, a light one and a pink one, which
+Ctrl+Shift+K turns on and off.

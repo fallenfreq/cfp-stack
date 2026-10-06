@@ -11,6 +11,7 @@ that home, or is generated from it where a copy must exist.
 | Each package's `README.md`            | What the package is                                            |
 | `docs/database.md`                    | How the API uses Drizzle and D1                                |
 | `docs/auth.md`                        | Signing in: sessions held by our server                        |
+| `docs/hosting.md`                     | What runs the site in Cloudflare, and the settings             |
 | `client/src/assets/sf-system.md`      | The sf/sl theme system's spec                                  |
 | `client/src/assets/sf-references.md`  | Outside work the theme system draws on                         |
 | `client/src/assets/sf-system-todo.md` | The theme system's open work: a plan, kept by its spec for now |

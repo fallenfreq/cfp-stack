@@ -1,39 +1,23 @@
-# somefreq-app
+# client
 
-This template should help get you started developing with Vue 3 in Vite.
+The site and its editor, in Vue 3. Vite builds it into `api/client_dist`, which the Pages
+project serves with the API. It has no settings of its own.
 
-## Recommended IDE Setup
+## Layout
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- `src/views/`: the pages, and `src/router/` maps addresses to them.
+- `src/components/`: the site's parts, the editor's (`editor/`) and the demos' (`demos/`).
+- `src/editor/extensions/`: what the editor (TipTap) adds to its blocks and marks.
+- `src/services/`: the API's data as the pages use it, who's signed in, and toasts and prompts.
+- `src/stores/`, `src/composables/`: shared state and behaviour.
+- `src/trpc.ts`: the API's client, typed from `api/src/routes/appRouter.ts`.
+- `src/assets/`: the base styles, and the theme system's spec, references and open work.
+- `e2e/`: the layout checks. `preview/`: the component preview.
 
-## Type Support for `.vue` Imports in TS
+## Checks
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+- Types: `vue-tsc --build`.
+- Layout: `e2e/`, in Chrome against the dev server at 8788.
+- Components: the preview built from `preview/`.
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
-
-```sh
-pnpm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-pnpm dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-pnpm build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-pnpm lint
-```
+Running it and its checks, from the root: `README.md`, "Developing" and "Commands".

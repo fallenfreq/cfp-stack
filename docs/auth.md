@@ -74,7 +74,7 @@ is updated, so a fresh session can pick up from it.
       `zitadelOptions.ts`, values in our terms), the router check (from `refs/wip/router-check`),
       `/auth/` in the Vite proxy, the preview's stand-in. Gone: `@zitadel/vue` (with
       `vue-oidc-client` / `oidc-client`), `axios`, `jwt-decode`, `cors`, `jsonwebtoken`, the
-      client's `zod`, both `client/.env` files, the introspection settings. CLAUDE.md "Auth setup"
+      client's `zod`, both `client/.env` files, the introspection settings. CLAUDE.md's auth setup
       and the README's sign-in setup rewritten here rather than in step 4.
     - Checked: types, unit tests, layout checks (106; a first run had 3 failures that didn't come
       back in two runs), the component preview; by hand on 8788 and through 5173:
@@ -352,6 +352,11 @@ cookie, `code`, the verifier, or request bodies.
 
 ## Zitadel (the current provider)
 
+- One instance, its address `OIDC_ISSUER` (`api/wrangler.toml`), with a project per environment
+  (prod, dev). A project's id is `ZITADEL_PROJECT_ID`, and its Web app's client id and secret are
+  `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`: prod's ids in `api/wrangler.toml` and its secret in
+  Cloudflare, dev's all in `api/.dev.vars`. Dev signs in with the same instance unless
+  `api/.dev.vars` sets an `OIDC_ISSUER` of its own.
 - Per project (prod, dev): a Web app, code flow, Basic client secret, Authorization Code + Refresh
   Token grants. Redirect: `/auth/callback` (dev: 8788 and 5173, development mode on). Post-logout:
   `/`.
@@ -369,11 +374,13 @@ cookie, `code`, the verifier, or request bodies.
 
 ## Settings
 
-- Vars: `OIDC_ISSUER`, `OIDC_CLIENT_ID` (Zitadel's Web app), `APP_ORIGINS`; the adapter's own:
+- Vars: `OIDC_ISSUER`, `OIDC_CLIENT_ID` (Zitadel's Web app), `APP_ORIGINS` (the site's own
+  addresses, comma-separated: "Forged requests"); the adapter's own:
   `ZITADEL_PROJECT_ID`.
-- Secrets: `OIDC_CLIENT_SECRET` (the Web app's), `SESSION_SECRET`, optionally
-  `SESSION_SECRET_PREVIOUS`.
-- Dev only: `DEV_INSECURE_COOKIES`.
+- Secrets: `OIDC_CLIENT_SECRET` (the Web app's), `SESSION_SECRET` (32 random bytes:
+  `openssl rand -base64 32`), optionally `SESSION_SECRET_PREVIOUS`.
+- Dev only: `DEV_INSECURE_COOKIES`, as Safari won't keep a Secure cookie over
+  `http://localhost`.
 - No longer read: `ZITADEL_INTROSPECTION_ENDPOINT`, and `ZITADEL_CLIENT_ID` /
   `ZITADEL_CLIENT_SECRET` (the API app's; kept for an older version, see "Zitadel").
 
@@ -415,7 +422,7 @@ Each step leaves the site working.
    the client service, the router check (`refs/wip/router-check`), `/auth/` in the Vite proxy,
    removed packages and settings.
 4. The old Zitadel apps and the old `ZITADEL_CLIENT_SECRET` secret in Cloudflare: kept for now, so
-   an older version can still run, and listed in "Zitadel". (CLAUDE.md "Auth setup" and the
+   an older version can still run, and listed in "Zitadel". (CLAUDE.md's auth setup and the
    README were rewritten in step 3.)
 
 Signed-in users sign in once more at step 3. Tabs left open on the old page get UNAUTHORIZED until
