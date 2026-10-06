@@ -198,3 +198,79 @@ test("a page in a collection's sheet sits on the sheet's line, and bleeds to its
 		'the bleed reaches the right edge',
 	).toBeLessThanOrEqual(1)
 })
+
+// The editor opens a stored page as signed in as an admin, the page faked like the ones above.
+async function openStored(page: Page, themeClass: string | null, stored: unknown) {
+	await steadyRequests(page)
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+		'Pages.getBySlug': stored,
+	})
+	await page.goto('/editor/stored')
+	await useTheme(page, themeClass)
+}
+
+/** A stored page holding one paragraph. */
+const oneParagraph = {
+	pageId: 1,
+	...storedPage('stored', 'Stored', [
+		{ type: 'paragraph', content: [{ type: 'text', text: 'A paragraph.' }] },
+	]),
+}
+
+// Opening a page isn't an edit: the editor opens with it, outside the undo history. Undo after it
+// opened took the page back out, for Save to store the empty page.
+test('undo goes back no further than a stored page as it opened in the editor', async ({
+	page,
+	themeClass,
+}) => {
+	await openStored(page, themeClass, oneParagraph)
+	const text = page.locator('.tiptap p').first()
+	await expect(text).toHaveText('A paragraph.')
+	await page.evaluate(() =>
+		(document.querySelector('.tiptap') as any).editor.commands.focus('end'),
+	)
+	// A letter typed and undone, so Undo is known to reach the editor; then once more.
+	await page.keyboard.type('x')
+	await expect(text).toHaveText('A paragraph.x')
+	for (const press of ['the letter', 'once more']) {
+		await page.keyboard.press('ControlOrMeta+z')
+		await settle(page)
+		await expect(text, press).toHaveText('A paragraph.')
+	}
+})
+
+// A stored page that can't open says so, with no editor: Save can't store what was read of it over
+// it, or make a new page at its address.
+test("a stored page that can't open says so, with no editor to save", async ({
+	page,
+	themeClass,
+}) => {
+	const unopenable = "This page can't be opened."
+	const cases: [string, unknown, string][] = [
+		[
+			'not valid',
+			{ pageId: 1, ...storedPage('stored', 'Stored', [{ type: 'noSuchBlock' }]) },
+			unopenable,
+		],
+		['not JSON', { ...oneParagraph, contentJson: 'not JSON' }, unopenable],
+		['JSON, not a document', { ...oneParagraph, contentJson: 'null' }, unopenable],
+		['not there', null, "There's no page at this address."],
+	]
+	for (const [name, stored, message] of cases) {
+		await openStored(page, themeClass, stored)
+		await expect(page.getByText(message), name).toBeVisible()
+		await expect(page.locator('.tiptap'), name).toHaveCount(0)
+	}
+
+	// A page that opens, then fails to arrive when it's fetched again.
+	await openStored(page, themeClass, oneParagraph)
+	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
+	await page.route(
+		(url) => url.pathname.includes('adminPages.getBySlug'),
+		(route) => route.abort(),
+	)
+	await page.reload()
+	await expect(page.getByText("This page couldn't be loaded.")).toBeVisible()
+	await expect(page.locator('.tiptap')).toHaveCount(0)
+})

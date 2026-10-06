@@ -1,6 +1,15 @@
 import Youtube from '@tiptap/extension-youtube'
 
 export const YoutubeExtension = Youtube.extend({
+	// The video is read from its iframe, through the boxes written around it: TipTap's, and the
+	// width limit's (below).
+	parseHTML() {
+		return [
+			...(this.parent?.() ?? []),
+			{ tag: 'div[data-youtube-video]', skip: true },
+			{ tag: 'div:has(> div[data-youtube-video])', skip: true },
+		]
+	},
 	renderHTML({ node, HTMLAttributes }) {
 		const { resp } = node.attrs
 		// The embed's width limit (layout): the node's own value, else 36rem.

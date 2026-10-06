@@ -62,35 +62,13 @@ export const useEditorStore = defineStore('editor', () => {
 		}
 	}
 
-	// Into the editor on screen. If another has opened by the time the page arrives (the address
-	// moved on), the page goes nowhere.
-	const loadPage = async (slug: string) => {
-		const into = editor.value
-		if (!into) return
-		const page = await trpc.adminPages.getBySlug.query({ slug })
-		if (editor.value !== into) return
-		if (!page) {
-			notify({
-				duration: 5000,
-				variant: 'warning',
-				message: `Page "${slug}" not found`,
-			})
-			return
-		}
-		try {
-			into.commands.setContent(JSON.parse(page.contentJson), {
-				errorOnInvalidContent: true,
-			})
-		} catch (err) {
-			notify({
-				duration: 8000,
-				variant: 'danger',
-				message: err instanceof Error ? err.message : 'Failed to load page content',
-			})
-			return
-		}
+	// The stored page at an address, for the view to open in a new editor; null if there's none.
+	const fetchPage = (slug: string) => trpc.adminPages.getBySlug.query({ slug })
+
+	// The page the editor on screen edits, set once its editor has opened it.
+	const setPage = (page: NonNullable<Awaited<ReturnType<typeof fetchPage>>>) => {
 		currentPageId.value = page.pageId
-		currentSlug.value = slug
+		currentSlug.value = page.slug
 		currentName.value = page.name || null
 		currentPublished.value = page.published
 	}
@@ -177,7 +155,8 @@ export const useEditorStore = defineStore('editor', () => {
 		currentName,
 		currentPublished,
 		pendingAutoTag,
-		loadPage,
+		fetchPage,
+		setPage,
 		save,
 		renamePage,
 	}

@@ -9,6 +9,19 @@ import { mergeAttributes } from '@tiptap/vue-3'
 export const CustomTaskItem = TaskItem.extend<TaskItemOptions>({
 	selectable: false,
 
+	// The item's text is in the div after its tick box (TipTap's markup), else in the item itself.
+	// Replaces TipTap's rule, which from 3.30 takes the first div anywhere, losing text before a
+	// Div block.
+	parseHTML() {
+		return [
+			{
+				tag: `li[data-type="${this.name}"]`,
+				priority: 51,
+				contentElement: (li) => li.querySelector(':scope > label + div') ?? li,
+			},
+		]
+	},
+
 	// TipTap's item sets its own attributes over the configured ones, so a class of its own
 	// replaced the checkbox-beside-text layout, and it updates only the tick. Merge them as saving
 	// does, and redraw the item when anything else changes, so it's built from its new attributes

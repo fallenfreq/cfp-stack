@@ -93,7 +93,17 @@ export function getContentExtensions({
 		}),
 		SfHeading,
 		Image,
-		Table.configure({
+		// TipTap writes a tbody and a colgroup without claiming them, and its content check refuses
+		// unclaimed elements. Column widths come from the cells.
+		Table.extend({
+			parseHTML() {
+				return [
+					...(this.parent?.() ?? []),
+					{ tag: 'tbody', skip: true },
+					{ tag: 'colgroup', ignore: true },
+				]
+			},
+		}).configure({
 			allowTableNodeSelection: tableNodeSelection,
 			HTMLAttributes: { class: 'tiptap-table' },
 		}),

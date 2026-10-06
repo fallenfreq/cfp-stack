@@ -1,5 +1,6 @@
 <template>
-	<SfStatusDisplay v-if="!editor" state="loading" message="Loading editor…" />
+	<SfStatusDisplay v-if="invalid" state="error" message="This page can't be opened." />
+	<SfStatusDisplay v-else-if="!editor" state="loading" message="Loading editor…" />
 	<div v-else>
 		<EditorTopBar :editor="editor" />
 		<FloatingToolbar :editor="editor" />
@@ -31,14 +32,25 @@ import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore.js'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import Placeholder from '@tiptap/extension-placeholder'
-import { EditorContent, useEditor, VueNodeViewRenderer, type NodeViewProps } from '@tiptap/vue-3'
-import { onBeforeUnmount, watch, type Component } from 'vue'
+import {
+	EditorContent,
+	useEditor,
+	VueNodeViewRenderer,
+	type Content,
+	type NodeViewProps,
+} from '@tiptap/vue-3'
+import { onBeforeUnmount, ref, watch, type Component } from 'vue'
 import CodeViewToggle from './CodeViewToggle.vue'
 import EditorTopBar from './EditorTopBar.vue'
 import FloatingDragHandle from './FloatingDragHandle.vue'
 import FloatingToolbar from './FloatingToolbar.vue'
 import TiptapCodeBlock from './TiptapCodeBlock.vue'
 import ToolbarScrollHint from './ToolbarScrollHint.vue'
+
+// What the editor opens: a stored page, our own HTML (the demo, the layout test cases), or nothing
+// (a new page). Read once: each page opens in a new editor.
+const props = defineProps<{ content: Content }>()
+const invalid = ref(false)
 
 const toolbarItems: ToolbarItem[] = defaultToolbarItems
 const dragHandleStore = useDragHandleStore()
@@ -84,19 +96,31 @@ const editor = useEditor({
 
 useNodeViewInteractions()
 const editorStore = useEditorStore()
-// useEditor makes the editor once the component is mounted; the store gets it when it exists.
+// Opening isn't an edit: the content goes in outside the undo history, so Undo can't empty the
+// page. Invalid content isn't opened: TipTap would drop what it can't read. Not useEditor's
+// `content`: what plugins add on the first change would become the first undo.
 watch(editor, (newEditor) => {
-	if (newEditor) {
-		editorStore.setEditor(newEditor)
-		newEditor.on('transaction', () => {
-			const state = multiSelectPluginKey.getState(newEditor.state)
-			multiSelectStore.sync(state?.positions ?? [])
-		})
+	if (!newEditor) return
+	try {
+		newEditor
+			.chain()
+			.setMeta('addToHistory', false)
+			.setContent(props.content, { errorOnInvalidContent: true, emitUpdate: false })
+			.run()
+	} catch (error) {
+		console.error("This page can't be opened:", error)
+		invalid.value = true
+		return
 	}
+	editorStore.setEditor(newEditor)
+	newEditor.on('transaction', () => {
+		const state = multiSelectPluginKey.getState(newEditor.state)
+		multiSelectStore.sync(state?.positions ?? [])
+	})
 })
 // The store points at the editor on screen. Leaving the page closes it, so clear it too: the
-// next editor starts with no page (Save can't write over this one), and a page or a save still
-// on its way for this one leaves the next alone (`loadPage`, `save`).
+// next editor starts with no page (Save can't write over this one), and a save still on its way
+// for this one leaves the next alone (`save`).
 onBeforeUnmount(() => {
 	if (editorStore.editor === editor.value) editorStore.setEditor(null)
 })

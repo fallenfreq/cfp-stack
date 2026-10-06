@@ -7,6 +7,9 @@ describes the target design; this file enumerates what needs to change in code t
 
 **Sign-in work** (its own track, 2026-10-04): resume from `docs/auth.md`, "Progress".
 
+**Editor** (2026-10-06): candidate 14 (undo after opening a page) is fixed. Next: candidate 15
+(the code view and undo), to decide with the user.
+
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
 the user), so themes in `@scope` apply on every supported browser. Item 8's to-do item bug
@@ -370,6 +373,65 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       then. The profile puts 1–2 ms a letter on it, the biggest single item, but some of that
       layout the browser would do anyway before drawing; not looked into further. Why an arrow
       press is two changes isn't looked into either.
+14. **Undo after opening a page emptied it** (found 2026-10-03; fixed 2026-10-06): opening a
+    stored page, the demo or the test page and pressing Undo before any edit left an empty page,
+    for Save to store. The editor was made empty and the page put in afterwards as an edit
+    (`setContent`), which undo recorded. Also, a stored page's editor could be typed in before the
+    page arrived, and the page then replaced the typing.
+    - **Fix, at one boundary:** `TiptapEditor.vue` takes what it opens (`content`, a new prop,
+      approved) and puts it in as the editor is made, before anything can be typed, outside the
+      undo history and without a "content changed" notice. Callers never load content into an
+      editor. Content that fails TipTap's check isn't opened ("This page can't be opened."):
+      unchecked, TipTap opens what it can read, which for an invalid stored page is nothing. The
+      view (`TiptapEditorDemo.vue`) works out what the address opens before making the editor,
+      and says so instead when there's no such page, it can't be fetched, or it isn't a
+      document. The store's `loadPage` is gone: `fetchPage` and `setPage` (approved); a page's
+      details are set when its editor reaches the store, so a refused page's never are.
+    - **Rejected:** a flag at each place content was loaded (the user: easy to miss later).
+      TipTap's own `content` option: its check is for the whole editor (every later insert, the
+      code view's switch back), and what plugins add on the first change (the trailing paragraph,
+      heading classes) becomes the first undo (proved).
+    - **The editor reads all the HTML it writes** (decided with the user: fix it at the source).
+      TipTap's check refused our own HTML (a table's `tbody`, the video's box) though the same
+      page passed as JSON: TipTap's extensions write wrappers they don't declare. Declared: the
+      table's `tbody` and `colgroup` (`contentExtensions.ts`), the video's two boxes
+      (`youtubeExtension.ts`), and the to-do item's text, read from the div after its tick box
+      (`customTaskItem.ts`). That rule replaces TipTap's: its own from 3.30 reads the first div
+      anywhere in the item, losing text before a Div block (proved). The check now flags nothing
+      in the demo, the test page, the editor's own HTML or the code view's. Everything reads as
+      before, except that pasting a to-do list no longer adds an empty span (proved). Upgrading
+      TipTap wouldn't do it: 3.31.4 still lacks the table's and the video's (issue #6424).
+    - **Checked:** in Chrome, the demo, the test page and stored pages open with nothing to undo,
+      and typing then undoing returns to the page. Missing, unfetchable, invalid, non-JSON and
+      `null` pages show their message, with no editor or Save. Saving a new page from a
+      collection keeps the same editor and tags it. `editor.spec.ts` and `app.spec.ts` gain four
+      checks (undo goes no further than the page as it opened, on the test page and a stored
+      page; a pasted to-do list matches the one copied; pages that can't open), all failing with
+      the change reverted; the suite passes (114).
+    - **Reviewed** by two separate agents: the approach (alternatives built and measured), then
+      the change. Fixed from the second: the fetch-failure check passed for the wrong reason;
+      unreadable stored content said "couldn't be loaded" (now "can't be opened"); the undo
+      checks type and undo a letter first, so Undo is known to reach the editor. Also fixed,
+      though it predates: stored content that's JSON but not a document (`null` opened as an
+      empty page that Save would store).
+    - **Logged, predate:**
+        - Copy and paste stores display-only extras on the pasted blocks (classes the editor adds,
+          such as `sf` and the to-do item's `sl-split sf-gap-md`, a table's minimum width, a
+          video's `auto` size) and loses a video's width limit (`resp` is written on its box but
+          read only from the iframe). The code view keeps them.
+        - A fetch that never answers leaves "Loading editor…" up: tRPC has no timeout.
+        - The video's box rule (`div:has(> div[data-youtube-video])`) relies on rule order: a
+          block added later that reads a plain `div` holding a video directly would be stepped
+          through. None does.
+15. **The code view and undo** (found 2026-10-05; to decide): switching to the code view and
+    back swaps the whole document, and undo crosses the swap (proved in Chrome on the demo).
+    Undo in the code view brings the page back while the editor still shows code, and switching
+    back then flattens the page into one paragraph of text. Undo after switching back puts the
+    page's HTML in it as a code block. Save stores either. Predates. Keeping the swaps out of the
+    undo history isn't enough: a whole-document edit made before the switch can still be undone
+    after it (proved by the review). To decide: each switch starts a fresh undo history, or the
+    code view is an editor of its own. A round trip also adds a trailing `;` to inline styles
+    (same meaning).
 
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in
@@ -533,8 +595,8 @@ Known gap not in this slice:
 - **Saved page content in D1 still carries pre-rename class tokens**
   (`sf-radius-md`, `sf-collapse-xs`, etc.). The CSS no longer defines those
   rules, so existing saved pages render unstyled when loaded by slug. Workaround:
-  load with `?seed=true` to bypass `store.loadPage()` and re-parse
-  `initialContent.html` instead. Per-user decision whether to write a migration
+  load with `?seed=true` to open `initialContent.html` instead of the stored
+  page. Per-user decision whether to write a migration
   or just reseed.
 
 Done in the editor + cleanup slice:
@@ -1240,11 +1302,14 @@ These are not bugs but unresolved tensions in the current design:
       by Zitadel's own `@zitadel/vue`. Removed with the server sign-in above (step 3, 2026-10-04).
 - [ ] `usePage` blanks when sign-in lands: the home page and a page preview show nothing until
       the admin copy arrives (the collection list keeps its own now).
-- [ ] Undo straight after a page opens empties it: loading the content counts as an edit
+- [x] Undo straight after a page opens empties it: loading the content counts as an edit
       (TipTap's `setContent` is recorded for undo), so Save would then store an empty page.
-      The same for the demo. Checked in Chrome 2026-10-03; predates the fix above.
+      The same for the demo. Checked in Chrome 2026-10-03; predates the fix above. Fixed
+      2026-10-06: candidate 14.
 - [ ] Nothing warns before unsaved edits are lost. Leaving the editor drops them (predates);
       moving to another editor address now does too, where it used to keep the page open.
+      Opening a page no longer says the content changed (candidate 14), so a warning can count
+      the editor's update events as edits.
 - [ ] A new page whose collection fails to be set after it's made never gets it: the next Save
       updates the page without its collection. Read in code, not tried.
 - [ ] `FloatingToolbar.vue`'s unmount reads the closed editor's view, logging "[tiptap error]

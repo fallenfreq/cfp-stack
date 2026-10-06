@@ -262,6 +262,67 @@ test('selected blocks stay selected when they change in place', async ({ page })
 	await expect(selected, 'a divider deleted').toHaveText(texts)
 })
 
+// Opening a page isn't an edit: the editor opens with it, outside the undo history. Undo after it
+// opened took the page back out, for Save to store the empty page.
+test('undo goes back no further than the page as it opened', async ({ page }) => {
+	const content = () =>
+		page.evaluate(() =>
+			JSON.stringify((document.querySelector('.tiptap') as any).editor.getJSON()),
+		)
+	const opened = await content()
+	await page.evaluate(() =>
+		(document.querySelector('.tiptap') as any).editor.commands.focus('end'),
+	)
+	// A letter typed and undone, so Undo is known to reach the editor; then once more.
+	await page.keyboard.type('x')
+	expect(await content()).not.toBe(opened)
+	for (const press of ['the letter', 'once more']) {
+		await page.keyboard.press('ControlOrMeta+z')
+		await settle(page)
+		expect(await content(), press).toBe(opened)
+	}
+})
+
+// The editor reads back the HTML it writes, which copying puts on the clipboard: a to-do item's
+// tick box is drawn, not text. A pasted to-do list started its first item with an empty span.
+// Its blocks and text are compared; the classes the editor adds for display are kept on paste.
+test('a pasted to-do list has the blocks and text of the one copied', async ({ page }) => {
+	const lists = () =>
+		page.evaluate(() => {
+			const shape = (node: any): unknown => ({
+				type: node.type.name,
+				text: node.text,
+				content: node.content.content.map(shape),
+			})
+			const found: unknown[] = []
+			;(document.querySelector('.tiptap') as any).editor.state.doc.descendants(
+				(node: any) => {
+					if (node.type.name !== 'taskList') return
+					found.push(shape(node))
+					return false
+				},
+			)
+			return found
+		})
+	const [copied] = await lists()
+	await page.evaluate(
+		(at) => {
+			const editor = (document.querySelector('.tiptap') as any).editor
+			editor.chain().focus().setNodeSelection(editor.state.doc.resolve(at).before()).run()
+		},
+		await nodePosition(page, 'task-plain'),
+	)
+	await page.keyboard.press('ControlOrMeta+c')
+	await page.evaluate(() =>
+		(document.querySelector('.tiptap') as any).editor.commands.focus('end'),
+	)
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	const after = await lists()
+	expect(after).toHaveLength(2)
+	expect(after[1]).toEqual(copied)
+})
+
 test('leaving the editor and coming back shows its content again, without a reload', async ({
 	page,
 }) => {
