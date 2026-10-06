@@ -45,7 +45,7 @@ should end up as the example for anything new.
     - A migration's comments have no `;`. Live D1 splits the SQL at each `;` without seeing
       comments, so a `;` in one leaves a piece with no statement, and the migration fails
       ("SQL code did not contain a statement"). Locally wrangler splits it itself, so only live
-      shows this.
+      would show it: `api/test/migrations.test.mjs` checks for it.
 - **A unique value is a `uniqueIndex()`**, not `.unique()`: drizzle-kit 1.0 writes `.unique()`
   into the table, which SQLite can only add or drop by rebuilding it; an index comes and goes on
   its own. A row that may be there already is inserted with `onConflictDoNothing()` and then

@@ -6,7 +6,7 @@ DROP TABLE `profiles`;--> statement-breakpoint
 /*
  Finished by hand: drizzle-kit can't drop `themes.created_by` (a foreign key), so `themes` is
  rebuilt. D1 enforces foreign keys inside a migration, so dropping the old `themes` deletes the
- rows that cascade from it; they're kept aside and put back (docs/database.md, "How we use it").
+ rows that cascade from it, so they're kept aside and put back (docs/database.md, "How we use it").
 */
 CREATE TABLE `__keep_theme_tokens` AS SELECT * FROM `theme_tokens`;--> statement-breakpoint
 CREATE TABLE `__keep_class_rules` AS SELECT * FROM `class_rules`;--> statement-breakpoint
