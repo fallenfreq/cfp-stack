@@ -1425,7 +1425,7 @@ These are not bugs but unresolved tensions in the current design:
       the editor's update events as edits.
 - [ ] A new page whose collection fails to be set after it's made never gets it: the next Save
       updates the page without its collection. Read in code, not tried.
-- [ ] `FloatingToolbar.vue`'s unmount reads the closed editor's view, logging "[tiptap error]
+- [ ] `FloatingToolbar.vue`'s unmount reads the closed editor's view, logging "\[tiptap error]
       The editor view is not available". It removes its listeners first, so nothing leaks.
       Predates; it now also shows on every move between editor addresses.
 - [ ] `useCollapseBreakpoint.ts` calls `stopWatch()` from its first run, before `stopWatch` is
