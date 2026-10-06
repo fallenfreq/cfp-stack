@@ -9,7 +9,8 @@ describes the target design; this file enumerates what needs to change in code t
 
 **Editor** (2026-10-06): candidate 14 (undo after opening a page) is fixed and committed.
 Candidate 15 (the code view as an editor of its own) and item 16 (TipTap 3.31.4, with what it
-broke fixed) are fixed, reviewed and committed together. Next: choose with the user.
+broke fixed) are fixed, reviewed and committed together. Item 17 (console errors and debug
+lines) is fixed and reviewed, not committed. Next: choose with the user.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -342,6 +343,12 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
     that lookup lands one level short, and `resolveActivePos` patches it with a Proxy that
     fakes the answer. Carrying the place once would remove the Proxy. It touches every block
     tool, so it needs its own sign-off and checks. Found while fixing 11; no bug seen from it.
+    - **It would also let the toolbar follow a block's own control** (17): while the code block's
+      language picker has focus, the toolbar could show the code block without the cursor
+      moving. Today the toolbar can only follow the cursor, and moving the cursor for it either
+      lands between blocks or selects the block (typing then replaces it). Worth designing with
+      the component store, when blocks with controls of their own are common (logged with the
+      user, 2026-10-06).
 13. **Menus rebuilt their lists on every keystroke** (found 2026-10-04; fixed 2026-10-04):
     Change Type, Wrap In, Insert and Wrap selection rebuilt their lists after every change in
     the editor, even while closed. A typed letter or a cursor move counts; one arrow press is
@@ -536,7 +543,7 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       closed editor's page when it goes (3.4.1 threw the same). `useCollapseBreakpoint.ts`
       throws on every collection page: its first run calls `stopWatch` before it's set.
       `useNodeViewInteractions.ts` logs debugging lines, and clicking the demo's first paragraph
-      warns about a selection in the document itself.
+      warns about a selection in the document itself. All fixed (17).
     - **Checked:** typechecks; the lint rule refuses TipTap's `useEditor` and allows ours (linted
       in memory, nothing fixed). In `app.spec.ts`: a page closed in a sheet still shows as it
       slides away (fails with no copy), and another page opened in the sheet leaves nothing of
@@ -545,6 +552,69 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       ticks it too, and a table written with column widths comes back without them (each failed
       before its fix). The demo snapshot's table lines are unchanged from 3.4.1 (fail with
       TipTap's table view). The suite passes (140).
+17. **Console errors and debug lines** (logged in 16 and before; fixed 2026-10-06, chosen with the
+    user). Each reproduced in Chrome first.
+    - **A collection opened once the theme had loaded threw** (`useCollapseBreakpoint.ts`). The
+      sheet's narrow-screen switch waited for the theme, then stopped waiting from inside its
+      first run, before the stop existed. It now follows the theme's breakpoint: set up when the
+      breakpoint arrives or changes, tidied away by Vue with the component.
+    - **Leaving the editor threw a TipTap error** (`FloatingToolbar.vue`). The toolbar took its
+      room (`has-floating-toolbar`) off the page after the editor had closed. The toolbar's
+      extension puts the class on the editor instead (`floatingToolbarExtension.ts`, a
+      ProseMirror `attributes` prop), so it comes and goes with the editor.
+    - **Focus on a block outside its text put the cursor between blocks**, where text can't go
+      (ProseMirror warns the first time on a page). `useNodeViewInteractions.ts` moved the cursor
+      to just before a block whenever focus landed on it outside its text, on purpose since Feb
+      2025 ("technically an error", `a42a7a4`): so the toolbar would move to a block whose own
+      control (the code block's language picker) took focus. Removed, with the debugging lines.
+      Measured in Chrome with it switched off: the first click into a block's text ends in the
+      same place; a click beside a Card's text still selects the Card (its own click does).
+    - **Using a block's own control now leaves the cursor where it was**, and the toolbar on its
+      block. Measured on the code before this item: from a layout block's text (most of the demo)
+      the toolbar never followed the picker, as another handler in the same file put the cursor
+      straight back; only from text straight on the page did it follow, by the cursor between
+      blocks. The picker changes its own block either way. Focus on a control and the editor's
+      cursor exist side by side; the toolbar reads the cursor (candidate 12).
+    - **Tried and taken out** (decided with the user): `FocusSelectsBlock`, selecting the whole
+      block while its control has focus. It made the toolbar follow every time, which it never
+      had, and the caret handler needed a focus rule so as not to put the cursor back (that rule
+      then broke the demo's interactive block, whose text slot can't take focus). With the block
+      selected, typing after Shift+Tab back to the page replaced it. The way to have the toolbar
+      follow a block's control is under candidate 12.
+    - **The pink mode key** (Ctrl+Shift+K) was registered by each dark mode switch (nav and
+      footer): the second was refused with a log line, and either one going would have taken the
+      key. Both are always shown, so only the line showed. The app registers it once (`main.ts`).
+      The plugin's way for a component to register a key (`AddKeyCombo`, `RemoveKeyCombo` and
+      `injectSafe` in `symbols.ts`) had no users left: removed, with `removeKeyCombo` (decided with
+      the user). Keys for the whole app are registered once at startup; a key for a component while
+      it's shown is designed when one is needed (each registration removing only itself).
+    - **Debug lines gone:** the dark mode switch's, an empty one in the map demo's marker click, and
+      the place picker's coordinates. Kept: a failed query's report (`queryClient.ts`), the key
+      plugin's refusal, pink mode's own messages.
+    - **Reviewed** three times by a separate agent: the breakpoint, the toolbar's class and the
+      pink mode key are at the right place (checked in Chrome: one listener per sheet, removed on
+      leaving, following a changed breakpoint; the class kept across updates and the code view).
+      Its findings on the focus handler led to the two bullets above; the last pass found nothing
+      blocking and confirmed the old behaviour by putting the old handler back. Done from it: the
+      editor-change watch unsubscribes through its cleanup; the check measures the toolbar's room,
+      not the class; helpers for moving between pages and for what the app logs (`moveTo`,
+      `appMessages`); a note on the toolbar's CSS pointing to the extension; a check for the
+      interactive block's slot. Left: the sheet keeps its last narrow or wide state if a theme
+      drops its breakpoint (the old code never followed the theme at all).
+    - **Logged, predates:** typing after a click in the demo's interactive block's text slot does
+      nothing. The slot is `display: contents` (`nodeViews.ts`, in a layout with a gap), so it can't
+      take focus: the block's box takes it, which is not editable at rest (`decorative`,
+      `customComponentNode.ts`, whose comment expects the slot to take focus). The cursor still
+      follows the click into the slot. Seen by the review; checked in Playwright.
+    - **Checked:** typechecks. `app.spec.ts`: opening a page logs nothing, and the pink mode key
+      works; a collection opened once the theme has loaded logs no errors. `editor.spec.ts`:
+      leaving the editor logs no errors, with the page's room for the toolbar; clicking between
+      the blocks in an inset Card selects it, with no warning; using a block's own control leaves
+      the cursor where it was; a click in the interactive block's slot puts the cursor there. Each
+      fails without its fix (also the toolbar's room without the extension's class); the slot
+      check, which passes on the code before too, fails with the focus rule tried above. In Chrome:
+      home, a collection, the editor, a click into a block, beside a Card, the code block's picker,
+      leaving: nothing logged. The suite passes (150; on battery, two workers: four time out).
 
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in
@@ -1425,13 +1495,13 @@ These are not bugs but unresolved tensions in the current design:
       the editor's update events as edits.
 - [ ] A new page whose collection fails to be set after it's made never gets it: the next Save
       updates the page without its collection. Read in code, not tried.
-- [ ] `FloatingToolbar.vue`'s unmount reads the closed editor's view, logging "\[tiptap error]
+- [x] `FloatingToolbar.vue`'s unmount reads the closed editor's view, logging "\[tiptap error]
       The editor view is not available". It removes its listeners first, so nothing leaks.
-      Predates; it now also shows on every move between editor addresses.
-- [ ] `useCollapseBreakpoint.ts` calls `stopWatch()` from its first run, before `stopWatch` is
+      Predates; it now also shows on every move between editor addresses. Fixed 2026-10-06: 17.
+- [x] `useCollapseBreakpoint.ts` calls `stopWatch()` from its first run, before `stopWatch` is
       set: a collection opened with the theme already loaded logs "Cannot access … before
       initialization". Found by the review; unrelated. On Vite (5173) Vue's development build
-      rethrows it from setup, so `/admin/pages` shows no list at all.
+      rethrows it from setup, so `/admin/pages` shows no list at all. Fixed 2026-10-06: 17.
 
 ## Deferred (pending design pass)
 

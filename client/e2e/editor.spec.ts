@@ -1,8 +1,11 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
 import {
+	appMessages,
 	box,
+	moveTo,
 	nodePosition,
+	openSeeded,
 	openTests,
 	placed,
 	selectBlock,
@@ -32,7 +35,10 @@ test('placement classes go on the outer box too, but are never saved', async ({ 
 	expect(saved).toBe('sf-size-md sl-pin-top')
 })
 
+// Focus on the Card's box also put the cursor just before it, between blocks, where text can't go
+// (the editor warns once).
 test('clicking between the blocks in an inset Card selects the card', async ({ page }) => {
+	const warnings = appMessages(page, ['warning'])
 	await page.locator('#card-inset').scrollIntoViewIfNeeded()
 	const above = await box(page.locator('#card-inset-first'))
 	const below = await box(page.locator('#card-inset-bleed'))
@@ -44,6 +50,7 @@ test('clicking between the blocks in an inset Card selects the card', async ({ p
 		return editor.state.selection.node?.attrs.id ?? null
 	})
 	expect(selected).toBe('card-inset')
+	expect(warnings).toEqual([])
 })
 
 test('the floating toolbar keeps all its tools with a block selected', async ({ page }) => {
@@ -500,17 +507,60 @@ test('leaving the editor and coming back shows its content again, without a relo
 }) => {
 	const lastCase = page.locator('#align-cluster-x-end-last')
 	await expect(lastCase).toBeAttached()
-	// As the site nav does: moving between pages without loading the app again.
-	const go = (to: string) =>
-		page.evaluate(
-			(to) =>
-				(
-					document.querySelector('#app') as any
-				).__vue_app__.config.globalProperties.$router.push(to),
-			to,
-		)
-	await go('/contact')
+	await moveTo(page, '/contact')
 	await expect(page.locator('main h1')).toHaveText('Contact')
-	await go('/editor?seed=tests')
+	await moveTo(page, '/editor?seed=tests')
 	await expect(lastCase).toBeAttached()
+})
+
+// The toolbar took its room off the page as it went, after the editor had closed.
+test('leaving the editor logs no errors', async ({ page }) => {
+	const errors = appMessages(page, ['error'])
+	const room = await page.locator('.tiptap').evaluate((page) => {
+		const style = getComputedStyle(page)
+		return parseFloat(style.paddingTop) - parseFloat(style.getPropertyValue('--toolbar-height'))
+	})
+	expect(room, 'the page has room at its top for the toolbar').toBeGreaterThan(0)
+	await moveTo(page, '/contact')
+	await expect(page.locator('main h1')).toHaveText('Contact')
+	expect(errors).toEqual([])
+})
+
+// Focus on a block's own control (the code block's language picker) moved the cursor to just
+// before the block, between blocks, where text can't go. The cursor stays where it was.
+test("using a block's own control leaves the cursor where it was", async ({ page }) => {
+	const warnings = appMessages(page, ['warning'])
+	await page.evaluate(() => {
+		const editor = (document.querySelector('.tiptap') as any).editor
+		editor.commands.insertContentAt(editor.state.doc.content.size, {
+			type: 'codeBlock',
+			content: [{ type: 'text', text: 'code' }],
+		})
+	})
+	await cursorInParagraph(page)
+	await settle(page)
+	const selection = () =>
+		page.evaluate(() =>
+			(document.querySelector('.tiptap') as any).editor.state.selection.toJSON(),
+		)
+	const before = await selection()
+	await page.locator('.tiptap .code-block select').focus()
+	await settle(page)
+	expect(await selection()).toEqual(before)
+	expect(warnings).toEqual([])
+})
+
+// The interactive block's text slot doesn't take focus itself: a click in it focuses the block's
+// box, and the cursor follows the browser's caret into the slot all the same.
+test("a click in a component block's slot puts the cursor there", async ({ page, themeClass }) => {
+	await openSeeded(page, 'true', '.tiptap .code-block select', themeClass)
+	const slot = page.locator('.tiptap p', { hasText: 'This is the editable slot' })
+	await slot.scrollIntoViewIfNeeded()
+	await slot.click()
+	await settle(page)
+	const cursorIn = await page.evaluate(() => {
+		const { selection } = (document.querySelector('.tiptap') as any).editor.state
+		return selection.empty ? selection.$from.parent.textContent : null
+	})
+	expect(cursorIn).toContain('This is the editable slot')
 })

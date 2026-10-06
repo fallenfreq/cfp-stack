@@ -1,5 +1,4 @@
-import { AddKeyCombo, RemoveKeyCombo } from '@/symbols'
-import type { App, Plugin } from 'vue'
+import type { Plugin } from 'vue'
 
 type KeyFunctionMap = Record<string, () => void>
 
@@ -14,6 +13,7 @@ const handleKeydown = (event: KeyboardEvent): void => {
 	}
 }
 
+// Keys for the whole app, registered once at startup (main.ts).
 const addKeyCombo = (keyCombo: string, func: () => void): void => {
 	if (keyFunctionMap[keyCombo]) {
 		console.log(`Key combo ${keyCombo} is already registered.`)
@@ -22,17 +22,11 @@ const addKeyCombo = (keyCombo: string, func: () => void): void => {
 	keyFunctionMap[keyCombo] = func
 }
 
-const removeKeyCombo = (keyCombo: string): void => {
-	delete keyFunctionMap[keyCombo]
-}
-
 const globalKeyPlugin: Plugin = {
-	install(app: App) {
-		app.provide(AddKeyCombo, addKeyCombo)
-		app.provide(RemoveKeyCombo, removeKeyCombo)
+	install() {
 		window.addEventListener('keydown', handleKeydown)
 	},
 }
 
 export default globalKeyPlugin
-export { addKeyCombo, removeKeyCombo }
+export { addKeyCombo }

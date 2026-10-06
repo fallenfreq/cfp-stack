@@ -125,6 +125,32 @@ export async function settle(page: Page): Promise<void> {
 	)
 }
 
+/** Go to `path` as the site nav does: moving between pages without loading the app again. */
+export async function moveTo(page: Page, path: string): Promise<void> {
+	await page.evaluate(
+		(path) =>
+			(
+				document.querySelector('#app') as any
+			).__vue_app__.config.globalProperties.$router.push(path),
+		path,
+	)
+}
+
+/**
+ * What the app's own code logs from now on, of these kinds ('error' also takes uncaught errors),
+ * as "kind: text". The browser's own messages have the page's address, not the app's code's.
+ */
+export function appMessages(page: Page, kinds: string[]): string[] {
+	const messages: string[] = []
+	page.on('console', (message) => {
+		if (kinds.includes(message.type()) && message.location().url.includes('/assets/'))
+			messages.push(`${message.type()}: ${message.text()}`)
+	})
+	if (kinds.includes('error'))
+		page.on('pageerror', (error) => messages.push(`error: ${error.message}`))
+	return messages
+}
+
 // ─── Measuring ──────────────────────────────────────────────────────────
 
 export const box = (target: Locator): Promise<Box> =>

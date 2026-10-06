@@ -63,7 +63,6 @@ async function onPlaceSelected(place: google.maps.places.Place) {
 		})
 
 		const location = place.location as google.maps.LatLng
-		console.log(`Selected place coordinates: Lat=${location.lat()}, Lng=${location.lng()}`)
 		props.map.setCenter({ lat: location.lat(), lng: location.lng() })
 
 		input.value = ''

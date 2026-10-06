@@ -1,7 +1,7 @@
 import { useEditorStore } from '@/stores/editorStore'
 import { type Editor } from '@tiptap/vue-3'
 import { storeToRefs } from 'pinia'
-import { onBeforeUnmount, onMounted, onUnmounted, watch } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
 
 export function useNodeViewInteractions() {
 	const editorStore = useEditorStore()
@@ -22,19 +22,6 @@ export function useNodeViewInteractions() {
 		if (!position) return
 		const { node, offset } = position
 		return editor.view?.posAtDOM(node, offset)
-	}
-
-	const moveSelectionToNodeView = (editor: Editor, nodeView: Element) => {
-		const parentNode = nodeView.parentElement
-		if (!parentNode) return
-
-		const childIndex = [...parentNode.children].indexOf(nodeView)
-		if (childIndex === -1) return
-
-		const pos = editor.view.posAtDOM(parentNode, childIndex)
-		if (pos == null) return
-
-		editor.commands.setTextSelection(pos)
 	}
 
 	const onSelectionChange = () => {
@@ -71,44 +58,12 @@ export function useNodeViewInteractions() {
 		}
 	}
 
-	const onEditorFocusIn = (event: FocusEvent) => {
-		if (!editor.value) return
-		const focusedElement = event.target as HTMLElement
-		if (!focusedElement) return
-
-		const nodeView = focusedElement.closest('[data-node-view-wrapper]')
-		const contentEl = nodeView?.querySelector('[data-node-view-content]')
-
-		if (nodeView && (!contentEl || !contentEl.contains(focusedElement))) {
-			moveSelectionToNodeView(editor.value, nodeView)
-		}
-	}
-
 	watch(
 		editor,
-		(newEditor, oldEditor) => {
-			try {
-				console.log('Editor changed', { newEditor, oldEditor })
-				if (oldEditor && !oldEditor.isDestroyed) {
-					oldEditor.off('selectionUpdate', onEditorSelectionUpdate)
-					oldEditor.view.dom.removeEventListener('focusin', onEditorFocusIn)
-				}
-				if (newEditor) {
-					newEditor.on('selectionUpdate', onEditorSelectionUpdate)
-
-					newEditor.on('create', () => {
-						console.log('Created editor')
-						newEditor.view.dom.addEventListener('focusin', onEditorFocusIn)
-					})
-
-					newEditor.on('destroy', () => {
-						console.log('Destroyed editor')
-						newEditor.view.dom.removeEventListener('focusin', onEditorFocusIn)
-					})
-				}
-			} catch (error) {
-				console.error('Error in editor watch:', error)
-			}
+		(current, _, onCleanup) => {
+			if (!current) return
+			current.on('selectionUpdate', onEditorSelectionUpdate)
+			onCleanup(() => current.off('selectionUpdate', onEditorSelectionUpdate))
 		},
 		{ immediate: true },
 	)
@@ -119,13 +74,5 @@ export function useNodeViewInteractions() {
 
 	onBeforeUnmount(() => {
 		document.removeEventListener('selectionchange', onSelectionChange)
-		console.log('Before unmount editor', { editor: editor.value })
-		if (editor.value) {
-			editor.value.off('selectionUpdate', onEditorSelectionUpdate)
-		}
-	})
-
-	onUnmounted(() => {
-		console.log('Unmounted editor')
 	})
 }

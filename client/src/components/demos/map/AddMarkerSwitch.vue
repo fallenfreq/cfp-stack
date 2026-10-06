@@ -89,7 +89,6 @@ const onMarkerClick = async (mapMarkersId: number) => {
 	const markerData = markerStore.allMarkers[mapMarkersId]
 	if (!markerData) return
 
-	console.log()
 	openSheet({
 		id: 'mapMarker',
 		content: markerData,

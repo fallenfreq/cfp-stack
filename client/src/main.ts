@@ -9,7 +9,8 @@ import router from './router'
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { queryClient } from './config/queryClient'
 
-import globalKeyPlugin from './plugins/globalKeyPlugin'
+import globalKeyPlugin, { addKeyCombo } from './plugins/globalKeyPlugin'
+import { useDarkModeStore } from './stores/darkModeStore'
 import { useThemeTokensStore } from './stores/themeTokensStore'
 
 // Not waited for: the app shows now and follows sign-in when it's known; pages that need it
@@ -25,5 +26,9 @@ app.use(router)
 // Fire-and-forget — palette computed refs update reactively when tokens arrive.
 // /styles/sf-system CSS is served from edge cache so the stylesheet itself is instant.
 useThemeTokensStore().hydrate().catch(console.error)
+
+// Secret pink mode, from anywhere in the app.
+const darkMode = useDarkModeStore()
+addKeyCombo('Ctrl+Shift+K', darkMode.togglePinkMode)
 
 app.mount('#app')

@@ -1,6 +1,15 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
-import { box, breakpoints, openTests, settle, steadyRequests, useTheme } from './helpers'
+import {
+	appMessages,
+	box,
+	breakpoints,
+	moveTo,
+	openTests,
+	settle,
+	steadyRequests,
+	useTheme,
+} from './helpers'
 
 // App screens: outside documents, a layout measures the layout around it.
 
@@ -249,6 +258,40 @@ test("another page opened in a collection's sheet leaves nothing of the one befo
 	await page.getByRole('link', { name: 'Not there' }).click()
 	await expect(sheet.getByText('Page not found.')).toBeVisible()
 	await expect(sheet.locator('.tiptap'), 'nothing of the page before').toHaveCount(0)
+})
+
+// Each dark mode switch registered the secret pink mode key, and the second was refused with a
+// log line; the key is the app's.
+test('opening a page logs nothing, and the pink mode key works', async ({ page }) => {
+	const logged = appMessages(page, ['log', 'info', 'warning', 'error'])
+	await steadyRequests(page)
+	await page.goto('/contact')
+	await expect(page.locator('main h1')).toHaveText('Contact')
+	await settle(page)
+	expect(logged).toEqual([])
+
+	const html = page.locator('html')
+	await page.keyboard.press('Control+Shift+K')
+	await expect(html).toHaveClass(/(^|\s)theme-pink(\s|$)/)
+	await page.keyboard.press('Control+Shift+K')
+	await expect(html).not.toHaveClass(/(^|\s)theme-pink(\s|$)/)
+})
+
+// The sheet follows the theme's breakpoint for narrow screens. It waited for the theme to load,
+// and with the theme already loaded, stopping the wait threw.
+test('a collection opened once the theme has loaded logs no errors', async ({ page }) => {
+	const errors = appMessages(page, ['error'])
+	await steadyRequests(page)
+	await fakeReplies(page, sheetCollection())
+	await page.goto('/contact')
+	await page.waitForFunction(
+		() =>
+			(document.querySelector('#app') as any).__vue_app__.config.globalProperties.$pinia.state
+				.value.themeTokens?.hydrated,
+	)
+	await moveTo(page, '/c/test?open=in-sheet')
+	await expect(page.locator('.sheet .tiptap p')).toHaveText('Shown to the end')
+	expect(errors).toEqual([])
 })
 
 // The editor opens a stored page as signed in as an admin, the page faked like the ones above.

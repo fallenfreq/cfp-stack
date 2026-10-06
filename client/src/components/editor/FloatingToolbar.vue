@@ -149,7 +149,6 @@ onMounted(() => {
 	window.addEventListener('resize', updatePosition)
 	window.addEventListener('scroll', updatePosition, { passive: true })
 	updatePosition()
-	;(props.editor.view.dom as HTMLElement).classList.add('has-floating-toolbar')
 })
 
 onUnmounted(() => {
@@ -157,7 +156,6 @@ onUnmounted(() => {
 	window.removeEventListener('resize', updatePosition)
 	window.removeEventListener('scroll', updatePosition)
 	dragHandleStore.setSelectionNodePos(null)
-	;(props.editor.view.dom as HTMLElement).classList.remove('has-floating-toolbar')
 })
 </script>
 
@@ -169,6 +167,7 @@ onUnmounted(() => {
 		align-self: center;
 	}
 
+	/* Room at the page's top for the toolbar; its extension puts the class on the editor. */
 	.tiptap.has-floating-toolbar[contenteditable='true'] {
 		padding-top: calc(var(--toolbar-height) + 20px);
 	}
