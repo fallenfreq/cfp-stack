@@ -10,7 +10,7 @@ describes the target design; this file enumerates what needs to change in code t
 **Editor** (2026-10-06): candidate 14 (undo after opening a page) is fixed and committed.
 Candidate 15 (the code view as an editor of its own) and item 16 (TipTap 3.31.4, with what it
 broke fixed) are fixed, reviewed and committed together. Item 17 (console errors and debug
-lines) is fixed and reviewed, not committed. Next: choose with the user.
+lines) is fixed, reviewed and committed. Next: choose with the user.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
