@@ -9,6 +9,8 @@ settings: `docs/hosting.md`. Signing in's setup: `docs/auth.md`, "Zitadel". Sche
   after a layout change, `pnpm test:ui`.
 - Production changes only with the owner's go-ahead: `pnpm migrate:push:api`, `pnpm seed:live`,
   and a push to `main`, which deploys (`docs/hosting.md`, "The Pages project").
+- Files are opened with the Read tool, not `cat` or `sed`: that's what loads a rule in
+  `.claude/rules/` for the files it covers.
 
 ## Working method (sf/sl theme system)
 

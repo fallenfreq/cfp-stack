@@ -17,19 +17,21 @@ approves the commit → commit only that step's files → update Progress. Anoth
    is. A hosting doc in `docs/`: what lives in Cloudflare (the Pages project `cfp-stack`, D1, the
    secrets by name, deploying). Zitadel's settings stay in `docs/auth.md`, "Zitadel" only; copies
    elsewhere go. The README no longer invites contributions.
-3. **`database.md` and `auth.md` become reference.** The database's open findings go to "Known
-   issues", applying a migration on live is written in (from its steps 2–4), and the map-data
-   decision moves there from Claude's memory. Each doc's lasting facts move to their home, then
-   its Plan and Progress are removed. This is the database plan's step 7.
-4. **Path rules and the secrets setting.** `.claude/rules/` `database`, `auth` and
-   `theme-system`: a few lines each, naming the doc to follow when touching those files.
-   `.claude/settings.json` denies reading `api/.dev.vars`.
-5. **Skills.** `commit-own-hunks`, `verify-findings`, `migrate` (it follows `database.md`), then
-   `ship-step`, which lists a step's stages and names the skill for each.
+3. **`docs/database.md` and `docs/auth.md` become reference.** The database's open findings go
+   to "Known issues", applying a migration on live is written in (from its steps 2–4), and the
+   map-data decision moves there from Claude's memory. Each doc's lasting facts move to their
+   home, then its Plan and Progress are removed. This is the database plan's step 7.
+4. **Path rules and the secrets setting.** `.claude/rules/` `database` and `auth`: a few lines
+   each, naming the doc to follow when touching those files. `CLAUDE.md` asks for files to be
+   opened with the Read tool, which is what loads a rule. `.claude/settings.json` denies
+   reading `api/.dev.vars`.
+5. **Skills.** `commit-own-hunks`, `verify-findings`, `migrate` (it follows `docs/database.md`),
+   then `ship-step`, which lists a step's stages and names the skill for each.
 6. **`CLAUDE.md` trimmed** to the rules for every task and which commands Claude runs when,
    citing the READMEs for the rest. The working method's rules for every task (commit only when
    asked, no lint or build unasked, findings verified, limits kept) stay; its sf/sl ones move to
-   their path rule, and its type-check commands become the ones `pnpm typecheck` runs.
+   a `theme-system` path rule in the same commit, so they're never in two places, and its
+   type-check commands become the ones `pnpm typecheck` runs.
 7. **Comments** (optional): what a caller reads becomes `/** */`, one package at a time.
 8. **Later, with the other session:** the theme spec split into reference, explanation and
    internal design; its todo given a plan's lifecycle; user docs begun.
@@ -79,4 +81,10 @@ pointer to sign-in's progress): each waits for a pause in it.
   the doc, with a note for it. Reviewed by an agent; its ten findings checked, nine fixed, one
   declined (the dev Web app's id stays only in `api/.dev.vars`, as the live one is only in
   `api/wrangler.toml`). Unit tests pass (4 + 24).
-- **Next:** step 4, starting with its plan, at a pause in the other session's work.
+- **Step 4 done** (2026-10-06): path rules for the database and signing in, and a deny rule for
+  `api/.dev.vars`. A fresh session that opened `api/src/db.ts` and `api/src/auth/oidc.ts` with
+  the Read tool got each rule's text, once a session; this one, which made them, didn't. A read
+  of `api/.dev.vars` from `api/` was blocked by the deny rule, and `api/.dev.vars.example` stays
+  readable. Reviewed by an agent; its five findings checked and fixed (a rule loads through the
+  Read tool, wider paths, the guide's row). Unit tests pass (4 + 24).
+- **Next:** step 5, the skills, starting with its plan.

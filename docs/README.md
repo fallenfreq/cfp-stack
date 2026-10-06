@@ -34,6 +34,7 @@ that home, or is generated from it where a copy must exist.
 | History: what something was, which change made it so          | The commit message                                                                                           |
 | A procedure only Claude runs                                  | A small skill in `.claude/skills/`; a bigger one names a skill for each stage                                |
 | What Claude reads before touching some files                  | A path rule in `.claude/rules/`, a few lines naming the doc                                                  |
+| A file Claude must not read, such as the secrets              | A deny rule in `.claude/settings.json`: it blocks the Read tool and shell commands that name the file        |
 | What Claude needs in every session                            | `CLAUDE.md`: the rules for every task and which commands Claude runs when; it cites the READMEs for the rest |
 | What one person's Claude has learnt about working with them   | Claude's memory, outside the repo; anything about the project goes in the repo                               |
 | Help for content authors                                      | The editor                                                                                                   |
