@@ -55,28 +55,31 @@ export async function setToken(db: Db, input: SetTokenInput): Promise<void> {
 	if (!input.value.trim()) throw new ValidationError('Token value is required')
 	await getThemeOrThrow(db, input.themeId)
 
-	await db
-		.insert(themeTokens)
-		.values({
-			themeId: input.themeId,
-			name: input.name,
-			value: input.value.trim(),
-			kind: input.kind,
-		})
-		.onConflictDoUpdate({
-			target: [themeTokens.themeId, themeTokens.name],
-			set: { value: input.value.trim(), kind: input.kind },
-		})
-
-	await touchTheme(db, input.themeId)
+	await db.batch([
+		db
+			.insert(themeTokens)
+			.values({
+				themeId: input.themeId,
+				name: input.name,
+				value: input.value.trim(),
+				kind: input.kind,
+			})
+			.onConflictDoUpdate({
+				target: [themeTokens.themeId, themeTokens.name],
+				set: { value: input.value.trim(), kind: input.kind },
+			}),
+		touchTheme(db, input.themeId),
+	])
 }
 
 export async function unsetToken(db: Db, themeId: string, name: string): Promise<void> {
-	const result = await db
-		.delete(themeTokens)
-		.where(and(eq(themeTokens.themeId, themeId), eq(themeTokens.name, name)))
-		.returning({ name: themeTokens.name })
-	if (result.length === 0) throw new NotFoundError(`Token ${name} not found on theme ${themeId}`)
+	if (!(await getToken(db, themeId, name)))
+		throw new NotFoundError(`Token ${name} not found on theme ${themeId}`)
 
-	await touchTheme(db, themeId)
+	await db.batch([
+		db
+			.delete(themeTokens)
+			.where(and(eq(themeTokens.themeId, themeId), eq(themeTokens.name, name))),
+		touchTheme(db, themeId),
+	])
 }

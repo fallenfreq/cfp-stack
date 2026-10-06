@@ -1,5 +1,5 @@
 import { and, eq, inArray } from 'drizzle-orm'
-import type { Db } from '../db.js'
+import { type Db, newestId } from '../db.js'
 import {
 	type ClassRule,
 	type ClassVocabulary,
@@ -413,38 +413,49 @@ async function insertRule(
 		elementSelector,
 	)
 
-	const rule = await db
-		.insert(classRules)
-		.values({
-			themeId: input.themeId,
-			cssProperty: input.cssProperty,
-			value: input.value.trim(),
-			pseudo,
-			elementSelector,
-		})
-		.returning({ id: classRules.id })
-		.get()
-
-	if (classNames.length > 0) {
-		await db
-			.insert(classRuleClasses)
-			.values(classNames.map((className) => ({ ruleId: rule.id, className })))
-	}
-
-	await touchTheme(db, input.themeId)
+	const [[rule]] = await db.batch([
+		db
+			.insert(classRules)
+			.values({
+				themeId: input.themeId,
+				cssProperty: input.cssProperty,
+				value: input.value.trim(),
+				pseudo,
+				elementSelector,
+			})
+			.returning({ id: classRules.id }),
+		// Its classes: the rule just inserted, paired with each vocabulary entry named.
+		db.insert(classRuleClasses).select(
+			db
+				.select({ ruleId: classRules.id, className: classVocabulary.name })
+				.from(classRules)
+				.crossJoin(classVocabulary)
+				.where(
+					and(
+						eq(classRules.id, newestId(db, classRules.id)),
+						inArray(classVocabulary.name, classNames),
+					),
+				),
+		),
+		touchTheme(db, input.themeId),
+	])
+	if (!rule) throw new Error('Failed to insert the rule')
 
 	return { id: rule.id }
 }
 
 export async function deleteClassRule(db: Db, ruleId: number): Promise<void> {
-	const result = await db
-		.delete(classRules)
+	const rule = await db
+		.select({ themeId: classRules.themeId })
+		.from(classRules)
 		.where(eq(classRules.id, ruleId))
-		.returning({ id: classRules.id, themeId: classRules.themeId })
-	const deleted = result[0]
-	if (!deleted) throw new NotFoundError(`Rule ${ruleId} not found`)
+		.get()
+	if (!rule) throw new NotFoundError(`Rule ${ruleId} not found`)
 
-	await touchTheme(db, deleted.themeId)
+	await db.batch([
+		db.delete(classRules).where(eq(classRules.id, ruleId)),
+		touchTheme(db, rule.themeId),
+	])
 }
 
 // Shared shape for the rules + junction + vocabulary join. Each public

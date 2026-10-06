@@ -1,8 +1,10 @@
-import { and, eq, gte, inArray, like, lte, or, type SQL } from 'drizzle-orm'
+import { and, eq, gte, inArray, like, lte, or, type SQL, type SQLWrapper } from 'drizzle-orm'
+import type { BatchItem } from 'drizzle-orm/batch'
 import { SQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { z } from 'zod'
 import { router, secureProcedure } from '../../config/trpc.js'
-import type { Db } from '../../db.js'
+import { type Db, newestId, writeTogether } from '../../db.js'
+import { definedFields } from '../../lib/index.js'
 import {
 	mapMarkers as mapMarkersSchema,
 	markerTags as markerTagsSchema,
@@ -24,39 +26,38 @@ const updateMarkerValidator = z.object({
 	tags: z.array(z.string()).optional(),
 })
 
-type Defined<T> = T extends undefined ? never : T
-
-const filterUndefined = <T extends Record<string, any>>(
-	obj: T,
-): {
-	[K in keyof T as T[K] extends undefined ? never : K]: Defined<T[K]>
-} => {
-	return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as any
-}
-
 const normalizeTag = (tag: string) => tag.trim().toLowerCase().replace(/\s+/g, '-')
 const normalizeTags = (tags: string[]) => {
 	const normalized = tags.filter(Boolean).map(normalizeTag)
 	return Array.from(new Set(normalized))
 }
 
-// The tags' ids, in the order given, adding the tags that are new. The names must be normalized
-// already (normalizeTags). A name is unique, so of two requests adding the same tag, one adds it.
-async function getOrInsertTags(
-	db: Db,
-	names: string[],
-): Promise<{ name: string; tagId: number }[]> {
-	if (names.length === 0) return []
-	await db
+// The tags whose names are new. The names must be normalized already (normalizeTags), and there
+// must be at least one. A name is unique, so of two requests adding the same tag, one adds it.
+const insertTags = (db: Db, names: string[]) =>
+	db
 		.insert(tagsSchema)
 		.values(names.map((name) => ({ name })))
 		.onConflictDoNothing()
-	const found = await db
-		.select({ name: tagsSchema.name, tagId: tagsSchema.tagId })
-		.from(tagsSchema)
-		.where(inArray(tagsSchema.name, names))
-	return names.flatMap((name) => found.filter((tag) => tag.name === name))
-}
+
+// The marker paired with each named tag; a pair there already stays as it is. The tags' ids are
+// read here, so in a batch after insertTags, a tag it added is paired too.
+const insertMarkerTags = (db: Db, markerId: number | SQLWrapper, names: string[]) =>
+	db
+		.insert(markerTagsSchema)
+		.select(
+			db
+				.select({ markerId: mapMarkersSchema.mapMarkersId, tagId: tagsSchema.tagId })
+				.from(mapMarkersSchema)
+				.crossJoin(tagsSchema)
+				.where(
+					and(
+						eq(mapMarkersSchema.mapMarkersId, markerId),
+						inArray(tagsSchema.name, names),
+					),
+				),
+		)
+		.onConflictDoNothing()
 
 export const markersRouter = router({
 	insert: secureProcedure
@@ -67,31 +68,28 @@ export const markersRouter = router({
 				markerData.title = markerData.title.trim()
 			}
 
-			const newMarker = await db
-				.insert(mapMarkersSchema)
-				.values(markerData)
-				.returning({
+			const normalizedTags = normalizeTags(tags)
+			const [[newMarker]] = await db.batch([
+				db.insert(mapMarkersSchema).values(markerData).returning({
 					mapMarkersId: mapMarkersSchema.mapMarkersId,
 					lat: mapMarkersSchema.lat,
 					lng: mapMarkersSchema.lng,
 					title: mapMarkersSchema.title,
-				})
-				.then((markers) => markers[0])
+				}),
+				...(normalizedTags.length > 0
+					? [
+							insertTags(db, normalizedTags),
+							insertMarkerTags(
+								db,
+								newestId(db, mapMarkersSchema.mapMarkersId),
+								normalizedTags,
+							),
+						]
+					: []),
+			])
 
 			if (!newMarker) {
 				throw new Error('Failed to insert the marker')
-			}
-
-			const normalizedTags = normalizeTags(tags)
-			const tagsAndIds = await getOrInsertTags(db, normalizedTags)
-
-			if (tagsAndIds.length > 0) {
-				await db.insert(markerTagsSchema).values(
-					tagsAndIds.map(({ tagId }) => ({
-						markerId: newMarker.mapMarkersId,
-						tagId,
-					})),
-				)
 			}
 
 			return {
@@ -200,36 +198,33 @@ export const markersRouter = router({
 		.mutation(async ({ input, ctx: { db } }) => {
 			const { markerId, tags, ...markerData } = input
 
-			const updates = filterUndefined(markerData)
+			const updates = definedFields(markerData)
+			const writes: BatchItem<'sqlite'>[] = []
 
 			// Tags, when given, replace the marker's tags.
-			let updatedTags: number[] = []
+			const updatedTags = tags ? normalizeTags(tags) : []
 			if (tags) {
-				const tagsAndIds = await getOrInsertTags(db, normalizeTags(tags))
-				updatedTags = tagsAndIds.map(({ tagId }) => tagId)
-
-				await db
-					.delete(markerTagsSchema)
-					.where(eq(markerTagsSchema.markerId, markerId))
-					.execute()
-
+				writes.push(
+					db.delete(markerTagsSchema).where(eq(markerTagsSchema.markerId, markerId)),
+				)
 				if (updatedTags.length > 0) {
-					await db.insert(markerTagsSchema).values(
-						updatedTags.map((tagId) => ({
-							markerId,
-							tagId,
-						})),
+					writes.push(
+						insertTags(db, updatedTags),
+						insertMarkerTags(db, markerId, updatedTags),
 					)
 				}
 			}
 
-			if (Object.keys(markerData).length > 0) {
-				await db
-					.update(mapMarkersSchema)
-					.set(updates)
-					.where(eq(mapMarkersSchema.mapMarkersId, markerId))
-					.execute()
+			if (Object.keys(updates).length > 0) {
+				writes.push(
+					db
+						.update(mapMarkersSchema)
+						.set(updates)
+						.where(eq(mapMarkersSchema.mapMarkersId, markerId)),
+				)
 			}
+
+			await writeTogether(db, writes)
 
 			return {
 				success: true,
@@ -251,17 +246,22 @@ export const markersRouter = router({
 			}),
 		)
 		.mutation(async ({ input: { markerId, tags }, ctx: { db } }) => {
-			const tagsAndIds = await getOrInsertTags(db, normalizeTags(tags.split(',')))
-			if (tagsAndIds.length === 0) return []
+			const names = normalizeTags(tags.split(','))
+			if (names.length === 0) return []
 
 			// Answers with the tags added: one the marker carries already stays as it is.
-			const added = await db
-				.insert(markerTagsSchema)
-				.values(tagsAndIds.map(({ tagId }) => ({ markerId, tagId })))
-				.onConflictDoNothing()
-				.returning({ tagId: markerTagsSchema.tagId })
+			const [, added, named] = await db.batch([
+				insertTags(db, names),
+				insertMarkerTags(db, markerId, names).returning({ tagId: markerTagsSchema.tagId }),
+				db
+					.select({ name: tagsSchema.name, tagId: tagsSchema.tagId })
+					.from(tagsSchema)
+					.where(inArray(tagsSchema.name, names)),
+			])
 			const addedIds = new Set(added.map(({ tagId }) => tagId))
-			return tagsAndIds.filter(({ tagId }) => addedIds.has(tagId)).map(({ name }) => name)
+			return names.filter((name) =>
+				named.some((tag) => tag.name === name && addedIds.has(tag.tagId)),
+			)
 		}),
 
 	deleteTagFromMarker: secureProcedure

@@ -15,12 +15,14 @@ const toParam = (v) => {
 
 function statement(db, sql, params = []) {
 	const stmt = db.prepare(sql)
+	const allNow = () => {
+		stmt.setReturnArrays(false)
+		return { results: stmt.all(...params), success: true, meta: {} }
+	}
 	return {
 		bind: (...p) => statement(db, sql, p.map(toParam)),
-		async all() {
-			stmt.setReturnArrays(false)
-			return { results: stmt.all(...params), success: true, meta: {} }
-		},
+		allNow,
+		all: async () => allNow(),
 		async raw() {
 			stmt.setReturnArrays(true)
 			return stmt.all(...params)
@@ -51,7 +53,20 @@ export function createMemoryD1(migrationsDir) {
 		db.exec(readFileSync(join(migrationsDir, name, 'migration.sql'), 'utf8'))
 	return {
 		prepare: (sql) => statement(db, sql),
-		batch: (stmts) => Promise.all(stmts.map((s) => s.all())),
+		// One transaction, as D1 runs a batch: if a statement fails, none of them stays. The
+		// statements run at once, so no other query runs inside it.
+		batch: async (stmts) => {
+			db.exec('BEGIN')
+			try {
+				const results = stmts.map((s) => s.allNow())
+				db.exec('COMMIT')
+				return results
+			} catch (error) {
+				// Unless SQLite ended it already (a ROLLBACK conflict clause, for one).
+				if (db.isTransaction) db.exec('ROLLBACK')
+				throw error
+			}
+		},
 		exec: async (sql) => {
 			db.exec(sql)
 			return { count: 0, duration: 0 }

@@ -55,8 +55,9 @@ export async function listThemes(db: Db): Promise<Theme[]> {
 // Bump `updated_at` on a theme. Called by child-row mutators (token set,
 // rule create/delete) so the parent row tracks descendant changes — drives
 // CSS-cache invalidation downstream without per-table updatedAt columns.
-export async function touchTheme(db: Db, themeId: string): Promise<void> {
-	await db.update(themes).set({ updatedAt: new Date() }).where(eq(themes.id, themeId))
+// Returns the write, to go in one batch with the change (docs/database.md).
+export function touchTheme(db: Db, themeId: string) {
+	return db.update(themes).set({ updatedAt: new Date() }).where(eq(themes.id, themeId))
 }
 
 // ─── Write ───────────────────────────────────────────────────────────────

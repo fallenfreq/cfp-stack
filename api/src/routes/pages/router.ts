@@ -1,6 +1,8 @@
 import { and, desc, eq } from 'drizzle-orm'
+import type { BatchItem } from 'drizzle-orm/batch'
 import { z } from 'zod'
 import { adminProcedure, publicProcedure, router } from '../../config/trpc.js'
+import { writeTogether } from '../../db.js'
 import {
 	definedFields,
 	insertWithUniqueSlug,
@@ -174,20 +176,26 @@ export const adminPagesRouter = router({
 		.mutation(async ({ input, ctx }) => {
 			const { pageId, tagIds, ...values } = input
 			const setValues = definedFields(values)
+			const writes: BatchItem<'sqlite'>[] = []
 			if (Object.keys(setValues).length > 0) {
-				await ctx.db
-					.update(sitePages)
-					.set({ ...setValues, updatedAt: new Date() })
-					.where(eq(sitePages.pageId, pageId))
+				writes.push(
+					ctx.db
+						.update(sitePages)
+						.set({ ...setValues, updatedAt: new Date() })
+						.where(eq(sitePages.pageId, pageId)),
+				)
 			}
 			if (tagIds !== undefined) {
-				await ctx.db.delete(sitePageTags).where(eq(sitePageTags.pageId, pageId))
+				writes.push(ctx.db.delete(sitePageTags).where(eq(sitePageTags.pageId, pageId)))
 				if (tagIds.length > 0) {
-					await ctx.db
-						.insert(sitePageTags)
-						.values(tagIds.map((tagId) => ({ pageId, tagId })))
+					writes.push(
+						ctx.db
+							.insert(sitePageTags)
+							.values(tagIds.map((tagId) => ({ pageId, tagId }))),
+					)
 				}
 			}
+			await writeTogether(ctx.db, writes)
 			return { pageId }
 		}),
 
