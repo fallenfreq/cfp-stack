@@ -12,11 +12,11 @@ approves the commit → commit only that step's files → update Progress. Anoth
 1. **The guide and its check.** `docs/README.md`: the docs, where each kind of information goes,
    and how a doc is cited. `pnpm test` checks every citation (`test/docReferences.test.mjs`).
 2. **The READMEs and hosting.** The root README takes the setup from `CLAUDE.md`; its
-   out-of-date tRPC example and its Zitadel and Cloudflare walkthroughs go. `client/README.md` (Vue's starter text) is replaced and
-   a README added in `api/`, each saying what the package is. A hosting doc in `docs/`: what
-   lives in Cloudflare (the Pages project `cfp-stack`, D1, the secrets by name, deploying). Zitadel's
-   settings stay in `docs/auth.md`, "Zitadel" only; copies elsewhere go. The README no longer
-   invites contributions.
+   out-of-date tRPC example and its Zitadel and Cloudflare walkthroughs go. `client/README.md`
+   (Vue's starter text) is replaced and a README added in `api/`, each saying what the package
+   is. A hosting doc in `docs/`: what lives in Cloudflare (the Pages project `cfp-stack`, D1, the
+   secrets by name, deploying). Zitadel's settings stay in `docs/auth.md`, "Zitadel" only; copies
+   elsewhere go. The README no longer invites contributions.
 3. **`database.md` and `auth.md` become reference.** The database's open findings go to "Known
    issues", applying a migration on live is written in (from its steps 2–4), and the map-data
    decision moves there from Claude's memory. Each doc's lasting facts move to their home, then
@@ -63,4 +63,20 @@ pointer to sign-in's progress): each waits for a pause in it.
   included. Reviewed by an agent; of its nine findings, three were kept on purpose (the guide's
   "generated", uncommitted files checked too, a file outside the repo failing). Unit tests pass
   (4 + 24).
-- **Next:** step 2, starting with its plan, at a pause in the other session's work.
+- **Step 2 done** (2026-10-06, `49a9614`): the READMEs; `docs/hosting.md`, checked in Cloudflare's
+  dashboard and with wrangler (the build, the domain, the secrets by name); what each setting is,
+  moved from the settings files to their docs; `CLAUDE.md` from 131 lines to 44. Reviewed by an
+  agent; its twelve findings checked, ten fixed. Found, from before this step: a preview should
+  answer 500 for the API and the stylesheet (`docs/hosting.md`, "Known issues");
+  `pnpm logging:api` names no project; `wrangler.toml`'s `name` isn't the project's;
+  `tsconfig.check.json`'s comment says the check doesn't need `dist/`, which it does;
+  `docs/auth.md`, "Settings" still says "before pushing the switch". Unit tests pass (4 + 24).
+- **Step 3 done** (2026-10-06): `docs/database.md` (from 285 lines to 129) and `docs/auth.md`
+  (from 473 to 298) are reference. Their plans, progress and rollout are gone, each fact that
+  still holds moved to its home: applying a migration on live, two decisions (one from Claude's
+  memory, deleted there), each doc's known issues, the API's in `api/README.md`, two reasons as
+  comments in `api/src/db.ts` and `api/src/auth/sessions.ts`. The other session's todo points at
+  the doc, with a note for it. Reviewed by an agent; its ten findings checked, nine fixed, one
+  declined (the dev Web app's id stays only in `api/.dev.vars`, as the live one is only in
+  `api/wrangler.toml`). Unit tests pass (4 + 24).
+- **Next:** step 4, starting with its plan, at a pause in the other session's work.

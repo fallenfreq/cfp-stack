@@ -1,7 +1,8 @@
 # Hosting
 
 What runs the site outside this repo, in Cloudflare (checked in the dashboard, 2026-10-06).
-Signing in's provider is in `docs/auth.md`, "Zitadel".
+Signing in's provider is in `docs/auth.md`, "Zitadel". Wrangler is the api's devDependency, so
+the `wrangler` commands here run from `api/` as `pnpm exec wrangler …`.
 
 ## The Pages project
 
@@ -22,8 +23,9 @@ Signing in's provider is in `docs/auth.md`, "Zitadel".
 
 ## D1
 
-`somefreq-db`, bound as `DB`; its id is in `api/wrangler.toml`. Production and previews share it.
-Its migrations and how they're applied: `docs/database.md`, "Migrations". Time Travel
+`somefreq-db`, bound as `DB`; its id is in `api/wrangler.toml`. Production, previews and every
+older deployment share it. Its migrations and how they're applied: `docs/database.md`,
+"Migrations", "Applying a migration on live". Time Travel
 (`wrangler d1 time-travel`) puts it back to an earlier moment.
 
 ## Settings

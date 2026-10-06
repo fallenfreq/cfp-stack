@@ -154,6 +154,8 @@ export function sessionStore(db: Db, sealer: Sealer, provider: IdentityProvider)
 		/** A new session; returns the cookie's value. */
 		async create(user: SignedInUser, tokens: ProviderTokens): Promise<string> {
 			const now = new Date()
+			// Housekeeping, unrelated to the new session, so not batched with it (docs/database.md,
+			// "How we use it").
 			await db.delete(sessions).where(lt(sessions.expiresAt, now))
 			const id = hex(crypto.getRandomValues(new Uint8Array(32)))
 			const row = { idHash: await idHashOf(id), subject: user.subject }

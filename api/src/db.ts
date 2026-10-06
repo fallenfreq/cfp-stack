@@ -4,7 +4,8 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
 
 // The database as `drizzle(env.DB)` gives it, with no tables registered: each query names its
-// table (docs/database.md, "How we use it").
+// table (docs/database.md, "How we use it"). In a module of its own, so sign-in can use it
+// without depending on the domain.
 export type Db = DrizzleD1Database
 
 // Writes that must happen together, as one batch: D1 runs it as one transaction, so if a write

@@ -1,168 +1,21 @@
 # Sign-in: sessions held by our server
 
-Design, agreed 2026-10-04. Reviewed by three agents (security, fit with this stack, simplicity) and
-checked against Zitadel's own examples. The build follows the steps under "Rollout", one at a time.
-
-## Progress (resume here)
-
-Each step: its files approved, built, checked, reviewed by an agent, committed. Then this section
-is updated, so a fresh session can pick up from it.
-
-- **Step 0, Zitadel apps: done** (2026-10-04).
-    - A "Web" app in each project: Code flow, Basic client secret, Authorization Code + Refresh
-      Token grants.
-        - Dev (`somefreq-dev`): client id `393640438516458992`; callbacks
-          `http://localhost:{8788,5173}/auth/callback`, sign-out back to `http://localhost:{8788,5173}/`,
-          development mode on. Its id and secret are in `api/.dev.vars` (`OIDC_CLIENT_ID`,
-          `OIDC_CLIENT_SECRET`).
-        - Live (`somefreq-prod`): client id `393641495095256560` (in `wrangler.toml`); callback
-          `https://somefreq.com/auth/callback`, sign-out back to `https://somefreq.com/`. Its
-          secret is a Production secret in Cloudflare (`OIDC_CLIENT_SECRET`), unused until step 3.
-    - Instance token lifetimes: access and ID 12 h, refresh 30 days in all (was 90), idle 30 days.
-    - The Cloudflare Pages project is named `cfp-stack`; `wrangler.toml` says `somefreq-pages`. Any
-      `wrangler pages` command that takes a project name needs `cfp-stack`.
-- **Step 1, server sign-in (unused): done** (2026-10-04). Reviewed by two agents together with
-  step 0 and committed with it. Refreshing and re-checking moved to step 3, with the procedures
-  that use them.
-    - Built: `api/src/auth/{provider,oidc,index,sessions,sealing,http}.ts`,
-      `api/src/providers/zitadel.ts`, `api/src/schemas/session.ts`,
-      `api/functions_src/auth/[action].ts`, `api/test/auth{Http,Sealing}.test.mjs`, migration
-      `0001_petite_bloodscream.sql` (creates `sessions` only; applied locally), `openid-client`
-      6.8.8, settings (`wrangler.toml` live values, `.dev.vars.example`; dev values and a generated
-      `SESSION_SECRET` in `.dev.vars`).
-    - Checked: types, unit tests (return address, cookies, cross-site check, sealing), lint,
-      layout checks; by hand on 8788, with another sign-in under way: `/auth/login` → Zitadel →
-      `/account` left a row (roles `["admin"]`, three sealed tokens, 30 days) and the cookie; a
-      same-origin sign-out POST deleted the row and cleared the cookie; cross-site and
-      header-less sign-outs get 403; the old sign-in routes still reach the app.
-    - Shaped while building: the contract has only what step 1 uses (refresh, re-check, reading a
-      session and `AccountProvider` join in step 3). `auth/index.ts` puts sign-in together from
-      its settings (`authFromEnv`). The return address is kept absolute (a path like `//evil.com`
-      would leave the origin).
-    - Changed after review (security; stack fit and simplicity):
-        - One sign-in cookie per sign-in under way, named by its `state` (two tabs signing in at
-          once broke each other); a state that can't name a cookie is refused.
-        - The sign-in checks are opaque outside the provider; the cookie holds them and the return
-          address as JSON.
-        - Settings: the origins and cookie setting are checked at once; the provider's and the
-          sealing secret when first used (so step 3's tRPC check won't fail on a missing secret).
-          The Zitadel adapter reads its own `ZITADEL_PROJECT_ID`.
-        - Discovery keeps only its result (a Worker mustn't await another request's fetch).
-        - A session that fails to save revokes the new refresh token; sign-out still finishes,
-          home, if the provider can't be reached.
-        - Dev cookie names are the site's own (`somefreq-session`), as every app on localhost
-          shares cookies.
-    - Found: the callback never sees the session cookie (Strict; the provider's redirect is
-      cross-site), so signing in again leaves the old row until it expires. Step 3's recent
-      sign-in must handle that (see "Recent sign-in").
-    - Still to do for live, before step 3: apply `0001` to live D1 (ask first; wrangler here isn't
-      signed in to Cloudflare, `npx wrangler login`), and create `SESSION_SECRET` in Cloudflare
-      (Production).
-- **Step 2 done:** tRPC calls the page's own `/trpc`; Vite (5173) proxies it to 8788, keeping
-  the Host. `VITE_API_HOST/PORT` are gone. Before, every call from 5173 asked 8788 for
-  cross-origin permission and was refused, so no data loaded there. `/auth/` joins the proxy in
-  step 3: until then `/auth/signinwin/zitadel` is a page of the client's own. Checked on 8788
-  and 5173 with the old token.
-- **Step 3, the switch: done** (2026-10-04). Reviewed by two agents (security; stack fit and
-  simplicity).
-    - Built: reading, refreshing (the lease) and re-checking in `sessions.ts`; `forRequest` in
-      `auth/index.ts` (each request's session, read once and only when asked for); `session.get`;
-      `account.*` through `AccountProvider` (Zitadel's in `providers/zitadel.ts`); the procedures
-      read the session (`accountProcedure` added); the cross-site check in `[[trpc]].ts`;
-      `/auth/login?recent=1` and the earlier session ended at the callback. Client:
-      `services/session.ts`, the account page on `account.*`, `utils/accountOptions.ts` (was
-      `zitadelOptions.ts`, values in our terms), the router check (from `refs/wip/router-check`),
-      `/auth/` in the Vite proxy, the preview's stand-in. Gone: `@zitadel/vue` (with
-      `vue-oidc-client` / `oidc-client`), `axios`, `jwt-decode`, `cors`, `jsonwebtoken`, the
-      client's `zod`, both `client/.env` files, the introspection settings. CLAUDE.md's auth setup
-      and the README's sign-in setup rewritten here rather than in step 4.
-    - Checked: types, unit tests, layout checks (106; a first run had 3 failures that didn't come
-      back in two runs), the component preview; by hand on 8788 and through 5173:
-        - signing in (Zitadel's own session: no password), a new tab signed in, admin pages;
-        - a re-check keeps `admin` (user info carries the roles);
-        - two refreshes in a row, and five calls at once while one was due (one refresh, all
-          answered);
-        - profile saved, a nickname set and cleared;
-        - the email change refused without a recent sign-in, then "Confirm it's you": a
-          password, the earlier session ended, and the request reached Zitadel (the same address,
-          refused unchanged);
-        - a token that won't open ends its session, and the app then shows you signed out;
-        - signing out (row deleted, Zitadel's session ended, home);
-        - forged requests: cross-site, same-site, a foreign or `null` Origin and none at all get
-          403; form, text and untyped posts 415.
-    - Shaped while building:
-        - The profile is saved with Zitadel's v1 `users/me/profile`: v2 can't clear a field (a
-          nickname). Zitadel refuses a profile saved unchanged, and its error text is
-          translated, so the adapter compares first.
-        - `AccountProfile` is re-exported from `appRouter.ts`: the client's emitted types must
-          name it, and that is the one module it can import.
-        - The adapter returns `{ identity, account }` (`Provider`), so `auth/index.ts` makes one
-          call.
-    - Changed after review:
-        - Every call that needs sign-in is re-checked (at most every 10 minutes), not only admin
-          and account calls: someone the provider ends loses access within minutes, not 30 days.
-        - A token that's missing or won't open ends its session (so rotating `SESSION_SECRET`
-          without `_PREVIOUS` signs everyone out, as "Tokens at rest" says).
-        - The earlier session goes to the callback as its id, not its hash: a copy of the
-          database can't end anyone's session.
-        - `recent=1` asks the provider for proof within a minute, well inside the 10 minutes the
-          change allows, so you aren't sent round twice.
-        - New tokens that fail to save are revoked; only Zitadel's 400 and 409 are "refused" (a
-          limit reached isn't a wrong code); sign-in reads roles from user info, as the re-check
-          does; a sign-in that can't be checked asks to try again; the account page shows the
-          server's refusal messages; "not known" isn't "signed out" (no sign-in loop when the
-          server can't answer).
-    - Found (predates this):
-        - tRPC sent stack traces with every error but internal ones (`onError` blanked those):
-          its `isDev` is on unless `NODE_ENV` is `production`, which Workers don't set; live's
-          "please log in" answer carried one. Fixed after step 3: `isDev: false` in
-          `config/trpc.ts`.
-        - Error answers (checked 2026-10-04): the allowlist held (`onError` replaced every
-          internal error's message), with three gaps, fixed then:
-            - `onError` both hid and logged, and logged no stack, original error or call. Now
-              `errorFormatter` in `config/trpc.ts` decides what an answer says, and `onError`
-              only logs: the call and the original error, with its stack.
-            - `[[trpc]].ts` returned `fetchRequestHandler(…)` without `await`, so its outer
-              catch missed a throw from our own `onError` or `responseMeta`.
-            - `createTheme` (`domain/themes.ts`) put D1's raw message ("UNIQUE constraint
-              failed: themes.…") in a `ConflictError`, which would go out once a route calls it
-              (only the seed does today); it says which theme clashed now.
-        - A tRPC path with a broken escape (`/trpc/%E0%A4%A`) is a 500 and an error log, though
-          it's the caller's mistake (tRPC's `decodeURIComponent` throws).
-        - Any signed-in user can delete any map marker or tag (`markers.delete`, `deleteTag`).
-          Not a priority: the map is a demo and the owner has the only account.
-        - The starter's `user` router is gone (2026-10-05): it was public, so anyone could add
-          users and posts or read a user's email, and `insert` logged every user. The starter's
-          probes went before it: `secure.test` (which logged its input), `test` and `echo`.
-        - The account page's language list is Zitadel's (kept, by choice); `usePage` still
-          blanks when sign-in lands (a shorter wait now).
-        - The page shows you signed out until `session.get` answers.
-    - Still to do for live, before pushing: apply `0001` to live D1 and create `SESSION_SECRET`
-      in Cloudflare (Production) (see step 1).
-- **Step 4, the old setup: kept, by choice** (2026-10-04). The old apps and their secrets stay so
-  an older version can still run; "Zitadel" lists them as the old sign-in's. `.npmrc` no longer
-  hoists `vue-oidc-client` (gone since step 3).
-- **Live, ready for the push** (2026-10-04): `0001` applied to live D1 (none left to apply), and
-  `SESSION_SECRET` created in Cloudflare (Production; generated straight into it, never shown).
-- **Live: done** (pushed `e9c57d7`, 2026-10-04). Checked on somefreq.com: `/account` signed out
-  sends you to Zitadel; signed in (the user's password), `session.get` and `account.profile`
-  answer `no-store`; a new tab opens `/admin` signed in; signing out goes home, signed out; no
-  stack in error answers.
-- **Left:** delete the old setup listed in "Zitadel" once no older version will run; the
-  "Found (predates this)" items under step 3, each with the user's go-ahead.
+How signing in works, and why. Designed 2026-10-04, reviewed by three agents (security, fit with
+this stack, simplicity) and checked against Zitadel's own examples.
 
 ## Why
 
-You have to sign in again in every new tab, and after closing one:
+When the browser signed in with Zitadel itself, you had to sign in again in every new tab, and
+after closing one:
 
-- The browser keeps the sign-in tokens per tab (session storage on live). A new tab has none.
+- The browser kept the sign-in tokens per tab (session storage on live). A new tab had none.
 - Restoring sign-in from a hidden frame can't work: Zitadel refuses to be framed and keeps its own
   cookie same-site (its defaults), and Safari and Firefox block the cross-site cookie anyway.
-- Our server keeps nothing: every protected call carries the token and the API asks Zitadel about
+- Our server kept nothing: every protected call carried the token and the API asked Zitadel about
   it each time (introspection).
 
-Also fixed on the way: the browser holds a token that can change your Zitadel account (the account
-page calls Zitadel's API directly), and the sign-in libraries are unmaintained.
+It also left the browser holding a token that could change your Zitadel account (the account
+page called Zitadel's API directly), and its sign-in libraries were unmaintained.
 
 ## The shape
 
@@ -219,7 +72,7 @@ provider (their ids differ) and every session ending once; those are migration t
 | `api/src/routes/session/router.ts`   | `session.get`: who you are (name, email, roles) or nothing. Public.                                                                                      |
 | `api/src/routes/account/router.ts`   | `account.*`: your profile and email, through `AccountProvider`, with the session's token and the session's user id (never one from input).               |
 | `api/functions_src/trpc/[[trpc]].ts` | Rejects cross-site requests; gives the context a session loader.                                                                                         |
-| `api/src/config/trpc.ts`             | `secureProcedure` / `adminProcedure` / `accountProcedure` read the session (once per request, only when used). Introspection and axios go.               |
+| `api/src/config/trpc.ts`             | `secureProcedure` / `adminProcedure` / `accountProcedure` read the session (once per request, only when used).                                           |
 
 No root `_middleware.ts`: at the root it would run a Function in front of every static file.
 
@@ -249,7 +102,7 @@ and `urn:zitadel:iam:org:projects:roles`.
   expiry, refresh lease, last re-check, created, expires.
 - Lifetime: 30 days from sign-in, fixed (the cookie's `Max-Age` is set once, so reads never write).
   It also ends when the provider refuses a refresh (Zitadel's refresh token is idle after 30 days
-  by default). Align the provider's absolute refresh lifetime with it. A session that ends costs a
+  by default). The provider's refresh lifetime matches it ("Zitadel"). A session that ends costs a
   quick trip through the provider, with no password while the provider's own session lasts.
 - Expired rows are swept at sign-in.
 
@@ -333,35 +186,32 @@ cookie, `code`, the verifier, or request bodies.
 
 ## Client
 
-- `services/session.ts` replaces `services/zitadelAuth.ts`, a plain module like `services/toast.ts`:
+- `services/session.ts`, a plain module like `services/toast.ts`:
   `whenSignInKnown()` (one `session.get`; it never rejects, and says whether the server answered:
   pages that need sign-in go home with a message rather than to sign in when it didn't), reactive
   `signedIn`, `hasRole()`, `signIn(returnTo)` (a full page load to `/auth/login`), `signOut()` (a
   form POST). A tRPC `UNAUTHORIZED` marks you signed out.
-- The router check (built, uncommitted): pages with `meta.signIn` wait for `whenSignInKnown()`,
-  then send you to sign in, or to `/no-access` without `meta.role`. `meta.authName` becomes
-  `meta.signIn`.
+- The router check: pages with `meta.signIn` wait for `whenSignInKnown()`, then send you to
+  sign in, or to `/no-access` without `meta.role`.
 - Account composables call `account.*`. No tokens, axios or provider URLs in the client.
 - tRPC uses a relative `/trpc`; Vite proxies `/trpc` and `/auth/` to 8788 with
   `changeOrigin: false` (the shorthand rewrites Host, which breaks the origin check and the
   callback address on 5173).
-- Gone: `@zitadel/vue`, `vue-oidc-client` / `oidc-client`, `jwt-decode`, axios, the startup gate
-  and `$zitadel` in `main.ts`, the callback routes, `VITE_API_HOST/PORT`,
-  `VITE_API_ZITADEL_CLIENT_ID`, `VITE_API_ZITADEL_PROJECT_RESOURCE_ID`.
-- The component preview gets a stand-in for `services/session.ts`.
+- The component preview has a stand-in for `services/session.ts`.
 
 ## Zitadel (the current provider)
 
 - One instance, its address `OIDC_ISSUER` (`api/wrangler.toml`), with a project per environment
-  (prod, dev). A project's id is `ZITADEL_PROJECT_ID`, and its Web app's client id and secret are
-  `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`: prod's ids in `api/wrangler.toml` and its secret in
-  Cloudflare, dev's all in `api/.dev.vars`. Dev signs in with the same instance unless
+  (`somefreq-prod`, `somefreq-dev`). A project's id is `ZITADEL_PROJECT_ID`, and its Web app's
+  client id and secret are `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`: prod's ids in
+  `api/wrangler.toml` and its secret in Cloudflare, dev's all in `api/.dev.vars`. Dev signs in with the same instance unless
   `api/.dev.vars` sets an `OIDC_ISSUER` of its own.
 - Per project (prod, dev): a Web app, code flow, Basic client secret, Authorization Code + Refresh
   Token grants. Redirect: `/auth/callback` (dev: 8788 and 5173, development mode on). Post-logout:
   `/`.
-- The absolute refresh token lifetime is 30 days (instance OIDC settings; set in step 0).
-- The old sign-in's, unused since step 3 and kept so an older version of the app can still run
+- The instance's token lifetimes (its OIDC settings): access and ID tokens 12 hours, refresh
+  tokens 30 days in all and 30 days idle, as long as a session.
+- The old sign-in's, unused since 2026-10-04 and kept so an older version of the app can still run
   (delete them once none will):
     - A User Agent app per project, which the browser signed in with (`@zitadel/vue`): prod
       `282311473735258121`, dev `282876108658061416`. Its redirects are
@@ -384,9 +234,10 @@ cookie, `code`, the verifier, or request bodies.
 - No longer read: `ZITADEL_INTROSPECTION_ENDPOINT`, and `ZITADEL_CLIENT_ID` /
   `ZITADEL_CLIENT_SECRET` (the API app's; kept for an older version, see "Zitadel").
 
-The new ones are checked on the auth paths only, so a missing secret breaks sign-in, not the whole
-API. Set them in Cloudflare (Production) before pushing the switch. Preview deployments can't sign
-in: their addresses aren't registered with the provider.
+The origins and the cookie setting are checked at once, on every request that reads them (each
+tRPC call), so a wrong `APP_ORIGINS` breaks the whole API. The provider's settings and the
+sealing secret are checked when first used, so a missing secret breaks signing in, not the whole
+API. Preview deployments can't sign in: their addresses aren't registered with the provider.
 
 ## Adding account features
 
@@ -398,35 +249,14 @@ the email change works: one method on `AccountProvider`, Zitadel's implementatio
 - Only what the provider lets a user do to themselves. Managing other users is a different
   permission model (a least-privilege service account), designed separately.
 - Sensitive changes (email, password, authenticators) require a recent sign-in.
-- With Zitadel, prefer its v2 user API; move today's v1 profile call over when touching it.
+- With Zitadel, its v2 user API, except where v1 does what v2 can't (the profile: v2 can't clear
+  a field).
 - Passkeys and security keys are tied to the domain you sign in on, which is Zitadel's. Registered
   from our site they wouldn't work at Zitadel's login, so they stay on Zitadel's page (unless
   Zitadel ever runs on our domain).
 
 Likely next: password change, authenticator app (TOTP), phone number. Each one confirmed against
 Zitadel's API when it's built.
-
-## Rollout
-
-Each step leaves the site working.
-
-0. Zitadel: create the Web apps; set the refresh lifetime.
-1. Server sign-in, unused: the `sessions` table (Drizzle migration: generate, check it only creates
-   `sessions`, commit; local, then live after `wrangler d1 migrations list --remote`),
-   `provider.ts`, `oidc.ts`, `providers/zitadel.ts` (identity part), `auth/index.ts`,
-   `sessions.ts` (create, end), `sealing.ts`, `http.ts`, `auth/[action].ts`, unit tests.
-   Tried by opening `/auth/login` by hand.
-2. tRPC on a relative `/trpc` with the proxy, still sending the old token.
-3. The switch, one commit: reading, refreshing and re-checking in `sessions.ts`, `session.get`,
-   session-based procedures, the cross-site check, `account.*` with Zitadel's `AccountProvider`,
-   the client service, the router check (`refs/wip/router-check`), `/auth/` in the Vite proxy,
-   removed packages and settings.
-4. The old Zitadel apps and the old `ZITADEL_CLIENT_SECRET` secret in Cloudflare: kept for now, so
-   an older version can still run, and listed in "Zitadel". (CLAUDE.md's auth setup and the
-   README were rewritten in step 3.)
-
-Signed-in users sign in once more at step 3. Tabs left open on the old page get UNAUTHORIZED until
-they reload.
 
 ## Tests
 
@@ -450,6 +280,7 @@ signed out is the real `session.get` (null); fake it only where the signed-in UI
 - A required custom header on tRPC calls: with the same-origin check, JSON-only posts, a Strict
   cookie and read-only GETs it adds nothing here.
 - A runtime provider switch or plugin system: one import is enough until a second provider exists.
+- A language list of our own on the account page: it uses Zitadel's.
 
 ## Later
 
@@ -458,11 +289,6 @@ signed out is the real `session.get` (null); fake it only where the signed-in UI
 - Account features as capabilities, so the account page shows only what the provider supports;
   added when a second provider needs it.
 - A Cloudflare rate limit on `/auth/*`; a per-session limit on email resends.
-
-## Found while designing (predates this)
-
-`user.insert` was a public mutation that wrote to the database (the `user` router, removed
-2026-10-05). `cors` and `jsonwebtoken` were unused API dependencies (removed in step 3).
 
 ## References
 

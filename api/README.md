@@ -31,3 +31,8 @@ people in and serves the themes' stylesheet; Pages serves the built client besid
   build first.
 
 Running it and its checks, from the root: `README.md`, "Developing" and "Commands".
+
+## Known issues
+
+- A tRPC address with a broken escape (`/trpc/%E0%A4%A`) answers 500 and logs an error, though
+  the mistake is the caller's: tRPC's `decodeURIComponent` throws.
