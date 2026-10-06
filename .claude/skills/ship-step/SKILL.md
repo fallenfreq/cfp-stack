@@ -4,7 +4,7 @@ description: Take one step of a plan in docs/plans/ from its plan to its commit 
 ---
 
 1. **Plan.** Read the step and the code it touches. Show the owner what will change, file by
-   file, with any new names for approval, and wait for their sign-off.
+   file, and wait for their sign-off (`CLAUDE.md` says when files go one at a time).
 2. **Build** what was signed off, and only that; a schema change with the `migrate` skill.
    Anything found outside it is logged and raised.
 3. **Check** with what `CLAUDE.md` lists, and by running what the change does (the dev server, a

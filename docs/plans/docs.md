@@ -29,8 +29,9 @@ followed the same stages).
    `ship-step`, which lists a step's stages and names the skill for each. Sharing the branch with
    other sessions is a line in `CLAUDE.md`, not a skill.
 6. **`CLAUDE.md` trimmed** to the rules for every task and which commands Claude runs when,
-   citing the READMEs for the rest. The working method's rules for every task (commit only when
-   asked, no lint or build unasked, findings verified, limits kept) stay; its sf/sl ones move to
+   citing the READMEs for the rest. The working method's rules for every task (one file at a
+   time, new vocabulary approved, commit only when asked, no lint or build unasked, findings
+   verified, limits kept) stay; its sf/sl ones move to
    a `theme-system` path rule in the same commit, so they're never in two places, and its
    type-check commands become the ones `pnpm typecheck` runs.
 7. **Comments** (optional): what a caller reads becomes `/** */`, one package at a time.
@@ -95,4 +96,14 @@ pointer to sign-in's progress): each waits for a pause in it.
   skill lists first). Reviewed by an agent; its nine findings checked: eight fixed, and one
   refuted (the skills not found, which a fresh session showed was this session's list). Claude's
   memory note on sharing the branch is deleted. Unit tests pass (4 + 24).
-- **Next:** step 6, the theme-system rule and the `CLAUDE.md` trim, starting with its plan.
+- **Step 6 done** (2026-10-07): `CLAUDE.md` from 46 lines to 24, with no sections; the sf/sl
+  working method is `.claude/rules/theme-system.md`, how the layout checks work and the browser
+  floor are in `client/README.md`. A fresh session that opened `client/src/main.ts`, and one that
+  opened `shared/placementClasses.js`, got the rule. Reviewed by an agent; its eight findings
+  checked with `verify-findings`, seven fixed. Found, from before this step: `pnpm typecheck`
+  reads `api/dist` (shown: 11 of its files), which `pnpm dev` keeps built, though
+  `tsconfig.check.json`'s comment says it doesn't; `client/vite.config.ts` pins `cssTarget` to
+  Safari 14 (2026-06-19, before the floor was raised to 17.4), compat code the floor no longer
+  needs; `client/playwright.config.ts`'s comment says every check runs under both themes, but
+  two run once. Unit tests pass (4 + 24).
+- **Next:** step 7 (optional, the owner's call): `/** */` comments, one package at a time.

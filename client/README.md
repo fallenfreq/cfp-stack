@@ -1,7 +1,8 @@
 # client
 
 The site and its editor, in Vue 3. Vite builds it into `api/client_dist`, which the Pages
-project serves with the API. It has no settings of its own.
+project serves with the API. It has no settings of its own. Its browser floor is Safari 17.4,
+as themes are emitted in `@scope`: no compat code below it.
 
 ## Layout
 
@@ -17,7 +18,14 @@ project serves with the API. It has no settings of its own.
 ## Checks
 
 - Types: `vue-tsc --build`.
-- Layout: `e2e/`, in Chrome against the dev server at 8788.
+- Layout: `e2e/`, in the installed Chrome against the dev server at 8788 (started if needed), with a
+  stylesheet built from the seed in memory. Each check runs under the root theme and again under a
+  deliberately different test theme (`e2e/testTheme.ts`, never seeded), so checks state behaviour,
+  not looks or pixels; only the demo page's and the theme comparison run once. The cases are on
+  `/editor?seed=tests`. The demo page's snapshot fails on any move; an intended one is accepted with
+  `--update-snapshots`. `SF_SYSTEM_CSS=<file>` checks another stylesheet. Known limits are checks
+  marked expected to fail (`e2e/known.spec.ts`). After editing client code, let the dev build finish
+  first: a page loaded mid-rebuild times out.
 - Components: the preview built from `preview/`.
 
 Running it and its checks, from the root: `README.md`, "Developing" and "Commands".

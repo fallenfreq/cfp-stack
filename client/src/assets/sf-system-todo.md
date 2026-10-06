@@ -11,17 +11,21 @@ describes the target design; this file enumerates what needs to change in code t
 `docs/auth.md` and `docs/database.md` are reference only now, their progress logs gone, so the line
 above points at the doc. `CLAUDE.md` is shorter: setup, commands and checks are in `README.md`,
 Cloudflare and the settings in `docs/hosting.md`, and where each kind of information goes in
-`docs/README.md`. It now opens with the checks Claude runs, that production changes need the owner's
-go-ahead, that other sessions share the branch, and that files are opened with the Read tool, which
-loads the rules in `.claude/rules/` for the files they cover. `pnpm test` also checks that every
-citation like `(docs/auth.md, "Settings")` resolves. Your working method in `CLAUDE.md` is unchanged
-for now, but for review findings, now checked with the `verify-findings` skill (`.claude/skills/`);
-a later step moves its sf/sl part to a rule that loads when the theme system's files are touched
-(the plan is in `docs/plans/`). Three of this file's own lines point at what's gone, for you to
-update or close: the open sign-in item ("Sign-in through our own server", which says
-`docs/auth.md`'s "Progress" says where it's up to; sign-in is live), "shipped with step 3 of
-`docs/auth.md`" (the steps are gone), and the note that the starter tables went, citing
-`docs/database.md` (that history is in the commits now).
+`docs/README.md`. It now also lists the checks Claude runs, and says that production changes need
+the owner's go-ahead, that other sessions share the branch, and that files are opened with the Read
+tool, which loads the rules in `.claude/rules/` for the files they cover. `pnpm test` also checks
+that every citation like `(docs/auth.md, "Settings")` resolves. Your working method is now split:
+what applies to every task stays in `CLAUDE.md` (review findings are checked with the
+`verify-findings` skill in `.claude/skills/`), and the sf/sl part is
+`.claude/rules/theme-system.md`, which loads when a client or theme file is opened with the Read
+tool; the rule also points at "Current state (resume here)". How the layout checks work and the
+browser floor are in `client/README.md`; the preview's command is `pnpm preview:components`; the
+type-check commands are now `pnpm typecheck --all` (the API's reads `api/dist`, which `pnpm dev`
+keeps built). Three of this file's own lines point at what's gone, for you to update or close: the
+open sign-in item ("Sign-in through our own server", which says `docs/auth.md`'s "Progress" says
+where it's up to; sign-in is live), "shipped with step 3 of `docs/auth.md`" (the steps are gone),
+and the note that the starter tables went, citing `docs/database.md` (that history is in the commits
+now).
 
 **Editor** (2026-10-06): candidate 14 (undo after opening a page) is fixed and committed.
 Candidate 15 (the code view as an editor of its own) and item 16 (TipTap 3.31.4, with what it
