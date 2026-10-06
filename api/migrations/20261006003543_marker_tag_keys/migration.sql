@@ -1,8 +1,8 @@
 /*
  Generated, then finished by hand: rebuilds marker_tags, which nothing points at, so dropping the
  old one deletes no other rows (on D1 the PRAGMA lines do nothing: docs/database.md, "How we use
- it"). It gets a key, so a marker carries a tag once, and an index on tag_id; a tag's name is
- unique. By hand: a name stored twice keeps its first tag; the pairs move to it, once each, and
+ it"). It gets a key, so a marker carries a tag once, and an index on tag_id. A tag's name is
+ unique. By hand: a name stored twice keeps its first tag, the pairs move to it, once each, and
  the other copies go. A pair whose tag isn't there gets no tag, which stops the migration.
 */
 PRAGMA foreign_keys=OFF;--> statement-breakpoint

@@ -42,6 +42,10 @@ should end up as the example for anything new.
     - drizzle-kit 1.0 writes a single-column primary key without `NOT NULL`, even when the
       schema says it, and SQLite then accepts NULL in a key that isn't an integer. A migration
       that creates or rebuilds a table with a text key gets `NOT NULL` added by hand.
+    - A migration's comments have no `;`. Live D1 splits the SQL at each `;` without seeing
+      comments, so a `;` in one leaves a piece with no statement, and the migration fails
+      ("SQL code did not contain a statement"). Locally wrangler splits it itself, so only live
+      shows this.
 - **A unique value is a `uniqueIndex()`**, not `.unique()`: drizzle-kit 1.0 writes `.unique()`
   into the table, which SQLite can only add or drop by rebuilding it; an index comes and goes on
   its own. A row that may be there already is inserted with `onConflictDoNothing()` and then
