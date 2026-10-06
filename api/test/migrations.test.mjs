@@ -32,7 +32,7 @@ function comments(sql) {
 }
 
 // Live D1 splits a migration at each `;` without seeing comments, so a `;` in one leaves a piece
-// with no statement, and the migration fails there (docs/database.md, migrations).
+// with no statement, and the migration fails there (docs/database.md, "Migrations").
 test('no migration has a ; in a comment', () => {
 	for (const folder of readdirSync(MIGRATIONS)) {
 		const sql = readFileSync(new URL(`${folder}/migration.sql`, MIGRATIONS), 'utf8')

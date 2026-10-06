@@ -21,7 +21,7 @@
 		"dev": "pnpm --filter @somefreq-app/* --parallel dev",
 		"build": "pnpm --filter @somefreq-app/* --parallel build",
 		"typecheck": "node scripts/typecheck.mjs",
-		"test": "pnpm --filter @somefreq-app/api test",
+		"test": "node --test 'test/*.test.mjs' && pnpm --filter @somefreq-app/api test",
 		"test:ui": "pnpm --filter @somefreq-app/client test:ui",
 		"dev:client": "pnpm --filter @somefreq-app/client dev",
 		"dev:vite:client": "pnpm --filter @somefreq-app/client dev:vite",

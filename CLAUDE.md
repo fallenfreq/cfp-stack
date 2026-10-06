@@ -47,7 +47,7 @@ The full-stack experience runs at **8788** (wrangler serves both the API and the
 | `pnpm dev`                    | Start both servers                                                      |
 | `pnpm build`                  | Build client + API side by side, no type check. Cloudflare's build      |
 | `pnpm typecheck`              | Type-check staged packages (`--all`: every package). Pre-commit runs it |
-| `pnpm test`                   | Unit tests (`api/test`, Node's built-in runner)                         |
+| `pnpm test`                   | Unit tests (`test`, `api/test`; Node's built-in runner)                 |
 | `pnpm test:ui`                | Layout checks in Chrome (`client/e2e`, Playwright)                      |
 | `pnpm migrate:api`            | Generate Drizzle migration files                                        |
 | `pnpm migrate:push:local:api` | Apply migrations to local D1                                            |
@@ -100,7 +100,7 @@ Push to `main` — Cloudflare Pages deploys automatically via GitHub integration
 ## Working method (sf/sl theme system)
 
 The theme system's spec is `client/src/assets/sf-system.md`; open work and where to resume is
-`client/src/assets/sf-system-todo.md` ("Current state (resume here)").
+`client/src/assets/sf-system-todo.md`, "Current state (resume here)".
 
 - One file at a time: reason → sign-off → edit. Simple, behaviour-neutral files may be
   batched with one review at the end.
