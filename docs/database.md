@@ -22,7 +22,8 @@ should end up as the example for anything new.
 - **No `sql` templates.** `sql<T>` asserts a type nothing checks. Use the builder's operators
   and do the rest in code (for example, group joined rows in TypeScript rather than with
   `GROUP_CONCAT`). SQLite's `LIKE` already ignores case for ASCII, so there's no `lower()` or
-  `ilike` (which SQLite doesn't have).
+  `ilike` (which SQLite doesn't have); a `%` or `_` in the text searched for matches any
+  characters.
 - **Writes that must happen together go in one `db.batch([…])`.** D1 runs a batch as one
   transaction: if a statement fails, none of them stays. D1 has no transaction you can hold
   open, so `db.transaction()` isn't used. When a later write needs an id an earlier insert makes,
@@ -43,7 +44,8 @@ should end up as the example for anything new.
       that creates or rebuilds a table with a text key gets `NOT NULL` added by hand.
 - **A unique value is a `uniqueIndex()`**, not `.unique()`: drizzle-kit 1.0 writes `.unique()`
   into the table, which SQLite can only add or drop by rebuilding it; an index comes and goes on
-  its own.
+  its own. A row that may be there already is inserted with `onConflictDoNothing()` and then
+  read, never looked for first: between the look and the insert, another request can add it.
 - **Every foreign key's column leads an index** (or the primary key). Deleting a row finds the
   rows pointing at it through that index; without one, SQLite reads the whole table for each row
   deleted (deleting the design read 326,276 rows before `…_keys_and_indexes`, 2 after).
@@ -115,17 +117,33 @@ for each; pushing is the owner's call.
       (before or after the push: the code doesn't depend on keys or indexes); check the counts
       and the stylesheet.
 4. **No `sql` templates** (`routes/markers/router.ts`: `lower()`, `ilike`, `GROUP_CONCAT`; the
-   map stays, so they're rewritten, not removed). `ilike` is also a bug: Drizzle writes
-   `title ilike '%…%'`, which SQLite refuses, so every marker search by text that isn't exact
-   fails with a 500. `marker_tags` has no primary key and no index: a marker can carry the same
-   tag twice, and deleting a marker or a tag reads the whole table. It takes the shape of
-   `site_page_tags` (nothing points at it, so rebuilding it is safe).
+   map stays, so they're rewritten, not removed).
+    - `ilike` was also a bug: Drizzle writes `title ilike '%…%'`, which SQLite refuses, so every
+      marker search by text that wasn't exact answered 500. A search now matches with `like`,
+      an exact one with `eq`, so there a title's case counts (tags are stored lowercase).
+    - `GROUP_CONCAT` joined the tags of the rows the search kept, so a marker found by one tag
+      came back with that tag only. The search now picks markers (by title, or through a
+      subquery those carrying a matching tag) and each comes back with all its tags, the rows
+      grouped in TypeScript.
+    - `marker_tags` had no key and no index: a marker could carry a tag twice, and deleting a
+      marker or a tag read the whole table. It takes `site_page_tags`' shape; `…_marker_tag_keys`
+      rebuilds it (nothing points at it). A tag's name is unique (`tags_name_unique`), so two
+      requests adding the same new tag add it once. Adding a tag a marker carries already adds
+      nothing, and the answer names only the tags added.
+    - Live, in manual mode. First the read-only check: no pair twice in `marker_tags`, no name
+      twice in `tags`, and no row of `marker_tags` pointing at nothing (the foreign-key check):
+      any of them stops the migration, which then changes nothing. Nothing else in
+      `sqlite_master` mentions `marker_tags`, and neither index name is taken. Note the
+      Time Travel bookmark and apply the migration, then push: the new code relies on the
+      unique name (without it, adding a tag that exists adds it again). Until then the old code
+      runs as before, except that adding a tag twice answers 500 rather than storing it twice.
 5. **Batch what must happen together.** Found so far:
     - `pages.update`: the page, then its tags deleted, then inserted (a failed insert leaves the
       page with no tags).
     - `createClassRule` (the rule, its classes, `touchTheme`), `deleteClassRule`, `setToken` and
       `unsetToken` (each write and `touchTheme`).
-    - The markers router's `insert` and `update`.
+    - The markers router's `insert` and `update`; `update`'s `filterUndefined` (and its `any`)
+      goes, as `.set()` leaves out what's undefined itself.
     - `auth/sessions.ts`: check each; its housekeeping deletes can stay separate.
     - The in-memory D1 (`client/e2e/d1Memory.mjs`) runs a batch's statements one by one, so in
       memory a failed statement leaves the earlier ones in place; it runs them as one
@@ -134,7 +152,9 @@ for each; pushing is the owner's call.
    Routes that write a table's rows (pages, tags, markers) take their input from the table, so a
    column change breaks the validator at compile time; inputs that aren't rows (the account's,
    from Zitadel) stay written by hand. zod 3.23 → 4 (1.0 accepts ≥ 3.25 or 4); only the API
-   uses zod.
+   uses zod. Found in the markers router: `normalizeTags` drops empty names before trimming, so
+   a tag of spaces is saved as `''`, and a tag that isn't there answers 500 rather than 404
+   (`NotFoundError`).
 7. **Write it down**: this page's "How we use it" stays current; `CLAUDE.md` points to it
    (with the owner's go-ahead).
 
@@ -179,5 +199,13 @@ for each; pushing is the owner's call.
   `d1_migrations` rows (ids 18–20) were renamed, after which only `…_keys_and_indexes` waited,
   and it ran. Every design row is the same (3 themes, 137 tokens, 469 rules, 695 rule classes),
   both keys are in the schema's order, the indexes are there, the foreign-key check is clean
-  and live's stylesheet is byte for byte the same. Unpushed: `2dd49ba`, `fbdff32`.
-- **Next:** push, then step 4, starting with its plan.
+  and live's stylesheet is byte for byte the same. Pushed `2dd49ba`…`a12db14`; once deployed,
+  live answers as before and its stylesheet is unchanged.
+- **Step 4, code and local done** (2026-10-06): on a copy of local D1 with markers and tags in
+  the old shape, the migration kept every pair; with a pair twice it stopped and changed
+  nothing. Locally `ilike` is refused, as it was live, and the router answers as planned (30
+  checks on local D1: each kind of search, each marker with all its tags, a tag added twice
+  kept once, one new tag added by five requests at once made once, the deletes taking their
+  pairs with them). Type checks, unit tests (21) and layout checks (114) pass.
+- **Next:** step 4 live (manual mode: the read-only check, the migration, then the push), then
+  step 5, starting with its plan.

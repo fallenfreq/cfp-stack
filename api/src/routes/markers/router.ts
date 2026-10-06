@@ -1,4 +1,4 @@
-import { and, eq, gte, ilike, lte, or, sql } from 'drizzle-orm'
+import { and, eq, gte, inArray, like, lte, or, type SQL } from 'drizzle-orm'
 import { SQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { z } from 'zod'
 import { router, secureProcedure } from '../../config/trpc.js'
@@ -8,8 +8,6 @@ import {
 	markerTags as markerTagsSchema,
 	tags as tagsSchema,
 } from '../../schemas/mapMarker.js'
-
-const lower = (column: SQLiteColumn) => sql`LOWER(${column})`
 
 const insertMarkerValidator = z.object({
 	tags: z.array(z.string()),
@@ -42,33 +40,22 @@ const normalizeTags = (tags: string[]) => {
 	return Array.from(new Set(normalized))
 }
 
-// The tag's id, adding the tag if it's new. The tag must be normalized already (normalizeTag).
-async function getOrInsertTag(
+// The tags' ids, in the order given, adding the tags that are new. The names must be normalized
+// already (normalizeTags). A name is unique, so of two requests adding the same tag, one adds it.
+async function getOrInsertTags(
 	db: Db,
-	normalizedTag: string,
-): Promise<{ normalizedTag: string; tagId: number }> {
-	const existingTag = await db
-		.select({ tagId: tagsSchema.tagId })
-		.from(tagsSchema)
-		.where(eq(tagsSchema.name, normalizedTag))
-		.limit(1)
-		.then((tags) => tags[0])
-
-	if (existingTag) {
-		return { normalizedTag, tagId: existingTag.tagId }
-	}
-
-	const newTag = await db
+	names: string[],
+): Promise<{ name: string; tagId: number }[]> {
+	if (names.length === 0) return []
+	await db
 		.insert(tagsSchema)
-		.values({ name: normalizedTag })
-		.returning({ tagId: tagsSchema.tagId })
-		.then((tags) => tags[0])
-
-	if (!newTag) {
-		throw new Error(`Failed to insert the tag: ${normalizedTag}`)
-	}
-
-	return { normalizedTag, tagId: newTag.tagId }
+		.values(names.map((name) => ({ name })))
+		.onConflictDoNothing()
+	const found = await db
+		.select({ name: tagsSchema.name, tagId: tagsSchema.tagId })
+		.from(tagsSchema)
+		.where(inArray(tagsSchema.name, names))
+	return names.flatMap((name) => found.filter((tag) => tag.name === name))
 }
 
 export const markersRouter = router({
@@ -96,9 +83,7 @@ export const markersRouter = router({
 			}
 
 			const normalizedTags = normalizeTags(tags)
-			const tagsAndIds = await Promise.all(
-				normalizedTags.map((tag) => getOrInsertTag(db, tag)),
-			)
+			const tagsAndIds = await getOrInsertTags(db, normalizedTags)
 
 			if (tagsAndIds.length > 0) {
 				await db.insert(markerTagsSchema).values(
@@ -112,7 +97,7 @@ export const markersRouter = router({
 			return {
 				success: true,
 				marker: newMarker,
-				tags: tagsAndIds.map(({ normalizedTag }) => normalizedTag),
+				tags: normalizedTags,
 			}
 		}),
 
@@ -133,11 +118,21 @@ export const markersRouter = router({
 			}),
 		)
 		.query(async ({ input: { search, exactSearch }, ctx: { db } }) => {
-			// Exact: the whole value, ignoring case. Otherwise: anything containing it.
+			// Exact: the whole value. Otherwise: anything containing it, ignoring case as SQLite's
+			// LIKE does (for ASCII); a % or _ in the value matches any characters.
 			const matchString = (column: SQLiteColumn, value: string) =>
-				exactSearch
-					? eq(lower(column), value.toLowerCase())
-					: ilike(column, `%${value.trim()}%`)
+				exactSearch ? eq(column, value) : like(column, `%${value.trim()}%`)
+
+			// Markers carrying a tag that matches.
+			const taggedWith = (match: SQL) =>
+				inArray(
+					mapMarkersSchema.mapMarkersId,
+					db
+						.select({ markerId: markerTagsSchema.markerId })
+						.from(markerTagsSchema)
+						.innerJoin(tagsSchema, eq(markerTagsSchema.tagId, tagsSchema.tagId))
+						.where(match),
+				)
 
 			// Exact: the same point. Otherwise: within 0.01° of it each way.
 			const matchLatLng = (
@@ -165,7 +160,7 @@ export const markersRouter = router({
 						: typeof search === 'string'
 							? or(
 									matchString(mapMarkersSchema.title, search),
-									matchString(tagsSchema.name, normalizeTag(search)),
+									taggedWith(matchString(tagsSchema.name, normalizeTag(search))),
 								)
 							: search.lat != null && search.lng != null
 								? matchLatLng(
@@ -176,14 +171,8 @@ export const markersRouter = router({
 									)
 								: undefined
 
-			const aggregate = await db
-				.select({
-					mapMarkersId: mapMarkersSchema.mapMarkersId,
-					title: mapMarkersSchema.title,
-					lat: mapMarkersSchema.lat,
-					lng: mapMarkersSchema.lng,
-					tags: sql<string>`GROUP_CONCAT(${tagsSchema.name}, ',')`.as('tags'),
-				})
+			const rows = await db
+				.select({ marker: mapMarkersSchema, tag: tagsSchema.name })
 				.from(mapMarkersSchema)
 				.leftJoin(
 					markerTagsSchema,
@@ -191,18 +180,19 @@ export const markersRouter = router({
 				)
 				.leftJoin(tagsSchema, eq(markerTagsSchema.tagId, tagsSchema.tagId))
 				.where(whereCondition)
-				.groupBy(
-					mapMarkersSchema.mapMarkersId,
-					mapMarkersSchema.title,
-					mapMarkersSchema.lat,
-					mapMarkersSchema.lng,
-				)
+				.orderBy(mapMarkersSchema.mapMarkersId, tagsSchema.name)
 
-			// GROUP_CONCAT joins a marker's tags with commas; each row gets them back as a list.
-			return aggregate.map((row) => ({
-				...row,
-				tags: row.tags ? row.tags.split(',') : [],
-			}))
+			// A row for each of a marker's tags; each marker once, with all its tags.
+			const markers = new Map<
+				number,
+				typeof mapMarkersSchema.$inferSelect & { tags: string[] }
+			>()
+			for (const { marker, tag } of rows) {
+				const entry = markers.get(marker.mapMarkersId) ?? { ...marker, tags: [] }
+				if (tag !== null) entry.tags.push(tag)
+				markers.set(marker.mapMarkersId, entry)
+			}
+			return [...markers.values()]
 		}),
 
 	update: secureProcedure
@@ -215,10 +205,7 @@ export const markersRouter = router({
 			// Tags, when given, replace the marker's tags.
 			let updatedTags: number[] = []
 			if (tags) {
-				const normalizedTags = normalizeTags(tags)
-				const tagsAndIds = await Promise.all(
-					normalizedTags.map((tag) => getOrInsertTag(db, tag)),
-				)
+				const tagsAndIds = await getOrInsertTags(db, normalizeTags(tags))
 				updatedTags = tagsAndIds.map(({ tagId }) => tagId)
 
 				await db
@@ -264,13 +251,17 @@ export const markersRouter = router({
 			}),
 		)
 		.mutation(async ({ input: { markerId, tags }, ctx: { db } }) => {
-			return await Promise.all(
-				normalizeTags(tags.split(',')).map(async (tag) => {
-					const { tagId, normalizedTag } = await getOrInsertTag(db, tag)
-					await db.insert(markerTagsSchema).values({ markerId, tagId }).execute()
-					return normalizedTag
-				}),
-			)
+			const tagsAndIds = await getOrInsertTags(db, normalizeTags(tags.split(',')))
+			if (tagsAndIds.length === 0) return []
+
+			// Answers with the tags added: one the marker carries already stays as it is.
+			const added = await db
+				.insert(markerTagsSchema)
+				.values(tagsAndIds.map(({ tagId }) => ({ markerId, tagId })))
+				.onConflictDoNothing()
+				.returning({ tagId: markerTagsSchema.tagId })
+			const addedIds = new Set(added.map(({ tagId }) => tagId))
+			return tagsAndIds.filter(({ tagId }) => addedIds.has(tagId)).map(({ name }) => name)
 		}),
 
 	deleteTagFromMarker: secureProcedure
