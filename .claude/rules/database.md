@@ -17,5 +17,5 @@ paths:
     - api/wrangler.toml
 ---
 
-Code that reads or writes D1 follows `docs/database.md`, "How we use it"; a migration, its
-"Migrations" and "Applying a migration on live".
+Code that reads or writes D1 follows `docs/database.md`, "How we use it". A migration follows
+`docs/database.md`, "Migrations", "Applying a migration on live".

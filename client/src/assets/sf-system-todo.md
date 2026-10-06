@@ -8,18 +8,20 @@ describes the target design; this file enumerates what needs to change in code t
 **Sign-in work** (its own track, 2026-10-04): done; how it works is `docs/auth.md`.
 
 **Note from the docs session** (2026-10-06; please delete this note once you've read it):
-`docs/auth.md` and `docs/database.md` are reference only now, their progress logs gone, so the
-line above points at the doc. `CLAUDE.md` is shorter: setup, commands and checks are in
-`README.md`, Cloudflare and the settings in `docs/hosting.md`, and where each kind of information
-goes in `docs/README.md`; it now opens with the checks Claude runs and a rule that production
-changes need the owner's go-ahead. `pnpm test` also checks that every citation like `(docs/auth.md,
-"Settings")` resolves. Your working method in `CLAUDE.md` is unchanged for now; a later step
-moves its sf/sl part to a rule that loads when the theme system's files are touched (the plan is
-in `docs/plans/`). Three of this file's own lines point at what's gone, for you to update or
-close: the open sign-in item ("Sign-in through our own server", which says `docs/auth.md`'s
-"Progress" says where it's up to; sign-in is live), "shipped with step 3 of `docs/auth.md`" (the
-steps are gone), and the note that the starter tables went, citing `docs/database.md` (that
-history is in the commits now).
+`docs/auth.md` and `docs/database.md` are reference only now, their progress logs gone, so the line
+above points at the doc. `CLAUDE.md` is shorter: setup, commands and checks are in `README.md`,
+Cloudflare and the settings in `docs/hosting.md`, and where each kind of information goes in
+`docs/README.md`. It now opens with the checks Claude runs, that production changes need the owner's
+go-ahead, that other sessions share the branch, and that files are opened with the Read tool, which
+loads the rules in `.claude/rules/` for the files they cover. `pnpm test` also checks that every
+citation like `(docs/auth.md, "Settings")` resolves. Your working method in `CLAUDE.md` is unchanged
+for now, but for review findings, now checked with the `verify-findings` skill (`.claude/skills/`);
+a later step moves its sf/sl part to a rule that loads when the theme system's files are touched
+(the plan is in `docs/plans/`). Three of this file's own lines point at what's gone, for you to
+update or close: the open sign-in item ("Sign-in through our own server", which says
+`docs/auth.md`'s "Progress" says where it's up to; sign-in is live), "shipped with step 3 of
+`docs/auth.md`" (the steps are gone), and the note that the starter tables went, citing
+`docs/database.md` (that history is in the commits now).
 
 **Editor** (2026-10-06): candidate 14 (undo after opening a page) is fixed and committed.
 Candidate 15 (the code view as an editor of its own) and item 16 (TipTap 3.31.4, with what it

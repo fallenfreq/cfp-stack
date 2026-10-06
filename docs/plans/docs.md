@@ -5,9 +5,8 @@ it. The guide this plan builds is `docs/README.md`. Deleted when done, as every 
 
 ## Plan
 
-Each step: show the plan → build → check → agent review → verify its findings → the owner
-approves the commit → commit only that step's files → update Progress. Another session shares
-`main`: stage only this work's files and hunks.
+Each step runs as `.claude/skills/ship-step/SKILL.md` says (from step 5 on; the steps before
+followed the same stages).
 
 1. **The guide and its check.** `docs/README.md`: the docs, where each kind of information goes,
    and how a doc is cited. `pnpm test` checks every citation (`test/docReferences.test.mjs`).
@@ -25,8 +24,10 @@ approves the commit → commit only that step's files → update Progress. Anoth
    each, naming the doc to follow when touching those files. `CLAUDE.md` asks for files to be
    opened with the Read tool, which is what loads a rule. `.claude/settings.json` denies
    reading `api/.dev.vars`.
-5. **Skills.** `commit-own-hunks`, `verify-findings`, `migrate` (it follows `docs/database.md`),
-   then `ship-step`, which lists a step's stages and names the skill for each.
+5. **Skills.** `verify-findings` (a finding is shown happening, and the code's intent
+   understood, before it's acted on), `migrate` (it follows `docs/database.md`), then
+   `ship-step`, which lists a step's stages and names the skill for each. Sharing the branch with
+   other sessions is a line in `CLAUDE.md`, not a skill.
 6. **`CLAUDE.md` trimmed** to the rules for every task and which commands Claude runs when,
    citing the READMEs for the rest. The working method's rules for every task (commit only when
    asked, no lint or build unasked, findings verified, limits kept) stay; its sf/sl ones move to
@@ -36,7 +37,7 @@ approves the commit → commit only that step's files → update Progress. Anoth
 8. **Later, with the other session:** the theme spec split into reference, explanation and
    internal design; its todo given a plan's lifecycle; user docs begun.
 
-Steps 2, 3, 4, 6 and 8 change what the other session works from (`CLAUDE.md`, and its todo's
+Steps 2 to 6 and 8 change what the other session works from (`CLAUDE.md`, and its todo's
 pointer to sign-in's progress): each waits for a pause in it.
 
 ### Decisions
@@ -87,4 +88,11 @@ pointer to sign-in's progress): each waits for a pause in it.
   of `api/.dev.vars` from `api/` was blocked by the deny rule, and `api/.dev.vars.example` stays
   readable. Reviewed by an agent; its five findings checked and fixed (a rule loads through the
   Read tool, wider paths, the guide's row). Unit tests pass (4 + 24).
-- **Next:** step 5, the skills, starting with its plan.
+- **Step 5 done** (2026-10-06): the skills `verify-findings`, `migrate` and `ship-step`; sharing
+  the branch is a line in `CLAUDE.md` (the owner's call), whose findings rule now names the skill.
+  A fresh session lists the three skills; this one, which made them, doesn't. On a copy of local
+  D1, `--persist-to` reads the copy (and a wrong path silently makes an empty database, so the
+  skill lists first). Reviewed by an agent; its nine findings checked: eight fixed, and one
+  refuted (the skills not found, which a fresh session showed was this session's list). Claude's
+  memory note on sharing the branch is deleted. Unit tests pass (4 + 24).
+- **Next:** step 6, the theme-system rule and the `CLAUDE.md` trim, starting with its plan.

@@ -45,7 +45,8 @@ How the API talks to D1. The code that follows it is the example for anything ne
   wrangler, which finds them through `migrations_pattern` (`pnpm migrate:push:local:api`, then
   `pnpm migrate:push:api` for live, as "Applying a migration on live" says). Wrangler records
   each one applied in `d1_migrations` under its path, so moving or renaming a migration's folder
-  means renaming its row, locally and on live. Read each one before applying it:
+  means renaming its row, locally and on live. A migration is committed with the schema change
+  that made it. Read each one before applying it:
     - Dropping a column that has a foreign key, or changing a table's keys or constraints,
       rebuilds the table, and on D1 dropping the old one deletes every row that cascades from
       it: D1 keeps foreign keys on inside a migration, so the `PRAGMA foreign_keys=OFF`

@@ -11,6 +11,8 @@ settings: `docs/hosting.md`. Signing in's setup: `docs/auth.md`, "Zitadel". Sche
   and a push to `main`, which deploys (`docs/hosting.md`, "The Pages project").
 - Files are opened with the Read tool, not `cat` or `sed`: that's what loads a rule in
   `.claude/rules/` for the files it covers.
+- Other sessions may be working in this repo on the same branch: check `git status`, then stage
+  and commit only your own files and hunks, each named (never `git add -A` or `commit -a`).
 
 ## Working method (sf/sl theme system)
 
@@ -22,9 +24,8 @@ The theme system's spec is `client/src/assets/sf-system.md`; open work and where
 - Classes (and comments) state meaning; the theme decides the look. Plain user terms.
 - Flag new vocabulary for approval: classes, tokens, component names, props, services.
 - Theme creators and content creators must not need to know about each other.
-- Verify every review finding in code; fix it in the layer that owns it. A finding outside
-  the approved scope is logged and raised, not fixed inline — say which findings are
-  regressions from the current change and which predate it.
+- Review findings are checked with the `verify-findings` skill
+  (`.claude/skills/verify-findings/SKILL.md`).
 - Never loosen validators or system limits without approval. Ask before undoing work.
 - Don't auto-run lint or build; typechecks are fine:
   `cd client && ./node_modules/.bin/vue-tsc --noEmit -p tsconfig.app.json`,
