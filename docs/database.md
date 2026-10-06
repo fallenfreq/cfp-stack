@@ -220,5 +220,9 @@ for each; pushing is the owner's call.
   copies of a name on one marker became one pair, a pair on the later copy moved to the first,
   the later copies went and `Food` beside `food` stayed; a pair whose tag isn't there stopped it
   and changed nothing. On live, a read-only preview: every pair stays, tag 29 (`test`) goes.
-- **Next:** step 4 live (manual mode: the migration, then the push), then step 5, starting with
-  its plan.
+- **Step 4 live** (2026-10-06): the first try failed on live and changed nothing, on the `;` in
+  the migration's comment ("How we use it", migrations). With the Time Travel bookmark noted,
+  the migration ran: 8 markers, 39 tags (`test`'s second copy gone) and the same 8 pairs;
+  `marker_tags` has its key, both indexes are there and the foreign-key check is clean. Pushed
+  `5c8c0b4`…`ec4da4f` and this entry, with `c7f7376` (the editor's undo).
+- **Next:** step 5, starting with its plan.
