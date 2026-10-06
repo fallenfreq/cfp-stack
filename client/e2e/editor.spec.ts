@@ -184,6 +184,20 @@ test('ticking a to-do item updates it without redrawing it', async ({ page }) =>
 	expect(await item.evaluate((el) => (el as any).drawnBeforeTicking)).toBe(true)
 })
 
+test('a to-do item with a class of its own keeps its tick box beside its text as it changes', async ({
+	page,
+}) => {
+	const item = page.locator('#task-own')
+	const plain = await taskItemLayout(page.locator('#task-plain'))
+	await item.locator(':scope > div p').click()
+	await page.keyboard.type('!')
+	await expect(item.locator(':scope > div')).toHaveText('Item with a class of its own!')
+	expect(await taskItemLayout(item), 'typed in').toEqual(plain)
+	await item.locator(':scope > label input').check()
+	await expect(item).toHaveAttribute('data-checked', 'true')
+	expect(await taskItemLayout(item), 'ticked').toEqual(plain)
+})
+
 // With blocks selected the toolbar shows only the selection's tools, but a selected block can
 // still change in place: ticked, or turned into a heading by typing or a shortcut. It stays
 // selected. Deleting one drops just that one, even when the block after it is just like it.
@@ -214,15 +228,20 @@ test('selected blocks stay selected when they change in place', async ({ page })
 		},
 		[...positions, await listEnd()],
 	)
-	const selected = page.locator('.tiptap .sf-on-selected:not(hr)')
+	// A to-do item's text is after its tick box, which has a name of its own for screen readers.
+	const selected = page.locator(
+		'.tiptap .sf-on-selected:not(hr, li), .tiptap li.sf-on-selected > label + div',
+	)
 	const selectedDivider = page.locator('.tiptap hr.sf-on-selected')
 	const texts = ['Column 1', 'Column 2', 'Plain item', 'Item with a class of its own']
 	await expect(selected).toHaveText(texts)
 	await expect(selectedDivider).toHaveCount(1)
 
-	await page.locator('#task-plain > label input').check()
-	await expect(page.locator('#task-plain')).toHaveAttribute('data-checked', 'true')
-	await expect(selected, 'a to-do ticked').toHaveText(texts)
+	for (const id of ['task-plain', 'task-own']) {
+		await page.locator(`#${id} > label input`).check()
+		await expect(page.locator(`#${id}`)).toHaveAttribute('data-checked', 'true')
+		await expect(selected, `${id} ticked`).toHaveText(texts)
+	}
 
 	// The cursor at the start of a block's text (Home doesn't go there on a Mac).
 	const cursorIn = async (id: string) =>
@@ -321,6 +340,159 @@ test('a pasted to-do list has the blocks and text of the one copied', async ({ p
 	const after = await lists()
 	expect(after).toHaveLength(2)
 	expect(after[1]).toEqual(copied)
+})
+
+// The code view is the page as code, in an editor of its own. It used to replace the page in the
+// page's editor, so Undo crossed between them: in the code view it brought the page back behind
+// the code, and after switching back it put the code in the page as a code block.
+const codeViewButton = (page: Page) => page.getByRole('button', { name: 'Code view' })
+const pageContent = (page: Page) =>
+	page.evaluate(() => JSON.stringify((document.querySelector('.tiptap') as any).editor.getJSON()))
+// The editor on screen: in the code view, the page's is hidden.
+const shownEditor = (page: Page) => page.locator('.tiptap:visible')
+const shownCode = (page: Page) =>
+	page.evaluate(() =>
+		(
+			[...document.querySelectorAll('.tiptap')].find((el) => el.checkVisibility()) as any
+		).editor.getText(),
+	)
+// Each switch puts the keys on the editor on screen, and leaving leaves no copy of the code.
+const switchView = async (page: Page, toCode: boolean) => {
+	await codeViewButton(page).click()
+	await expect(codeViewButton(page)).toHaveAttribute('aria-pressed', String(toCode))
+	await expect(shownEditor(page)).toBeFocused()
+	await expect(page.locator('.tiptap')).toHaveCount(toCode ? 2 : 1)
+}
+const replaceCode = async (page: Page, code: string) => {
+	await shownEditor(page).click()
+	await page.keyboard.press('ControlOrMeta+a')
+	await page.keyboard.type(code)
+	// A person's pause: Undo takes back changes less than half a second apart as one.
+	await page.waitForTimeout(600)
+}
+const undo = async (page: Page) => {
+	await page.keyboard.press('ControlOrMeta+z')
+	await settle(page)
+}
+
+test('undo in the code view undoes only the code', async ({ page }) => {
+	const opened = await pageContent(page)
+	await switchView(page, true)
+	const code = await shownCode(page)
+	await shownEditor(page).click()
+	await page.keyboard.press('ControlOrMeta+z')
+	expect(await shownCode(page), 'nothing typed: the code as it opened').toBe(code)
+	await page.keyboard.type('abc')
+	expect(await shownCode(page)).not.toBe(code)
+	await page.keyboard.press('ControlOrMeta+z')
+	expect(await shownCode(page), 'the typing undone').toBe(code)
+	expect(await pageContent(page), 'the page untouched').toBe(opened)
+	await switchView(page, false)
+	expect(await pageContent(page)).toBe(opened)
+})
+
+test('looking at the code and back leaves the page and its undo as they were', async ({ page }) => {
+	const opened = await pageContent(page)
+	await page.evaluate(() =>
+		(document.querySelector('.tiptap') as any).editor.commands.focus('end'),
+	)
+	await page.keyboard.type('x')
+	const typed = await pageContent(page)
+	await switchView(page, true)
+	await switchView(page, false)
+	expect(await pageContent(page)).toBe(typed)
+	await undo(page)
+	expect(await pageContent(page), 'the letter undone').toBe(opened)
+})
+
+test('changed code goes into the page as one change, which Undo takes back', async ({ page }) => {
+	const opened = await pageContent(page)
+	await switchView(page, true)
+	await replaceCode(page, '<p>From the code.</p>')
+	await switchView(page, false)
+	await expect(page.locator('.tiptap p')).toHaveText(['From the code.'])
+	await undo(page)
+	expect(await pageContent(page)).toBe(opened)
+})
+
+// Switching left the keys on the hidden page: in Safari, typing then edited it.
+test('keys pressed after switching go to the code, not the hidden page', async ({ page }) => {
+	const opened = await pageContent(page)
+	await switchView(page, true)
+	await page.keyboard.type('abc')
+	expect(await shownCode(page)).toMatch(/^abc/)
+	expect(await pageContent(page)).toBe(opened)
+})
+
+// The code block's own keys leave it or turn it into a paragraph, which the code view can't hold:
+// Enter at the end added and took away a line by turns.
+test("the code block's keys stay in the code", async ({ page }) => {
+	const errors: string[] = []
+	page.on('pageerror', (error) => errors.push(error.message))
+	await switchView(page, true)
+	const code = await shownCode(page)
+	await page.evaluate(() =>
+		(
+			[...document.querySelectorAll('.tiptap')].find((el) => el.checkVisibility()) as any
+		).editor.commands.focus('end'),
+	)
+	await settle(page)
+	for (let i = 0; i < 3; i++) await page.keyboard.press('Enter')
+	expect(await shownCode(page)).toBe(`${code}\n\n\n`)
+	await page.keyboard.press('ControlOrMeta+Alt+c')
+	await settle(page)
+	expect(errors).toEqual([])
+})
+
+// A table's head and foot hold rows like its body.
+test('a table written with a head and foot comes back with all its rows', async ({ page }) => {
+	await switchView(page, true)
+	await replaceCode(
+		page,
+		'<table><thead><tr><th>Head</th></tr></thead><tbody><tr><td>Body</td></tr></tbody><tfoot><tr><td>Foot</td></tr></tfoot></table>',
+	)
+	await switchView(page, false)
+	await expect(page.locator('.tiptap tr')).toHaveText(['Head', 'Body', 'Foot'])
+})
+
+// Tables from elsewhere give their columns widths; the page keeps none, so a table fits its column.
+test('a table written with column widths comes back without them', async ({ page }) => {
+	await switchView(page, true)
+	await replaceCode(
+		page,
+		'<table><colgroup><col width="900"><col width="900"></colgroup><tbody><tr><td>One</td><td>Two</td></tr></tbody></table>',
+	)
+	await switchView(page, false)
+	const table = page.locator('.tiptap table')
+	await expect(table.locator('td')).toHaveText(['One', 'Two'])
+	expect(await pageContent(page), 'no widths kept').not.toMatch(/"colwidth":\[/)
+	expect((await box(table)).width).toBeLessThanOrEqual((await box(page.locator('.tiptap'))).width)
+})
+
+// It used to drop what it couldn't read without a word: a marquee came back as a paragraph.
+test("code the page can't read keeps the code view open, saying what", async ({ page }) => {
+	const opened = await pageContent(page)
+	await switchView(page, true)
+	await replaceCode(page, '<p>Kept</p><marquee>Moving</marquee>')
+	await codeViewButton(page).click()
+	await expect(page.getByText("The page can't read <marquee> in this code.")).toBeVisible()
+	await expect(codeViewButton(page)).toHaveAttribute('aria-pressed', 'true')
+	expect(await pageContent(page)).toBe(opened)
+})
+
+// The page's toolbar works on the page; over the code view it would stay where it was.
+test("the page's toolbar and path aren't shown in the code view", async ({ page }) => {
+	await selectBlock(page, 'task-plain')
+	const toolbar = page.locator('.floating-toolbar')
+	const path = page.locator('.node-path button')
+	await expect(toolbar).toBeVisible()
+	await expect(path).not.toHaveCount(0)
+	await switchView(page, true)
+	await expect(toolbar).toHaveCount(0)
+	await expect(path).toHaveCount(0)
+	await switchView(page, false)
+	await expect(toolbar).toBeVisible()
+	await expect(path).not.toHaveCount(0)
 })
 
 test('leaving the editor and coming back shows its content again, without a reload', async ({

@@ -1,7 +1,6 @@
 import ToolbarImageUrlControl from '@/components/editor/toolbar/ToolbarImageUrlControl.vue'
 import ToolbarLinkControl from '@/components/editor/toolbar/ToolbarLinkControl.vue'
 import ToolbarYouTubeUrlControl from '@/components/editor/toolbar/ToolbarYouTubeUrlControl.vue'
-import { useEditorStore } from '@/stores/editorStore'
 import { toolbarCustomItem } from './toolbarItemFactory'
 
 export const mediaItems = [
@@ -23,8 +22,7 @@ export const mediaItems = [
 		(editor) =>
 			editor.isActive('link')
 			|| (editor.state.selection.$from.parent.type.isTextblock
-				&& editor.state.selection.$from.parent.type.name !== 'codeBlock'
-				&& !useEditorStore().isCodeView),
+				&& editor.state.selection.$from.parent.type.name !== 'codeBlock'),
 		ToolbarLinkControl,
 		{ tooltip: 'Link' },
 	),

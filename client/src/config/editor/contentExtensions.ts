@@ -74,6 +74,17 @@ export const SfHeading = Heading.extend({
 	},
 }).configure({ levels: [1, 2, 3] })
 
+// A cell's width is its own `colwidth`, as TipTap writes it. TipTap also reads the table's
+// `<col width>`, which tables from elsewhere carry: kept, those tables didn't fit their column.
+const cellWidth = {
+	default: null,
+	parseHTML: (cell: HTMLElement) =>
+		cell
+			.getAttribute('colwidth')
+			?.split(',')
+			.map((width) => parseInt(width, 10)) ?? null,
+}
+
 export function getContentExtensions({
 	tableNodeSelection = false,
 	codeBlockNodeView,
@@ -94,21 +105,36 @@ export function getContentExtensions({
 		SfHeading,
 		Image,
 		// TipTap writes a tbody and a colgroup without claiming them, and its content check refuses
-		// unclaimed elements. Column widths come from the cells.
+		// unclaimed elements. Column widths come from the cells. A head or foot written in the code
+		// view holds rows like any other.
 		Table.extend({
 			parseHTML() {
 				return [
 					...(this.parent?.() ?? []),
 					{ tag: 'tbody', skip: true },
+					{ tag: 'thead', skip: true },
+					{ tag: 'tfoot', skip: true },
 					{ tag: 'colgroup', ignore: true },
 				]
 			},
 		}).configure({
 			allowTableNodeSelection: tableNodeSelection,
 			HTMLAttributes: { class: 'tiptap-table' },
+			// Drawn as saved. TipTap's view wraps the table in a box of the editor's own (the table
+			// wasn't the block, and didn't fill its column); what else it does, keeping column widths
+			// in step as columns change, cells without widths don't need.
+			View: null,
 		}),
-		TableCell,
-		TableHeader,
+		TableCell.extend({
+			addAttributes() {
+				return { ...this.parent?.(), colwidth: cellWidth }
+			},
+		}),
+		TableHeader.extend({
+			addAttributes() {
+				return { ...this.parent?.(), colwidth: cellWidth }
+			},
+		}),
 		TableRow,
 		Span,
 		TextColor,

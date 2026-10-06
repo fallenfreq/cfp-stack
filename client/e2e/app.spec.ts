@@ -199,6 +199,58 @@ test("a page in a collection's sheet sits on the sheet's line, and bleeds to its
 	).toBeLessThanOrEqual(1)
 })
 
+/** A collection whose sheet opens `in-sheet`, a page of one paragraph; other pages can be listed. */
+const sheetCollection = (listed: { slug: string; name: string }[] = []) => ({
+	'Tags.getBySlug': { tagId: 1, name: 'A collection', slug: 'test', published: true },
+	'Pages.listByCollection': listed.map((p) => ({ ...p, imageUrl: null })),
+	'Pages.getBySlug': storedPage('in-sheet', 'In the sheet', [
+		{ type: 'paragraph', content: [{ type: 'text', text: 'Shown to the end' }] },
+	]),
+})
+
+test("a page closed in a collection's sheet still shows as the sheet slides away", async ({
+	page,
+}) => {
+	await steadyRequests(page)
+	await fakeReplies(page, sheetCollection())
+	await page.goto('/c/test?open=in-sheet')
+	const sheet = page.locator('.sheet')
+	await expect(sheet.locator('.tiptap p')).toHaveText('Shown to the end')
+	await expect(sheet).toHaveCSS('transform', 'none')
+
+	// The page's text as the sheet starts to slide away.
+	const shownAsItLeaves = sheet.evaluate(
+		(sheet) =>
+			new Promise<string>((resolve) =>
+				new MutationObserver((_, watching) => {
+					if (!sheet.classList.contains('slide-leave-active')) return
+					watching.disconnect()
+					resolve(sheet.querySelector('.page-content')?.textContent ?? '')
+				}).observe(sheet, { attributeFilter: ['class'] }),
+			),
+	)
+	await page.getByRole('button', { name: 'Close' }).click()
+	expect(await shownAsItLeaves).toBe('Shown to the end')
+	await expect(sheet).toHaveCount(0)
+	await expect(page.locator('.tiptap'), 'nothing of it left').toHaveCount(0)
+})
+
+test("another page opened in a collection's sheet leaves nothing of the one before", async ({
+	page,
+}) => {
+	await steadyRequests(page)
+	await fakeReplies(page, sheetCollection([{ slug: 'gone', name: 'Not there' }]))
+	await page.goto('/c/test?open=in-sheet')
+	const sheet = page.locator('.sheet')
+	await expect(sheet.locator('.tiptap p')).toHaveText('Shown to the end')
+
+	// The next page isn't found: the sheet stays, and the page before it goes.
+	await fakeReplies(page, { 'Pages.getBySlug': null })
+	await page.getByRole('link', { name: 'Not there' }).click()
+	await expect(sheet.getByText('Page not found.')).toBeVisible()
+	await expect(sheet.locator('.tiptap'), 'nothing of the page before').toHaveCount(0)
+})
+
 // The editor opens a stored page as signed in as an admin, the page faked like the ones above.
 async function openStored(page: Page, themeClass: string | null, stored: unknown) {
 	await steadyRequests(page)
@@ -273,4 +325,47 @@ test("a stored page that can't open says so, with no editor to save", async ({
 	await page.reload()
 	await expect(page.getByText("This page couldn't be loaded.")).toBeVisible()
 	await expect(page.locator('.tiptap')).toHaveCount(0)
+})
+
+// Save in the code view stored the code itself: the page became one code block.
+test('Save in the code view saves the page, with the changes made to its code', async ({
+	page,
+	themeClass,
+}) => {
+	await openStored(page, themeClass, oneParagraph)
+	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
+	let saved: any = null
+	await page.route(
+		(url) => url.pathname.includes('adminPages.update'),
+		(route) => {
+			saved = JSON.parse(route.request().postDataJSON()[0].json.contentJson)
+			return route.fulfill({ json: [{ result: { data: { json: null } } }] })
+		},
+	)
+	const codeView = page.getByRole('button', { name: 'Code view' })
+	await codeView.click()
+	await expect(codeView).toHaveAttribute('aria-pressed', 'true')
+	const writeCode = async (code: string) => {
+		await page.locator('.tiptap:visible').click()
+		await page.keyboard.press('ControlOrMeta+a')
+		await page.keyboard.type(code)
+	}
+	const save = page.getByRole('button', { name: 'Save' })
+	await page.getByRole('button', { name: 'Editor actions' }).click()
+	// Code the page can't read isn't saved, and says so.
+	await writeCode('<marquee>Moving</marquee>')
+	await save.click()
+	await expect(
+		page.getByText("Not saved: The page can't read <marquee> in this code."),
+	).toBeVisible()
+	expect(saved).toBeNull()
+	await writeCode('<p>From the code.</p>')
+	await save.click()
+	await expect.poll(() => saved).not.toBeNull()
+	const blocks = saved.content.map((block: any) => [
+		block.type,
+		block.content?.map((text: any) => text.text).join(''),
+	])
+	expect(blocks).toEqual([['paragraph', 'From the code.']])
+	await expect(codeView, 'still in the code view').toHaveAttribute('aria-pressed', 'true')
 })

@@ -4,7 +4,6 @@ import ToolbarColorControl from '@/components/editor/toolbar/ToolbarColorControl
 import ToolbarCornersControl from '@/components/editor/toolbar/ToolbarCornersControl.vue'
 import ToolbarFontControl from '@/components/editor/toolbar/ToolbarFontControl.vue'
 import ToolbarShadowControl from '@/components/editor/toolbar/ToolbarShadowControl.vue'
-import { useEditorStore } from '@/stores/editorStore'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import { toolbarCustomItem } from './toolbarItemFactory'
 
@@ -13,7 +12,6 @@ export const styleItems = [
 	toolbarCustomItem(
 		'color',
 		(editor, ctx) => {
-			if (useEditorStore().isCodeView) return false
 			if (useMultiSelectStore().positions.length > 1) return false
 			// Mark mode: cursor in any textblock other than codeBlock
 			if (
@@ -32,7 +30,6 @@ export const styleItems = [
 	toolbarCustomItem(
 		'font-style',
 		(editor, ctx) => {
-			if (useEditorStore().isCodeView) return false
 			if (useMultiSelectStore().positions.length > 1) return false
 			if (
 				editor.state.selection.$from.parent.type.isTextblock
@@ -48,10 +45,7 @@ export const styleItems = [
 	// --- Aspect ratio ---
 	toolbarCustomItem(
 		'aspect',
-		(_e, ctx) =>
-			ctx.activeDepth > 0
-			&& !useEditorStore().isCodeView
-			&& useMultiSelectStore().positions.length <= 1,
+		(_e, ctx) => ctx.activeDepth > 0 && useMultiSelectStore().positions.length <= 1,
 		ToolbarAspectControl,
 		{ tooltip: 'Aspect ratio' },
 	),
@@ -59,10 +53,7 @@ export const styleItems = [
 	// --- Border-radius corners ---
 	toolbarCustomItem(
 		'corners',
-		(_e, ctx) =>
-			ctx.activeDepth > 0
-			&& !useEditorStore().isCodeView
-			&& useMultiSelectStore().positions.length <= 1,
+		(_e, ctx) => ctx.activeDepth > 0 && useMultiSelectStore().positions.length <= 1,
 		ToolbarCornersControl,
 		{ tooltip: 'Corners' },
 	),
@@ -70,19 +61,13 @@ export const styleItems = [
 	// --- Box shadow ---
 	toolbarCustomItem(
 		'shadow',
-		(_e, ctx) =>
-			ctx.activeDepth > 0
-			&& !useEditorStore().isCodeView
-			&& useMultiSelectStore().positions.length <= 1,
+		(_e, ctx) => ctx.activeDepth > 0 && useMultiSelectStore().positions.length <= 1,
 		ToolbarShadowControl,
 		{ tooltip: 'Shadow' },
 	),
 
 	// --- Node attribute editor ---
-	toolbarCustomItem(
-		'attr-editor',
-		(_e, ctx) => ctx.activeDepth > 0 && !useEditorStore().isCodeView,
-		ToolbarAttributeEditor,
-		{ tooltip: 'Attributes' },
-	),
+	toolbarCustomItem('attr-editor', (_e, ctx) => ctx.activeDepth > 0, ToolbarAttributeEditor, {
+		tooltip: 'Attributes',
+	}),
 ]

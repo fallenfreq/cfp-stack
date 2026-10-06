@@ -16,6 +16,7 @@ declare module 'vue' {
     AdminListItem: typeof import('./src/components/admin/AdminListItem.vue')['default']
     BasicCard: typeof import('./src/components/BasicCard.vue')['default']
     BasicFooter: typeof import('./src/components/BasicFooter.vue')['default']
+    CodeView: typeof import('./src/components/editor/CodeView.vue')['default']
     CodeViewToggle: typeof import('./src/components/editor/CodeViewToggle.vue')['default']
     CollectionGrid: typeof import('./src/components/CollectionGrid.vue')['default']
     ColorPicker: typeof import('./src/components/editor/toolbar/ColorPicker.vue')['default']

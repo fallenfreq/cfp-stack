@@ -7,8 +7,9 @@ describes the target design; this file enumerates what needs to change in code t
 
 **Sign-in work** (its own track, 2026-10-04): resume from `docs/auth.md`, "Progress".
 
-**Editor** (2026-10-06): candidate 14 (undo after opening a page) is fixed. Next: candidate 15
-(the code view and undo), to decide with the user.
+**Editor** (2026-10-06): candidate 14 (undo after opening a page) is fixed and committed.
+Candidate 15 (the code view as an editor of its own) and item 16 (TipTap 3.31.4, with what it
+broke fixed) are fixed, reviewed and committed together. Next: choose with the user.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -423,15 +424,127 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
         - The video's box rule (`div:has(> div[data-youtube-video])`) relies on rule order: a
           block added later that reads a plain `div` holding a video directly would be stepped
           through. None does.
-15. **The code view and undo** (found 2026-10-05; to decide): switching to the code view and
-    back swaps the whole document, and undo crosses the swap (proved in Chrome on the demo).
-    Undo in the code view brings the page back while the editor still shows code, and switching
-    back then flattens the page into one paragraph of text. Undo after switching back puts the
-    page's HTML in it as a code block. Save stores either. Predates. Keeping the swaps out of the
-    undo history isn't enough: a whole-document edit made before the switch can still be undone
-    after it (proved by the review). To decide: each switch starts a fresh undo history, or the
-    code view is an editor of its own. A round trip also adds a trailing `;` to inline styles
-    (same meaning).
+15. **The code view and undo** (found 2026-10-05; fixed 2026-10-06): the code view replaced the
+    page inside the page's editor, so Undo and Save took the code for the page. Undo in the code
+    view brought the page back behind the code, and switching back flattened it into one
+    paragraph; Undo after switching back put the page's code in as a code block; Save in the
+    code view stored that code block. Code the page couldn't read was changed without a word (a
+    `marquee` came back as a paragraph).
+    - **Fix (decided with the user):** the code view is an editor of its own (`CodeView.vue`):
+      one code block, with its own undo, and without the code block's keys (they leave the block
+      or make a paragraph, which it can't hold). The page stays underneath, hidden, with its
+      undo; its toolbar, drag handle and block path aren't shown. Going in, the store writes the
+      page as code (`code`, and `pageCode`: the code the page holds) and the keys go to the code.
+      Going out, and on Save, changed code goes into the page as one edit Undo takes back,
+      through TipTap's content check, and the keys go back to the page. Code it can't read keeps
+      the code view open, naming the tag ("Not saved:" first on Save). Unchanged code leaves the
+      page alone, so looking costs nothing (and no longer adds a trailing `;` to inline styles;
+      edited code still does, same meaning). A table's `thead` and `tfoot` read as rows
+      (`contentExtensions.ts`).
+    - **Rejected:** a fresh undo history at each switch: looking at the code would throw undo
+      away, and TipTap has no command for it. Keeping the swaps out of undo: an edit made before
+      the switch could still be undone after it (proved by the review of candidate 14). Measured
+      by the review: one editor swapping its whole state in and out breaks (TipTap's Vue editor
+      keeps its own copy of the state: the code vanished on the next command, and the page's
+      toolbar and path showed over it); CodeMirror edits code better but adds its HTML language
+      and commands packages and its own theming, and typing is already fast (7ms a key on the
+      demo, against 11ms in the old view); a textarea loses the highlighting.
+    - **Dropped (agreed):** the old code view's toolbar: Format Code (switching back and in tidies
+      the code), Delete (emptied the page), Toggle selection. With it went the code-view checks
+      on the page's toolbar buttons, the code block's disabled language picker, and
+      `escapeHTML`, used only by the old switch. Three packages StarterKit already installs are
+      now declared: TipTap's document, text and undo (`client/package.json`).
+    - **Reviewed** by a separate agent: the approach and the change. Fixed from it (regressions
+      of this change): closing the code view left a dead copy of the code on the page, one more
+      each visit (TipTap 3.4.1's `useEditor` swapped a copy in for the box when it closed; fixed
+      at its source by item 16); the keys stayed on the hidden page, so in Safari typing after
+      switching edited it (proved in WebKit); tables with a head or foot were refused; Enter at
+      the end of the code added and took away a line by turns, and Cmd+Alt+C threw. Also: the
+      message names the refused element's whole opening tag (a plain `<div>` read as if every
+      div were wrong), and says "Not saved" on Save.
+    - **Checked:** in Chrome, on the demo and the test page, and the keys in WebKit. Nine checks:
+      in `editor.spec.ts`, Undo in the code view, looking and back, changed code and Undo, keys
+      after switching, the code block's keys, a table's head and foot, code the page can't read,
+      the page's toolbar and path, and every switch checks the keys and leaves no copy; in
+      `app.spec.ts`, Save in the code view, refused and then saved. All fail with the change
+      reverted, and each review fix's check fails with that fix taken out. The suite passes
+      (132).
+    - **Logged, predates:**
+        - Switching back still drops without a word what isn't an element: attributes the page
+          doesn't know (`data-*`, `title`, `lang`, `onclick`), HTML comments, and a line break
+          before bare text at the top (it becomes a space). Only elements are refused.
+        - `FloatingEditorMenu.vue` isn't used anywhere (only registered for auto-import).
+    - **Logged, minor:** the code view sits flush under the top bar (the old one had the
+      language picker above it); keys typed on the page in the moment the code is being written
+      (about 0.1s) aren't in the code, and are replaced (undoably) only if the code is then
+      edited; with two refused elements the message names the last; Tab could indent in the
+      code view (TipTap's `enableTabIndentation`), but then Tab no longer leaves it. The review
+      installed Playwright's WebKit (`~/Library/Caches/ms-playwright`, `webkit-2359`,
+      `ffmpeg-1011`): kept (decided with the user), for item 7's WebKit layout checks.
+16. **TipTap 3.31.4** (2026-10-06, from 3.4.1; the user wanted the upgrade anyway): TipTap's own
+    fix for the dead copy. 3.4.1's `useEditor` swapped a copy in for the editor's box as it
+    closed; where the box was the component's own element, Vue removed the original and the
+    copy stayed. Besides the code view (candidate 15), a collection's sheet kept the page before
+    above the next one while that loaded, or above "Page not found." (proved). 3.31.4 drops the
+    copy (TipTap PR #7753) and leaves the box to Vue.
+    - **What it broke, fixed (approved):**
+        - Closing an editor empties its box at once, so a sheet sliding away showed nothing
+          (proved: 675 characters before, none as the slide began). Every editor is made with
+          `useEditor` (`composables/editor/useEditor.ts`): TipTap's, except that closing leaves
+          a still, inert copy of the page inside the box, which Vue removes with the box. A
+          lint rule refuses TipTap's (`client/eslint.config.js`). `CodeView.vue` uses it too,
+          no longer making its own editor.
+        - Tables were drawn in a box of the editor's own (`div.tableWrapper`), on published
+          pages too, so the table wasn't the block and no longer filled its column (238px of
+          245 on the demo). Drawn as saved again (`View: null`, `contentExtensions.ts`).
+    - **Accepted:** a to-do item's label now holds its tick box's name as hidden text ("Task item
+      checkbox for …"; the box had it as `aria-label` already). Saved HTML is unchanged. One check
+      reads the item's text after the tick box instead; the demo snapshot's span lines changed.
+    - **Rejected:** keeping a sheet's content until it has slid away: the editor is what empties
+      a box Vue still owns, so every animated container would need it. The copy swapped in for
+      the box, as 3.4.1 did: that is what stayed behind.
+    - **Logged:**
+        - TipTap's placeholder marks the last empty paragraph `is-editor-empty` when a page
+          opens: it reads `editor.isEmpty` before the change applies. Nothing styles that class;
+          the demo snapshot has it.
+        - TipTap's injected base styles stay after the last editor closes (its closing sees the
+          copy as an editor). The copy needs them while it shows; they style only TipTap's
+          classes, and the next editor reuses them.
+        - Four declared TipTap packages aren't imported: table-header, table-row, task-list,
+          dropcursor (`client/package.json`).
+        - The copy reloads what's embedded: a sheet's YouTube video stops as the slide begins
+          and loads again in the copy (as 3.4.1's copy did).
+        - A table cell's `text-align` is now also its own `align` attribute: taking it out of
+          the cell's `style` alone leaves the cell aligned (read in TipTap's code).
+    - **Reviewed** by a separate agent: the approach holds. Measured: the original page can't be
+      kept instead of a copy (destroying takes every node view's content out of it); every
+      mounting mode empties or removes the page; the sheet keeping its content until it has slid
+      away, or closing the editor once its box has gone, works per container or leaves a live
+      editor on screen. Fixed from it (regressions of the upgrade):
+        - A to-do item with a class of its own lost its tick-box-beside-text layout as soon as
+          it was typed in, ticked or selected, and ticking it dropped its selection highlight:
+          TipTap's update now writes the item's own attributes over it (extension-list 3.15.2).
+          `customTaskItem.ts` keeps the class as drawn when it updates in place.
+        - Tables from elsewhere carrying `<col width>` were saved at those widths (3.31.4 reads
+          them), wider than their column. A cell's width is its own `colwidth` again
+          (`contentExtensions.ts`).
+        - `useEditor` destroys an editor without a view too.
+    - **Kept (decided with the user):** TipTap's new keys. Tab at the start of a paragraph right
+      after a list moves it into the list's last item (ListKeymap 3.30.0); Backspace at the start
+      of a later list item lifts it out of the list before merging (3.25.0).
+    - **Logged, predate:** leaving the editor logs a TipTap error: `FloatingToolbar.vue` reads the
+      closed editor's page when it goes (3.4.1 threw the same). `useCollapseBreakpoint.ts`
+      throws on every collection page: its first run calls `stopWatch` before it's set.
+      `useNodeViewInteractions.ts` logs debugging lines, and clicking the demo's first paragraph
+      warns about a selection in the document itself.
+    - **Checked:** typechecks; the lint rule refuses TipTap's `useEditor` and allows ours (linted
+      in memory, nothing fixed). In `app.spec.ts`: a page closed in a sheet still shows as it
+      slides away (fails with no copy), and another page opened in the sheet leaves nothing of
+      the one before (fails with the copy swapped in for the box). In `editor.spec.ts`: a to-do
+      item with a class of its own keeps its layout typed in and ticked, the selection check
+      ticks it too, and a table written with column widths comes back without them (each failed
+      before its fix). The demo snapshot's table lines are unchanged from 3.4.1 (fail with
+      TipTap's table view). The suite passes (140).
 
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in

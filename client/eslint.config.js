@@ -64,4 +64,23 @@ export default defineConfig([
 		plugins: { vue: pluginVue },
 		rules: { 'vue/no-ref-object-reactivity-loss': 'error' },
 	},
+	{
+		// TipTap's useEditor empties the editor's box as it closes: a sheet sliding away showed
+		// nothing. Ours leaves the page there until the box goes.
+		files: ['**/*.{ts,vue}'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					paths: [
+						{
+							name: '@tiptap/vue-3',
+							importNames: ['useEditor'],
+							message: "Use useEditor from '@/composables/editor/useEditor'.",
+						},
+					],
+				},
+			],
+		},
+	},
 ])

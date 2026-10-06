@@ -3,19 +3,24 @@
 	<SfStatusDisplay v-else-if="!editor" state="loading" message="Loading editor…" />
 	<div v-else>
 		<EditorTopBar :editor="editor" />
-		<FloatingToolbar :editor="editor" />
-		<ToolbarScrollHint :editor="editor" />
-		<FloatingDragHandle :editor="editor" />
+		<!-- The code view shows instead of the page, which stays underneath with its undo. -->
+		<template v-if="!editorStore.isCodeView">
+			<FloatingToolbar :editor="editor" />
+			<ToolbarScrollHint :editor="editor" />
+			<FloatingDragHandle :editor="editor" />
+		</template>
 		<CodeViewToggle />
 		<!-- The document sits in the page shell, as a stored page does; the bars are the editor's.
 		     page-content: in an inset, its blocks become the inset's items (slLayout.ts). -->
 		<SfPageShell>
-			<EditorContent class="page-content" :editor="editor" />
+			<EditorContent v-show="!editorStore.isCodeView" class="page-content" :editor="editor" />
+			<CodeView v-if="editorStore.isCodeView" />
 		</SfPageShell>
 	</div>
 </template>
 
 <script setup lang="ts">
+import { useEditor } from '@/composables/editor/useEditor'
 import { useNodeViewInteractions } from '@/composables/editor/useNodeViewInteractions'
 import { getContentExtensions } from '@/config/editor/contentExtensions'
 import Commands from '@/editor/extensions/commands/commands.js'
@@ -32,14 +37,9 @@ import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore.js'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import Placeholder from '@tiptap/extension-placeholder'
-import {
-	EditorContent,
-	useEditor,
-	VueNodeViewRenderer,
-	type Content,
-	type NodeViewProps,
-} from '@tiptap/vue-3'
+import { EditorContent, VueNodeViewRenderer, type Content, type NodeViewProps } from '@tiptap/vue-3'
 import { onBeforeUnmount, ref, watch, type Component } from 'vue'
+import CodeView from './CodeView.vue'
 import CodeViewToggle from './CodeViewToggle.vue'
 import EditorTopBar from './EditorTopBar.vue'
 import FloatingDragHandle from './FloatingDragHandle.vue'

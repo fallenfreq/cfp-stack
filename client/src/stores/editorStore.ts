@@ -4,7 +4,6 @@ import { notify } from '@/services/toast'
 import { trpc } from '@/trpc'
 import { prettifyCode } from '@/utils/codeFormatting'
 import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
-import { escapeHTML } from '@/utils/stringUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { defineStore } from 'pinia'
 import { ref, shallowRef, type ShallowRef } from 'vue'
@@ -38,21 +37,55 @@ export const useEditorStore = defineStore('editor', () => {
 		}
 	}
 
-	const toggleCodeView = async () => {
-		if (!editor.value) return
+	// The code view's code (CodeView keeps it up to date) and the code the page holds: what the
+	// code view opened with, or last put into the page. Code that differs from it is an edit.
+	const code = ref('')
+	const pageCode = ref('')
+
+	// Changed code goes into the page as one edit, which Undo takes back. Returns why not if the
+	// page can't read it.
+	const applyCode = (): string | null => {
+		if (!editor.value || code.value === pageCode.value) return null
 		try {
-			if (isCodeView.value) {
-				editor.value.commands.setContent(editor.value.getText())
-			} else {
-				if (!generateBlueprintHTML) {
-					generateBlueprintHTML = initGenerateBlueprintHTML(editor.value)
-				}
-				const htmlContent = await prettifyCode(generateBlueprintHTML(), 'html')
-				editor.value.commands.setContent(
-					`<pre><code class="language-html">${escapeHTML(htmlContent)}</code></pre>`,
-				)
+			editor.value.commands.setContent(code.value, { errorOnInvalidContent: true })
+		} catch (error) {
+			// TipTap's check quotes the last element it refused; its opening tag finds it.
+			const cause =
+				error instanceof Error && error.cause instanceof Error ? error.cause.message : ''
+			const tag = cause.match(/<[^>]*>/)?.[0]
+			return tag
+				? `The page can't read ${tag} in this code.`
+				: "The page can't read this code."
+		}
+		pageCode.value = code.value
+		return null
+	}
+	const codeProblem = (message: string) => notify({ duration: 8000, variant: 'danger', message })
+
+	// The page is written as code for the code view, which shows instead of it. Leaving puts what
+	// changed into the page, and the keys back on it; code the page can't read keeps the code view
+	// open.
+	const toggleCodeView = async () => {
+		const from = editor.value
+		if (!from) return
+		if (isCodeView.value) {
+			const problem = applyCode()
+			if (problem) {
+				codeProblem(problem)
+				return
 			}
-			isCodeView.value = !isCodeView.value
+			isCodeView.value = false
+			from.commands.focus()
+			return
+		}
+		try {
+			if (!generateBlueprintHTML) generateBlueprintHTML = initGenerateBlueprintHTML(from)
+			const written = await prettifyCode(generateBlueprintHTML(), 'html')
+			// Another page opened meanwhile.
+			if (editor.value !== from) return
+			code.value = written
+			pageCode.value = written
+			isCodeView.value = true
 		} catch (err) {
 			notify({
 				duration: 8000,
@@ -78,6 +111,12 @@ export const useEditorStore = defineStore('editor', () => {
 	const save = async () => {
 		const from = editor.value
 		if (!from) return
+		// What's saved is the page, with the code view's changes in it.
+		const problem = isCodeView.value ? applyCode() : null
+		if (problem) {
+			codeProblem(`Not saved: ${problem}`)
+			return
+		}
 		const stillOpen = () => editor.value === from
 		saveStatus.value = 'saving'
 		const json = from.getJSON()
@@ -149,6 +188,7 @@ export const useEditorStore = defineStore('editor', () => {
 		setEditor,
 		isCodeView,
 		toggleCodeView,
+		code,
 		saveStatus,
 		currentPageId,
 		currentSlug,

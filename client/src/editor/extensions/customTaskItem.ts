@@ -22,17 +22,17 @@ export const CustomTaskItem = TaskItem.extend<TaskItemOptions>({
 		]
 	},
 
-	// TipTap's item sets its own attributes over the configured ones, so a class of its own
-	// replaced the checkbox-beside-text layout, and it updates only the tick. Merge them as saving
-	// does, and redraw the item when anything else changes, so it's built from its new attributes
-	// as it was at first (a removed id or style goes too). Ticking still updates in place.
+	// TipTap's item sets its own attributes over the configured ones, drawing it and again on each
+	// update, so a class of its own replaced the checkbox-beside-text layout. Merge them as saving
+	// does, and redraw the item when anything but the tick changes (a removed id or style goes too).
+	// Ticks and typing update in place, keeping the class as drawn: the layout's and the selection's.
 	addNodeView() {
 		const create = this.parent?.()
 		return (props) => {
 			const view = create!(props)
+			const dom = view.dom as HTMLElement
 			const attributes = mergeAttributes(this.options.HTMLAttributes, props.HTMLAttributes)
-			for (const [name, value] of Object.entries(attributes))
-				(view.dom as HTMLElement).setAttribute(name, value)
+			for (const [name, value] of Object.entries(attributes)) dom.setAttribute(name, value)
 			let shown = props.node
 			const onlyTicked = (node: PMNode) =>
 				node.type === shown.type
@@ -42,8 +42,10 @@ export const CustomTaskItem = TaskItem.extend<TaskItemOptions>({
 			return {
 				...view,
 				update: (node, decorations, innerDecorations) => {
-					if (!onlyTicked(node) || !view.update?.(node, decorations, innerDecorations))
-						return false
+					if (!onlyTicked(node)) return false
+					const drawn = dom.className
+					if (!view.update?.(node, decorations, innerDecorations)) return false
+					dom.className = drawn
 					shown = node
 					return true
 				},

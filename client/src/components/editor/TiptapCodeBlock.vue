@@ -8,7 +8,6 @@
 					v-model="selectedLanguage"
 					class="sf sf-field sf-is-contained sf-size-2xs sf-on-focus"
 					aria-label="Code language"
-					:disabled="editorStore.isCodeView"
 				>
 					<option :value="null">Auto</option>
 					<option disabled>—</option>
@@ -23,11 +22,9 @@
 </template>
 
 <script setup lang="ts">
-import { useEditorStore } from '@/stores/editorStore'
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from '@tiptap/vue-3'
 import highlight from 'highlight.js'
 import { computed } from 'vue'
-const editorStore = useEditorStore()
 
 const props = defineProps<NodeViewProps>()
 const languages: string[] = props.extension.options.lowlight.listLanguages()

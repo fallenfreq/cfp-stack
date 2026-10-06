@@ -5,8 +5,9 @@
 </template>
 
 <script setup lang="ts">
+import { useEditor } from '@/composables/editor/useEditor'
 import { getContentExtensions } from '@/config/editor/contentExtensions'
-import { EditorContent, useEditor } from '@tiptap/vue-3'
+import { EditorContent } from '@tiptap/vue-3'
 import { ref, watch } from 'vue'
 
 // A page's content with no shell around it — the page route, a sheet or anything else

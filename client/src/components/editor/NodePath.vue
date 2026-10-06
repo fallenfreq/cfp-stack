@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { useScrollOverflow } from '@/composables/useScrollOverflow'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
+import { useEditorStore } from '@/stores/editorStore'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
@@ -31,6 +32,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 const props = defineProps<{ editor: Editor }>()
 const dragHandleStore = useDragHandleStore()
+const editorStore = useEditorStore()
 
 const tick = ref(0)
 const nodePathEl = ref<HTMLElement | null>(null)
@@ -44,6 +46,8 @@ interface PathSegment {
 
 const path = computed((): PathSegment[] => {
 	void tick.value
+	// The code view hides the page, so it has no path to show.
+	if (editorStore.isCodeView) return []
 	const { state } = props.editor
 	const { selection } = state
 

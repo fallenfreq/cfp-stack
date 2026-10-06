@@ -1,7 +1,6 @@
 import ToolbarNodePicker, {
 	type NodePickerItem,
 } from '@/components/editor/toolbar/ToolbarNodePicker.vue'
-import { useEditorStore } from '@/stores/editorStore'
 import { prettifySelectedCode } from '@/utils/editor/editorUtils'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { Fragment } from '@tiptap/pm/model'
@@ -15,7 +14,6 @@ import {
 	isFormattableTextblock,
 	isInTable,
 	isListNode,
-	isNotCodeView,
 	isParagraphOrHeading,
 	isTextblock,
 	LIST_ITEM_MAP,
@@ -215,7 +213,7 @@ export const blockItems = [
 		id: 'undo',
 		tooltip: 'Undo',
 		label: icon('undo'),
-		show: isNotCodeView,
+		show: () => true,
 		disabled: (editor) => !editor.can().undo(),
 		action: (editor) => editor.chain().focus().undo().run(),
 	}),
@@ -223,7 +221,7 @@ export const blockItems = [
 		id: 'redo',
 		tooltip: 'Redo',
 		label: icon('redo'),
-		show: isNotCodeView,
+		show: () => true,
 		disabled: (editor) => !editor.can().redo(),
 		action: (editor) => editor.chain().focus().redo().run(),
 	}),
@@ -343,18 +341,14 @@ export const blockItems = [
 	toolbarCustomItem(
 		'insert',
 		(_e, ctx) =>
-			ctx.activeDepth > 0
-			&& !ctx.activeNode.type.isLeaf
-			&& !ctx.activeNode.type.isTextblock
-			&& isNotCodeView(),
+			ctx.activeDepth > 0 && !ctx.activeNode.type.isLeaf && !ctx.activeNode.type.isTextblock,
 		ToolbarNodePicker,
 		{ props: { iconName: 'add', getItems: getInsertIntoItems }, tooltip: 'Insert' },
 	),
 	toolbarCustomItem(
 		'turn-into',
 		// !isLeaf: for a leaf NodeSelection resolveActivePos resolves to the parent, giving wrong results
-		(_e, ctx) =>
-			ctx.activeDepth > 0 && !ctx.activeNode.type.isLeaf && !useEditorStore().isCodeView,
+		(_e, ctx) => ctx.activeDepth > 0 && !ctx.activeNode.type.isLeaf,
 		ToolbarNodePicker,
 		{
 			props: { iconName: 'change_circle', getItems: getTurnIntoItems },
@@ -364,10 +358,8 @@ export const blockItems = [
 	toolbarCustomItem(
 		'wrap-in',
 		(editor, ctx) =>
-			!useEditorStore().isCodeView
-			&& (ctx.nodePos !== null
-				|| (!editor.state.selection.empty
-					&& editor.state.selection.$from.parent.inlineContent)),
+			ctx.nodePos !== null
+			|| (!editor.state.selection.empty && editor.state.selection.$from.parent.inlineContent),
 		ToolbarNodePicker,
 		{ props: { iconName: 'frame_source', getItems: getWrapInItems }, tooltip: 'Wrap In' },
 	),

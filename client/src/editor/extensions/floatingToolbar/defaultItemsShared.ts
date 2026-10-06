@@ -1,5 +1,4 @@
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
-import { useEditorStore } from '@/stores/editorStore'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
@@ -9,26 +8,22 @@ import type { ToolbarItemContext } from './types'
 export const icon = (name: string) => () => h(ToolbarIcon, null, () => name)
 
 // Block conversion ops must match what NodePath points at.
-export const isTextblock = (_e: Editor, ctx: ToolbarItemContext) =>
-	ctx.activeNode.type.isTextblock && !useEditorStore().isCodeView
+export const isTextblock = (_e: Editor, ctx: ToolbarItemContext) => ctx.activeNode.type.isTextblock
 
 // Inline mark ops follow the cursor — safe at any depth since they only affect
 // selected text, never change block structure.
 export const isFormattableTextblock = (editor: Editor) =>
 	editor.state.selection.$from.parent.type.isTextblock
 	&& editor.state.selection.$from.parent.type.name !== 'codeBlock'
-	&& !useEditorStore().isCodeView
 
 export const isParagraphOrHeading = (_e: Editor, ctx: ToolbarItemContext) =>
-	['paragraph', 'heading'].includes(ctx.activeNode.type.name) && !useEditorStore().isCodeView
+	['paragraph', 'heading'].includes(ctx.activeNode.type.name)
 
 export const isInTable = (editor: Editor) =>
 	editor.isActive('tableCell') || editor.isActive('tableHeader')
 
 export const isListNode = (_e: Editor, ctx: ToolbarItemContext) =>
 	['bulletList', 'orderedList', 'taskList'].includes(ctx.activeNode.type.name)
-
-export const isNotCodeView = () => !useEditorStore().isCodeView
 
 // Only true schema primitives need explicit exclusion; leaf nodes and structural nodes
 // (tableRow, listItem, etc.) are filtered automatically by isLeaf and canReplaceWith/validContent.
