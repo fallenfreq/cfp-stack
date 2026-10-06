@@ -130,13 +130,16 @@ for each; pushing is the owner's call.
       rebuilds it (nothing points at it). A tag's name is unique (`tags_name_unique`), so two
       requests adding the same new tag add it once. Adding a tag a marker carries already adds
       nothing, and the answer names only the tags added.
-    - Live, in manual mode. First the read-only check: no pair twice in `marker_tags`, no name
-      twice in `tags`, and no row of `marker_tags` pointing at nothing (the foreign-key check):
-      any of them stops the migration, which then changes nothing. Nothing else in
-      `sqlite_master` mentions `marker_tags`, and neither index name is taken. Note the
-      Time Travel bookmark and apply the migration, then push: the new code relies on the
-      unique name (without it, adding a tag that exists adds it again). Until then the old code
-      runs as before, except that adding a tag twice answers 500 rather than storing it twice.
+    - The old code looked a tag up before adding it, so a name could be stored twice (live had
+      `test` twice). The migration merges them: a name keeps its first tag, the pairs move to
+      it, once each, and the other copies go.
+    - Live, in manual mode. First the read-only check: no row of `marker_tags` pointing at
+      nothing (the foreign-key check), which stops the migration, which then changes nothing.
+      Nothing else in `sqlite_master` mentions `marker_tags`, and neither index name is taken.
+      Note the Time Travel bookmark and apply the migration, then push: the new code relies on
+      the unique name (without it, adding a tag that exists adds it again). Until then the old
+      code runs as before, except that adding a tag twice answers 500 rather than storing it
+      twice.
 5. **Batch what must happen together.** Found so far:
     - `pages.update`: the page, then its tags deleted, then inserted (a failed insert leaves the
       page with no tags).
@@ -154,7 +157,8 @@ for each; pushing is the owner's call.
    from Zitadel) stay written by hand. zod 3.23 → 4 (1.0 accepts ≥ 3.25 or 4); only the API
    uses zod. Found in the markers router: `normalizeTags` drops empty names before trimming, so
    a tag of spaces is saved as `''`, and a tag that isn't there answers 500 rather than 404
-   (`NotFoundError`).
+   (`NotFoundError`). On live (2026-10-06), 34 of the 40 tags are on no marker, and 13 names
+   date from before `normalizeTag` (`Food` beside `food`), all on no marker.
 7. **Write it down**: this page's "How we use it" stays current; `CLAUDE.md` points to it
    (with the owner's go-ahead).
 
@@ -207,5 +211,10 @@ for each; pushing is the owner's call.
   checks on local D1: each kind of search, each marker with all its tags, a tag added twice
   kept once, one new tag added by five requests at once made once, the deletes taking their
   pairs with them). Type checks, unit tests (21) and layout checks (114) pass.
-- **Next:** step 4 live (manual mode: the read-only check, the migration, then the push), then
-  step 5, starting with its plan.
+- **Step 4, a name stored twice** (2026-10-06): live's read-only check found `test` twice, so
+  the migration now merges names. On a copy of local D1 as it was before the migration, both
+  copies of a name on one marker became one pair, a pair on the later copy moved to the first,
+  the later copies went and `Food` beside `food` stayed; a pair whose tag isn't there stopped it
+  and changed nothing. On live, a read-only preview: every pair stays, tag 29 (`test`) goes.
+- **Next:** step 4 live (manual mode: the migration, then the push), then step 5, starting with
+  its plan.
