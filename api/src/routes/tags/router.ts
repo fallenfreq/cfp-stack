@@ -1,15 +1,17 @@
 import { count, eq } from 'drizzle-orm'
-import { z } from 'zod'
+import { createSelectSchema } from 'drizzle-orm/zod'
 import { adminProcedure, publicProcedure, router } from '../../config/trpc.js'
-import {
-	definedFields,
-	insertWithUniqueSlug,
-	nameSchema,
-	slugify,
-	slugSchema,
-} from '../../lib/index.js'
+import { NotFoundError } from '../../domain/errors.js'
+import { definedFields, insertWithUniqueSlug, slugify, slugRule } from '../../lib/index.js'
 import { sitePageTags } from '../../schemas/pageTag.js'
 import { siteTags } from '../../schemas/tag.js'
+
+// What a collection's columns accept: their types and lengths from the table, and what the app
+// adds. Each input picks the columns it takes.
+export const siteTagInput = createSelectSchema(siteTags, {
+	name: (column) => column.min(1),
+	slug: slugRule,
+})
 
 export const publicTagsRouter = router({
 	list: publicProcedure.query(({ ctx }) =>
@@ -17,7 +19,7 @@ export const publicTagsRouter = router({
 	),
 
 	getBySlug: publicProcedure
-		.input(z.object({ slug: slugSchema }))
+		.input(siteTagInput.pick({ slug: true }))
 		// A lookup that finds nothing returns null: TanStack Query treats undefined data as an error.
 		.query(
 			async ({ input, ctx }) =>
@@ -39,11 +41,9 @@ export const adminTagsRouter = router({
 
 	create: adminProcedure
 		.input(
-			z.object({
-				name: nameSchema,
-				slug: slugSchema.optional(),
-				published: z.boolean().optional(),
-			}),
+			siteTagInput
+				.pick({ name: true, slug: true, published: true })
+				.partial({ slug: true, published: true }),
 		)
 		.mutation(({ input, ctx }) =>
 			insertWithUniqueSlug(
@@ -59,25 +59,25 @@ export const adminTagsRouter = router({
 
 	update: adminProcedure
 		.input(
-			z.object({
-				tagId: z.number(),
-				name: nameSchema.optional(),
-				slug: slugSchema.optional(),
-				published: z.boolean().optional(),
-			}),
+			siteTagInput
+				.pick({ name: true, slug: true, published: true })
+				.partial()
+				.extend({ tagId: siteTagInput.shape.tagId }),
 		)
-		.mutation(({ input, ctx }) => {
+		.mutation(async ({ input, ctx }) => {
 			const { tagId, ...values } = input
-			return ctx.db
+			const updated = await ctx.db
 				.update(siteTags)
 				.set({ ...definedFields(values), updatedAt: new Date() })
 				.where(eq(siteTags.tagId, tagId))
 				.returning({ tagId: siteTags.tagId })
 				.get()
+			if (!updated) throw new NotFoundError('Collection not found')
+			return updated
 		}),
 
 	delete: adminProcedure
-		.input(z.object({ tagId: z.number() }))
+		.input(siteTagInput.pick({ tagId: true }))
 		.mutation(({ input, ctx }) =>
 			ctx.db.delete(siteTags).where(eq(siteTags.tagId, input.tagId)),
 		),

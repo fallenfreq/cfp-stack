@@ -1,39 +1,50 @@
 import { and, eq, gte, inArray, like, lte, or, type SQL, type SQLWrapper } from 'drizzle-orm'
 import type { BatchItem } from 'drizzle-orm/batch'
 import { SQLiteColumn } from 'drizzle-orm/sqlite-core'
+import { createSelectSchema } from 'drizzle-orm/zod'
 import { z } from 'zod'
 import { router, secureProcedure } from '../../config/trpc.js'
 import { type Db, newestId, writeTogether } from '../../db.js'
-import { definedFields } from '../../lib/index.js'
+import { NotFoundError } from '../../domain/errors.js'
+import { definedFields, mustExist } from '../../lib/index.js'
 import {
 	mapMarkers as mapMarkersSchema,
 	markerTags as markerTagsSchema,
 	tags as tagsSchema,
 } from '../../schemas/mapMarker.js'
 
-const insertMarkerValidator = z.object({
-	tags: z.array(z.string()),
-	title: z.string(),
-	lat: z.number(),
-	lng: z.number(),
+// What a marker's and a tag's columns accept: their types and lengths from the tables, and what
+// the app adds. Each input picks the columns it takes.
+const markerInput = createSelectSchema(mapMarkersSchema, {
+	// Its length counted once trimmed.
+	title: (column) => z.string().trim().pipe(column.min(1)),
+	lat: (column) => column.min(-90).max(90),
+	lng: (column) => column.min(-180).max(180),
 })
+const tagInput = createSelectSchema(tagsSchema)
 
-const updateMarkerValidator = z.object({
-	markerId: z.number(),
-	title: z.string().optional(),
-	lat: z.number().optional(),
-	lng: z.number().optional(),
-	tags: z.array(z.string()).optional(),
-})
-
+// A tag as stored: trimmed, lowercased, its spaces made hyphens.
 const normalizeTag = (tag: string) => tag.trim().toLowerCase().replace(/\s+/g, '-')
-const normalizeTags = (tags: string[]) => {
-	const normalized = tags.filter(Boolean).map(normalizeTag)
-	return Array.from(new Set(normalized))
-}
+const tagName = z.string().transform(normalizeTag).pipe(tagInput.shape.name)
 
-// The tags whose names are new. The names must be normalized already (normalizeTags), and there
-// must be at least one. A name is unique, so of two requests adding the same tag, one adds it.
+// Tags named for a marker, each once; blank ones are dropped. At most 50 a request, as sent:
+// they're bound to one query, and D1 takes at most 100 values.
+const tagNames = z
+	.array(tagName)
+	.max(50)
+	.transform((names) => [...new Set(names.filter(Boolean))])
+
+const insertMarkerValidator = markerInput
+	.pick({ title: true, lat: true, lng: true })
+	.extend({ tags: tagNames })
+
+const updateMarkerValidator = markerInput
+	.pick({ title: true, lat: true, lng: true })
+	.partial()
+	.extend({ markerId: markerInput.shape.mapMarkersId, tags: tagNames.optional() })
+
+// The tags whose names are new. The names must be normalized already (tagNames), and there must
+// be at least one. A name is unique, so of two requests adding the same tag, one adds it.
 const insertTags = (db: Db, names: string[]) =>
 	db
 		.insert(tagsSchema)
@@ -64,11 +75,6 @@ export const markersRouter = router({
 		.input(insertMarkerValidator)
 		.mutation(async ({ input, ctx: { db } }) => {
 			const { tags, ...markerData } = input
-			if (markerData.title) {
-				markerData.title = markerData.title.trim()
-			}
-
-			const normalizedTags = normalizeTags(tags)
 			const [[newMarker]] = await db.batch([
 				db.insert(mapMarkersSchema).values(markerData).returning({
 					mapMarkersId: mapMarkersSchema.mapMarkersId,
@@ -76,14 +82,10 @@ export const markersRouter = router({
 					lng: mapMarkersSchema.lng,
 					title: mapMarkersSchema.title,
 				}),
-				...(normalizedTags.length > 0
+				...(tags.length > 0
 					? [
-							insertTags(db, normalizedTags),
-							insertMarkerTags(
-								db,
-								newestId(db, mapMarkersSchema.mapMarkersId),
-								normalizedTags,
-							),
+							insertTags(db, tags),
+							insertMarkerTags(db, newestId(db, mapMarkersSchema.mapMarkersId), tags),
 						]
 					: []),
 			])
@@ -95,7 +97,7 @@ export const markersRouter = router({
 			return {
 				success: true,
 				marker: newMarker,
-				tags: normalizedTags,
+				tags,
 			}
 		}),
 
@@ -105,11 +107,8 @@ export const markersRouter = router({
 				search: z
 					.union([
 						z.string(),
-						z.number(),
-						z.object({
-							lat: z.number(),
-							lng: z.number(),
-						}),
+						markerInput.shape.mapMarkersId,
+						markerInput.pick({ lat: true, lng: true }),
 					])
 					.optional(),
 				exactSearch: z.boolean().default(false),
@@ -197,21 +196,18 @@ export const markersRouter = router({
 		.input(updateMarkerValidator)
 		.mutation(async ({ input, ctx: { db } }) => {
 			const { markerId, tags, ...markerData } = input
+			await mustExist(db, mapMarkersSchema.mapMarkersId, markerId, 'Marker not found')
 
 			const updates = definedFields(markerData)
 			const writes: BatchItem<'sqlite'>[] = []
 
 			// Tags, when given, replace the marker's tags.
-			const updatedTags = tags ? normalizeTags(tags) : []
 			if (tags) {
 				writes.push(
 					db.delete(markerTagsSchema).where(eq(markerTagsSchema.markerId, markerId)),
 				)
-				if (updatedTags.length > 0) {
-					writes.push(
-						insertTags(db, updatedTags),
-						insertMarkerTags(db, markerId, updatedTags),
-					)
+				if (tags.length > 0) {
+					writes.push(insertTags(db, tags), insertMarkerTags(db, markerId, tags))
 				}
 			}
 
@@ -230,23 +226,32 @@ export const markersRouter = router({
 				success: true,
 				updatedFields: {
 					...markerData,
-					tags: updatedTags,
+					tags: tags ?? [],
 				},
 			}
 		}),
-	delete: secureProcedure.input(z.number()).mutation(async ({ input, ctx: { db } }) => {
-		return db.delete(mapMarkersSchema).where(eq(mapMarkersSchema.mapMarkersId, input)).execute()
-	}),
+	delete: secureProcedure
+		.input(markerInput.shape.mapMarkersId)
+		.mutation(async ({ input, ctx: { db } }) => {
+			return db
+				.delete(mapMarkersSchema)
+				.where(eq(mapMarkersSchema.mapMarkersId, input))
+				.execute()
+		}),
 
 	addTagsToMarker: secureProcedure
 		.input(
 			z.object({
-				markerId: z.number(),
-				tags: z.string(),
+				markerId: markerInput.shape.mapMarkersId,
+				// Comma-separated.
+				tags: z
+					.string()
+					.transform((list) => list.split(','))
+					.pipe(tagNames),
 			}),
 		)
-		.mutation(async ({ input: { markerId, tags }, ctx: { db } }) => {
-			const names = normalizeTags(tags.split(','))
+		.mutation(async ({ input: { markerId, tags: names }, ctx: { db } }) => {
+			await mustExist(db, mapMarkersSchema.mapMarkersId, markerId, 'Marker not found')
 			if (names.length === 0) return []
 
 			// Answers with the tags added: one the marker carries already stays as it is.
@@ -267,22 +272,20 @@ export const markersRouter = router({
 	deleteTagFromMarker: secureProcedure
 		.input(
 			z.object({
-				markerId: z.number(),
-				tag: z.string(),
+				markerId: markerInput.shape.mapMarkersId,
+				tag: tagName,
 			}),
 		)
 		.mutation(async ({ input: { markerId, tag }, ctx: { db } }) => {
-			const normalizedTag = normalizeTag(tag)
-
 			const existingTag = await db
 				.select({ tagId: tagsSchema.tagId })
 				.from(tagsSchema)
-				.where(eq(tagsSchema.name, normalizedTag))
+				.where(eq(tagsSchema.name, tag))
 				.limit(1)
 				.then((tags) => tags[0])
 
 			if (!existingTag) {
-				throw new Error(`Tag '${tag}' does not exist.`)
+				throw new NotFoundError(`Tag "${tag}" not found`)
 			}
 
 			const tagId = existingTag.tagId
@@ -298,7 +301,7 @@ export const markersRouter = router({
 		}),
 
 	deleteTag: secureProcedure
-		.input(z.union([z.number(), z.string()]))
+		.input(z.union([tagInput.shape.tagId, tagInput.shape.name]))
 		.mutation(async ({ input, ctx: { db } }) => {
 			return db
 				.delete(tagsSchema)

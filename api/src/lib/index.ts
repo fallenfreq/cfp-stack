@@ -1,19 +1,28 @@
 import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
-import { isUniqueViolation } from '../db.js'
+import { eq, getColumnTable } from 'drizzle-orm'
+import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
+import type { z } from 'zod'
+import { type Db, isUniqueViolation } from '../db.js'
+import { NotFoundError } from '../domain/errors.js'
 
-export const slugSchema = z
-	.string()
-	.min(1)
-	.max(256)
-	.transform((s) => s.toLowerCase())
-	.pipe(
-		z
-			.string()
-			.regex(/^[a-z0-9-]+$/, 'Slug may only contain lowercase letters, numbers, and hyphens'),
-	)
+// What a slug column accepts (a page's, a collection's), on top of its length: the address part,
+// lowercased.
+export const slugRule = (column: z.ZodString) =>
+	column
+		.min(1)
+		.toLowerCase()
+		.regex(/^[a-z0-9-]+$/, 'Slug may only contain lowercase letters, numbers, and hyphens')
 
-export const nameSchema = z.string().min(1).max(256)
+// The row a write is for is there, or the answer is 404: the check that reads before the write
+// (docs/database.md, "How we use it").
+export async function mustExist(db: Db, key: SQLiteColumn, id: number, notFound: string) {
+	const row = await db
+		.select({ key })
+		.from(getColumnTable<SQLiteTable>(key))
+		.where(eq(key, id))
+		.get()
+	if (!row) throw new NotFoundError(notFound)
+}
 
 export function slugify(name: string): string {
 	return (

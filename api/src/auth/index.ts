@@ -25,7 +25,7 @@ const requestSettings = z.object({
 // (docs/auth.md, "Settings").
 const oidcSettings = z
 	.object({
-		OIDC_ISSUER: z.string().url(),
+		OIDC_ISSUER: z.url(),
 		OIDC_CLIENT_ID: z.string().min(1),
 		OIDC_CLIENT_SECRET: z.string().min(1),
 	})

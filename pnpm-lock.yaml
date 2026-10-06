@@ -95,13 +95,13 @@ importers:
         version: 20.19.13
       drizzle-orm:
         specifier: 1.0.0-rc.4
-        version: 1.0.0-rc.4(@cloudflare/workers-types@4.20250906.0)(zod@3.25.76)
+        version: 1.0.0-rc.4(@cloudflare/workers-types@4.20250906.0)(zod@4.6.5)
       openid-client:
         specifier: ^6.8.8
         version: 6.8.8
       zod:
-        specifier: ^3.23.5
-        version: 3.25.76
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       drizzle-kit:
         specifier: 1.0.0-rc.4
@@ -3334,8 +3334,8 @@ packages:
   youch@4.1.0-beta.10:
     resolution: {integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==}
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -4777,10 +4777,10 @@ snapshots:
       get-tsconfig: 4.14.3
       jiti: 2.7.0
 
-  drizzle-orm@1.0.0-rc.4(@cloudflare/workers-types@4.20250906.0)(zod@3.25.76):
+  drizzle-orm@1.0.0-rc.4(@cloudflare/workers-types@4.20250906.0)(zod@4.6.5):
     optionalDependencies:
       '@cloudflare/workers-types': 4.20250906.0
-      zod: 3.25.76
+      zod: 4.6.5
 
   emoji-regex@10.6.0: {}
 
@@ -6334,6 +6334,6 @@ snapshots:
       cookie: 1.1.1
       youch-core: 0.3.3
 
-  zod@3.25.76: {}
+  zod@4.6.5: {}
 
   zwitch@2.0.4: {}

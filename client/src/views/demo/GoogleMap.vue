@@ -218,12 +218,13 @@ const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title:
 	}
 
 	try {
-		await trpc.mapMarker.update.mutate({
+		const { updatedFields } = await trpc.mapMarker.update.mutate({
 			markerId: markerContent.mapMarkersId,
 			title: newTitle,
 		})
 
-		markerContent.title = newTitle
+		// As the server saved it (trimmed).
+		markerContent.title = updatedFields.title ?? newTitle
 
 		notify({
 			duration: 5000,

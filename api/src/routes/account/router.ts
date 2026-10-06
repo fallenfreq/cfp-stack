@@ -36,7 +36,7 @@ const accountRouter = router({
 
 	// Whoever changes the email can take over the account, so it needs a recent sign-in.
 	changeEmail: accountProcedure
-		.input(z.object({ email: z.string().trim().email().max(200) }))
+		.input(z.object({ email: z.string().trim().pipe(z.email().max(200)) }))
 		.mutation(async ({ ctx, input }) => {
 			if (!signedInRecently(ctx.user))
 				throw new TRPCError({

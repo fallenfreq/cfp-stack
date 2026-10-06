@@ -20,7 +20,7 @@ const SIGNIN_SECONDS = 10 * 60
 // sensitive change allows (sessions.ts), so there's time left to make it.
 const RECENT_PROOF_SECONDS = 60
 const savedSignIn = z.object({
-	checks: z.record(z.string()),
+	checks: z.record(z.string(), z.string()),
 	returnTo: z.string(),
 	// The session this browser had when it set out, ended once the new one exists.
 	earlier: z.string().nullable(),

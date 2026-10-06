@@ -33,7 +33,7 @@
 		"@types/node": "^20.1.4",
 		"drizzle-orm": "1.0.0-rc.4",
 		"openid-client": "^6.8.8",
-		"zod": "^3.23.5"
+		"zod": "^4.6.5"
 	},
 	"nodemonConfig": {
 		"delay": "400",

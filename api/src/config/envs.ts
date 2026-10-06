@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 const d1DatabaseSchema = z.custom<D1Database>(
 	(value) => typeof value === 'object' && value !== null && 'prepare' in value,
-	{ message: 'Invalid D1Database instance' },
+	{ error: 'Invalid D1Database instance' },
 )
 
 const envSchema = z.object({

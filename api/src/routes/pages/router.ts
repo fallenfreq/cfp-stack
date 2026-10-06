@@ -1,40 +1,49 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 import type { BatchItem } from 'drizzle-orm/batch'
+import { createSelectSchema } from 'drizzle-orm/zod'
 import { z } from 'zod'
 import { adminProcedure, publicProcedure, router } from '../../config/trpc.js'
 import { writeTogether } from '../../db.js'
 import {
 	definedFields,
 	insertWithUniqueSlug,
-	nameSchema,
+	mustExist,
 	slugify,
-	slugSchema,
+	slugRule,
 } from '../../lib/index.js'
 import { sitePages } from '../../schemas/page.js'
 import { sitePageTags } from '../../schemas/pageTag.js'
 import { siteTags } from '../../schemas/tag.js'
+import { siteTagInput } from '../tags/router.js'
 
-const imageUrlSchema = z
-	.string()
-	.regex(/^https?:\/\//)
-	.url()
-	.nullable()
-	.optional()
+const isJson = (text: string) => {
+	try {
+		JSON.parse(text)
+		return true
+	} catch {
+		return false
+	}
+}
 
-const contentJsonSchema = z
-	.string()
-	.max(1_000_000)
-	.refine(
-		(v) => {
-			try {
-				JSON.parse(v)
-				return true
-			} catch {
-				return false
-			}
-		},
-		{ message: 'Must be valid JSON' },
-	)
+// What a page's columns accept: their types and lengths from the table, and what the app adds.
+// Each input picks the columns it takes.
+const pageInput = createSelectSchema(sitePages, {
+	name: (column) => column.min(1),
+	slug: slugRule,
+	// zod's own http(s) rule, which also asks for the `//`.
+	imageUrl: (column) => column.pipe(z.url({ protocol: z.regexes.httpProtocol })),
+	// Its size in bytes, which is what D1 limits (2,000,000 a value).
+	contentJson: (column) =>
+		column
+			.refine((text) => new TextEncoder().encode(text).length <= 1_000_000, {
+				error: 'At most 1,000,000 bytes',
+				abort: true,
+			})
+			.refine(isJson, { error: 'Must be valid JSON' }),
+})
+
+// A page's collections: at most 50. They're bound to one query, and D1 takes at most 100 values.
+const collectionIds = z.array(siteTagInput.shape.tagId).max(50)
 
 const listColumns = {
 	pageId: sitePages.pageId,
@@ -48,7 +57,7 @@ const listColumns = {
 
 export const publicPagesRouter = router({
 	// A lookup that finds nothing returns null: TanStack Query treats undefined data as an error.
-	getBySlug: publicProcedure.input(z.object({ slug: slugSchema })).query(
+	getBySlug: publicProcedure.input(pageInput.pick({ slug: true })).query(
 		async ({ input, ctx }) =>
 			(await ctx.db
 				.select()
@@ -66,7 +75,7 @@ export const publicPagesRouter = router({
 	),
 
 	listByCollection: publicProcedure
-		.input(z.object({ collectionSlug: z.string() }))
+		.input(z.object({ collectionSlug: siteTagInput.shape.slug }))
 		.query(({ input, ctx }) =>
 			ctx.db
 				.select(listColumns)
@@ -86,7 +95,7 @@ export const publicPagesRouter = router({
 
 export const adminPagesRouter = router({
 	getBySlug: adminProcedure
-		.input(z.object({ slug: slugSchema }))
+		.input(pageInput.pick({ slug: true }))
 		.query(
 			async ({ input, ctx }) =>
 				(await ctx.db.select().from(sitePages).where(eq(sitePages.slug, input.slug)).get())
@@ -98,7 +107,7 @@ export const adminPagesRouter = router({
 	),
 
 	listByCollection: adminProcedure
-		.input(z.object({ collectionSlug: z.string() }))
+		.input(z.object({ collectionSlug: siteTagInput.shape.slug }))
 		.query(({ input, ctx }) =>
 			ctx.db
 				.select(listColumns)
@@ -122,7 +131,7 @@ export const adminPagesRouter = router({
 	),
 
 	getWithTags: adminProcedure
-		.input(z.object({ pageId: z.number() }))
+		.input(pageInput.pick({ pageId: true }))
 		.query(async ({ input, ctx }) => {
 			const [page, tags] = await Promise.all([
 				ctx.db.select().from(sitePages).where(eq(sitePages.pageId, input.pageId)).get(),
@@ -138,11 +147,9 @@ export const adminPagesRouter = router({
 
 	create: adminProcedure
 		.input(
-			z.object({
-				name: nameSchema,
-				imageUrl: imageUrlSchema,
-				contentJson: contentJsonSchema,
-			}),
+			pageInput
+				.pick({ name: true, imageUrl: true, contentJson: true })
+				.partial({ imageUrl: true }),
 		)
 		.mutation(({ input, ctx }) => {
 			const values = {
@@ -163,18 +170,20 @@ export const adminPagesRouter = router({
 
 	update: adminProcedure
 		.input(
-			z.object({
-				pageId: z.number(),
-				contentJson: contentJsonSchema.optional(),
-				name: nameSchema.optional(),
-				slug: slugSchema.optional(),
-				imageUrl: imageUrlSchema,
-				published: z.boolean().optional(),
-				tagIds: z.array(z.number()).optional(),
-			}),
+			pageInput
+				.pick({
+					contentJson: true,
+					name: true,
+					slug: true,
+					imageUrl: true,
+					published: true,
+				})
+				.partial()
+				.extend({ pageId: pageInput.shape.pageId, tagIds: collectionIds.optional() }),
 		)
 		.mutation(async ({ input, ctx }) => {
 			const { pageId, tagIds, ...values } = input
+			await mustExist(ctx.db, sitePages.pageId, pageId, 'Page not found')
 			const setValues = definedFields(values)
 			const writes: BatchItem<'sqlite'>[] = []
 			if (Object.keys(setValues).length > 0) {
@@ -187,11 +196,22 @@ export const adminPagesRouter = router({
 			}
 			if (tagIds !== undefined) {
 				writes.push(ctx.db.delete(sitePageTags).where(eq(sitePageTags.pageId, pageId)))
+				// Paired from a select, as a marker's tags are: a collection that isn't there
+				// (deleted meanwhile) is left out, and so is the page if it went since the check.
 				if (tagIds.length > 0) {
 					writes.push(
-						ctx.db
-							.insert(sitePageTags)
-							.values(tagIds.map((tagId) => ({ pageId, tagId }))),
+						ctx.db.insert(sitePageTags).select(
+							ctx.db
+								.select({ pageId: sitePages.pageId, tagId: siteTags.tagId })
+								.from(sitePages)
+								.crossJoin(siteTags)
+								.where(
+									and(
+										eq(sitePages.pageId, pageId),
+										inArray(siteTags.tagId, tagIds),
+									),
+								),
+						),
 					)
 				}
 			}
@@ -200,7 +220,7 @@ export const adminPagesRouter = router({
 		}),
 
 	delete: adminProcedure
-		.input(z.object({ pageId: z.number() }))
+		.input(pageInput.pick({ pageId: true }))
 		.mutation(({ input, ctx }) =>
 			ctx.db.delete(sitePages).where(eq(sitePages.pageId, input.pageId)),
 		),
