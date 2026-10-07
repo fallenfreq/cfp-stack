@@ -22,6 +22,9 @@ styled by themes kept in the database. It runs on Cloudflare Pages, and began as
    and `pnpm seed:local` puts in the design (themes, rules) and the
    collections the menu links to. Without the seed the site has no styles. After a change to
    `api/src/schemas`: `docs/database.md`, "Migrations".
+5. The layout checks use the installed Chrome and Playwright's WebKit (Safari's engine):
+   `pnpm --filter @somefreq-app/client exec playwright install webkit`, again after updating
+   Playwright.
 
 Hosting it: `docs/hosting.md`.
 
@@ -30,7 +33,8 @@ Hosting it: `docs/hosting.md`.
 `pnpm dev` builds the client and the API as you edit, and serves the whole site at
 http://localhost:8788. For hot reload as well, `pnpm dev:vite:client` serves the client at
 http://localhost:5173 and passes `/trpc`, `/auth/` and `/styles` to 8788. `pnpm dev:api` serves
-the API with the client as last built.
+the API with the client as last built. After a change to `shared/package.json`, restart
+`pnpm dev`: its client build keeps the file as it was and fails on a new export.
 
 ## Commands
 
@@ -41,7 +45,7 @@ the API with the client as last built.
 | `pnpm build`                  | Build client + API side by side, no type check. Cloudflare's build      |
 | `pnpm typecheck`              | Type-check staged packages (`--all`: every package). Pre-commit runs it |
 | `pnpm test`                   | Tests (`test`, `api/test`, which builds the API first; Node's runner)   |
-| `pnpm test:ui`                | Layout checks in Chrome (`client/e2e`, Playwright)                      |
+| `pnpm test:ui`                | Layout checks in Chrome and WebKit (`client/e2e`, Playwright)           |
 | `pnpm preview:components`     | Build the component preview (`--serve`: at http://localhost:4173)       |
 | `pnpm migrate:api`            | Generate Drizzle migration files                                        |
 | `pnpm migrate:push:local:api` | Apply migrations to local D1                                            |

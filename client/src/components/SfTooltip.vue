@@ -109,7 +109,10 @@ useAnchorFallback(
 
 <style scoped>
 @layer ui {
+	/* Positioned: in a fixed bar, Safari 26 misplaces a box anchored to an unpositioned element
+	   (SfPopover's trigger is positioned too). */
 	.tooltip-root {
+		position: relative;
 		display: inline-flex;
 		user-select: none;
 		-webkit-user-select: none;

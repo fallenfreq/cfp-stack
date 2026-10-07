@@ -202,11 +202,14 @@ test('the known-limit case is set up: text above, the block, text below', async 
 	expect(order).toBe(true)
 })
 
-// Known not to work yet (sf-system-todo.md, 18): the drag ends as a cursor where it stops, as it
-// did before; across a Card it takes the Card. When fixed, Playwright reports "expected to fail,
-// but passed": remove test.fail().
-test('a drag from the text above to the text below takes the block whole', async ({ page }) => {
-	test.fail()
+// Known not to work yet in Chrome (sf-system-todo.md, 18): the drag ends as a cursor where it
+// stops, as it did before; across a Card it takes the Card. WebKit takes the block. When fixed,
+// Playwright reports "expected to fail, but passed": remove test.fail().
+test('a drag from the text above to the text below takes the block whole', async ({
+	page,
+	browserName,
+}) => {
+	test.fail(browserName === 'chromium')
 	await dragAcross(page, textAbove(page), textBelow(page))
 	await page.keyboard.press('Backspace')
 	expect(await pageText(page)).not.toContain('This is the editable slot')

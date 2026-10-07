@@ -227,8 +227,13 @@ async function placementsWhileScrolling(
 for (const c of SHORT_SCREEN)
 	test(`${c.name}: scrolling the page brings it into view, without anchor positioning too`, async ({
 		browser,
+		browserName,
 		themeClass,
 	}) => {
+		// Known not to work yet in Safari 26 (sf-system-todo.md, 19): where the panel fits nowhere,
+		// it runs off the top of the screen, as WebKit doesn't slide it back. When fixed, Playwright
+		// reports "expected to fail, but passed": remove test.fail().
+		test.fail(browserName === 'webkit' && c.name === 'a panel on a short screen')
 		const css = await placementsWhileScrolling(browser, c, themeClass, false)
 		const script = await placementsWhileScrolling(browser, c, themeClass, true)
 		css.forEach((want, step) => {
@@ -368,4 +373,42 @@ test('a panel too tall for the screen stops at its height and scrolls', async ({
 		Math.abs((await measure(false)) - (await measure(true))),
 		'the same height',
 	).toBeLessThanOrEqual(1)
+})
+
+// In the browser as it is. Safari 26 places a box anchored to an unpositioned element in a fixed bar
+// as though the bar scrolled with the page; the floating toolbar is one, so on a scrolled page its
+// panels and tooltips opened off the screen until their triggers were positioned.
+test('on a scrolled page, a toolbar panel opens under its button and a tooltip over it', async ({
+	page,
+	themeClass,
+}) => {
+	await openSeeded(page, 'true', DEMO_END, themeClass)
+	await panelBeside(0.4, 'first')(page)
+	await expect(page.locator(OPEN_BOX)).toBeVisible()
+	// Its own tooltip waits on the pointer resting there.
+	await page.mouse.move(0, 0)
+	for (const step of ['a panel', 'a panel, the page scrolled on', 'a tooltip'] as const) {
+		if (step === 'a panel, the page scrolled on')
+			await page.evaluate(() => window.scrollBy(0, 80))
+		if (step === 'a tooltip') {
+			await page.evaluate((open) => {
+				for (const b of document.querySelectorAll<HTMLElement>(open)) b.hidePopover()
+			}, OPEN_BOX)
+			await page.locator('.floating-toolbar .tooltip-root:visible').first().hover()
+			await expect(page.locator(OPEN_BOX)).toBeVisible()
+		}
+		await settle(page)
+		// How far it is from its trigger: below it for a panel, above it for a tooltip.
+		const { scrolled, gap } = await page.locator(OPEN_BOX).evaluate((el) => {
+			const tooltip = el.matches('.tooltip-popup')
+			const trigger = tooltip
+				? el.parentElement!
+				: document.querySelector(`[popovertarget="${CSS.escape(el.id)}"]`)!
+			const [t, box] = [trigger.getBoundingClientRect(), el.getBoundingClientRect()]
+			return { scrolled: scrollY, gap: tooltip ? t.top - box.bottom : box.top - t.bottom }
+		})
+		expect(scrolled, `${step}: the page is scrolled`).toBeGreaterThan(0)
+		expect(gap, `${step}: beside its trigger`).toBeGreaterThanOrEqual(0)
+		expect(gap, `${step}: beside its trigger`).toBeLessThan(40)
+	}
 })

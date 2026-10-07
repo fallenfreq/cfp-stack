@@ -133,3 +133,14 @@ const onClick = (event: MouseEvent) => {
 	max-inline-size: calc(100% - 2 * var(--sf-spacing_page));
 }
 </style>
+
+<style>
+/* The consumer's trigger, positioned: Safari 26 places a box anchored to an unpositioned element
+   in a fixed bar (the floating toolbar, a sheet) as though the bar scrolled with the page. A
+   theme's own position wins; only static would bring that back. */
+@layer ui {
+	:where([popovertarget]) {
+		position: relative;
+	}
+}
+</style>

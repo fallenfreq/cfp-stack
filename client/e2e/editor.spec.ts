@@ -39,6 +39,8 @@ test('placement classes go on the outer box too, but are never saved', async ({ 
 test('clicking between the blocks in an inset Card selects the card', async ({ page }) => {
 	const warnings = appMessages(page, ['warning'])
 	await page.locator('#card-inset').scrollIntoViewIfNeeded()
+	// The floating toolbar follows the scroll a frame later; until then it can cover the spot.
+	await settle(page)
 	const above = await box(page.locator('#card-inset-first'))
 	const below = await box(page.locator('#card-inset-bleed'))
 	expect(below.top - above.bottom).toBeGreaterThan(4)

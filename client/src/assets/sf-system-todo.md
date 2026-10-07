@@ -11,8 +11,9 @@ describes the target design; this file enumerates what needs to change in code t
 Candidate 15 (the code view as an editor of its own) and item 16 (TipTap 3.31.4, with what it
 broke fixed) are fixed, reviewed and committed together. Item 17 (console errors and debug
 lines) is fixed, reviewed and committed. Item 18 (a component block's own parts and its slot) is
-done, checked and reviewed twice, the reviews' findings fixed or logged, and committed. Next: choose
-with the user.
+done, checked and reviewed twice, the reviews' findings fixed or logged, and committed. Item 19
+(the layout checks in WebKit, and the Safari 26 toolbar panel fix they led to) is done, checked
+and reviewed, the review's findings fixed; not committed.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -205,13 +206,13 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
 4. **Check the page's line in Safari** (added 2026-10-02; checked by the user in Safari 18.3.1,
    2026-10-03: right, see "Checked" above).
    The bleed width is a registered length worked out from `100cqi` (`--sfx-bleed-width`,
-   `slCombined.ts`). The layout checks only run in Chrome. Safari recomputes it when the
+   `slCombined.ts`). The layout checks then ran only in Chrome. Safari recomputes it when the
    window resizes; rotating and gaining a scrollbar weren't tried.
     - **To check:** open `/editor?seed=true` and resize the window, wide to narrow and back.
       The hero image and the code sample should stay edge to edge, with nothing sticking out
       sideways. Do the same with a page open in a collection's sheet.
     - **If it's wrong:** bleeding blocks stop short of the edges or push the page sideways.
-      Running the layout checks in WebKit (candidate 7) would catch it from then on.
+      The layout checks run in WebKit too since item 19.
 5. **Columns placed straight in an inset stack late** (found 2026-10-02 by the second code
    review; predates the page shell work, not fixed). An inset holding a collapsing layout is
    the box that layout measures, but the inset's margins are grid tracks. So it measures wider
@@ -293,7 +294,7 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
           bar, with the footer at the bottom; a published page has no room added.
         - The user, in Safari 18.3.1: right.
 
-7. Bigger: the validator / linter (item 11); WebKit in the layout checks.
+7. Bigger: the validator / linter (item 11). WebKit in the layout checks: done (item 19).
 8. **Settings for every selected block** (proposed 2026-10-03, not designed): with blocks
    selected, the toolbar's settings would change all of them, as in Notion, Google Docs or
    Figma; today it shows none. To decide: which settings show (only those every selected
@@ -751,7 +752,8 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
           nothing highlighted (27 Sep the same); in WebKit such a drag can highlight from the top
           of the page.
         - A drag from text above the interactive block to text below ends as a cursor where it stops
-          (27 Sep the same); across a Card it takes the Card. A check marked expected to fail.
+          (27 Sep the same); across a Card it takes the Card. A check marked expected to fail, in
+          Chrome only: WebKit takes the block (found with item 19).
         - Keys pressed within the frame of a click reach the editor before it reads the click, in
           any text (Chrome; WebKit is fine): on the demo, which opens with its hero image selected,
           they replace the image. No person types that fast; the checks let a click land.
@@ -784,6 +786,67 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       typing after a pressed button (the second review's fourth fix): not a bug as such, said the
       user, but it makes the browsers behave alike.
 
+19. **WebKit in the layout checks, and toolbar panels in Safari 26** (2026-10-07, chosen with the
+    user; candidate 7). The suite's first run in Playwright's WebKit (1.63, Safari 26.6): 184 of
+    198 passed.
+    - **Found, a Safari 26 bug:** a box anchored to an unpositioned element in a fixed bar is
+      placed as though the bar scrolled with the page, off by the page's scroll. So on a scrolled
+      page the floating toolbar's panels and tooltips opened off the screen (the toolbar is fixed;
+      so is a sheet, whose Close tooltip landed at −534px). Proved on a bare page: off by the
+      scroll with `position-area` or `anchor()`, in the top layer or not, with a transform or not,
+      in nested fixed bars; right when the anchor itself is positioned (relative or sticky), not
+      when only a box around it is; Chrome is right. Safari 17.4–18 have no anchor positioning, so
+      the script places their boxes, right (the user's 18.3.1 isn't affected). Not tried in real
+      Safari 26 (none to hand); not found in WebKit's bug list, not reported.
+    - **Fixed** where anchors are made: SfPopover's trigger and SfTooltip's root are positioned
+      (`position: relative`). The trigger's rule is `:where()` in the ui layer, so a theme's own
+      position wins; only `static` would bring the bug back. Safari 26 then places them itself,
+      as Chrome does, and the script stays for Safari 17.4–18 (item 3's design).
+    - **Rejected** (decided with the user): first built and checked, a one-off test in a hidden
+      frame with its page scrolled (about 2ms), after which the script placed boxes whose trigger
+      sat in a fixed bar. It noticed the bug in any build and retired itself, but was about 45
+      lines; the review found it could report a pass under a style policy that blocks inline
+      styles (the site sends none), and that its case differed from the app's (a fixed box, not a
+      popover). Its WebKit checks compared the script with itself. The rule relies on WebKit
+      behaviour that isn't specified, as the bug is; the WebKit checks guard it.
+    - **The checks:** `playwright.config.ts` runs each in Chrome and in WebKit. WebKit's accepted
+      demo page is its own (`e2e/__snapshots__/demo.spec.ts/webkit/`). Beside Chrome's, text sits
+      up to 1px off, tick boxes are 12px (13), a table's columns report no size and hidden options
+      another display; no block moves. The drag-across known limit (item 18) is Chrome's only. The
+      inset Card click check clicked in the frame of its scroll, before the floating toolbar
+      followed, and in WebKit the toolbar covered the spot: it now waits a frame.
+    - **Checked:**
+        - A new check in `anchorFallback.spec.ts`: on a scrolled page, a toolbar panel opens under
+          its button and stays there as the page scrolls on, and a tooltip shows over its button.
+          In WebKit it fails without the rules (the panel 1,243px above), and without SfTooltip's
+          alone (the tooltip 1,260px off); Chrome passes either way. The earlier placement checks
+          there, the CSS against the script, failed in WebKit too, and pass now.
+        - A sheet's Close tooltip on a page scrolled 600px: the same in WebKit as in Chrome.
+        - The suite: 400 pass (200 in each browser), in 2.2 minutes. Two code view checks failed
+          once in WebKit, then passed 192 times in a row; likely a rebuild under way.
+    - **Found once Safari 26 places panels itself, not fixed:** where a panel fits nowhere (item 6;
+      a 330px screen, its button mid-screen, last above it), WebKit lets it run off the top of the
+      screen (41px; 124px under the test theme) where Chrome slides it down to the top. The same
+      for a button outside any fixed bar, so it's WebKit's, whichever fix (the frame test's script
+      only hid it in the toolbar). Chrome follows the spec there (a box that overflows but fits is
+      shifted back). Tried `align-self: safe start` (and `safe end` above): WebKit then stops it
+      at the top, but Chrome no longer slides a panel up on a page that doesn't scroll (item 6's
+      rule), so it's out. In the editor the room past the end (item 6) means scrolling always
+      brings the panel into view (the check's steps with the button at an edge pass in WebKit).
+      Elsewhere, at the very end of a page on a short screen, its top could stay cut off (not
+      tried; the mirror of item 6's logged case at the bottom). That case in
+      `anchorFallback.spec.ts` is marked expected to fail in WebKit.
+    - **Review** (a separate agent): it found the CSS rule. Checked: the rule places all 14
+      placements and the sheet's tooltip as Chrome does, and full-page screenshots of the demo,
+      the test page and the home page were unchanged by it in both browsers. A tooltip on a
+      scrolled page had no check: added. Docs: the plan named the code view switch and the
+      preview's edit button as affected (they have no panel or tooltip); fixed.
+    - **Found on the way:** the dev server's client build failed from 14:49 on, unseen: the other
+      session added an export to `shared/package.json`, and a watching build keeps the file as it
+      first read it. Restarting `pnpm dev` fixed it (`README.md`, "Developing").
+    - **Open:** real Safari 26 (an iPhone or iPad on iOS 26 would do); reporting the bug to WebKit,
+      which needs the user's account.
+
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in
 Playwright, 2026-10-02). Grid items with auto side margins shrink to fit. Nothing in the app
@@ -797,9 +860,9 @@ all show. Its script measures the toolbar's width, which Chrome limits to the ro
 where it starts. Left as is (decided with the user).
 
 **Layout checks** (added 2026-10-01): `pnpm test:ui` runs
-`client/e2e` with Playwright in the installed Chrome, against the dev server. 90 checks (14 of them
-expected to fail), about a minute. On battery, four at once get throttled and time out
-(2026-10-03); `pnpm test:ui --workers 2` passes.
+`client/e2e` with Playwright in the installed Chrome and in Playwright's WebKit (since item 19),
+against the dev server. 400 checks, 200 in each browser, about two minutes. On battery, four at
+once get throttled and time out (2026-10-03); `pnpm test:ui --workers 2` passes.
 
 - **The stylesheet** is built from the seed in a throwaway database in memory
   (`e2e/globalSetup.ts`, using `e2e/d1Memory.mjs`, which the component preview now imports
@@ -812,7 +875,8 @@ expected to fail), about a minute. On battery, four at once get throttled and ti
     - A component block is compared with a plain twin.
     - Each collapse case names the box it measures, and is checked to measure it and to stack
       exactly when that box is at or below its breakpoint (read from the stylesheet).
-- **The demo page** is snapshotted under the root theme only (`e2e/__snapshots__`).
+- **The demo page** is snapshotted under the root theme only (`e2e/__snapshots__`), WebKit's
+  apart (`webkit/`).
 - **The cases** are on `/editor?seed=tests` (`client/src/config/editor/testContent.html`).
   Add a case for each layout fix.
 - **Known not to work yet** (K1–K5, `e2e/known.spec.ts`): each checks what should happen and
