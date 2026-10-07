@@ -1,5 +1,6 @@
 import './assets/main.css'
 
+import { notifyError } from '@/services/errors'
 import { whenSignInKnown } from '@/services/session'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
@@ -18,6 +19,18 @@ import { useThemeTokensStore } from './stores/themeTokensStore'
 whenSignInKnown()
 
 const app = createApp(App)
+// What a component's code didn't catch (its handlers, hooks, watchers, render) says so, as a failed
+// read or write does; the console says where it came from, as Vue's own warning did.
+app.config.errorHandler = (error, _instance, info) => {
+	console.warn(`Unhandled error during ${info}`)
+	notifyError(error)
+}
+// So does a promise that failed with nothing waiting on it (a store's watcher, a map's listener);
+// notifyError logs it, in place of the browser.
+window.addEventListener('unhandledrejection', (event) => {
+	event.preventDefault()
+	notifyError(event.reason)
+})
 app.use(globalKeyPlugin)
 app.use(createPinia())
 app.use(VueQueryPlugin, { queryClient })

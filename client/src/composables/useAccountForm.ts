@@ -1,8 +1,9 @@
-import { accountProfileKey, refusalOf, type AccountProfile } from '@/composables/useAccountProfile'
+import { accountProfileKey, type AccountProfile } from '@/composables/useAccountProfile'
 import { queryClient } from '@/config/queryClient'
+import { errorMessage } from '@/services/errors'
 import { trpc } from '@/trpc'
 import { genderOptions, knownLanguage } from '@/utils/accountOptions'
-import { TRPCClientError } from '@trpc/client'
+import { useMutation } from '@tanstack/vue-query'
 import { reactive, ref, watch, type Ref } from 'vue'
 
 type GenderChoice = (typeof genderOptions)[number]['value']
@@ -30,7 +31,14 @@ export function useAccountForm(profile: Ref<AccountProfile>) {
 		{ immediate: true },
 	)
 
-	const saving = ref(false)
+	// The form says itself why a save failed.
+	const update = useMutation({
+		mutationFn: (changes: Parameters<typeof trpc.account.updateProfile.mutate>[0]) =>
+			trpc.account.updateProfile.mutate(changes),
+		meta: { showsOwnError: true },
+		onSuccess: () => queryClient.invalidateQueries({ queryKey: accountProfileKey }),
+	})
+
 	const saveSuccess = ref(false)
 	const saveError = ref<string | null>(null)
 
@@ -40,24 +48,16 @@ export function useAccountForm(profile: Ref<AccountProfile>) {
 	})
 
 	async function saveAccount() {
-		saving.value = true
 		saveSuccess.value = false
 		saveError.value = null
 		try {
-			await trpc.account.updateProfile.mutate({ ...form, gender: form.gender || null })
-			await queryClient.invalidateQueries({ queryKey: accountProfileKey })
+			await update.mutateAsync({ ...form, gender: form.gender || null })
 			saveSuccess.value = true
 		} catch (error) {
 			console.error('Profile save failed', error)
-			saveError.value =
-				refusalOf(error)
-				?? (error instanceof TRPCClientError && error.data?.code === 'BAD_REQUEST'
-					? "Your profile wasn't saved: check its fields."
-					: 'Failed to save profile. Please try again.')
-		} finally {
-			saving.value = false
+			saveError.value = errorMessage(error)
 		}
 	}
 
-	return { form, saving, saveSuccess, saveError, saveAccount }
+	return { form, saving: update.isPending, saveSuccess, saveError, saveAccount }
 }

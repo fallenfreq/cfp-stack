@@ -5,7 +5,7 @@ import { useMapStore } from '@/stores/mapStore'
 import { useMarkerStore } from '@/stores/markerStore'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import { trpc } from '@/trpc'
-import { useQuery } from '@tanstack/vue-query'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { onMounted, ref, toRaw, watch } from 'vue'
 
 export interface MapMarkerItem {
@@ -49,6 +49,29 @@ const toggleAddingMarkers = () => {
 	}
 }
 
+// A new marker goes on the map once the server has saved it; one the server refuses says why
+// (config/queryClient.ts).
+const markerInsert = useMutation({
+	mutationFn: (input: { lat: number; lng: number; title: string; tags: string[] }) =>
+		trpc.mapMarker.insert.mutate(input),
+	onSuccess: async ({ marker, tags: processedTags }, { lat, lng, title }) => {
+		const { AdvancedMarkerElement } = (await google.maps.importLibrary(
+			'marker',
+		)) as google.maps.MarkerLibrary
+		const markerEl = new AdvancedMarkerElement({
+			map: toRaw(mapStore.map),
+			position: { lat, lng },
+			collisionBehavior: 'REQUIRED' as google.maps.CollisionBehavior,
+			title,
+			gmpClickable: true,
+		})
+		markerEl.addListener('click', () => onMarkerClick(marker.mapMarkersId))
+
+		markerStore.addMarker({ ...marker, tags: processedTags }, markerEl)
+		toggleAddingMarkers()
+	},
+})
+
 const onMapClick = async (event: google.maps.MapMouseEvent) => {
 	if (!event.latLng) return
 	const latLng = event.latLng
@@ -61,28 +84,7 @@ const onMapClick = async (event: google.maps.MapMouseEvent) => {
 	const tagsInput = await showPrompt('Enter tags for the marker (comma-separated):')
 
 	const tags = tagsInput ? tagsInput.split(',') : []
-
-	const { marker, tags: processedTags } = await trpc.mapMarker.insert.mutate({
-		lat: latLng.lat(),
-		lng: latLng.lng(),
-		title,
-		tags,
-	})
-
-	const { AdvancedMarkerElement } = (await google.maps.importLibrary(
-		'marker',
-	)) as google.maps.MarkerLibrary
-	const markerEl = new AdvancedMarkerElement({
-		map: toRaw(mapStore.map),
-		position: { lat: latLng.lat(), lng: latLng.lng() },
-		collisionBehavior: 'REQUIRED' as google.maps.CollisionBehavior,
-		title,
-		gmpClickable: true,
-	})
-	markerEl.addListener('click', () => onMarkerClick(marker.mapMarkersId))
-
-	markerStore.addMarker({ ...marker, tags: processedTags }, markerEl)
-	toggleAddingMarkers()
+	markerInsert.mutate({ lat: latLng.lat(), lng: latLng.lng(), title, tags })
 }
 
 const onMarkerClick = async (mapMarkersId: number) => {

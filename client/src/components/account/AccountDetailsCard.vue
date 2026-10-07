@@ -57,7 +57,13 @@ const { form, saving, saveSuccess, saveError, saveAccount } = useAccountForm(
 			<span v-if="saveSuccess" class="sf-text-sm sf-variant-success" role="status">
 				Saved successfully
 			</span>
-			<span v-if="saveError" class="sf-text-sm sf-variant-danger" role="alert">
+			<!-- pre-line: an error can be several lines, one for each field. -->
+			<span
+				v-if="saveError"
+				class="sf-text-sm sf-variant-danger"
+				role="alert"
+				style="white-space: pre-line"
+			>
 				{{ saveError }}
 			</span>
 		</div>

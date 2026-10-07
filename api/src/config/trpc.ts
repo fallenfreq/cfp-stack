@@ -1,5 +1,6 @@
 import { TRPCError, initTRPC } from '@trpc/server'
 import superjson from 'superjson'
+import { z } from 'zod'
 import type { RequestSession } from '../auth/index.js'
 import { SessionUnavailable } from '../auth/sessions.js'
 import type { Db } from '../db.js'
@@ -16,13 +17,21 @@ const t = initTRPC.context<Context>().create({
 	// Workers don't set.
 	isDev: false,
 	// Errors the user can act on go out with their message: domain errors (domainErrors
-	// below), errors a route throws on purpose and tRPC's checks of the request. Anything else is
-	// INTERNAL_SERVER_ERROR and says only "Internal Server Error"; onError in [[trpc]].ts logs
-	// it in full.
-	errorFormatter: ({ shape, error }) =>
-		error.code === 'INTERNAL_SERVER_ERROR'
-			? { ...shape, message: 'Internal Server Error' }
-			: shape,
+	// below), errors a route throws on purpose and tRPC's checks of the request. An input the
+	// check refused also sends its issues, field by field (zodError), for the client to word.
+	// Anything else is INTERNAL_SERVER_ERROR and says only "Internal Server Error"; onError in
+	// [[trpc]].ts logs it in full.
+	errorFormatter: ({ shape, error }) => ({
+		...shape,
+		message: error.code === 'INTERNAL_SERVER_ERROR' ? 'Internal Server Error' : shape.message,
+		data: {
+			...shape.data,
+			zodError:
+				error.code === 'BAD_REQUEST' && error.cause instanceof z.ZodError
+					? z.flattenError(error.cause)
+					: null,
+		},
+	}),
 })
 
 // Signed in, vouched for by the provider in the last 10 minutes (docs/auth.md, "Re-checking

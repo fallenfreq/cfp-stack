@@ -1,4 +1,4 @@
-import { isSlug, slugCase, slugify } from '@somefreq-app/shared/slug'
+import { isSlug, notASlug, slugCase, slugify } from '@somefreq-app/shared/slug'
 import { eq, getColumnTable, inArray } from 'drizzle-orm'
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
 import { z } from 'zod'
@@ -12,10 +12,7 @@ export const nameRule = (column: z.ZodString) => z.string().trim().pipe(column.m
 // What a slug column accepts (a page's, a collection's): what a slug may hold, in a slug's case
 // (@somefreq-app/shared/slug), its length counted after that.
 export const slugRule = (column: z.ZodString) =>
-	z
-		.string()
-		.overwrite(slugCase)
-		.pipe(column.min(1).refine(isSlug, 'Slug may only contain letters, numbers, and hyphens'))
+	z.string().overwrite(slugCase).pipe(column.min(1).refine(isSlug, notASlug))
 
 // The row a write is for is there, or the answer is 404: the check that reads before the write
 // (docs/database.md, "How we use it").

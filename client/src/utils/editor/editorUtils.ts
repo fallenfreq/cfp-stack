@@ -76,7 +76,6 @@ const prettifySelectedCode = async (editor: Editor) => {
 		)
 	} catch (error) {
 		notify({
-			duration: 10000,
 			variant: 'danger',
 			message:
 				'Formatting error: ' + (error instanceof Error ? error.message : 'Unknown error'),

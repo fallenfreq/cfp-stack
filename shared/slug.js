@@ -16,6 +16,9 @@ export function isSlug(text) {
 	return slug.test(text)
 }
 
+// What's said when text isn't a slug: by the api when it refuses one, by the client before sending.
+export const notASlug = 'Slug may only contain letters, numbers, and hyphens'
+
 // A slug's case, for one made from a name and one sent in alike, so an address in capitals finds
 // its page: lowercased, without the dot İ leaves on its i (İstanbul makes istanbul), in Unicode's
 // composed form (NFC) so a name typed either way makes the same slug. The marks are put in their

@@ -103,11 +103,11 @@ const startRename = () => {
 	actionsOpen.value = false
 }
 
-const commitRename = async () => {
+const commitRename = () => {
 	renamingName.value = false
 	const trimmed = nameInputValue.value.trim()
 	if (trimmed && trimmed !== currentName.value) {
-		await store.renamePage(trimmed)
+		store.renamePage(trimmed)
 	} else {
 		nameInputValue.value = currentName.value ?? 'Untitled'
 	}

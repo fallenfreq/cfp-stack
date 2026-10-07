@@ -1,12 +1,17 @@
+import { queryClient } from '@/config/queryClient'
 import router from '@/router'
+import { notifyError } from '@/services/errors'
 import { showPrompt } from '@/services/promptModal'
 import { notify } from '@/services/toast'
 import { trpc } from '@/trpc'
 import { prettifyCode } from '@/utils/codeFormatting'
 import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
+import { useMutation } from '@tanstack/vue-query'
 import type { Editor } from '@tiptap/vue-3'
 import { defineStore } from 'pinia'
 import { ref, shallowRef, type ShallowRef } from 'vue'
+
+type PageChanges = Parameters<typeof trpc.adminPages.update.mutate>[0]
 
 export const useEditorStore = defineStore('editor', () => {
 	const codeViewDefault = false
@@ -60,7 +65,7 @@ export const useEditorStore = defineStore('editor', () => {
 		pageCode.value = code.value
 		return null
 	}
-	const codeProblem = (message: string) => notify({ duration: 8000, variant: 'danger', message })
+	const codeProblem = (message: string) => notify({ variant: 'danger', message })
 
 	// The page is written as code for the code view, which shows instead of it. Leaving puts what
 	// changed into the page, and the keys back on it; code the page can't read keeps the code view
@@ -88,7 +93,6 @@ export const useEditorStore = defineStore('editor', () => {
 			isCodeView.value = true
 		} catch (err) {
 			notify({
-				duration: 8000,
 				variant: 'danger',
 				message: `Code view failed: ${err instanceof Error ? err.message : String(err)}`,
 			})
@@ -105,6 +109,19 @@ export const useEditorStore = defineStore('editor', () => {
 		currentName.value = page.name || null
 		currentPublished.value = page.published
 	}
+
+	// The page's writes; one the server refuses says why (config/queryClient.ts).
+	const createPage = useMutation(
+		{
+			mutationFn: (input: { name: string; contentJson: string }) =>
+				trpc.adminPages.create.mutate(input),
+		},
+		queryClient,
+	)
+	const updatePage = useMutation(
+		{ mutationFn: (input: PageChanges) => trpc.adminPages.update.mutate(input) },
+		queryClient,
+	)
 
 	// Saves the editor on screen. If another opens while it saves (the address moved on), the save
 	// still finishes, but the page it made stays out of the editor now on screen.
@@ -125,7 +142,7 @@ export const useEditorStore = defineStore('editor', () => {
 		)
 		try {
 			if (currentPageId.value !== null) {
-				await trpc.adminPages.update.mutate({ pageId: currentPageId.value, contentJson })
+				await updatePage.mutateAsync({ pageId: currentPageId.value, contentJson })
 			} else {
 				const autoTag = pendingAutoTag.value
 				let name = currentName.value?.trim() || null
@@ -136,7 +153,7 @@ export const useEditorStore = defineStore('editor', () => {
 						return
 					}
 				}
-				const result = await trpc.adminPages.create.mutate({ name, contentJson })
+				const result = await createPage.mutateAsync({ name, contentJson })
 				if (!result?.pageId) throw new Error('Failed to create page: no ID returned')
 				if (stillOpen()) {
 					currentPageId.value = result.pageId
@@ -144,10 +161,7 @@ export const useEditorStore = defineStore('editor', () => {
 					currentName.value = name
 				}
 				if (autoTag !== null) {
-					await trpc.adminPages.update.mutate({
-						pageId: result.pageId,
-						tagIds: [autoTag],
-					})
+					await updatePage.mutateAsync({ pageId: result.pageId, tagIds: [autoTag] })
 					if (stillOpen()) pendingAutoTag.value = null
 				}
 				if (stillOpen())
@@ -167,20 +181,36 @@ export const useEditorStore = defineStore('editor', () => {
 			setTimeout(() => {
 				if (saveStatus.value === 'error') saveStatus.value = 'idle'
 			}, 5000)
-			const message = error instanceof Error ? error.message : 'Save failed'
-			notify({
-				duration: 8000,
-				variant: 'danger',
-				message,
-			})
+			// A refused write has said why already; this says anything else.
+			notifyError(error)
 		}
 	}
 
-	const renamePage = async (newName: string) => {
-		if (!newName.trim()) return
-		currentName.value = newName.trim()
-		if (!currentPageId.value) return
-		await trpc.adminPages.update.mutate({ pageId: currentPageId.value, name: newName.trim() })
+	// A new name shows at once. If the server refuses it, the name before comes back, unless the
+	// editor has moved on to another page or name meanwhile.
+	const rename = useMutation(
+		{
+			mutationFn: (input: { pageId: number; name: string }) =>
+				trpc.adminPages.update.mutate(input),
+			onMutate: ({ name }) => {
+				const before = currentName.value
+				currentName.value = name
+				return { before }
+			},
+			onError: (_error, { pageId, name }, context) => {
+				if (context && currentPageId.value === pageId && currentName.value === name)
+					currentName.value = context.before
+			},
+		},
+		queryClient,
+	)
+
+	// A page not saved yet keeps the name for its first save.
+	const renamePage = (newName: string) => {
+		const name = newName.trim()
+		if (!name) return
+		if (currentPageId.value === null) currentName.value = name
+		else rename.mutate({ pageId: currentPageId.value, name })
 	}
 
 	return {

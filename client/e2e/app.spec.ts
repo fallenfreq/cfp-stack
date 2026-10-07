@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Page, Route } from '@playwright/test'
 import { expect, test } from './fixtures'
 import {
 	appMessages,
@@ -411,4 +411,119 @@ test('Save in the code view saves the page, with the changes made to its code', 
 	])
 	expect(blocks).toEqual([['paragraph', 'From the code.']])
 	await expect(codeView, 'still in the code view').toHaveAttribute('aria-pressed', 'true')
+})
+
+// A change the server refuses on the admin pages says why, in the words errors.ts gives each kind.
+test('a change the server refuses on the admin pages says why', async ({ page, themeClass }) => {
+	await steadyRequests(page)
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+		'adminTags.list': [{ tagId: 1, name: 'News', slug: 'news', published: true, pageCount: 0 }],
+	})
+	// A refusal as the server sends it (api/src/config/trpc.ts).
+	const refusal =
+		(status: number, code: string, message: string, zodError: unknown = null) =>
+		(route: Route) =>
+			route.fulfill({
+				status,
+				json: [{ error: { json: { message, code: -32000, data: { code, zodError } } } }],
+			})
+	let answer = (_route: Route): Promise<void> => Promise.resolve()
+	await page.route(
+		(url) => url.pathname.includes('adminTags.update'),
+		(route) => answer(route),
+	)
+	await page.goto('/admin/collections')
+	await useTheme(page, themeClass)
+
+	const cases: [string, string, string, (route: Route) => Promise<void>, string][] = [
+		[
+			'a refusal, in its words',
+			'Change slug',
+			'events',
+			refusal(409, 'CONFLICT', 'That slug is already in use'),
+			'That slug is already in use',
+		],
+		[
+			'a refused input, by field',
+			'Rename',
+			'   ',
+			refusal(400, 'BAD_REQUEST', '[…]', {
+				formErrors: [],
+				fieldErrors: { name: ['Too small: expected string to have >=1 characters'] },
+			}),
+			// Named as the page labels it.
+			'Name: Too small: expected string to have >=1 characters',
+		],
+		[
+			'a failure on the server',
+			'Rename',
+			'Renamed',
+			refusal(500, 'INTERNAL_SERVER_ERROR', 'Internal Server Error'),
+			'Something went wrong on our side. Please try again.',
+		],
+		[
+			'no answer',
+			'Rename',
+			'Renamed',
+			(route) => route.abort(),
+			"Couldn't get an answer from the server. Please try again.",
+		],
+	]
+	for (const [name, action, typed, reply, said] of cases) {
+		answer = reply
+		await page.getByRole('button', { name: 'Actions' }).click()
+		await page.getByRole('button', { name: action }).locator('visible=true').click()
+		await page.locator('dialog[open] input').fill(typed)
+		await page.keyboard.press('Enter')
+		const toast = page.getByRole('alert').filter({ hasText: said })
+		await expect(toast, name).toBeVisible()
+		// Out of the way of the next case.
+		await toast.getByRole('button', { name: 'Dismiss' }).click()
+	}
+})
+
+// A new name shows in the editor at once; one the server refuses says why and goes back. It stayed.
+test('a name the server refuses in the editor goes back to the one before', async ({
+	page,
+	themeClass,
+}) => {
+	await openStored(page, themeClass, oneParagraph)
+	await page.route(
+		(url) => url.pathname.includes('adminPages.update'),
+		(route) =>
+			route.fulfill({
+				status: 404,
+				json: [
+					{
+						error: {
+							json: {
+								message: 'Page not found',
+								code: -32004,
+								data: { code: 'NOT_FOUND' },
+							},
+						},
+					},
+				],
+			}),
+	)
+	const name = page.locator('.editor-top-bar input')
+	await expect(name).toHaveValue('Stored')
+	await name.fill('Renamed')
+	await name.press('Enter')
+	await expect(page.getByRole('alert').filter({ hasText: 'Page not found' })).toBeVisible()
+	await expect(name).toHaveValue('Stored')
+})
+
+// A promise that fails with nothing waiting on it says so, as an error nothing caught does.
+test('an error nothing caught says so', async ({ page, themeClass }) => {
+	await steadyRequests(page)
+	await page.goto('/')
+	await useTheme(page, themeClass)
+	await page.evaluate(() => {
+		void Promise.reject(new Error('Not caught'))
+	})
+	await expect(
+		page.getByRole('alert').filter({ hasText: 'Something went wrong. Please try again.' }),
+	).toBeVisible()
 })

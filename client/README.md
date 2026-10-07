@@ -9,9 +9,13 @@ as themes are emitted in `@scope`: no compat code below it.
 - `src/views/`: the pages, and `src/router/` maps addresses to them.
 - `src/components/`: the site's parts, the editor's (`editor/`) and the demos' (`demos/`).
 - `src/editor/extensions/`: what the editor (TipTap) adds to its blocks and marks.
-- `src/services/`: the API's data as the pages use it, who's signed in, and toasts and prompts.
+- `src/services/`: the API's data as the pages use it, who's signed in, toasts and prompts, and
+  what an error says (`errors.ts`, the one place a failed call to the server is put into words).
 - `src/stores/`, `src/composables/`: shared state and behaviour.
-- `src/trpc.ts`: the API's client, typed from `api/src/routes/appRouter.ts`.
+- `src/trpc.ts`: the API's client, typed from `api/src/routes/appRouter.ts`. Writes go through
+  `useMutation`, so one that fails says why, as a read through `useQuery` does
+  (`src/config/queryClient.ts`); so does an error a component's code didn't catch, or a promise
+  that failed with nothing waiting on it (`src/main.ts`).
 - `src/assets/`: the base styles, and the theme system's spec, references and open work.
 - `e2e/`: the layout checks. `preview/`: the component preview.
 
@@ -37,11 +41,3 @@ Running it and its checks, from the root: `README.md`, "Developing" and "Command
 - `vite.config.ts` pins `cssTarget` below the browsers that read range syntax (Safari 14, Chrome 87,
   Edge 88, Firefox 78; 2026-06-19), so the minifier keeps media queries they read. The floor has
   since been raised to Safari 17.4 (2026-10-01), which doesn't need it.
-- A change the server refuses on the admin pages shows nothing: renaming, changing a slug,
-  publishing, deleting, a new page or collection (`useListItemActions.ts`, `views/admin/`).
-  Nothing catches the error and the query client shows only failed reads, so a slug that's
-  taken (409), a name of spaces or a new name with no letter or number (400) is refused without
-  a word; a page's collections reload instead. The editor's Save shows the server's message,
-  which for a refused input is zod's issues as JSON. Read in the code, not tried in a browser. A
-  fix at the boundaries: the API gives a refused input a readable message, and the client
-  shows, in one place, any error nothing else handled.

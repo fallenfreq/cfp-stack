@@ -1,16 +1,19 @@
 // From api/: pnpm test, which builds dist/ first: the routes are read from it.
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { drizzle } from 'drizzle-orm/d1'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
+import superjson from 'superjson'
 import { createMemoryD1 } from '../../client/e2e/d1Memory.mjs'
 import { appRouter } from '../dist/routes/appRouter.js'
 
 const d1 = createMemoryD1(fileURLToPath(new URL('../migrations/', import.meta.url)))
-const admin = appRouter.createCaller({
+const context = {
 	db: drizzle(d1),
 	session: { checkedUser: async () => ({ roles: ['admin'] }) },
-})
+}
+const admin = appRouter.createCaller(context)
 const contentJson = JSON.stringify({ type: 'doc', content: [] })
 const addPage = (name) => admin.adminPages.create({ name, contentJson })
 const taken = { code: 'CONFLICT', message: 'That slug is already in use' }
@@ -102,4 +105,37 @@ test('names are trimmed, and a name of spaces is refused', async () => {
 		code: 'BAD_REQUEST',
 	})
 	await assert.rejects(admin.adminTags.create({ name: '   ' }), { code: 'BAD_REQUEST' })
+})
+
+// A refusal as the client gets it: through tRPC's handler, whose errorFormatter createCaller skips.
+const refusal = async (path, input) => {
+	const response = await fetchRequestHandler({
+		endpoint: '/trpc',
+		req: new Request(`http://localhost/trpc/${path}`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(superjson.serialize(input)),
+		}),
+		router: appRouter,
+		createContext: () => context,
+	})
+	return { status: response.status, ...superjson.deserialize((await response.json()).error) }
+}
+
+test('a refused input sends its issues field by field, for the client to word', async () => {
+	const spaces = await refusal('adminTags.create', { name: '   ' })
+	assert.equal(spaces.status, 400)
+	assert.deepEqual(spaces.data.zodError.formErrors, [])
+	assert.deepEqual(Object.keys(spaces.data.zodError.fieldErrors), ['name'])
+
+	// Any other refusal is in words already, a 400 of our own too.
+	const noLetter = await refusal('adminTags.create', { name: '★' })
+	assert.equal(noLetter.status, 400)
+	assert.equal(noLetter.message, 'A name needs a letter or a number for its address')
+	assert.equal(noLetter.data.zodError, null)
+	const news = await admin.adminTags.create({ name: 'Refused' })
+	const slugTaken = await refusal('adminTags.create', { name: 'Other', slug: news.slug })
+	assert.equal(slugTaken.status, 409)
+	assert.equal(slugTaken.message, 'That slug is already in use')
+	assert.equal(slugTaken.data.zodError, null)
 })

@@ -1,7 +1,9 @@
-import { accountProfileKey, refusalOf, type AccountProfile } from '@/composables/useAccountProfile'
+import { accountProfileKey, type AccountProfile } from '@/composables/useAccountProfile'
 import { queryClient } from '@/config/queryClient'
+import { errorMessage } from '@/services/errors'
 import { signIn } from '@/services/session'
 import { trpc } from '@/trpc'
+import { useMutation } from '@tanstack/vue-query'
 import { TRPCClientError } from '@trpc/client'
 import { ref } from 'vue'
 
@@ -20,6 +22,21 @@ export function useEmailChange(profile: AccountProfile) {
 	const emailError = ref<string | null>(null)
 	const resendSent = ref(false)
 
+	// The card says itself why a step failed.
+	const meta = { showsOwnError: true }
+	const changeEmail = useMutation({
+		mutationFn: (email: string) => trpc.account.changeEmail.mutate({ email }),
+		meta,
+	})
+	const verifyEmail = useMutation({
+		mutationFn: (code: string) => trpc.account.verifyEmail.mutate({ code }),
+		meta,
+	})
+	const resendCode = useMutation({
+		mutationFn: () => trpc.account.resendEmailCode.mutate(),
+		meta,
+	})
+
 	async function requestEmailChange() {
 		if (newEmail.value !== confirmEmail.value) {
 			emailError.value = 'Email addresses do not match'
@@ -29,7 +46,7 @@ export function useEmailChange(profile: AccountProfile) {
 		emailError.value = null
 		const submittedEmail = newEmail.value
 		try {
-			await trpc.account.changeEmail.mutate({ email: submittedEmail })
+			await changeEmail.mutateAsync(submittedEmail)
 			pendingEmail.value = submittedEmail
 			sessionStorage.setItem(PENDING_EMAIL_KEY, submittedEmail)
 			newEmail.value = ''
@@ -39,8 +56,7 @@ export function useEmailChange(profile: AccountProfile) {
 				emailStatus.value = 'confirm'
 				return
 			}
-			emailError.value =
-				refusalOf(error) ?? 'Failed to request email change. Please try again.'
+			emailError.value = errorMessage(error)
 			emailStatus.value = 'idle'
 		}
 	}
@@ -54,13 +70,13 @@ export function useEmailChange(profile: AccountProfile) {
 		emailStatus.value = 'verifying'
 		emailError.value = null
 		try {
-			await trpc.account.verifyEmail.mutate({ code: verificationCode.value })
+			await verifyEmail.mutateAsync(verificationCode.value)
 			sessionStorage.removeItem(PENDING_EMAIL_KEY)
 			verificationCode.value = ''
 			emailStatus.value = 'done'
 			await queryClient.invalidateQueries({ queryKey: accountProfileKey })
 		} catch (error) {
-			emailError.value = refusalOf(error) ?? "The code couldn't be checked. Please try again."
+			emailError.value = errorMessage(error)
 			emailStatus.value = 'code'
 		}
 	}
@@ -69,10 +85,10 @@ export function useEmailChange(profile: AccountProfile) {
 		emailError.value = null
 		resendSent.value = false
 		try {
-			await trpc.account.resendEmailCode.mutate()
+			await resendCode.mutateAsync()
 			resendSent.value = true
 		} catch (error) {
-			emailError.value = refusalOf(error) ?? 'Failed to resend code. Please try again.'
+			emailError.value = errorMessage(error)
 		}
 	}
 

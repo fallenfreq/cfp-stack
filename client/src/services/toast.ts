@@ -30,11 +30,11 @@ function run(id: number, timer: Timer) {
 	timer.timeout = setTimeout(() => dismiss(id), timer.remaining)
 }
 
-/** Show a message. duration is in ms; 0 keeps it until closed. */
+/** Show a message for duration ms (0 keeps it until closed): by default an error 10 s, else 5 s. */
 export function notify({
 	message,
 	variant,
-	duration = 5000,
+	duration = variant === 'danger' ? 10000 : 5000,
 }: {
 	message: string
 	variant?: ToastVariant | undefined

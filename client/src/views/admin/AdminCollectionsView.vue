@@ -22,7 +22,7 @@
 				:name="tag.name"
 				:slug="tag.slug"
 				:published="tag.published"
-				@update:published="(v) => togglePublished(tag.tagId, v)"
+				@update:published="(v) => crud.onPublish(tag.tagId, v)"
 			>
 				<template #meta>
 					<span class="page-count sf-text-sm sf-loudness-1 sf-single-line">
@@ -79,13 +79,15 @@ import { useListItemActions } from '@/composables/useListItemActions'
 import { showPrompt } from '@/services/promptModal'
 import { useAllTags } from '@/services/tags'
 import { trpc } from '@/trpc'
+import { useMutation } from '@tanstack/vue-query'
 
 const { data: tags, isPending } = useAllTags()
 
 const crud = useListItemActions({
 	queryKey: ['tags'],
-	rename: (id, name) => trpc.adminTags.update.mutate({ tagId: id, name }),
-	changeSlug: (id, slug) => trpc.adminTags.update.mutate({ tagId: id, slug }),
+	rename: ({ id, name }) => trpc.adminTags.update.mutate({ tagId: id, name }),
+	changeSlug: ({ id, slug }) => trpc.adminTags.update.mutate({ tagId: id, slug }),
+	publish: ({ id, published }) => trpc.adminTags.update.mutate({ tagId: id, published }),
 	delete: (id) => trpc.adminTags.delete.mutate({ tagId: id }),
 	slugMessage: (current) =>
 		`New slug for "${current}"\n⚠ Changing this will break /c/${current} links.`,
@@ -95,16 +97,14 @@ const crud = useListItemActions({
 	},
 })
 
-const togglePublished = async (tagId: number, published: boolean) => {
-	await trpc.adminTags.update.mutate({ tagId, published })
-	await crud.invalidate()
-}
+const createTag = useMutation({
+	mutationFn: (name: string) => trpc.adminTags.create.mutate({ name }),
+	onSuccess: crud.invalidate,
+})
 
 const onNewTag = async () => {
 	const name = await showPrompt('Tag name')
-	if (!name) return
-	await trpc.adminTags.create.mutate({ name })
-	await crud.invalidate()
+	if (name) createTag.mutate(name)
 }
 </script>
 

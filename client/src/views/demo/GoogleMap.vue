@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 /// <reference types="google.maps" />
-import AddMarkerSwitch from '@/components/demos/map/AddMarkerSwitch.vue'
+import AddMarkerSwitch, { type MapMarkerItem } from '@/components/demos/map/AddMarkerSwitch.vue'
 import GoogleAutocomplete from '@/components/demos/map/GoogleAutocomplete.vue'
 import CurrentLocationMarker from '@/components/demos/map/currentLocation.vue'
 import { showConfirm, showPrompt } from '@/services/promptModal'
@@ -11,6 +11,7 @@ import { useMarkerStore } from '@/stores/markerStore'
 import { useStackableSheetStore } from '@/stores/stackableSheetStore'
 import { trpc } from '@/trpc'
 import { Loader, type LoaderOptions } from '@googlemaps/js-api-loader'
+import { useMutation } from '@tanstack/vue-query'
 import { storeToRefs } from 'pinia'
 import { nextTick, onMounted, ref, useCssModule, watch } from 'vue'
 
@@ -127,25 +128,47 @@ watch(
 	},
 )
 
-const deleteMarker = async (markerContent: {
-	mapMarkersId: number
-	title: string
-	markerInstance: google.maps.marker.AdvancedMarkerElement
-}) => {
+// The map's writes: each changes the marker once the server has saved it; one the server refuses
+// says why (config/queryClient.ts).
+const markerDeletion = useMutation({
+	mutationFn: (marker: MapMarkerItem) => trpc.mapMarker.delete.mutate(marker.mapMarkersId),
+	onSuccess: (_, marker) => {
+		marker.markerInstance.position = null
+		marker.markerInstance.map = null
+		markerStore.removeMarker(marker.mapMarkersId)
+		closeSheet()
+	},
+})
+const tagDeletion = useMutation({
+	mutationFn: ({ marker, tag }: { marker: MapMarkerItem; tag: string }) =>
+		trpc.mapMarker.deleteTagFromMarker.mutate({ markerId: marker.mapMarkersId, tag }),
+	onSuccess: (_, { marker, tag }) => {
+		marker.tags = marker.tags.filter((t) => t !== tag)
+	},
+})
+// The server splits the list and answers with the tags as it saved them.
+const tagAddition = useMutation({
+	mutationFn: ({ marker, tags }: { marker: MapMarkerItem; tags: string }) =>
+		trpc.mapMarker.addTagsToMarker.mutate({ markerId: marker.mapMarkersId, tags }),
+	onSuccess: (addedTags, { marker }) => {
+		marker.tags.push(...addedTags)
+	},
+})
+const titleChange = useMutation({
+	mutationFn: ({ marker, title }: { marker: MapMarkerItem; title: string }) =>
+		trpc.mapMarker.update.mutate({ markerId: marker.mapMarkersId, title }),
+	onSuccess: ({ updatedFields }, { marker, title }) => {
+		// As the server saved it (trimmed).
+		marker.title = updatedFields.title ?? title
+		notify({ variant: 'success', message: 'Title updated successfully!' })
+	},
+})
+
+const deleteMarker = async (markerContent: MapMarkerItem) => {
 	const ok = await showConfirm(`Delete the marker "${markerContent.title}"?`, {
 		okText: 'Delete',
 	})
-	if (!ok) return
-	const { mapMarkersId: markerId, markerInstance: marker } = markerContent
-	try {
-		await trpc.mapMarker.delete.mutate(markerId)
-		marker.position = null
-		marker.map = null
-		markerStore.removeMarker(markerId)
-		closeSheet()
-	} catch (error) {
-		console.error('Error deleting marker:', error)
-	}
+	if (ok) markerDeletion.mutate(markerContent)
 }
 const directionsUrl = (lat: number, lng: number) => `https://maps.google.com/?q=${lat},${lng}`
 
@@ -163,24 +186,13 @@ const toggleDeleteMode = () => {
 		})
 }
 
-const onMarkerTagClick = async (tag: string) => {
+const onMarkerTagClick = (tag: string) => {
 	if (deleteMode.value) {
-		await deleteTagFromMarker(tag)
+		if (sheetContent.value?.id === 'mapMarker')
+			tagDeletion.mutate({ marker: sheetContent.value.content, tag })
 		deleteMode.value = false
 	} else {
 		onTagClick(tag)
-	}
-}
-
-const deleteTagFromMarker = async (tag: string) => {
-	if (!sheetContent.value || sheetContent.value.id !== 'mapMarker') return
-	const markerId = sheetContent.value.content.mapMarkersId
-
-	try {
-		await trpc.mapMarker.deleteTagFromMarker.mutate({ markerId, tag })
-		sheetContent.value.content.tags = sheetContent.value.content.tags.filter((t) => t !== tag)
-	} catch (error) {
-		console.error('Error deleting tag:', error)
 	}
 }
 
@@ -189,18 +201,7 @@ const openAddTagPrompt = async () => {
 	if (!newTags) return
 
 	if (!sheetContent.value || sheetContent.value.id !== 'mapMarker') return
-	const markerId = sheetContent.value.content.mapMarkersId
-
-	try {
-		// The server splits the list and answers with the tags as it saved them.
-		const addedTags = await trpc.mapMarker.addTagsToMarker.mutate({
-			markerId,
-			tags: newTags,
-		})
-		sheetContent.value.content.tags.push(...addedTags)
-	} catch (error) {
-		console.error('Error adding tags:', error)
-	}
+	tagAddition.mutate({ marker: sheetContent.value.content, tags: newTags })
 }
 
 const onTagClick = (tag: string) => {
@@ -211,34 +212,12 @@ const onTagClick = (tag: string) => {
 			: markerStore.selectedTags.push(tag)
 }
 
-const openTitleEditPrompt = async (markerContent: { mapMarkersId: number; title: string }) => {
+const openTitleEditPrompt = async (markerContent: MapMarkerItem) => {
 	const newTitle = await showPrompt('Enter the new title:')
 	if (newTitle === null || newTitle.trim() === '') {
 		return
 	}
-
-	try {
-		const { updatedFields } = await trpc.mapMarker.update.mutate({
-			markerId: markerContent.mapMarkersId,
-			title: newTitle,
-		})
-
-		// As the server saved it (trimmed).
-		markerContent.title = updatedFields.title ?? newTitle
-
-		notify({
-			duration: 5000,
-			variant: 'success',
-			message: 'Title updated successfully!',
-		})
-	} catch (error) {
-		console.error('Error updating title:', error)
-		notify({
-			duration: 5000,
-			variant: 'danger',
-			message: 'Failed to update title. Please try again.',
-		})
-	}
+	titleChange.mutate({ marker: markerContent, title: newTitle })
 }
 </script>
 

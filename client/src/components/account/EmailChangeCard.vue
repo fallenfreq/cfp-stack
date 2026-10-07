@@ -87,7 +87,13 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 					{{ emailStatus === 'sending' ? 'Sending…' : 'Request change' }}
 				</SfButton>
 			</div>
-			<p v-if="emailError" class="sf-text-sm sf-variant-danger" role="alert">
+			<!-- pre-line: an error can be several lines, one for each field. -->
+			<p
+				v-if="emailError"
+				class="sf-text-sm sf-variant-danger"
+				role="alert"
+				style="white-space: pre-line"
+			>
 				{{ emailError }}
 			</p>
 		</template>
@@ -135,7 +141,12 @@ const canVerify = computed(() => emailStatus.value !== 'verifying' && !!verifica
 					Code resent to {{ pendingEmail }}
 				</span>
 			</div>
-			<p v-if="emailError" class="sf-text-sm sf-variant-danger" role="alert">
+			<p
+				v-if="emailError"
+				class="sf-text-sm sf-variant-danger"
+				role="alert"
+				style="white-space: pre-line"
+			>
 				{{ emailError }}
 			</p>
 		</template>

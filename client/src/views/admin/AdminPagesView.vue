@@ -27,7 +27,7 @@
 				:name="page.name"
 				:slug="page.slug"
 				:published="page.published"
-				@update:published="(v) => togglePublished(page.pageId, v)"
+				@update:published="(v) => crud.onPublish(page.pageId, v)"
 			>
 				<template #meta>
 					<SfPopover class="sf-size-xs">
@@ -153,7 +153,7 @@ import { useAllPages } from '@/services/pages'
 import { showPrompt } from '@/services/promptModal'
 import { useAllTags } from '@/services/tags'
 import { trpc } from '@/trpc'
-import { useQuery } from '@tanstack/vue-query'
+import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -184,16 +184,12 @@ const pageTags = computed(() => {
 
 const crud = useListItemActions({
 	queryKey: ['pages'],
-	rename: (id, name) => trpc.adminPages.update.mutate({ pageId: id, name }),
-	changeSlug: (id, slug) => trpc.adminPages.update.mutate({ pageId: id, slug }),
+	rename: ({ id, name }) => trpc.adminPages.update.mutate({ pageId: id, name }),
+	changeSlug: ({ id, slug }) => trpc.adminPages.update.mutate({ pageId: id, slug }),
+	publish: ({ id, published }) => trpc.adminPages.update.mutate({ pageId: id, published }),
 	delete: (id) => trpc.adminPages.delete.mutate({ pageId: id }),
 	deleteMessage: (_id, name) => `Delete "${name}"? This cannot be undone.`,
 })
-
-const togglePublished = async (pageId: number, published: boolean) => {
-	await trpc.adminPages.update.mutate({ pageId, published })
-	await crud.invalidate()
-}
 
 // The name says which tags the page has, since the tags alone aren't read out.
 const tagsLabel = (page: { pageId: number; name: string; slug: string }) => {
@@ -203,7 +199,11 @@ const tagsLabel = (page: { pageId: number; name: string; slug: string }) => {
 
 // Each save sends the boxes as ticked right now, not the last list from the server,
 // so quick ticks don't undo each other. Saves for one page run one after another; a
-// failed save reloads, so the boxes show what was actually saved.
+// failed save says why and reloads, so the boxes show what was actually saved.
+const saveTags = useMutation({
+	mutationFn: (input: { pageId: number; tagIds: number[] }) =>
+		trpc.adminPages.update.mutate(input),
+})
 const tagSaves = new Map<number, Promise<unknown>>()
 const onTagsChange = (pageId: number, event: Event) => {
 	const group = event.currentTarget as HTMLElement
@@ -211,7 +211,7 @@ const onTagsChange = (pageId: number, event: Event) => {
 		Number(input.value),
 	)
 	const save = (tagSaves.get(pageId) ?? Promise.resolve()).then(() =>
-		trpc.adminPages.update.mutate({ pageId, tagIds }),
+		saveTags.mutateAsync({ pageId, tagIds }),
 	)
 	// Reload only once no newer save is waiting — a reload in between would put back
 	// ticks the user has since changed.
@@ -227,16 +227,19 @@ const onTagsChange = (pageId: number, event: Event) => {
 	tagSaves.set(pageId, tail)
 }
 
+// A new page opens in the editor.
+const createPage = useMutation({
+	mutationFn: (name: string) =>
+		trpc.adminPages.create.mutate({
+			name,
+			contentJson: JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] }),
+		}),
+	onSuccess: (page) => router.push({ name: 'editor-page', params: { slug: page.slug } }),
+})
+
 const onNewPage = async () => {
 	const name = await showPrompt('Page name')
-	if (!name) return
-	const result = await trpc.adminPages.create.mutate({
-		name,
-		contentJson: JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] }),
-	})
-	if (result?.slug) {
-		router.push({ name: 'editor-page', params: { slug: result.slug } })
-	}
+	if (name) createPage.mutate(name)
 }
 </script>
 
