@@ -1316,6 +1316,10 @@ Each rule's reason is in the section named.
 
 - One arrangement per box: `sl-inset` doesn't share a block with `sl-stack`, `sl-cluster`,
   `sl-columns`, `sl-split` or `sl-grid` (Side margins and full-bleed).
+- That counts the layout a block's component gives it: a Section and a Centre stack their
+  blocks, and Columns, Split and Cover arrange theirs, so none takes another layout, `sl-row`
+  and `sl-inset` included. For a row or a band, use a Card or a plain block. The validator
+  needs each component's own layout to see it.
 - `sl-center` doesn't share a block with `sl-bleed`. A centred reading column that also spans
   edge to edge has no clear meaning. A Centre block set to bleed is fine: its outer box takes
   the bleed (Side margins and full-bleed).

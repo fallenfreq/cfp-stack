@@ -1,14 +1,5 @@
 import { expect, test } from './fixtures'
-import {
-	box,
-	breakpoints,
-	columnCount,
-	css,
-	isShown,
-	openTests,
-	placed,
-	setShellWidth,
-} from './helpers'
+import { box, breakpoints, columnCount, isShown, openTests, placed, setShellWidth } from './helpers'
 
 // Known not to work yet (sf-system-todo.md, item 10, "Logged"; the typed-layout limit is in
 // sf-system.md). Each check states what should happen and is marked as expected to fail. When
@@ -27,14 +18,6 @@ test('the known-limit cases are set up as described', async ({ page }) => {
 		(await box(page.locator('#k1-columns'))).width,
 		'K1: the side is narrower than sm',
 	).toBeLessThanOrEqual(sm)
-	expect(
-		await css(page.locator('#k2-section'), 'grid-column-end'),
-		'K2: the Section spans the row',
-	).not.toBe('auto')
-	for (const id of ['k3-section', 'k3-center'])
-		await expect(page.locator(`#${id}`), `K3: ${id} wears sl-inset`).toHaveClass(
-			/(^|\s)sl-inset(\s|$)/,
-		)
 	const content = await box(page.locator('#k4-content'))
 	expect(
 		(await box(page.locator('#k4-card'))).height,
@@ -49,28 +32,6 @@ test('K1: typed columns in a narrow side of a Split stack', async ({ page }) => 
 	test.fail()
 	expect(await columnCount(page.locator('#k1-columns'))).toBe(1)
 })
-
-test("K2: a Section set as a row puts its blocks in the parent's columns", async ({ page }) => {
-	test.fail()
-	for (const n of [1, 2, 3]) {
-		const cell = await box(page.locator(`#k2-cell-${n}`))
-		const column = await box(page.locator(`#k2-column-${n}`))
-		expect(
-			cell.left >= column.left - 1 && cell.right <= column.right + 1,
-			`cell ${n} in column ${n}`,
-		).toBe(true)
-	}
-})
-
-for (const id of ['k3-section', 'k3-center'])
-	test(`K3: a ${id === 'k3-section' ? 'Section' : 'Centre'} used as an inset gives its blocks side margins`, async ({
-		page,
-	}) => {
-		test.fail()
-		const root = await box(page.locator(`#${id}`))
-		const onTheLine = await box(page.locator(`#${id}-line`))
-		expect(onTheLine.left).toBeGreaterThan(root.left + 1)
-	})
 
 test("K4: a Section with a background stretches to its row's height", async ({ page }) => {
 	test.fail()

@@ -13,7 +13,10 @@ broke fixed) are fixed, reviewed and committed together. Item 17 (console errors
 lines) is fixed, reviewed and committed. Item 18 (a component block's own parts and its slot) is
 done, checked and reviewed twice, the reviews' findings fixed or logged, and committed. Item 19
 (the layout checks in WebKit, and the Safari 26 toolbar panel fix they led to) is done, checked
-and reviewed, the review's findings fixed, and committed. Next: choose with the user.
+and reviewed, the review's findings fixed, and committed. Item 20 (known limits K2 and K3) is
+decided with the user: not bugs but content the validator should flag; the tried fix was
+undone. Next: item 21 (the Section becomes Stack, and `sl-stack` reads its padding), then K4
+and K5.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -847,6 +850,25 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
     - **Open:** real Safari 26 (an iPhone or iPad on iOS 26 would do); reporting the bug to WebKit,
       which needs the user's account.
 
+20. **A Section or Centre set as a row or an inset: not a bug** (known limits K2 and K3, logged
+    in item 10's review as "should work"; decided with the user 2026-10-07). Given `sl-row` or
+    `sl-inset` in the code view, a Section kept its blocks stacked and a Section or Centre gave
+    them no side margins: the component wears `sl-stack` itself, so the box has two layouts,
+    and the stack wins by its order in `slLayout.ts`.
+    - **Decided:** that's content the validator should flag, not something to make work. The spec
+      already has one layout per box; it now says that counts the layout a block's component
+      gives it (`sf-system.md`, "Validator and linter", Content). A row or a band is a Card or a
+      plain block, both already checked. The Section's class picker offers neither class.
+    - **Tried and undone** (uncommitted): a stack giving way to any other layout on its box, and
+      the Section's padding moved from inline into its own CSS. It worked (measured in Chrome and
+      WebKit), but added a rule nobody needs and took the linter's rule out of the spec. Moving the
+      stack's rules first alone wasn't enough: its gap still applied between an inset's margin
+      tracks, putting text 16px too far in.
+    - K2 and K3 leave `known.spec.ts` and the test page.
+    - **Found:** the Section applies its own padding (`sf-padding-*` only sets `--sf-padding`),
+      inline (`LayoutSection.vue`), so no theme or layout rule can change it. The spec has the
+      layout class on the box read the padding (Layout channels), as `sl-center` does: item 21.
+
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in
 Playwright, 2026-10-02). Grid items with auto side margins shrink to fit. Nothing in the app
@@ -879,7 +901,7 @@ once get throttled and time out (2026-10-03); `pnpm test:ui --workers 2` passes.
   apart (`webkit/`).
 - **The cases** are on `/editor?seed=tests` (`client/src/config/editor/testContent.html`).
   Add a case for each layout fix.
-- **Known not to work yet** (K1–K5, `e2e/known.spec.ts`): each checks what should happen and
+- **Known not to work yet** (K1, K4 and K5, `e2e/known.spec.ts`): each checks what should happen and
   is marked as expected to fail, with a normal check that every case is set up as described.
   When one is fixed, Playwright reports "expected to fail, but passed": remove its
   `test.fail()` and move the case up the test page.
@@ -1355,9 +1377,10 @@ What's pending:
       `html-self-closing` stays with `void: 'any'`, and `require-default-prop` is off (an
       optional prop is left out, not defaulted to undefined). The layout checks (Playwright)
       stay out of CI by choice (decided with the user, 2026-10-01): they're run locally.
-    - `sl-row` or `sl-inset` on a Section or Center loses to its baked `sl-stack`: a Section's
+    - ~~`sl-row` or `sl-inset` on a Section or Center loses to its baked `sl-stack`: a Section's
       blocks don't line up with the parent's columns, and an inset Section or Centre has no
-      side margins. Checks K2 and K3.
+      side margins. Checks K2 and K3.~~ Not a bug: two layouts on one box, for the validator
+      (item 20).
     - A component root doesn't fill its stretched wrapper: a Section with a background in a row
       of columns is 58px tall beside a 394px Card (TiptapTest: 235 of 520px). LayoutCard
       patches this with `height: 100%`. Check K4.
