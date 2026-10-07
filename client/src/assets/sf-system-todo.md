@@ -21,11 +21,11 @@ what applies to every task stays in `CLAUDE.md` (review findings are checked wit
 tool; the rule also points at "Current state (resume here)". How the layout checks work and the
 browser floor are in `client/README.md`; the preview's command is `pnpm preview:components`; the
 type-check commands are now `pnpm typecheck --all` (the API's reads `api/dist`, which `pnpm dev`
-keeps built). Three of this file's own lines point at what's gone, for you to update or close: the
-open sign-in item ("Sign-in through our own server", which says `docs/auth.md`'s "Progress" says
-where it's up to; sign-in is live), "shipped with step 3 of `docs/auth.md`" (the steps are gone),
-and the note that the starter tables went, citing `docs/database.md` (that history is in the commits
-now).
+keeps built). The docs plan is closed; its last step is an item under "For the docs". Three of this
+file's own lines point at what's gone, for you to update or close: the open sign-in item ("Sign-in
+through our own server", which says `docs/auth.md`'s "Progress" says where it's up to; sign-in is
+live), "shipped with step 3 of `docs/auth.md`" (the steps are gone), and the note that the starter
+tables went, citing `docs/database.md` (that history is in the commits now).
 
 **Editor** (2026-10-06): candidate 14 (undo after opening a page) is fixed and committed.
 Candidate 15 (the code view as an editor of its own) and item 16 (TipTap 3.31.4, with what it
@@ -1557,6 +1557,14 @@ These are not bugs but unresolved tensions in the current design:
   semantics may want their own treatment when Vuestic is removed.
 
 ## For the docs (when there are some)
+
+**Next for the docs:** split `sf-system.md` into reference (the classes and tokens), explanation
+(the three actors, the vocabulary's rules) and internal design (the validator, editor integration),
+and give this todo a plan's lifecycle (`docs/README.md`, "Where things go"). User docs begin with
+the first one: content authors' help in the editor, guides for theme and component authors in the
+repo, starting from the examples below. The owner may make the repository private and split the
+system (the editor, the theme system) from the site, versioned, to build other sites with it;
+whether it stays open source is open.
 
 Examples worth keeping for page builders and component makers (checked in Chrome, 2026-10-03).
 

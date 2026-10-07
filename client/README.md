@@ -29,3 +29,11 @@ as themes are emitted in `@scope`: no compat code below it.
 - Components: the preview built from `preview/`.
 
 Running it and its checks, from the root: `README.md`, "Developing" and "Commands".
+
+## Known issues
+
+- `vite.config.ts` pins `cssTarget` below the browsers that read range syntax (Safari 14, Chrome 87,
+  Edge 88, Firefox 78; 2026-06-19), so the minifier keeps media queries they read. The floor has
+  since been raised to Safari 17.4 (2026-10-01), which doesn't need it.
+- `playwright.config.ts`'s comment says every check runs under both themes; the demo page's and
+  the theme comparison run once.

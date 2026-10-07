@@ -36,3 +36,5 @@ Running it and its checks, from the root: `README.md`, "Developing" and "Command
 
 - A tRPC address with a broken escape (`/trpc/%E0%A4%A`) answers 500 and logs an error, though
   the mistake is the caller's: tRPC's `decodeURIComponent` throws.
+- `tsconfig.check.json`'s comment says the type check doesn't need `dist/`; it does, as the
+  Functions' imports read it.

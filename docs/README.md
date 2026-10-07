@@ -15,7 +15,6 @@ that home, or is generated from it where a copy must exist.
 | `client/src/assets/sf-system.md`      | The sf/sl theme system's spec                                  |
 | `client/src/assets/sf-references.md`  | Outside work the theme system draws on                         |
 | `client/src/assets/sf-system-todo.md` | The theme system's open work: a plan, kept by its spec for now |
-| `docs/plans/`                         | Plans, while they run                                          |
 | `CLAUDE.md`                           | What Claude needs in every session                             |
 
 ## Where things go
@@ -50,3 +49,14 @@ root (its name alone, from its own folder or when no other file has it), then he
 leads, each in quotes. A heading's closing parenthetical can be left out: "Zitadel" names
 "Zitadel (the current provider)". `pnpm test` checks each citation in this form, so a doc moved
 or a section renamed fails until what cites it follows.
+
+## Decisions
+
+- **No decision records** (2026-10-06). A topic's current decisions are in its doc; their history is
+  in the commits.
+- **No generated settings docs** (2026-10-06). Five schemas read the settings
+  (`api/src/config/envs.ts` and the sign-in's), so none is the one source: a setting's meaning is in
+  its topic's doc, which the files that set it cite.
+- **No type-check skill or Claude Code hook** (2026-10-06). Git's commit hook type-checks the
+  packages a commit touches, and `pnpm typecheck` is the one command.
+- **Sharing a branch with other sessions is a line in `CLAUDE.md`**, not a skill (2026-10-06).
