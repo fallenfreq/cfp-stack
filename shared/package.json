@@ -7,6 +7,10 @@
 		"./placementClasses": {
 			"types": "./placementClasses.d.ts",
 			"default": "./placementClasses.js"
+		},
+		"./slug": {
+			"types": "./slug.d.ts",
+			"default": "./slug.js"
 		}
 	}
 }

@@ -1,6 +1,6 @@
 import { showConfirm, showPrompt } from '@/services/promptModal'
 import { notify } from '@/services/toast'
-import { isValidSlug } from '@/utils/slug'
+import { isSlug, slugCase } from '@somefreq-app/shared/slug'
 import { useQueryClient } from '@tanstack/vue-query'
 
 export function useListItemActions(options: {
@@ -30,9 +30,9 @@ export function useListItemActions(options: {
 	}
 
 	const onChangeSlug = async (id: number, currentSlug: string) => {
-		const slug = await showPrompt(slugMsg(currentSlug), (value) => value.toLowerCase())
+		const slug = await showPrompt(slugMsg(currentSlug), slugCase)
 		if (!slug) return
-		if (!isValidSlug(slug)) {
+		if (!isSlug(slug)) {
 			notify({
 				message: 'Slug may only contain letters, numbers, and hyphens',
 				variant: 'danger',

@@ -1,20 +1,21 @@
-import { eq, getColumnTable } from 'drizzle-orm'
+import { isSlug, slugCase, slugify } from '@somefreq-app/shared/slug'
+import { eq, getColumnTable, inArray } from 'drizzle-orm'
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
 import { z } from 'zod'
 import { type Db, isUniqueViolation } from '../db.js'
-import { ConflictError, NotFoundError } from '../domain/errors.js'
+import { ConflictError, NotFoundError, ValidationError } from '../domain/errors.js'
 
 // What a name column accepts (a page's, a collection's, a marker's title), on top of its type:
 // trimmed, then not empty, its length counted once trimmed.
 export const nameRule = (column: z.ZodString) => z.string().trim().pipe(column.min(1))
 
-// What a slug column accepts (a page's, a collection's), on top of its length: the address part,
-// lowercased.
+// What a slug column accepts (a page's, a collection's): what a slug may hold, in a slug's case
+// (@somefreq-app/shared/slug), its length counted after that.
 export const slugRule = (column: z.ZodString) =>
-	column
-		.min(1)
-		.toLowerCase()
-		.regex(/^[a-z0-9-]+$/, 'Slug may only contain lowercase letters, numbers, and hyphens')
+	z
+		.string()
+		.overwrite(slugCase)
+		.pipe(column.min(1).refine(isSlug, 'Slug may only contain letters, numbers, and hyphens'))
 
 // The row a write is for is there, or the answer is 404: the check that reads before the write
 // (docs/database.md, "How we use it").
@@ -27,15 +28,6 @@ export async function mustExist(db: Db, key: SQLiteColumn, id: number, notFound:
 	if (!row) throw new NotFoundError(notFound)
 }
 
-export function slugify(name: string): string {
-	return (
-		name
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, '-')
-			.replace(/^-|-$/g, '') || 'untitled'
-	)
-}
-
 type WithDefinedValues<T extends object> = {
 	[K in keyof T]?: Exclude<T[K], undefined>
 }
@@ -46,30 +38,46 @@ export function definedFields<T extends object>(obj: T): WithDefinedValues<T> {
 	) as WithDefinedValues<T>
 }
 
-// The slug with its ending, both within the column's length: the slug is cut to make room, and a
-// hyphen left at the cut goes.
+// The slug with its ending, both within the column's length: the slug is cut to make room, and
+// half a character or a hyphen left at the cut goes.
 const withinLength = (slug: string, ending: string, length = Infinity) =>
 	slug.length + ending.length <= length
 		? slug + ending
-		: slug.slice(0, length - ending.length).replace(/-+$/, '') + ending
+		: slug
+				.slice(0, length - ending.length)
+				.replace(/[\uD800-\uDBFF]$/, '')
+				.replace(/-+$/, '') + ending
 
-// A slug the app makes: the one given or, while that's taken, with -2, -3… added, up to
-// maxAttempts and then 409. Each fits the slug column, so the row's address accepts it.
+// A slug made from a name: the name's own or, while that's taken, with -2, -3… added, each within
+// the slug column's length so the row's address accepts it. One read finds which of the next 50
+// are taken (D1 binds at most 100 values a query), then the first free one is inserted. The
+// unique index still decides: one another request takes meanwhile moves this on to the next. It
+// always ends, as each round moves 50 on and there are only so many rows.
 export async function insertWithUniqueSlug<T>(
+	db: Db,
 	insert: (slug: string) => Promise<T>,
-	baseSlug: string,
+	name: string,
 	column: SQLiteColumn,
-	maxAttempts = 10,
 ): Promise<T> {
-	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-		const slug = withinLength(baseSlug, attempt === 1 ? '' : `-${attempt}`, column.length)
-		try {
-			return await insert(slug)
-		} catch (error) {
-			if (!isUniqueViolation(error, column)) throw error
+	const slug = slugify(name)
+	if (!slug) throw new ValidationError('A name needs a letter or a number for its address')
+	for (let first = 1; ; first += 50) {
+		const candidates = Array.from({ length: 50 }, (_, i) =>
+			withinLength(slug, first + i === 1 ? '' : `-${first + i}`, column.length),
+		)
+		const taken = await db
+			.select({ slug: column })
+			.from(getColumnTable<SQLiteTable>(column))
+			.where(inArray(column, candidates))
+		const takenSlugs = new Set(taken.map((row) => row.slug))
+		for (const candidate of candidates.filter((c) => !takenSlugs.has(c))) {
+			try {
+				return await insert(candidate)
+			} catch (error) {
+				if (!isUniqueViolation(error, column)) throw error
+			}
 		}
 	}
-	throw new ConflictError(`Could not generate a unique slug after ${maxAttempts} attempts`)
 }
 
 // A write that saves a slug the admin chose: if another row has it, the answer is 409.

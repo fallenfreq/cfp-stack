@@ -10,7 +10,6 @@ import {
 	insertWithUniqueSlug,
 	mustExist,
 	nameRule,
-	slugify,
 	slugRule,
 } from '../../lib/index.js'
 import { sitePages } from '../../schemas/page.js'
@@ -160,13 +159,14 @@ export const adminPagesRouter = router({
 				...(input.imageUrl != null ? { imageUrl: input.imageUrl } : {}),
 			}
 			return insertWithUniqueSlug(
+				ctx.db,
 				(slug) =>
 					ctx.db
 						.insert(sitePages)
 						.values({ ...values, slug })
 						.returning({ pageId: sitePages.pageId, slug: sitePages.slug })
 						.get(),
-				slugify(input.name),
+				input.name,
 				sitePages.slug,
 			)
 		}),

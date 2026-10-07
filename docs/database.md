@@ -66,10 +66,11 @@ How the API talks to D1. The code that follows it is the example for anything ne
   into the table, which SQLite can only add or drop by rebuilding it; an index comes and goes on
   its own. A row that may be there already is inserted with `onConflictDoNothing()` and then
   read, never looked for first: between the look and the insert, another request can add it.
-  A slug that's taken is another row's: one made from a name moves aside (`-2` to `-10`, within
-  the column's length, then 409; `insertWithUniqueSlug`), and one the admin chose answers 409
-  (`conflictIfSlugTaken`). Both are told the slug column, and `isUniqueViolation` checks the
-  repeat is in it.
+  A slug that's taken is another row's: one made from a name moves aside to the first free `-2`,
+  `-3`…, within the column's length (`insertWithUniqueSlug`), and one the admin chose answers
+  409 (`conflictIfSlugTaken`). Looking first is safe there, as it only picks which slug to try:
+  one read finds which of the next 50 are taken, and the index still decides. Both are told the
+  slug column, and `isUniqueViolation` checks the repeat is in it.
 - **Every foreign key's column leads an index** (or the primary key). Deleting a row finds the
   rows pointing at it through that index; without one, SQLite reads the whole table for each row
   deleted (deleting the design read 326,276 rows before `…_keys_and_indexes`, 2 after).
@@ -118,6 +119,15 @@ How the API talks to D1. The code that follows it is the example for anything ne
   them, and the default change (2026-06-15) needed a rebuild drizzle-kit 0.20 doesn't write.
   Live was brought in line by adding the missing tables and marking `0000` applied, so the
   older tables kept their shapes. A future rebuild of either table puts it right.
+- **Slugs in any alphabet** (2026-10-07). A slug holds letters and numbers in any alphabet,
+  each with its accents and other marks, and hyphens (`shared/slug.js`, which the API and the
+  client both check with). Making one from a name drops what shows nothing (an emoji's
+  selector, joiners) and marks on nothing, then gives it a slug's case (`slugCase`: lowercased,
+  without the dot `İ` leaves on its i, composed as NFC), which a slug sent in gets too, so
+  `/c/İSTANBUL` finds `istanbul`. So `Ελλάδα` makes `ελλάδα` and `Café` makes `café`, where
+  they made `untitled` and `caf`. A name with no letter or number makes no
+  slug and is refused (400). Letters that look alike in two alphabets (Cyrillic `а`, Latin `a`)
+  make two addresses that look the same; only admins make slugs.
 
 ## Known issues
 
@@ -126,11 +136,6 @@ How the API talks to D1. The code that follows it is the example for anything ne
   was. The duplicate-rule check reads before it inserts, so two requests at once could both add
   the same rule. A vocabulary entry removed between a new rule's checks and its batch leaves the
   rule without that class.
-- **Slugs made from names.** Only a–z and 0–9 are kept, so `Café` makes `caf`, and a name with
-  neither (`Ελλάδα`, `Москва`, `日本`) makes `untitled`, whatever it says. A slug moves aside
-  only as far as `-10`, so an 11th page or collection whose name makes the same slug can't be
-  made (409): an 11th named `Test`, or an 11th named in another script. A slug holds only a–z,
-  0–9 and hyphens (`slugRule`), so a fix changes how a slug is made or what it may hold.
 - **The map.** Any signed-in user can change or delete any marker or tag (`api/src/routes/markers`):
   the map is a demo and the owner has the only account. A new marker's pin shows its title as
   typed, the server's trimmed. Live keeps 13 tag names from before tags were normalized (`Food`

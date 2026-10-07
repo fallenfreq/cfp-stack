@@ -7,7 +7,6 @@ import {
 	definedFields,
 	insertWithUniqueSlug,
 	nameRule,
-	slugify,
 	slugRule,
 } from '../../lib/index.js'
 import { sitePageTags } from '../../schemas/pageTag.js'
@@ -61,7 +60,7 @@ export const adminTagsRouter = router({
 					.get()
 			// A slug the admin chose is kept or refused; one made from the name moves aside.
 			return input.slug === undefined
-				? insertWithUniqueSlug(insert, slugify(input.name), siteTags.slug)
+				? insertWithUniqueSlug(ctx.db, insert, input.name, siteTags.slug)
 				: conflictIfSlugTaken(insert(input.slug), siteTags.slug)
 		}),
 
