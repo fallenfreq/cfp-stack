@@ -13,7 +13,7 @@ broke fixed) are fixed, reviewed and committed together. Item 17 (console errors
 lines) is fixed, reviewed and committed. Item 18 (a component block's own parts and its slot) is
 done, checked and reviewed twice, the reviews' findings fixed or logged, and committed. Item 19
 (the layout checks in WebKit, and the Safari 26 toolbar panel fix they led to) is done, checked
-and reviewed, the review's findings fixed; not committed.
+and reviewed, the review's findings fixed, and committed. Next: choose with the user.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
