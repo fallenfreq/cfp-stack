@@ -5,9 +5,11 @@ import { z } from 'zod'
 import { adminProcedure, publicProcedure, router } from '../../config/trpc.js'
 import { writeTogether } from '../../db.js'
 import {
+	conflictIfSlugTaken,
 	definedFields,
 	insertWithUniqueSlug,
 	mustExist,
+	nameRule,
 	slugify,
 	slugRule,
 } from '../../lib/index.js'
@@ -28,7 +30,7 @@ const isJson = (text: string) => {
 // What a page's columns accept: their types and lengths from the table, and what the app adds.
 // Each input picks the columns it takes.
 const pageInput = createSelectSchema(sitePages, {
-	name: (column) => column.min(1),
+	name: nameRule,
 	slug: slugRule,
 	// zod's own http(s) rule, which also asks for the `//`.
 	imageUrl: (column) => column.pipe(z.url({ protocol: z.regexes.httpProtocol })),
@@ -165,6 +167,7 @@ export const adminPagesRouter = router({
 						.returning({ pageId: sitePages.pageId, slug: sitePages.slug })
 						.get(),
 				slugify(input.name),
+				sitePages.slug,
 			)
 		}),
 
@@ -215,7 +218,7 @@ export const adminPagesRouter = router({
 					)
 				}
 			}
-			await writeTogether(ctx.db, writes)
+			await conflictIfSlugTaken(writeTogether(ctx.db, writes), sitePages.slug)
 			return { pageId }
 		}),
 

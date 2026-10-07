@@ -19,7 +19,7 @@ people in and serves the themes' stylesheet; Pages serves the built client besid
 - `scripts/seed.mjs`: the seed's command.
 - `default-pages/`, `sample-data/`: SQL run by hand with `wrangler d1 execute`, as each file
   says: the home page, and sample collections.
-- `test/`: unit tests.
+- `test/`: the tests ("Building and checking it").
 - `wrangler.toml`: the Pages project's settings (`docs/hosting.md`). Locally, wrangler keeps
   the database in `.wrangler/state`.
 
@@ -29,6 +29,8 @@ people in and serves the themes' stylesheet; Pages serves the built client besid
   (`tsc --build --noCheck`); the Functions import what they use from `dist/`.
 - Types: `tsconfig.check.json`, over both. The Functions' imports read `dist/`, so it needs a
   build first.
+- Tests: `test/`. The routes' tests call them from `dist/` on the in-memory D1
+  (`client/e2e/d1Memory.mjs`), so `pnpm test` builds it first.
 
 Running it and its checks, from the root: `README.md`, "Developing" and "Commands".
 

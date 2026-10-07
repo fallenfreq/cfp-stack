@@ -1,6 +1,7 @@
-// Minimal Cloudflare D1 binding over node:sqlite, so drizzle's d1 driver can run the real
-// seed + CSS generator in memory — no wrangler, no local D1 files. Used by the layout checks
-// (globalSetup.ts), the component preview and the seed script (api/scripts/seed.mjs).
+// Minimal Cloudflare D1 binding over node:sqlite, so drizzle's d1 driver can run the API's code
+// (the seed, the CSS generator, the routes) in memory — no wrangler, no local D1 files. Used by
+// the layout checks (globalSetup.ts), the component preview, the seed script
+// (api/scripts/seed.mjs) and the API's tests (api/test).
 import { readdirSync, readFileSync, realpathSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'

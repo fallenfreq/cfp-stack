@@ -1,4 +1,4 @@
-import { DrizzleQueryError, getColumnTable, is, max } from 'drizzle-orm'
+import { DrizzleQueryError, getColumnTable, getTableName, is, max } from 'drizzle-orm'
 import type { BatchItem } from 'drizzle-orm/batch'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
@@ -27,8 +27,14 @@ export const newestId = (db: Db, key: SQLiteColumn) =>
 export const databaseError = (error: unknown): unknown =>
 	is(error, DrizzleQueryError) ? error.cause : error
 
-// The write would repeat a value that must be unique, such as a slug.
-export const isUniqueViolation = (error: unknown): boolean => {
+// The write would repeat a value that must be unique; given a column, a value of that column. The
+// database names the columns: "UNIQUE constraint failed: site_pages.slug".
+export const isUniqueViolation = (error: unknown, column?: SQLiteColumn): boolean => {
 	const cause = databaseError(error)
-	return cause instanceof Error && cause.message.includes('UNIQUE constraint failed')
+	if (!(cause instanceof Error)) return false
+	const failed = /UNIQUE constraint failed: ([\w.]+(?:, [\w.]+)*)/.exec(cause.message)
+	if (!failed?.[1]) return false
+	if (!column) return true
+	const name = `${getTableName(getColumnTable<SQLiteTable>(column))}.${column.name}`
+	return failed[1].split(', ').includes(name)
 }

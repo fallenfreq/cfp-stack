@@ -1,5 +1,5 @@
 # Every push to main and every pull request: lint and check formatting across the repo, then
-# build, type-check every package and run the unit tests. The build comes before the type
+# build, type-check every package and run the tests. The build comes before the type
 # check because the api's check reads its dist/. Cloudflare deploys main on its own; this
 # says whether what it deployed checks out.
 name: Checks

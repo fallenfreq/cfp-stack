@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { router, secureProcedure } from '../../config/trpc.js'
 import { type Db, newestId, writeTogether } from '../../db.js'
 import { NotFoundError } from '../../domain/errors.js'
-import { definedFields, mustExist } from '../../lib/index.js'
+import { definedFields, mustExist, nameRule } from '../../lib/index.js'
 import {
 	mapMarkers as mapMarkersSchema,
 	markerTags as markerTagsSchema,
@@ -16,8 +16,7 @@ import {
 // What a marker's and a tag's columns accept: their types and lengths from the tables, and what
 // the app adds. Each input picks the columns it takes.
 const markerInput = createSelectSchema(mapMarkersSchema, {
-	// Its length counted once trimmed.
-	title: (column) => z.string().trim().pipe(column.min(1)),
+	title: nameRule,
 	lat: (column) => column.min(-90).max(90),
 	lng: (column) => column.min(-180).max(180),
 })

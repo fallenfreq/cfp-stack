@@ -40,7 +40,7 @@ the API with the client as last built.
 | `pnpm dev:vite:client`        | Vite at 5173, with hot reload, passing API calls to 8788                |
 | `pnpm build`                  | Build client + API side by side, no type check. Cloudflare's build      |
 | `pnpm typecheck`              | Type-check staged packages (`--all`: every package). Pre-commit runs it |
-| `pnpm test`                   | Unit tests (`test`, `api/test`; Node's built-in runner)                 |
+| `pnpm test`                   | Tests (`test`, `api/test`, which builds the API first; Node's runner)   |
 | `pnpm test:ui`                | Layout checks in Chrome (`client/e2e`, Playwright)                      |
 | `pnpm preview:components`     | Build the component preview (`--serve`: at http://localhost:4173)       |
 | `pnpm migrate:api`            | Generate Drizzle migration files                                        |
@@ -56,7 +56,7 @@ the API with the client as last built.
 Checks run at two points. On commit, the hook lints and formats the staged files and
 type-checks the packages they touch. On every push to `main` and every pull request, GitHub
 Actions (`.github/workflows/checks.yml`) lints and checks formatting across the repo, then
-builds, type-checks every package and runs the unit tests.
+builds, type-checks every package and runs the tests.
 
 ## Deploying
 

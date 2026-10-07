@@ -37,3 +37,11 @@ Running it and its checks, from the root: `README.md`, "Developing" and "Command
   since been raised to Safari 17.4 (2026-10-01), which doesn't need it.
 - `playwright.config.ts`'s comment says every check runs under both themes; the demo page's and
   the theme comparison run once.
+- A change the server refuses on the admin pages shows nothing: renaming, changing a slug,
+  publishing, deleting, a new page or collection (`useListItemActions.ts`, `views/admin/`).
+  Nothing catches the error and the query client shows only failed reads, so a slug that's
+  taken (409) or a name of spaces (400) is refused without a word; a page's collections reload
+  instead. The editor's Save shows the server's message, which for a refused input is zod's
+  issues as JSON. Read in the code, not tried in a browser. A fix at the boundaries: the API
+  gives a refused input a readable message, and the client shows, in one place, any error
+  nothing else handled.
