@@ -32,12 +32,11 @@ test('alignment: x is sideways and y is up and down on every layout', async ({ p
 		'a stack aligned y centre',
 	).toBeLessThanOrEqual(1)
 
-	const section = await at('align-section')
-	const inSection = await at('align-section-item')
-	expect(
-		Math.abs(center(inSection) - center(section)),
-		'a Section aligned centre',
-	).toBeLessThanOrEqual(1)
+	const stack = await at('align-stack')
+	const inStack = await at('align-stack-item')
+	expect(Math.abs(center(inStack) - center(stack)), 'a Stack aligned centre').toBeLessThanOrEqual(
+		1,
+	)
 
 	const row = await at('align-cluster-x-end')
 	const last = await at('align-cluster-x-end-last')

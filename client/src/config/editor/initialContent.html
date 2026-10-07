@@ -50,21 +50,21 @@
 	</div>
 
 	<layout-card class="sf-size-md">
-		<h3 class="sf-heading-3">LayoutSection</h3>
+		<h3 class="sf-heading-3">LayoutStack</h3>
 		<p>
 			A <strong>flex-column container</strong> with configurable <em>gap</em>,
 			<em>padding</em>, and <em>align</em> props. Use it to group blocks with consistent
-			spacing. The three paragraphs below are inside a LayoutSection with
+			spacing. The three paragraphs below are inside a LayoutStack with
 			<code>gap="sm"</code> and <code>align="start"</code>.
 		</p>
-		<layout-section class="sf-gap-sm" align="start">
-			<p>First item in the LayoutSection.</p>
+		<layout-stack class="sf-gap-sm" align="start">
+			<p>First item in the LayoutStack.</p>
 			<p>Second item — the gap between these is controlled by the <code>gap</code> prop.</p>
 			<p>
 				Third item. The <code>align</code> prop controls cross-axis alignment (start /
 				center / end / stretch).
 			</p>
-		</layout-section>
+		</layout-stack>
 	</layout-card>
 
 	<div data-container="">
@@ -175,7 +175,7 @@
 	</div>
 
 	<layout-columns columns="3" class="sf-gap-md sl-collapse-sm">
-		<layout-section class="sf-gap-sm">
+		<layout-stack class="sf-gap-sm">
 			<h3 class="sf-heading-3">Lists</h3>
 			<ul>
 				<li>
@@ -193,18 +193,18 @@
 				<li data-checked data-type="taskItem"><p>Task item (checked)</p></li>
 				<li data-type="taskItem"><p>Task item (unchecked)</p></li>
 			</ul>
-		</layout-section>
+		</layout-stack>
 
-		<layout-section class="sf-gap-sm">
+		<layout-stack class="sf-gap-sm">
 			<h3 class="sf-heading-3">Images</h3>
 			<p>
 				Insert via <code>/image</code>. Select to reveal the
 				<span class="material-symbols-rounded sf-icon">edit</span> URL editor.
 			</p>
 			<img src="https://placehold.co/400x300/png" style="width: 100%" />
-		</layout-section>
+		</layout-stack>
 
-		<layout-section class="sf-gap-sm">
+		<layout-stack class="sf-gap-sm">
 			<h3 class="sf-heading-3">Tables</h3>
 			<p>Insert via <code>/table</code>. Click any cell for row and column controls.</p>
 			<table>
@@ -229,7 +229,7 @@
 					<td><p>Away</p></td>
 				</tr>
 			</table>
-		</layout-section>
+		</layout-stack>
 	</layout-columns>
 
 	<div data-container="">
@@ -244,7 +244,7 @@
 	</div>
 
 	<layout-split split="2/3" class="sf-gap-md sl-collapse-sm">
-		<layout-section class="sf-gap-sm">
+		<layout-stack class="sf-gap-sm">
 			<p>
 				Portrait source image (<code>400×600</code>) locked to <code>sl-aspect-16-9</code>
 				— the top and bottom are cropped to fill the widescreen shape.
@@ -254,8 +254,8 @@
 				class="sl-aspect-16-9 sl-object-cover"
 				style="width: 100%"
 			/>
-		</layout-section>
-		<layout-section class="sf-gap-sm">
+		</layout-stack>
+		<layout-stack class="sf-gap-sm">
 			<p>
 				Landscape source image (<code>800×300</code>) locked to <code>sl-aspect-1-1</code>
 				— the sides are cropped to make a square.
@@ -265,7 +265,7 @@
 				class="sl-aspect-1-1 sl-object-cover"
 				style="width: 100%"
 			/>
-		</layout-section>
+		</layout-stack>
 	</layout-split>
 
 	<div data-container="">
@@ -674,7 +674,7 @@ const editor = useEditor({
 				<p>Floating toolbar with context-aware items and tooltips</p>
 			</li>
 			<li data-checked data-type="taskItem">
-				<p>Five layout container components (Section, Split, Columns, Card, Center)</p>
+				<p>Five layout container components (Stack, Split, Columns, Card, Center)</p>
 			</li>
 			<li data-checked data-type="taskItem">
 				<p>Interactive Vue component nodes with editable slots</p>

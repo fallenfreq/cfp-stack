@@ -21,7 +21,7 @@ test('the known-limit cases are set up as described', async ({ page }) => {
 	const content = await box(page.locator('#k4-content'))
 	expect(
 		(await box(page.locator('#k4-card'))).height,
-		"K4: the Card beside it is taller than the Section's content",
+		"K4: the Card beside it is taller than the Stack's content",
 	).toBeGreaterThan(content.height + 20)
 	await setShellWidth(page, md - 40)
 	expect(await isShown(page.locator('#k5-hidden')), 'K5: the last block is hidden').toBe(false)
@@ -33,11 +33,11 @@ test('K1: typed columns in a narrow side of a Split stack', async ({ page }) => 
 	expect(await columnCount(page.locator('#k1-columns'))).toBe(1)
 })
 
-test("K4: a Section with a background stretches to its row's height", async ({ page }) => {
+test("K4: a Stack with a background stretches to its row's height", async ({ page }) => {
 	test.fail()
-	const section = await box(page.locator('#k4-section'))
-	const outer = await box(placed(page, 'k4-section'))
-	expect(Math.abs(section.height - outer.height)).toBeLessThanOrEqual(1)
+	const stack = await box(page.locator('#k4-stack'))
+	const outer = await box(placed(page, 'k4-stack'))
+	expect(Math.abs(stack.height - outer.height)).toBeLessThanOrEqual(1)
 })
 
 test("K5: hiding a Card's last block leaves no extra space under the block above it", async ({

@@ -51,7 +51,7 @@ code.sf  149 1165 125 20  inline normal
 div  40 1204 280 180  block normal
 div.sl-stack.sl-align-x-start.sf-gap-sm  40 1204 280 180  flex normal
 div  0 -171 0 0  contents normal
-p  40 1204 207 26  block normal
+p  40 1204 194 26  block normal
 p  40 1242 280 52  block normal
 code.sf  157 1271 29 20  inline normal
 p  40 1306 280 78  block normal

@@ -16,7 +16,7 @@ export function useNodeClassTokens() {
 			{ key: 'radius', prefix: 'sf-radius-', options: radiusOptions.value, default: null },
 			{ key: 'padding', prefix: 'sf-padding-', options: spacingOptions.value, default: null },
 		],
-		LayoutSection: [
+		LayoutStack: [
 			{ key: 'gap', prefix: 'sf-gap-', options: spacingOptions.value, default: null },
 			{ key: 'padding', prefix: 'sf-padding-', options: spacingOptions.value, default: null },
 		],

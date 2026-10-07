@@ -6,7 +6,6 @@
 			'sl-align-x-center': align === 'center',
 			'sl-align-x-end': align === 'end',
 		}"
-		:style="{ padding: 'var(--sf-padding, 0)' }"
 	>
 		<slot />
 	</div>

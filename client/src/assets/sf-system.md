@@ -228,8 +228,10 @@ spaced row keeps its own.
 
 Every reader gives its own default — `gap: var(--sf-gap, var(--sf-spacing-md))` on the
 layouts, `var(--sf-padding, var(--sf-spacing-2xs))` on the compact units — or none where an
-unset value already means no spacing (`sl-center`'s side padding). Chrome classes set
-`--sf-padding` on themselves and read it, so `sf-size-*` on the same element changes it.
+unset value already means no spacing (`sl-center`'s side padding, `sl-stack`'s padding).
+Chrome classes set `--sf-padding` on themselves and read it, so `sf-size-*` on the same element
+changes it. `sl-stack` reads it as a default in the lowest layer, so padding the theme gives the
+same box wins; a centred stack (`sl-center`) keeps to its side padding.
 
 Channels look like tokens because they share the `--sf-*` prefix, but they are runtime
 slots filled by classes, not theme values.
@@ -1316,7 +1318,7 @@ Each rule's reason is in the section named.
 
 - One arrangement per box: `sl-inset` doesn't share a block with `sl-stack`, `sl-cluster`,
   `sl-columns`, `sl-split` or `sl-grid` (Side margins and full-bleed).
-- That counts the layout a block's component gives it: a Section and a Centre stack their
+- That counts the layout a block's component gives it: a Stack and a Centre stack their
   blocks, and Columns, Split and Cover arrange theirs, so none takes another layout, `sl-row`
   and `sl-inset` included. For a row or a band, use a Card or a plain block. The validator
   needs each component's own layout to see it.

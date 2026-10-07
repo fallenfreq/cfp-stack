@@ -96,7 +96,7 @@ test('the block pickers name every block they offer', async ({ page }) => {
 	}
 	await selectBlock(page, 'c1-card')
 	const wrapIn = await picker('frame_source')
-	expect(wrapIn).toContain('layout-section')
+	expect(wrapIn).toContain('layout-stack')
 	expect(wrapIn.filter((name) => /^[0-9a-f]{8}-/.test(name))).toEqual([])
 
 	// The to-do list, as its node-path crumb selects it, in view.

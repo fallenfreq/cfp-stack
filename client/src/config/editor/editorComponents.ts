@@ -3,8 +3,8 @@ import LayoutCard from '@/components/layout/LayoutCard.vue'
 import LayoutCenter from '@/components/layout/LayoutCenter.vue'
 import LayoutColumns from '@/components/layout/LayoutColumns.vue'
 import LayoutCover from '@/components/layout/LayoutCover.vue'
-import LayoutSection from '@/components/layout/LayoutSection.vue'
 import LayoutSplit from '@/components/layout/LayoutSplit.vue'
+import LayoutStack from '@/components/layout/LayoutStack.vue'
 import { enumAttr } from '@/editor/enumAttr'
 import { type Component } from 'vue'
 
@@ -39,10 +39,10 @@ const editorComponents = {
 		props: {},
 		content: 'block*',
 	},
-	LayoutSection: {
+	LayoutStack: {
 		uuid: '535f350e-b2d6-4675-a371-cb582fee557c',
-		alias: 'layout-section',
-		component: LayoutSection,
+		alias: 'layout-stack',
+		component: LayoutStack,
 		props: {
 			align: enumAttr('stretch', ALIGN_OPTIONS),
 		},

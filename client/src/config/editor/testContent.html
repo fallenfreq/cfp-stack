@@ -11,16 +11,30 @@
 
 <h2>Blocks rendered by a component</h2>
 
-<h3>Divide lines in a Section look like those in a plain stack, and the card's is on the card</h3>
-<layout-section id="divide-section" class="sf-gap-sm sf-divide-y">
+<h3>Divide lines in a Stack look like those in a plain stack, and the card's is on the card</h3>
+<layout-stack id="divide-stack" class="sf-gap-sm sf-divide-y">
 	<p>One</p>
 	<p>Two</p>
 	<layout-card class="sf-size-md"><p>A card</p></layout-card>
-</layout-section>
-<div data-container id="divide-section-twin" class="sl-stack sf-gap-sm sf-divide-y">
+</layout-stack>
+<div data-container id="divide-stack-twin" class="sl-stack sf-gap-sm sf-divide-y">
 	<p>One</p>
 	<p>Two</p>
 	<div data-container class="sf-depth-1 sf-size-md"><p>A plain card</p></div>
+</div>
+
+<h3>A Stack given padding is padded as a plain stack is, with a background too</h3>
+<layout-stack id="padded-stack" class="sf-padding-lg"><p>Padded</p></layout-stack>
+<div data-container id="padded-stack-twin" class="sl-stack sf-padding-lg"><p>Padded</p></div>
+<layout-stack id="padded-card-stack" class="sf-depth-1 sf-padding-lg"><p>Padded</p></layout-stack>
+<div data-container id="padded-card-stack-twin" class="sl-stack sf-depth-1 sf-padding-lg">
+	<p>Padded</p>
+</div>
+
+<h3>A Centre given padding pads only its sides, as a plain centred stack does</h3>
+<layout-center id="padded-center" class="sf-padding-lg"><p>Padded at the sides</p></layout-center>
+<div data-container id="padded-center-twin" class="sl-center sl-stack sf-padding-lg">
+	<p>Padded at the sides</p>
 </div>
 
 <h3>Divide lines in a Card look like those in a plain card</h3>
@@ -43,7 +57,7 @@
 
 <h3>A scroll frame works around a block that scrolls, as around a plain box</h3>
 <div data-container id="frame-block" class="sl-scroll-frame">
-	<layout-section class="sl-scroll-x"><p>A Section that scrolls sideways</p></layout-section>
+	<layout-stack class="sl-scroll-x"><p>A Stack that scrolls sideways</p></layout-stack>
 </div>
 <div data-container id="frame-plain" class="sl-scroll-frame">
 	<div data-container class="sl-scroll-x"><p>A plain box that scrolls sideways</p></div>
@@ -114,13 +128,13 @@
 </div>
 
 <h3>Below md the Card is hidden and leaves one gap, not two</h3>
-<layout-section id="hide-section" class="sf-gap-md">
+<layout-stack id="hide-stack" class="sf-gap-md">
 	<p id="hide-above">Above</p>
 	<layout-card id="hide-card" class="sf-size-md sl-hide-below-md"
 		><p>Hidden below md</p></layout-card
 	>
 	<p id="hide-below">Below</p>
-</layout-section>
+</layout-stack>
 
 <h3>A Card set as a row puts its blocks in the parent's columns</h3>
 <layout-columns id="row-parent" columns="3" class="sf-gap-md">
@@ -223,15 +237,15 @@
 	</layout-columns>
 </layout-cover>
 
-<h3>A2: Columns in a centred Section measure the Section</h3>
-<layout-section id="a2-section" align="center">
+<h3>A2: Columns in a centred Stack measure the Stack</h3>
+<layout-stack id="a2-stack" align="center">
 	<p>Intro</p>
 	<layout-columns id="a2-columns" columns="3" class="sf-gap-md sl-collapse-sm">
 		<p>One</p>
 		<p>Two</p>
 		<p>Three</p>
 	</layout-columns>
-</layout-section>
+</layout-stack>
 
 <h3>A3: Columns in a row measure the row</h3>
 <div data-container id="a3-row" class="sl-cluster">
@@ -243,26 +257,26 @@
 	</layout-columns>
 </div>
 
-<h3>A4: a typed grid in a Section in a plain card in a row measures the row</h3>
+<h3>A4: a typed grid in a Stack in a plain card in a row measures the row</h3>
 <div data-container id="a4-row" class="sl-cluster">
 	<div data-container id="a4-card" class="sf-depth-1">
-		<layout-section class="sf-gap-sm">
-			<p>In a section</p>
+		<layout-stack class="sf-gap-sm">
+			<p>In a stack</p>
 			<div data-container id="a4-columns" class="sl-columns sl-collapse-sm">
 				<p>a</p>
 				<p>b</p>
 				<p>c</p>
 			</div>
-		</layout-section>
+		</layout-stack>
 	</div>
 </div>
 
 <h3>A5: a tagline in a Cover hides when the page is below sm</h3>
 <layout-cover minHeight="compact">
-	<layout-section class="sf-gap-sm">
+	<layout-stack class="sf-gap-sm">
 		<h1>Big title</h1>
 		<p id="a5-tagline" class="sl-hide-below-sm">Tagline that hides on small screens</p>
-	</layout-section>
+	</layout-stack>
 </layout-cover>
 
 <h3>B1: in a narrow Centre, a paragraph hides only when the page is below md</h3>
@@ -271,20 +285,20 @@
 	<p id="b1-hidden" class="sl-hide-below-md">Hidden below md</p>
 </layout-center>
 
-<h3>T1 and T2: a Section and Columns in table cells measure the page</h3>
+<h3>T1 and T2: a Stack and Columns in table cells measure the page</h3>
 <table>
 	<tbody>
 		<tr>
 			<td><p>Short</p></td>
 			<td>
-				<layout-section id="t1-section" class="sf-gap-sm">
+				<layout-stack id="t1-stack" class="sf-gap-sm">
 					<p>In a cell</p>
 					<div data-container id="t1-columns" class="sl-columns sl-collapse-sm">
 						<p>a</p>
 						<p>b</p>
 						<p>c</p>
 					</div>
-				</layout-section>
+				</layout-stack>
 			</td>
 			<td>
 				<layout-columns id="t2-columns" columns="3" class="sf-gap-md sl-collapse-sm">
@@ -349,10 +363,10 @@
 	<p id="align-stack-y-center-item">Middle</p>
 </div>
 
-<h3>A Section aligned centre: its item sits in the middle</h3>
-<layout-section id="align-section" align="center">
-	<p id="align-section-item">Centre</p>
-</layout-section>
+<h3>A Stack aligned centre: its item sits in the middle</h3>
+<layout-stack id="align-stack" align="center">
+	<p id="align-stack-item">Centre</p>
+</layout-stack>
 
 <h3>A row aligned x end: its items sit on the right</h3>
 <div data-container id="align-cluster-x-end" class="sl-cluster sl-align-x-end">
@@ -381,9 +395,9 @@
 	</div>
 </layout-split>
 
-<h3>K4: a Section with a background should stretch to its row's height, as a Card does</h3>
+<h3>K4: a Stack with a background should stretch to its row's height, as a Card does</h3>
 <layout-columns columns="2" class="sf-gap-md">
-	<layout-section id="k4-section" class="sf-depth-1"><p id="k4-content">Short</p></layout-section>
+	<layout-stack id="k4-stack" class="sf-depth-1"><p id="k4-content">Short</p></layout-stack>
 	<layout-card id="k4-card">
 		<p>Tall</p>
 		<p>Tall</p>

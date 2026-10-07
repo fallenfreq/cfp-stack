@@ -12,7 +12,7 @@ test('the test theme really differs from the root theme', async ({ page }) => {
 		const onTheLine = await box(page.locator('#inset-first'))
 		const divided = page.locator('#divide-card-twin > p').nth(1)
 		return {
-			gap: await css(page.locator('#hide-section'), 'row-gap'),
+			gap: await css(page.locator('#hide-stack'), 'row-gap'),
 			cardPadding: await css(page.locator('#divide-card'), 'padding-left'),
 			pageMargin: Math.round(onTheLine.left - inset.left),
 			font: await css(page.locator('#inset-first'), 'font-family'),

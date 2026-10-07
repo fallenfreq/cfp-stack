@@ -11,6 +11,9 @@ import { throughNodeViews } from './nodeViewSelectors.js'
 // layout; holding themes to looks is the validator's job (not built). Within this block,
 // two layouts on one element are settled by name order (the order the DB emitted them in);
 // modifiers come after them.
+//   sl-stack — padded by the padding it's given (sf-padding-*), as a default in the lowest
+//     layer, so any padding the theme gives the box wins. A centred column (sl-center) pads
+//     only its sides.
 //   sl-row — joins the parent grid's columns (subgrid). Gaps follow the parent's. Only
 //     changes where cells are drawn; reading and tab order stay the source order. On a
 //     block a component renders, the wrapper and the component both join, so the
@@ -184,5 +187,8 @@ export const SL_LAYOUT = `@layer sl-layout {
 	.sl-cluster.sl-align-x-end { justify-content: end; }
 	.sl-cluster.sl-align-x-start { justify-content: start; }
 	.sl-inset-line { padding-inline: ${LINE_MARGIN}; }
+}
+@layer reset {
+	.sl-stack:not(.sl-center) { padding: var(--sf-padding); }
 }
 `

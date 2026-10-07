@@ -46,12 +46,12 @@ strong  364 1013 154 20  inline normal
 em  641 1013 26 20  inline normal
 em  674 1013 55 20  inline normal
 em  765 1013 33 20  inline normal
-code.sf  884 1039 77 20  inline normal
+code.sf  870 1039 77 20  inline normal
 code.sf  352 1065 125 20  inline normal
 div  352 1104 736 102  block normal
 div.sl-stack.sl-align-x-start.sf-gap-sm  352 1104 736 102  flex normal
 div  0 -171 0 0  contents normal
-p  352 1104 207 26  block normal
+p  352 1104 194 26  block normal
 p  352 1142 455 26  block normal
 code.sf  739 1145 29 20  inline normal
 p  352 1180 583 26  block normal

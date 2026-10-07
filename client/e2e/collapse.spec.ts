@@ -19,14 +19,14 @@ import {
 
 const COLUMNS = [
 	{ id: 'a1-columns', name: 'A1: Columns of Cards in a Cover', measures: 'page' },
-	{ id: 'a2-columns', name: 'A2: Columns in a centred Section', measures: '#a2-section' },
+	{ id: 'a2-columns', name: 'A2: Columns in a centred Stack', measures: '#a2-stack' },
 	{ id: 'a3-columns', name: 'A3: Columns in a row', measures: '#a3-row' },
 	{
 		id: 'a4-columns',
-		name: 'A4: a typed grid in a Section in a card in a row',
+		name: 'A4: a typed grid in a Stack in a card in a row',
 		measures: '#a4-row',
 	},
-	{ id: 't1-columns', name: 'T1: a typed grid in a Section in a table cell', measures: 'page' },
+	{ id: 't1-columns', name: 'T1: a typed grid in a Stack in a table cell', measures: 'page' },
 	{ id: 't2-columns', name: 'T2: Columns in a table cell', measures: 'page' },
 	{ id: 's1-columns', name: 'S1: Columns in an auto split column', measures: '#s1-split' },
 	{
@@ -45,7 +45,7 @@ const HIDDEN_BELOW = [
 // Blocks in spots sized by their content; the bug this guards against left them 0 or 1px wide.
 const NOT_ZERO = [
 	{ id: 'a4-card', name: 'A4: the plain card in a row' },
-	{ id: 't1-section', name: 'T1: a Section in a table cell' },
+	{ id: 't1-stack', name: 'T1: a Stack in a table cell' },
 	{ id: 't2-columns', name: 'T2: Columns in a table cell' },
 	{ id: 'c1-card', name: 'C1: a Card in a row' },
 ]

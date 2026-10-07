@@ -61,14 +61,35 @@ const drawsNothing = (look: string) => {
 	)
 }
 
-test('divide lines in a Section look like those in a plain stack, on the card itself', async ({
+test('divide lines in a Stack look like those in a plain stack, on the card itself', async ({
 	page,
 }) => {
-	const block = await dividerLooks(page, 'divide-section')
-	const twin = await dividerLooks(page, 'divide-section-twin')
+	const block = await dividerLooks(page, 'divide-stack')
+	const twin = await dividerLooks(page, 'divide-stack-twin')
 	expect(twin.items[1], 'the theme draws a divide line').not.toBe(twin.items[0])
 	expect(block.items).toEqual(twin.items)
 	expect(block.outerBoxes.every(drawsNothing), "the card's outer box draws no line").toBe(true)
+})
+
+test('a Stack given padding is padded as a plain stack is, and a Centre only at its sides', async ({
+	page,
+}) => {
+	const padding = (id: string) =>
+		page.locator(`#${id}`).evaluate((el) => {
+			const s = getComputedStyle(el)
+			return [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft]
+		})
+	for (const id of ['padded-stack', 'padded-card-stack']) {
+		const twin = await padding(`${id}-twin`)
+		expect(parseFloat(twin[0]!), `${id}: the plain stack is padded`).toBeGreaterThan(0)
+		expect(await padding(id), id).toEqual(twin)
+	}
+	const [top, right, bottom, left] = (await padding('padded-center-twin')).map(parseFloat)
+	expect([top, bottom], 'a plain centred stack: no padding above or below').toEqual([0, 0])
+	expect(Math.min(right!, left!), 'a plain centred stack: padded at the sides').toBeGreaterThan(0)
+	expect(await padding('padded-center'), 'the Centre').toEqual(
+		await padding('padded-center-twin'),
+	)
 })
 
 test('divide lines in a Card look like those in a plain card', async ({ page }) => {
@@ -82,7 +103,7 @@ test("a component's own parts and the blocks in its slot are one list of items",
 	page,
 }) => {
 	const { ownParts, items } = await dividerLooks(page, 'divide-slot')
-	const undivided = (await dividerLooks(page, 'divide-section-twin')).items[0]
+	const undivided = (await dividerLooks(page, 'divide-stack-twin')).items[0]
 	// Its own parts are a heading, a paragraph, a row and a paragraph; the slot holds paragraphs.
 	expect(ownParts[1], "the paragraph after the component's heading has a line").not.toBe(
 		undivided,
@@ -185,7 +206,7 @@ test('a block pinned inside a Card stays at the top of the scroll area around th
 test('below md a hidden Card leaves one gap, not two', async ({ page }) => {
 	await setShellWidth(page, breakpoints().md! - 40)
 	expect(await placed(page, 'hide-card').evaluate((el) => el.checkVisibility())).toBe(false)
-	const gap = parseFloat(await css(page.locator('#hide-section'), 'row-gap'))
+	const gap = parseFloat(await css(page.locator('#hide-stack'), 'row-gap'))
 	const above = await box(page.locator('#hide-above'))
 	const below = await box(page.locator('#hide-below'))
 	expect(gap).toBeGreaterThan(0)
