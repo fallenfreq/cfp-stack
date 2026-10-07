@@ -137,6 +137,37 @@ export async function moveTo(page: Page, path: string): Promise<void> {
 }
 
 /**
+ * Put `text` on the clipboard from a text box outside the editor, so a later copy that does
+ * nothing reads back as `text` (the clipboard outlives a check).
+ */
+export async function setClipboard(page: Page, text: string): Promise<void> {
+	await page.evaluate((text) => {
+		const box = document.createElement('textarea')
+		box.value = text
+		document.body.append(box)
+		box.select()
+		document.execCommand('copy')
+		box.remove()
+	}, text)
+}
+
+/** What copying the current selection puts on the clipboard, read back by pasting it outside the editor. */
+export async function copiedText(page: Page): Promise<string> {
+	await page.keyboard.press('ControlOrMeta+c')
+	await page.evaluate(() => {
+		const box = document.createElement('textarea')
+		box.id = 'pasted-copy'
+		box.style.cssText = 'position: fixed; inset: 0 auto auto 0'
+		document.body.append(box)
+		box.focus()
+	})
+	await page.keyboard.press('ControlOrMeta+v')
+	const text = await page.locator('#pasted-copy').inputValue()
+	await page.locator('#pasted-copy').evaluate((box) => box.remove())
+	return text.replace(/\s+/g, ' ').trim()
+}
+
+/**
  * What the app's own code logs from now on, of these kinds ('error' also takes uncaught errors),
  * as "kind: text". The browser's own messages have the page's address, not the app's code's.
  */

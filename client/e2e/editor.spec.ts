@@ -5,7 +5,6 @@ import {
 	box,
 	moveTo,
 	nodePosition,
-	openSeeded,
 	openTests,
 	placed,
 	selectBlock,
@@ -548,19 +547,4 @@ test("using a block's own control leaves the cursor where it was", async ({ page
 	await settle(page)
 	expect(await selection()).toEqual(before)
 	expect(warnings).toEqual([])
-})
-
-// The interactive block's text slot doesn't take focus itself: a click in it focuses the block's
-// box, and the cursor follows the browser's caret into the slot all the same.
-test("a click in a component block's slot puts the cursor there", async ({ page, themeClass }) => {
-	await openSeeded(page, 'true', '.tiptap .code-block select', themeClass)
-	const slot = page.locator('.tiptap p', { hasText: 'This is the editable slot' })
-	await slot.scrollIntoViewIfNeeded()
-	await slot.click()
-	await settle(page)
-	const cursorIn = await page.evaluate(() => {
-		const { selection } = (document.querySelector('.tiptap') as any).editor.state
-		return selection.empty ? selection.$from.parent.textContent : null
-	})
-	expect(cursorIn).toContain('This is the editable slot')
 })

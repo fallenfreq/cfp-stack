@@ -7,30 +7,12 @@ describes the target design; this file enumerates what needs to change in code t
 
 **Sign-in work** (its own track, 2026-10-04): done; how it works is `docs/auth.md`.
 
-**Note from the docs session** (2026-10-06; please delete this note once you've read it):
-`docs/auth.md` and `docs/database.md` are reference only now, their progress logs gone, so the line
-above points at the doc. `CLAUDE.md` is shorter: setup, commands and checks are in `README.md`,
-Cloudflare and the settings in `docs/hosting.md`, and where each kind of information goes in
-`docs/README.md`. It now also lists the checks Claude runs, and says that production changes need
-the owner's go-ahead, that other sessions share the branch, and that files are opened with the Read
-tool, which loads the rules in `.claude/rules/` for the files they cover. `pnpm test` also checks
-that every citation like `(docs/auth.md, "Settings")` resolves. Your working method is now split:
-what applies to every task stays in `CLAUDE.md` (review findings are checked with the
-`verify-findings` skill in `.claude/skills/`), and the sf/sl part is
-`.claude/rules/theme-system.md`, which loads when a client or theme file is opened with the Read
-tool; the rule also points at "Current state (resume here)". How the layout checks work and the
-browser floor are in `client/README.md`; the preview's command is `pnpm preview:components`; the
-type-check commands are now `pnpm typecheck --all` (the API's reads `api/dist`, which `pnpm dev`
-keeps built). The docs plan is closed; its last step is an item under "For the docs". Three of this
-file's own lines point at what's gone, for you to update or close: the open sign-in item ("Sign-in
-through our own server", which says `docs/auth.md`'s "Progress" says where it's up to; sign-in is
-live), "shipped with step 3 of `docs/auth.md`" (the steps are gone), and the note that the starter
-tables went, citing `docs/database.md` (that history is in the commits now).
-
 **Editor** (2026-10-06): candidate 14 (undo after opening a page) is fixed and committed.
 Candidate 15 (the code view as an editor of its own) and item 16 (TipTap 3.31.4, with what it
 broke fixed) are fixed, reviewed and committed together. Item 17 (console errors and debug
-lines) is fixed, reviewed and committed. Next: choose with the user.
+lines) is fixed, reviewed and committed. Item 18 (a component block's own parts and its slot) is
+done, checked and reviewed twice, the reviews' findings fixed or logged, and committed. Next: choose
+with the user.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -635,6 +617,172 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       check, which passes on the code before too, fails with the focus rule tried above. In Chrome:
       home, a collection, the editor, a click into a block, beside a Card, the code block's picker,
       leaving: nothing logged. The suite passes (150; on battery, two workers: four time out).
+18. **A component block's own parts and its slot** (found in 17; in progress 2026-10-06/07, with
+    the user). Any Vue component, a library's included, becomes a block (`customComponentNode.ts`):
+    its own heading, text and buttons aren't editable, its slot holds the page's blocks. Until
+    this item only blocks marked `decorative` in the list of components did that (only the demo's
+    interactive block, `TiptapTest`, was); now every block whose component draws parts of its own.
+    - **Broken since 28 Sep** (`8dbbcef`, the block moved off Tailwind onto `sl-stack`): its slot,
+      straight in a layout with a gap, steps aside (`display: contents`, `nodeViews.ts`), so it has
+      no box and can't take focus. The block's box is locked at rest and unlocked only by focus
+      landing in the slot, so typing in the slot does nothing, by click or by the editor placing the
+      cursor; arrowing out sticks. In WebKit the cursor can't even get in. Item 17's check only
+      looked at the cursor.
+    - **How it was measured:** each version run on its own port from a git worktree (`8dbbcef^`, 27
+      Sep; `f8f096d`, just before May's `0af613f`: its lockfile lists the lightningcss packages twice,
+      remove the second copies to install; its demo is `/demo/editor`, behind the old sign-in, taken
+      out of the copy), and the same scripted clicks, drags, keys and copies run against each in
+      Chrome and Playwright's WebKit. Prototypes swapped in for `customComponentNode.ts` on the dev
+      server, the committed file put back after each.
+    - **What each did:** 27 Sep: the slot types; clicking the heading selects the block and typing
+      does nothing (focus stays on the locked box: that's what the focus lock is for); copying the
+      block's own text copies the slot's text instead. Before May (`f8f096d`, Chrome): dragging
+      across the heading and the loose words beside the slot copies just those words. May's
+      `0af613f` made a click outside the slot select the block, so the drag handle and toolbar come
+      up; a drag ends in a click, so since then a drag selects the block and the editor copies it.
+    - **Tried:** B, the lock plus unlocking on a press in the slot and on the cursor arriving there:
+      the browser gives focus to the box and the focus lock locks it again (keys straight after a
+      click are lost), and WebKit still can't reach the slot. A3, no lock: the node view marks every
+      element the component draws outside its slot not editable (again when it adds some); box and
+      slot always belong to the editor; a click that ends a drag doesn't select the block; the browser
+      copies highlighted text from the block's own parts. A3 matches 27 Sep in every case measured,
+      in Chrome and WebKit, nested blocks too, and copies an element's text. Its limits: text a
+      component writes straight beside its slot (loose words) can't be marked, so it acts like a
+      block's padding (a click selects the block, typing replaces it, as a Card's padding does
+      today) and can't be highlighted; a drag stops at the edge of each marked element (Chrome keeps
+      the first, WebKit none), which the user found trying it. A4 (A3 plus refusing typing in the
+      block's own parts, the code's FUTURE note) changed nothing: the editor already moves such
+      typing into the document. A5 (focus the box on a press on loose words): Chrome hands focus
+      straight back to the editor, as the box is editable.
+    - **A6, chosen** (the user tried it): A3, plus the whole box locked by a press on its own parts,
+      before the browser starts a selection, and unlocked by a press in the slot or the editor's
+      cursor going anywhere but this whole block. Nothing waits for focus. Measured in Chrome and
+      WebKit: every case as A3; a drag from the heading into the paragraph under it copies both;
+      loose words act as the block's own text (a click selects the block and typing does nothing, a
+      drag or double-click highlights and copies them); nesting; buttons and inputs; a click in the
+      slot or below after a lock unlocks and types there; a read-only editor never types.
+    - **Done** (`customComponentNode.ts`): A6 as above; the click that ends a drag no longer selects
+      any component block (a Card's padding included). Gone: the focus toggle and its relock, and
+      the FUTURE note on the focus toggle (its phone drag-in case is untested: no phone here).
+    - **Automatic** (decided with the user, after the review below; it replaces the `decorative`
+      mark, which only the demo block had, so a component added without it let a click on its
+      heading and one letter replace the whole block, measured): every component block finds its
+      own parts, elements or text beside its slot, when it appears and when they change (changes
+      inside the slot are ignored), and the rules apply when it has some. Layouts draw only a box
+      around their slot, so they stay as they were. Checked: a Card's padding still selects the
+      Card and typing replaces it; a Card that draws a title of its own later gets the rules (fails
+      with the mark); every earlier measurement again in Chrome and WebKit; the suite (182).
+    - **Checked:** `componentBlock.spec.ts`, one check per rule above, on the demo's interactive
+      block: a click in the slot types there; so does the cursor the editor puts there; a click on
+      the block's own text selects it and typing changes nothing; a drag across its own text copies
+      those words; text beside the slot (put in by the check) is copied when dragged and still after
+      a click; the button works; after a click on its text, a click in the slot types there; an
+      interactive block in the slot of another; a read-only editor types nothing. Six fail on the
+      committed code (the three that pass guard what already worked: the click check fails with a
+      cursor-only lock, the first idea); the copy and text-beside checks fail on A3. Moved in: 17's
+      slot check, which now types. `copiedText` in `helpers.ts`.
+    - **Reviewed** by a separate agent (findings checked by showing each in the app):
+        - Fixed, caused by A6: after a drag across the block's own words the editor kept its earlier
+          selection out of sight, and cut deleted it (the demo's hero image, or a word selected
+          before) and paste went there, in Chrome and WebKit. Now, in the locked box, copy, cut
+          and paste reach the editor only for the selected block you see; otherwise copying is the
+          browser's and cut and paste do nothing, as with text on a page. This also covers a
+          highlight that runs past the block (WebKit copied the earlier selection) and a drag past
+          the block that ends with nothing highlighted (Chrome; cut deleted the earlier word).
+          Clicking the heading, then copy or cut, still copies or cuts the block.
+        - Fixed, caused by A6: a click on highlighted own words only cleared them; a second click
+          selected the block. A click is now told from a drag by how far the pointer moved (over
+          4px) since the press, not by whether text is highlighted.
+        - Fixed, caused by A6: on a touch screen mousedown comes only once the finger lifts (Chrome
+          and WebKit, emulated), so a long-press selection began unlocked. The press is now
+          pointerdown; taps checked in emulation. A real phone is still unchecked.
+        - Checks: the clipboard outlives a check, so a copy that does nothing could read back old
+          text: each check now starts with a marker on it (`setClipboard`). Added: cut and paste
+          with own words highlighted (fails on A6 as reviewed), a click on highlighted words (the
+          same), a part the component adds later isn't editable (fails without the re-marking), a
+          drag in a Card ending in its padding keeps the highlight (fails on the committed code), a
+          click on text beside the slot selects the block, and the known limit's setup.
+        - Comment: the press stops at the block (`stopPropagation`), but the editor ignores such a
+          press anyway (TipTap's `stopEvent`, checked): said so.
+        - Checked fine by the review: a lock left on is harmless (ArrowDown into the slot or a
+          click unlocks it); nesting; no MutationObserver loop, one batch for 21 slot edits; no stale
+          positions; clean-up on removal; read-only never locks.
+        - The suite passes (178); the earlier measurements and the review's scripts rerun on the
+          fixed code in Chrome and WebKit, the WebKit drag cases ten times each.
+    - **Reviewed again** (the fixes and the automatic part; each finding shown in the app):
+        - Fixed, caused by the fixes: a text box among the block's own parts couldn't cut or
+          paste after a drag in it (a text box's selection reads as nothing highlighted). A text
+          box, or a field the component makes editable itself, keeps its own clipboard; such a
+          field is no longer marked not editable either.
+        - Fixed, caused by the fixes: a tap that moved 5–10px no longer selected a block, Cards
+          included (touch emulation). Only a mouse or pen press that moves is a drag; a touch that
+          moves selects or scrolls without a click.
+        - Fixed, partly older: a button of the block's own that removes itself (a Dismiss) made
+          the click select the outermost block around it (the target was gone; same at HEAD). The
+          click's path now decides. New with the fixes: parts going away unlocked the box while it
+          had focus, so in WebKit typing landed elsewhere, saved; the box now stays locked until a
+          press in the slot or the cursor leaving. And in WebKit a pressed button takes no focus,
+          so typing went to the page's last caret, however placed (also at HEAD, at the slot's
+          end): a press on the block's own parts now drops a caret left outside the block.
+        - Fixed, caused by the automatic part: text beside the slot that the component fills in
+          later wasn't noticed (the observer now also sees text changes).
+        - Checks added (each shown failing on the version reviewed, except the two that guard
+          what worked): copy and cut after a click on the block's own text take the block; a touch
+          locks at once and a wobbling tap selects; pressing the block's button then typing
+          changes nothing (Chrome can't show the WebKit case; scripted there); a self-removing
+          button; parts going away while locked; a text box's own cut and paste; text filled in
+          later (on a Card, whose only part it is); a field of the component's own stays editable.
+        - Not changed, older: after a click on the block's own text, Select All highlights the
+          whole app page and copy takes its text; the same with the committed code (focus is on
+          the block's box, so the editor doesn't take the keys). The reviewer had compared with an
+          in-between version.
+        - Checked fine by the review: of 43 component blocks on the demo and 48 on the test page,
+          only the interactive block has parts of its own; layouts behave as before in both
+          engines; nesting; the observer can't loop and costs little (30 nested Sections, 20
+          edits: 1.4ms in all).
+        - The suite passes (198); every earlier measurement again in Chrome and WebKit.
+    - **Logged, predate A6:**
+        - With an outer block selected, a click on an inner block's heading keeps the outer one
+          (`props.selected` is true for blocks inside a selected block).
+        - With a block selected through its own text, focus is on its box: the drag handle stops
+          following the pointer, arrows, Enter and Backspace do nothing (Cmd+Z works); in
+          Playwright's WebKit, Backspace goes back a page (real Safari doesn't, as far as known).
+        - In Chrome a drag from the block's own text into its slot or past the block ends with
+          nothing highlighted (27 Sep the same); in WebKit such a drag can highlight from the top
+          of the page.
+        - A drag from text above the interactive block to text below ends as a cursor where it stops
+          (27 Sep the same); across a Card it takes the Card. A check marked expected to fail.
+        - Keys pressed within the frame of a click reach the editor before it reads the click, in
+          any text (Chrome; WebKit is fine): on the demo, which opens with its hero image selected,
+          they replace the image. No person types that fast; the checks let a click land.
+        - Arrowing up from the start of a slot inside a stack inside the block (a library-shaped
+          test block) lands in the next block's slot (A3 and A4 too).
+        - The code block's own view says `contenteditable="true"` (`TiptapCodeBlock.vue`), so in a
+          read-only editor it stays editable; and slots keep the editability they were drawn with
+          when an open editor is switched to read-only. Published pages are read-only from the
+          start, without the code block's view; the app never switches an open editor.
+        - The slot's `tabindex` comment (`customComponentNode.ts`) speaks of the focus toggle;
+          taking the attribute out changes focus in every component block, so left for a check.
+    - **Other editors** (searched 2026-10-07): none makes unchanged component markup non-editable
+      and keeps its text selectable beside an editable slot. TipTap, BlockNote, Slate and Plate
+      leave the author to mark parts (TipTap's node-view guide); Lexical (named slots) and CKEditor 5
+      (widgets) lock the whole box, clicking it selects the block, and a selection never crosses
+      into the slot; CKEditor fakes the selection. ProseMirror's author: locking the box with an
+      editable island inside is "usually a bad idea" and not supported by one editor
+      (discuss.prosemirror.net, "Selection in NodeViews outside of contentDOM" and "NodeView
+      rendering child nodes without contentDOM"); text in a node view's own parts can only be
+      selected once the editor lets go on the press ("Non-editable text selection in selectable
+      nodes"), the nearest thing to A6. Gutenberg toggles the other way, unlocking during a drag
+      across blocks. TipTap's issue on selecting text in node views is open (#4036). So what we
+      offer (any component, no author effort, its text selectable) is new; prosemirror-view 1.42.6
+      already has the Chrome fix for cursor motion past uneditable parts.
+    - **Rules** (decided with the user): a click on the block's own parts selects the block; a drag
+      across them highlights and copies the words; a drag in from outside takes the block whole (not
+      yet, logged above); buttons and inputs work; the slot is plain text editing; nesting works;
+      component authors do nothing special. Not checked on a real phone, real Safari or Firefox.
+    - **Committed** (2026-10-07). Real Safari, Firefox and a phone are still unchecked. On WebKit's
+      typing after a pressed button (the second review's fourth fix): not a bug as such, said the
+      user, but it makes the browsers behave alike.
 
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in
@@ -695,7 +843,7 @@ What's in place:
 
 - Theme schema (`api/src/schemas/theme.ts`): `themes`, `theme_tokens`, `class_vocabulary`,
   `class_rules`, `class_rule_classes` — all done. (`user_theme_aliases` and the brand user went
-  2026-10-05, as nothing read them: docs/database.md.)
+  2026-10-05, as nothing read them.)
 - Layout schema (`api/src/schemas/layout.ts`): `collapse_thresholds(name, value, updated_at)` —
   system config separate from theme tables; user-editable, not wiped on reseed.
 - Domain layer (`api/src/domain/`): `themes`, `themeTokens`, `classRules`,
@@ -1468,7 +1616,7 @@ These are not bugs but unresolved tensions in the current design:
 - [x] The editor doesn't follow sign-in: a new tab at `/editor/<page>` on live starts signed
       out, so the page fails to load (no message) and Save makes a new page instead of
       updating it (proved in Chrome by the review). Decided with the user: fix it at the router,
-      for every page that needs sign-in. Built 2026-10-03; shipped with step 3 of `docs/auth.md`
+      for every page that needs sign-in. Built 2026-10-03; shipped with the server sign-in below
       (2026-10-04), where `meta.authName` became `meta.signIn` and sign-in is known after one
       question to our server.
     - **The router decides access, on every visit.** A page that needs sign-in waits until
@@ -1494,15 +1642,15 @@ These are not bugs but unresolved tensions in the current design:
       Safari would still block it; rejected. The router check that waits for sign-in (built,
       uncommitted) would make a signed-out new tab wait those 10 s, so it ships with the server
       sign-in below, not before. The addresses go when the old apps do.
-- [ ] **Sign-in through our own server: design agreed 2026-10-04, see `docs/auth.md`** (reviewed
-      by three agents and checked against Zitadel's own examples). Our server signs you in,
-      keeps Zitadel's tokens sealed in D1 and refreshes them; the browser gets only our own
-      cookie, so every tab is signed in, in every browser, and the account page's Zitadel calls
-      move to our API. Built in the steps listed there; its "Progress" section says where it's up
-      to (steps 0–4 done 2026-10-04, the old Zitadel apps kept for now; live is next).
+- [x] **Sign-in through our own server** (designed, built and live 2026-10-04; reviewed by three
+      agents and checked against Zitadel's own examples). Our server signs you in, keeps
+      Zitadel's tokens sealed in D1 and refreshes them; the browser gets only our own cookie, so
+      every tab is signed in, in every browser, and the account page's Zitadel calls go through
+      our API. How it works: `docs/auth.md`. The old sign-in's Zitadel apps are kept so an older
+      version can still run (docs/auth.md, "Zitadel").
 - [x] The sign-in libraries are unmaintained: `oidc-client` 1.11 (its successor is
       `oidc-client-ts`) under `vue-oidc-client` 1.0.0-alpha.5 (last released 2022), both used
-      by Zitadel's own `@zitadel/vue`. Removed with the server sign-in above (step 3, 2026-10-04).
+      by Zitadel's own `@zitadel/vue`. Removed with the server sign-in above (2026-10-04).
 - [ ] `usePage` blanks when sign-in lands: the home page and a page preview show nothing until
       the admin copy arrives (the collection list keeps its own now).
 - [x] Undo straight after a page opens empties it: loading the content counts as an edit
