@@ -17,8 +17,8 @@ and reviewed, the review's findings fixed, and committed. Item 20 (known limits 
 decided with the user: not bugs but content the validator should flag; the tried fix was
 undone. Item 21 (the Section becomes Stack, and `sl-stack` reads its padding) is done,
 checked, reviewed, the review's finding fixed, and committed. Item 22 (the layout blocks'
-pickers show again) is fixed, checked and committed; a fresh agent's review found six, fixed
-but for two raised with the user (a check helper's level, and old tags in pasted HTML). Next
+pickers show again) is fixed, checked and committed; a fresh agent's review found six, all
+fixed but one the user ruled out (old tags in HTML pasted between sites). Next
 with the user: K4 and K5.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
@@ -936,15 +936,18 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
           keyed by the name shown (item 10). Meant: nothing else looks a component block up by its
           component name (`LayoutCard`).
         - Fixed: item 21's note said the ID maps to the block's name; it maps to its tag.
-        - Logged, older (1 Oct, `a1d0f82`), raised with the user: `selectBlock` (`e2e/helpers.ts`)
-          says it selects "as clicking its node-path crumb does", but doesn't set the level being
-          edited as a crumb does. So for a block inside another the toolbar acts on the outer one:
-          three editor checks select `c1-card` and drive its box's toolbar. Each still checks what
-          it says.
-        - Raised with the user: `fedc5d2` dropped item 10's open question, whether HTML with a tag
-          that no longer matches stays readable. Copying puts a block in HTML by its tag
-          (`<layout-stack …>`, no ID; seen in Chrome) and pasting finds it by its tag, so with tags
-          per site a block pasted from another site could lose its wrapper.
+        - Fixed, older (1 Oct, `a1d0f82`; fixing approved by the user): `selectBlock`
+          (`e2e/helpers.ts`) said it selects "as clicking its node-path crumb does", but didn't set
+          the level being edited as a crumb does, so for a block inside another the toolbar acted
+          on the outer one (three editor checks selecting `c1-card` drove its box's toolbar). It
+          now clicks the block's crumb, then puts the block in view: before clicking, Playwright
+          scrolls the crumb into view, which under the test theme moved the page (419px in
+          Chrome, 846px in WebKit) and the block's toolbar off screen (7 of 40 runs failed; now 40
+          of 40 pass). The page's own click moves neither the page nor the selection (measured).
+        - Not needed (decided with the user): `fedc5d2` dropped item 10's open question, whether
+          HTML with a tag that no longer matches stays readable. Copying puts a block in HTML by
+          its tag (`<layout-stack …>`, no ID; seen in Chrome), but blocks aren't copied between
+          sites.
 
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in

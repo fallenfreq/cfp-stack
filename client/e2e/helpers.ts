@@ -271,16 +271,22 @@ export const nodePosition = (page: Page, id: string): Promise<number> =>
 		return at
 	}, id)
 
-/** Select a whole block, as clicking its node-path crumb does, with the block in view. */
+/**
+ * Select a whole block, in view, and click its crumb in the node path, so the toolbar works on it
+ * even inside another block.
+ */
 export async function selectBlock(page: Page, id: string): Promise<void> {
 	const at = await nodePosition(page, id)
+	await page.evaluate((at) => {
+		const editor = (document.querySelector('.tiptap') as any).editor
+		editor.chain().focus().setNodeSelection(at).run()
+	}, at)
+	await page.locator('.node-path button').last().click()
+	// Before clicking, Playwright scrolls the crumb into view, which can move the page (seen under
+	// the test theme); a person's click doesn't.
 	await page.evaluate(
-		([id, at]) => {
-			document.getElementById(id as string)!.scrollIntoView({ block: 'center' })
-			const editor = (document.querySelector('.tiptap') as any).editor
-			editor.chain().focus().setNodeSelection(at).run()
-		},
-		[id, at] as const,
+		(id) => document.getElementById(id)!.scrollIntoView({ block: 'center' }),
+		id,
 	)
 	await settle(page)
 }
