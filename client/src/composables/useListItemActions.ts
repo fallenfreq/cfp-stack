@@ -1,3 +1,4 @@
+import { noAnswer } from '@/services/errors'
 import { showConfirm, showPrompt } from '@/services/promptModal'
 import { notify } from '@/services/toast'
 import { isSlug, notASlug, slugCase } from '@somefreq-app/shared/slug'
@@ -25,9 +26,14 @@ export function useListItemActions(options: {
 
 	const invalidate = () => queryClient.invalidateQueries({ queryKey: options.queryKey })
 
-	// Each change saves, then reloads the list; one the server refuses says why
+	// Each change saves, then reloads the list, saved or refused, so it shows what the server has
+	// (with no answer, a reload would get none either); one that fails says why
 	// (config/queryClient.ts).
-	const change = <T>(save: Save<T>) => useMutation({ mutationFn: save, onSuccess: invalidate })
+	const change = <T>(save: Save<T>) =>
+		useMutation({
+			mutationFn: save,
+			onSettled: (_data, error) => (noAnswer(error) ? undefined : invalidate()),
+		})
 	const rename = change(options.rename)
 	const changeSlug = change(options.changeSlug)
 	const publish = change(options.publish)

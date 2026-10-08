@@ -7,6 +7,8 @@ const fieldNames: Record<string, string> = {
 	name: 'Name',
 	slug: 'Slug',
 	title: 'Title',
+	contentJson: 'Page content',
+	tagIds: 'Tags',
 	firstName: 'First name',
 	lastName: 'Last name',
 	displayName: 'Display name',
@@ -17,18 +19,23 @@ const fieldNames: Record<string, string> = {
 	code: 'Verification code',
 }
 
+// A call the server didn't answer: no answer from tRPC at all, or one from before it
+// (api/functions_src/trpc/[[trpc]].ts). Asking again straight away would meet the same.
+export function noAnswer(error: unknown): boolean {
+	return error instanceof TRPCClientError && !error.data
+}
+
 // What an error says on the page: the one place a failed call to the server, or an error nothing
 // else words, is put into words, where translations would go. The server sends only what's safe
 // to show (api/src/config/trpc.ts): its refusals in words, a refused input's issues field by
 // field, and "Internal Server Error" for anything else.
 export function errorMessage(error: unknown): string {
 	if (!(error instanceof TRPCClientError)) return 'Something went wrong. Please try again.'
+	if (noAnswer(error)) return "Couldn't get an answer from the server. Please try again."
 	const { data } = error as TRPCClientError<AppRouter>
-	// No answer from tRPC: none at all, or one from before it (api/functions_src/trpc/[[trpc]].ts).
-	if (!data) return "Couldn't get an answer from the server. Please try again."
-	if (data.code === 'INTERNAL_SERVER_ERROR')
+	if (data?.code === 'INTERNAL_SERVER_ERROR')
 		return 'Something went wrong on our side. Please try again.'
-	if (data.zodError) {
+	if (data?.zodError) {
 		const { formErrors, fieldErrors } = data.zodError
 		// Keyed by the input's fields, which the server's type can't name for every route.
 		const fields = Object.entries<string[] | undefined>(fieldErrors).flatMap(
@@ -45,8 +52,8 @@ export function errorMessage(error: unknown): string {
 const shown = new WeakSet<object>()
 
 // An error in a toast, and in full in the console: a read or a write that failed
-// (config/queryClient.ts), what a component's code didn't catch and a promise that failed with
-// nothing waiting on it (main.ts).
+// (config/queryClient.ts), what a component's code didn't catch and a promise of ours that failed
+// with nothing waiting on it (main.ts).
 export function notifyError(error: unknown): void {
 	if (typeof error === 'object' && error !== null) {
 		if (shown.has(error)) return

@@ -20,16 +20,21 @@ whenSignInKnown()
 
 const app = createApp(App)
 // What a component's code didn't catch (its handlers, hooks, watchers, render) says so, as a failed
-// read or write does; the console says where it came from, as Vue's own warning did.
+// read or write does; the console says where it came from (in a built app, as a link to Vue's list
+// of where errors happen).
 app.config.errorHandler = (error, _instance, info) => {
 	console.warn(`Unhandled error during ${info}`)
 	notifyError(error)
 }
-// So does a promise that failed with nothing waiting on it (a store's watcher, a map's listener);
-// notifyError logs it, in place of the browser.
+// So does a promise of ours that failed with nothing waiting on it (a listener on the map, a
+// timer): one whose error was made in this site's own files, as error trackers tell theirs apart.
+// notifyError logs it, in place of the browser. One from another site's script (Google Maps', a
+// browser extension's) is left to the browser.
 window.addEventListener('unhandledrejection', (event) => {
+	const { reason } = event
+	if (!(reason instanceof Error && reason.stack?.includes(location.origin))) return
 	event.preventDefault()
-	notifyError(event.reason)
+	notifyError(reason)
 })
 app.use(globalKeyPlugin)
 app.use(createPinia())

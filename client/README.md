@@ -15,7 +15,7 @@ as themes are emitted in `@scope`: no compat code below it.
 - `src/trpc.ts`: the API's client, typed from `api/src/routes/appRouter.ts`. Writes go through
   `useMutation`, so one that fails says why, as a read through `useQuery` does
   (`src/config/queryClient.ts`); so does an error a component's code didn't catch, or a promise
-  that failed with nothing waiting on it (`src/main.ts`).
+  of ours that failed with nothing waiting on it (`src/main.ts`).
 - `src/assets/`: the base styles, and the theme system's spec, references and open work.
 - `e2e/`: the layout checks. `preview/`: the component preview.
 
@@ -41,3 +41,9 @@ Running it and its checks, from the root: `README.md`, "Developing" and "Command
 - `vite.config.ts` pins `cssTarget` below the browsers that read range syntax (Safari 14, Chrome 87,
   Edge 88, Firefox 78; 2026-06-19), so the minifier keeps media queries they read. The floor has
   since been raised to Safari 17.4 (2026-10-01), which doesn't need it.
+- A tab open from before a deploy can't load code it hasn't loaded yet, as its files are gone
+  (2026-10-08, shown in the browser). A link to such a page (Edit, Preview) does nothing; only the
+  console says why. A new page made from the list of pages is saved but doesn't open, and says
+  "Something went wrong. Please try again.", so trying again makes a second one. tRPC's own
+  refusals, such as a route renamed since, show as tRPC words them. The fix is Vite's documented
+  one: reload when a page's code fails to load (`vite:preloadError`).

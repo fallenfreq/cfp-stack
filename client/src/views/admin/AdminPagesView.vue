@@ -149,6 +149,7 @@
 import AdminList from '@/components/admin/AdminList.vue'
 import AdminListItem from '@/components/admin/AdminListItem.vue'
 import { useListItemActions } from '@/composables/useListItemActions'
+import { noAnswer } from '@/services/errors'
 import { useAllPages } from '@/services/pages'
 import { showPrompt } from '@/services/promptModal'
 import { useAllTags } from '@/services/tags'
@@ -199,7 +200,7 @@ const tagsLabel = (page: { pageId: number; name: string; slug: string }) => {
 
 // Each save sends the boxes as ticked right now, not the last list from the server,
 // so quick ticks don't undo each other. Saves for one page run one after another; a
-// failed save says why and reloads, so the boxes show what was actually saved.
+// failed save says why, and the boxes go back to what the server has.
 const saveTags = useMutation({
 	mutationFn: (input: { pageId: number; tagIds: number[] }) =>
 		trpc.adminPages.update.mutate(input),
@@ -220,7 +221,18 @@ const onTagsChange = (pageId: number, event: Event) => {
 			async () => {
 				if (tagSaves.get(pageId) === tail) await crud.invalidate()
 			},
-			() => crud.invalidate(),
+			async (error: unknown) => {
+				// The boxes go back to what was last loaded, at once: Vue won't, as its data
+				// hasn't changed. A newer save waiting decides them instead.
+				if (tagSaves.get(pageId) === tail) {
+					const loaded = pageTags.value.get(pageId) ?? []
+					for (const input of group.querySelectorAll<HTMLInputElement>('input'))
+						input.checked = loaded.some((a) => a.tagId === Number(input.value))
+				}
+				// Then the list reloads, to show what the server has, if it answered: with no
+				// answer, a reload would get none either.
+				if (!noAnswer(error)) await crud.invalidate()
+			},
 		)
 		// A failed reload mustn't block the next save in the chain.
 		.catch(() => undefined)

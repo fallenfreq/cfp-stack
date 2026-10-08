@@ -18,7 +18,14 @@
 				:class="toast.variant && `sf-variant-${toast.variant}`"
 				:role="toast.variant === 'danger' ? 'alert' : undefined"
 			>
-				<p class="toast-message">{{ toast.message }}</p>
+				<p class="toast-message">
+					{{ toast.message }}
+					<span
+						v-if="toast.count > 1"
+						class="sf-counter sf-single-line sf-size-2xs sf-loudness-1"
+						>×{{ toast.count }}</span
+					>
+				</p>
 				<SfIconButton
 					icon="x"
 					tooltip="Dismiss"
@@ -47,13 +54,14 @@ const bringToFront = () => {
 	el.showPopover()
 }
 onMounted(bringToFront)
+// Counted by times shown, so a message shown again comes to the front as a new one does.
 watch(
-	() => toasts.length,
-	async (length, previous) => {
-		if (length > previous) return bringToFront()
+	() => toasts.reduce((shown, toast) => shown + toast.count, 0),
+	async (shown, previous) => {
+		if (shown > previous) return bringToFront()
 		// A removed toast doesn't report focus or the pointer leaving, so check after it goes.
 		await nextTick()
-		if (!length) holdToasts('hover', false)
+		if (!toasts.length) holdToasts('hover', false)
 		if (!region.value?.contains(document.activeElement)) holdToasts('focus', false)
 	},
 )

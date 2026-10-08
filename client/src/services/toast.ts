@@ -9,6 +9,8 @@ export interface Toast {
 	id: number
 	message: string
 	variant: ToastVariant | undefined
+	// How many times it has been shown while on screen.
+	count: number
 }
 
 export const toasts = shallowReactive<Toast[]>([])
@@ -30,7 +32,10 @@ function run(id: number, timer: Timer) {
 	timer.timeout = setTimeout(() => dismiss(id), timer.remaining)
 }
 
-/** Show a message for duration ms (0 keeps it until closed): by default an error 10 s, else 5 s. */
+/**
+ * Show a message for duration ms (0 keeps it until closed): by default an error 10 s, else 5 s.
+ * The same message again, while it's on screen, counts on that toast and starts its time again.
+ */
 export function notify({
 	message,
 	variant,
@@ -40,8 +45,16 @@ export function notify({
 	variant?: ToastVariant | undefined
 	duration?: number
 }): void {
-	const id = nextId++
-	toasts.push({ id, message, variant })
+	const index = toasts.findIndex(
+		(toast) => toast.message === message && toast.variant === variant,
+	)
+	const shown = toasts[index]
+	const id = shown ? shown.id : nextId++
+	// Replaced, not changed in place: the list only notices what's put in it.
+	if (shown) toasts.splice(index, 1, { ...shown, count: shown.count + 1 })
+	else toasts.push({ id, message, variant, count: 1 })
+	clearTimeout(timers.get(id)?.timeout)
+	timers.delete(id)
 	if (!duration) return
 	const timer: Timer = { remaining: duration, started: 0 }
 	timers.set(id, timer)

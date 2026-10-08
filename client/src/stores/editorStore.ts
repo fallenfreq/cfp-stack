@@ -23,6 +23,8 @@ export const useEditorStore = defineStore('editor', () => {
 	const currentPageId = ref<number | null>(null)
 	const currentSlug = ref<string | null>(null)
 	const currentName = ref<string | null>(null)
+	// The name the server has for the page on screen, which a refused rename goes back to.
+	let savedName: string | null = null
 	const currentPublished = ref(false)
 	const pendingAutoTag = ref<number | null>(null)
 
@@ -36,6 +38,7 @@ export const useEditorStore = defineStore('editor', () => {
 			currentPageId.value = null
 			currentSlug.value = null
 			currentName.value = null
+			savedName = null
 			currentPublished.value = false
 			pendingAutoTag.value = null
 			saveStatus.value = 'idle'
@@ -107,6 +110,7 @@ export const useEditorStore = defineStore('editor', () => {
 		currentPageId.value = page.pageId
 		currentSlug.value = page.slug
 		currentName.value = page.name || null
+		savedName = currentName.value
 		currentPublished.value = page.published
 	}
 
@@ -159,6 +163,7 @@ export const useEditorStore = defineStore('editor', () => {
 					currentPageId.value = result.pageId
 					currentSlug.value = result.slug
 					currentName.value = name
+					savedName = name
 				}
 				if (autoTag !== null) {
 					await updatePage.mutateAsync({ pageId: result.pageId, tagIds: [autoTag] })
@@ -186,20 +191,21 @@ export const useEditorStore = defineStore('editor', () => {
 		}
 	}
 
-	// A new name shows at once. If the server refuses it, the name before comes back, unless the
-	// editor has moved on to another page or name meanwhile.
+	// A new name shows at once. If the server refuses it while it still shows, the name the server
+	// has comes back.
 	const rename = useMutation(
 		{
 			mutationFn: (input: { pageId: number; name: string }) =>
 				trpc.adminPages.update.mutate(input),
 			onMutate: ({ name }) => {
-				const before = currentName.value
 				currentName.value = name
-				return { before }
 			},
-			onError: (_error, { pageId, name }, context) => {
-				if (context && currentPageId.value === pageId && currentName.value === name)
-					currentName.value = context.before
+			onSuccess: (_page, { pageId, name }) => {
+				if (currentPageId.value === pageId) savedName = name
+			},
+			onError: (_error, { pageId, name }) => {
+				if (currentPageId.value === pageId && currentName.value === name)
+					currentName.value = savedName
 			},
 		},
 		queryClient,

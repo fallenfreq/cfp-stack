@@ -413,8 +413,13 @@ test('Save in the code view saves the page, with the changes made to its code', 
 	await expect(codeView, 'still in the code view').toHaveAttribute('aria-pressed', 'true')
 })
 
-// A change the server refuses on the admin pages says why, in the words errors.ts gives each kind.
-test('a change the server refuses on the admin pages says why', async ({ page, themeClass }) => {
+// A change the server refuses on the admin pages says why, in the words errors.ts gives each kind,
+// and the list reloads to show what the server has (a row deleted elsewhere goes). With no answer
+// it doesn't: a reload would get none either, and say so again.
+test('a change the server refuses on the admin pages says why, and the list reloads', async ({
+	page,
+	themeClass,
+}) => {
 	await steadyRequests(page)
 	await fakeReplies(page, {
 		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
@@ -433,16 +438,22 @@ test('a change the server refuses on the admin pages says why', async ({ page, t
 		(url) => url.pathname.includes('adminTags.update'),
 		(route) => answer(route),
 	)
+	let reloads = 0
+	page.on('request', (request) => {
+		if (request.url().includes('adminTags.list')) reloads++
+	})
 	await page.goto('/admin/collections')
 	await useTheme(page, themeClass)
 
-	const cases: [string, string, string, (route: Route) => Promise<void>, string][] = [
+	// Each: the action, what's typed, the answer, what the toast says, and whether the list reloads.
+	const cases: [string, string, string, (route: Route) => Promise<void>, string, boolean][] = [
 		[
 			'a refusal, in its words',
 			'Change slug',
 			'events',
 			refusal(409, 'CONFLICT', 'That slug is already in use'),
 			'That slug is already in use',
+			true,
 		],
 		[
 			'a refused input, by field',
@@ -454,6 +465,7 @@ test('a change the server refuses on the admin pages says why', async ({ page, t
 			}),
 			// Named as the page labels it.
 			'Name: Too small: expected string to have >=1 characters',
+			true,
 		],
 		[
 			'a failure on the server',
@@ -461,6 +473,7 @@ test('a change the server refuses on the admin pages says why', async ({ page, t
 			'Renamed',
 			refusal(500, 'INTERNAL_SERVER_ERROR', 'Internal Server Error'),
 			'Something went wrong on our side. Please try again.',
+			true,
 		],
 		[
 			'no answer',
@@ -468,62 +481,161 @@ test('a change the server refuses on the admin pages says why', async ({ page, t
 			'Renamed',
 			(route) => route.abort(),
 			"Couldn't get an answer from the server. Please try again.",
+			false,
 		],
 	]
-	for (const [name, action, typed, reply, said] of cases) {
+	for (const [name, action, typed, reply, said, reloadsAfter] of cases) {
 		answer = reply
+		const reloadsBefore = reloads
 		await page.getByRole('button', { name: 'Actions' }).click()
 		await page.getByRole('button', { name: action }).locator('visible=true').click()
 		await page.locator('dialog[open] input').fill(typed)
 		await page.keyboard.press('Enter')
 		const toast = page.getByRole('alert').filter({ hasText: said })
 		await expect(toast, name).toBeVisible()
+		if (reloadsAfter) {
+			await expect
+				.poll(() => reloads, `${name}: the list reloads`)
+				.toBeGreaterThan(reloadsBefore)
+		} else {
+			// Time for a reload to have been asked for, had there been one.
+			await page.waitForTimeout(500)
+			expect(reloads, `${name}: no reload`).toBe(reloadsBefore)
+		}
 		// Out of the way of the next case.
 		await toast.getByRole('button', { name: 'Dismiss' }).click()
 	}
 })
 
-// A new name shows in the editor at once; one the server refuses says why and goes back. It stayed.
-test('a name the server refuses in the editor goes back to the one before', async ({
+// A new name shows in the editor at once; one the server refuses says why and goes back to the
+// name the server has. It stayed; with a second rename sent before the first was refused, both
+// refused, it went back to the first, which the server never had. The same refusal twice is one
+// toast, counted.
+test('a name the server refuses in the editor goes back to the one it has', async ({
 	page,
 	themeClass,
 }) => {
 	await openStored(page, themeClass, oneParagraph)
+	// The first rename's answer waits until the second has been made. Made close together, the two
+	// can go in one request, which gets an answer for each.
+	let answer: (() => void) | undefined
+	const answered = new Promise<void>((done) => (answer = done))
 	await page.route(
 		(url) => url.pathname.includes('adminPages.update'),
-		(route) =>
-			route.fulfill({
+		async (route) => {
+			await answered
+			const calls = new URL(route.request().url()).pathname.split(',')
+			await route.fulfill({
 				status: 404,
-				json: [
-					{
-						error: {
-							json: {
-								message: 'Page not found',
-								code: -32004,
-								data: { code: 'NOT_FOUND' },
-							},
+				json: calls.map(() => ({
+					error: {
+						json: {
+							message: 'Page not found',
+							code: -32004,
+							data: { code: 'NOT_FOUND' },
 						},
 					},
-				],
-			}),
+				})),
+			})
+		},
 	)
 	const name = page.locator('.editor-top-bar input')
 	await expect(name).toHaveValue('Stored')
-	await name.fill('Renamed')
+	await name.fill('First')
 	await name.press('Enter')
-	await expect(page.getByRole('alert').filter({ hasText: 'Page not found' })).toBeVisible()
+	await expect(name).toHaveValue('First')
+	await name.fill('Second')
+	await name.press('Enter')
+	await expect(name).toHaveValue('Second')
+	answer?.()
+	const toast = page.getByRole('alert').filter({ hasText: 'Page not found' })
+	await expect(toast).toContainText('×2')
+	await expect(toast).toHaveCount(1)
 	await expect(name).toHaveValue('Stored')
 })
 
-// A promise that fails with nothing waiting on it says so, as an error nothing caught does.
-test('an error nothing caught says so', async ({ page, themeClass }) => {
+// A tag box ticked for a save that fails is unticked again: the list reloads as it was, which
+// doesn't change the box by itself. It stayed ticked.
+test('a tag box whose save fails is unticked again', async ({ page, themeClass }) => {
 	await steadyRequests(page)
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+		'adminPages.list': [
+			{
+				pageId: 1,
+				slug: 'stored',
+				name: 'Stored',
+				imageUrl: null,
+				published: true,
+				createdAt: null,
+				updatedAt: null,
+			},
+		],
+		'adminTags.list': [{ tagId: 1, name: 'News', slug: 'news', published: true, pageCount: 0 }],
+		'adminPages.listTagAssignments': [],
+	})
+	await page.route(
+		(url) => url.pathname.includes('adminPages.update'),
+		(route) => route.abort(),
+	)
+	await page.goto('/admin/pages')
+	await useTheme(page, themeClass)
+	await page.getByRole('button', { name: /^Tags for Stored/ }).click()
+	const box = page.getByRole('checkbox', { name: 'News' })
+	await box.click()
+	await expect(
+		page.getByRole('alert').filter({ hasText: "Couldn't get an answer from the server." }),
+	).toBeVisible()
+	await expect(box).not.toBeChecked()
+})
+
+// A promise of ours that fails with nothing waiting on it says so, as an error nothing caught
+// does; one from another site's script (Google Maps', a browser extension's) is left to the
+// browser.
+test("a promise of ours that fails with nothing waiting says so, another site's doesn't", async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	const failing = (whose: string) => `Promise.reject(new Error('${whose} failed'))`
+	// Served for other sites to use (CORS), as a map's script is. Chrome tells the page nothing of
+	// another site's script's failures without it, which would leave this nothing to check.
+	await page.route('https://elsewhere.test/widget.js', (route) =>
+		route.fulfill({
+			contentType: 'text/javascript',
+			headers: { 'Access-Control-Allow-Origin': '*' },
+			body: failing('Widget'),
+		}),
+	)
+	await page.route('**/e2e-not-caught.js', (route) =>
+		route.fulfill({ contentType: 'text/javascript', body: failing('Ours') }),
+	)
 	await page.goto('/')
 	await useTheme(page, themeClass)
+	// The failures the page is told of.
 	await page.evaluate(() => {
-		void Promise.reject(new Error('Not caught'))
+		const heard: string[] = ((window as any).heard = [])
+		addEventListener('unhandledrejection', (event) => heard.push(event.reason.message))
 	})
-	await expect(
-		page.getByRole('alert').filter({ hasText: 'Something went wrong. Please try again.' }),
-	).toBeVisible()
+	await page.evaluate(
+		(src) =>
+			new Promise((loaded) => {
+				const script = document.createElement('script')
+				script.crossOrigin = 'anonymous'
+				script.src = src
+				script.onload = loaded
+				document.head.append(script)
+			}),
+		'https://elsewhere.test/widget.js',
+	)
+	await page.addScriptTag({ url: '/e2e-not-caught.js' })
+	await expect
+		.poll(() => page.evaluate(() => (window as any).heard))
+		.toEqual(['Widget failed', 'Ours failed'])
+	const toast = page
+		.getByRole('alert')
+		.filter({ hasText: 'Something went wrong. Please try again.' })
+	await expect(toast).toBeVisible()
+	// Shown once: the other site's would have counted on it.
+	await expect(toast).not.toContainText('×')
 })
