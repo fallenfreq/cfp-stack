@@ -80,18 +80,42 @@ test("the Attributes panel's class row stacks in the narrow panel", async ({ pag
 	expect((await box(row)).width).toBeGreaterThan(200)
 })
 
-test("a Card's Attributes panel offers its padding and radius", async ({ page }) => {
+// A picker shows as a row once set, else as a button to add it.
+test("the layout blocks' Attributes panels offer their pickers", async ({ page }) => {
+	const pickers = {
+		'divide-card': ['radius', 'padding'],
+		'padded-stack': ['gap', 'padding'],
+		'padded-center': ['gap', 'padding'],
+		'row-parent': ['gap', 'collapse'],
+		'c2-split': ['gap', 'collapse'],
+	}
+	const openPanel = async () => {
+		const tune = page.locator('.floating-toolbar button:has(span:text-is("tune"))')
+		await tune.click()
+		const panel = page.locator(`#${await tune.getAttribute('popovertarget')}`)
+		await expect(panel).toBeVisible()
+		return panel
+	}
+	for (const [id, names] of Object.entries(pickers)) {
+		await selectBlock(page, id)
+		const panel = await openPanel()
+		for (const name of names)
+			await expect(
+				panel
+					.getByLabel(name, { exact: true })
+					.or(panel.getByRole('button', { name: `add ${name}`, exact: true })),
+				`${id}: ${name}`,
+			).toHaveCount(1)
+		await page.keyboard.press('Escape')
+	}
+	// Picking one sets the theme's first value, so it waits for the theme's tokens.
+	await page.waitForFunction(
+		() =>
+			(document.querySelector('#app') as any).__vue_app__.config.globalProperties.$pinia.state
+				.value.themeTokens?.hydrated,
+	)
 	await selectBlock(page, 'divide-card')
-	const tune = page.locator('.floating-toolbar button:has(span:text-is("tune"))')
-	await tune.click()
-	const panel = page.locator(`#${await tune.getAttribute('popovertarget')}`)
-	await expect(panel).toBeVisible()
-	for (const picker of ['padding', 'radius'])
-		await expect(
-			panel.locator('.attr-add-btn').filter({ hasText: picker }),
-			picker,
-		).toHaveCount(1)
-	await panel.locator('.attr-add-btn').filter({ hasText: 'padding' }).click()
+	await (await openPanel()).getByRole('button', { name: 'add padding', exact: true }).click()
 	await expect(page.locator('#divide-card')).toHaveClass(/(^|\s)sf-padding-\S+/)
 })
 

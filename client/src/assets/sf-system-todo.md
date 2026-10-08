@@ -17,7 +17,9 @@ and reviewed, the review's findings fixed, and committed. Item 20 (known limits 
 decided with the user: not bugs but content the validator should flag; the tried fix was
 undone. Item 21 (the Section becomes Stack, and `sl-stack` reads its padding) is done,
 checked, reviewed, the review's finding fixed, and committed. Item 22 (the layout blocks'
-pickers show again) is fixed, checked, reviewed and committed. Next with the user: K4 and K5.
+pickers show again) is fixed, checked and committed; a fresh agent's review found six, fixed
+but for two raised with the user (a check helper's level, and old tags in pasted HTML). Next
+with the user: K4 and K5.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -900,26 +902,49 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
           stack. The check above fails with the bug, in both browsers and themes.
         - Not changed (decided with the user): HTML with the old `<layout-section>` tag no longer
           makes the block (put into the editor: two plain paragraphs, the wrapper lost). No such
-          HTML is kept anywhere: stored pages keep the block's ID, which maps to its name
+          HTML is kept anywhere: stored pages keep the block's ID, which maps to its tag
           (`nodeRegistry.ts`; per site with the component store, item 10).
 
 22. **The layout blocks' pickers show again** (2026-10-08, approved by the user; found in 21).
-    - **Was:** a Card's, Stack's, Columns', Split's or Centre's Attributes panel offered class,
-      data-container, id and style only, never its gap, padding, radius or collapse pickers. The
+    - **Was:** a Card's, Stack's, Columns', Split's or Centre's Attributes panel offered class, id,
+      style and the block's own settings, never its gap, padding, radius or collapse pickers. The
       panel looks them up by the block's type in the editor, which for a component block has been
       its ID since 14 June (`8e592a6`, so saved pages survive a rename); the list was keyed by
       component name. Added 13 June (`c74ad5a`), they worked for a day. An image's radius picker
       (a built-in block) was never affected.
     - **Fixed:** the list is keyed by each block's ID (`nodeClassTokens.ts`), as
       `allowAttributesExtension.ts` keys them.
-    - **Checked:** `editor.spec.ts`: a Card's panel offers padding and radius, and picking padding
-      puts an `sf-padding-` class on the card. It fails on the old list in both browsers and
-      themes, and passes now. The suite passes.
+    - **Checked:** `editor.spec.ts`: each of the five blocks' panels offers its pickers (a row once
+      set, else a button to add it), and picking padding puts an `sf-padding-` class on a Card. It
+      fails on the old list, and with the Centre's key wrong, in both browsers and themes; it
+      passes now. The suite passes.
     - The toolbar and its panels act on a block at the level being edited (the drag handle's
-      depth): a Card inside a box is reached by going a level in, so the check uses a top-level
-      Card.
-    - **Reviewed** (in the session, no review command available): no findings. No import cycle;
-      nothing else in the client is keyed by a block's name.
+      depth): a block inside another is reached by going a level in (its crumb), so the check
+      uses top-level blocks. The test page's C2 Split has an id for it.
+    - **Reviewed** by a fresh agent (a first pass in the session found nothing). Each finding was
+      run in Chrome:
+        - Fixed: "Was:" named the wrong panel, as does `fedc5d2`'s message. The sighting in 21
+          selected `c1-card`, which sits in a box, so the toolbar had the box: class,
+          data-container, id and style. A Card's own panel never offers data-container.
+        - Fixed: the check covered the Card only, and passed with the Centre's key wrong. It
+          covers all five now.
+        - Fixed: picking needs the theme's tokens, which load in the background; opening the test
+          page doesn't wait for them. With them 6s late, picking padding left an empty row and set
+          no class, even once they came. The check waits for them, as `app.spec.ts` does. A person
+          picking that early would see the same (logged).
+        - Fixed: "nothing else is keyed by a block's name" was wrong as put: the picker's rows are
+          keyed by the name shown (item 10). Meant: nothing else looks a component block up by its
+          component name (`LayoutCard`).
+        - Fixed: item 21's note said the ID maps to the block's name; it maps to its tag.
+        - Logged, older (1 Oct, `a1d0f82`), raised with the user: `selectBlock` (`e2e/helpers.ts`)
+          says it selects "as clicking its node-path crumb does", but doesn't set the level being
+          edited as a crumb does. So for a block inside another the toolbar acts on the outer one:
+          three editor checks select `c1-card` and drive its box's toolbar. Each still checks what
+          it says.
+        - Raised with the user: `fedc5d2` dropped item 10's open question, whether HTML with a tag
+          that no longer matches stays readable. Copying puts a block in HTML by its tag
+          (`<layout-stack …>`, no ID; seen in Chrome) and pasting finds it by its tag, so with tags
+          per site a block pasted from another site could lose its wrapper.
 
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in
