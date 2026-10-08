@@ -16,8 +16,8 @@ done, checked and reviewed twice, the reviews' findings fixed or logged, and com
 and reviewed, the review's findings fixed, and committed. Item 20 (known limits K2 and K3) is
 decided with the user: not bugs but content the validator should flag; the tried fix was
 undone. Item 21 (the Section becomes Stack, and `sl-stack` reads its padding) is done,
-checked, reviewed, the review's finding fixed, and committed. Next with the user: the layout
-blocks' pickers that never show (found in 21), K4 and K5.
+checked, reviewed, the review's finding fixed, and committed. Item 22 (the layout blocks'
+pickers show again) is fixed, checked, reviewed and committed. Next with the user: K4 and K5.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -325,9 +325,7 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
     field) beside the site's alias, and where each shows (the author's name can be shared by
     two components; the alias is unique on the site). The picker's rows are told apart by
     their label (`ToolbarNodePicker.vue`), which two components named alike would break:
-    key them by type. HTML carries the alias as its tag, so renaming one (the Section became
-    Stack, 21) leaves HTML with the old tag unread: pasted from a tab on the old build, or kept
-    code-view text. To decide with the store: whether old aliases stay readable.
+    key them by type.
 11. **Typing logged editor warnings** (seen 2026-10-01; fixed 2026-10-04): typing in a
     paragraph or heading straight on the page logged 38 TipTap warnings a letter ("setNode()
     only supports text block nodes"). Not in a Section, as first noted: there the toolbar acts
@@ -892,23 +890,36 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       stylesheet the plain box isn't padded), and a Centre given padding only at its sides. The
       demo page's snapshot moved only where its text now says Stack (shorter lines; one list line
       no longer wraps at just below sm): accepted in both browsers. The suite passes.
-    - **Found on the way, not fixed:** the layout blocks' pickers (gap, padding, radius, collapse:
-      `nodeClassTokens.ts`) never show. They're looked up by the block's type name
-      (`ToolbarAttributeEditor.vue`), which for a component block has been its ID since 14 June
-      (`8e592a6`); the list is keyed by component name. Seen in Chrome: a Card's Attributes panel
-      offers class, data-container, id and style only.
+    - **Found on the way:** the layout blocks' pickers never show: item 22.
     - **Code review** (`/code-review high`): eight findings, two on this item; the other six are on
       the other session's uncommitted work (refused-change messages), left to it and passed to the
       user.
-        - Fixed, a regression: the stack's padding reached the Centre (its root is `sl-center
-sl-stack`), so a Centre given `sf-padding-lg` was padded above and below too (24px all
-          round, 0 24px before; measured in Chrome). The rule now skips a centred stack. The check
-          above fails with the bug, in both browsers and themes.
-        - Raised, not done: HTML with the old `<layout-section>` tag no longer makes the block (put
-          into the editor: two plain paragraphs, the wrapper lost). Stored pages keep the ID, so
-          only HTML in transit has it: copied from a tab on the old build and pasted after the
-          deploy, or code-view text kept elsewhere. Accepting old names would be a new setting on
-          every component block; the same holds for any renamed alias (item 10).
+        - Fixed, a regression: the stack's padding reached the Centre (its root is
+          `sl-center sl-stack`), so a Centre given `sf-padding-lg` was padded above and below too
+          (24px all round, 0 24px before; measured in Chrome). The rule now skips a centred
+          stack. The check above fails with the bug, in both browsers and themes.
+        - Not changed (decided with the user): HTML with the old `<layout-section>` tag no longer
+          makes the block (put into the editor: two plain paragraphs, the wrapper lost). No such
+          HTML is kept anywhere: stored pages keep the block's ID, which maps to its name
+          (`nodeRegistry.ts`; per site with the component store, item 10).
+
+22. **The layout blocks' pickers show again** (2026-10-08, approved by the user; found in 21).
+    - **Was:** a Card's, Stack's, Columns', Split's or Centre's Attributes panel offered class,
+      data-container, id and style only, never its gap, padding, radius or collapse pickers. The
+      panel looks them up by the block's type in the editor, which for a component block has been
+      its ID since 14 June (`8e592a6`, so saved pages survive a rename); the list was keyed by
+      component name. Added 13 June (`c74ad5a`), they worked for a day. An image's radius picker
+      (a built-in block) was never affected.
+    - **Fixed:** the list is keyed by each block's ID (`nodeClassTokens.ts`), as
+      `allowAttributesExtension.ts` keys them.
+    - **Checked:** `editor.spec.ts`: a Card's panel offers padding and radius, and picking padding
+      puts an `sf-padding-` class on the card. It fails on the old list in both browsers and
+      themes, and passes now. The suite passes.
+    - The toolbar and its panels act on a block at the level being edited (the drag handle's
+      depth): a Card inside a box is reached by going a level in, so the check uses a top-level
+      Card.
+    - **Reviewed** (in the session, no review command available): no findings. No import cycle;
+      nothing else in the client is keyed by a block's name.
 
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in

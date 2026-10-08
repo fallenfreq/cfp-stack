@@ -80,6 +80,21 @@ test("the Attributes panel's class row stacks in the narrow panel", async ({ pag
 	expect((await box(row)).width).toBeGreaterThan(200)
 })
 
+test("a Card's Attributes panel offers its padding and radius", async ({ page }) => {
+	await selectBlock(page, 'divide-card')
+	const tune = page.locator('.floating-toolbar button:has(span:text-is("tune"))')
+	await tune.click()
+	const panel = page.locator(`#${await tune.getAttribute('popovertarget')}`)
+	await expect(panel).toBeVisible()
+	for (const picker of ['padding', 'radius'])
+		await expect(
+			panel.locator('.attr-add-btn').filter({ hasText: picker }),
+			picker,
+		).toHaveCount(1)
+	await panel.locator('.attr-add-btn').filter({ hasText: 'padding' }).click()
+	await expect(page.locator('#divide-card')).toHaveClass(/(^|\s)sf-padding-\S+/)
+})
+
 // A custom block goes by its alias (the tag the code view shows), never its ID; a built-in one by
 // its label, never its type's name.
 test('the block pickers name every block they offer', async ({ page }) => {
