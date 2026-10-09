@@ -75,6 +75,15 @@
 	<img src="/favicon.png" />
 </layout-card>
 
+<h3>
+	A picture with a shape keeps it in a column narrower than the picture; a centred one keeps its
+	size
+</h3>
+<div data-container id="shape-picture-column" style="width: 20px">
+	<img id="shape-picture" class="sl-aspect-16-9" src="/favicon.png" />
+</div>
+<img id="center-picture" class="sl-center" src="/favicon.png" />
+
 <h3>A Card set to bleed reaches the edges of the inset around it</h3>
 <div data-container id="inset" class="sl-inset">
 	<p id="inset-first">On the line</p>
@@ -146,6 +155,196 @@
 		<p id="row-cell-2">Cell 2</p>
 		<p id="row-cell-3">Cell 3</p>
 	</layout-card>
+</layout-columns>
+
+<h3>In a row, a Stack and a Card stretch to the row's height, as a plain block does</h3>
+<layout-columns columns="4" class="sf-gap-md">
+	<layout-stack id="stretch-stack" class="sf-depth-1"><p>Short</p></layout-stack>
+	<layout-card id="stretch-card"><p>Short</p></layout-card>
+	<div data-container id="stretch-plain" class="sf-depth-1"><p>Short</p></div>
+	<div data-container id="stretch-tall" class="sf-depth-1">
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+	</div>
+</layout-columns>
+<div data-container class="sl-columns sf-gap-md" style="--sl-cols: repeat(2, 1fr)">
+	<div data-container class="sl-row">
+		<layout-card id="stretch-row-card"><p>Short, in a row of shared columns</p></layout-card>
+		<div data-container id="stretch-row-tall" class="sf-depth-1">
+			<p>Tall</p>
+			<p>Tall</p>
+			<p>Tall</p>
+			<p>Tall</p>
+			<p>Tall</p>
+			<p>Tall</p>
+		</div>
+	</div>
+</div>
+
+<h3>In a row, a block's own space above and below stays inside the row, as a plain block's does</h3>
+<layout-columns columns="3" class="sf-gap-md">
+	<layout-stack id="spaced-stack" class="sf-depth-1" style="margin-block: 20px"
+		><p>Short</p></layout-stack
+	>
+	<div data-container id="spaced-plain" class="sl-stack sf-depth-1" style="margin-block: 20px">
+		<p>Short</p>
+	</div>
+	<div data-container class="sf-depth-1">
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+	</div>
+</layout-columns>
+
+<h3>In a row, a block with wide content is as wide as a plain block</h3>
+<div data-container class="sl-columns sf-gap-md">
+	<layout-stack id="wide-stack" class="sf-depth-1"
+		><p>Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch</p></layout-stack
+	>
+	<div data-container id="wide-plain" class="sl-stack sf-depth-1">
+		<p>Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch</p>
+	</div>
+	<p>Three</p>
+	<p>Four</p>
+</div>
+<layout-columns columns="4" class="sf-gap-md">
+	<layout-stack id="widen-stack" class="sf-depth-1"
+		><p>Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch</p></layout-stack
+	>
+	<p>Two</p>
+	<p>Three</p>
+	<p>Four</p>
+</layout-columns>
+<layout-columns columns="4" class="sf-gap-md">
+	<div data-container id="widen-plain" class="sl-stack sf-depth-1">
+		<p>Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch</p>
+	</div>
+	<p>Two</p>
+	<p>Three</p>
+	<p>Four</p>
+</layout-columns>
+<layout-columns columns="4" class="sf-gap-md">
+	<layout-stack id="scroll-stack" class="sl-scroll-x sf-depth-1"
+		><p>Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch</p></layout-stack
+	>
+	<div data-container id="scroll-plain" class="sl-stack sl-scroll-x sf-depth-1">
+		<p>Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch</p>
+	</div>
+	<p>Three</p>
+	<p>Four</p>
+</layout-columns>
+
+<h3>In a row, a block with a shape keeps its shape and its column, as a plain block does</h3>
+<layout-columns columns="4" class="sf-gap-md">
+	<layout-stack id="shape-stack" class="sl-aspect-1-1 sf-depth-1"><p>Square</p></layout-stack>
+	<div data-container id="shape-plain" class="sl-stack sl-aspect-1-1 sf-depth-1">
+		<p>Square</p>
+	</div>
+	<p id="shape-short">Short</p>
+	<div data-container id="shape-tall" class="sf-depth-1" style="height: 60rem"><p>Tall</p></div>
+	<layout-stack id="shape-wordy" class="sl-aspect-16-9 sf-depth-1"
+		><p>More text</p>
+		<p>than</p>
+		<p>a wide</p>
+		<p>shape</p>
+		<p>holds</p>
+		<p>at this</p>
+		<p>width</p></layout-stack
+	>
+	<layout-stack id="shape-own" class="sl-aspect-1-1 sf-depth-1" style="height: 100px"
+		><p>Own</p></layout-stack
+	>
+	<div
+		data-container
+		id="shape-own-plain"
+		class="sl-stack sl-aspect-1-1 sf-depth-1"
+		style="height: 100px"
+	>
+		<p>Own</p>
+	</div>
+</layout-columns>
+
+<h3>In a row, a Centre is as wide as its measure allows, centred, as on the page</h3>
+<layout-columns columns="3" class="sf-gap-md">
+	<layout-center id="row-center" maxWidth="xs"><p>Hi</p></layout-center>
+	<div
+		data-container
+		id="row-center-plain"
+		class="sl-center sl-stack"
+		style="--sl-measure: 20rem"
+	>
+		<p>Hi</p>
+	</div>
+	<p>Beside them</p>
+</layout-columns>
+
+<h3>
+	A centred column is as wide as its measure allows in a stack or an inset, and as wide as its
+	text in a layout aligned sideways, as a Centre is
+</h3>
+<div data-container class="sl-stack">
+	<layout-center id="stack-center" maxWidth="xs"><p>Hi</p></layout-center>
+	<div
+		data-container
+		id="stack-center-plain"
+		class="sl-center sl-stack"
+		style="--sl-measure: 20rem"
+	>
+		<p>Hi</p>
+	</div>
+</div>
+<div data-container class="sl-inset">
+	<layout-center id="inset-center" maxWidth="xs"><p>Hi</p></layout-center>
+	<div
+		data-container
+		id="inset-center-plain"
+		class="sl-center sl-stack"
+		style="--sl-measure: 20rem"
+	>
+		<p>Hi</p>
+	</div>
+</div>
+<div data-container class="sl-stack sl-align-x-center">
+	<layout-center id="aligned-center" maxWidth="xs"><p>Hi</p></layout-center>
+	<div
+		data-container
+		id="aligned-center-plain"
+		class="sl-center sl-stack"
+		style="--sl-measure: 20rem"
+	>
+		<p>Hi</p>
+	</div>
+</div>
+
+<h3>In a row, a Card set to hide or show below a width does, as on the page</h3>
+<layout-columns columns="3" class="sf-gap-md">
+	<layout-card id="row-hide" class="sl-hide-below-md"><p>Hidden below md</p></layout-card>
+	<layout-card id="row-show" class="sl-show-below-md"><p>Shown below md</p></layout-card>
+	<p>Beside them</p>
+</layout-columns>
+
+<h3>
+	In a row aligned to the top, a Stack and a Card keep their own height, as a plain block does
+</h3>
+<layout-columns columns="4" align="start" class="sf-gap-md">
+	<layout-stack id="top-stack" class="sf-depth-1"><p>Short</p></layout-stack>
+	<layout-card id="top-card"><p>Short</p></layout-card>
+	<div data-container id="top-plain" class="sl-stack sf-depth-1"><p>Short</p></div>
+	<div data-container id="top-tall" class="sf-depth-1">
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+		<p>Tall</p>
+	</div>
 </layout-columns>
 
 <h3>
@@ -394,21 +593,6 @@
 		<p>c</p>
 	</div>
 </layout-split>
-
-<h3>K4: a Stack with a background should stretch to its row's height, as a Card does</h3>
-<layout-columns columns="2" class="sf-gap-md">
-	<layout-stack id="k4-stack" class="sf-depth-1"><p id="k4-content">Short</p></layout-stack>
-	<layout-card id="k4-card">
-		<p>Tall</p>
-		<p>Tall</p>
-		<p>Tall</p>
-		<p>Tall</p>
-		<p>Tall</p>
-		<p>Tall</p>
-		<p>Tall</p>
-		<p>Tall</p>
-	</layout-card>
-</layout-columns>
 
 <h3>K5: hiding a Card's last block should leave no extra space under the block above it</h3>
 <layout-card id="k5-card" class="sf-size-md">

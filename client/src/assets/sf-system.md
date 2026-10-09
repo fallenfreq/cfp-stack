@@ -869,6 +869,13 @@ sl-align-x-end     right
 Aligned sideways, a layout's items take their content's width instead of the full width.
 On a stack, y alignment shows only when the stack is taller than its content.
 
+A row of items side by side (`sl-columns`, `sl-split`, `sl-grid`, `sl-row`) stretches them to
+its height unless it's aligned. A shape (`sl-aspect-*`) counts as a height of the block's own:
+a block with one keeps its shape at the top of the row instead of stretching (and widening to
+keep its shape). A centred column (`sl-center`) is as wide as its measure allows in a row, a
+stack or an inset, not as wide as its text; in a layout aligned sideways it takes its
+content's width, as the other items do.
+
 **Rows that share columns** — `sl-row` on a child of a grid layout (`sl-split`,
 `sl-columns`, `sl-grid`) makes it span every column and put its own children on the
 parent's columns. Separate row elements then line up as if their cells were in one grid:
@@ -1252,6 +1259,13 @@ component blocks (`throughNodeViews` in `api/src/domain/css/nodeViewSelectors.ts
 - **A layout's content box steps aside** (`display: contents`, `nodeViews.ts`), so the blocks
   inside are the layout's own items. They follow the component's own parts as siblings: in a
   divided layout with a heading of its own, the first block gets a line.
+- **In a row, a block fills it as a plain block does.** A grid layout's row (`sl-columns`,
+  `sl-split`, `sl-grid`, `sl-row`) stretches its blocks to its height unless it's aligned: a
+  plain `sl-split` is aligned to the top, and the Columns and Split blocks stretch unless their
+  align setting says top, middle or bottom. A block with a shape or a height of its own keeps
+  it (Layout primitives). There a component's outer box is a one-cell grid as wide as itself
+  (`nodeViews.ts`), so its root stretches too, keeping its own margins inside the row, and is
+  as wide as a plain block would be.
 - Rewritten rules keep their weight.
 - **What can't be rewritten:** a `:has()` inside another `:has()` (the browser would drop the
   whole rule), a child or sibling step inside `:not()`, `:is()` or `:where()`, and a sibling
@@ -1282,6 +1296,8 @@ component, so these keep the system's layout working around and inside it:
   Anything in between makes them that box's items instead.
 - **Don't bake placement classes on the root.** The outer box gets only the node's classes,
   so a baked pin, hide or show does nothing. Give the node a default class instead.
+- **Don't size the root to fill its outer box** (`height: 100%`). In a row it stretches
+  already; a height of your own stops it, and with margins it would overflow the row.
 - **Avoid width containers of your own.** A width container takes no width from its content,
   so your block is 0 wide wherever its width comes from its content (a cluster, a table
   cell). If you need one, name it and query it by name

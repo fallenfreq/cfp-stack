@@ -18,8 +18,10 @@ decided with the user: not bugs but content the validator should flag; the tried
 undone. Item 21 (the Section becomes Stack, and `sl-stack` reads its padding) is done,
 checked, reviewed, the review's finding fixed, and committed. Item 22 (the layout blocks'
 pickers show again) is fixed, checked and committed; a fresh agent's review found six, all
-fixed but one the user ruled out (old tags in HTML pasted between sites). Next
-with the user: K4 and K5.
+fixed but one the user ruled out (old tags in HTML pasted between sites). Item 23 (K4: a
+block in a row fills it, as a plain block does) is decided with the user, done, checked,
+reviewed three times by fresh agents with every finding fixed or logged (shapes, the Centre's
+width and alignment decided with the user), and committed. Then with the user: K5.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -949,11 +951,147 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
           its tag (`<layout-stack …>`, no ID; seen in Chrome), but blocks aren't copied between
           sites.
 
+23. **A block in a row fills it, as a plain block does** (2026-10-08, K4; decided with the user).
+    - **Was:** a row of a grid layout stretches its blocks to its height unless it's aligned; the
+      Columns and Split blocks' align setting is stretch unless set to top, middle or bottom. A
+      plain block filled the row, and so did a Card (its own `height: 100%`), but every other
+      component block kept its own height: a Stack with a background stopped short (58px in a
+      352px row), "items at the bottom" did nothing, a block with parts of its own stayed 235px
+      tall in a 772px row. The outer box stretched; the component inside it didn't.
+    - **Decided with the user:** the row decides, as it already does, and its default stays
+      stretch, so pages change only where a component block didn't fill. Stretch works for every
+      block; no class for a single block yet. A component's creator does nothing for it to fill,
+      and a height of their own wins.
+    - **Fixed:** in a row (`ROW_LAYOUT_SELECTOR`, `slLayout.ts`), a component's outer box is a
+      one-cell grid as wide as itself (`100%`, `nodeViews.ts`), so the component stretches by
+      the same rules as a plain block and is as wide as one. Two classes say what they need
+      wherever they sit, as defaults in the lowest layer (a set height or width wins): a shape
+      is a height of the block's own, so a row leaves it its shape (`sl-aspect-*`,
+      `height: min-content`, zero weight so a picture keeps the reset's sizing); a centred
+      column fills sideways up to its measure (`sl-center`, `stretch`, and
+      `-webkit-fill-available` for older Safari), except a picture, and except in a layout
+      aligned sideways, where it takes its content's width as the other items do. The Card's
+      own width and height are gone. The spec says how, and tells component authors not to
+      size the root themselves.
+    - **Rejected, measured** against a plain twin in 17 cases, in Chrome and WebKit under both
+      themes:
+        - `height: 100%` on every component: 15 of 17. A block's own space above and below ends
+          that far past the row (20px each side in the test).
+        - `height: stretch` (fill, less the block's margins): all 17 in Chrome, but WebKit ignores
+          it in a row (blocks stay short); `-webkit-fill-available` goes wrong everywhere in
+          WebKit.
+        - A one-cell grid around every component, not only in rows: a block's own space above no
+          longer merges with the space before it (40px became 56px).
+    - **Checked:** `blocks.spec.ts`, each failing without what it checks:
+        - In a row a Stack and a Card stretch to the row's height, in a Columns block and in a
+          plain row of shared columns (old stylesheet: fails; without the rule's first half,
+          which reaches a block straight in a plain row: fails).
+        - A block's own space above and below stays inside the row (`height: 100%`: 40px past).
+        - A block with wide content is as wide as a plain block: a long word keeps a plain
+          row's column (the grid without `100%`: 140px wider, 327px under the test theme) and
+          widens a Columns block's column as a plain block's does (`minmax(0, 1fr)`: fails); a
+          block that scrolls sideways keeps its column (old stylesheet: fails).
+        - A block with a shape keeps its shape and its column, and more text makes it taller,
+          not wider; with a height of its own, the shape sets its width (without the shape rule,
+          or as first reviewed: fails; with the fill on every component again: fails).
+        - A Centre is as wide as its measure allows, centred, and so is a plain centred column
+          (without the class's fill: fails; as first reviewed, the plain one fails).
+        - A plain centred column matches a Centre in a stack and an inset (its measure) and in
+          a stack aligned sideways (its text) (without the class's fill: fails; without the
+          aligned rule, or as second reviewed: fails).
+        - A picture with a shape keeps it in a column narrower than the picture, and a centred
+          picture keeps its size (the shape rule with weight: fails in WebKit; the fill on
+          pictures: fails; as second reviewed: both fail).
+        - Hide and show work in a row (the row's rule given weight: fails).
+        - In a row aligned to the top a Stack and a Card keep their own height (passes on the
+          old stylesheet too: it guards what didn't change).
+    - The demo page moved only as expected: at wide, three Stacks without a background now fill
+      their rows (268→287, 275→287, 341→346px), and outer boxes in rows are now grids, same
+      size; accepted in both browsers. The suite passes. Against plain twins in 27 cases, both
+      browsers and themes, what still differs is older or the plain block's own fault (below).
+      Firefox isn't measured (the checks run Chrome and WebKit).
+    - **Found on the way** (logged): a plain `sl-split` and the Split block align differently by
+      default; two older differences between a component block and its plain twin. Also fixed,
+      not logged before: a component that scrolls sideways (`sl-scroll-x`) with wide content
+      widened its column to its content (1210px in a 308px column; 217px past the page under
+      the test theme). It now keeps its column, as its plain twin does.
+    - **Reviewed** by a fresh agent. Each finding was run in Chrome and WebKit:
+        - Fixed, a regression: the grid's one column was `auto`, so a component with wide
+          content (a long word, a URL, code) was as wide as its content and spilled out of a
+          plain row's column over its neighbour (1541px in a 308px column; plain twin 308). The
+          column is now the box's full width. `minmax(0, 1fr)` (also measured) fixes it too but
+          stops a component's wide content widening a Columns block's column, as a plain
+          block's does.
+        - Fixed, a regression: a Centre in a row shrank to its text (512 → 14px), as a grid
+          item with automatic side margins does. The component now fills the cell sideways, so
+          it's 512px and centred again. Not taken: `sl-center { width: 100% }`, which also
+          changes plain blocks and only partly (in a cluster or a cover a plain centred column
+          would fill its measure while a Centre block hugs its text).
+        - Fixed with the first: a square Stack beside a tall block in a plain row went from
+          632px to 1024. In a Columns block it now widens with its column in Chrome, as its plain
+          twin does (the logged shape issue, which now reaches component blocks there); in WebKit
+          it keeps its shape.
+        - Fixed: wording. The spec and `slLayout.ts` now say a plain `sl-split` is aligned to the
+          top; the spec says how the component sizes sideways; "235 of 772px" read as a clash
+          with the logged 520px (two different rows).
+        - Fixed: check gaps. Nothing reached a block straight in a plain row, `sl-row`, or
+          width: the checks above now do.
+    - **Reviewed again** (2026-10-09) by a fresh agent, with the related logged issues. Each
+      finding was run in Chrome and WebKit under both themes:
+        - Fixed, a regression (decided with the user: the shape wins). In Chrome a component
+          block with a shape, in a row that stretches, widened its column to the row's height
+          (632 → 1276px; 832px past the page under the test theme). A 16:9 block holding more
+          text than its shape widened its own column with nothing beside it (416 → 1074px).
+          WebKit kept the shape; plain blocks with a shape already widened in both browsers. A
+          shape now counts as a height of the block's own: every shaped block keeps its shape
+          and its column in both browsers, middle- and bottom-aligned rows stay aligned, and
+          nothing outside rows moved. Not taken, measured:
+          `align-self: start` (moves blocks in middle- or bottom-aligned rows to the top);
+          `min-width: 0` (plain blocks still widen); the Columns block's stretch as `normal`
+          (changes nothing: the widening comes from the column's minimum, not the stretch).
+        - Fixed, a regression found checking it (decided with the user). The sideways fill was
+          on every component in a row, so a block with a shape and a height of its own lost its
+          shape (100×100 → 632×100; plain twin 100×100). The fill moved to the one class whose
+          automatic margins need it, `sl-center`. The Centre block measures the same in all 8
+          containers tried. A plain `sl-center` is now a reading column in rows, insets and
+          stacks too (14 → 320px). In a cluster or a cover a plain one fills its measure while
+          the Centre block hugs its text: that's where a block sits (item 10), logged below.
+        - Fixed: check gaps. Nothing checked a shape in a row; `minmax(0, 1fr)` passed every
+          check; hide and show in a row were caught only by chance. The checks above now do.
+        - Fixed: wording. The spec said a row stretches every block; the logged shape issue was
+          too narrow; three comments.
+        - Logged: the checks never run Safari 17.4's `-webkit-fill-available` line (both test
+          browsers read `stretch`). Measured by hand with only that line: every case the same.
+        - Older, logged below: the Split default (with the review's measured fix), the nested
+          collapsing Columns block (with its measured fix), and two WebKit faults.
+    - **Reviewed a third time** (2026-10-09) by a fresh agent, the second round's fixes most.
+      Each finding was run in Chrome and WebKit under both themes:
+        - Fixed, a regression: the shape rule outweighed the reset's sizing of pictures, so in
+          WebKit a shaped picture with no fill (or "Original") lost its shape or grew past its
+          pixels: 2000×1000 at 16:9 in a 400px column 400×225 → 400×1000; 400×600 at 16:9 on
+          the page 400×600 → 1067×600. The rule now has no weight, so pictures are as before.
+          In Chrome a shaped picture in a row that stretches still stretches to the row's
+          height, as before item 23 (logged below).
+        - Fixed, a regression: a picture typed with `sl-center` (code view) was blown up to the
+          measure (100×100 → 517×517). The fill now skips pictures and other embedded media.
+        - Fixed, a regression (decided with the user: the layout's alignment wins). In a layout
+          aligned sideways a plain centred column filled its measure (14 → 320px) while the
+          Centre block, like the layout's other items, took its text's width. It now takes its
+          content's width there too; stacks and insets still fill.
+        - Logged, from removing the Card's `height: 100%`: a 16:9 Card holding more than fits
+          now grows to fit it in Chrome (1280×720 → 1280×1276), as its plain twin does; WebKit
+          keeps it at its shape and cuts the rest off, plain twin too (below).
+        - Fixed: check gaps. Nothing checked a shaped picture, or a plain centred column outside
+          rows (filling only in rows passed every check). The checks above now do.
+        - Fixed: wording. The spec's centred column clashed with alignment; "widening to the
+          row's height" mixed width and height; the row layouts' comment said "grid layouts"
+          (an inset and a cover are grids too); "a set height wins" wasn't true of pictures.
+
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in
-Playwright, 2026-10-02). Grid items with auto side margins shrink to fit. Nothing in the app
-does this: the Centre block's wrapper is the inset's item, and only `LayoutCenter.vue` wears
-`sl-center`. Found 2026-10-02, not fixed. Moving between two editor addresses
+Playwright, 2026-10-02). Grid items with auto side margins shrink to fit. Fixed 2026-10-09
+(item 23): `sl-center` fills sideways up to its measure, in a row, an inset or a stack. In a
+cluster or a cover the Centre block still hugs its text (logged below). Moving between two editor addresses
 kept the page open (found 2026-10-01; fixed 2026-10-03, see "Editor + Vue components").
 
 On a narrow window the floating toolbar differs between browsers (seen 2026-10-03). Chrome
@@ -981,7 +1119,7 @@ once get throttled and time out (2026-10-03); `pnpm test:ui --workers 2` passes.
   apart (`webkit/`).
 - **The cases** are on `/editor?seed=tests` (`client/src/config/editor/testContent.html`).
   Add a case for each layout fix.
-- **Known not to work yet** (K1, K4 and K5, `e2e/known.spec.ts`): each checks what should happen and
+- **Known not to work yet** (K1 and K5, `e2e/known.spec.ts`): each checks what should happen and
   is marked as expected to fail, with a normal check that every case is set up as described.
   When one is fixed, Playwright reports "expected to fail, but passed": remove its
   `test.fail()` and move the case up the test page.
@@ -1461,9 +1599,43 @@ What's pending:
       blocks don't line up with the parent's columns, and an inset Section or Centre has no
       side margins. Checks K2 and K3.~~ Not a bug: two layouts on one box, for the validator
       (item 20).
-    - A component root doesn't fill its stretched wrapper: a Section with a background in a row
+    - ~~A component root doesn't fill its stretched wrapper: a Section with a background in a row
       of columns is 58px tall beside a 394px Card (TiptapTest: 235 of 520px). LayoutCard
-      patches this with `height: 100%`. Check K4.
+      patches this with `height: 100%`. Check K4.~~ Fixed (item 23).
+    - ~~A block with a shape (`sl-aspect-*`) beside a taller block in a Columns row stretches
+      to the row, then widens its column to keep its shape: 1372px in a 632px column, past the
+      page, in Chrome and WebKit, plain blocks too.~~ Fixed (item 23, second review): a shape
+      counts as a height of the block's own.
+    - A plain `sl-split` aligns its sides to the top, but the Split block stretches them (its
+      align setting's default). Found in item 23. One default at the class (dropping
+      `align-items: start`, measured by the second review) moves to-do items, which are splits:
+      the tick box's label grows from 26px to 52 or 78px. It would also change plain splits on
+      app screens (`ToolbarAttributeEditor`, `GoogleMap`). The user's call.
+    - Older differences between a component block and its plain twin (found in item 23):
+        - A Columns block set to collapse, holding a long word, inside a Columns block keeps its
+          column's width while its plain twin widens it (632 against 1534px). A collapsing block's
+          outer box is a width container, so its content doesn't widen it; the plain twin isn't
+          one. Measured fix: a collapsing layout takes no minimum width from its content
+          (`[class*="sl-collapse-"] { min-width: 0 }`): the twin matches (693 → 384px under the
+          test theme) and the suite passes. Any plain collapsing layout with content wider than
+          its column would then keep its column.
+        - In a cluster or a cover, a plain `sl-center` fills its measure (in a cluster, centred
+          along its line), while a Centre block hugs its text (at the line's start in a
+          cluster). Its outer box is sized by its content: where a block sits (item 10).
+    - In WebKit (found in item 23's second review, the same before it):
+        - An image set to cover fills a shaped box's whole height, padding included, so a plain
+          box grows by its padding (356 → 388px) and a Card clips the image.
+        - Clicking the empty lower part of a stretched Card in a row puts the caret in the next
+          heading instead of selecting the Card.
+        - A picture with a shape and no fill, as wide as its pixels or narrower than its column,
+          ignores the shape: 800×300 at 1:1 stays 800×300 (Chrome 800×800). Found in item 23's
+          third review.
+        - A box with a shape that clips (a Card) holding more than fits keeps its shape and cuts
+          the rest off; Chrome grows it to fit (1280×720 against 1280×1276), as CSS says to.
+          The Card did the same in Chrome until item 23 removed its `height: 100%`.
+    - In Chrome, a picture with a shape in a row that stretches stretches to the row's height
+      (632×1276 for a square); WebKit keeps the shape. Before item 23 too. Found in its third
+      review.
     - TiptapCodeBlock puts the author's classes on a nested `pre`. That node view is editor
       only, so placement and looks differ from published pages.
     - Scroll-frame arrows can't show in documents: the `sf-is-overflow-*` script runs only in

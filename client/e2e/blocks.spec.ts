@@ -152,6 +152,25 @@ test('an image set to cover fills its Card', async ({ page }) => {
 	expect(fit.height).toBeGreaterThan(card.height * 0.8)
 })
 
+test('a picture with a shape keeps it in a column narrower than the picture; a centred one keeps its size', async ({
+	page,
+}) => {
+	const column = await box(page.locator('#shape-picture-column'))
+	const picture = page.locator('#shape-picture')
+	const own = await picture.evaluate((img: HTMLImageElement) => img.naturalWidth)
+	expect(own, 'the picture is wider than its column').toBeGreaterThan(column.width)
+	const shaped = await box(picture)
+	expect(Math.abs(shaped.width - column.width), 'width').toBeLessThanOrEqual(1)
+	expect(Math.abs(shaped.height - (shaped.width * 9) / 16), 'shape').toBeLessThanOrEqual(1)
+	const centred = page.locator('#center-picture')
+	const size = await centred.evaluate((img: HTMLImageElement) => [
+		img.naturalWidth,
+		img.naturalHeight,
+	])
+	const placedAt = await box(centred)
+	expect([Math.round(placedAt.width), Math.round(placedAt.height)], 'centred').toEqual(size)
+})
+
 test('a Card set to bleed reaches the edges of the inset around it', async ({ page }) => {
 	const inset = await box(page.locator('#inset'))
 	const bleed = await box(placed(page, 'inset-bleed'))
@@ -223,6 +242,139 @@ test("a Card set as a row puts its blocks in the parent's columns", async ({ pag
 			await within(page.locator(`#row-cell-${n}`), page.locator(`#row-column-${n}`)),
 			`cell ${n} sits in column ${n}`,
 		).toBe(true)
+})
+
+test("in a row, a Stack and a Card stretch to the row's height, as a plain block does", async ({
+	page,
+}) => {
+	const row = (await box(page.locator('#stretch-tall'))).height
+	const content = (await box(page.locator('#stretch-plain p'))).height
+	expect(row, 'the tall block makes the row taller than a short one').toBeGreaterThan(
+		content + 40,
+	)
+	for (const id of ['stretch-plain', 'stretch-stack', 'stretch-card'])
+		expect(Math.abs((await box(page.locator(`#${id}`))).height - row), id).toBeLessThanOrEqual(
+			1,
+		)
+	// A component straight in a plain row, here a row of shared columns.
+	const sharedRow = (await box(page.locator('#stretch-row-tall'))).height
+	const card = (await box(page.locator('#stretch-row-card'))).height
+	expect(Math.abs(card - sharedRow), 'stretch-row-card').toBeLessThanOrEqual(1)
+})
+
+test('in a row, a block with wide content is as wide as a plain block', async ({ page }) => {
+	const plain = await box(page.locator('#wide-plain'))
+	// The word on one line; in the column it's broken to fit.
+	const word = await page.locator('#wide-plain p').evaluate((p) => {
+		const line = document.createElement('span')
+		line.style.cssText = `white-space: nowrap; font: ${getComputedStyle(p).font}`
+		line.textContent = p.textContent
+		document.body.append(line)
+		const width = line.getBoundingClientRect().width
+		line.remove()
+		return width
+	})
+	expect(word, 'the word is wider than the column').toBeGreaterThan(plain.width)
+	const stack = await box(page.locator('#wide-stack'))
+	expect(Math.abs(stack.width - plain.width), 'keeps a plain row its column').toBeLessThanOrEqual(
+		1,
+	)
+	// A Columns block's column widens for its content.
+	const widened = await box(page.locator('#widen-plain'))
+	const short = (await box(page.locator('#scroll-plain'))).width
+	expect(widened.width, "the word widens a Columns block's column").toBeGreaterThan(short + 40)
+	const widen = (await box(page.locator('#widen-stack'))).width
+	expect(
+		Math.abs(widen - widened.width),
+		'widens a Columns block its column',
+	).toBeLessThanOrEqual(1)
+	// A block that scrolls sideways keeps its column.
+	const scroll = (await box(page.locator('#scroll-stack'))).width
+	expect(Math.abs(scroll - short), 'a block that scrolls keeps its column').toBeLessThanOrEqual(1)
+})
+
+test('in a row, a block with a shape keeps its shape and its column, as a plain block does', async ({
+	page,
+}) => {
+	const column = (await box(page.locator('#shape-short'))).width
+	const tall = (await box(page.locator('#shape-tall'))).height
+	expect(tall, 'the row is taller than a column is wide').toBeGreaterThan(column + 40)
+	for (const id of ['shape-stack', 'shape-plain']) {
+		const own = await box(page.locator(`#${id}`))
+		expect(Math.abs(own.width - column), `${id} keeps its column`).toBeLessThanOrEqual(1)
+		expect(Math.abs(own.height - own.width), `${id} keeps its shape`).toBeLessThanOrEqual(1)
+	}
+	// More text than its shape holds: it grows taller, not wider.
+	const wordy = await box(page.locator('#shape-wordy'))
+	expect(Math.abs(wordy.width - column), 'shape-wordy keeps its column').toBeLessThanOrEqual(1)
+	expect(wordy.height, 'shape-wordy holds more than its shape').toBeGreaterThan(wordy.width)
+	// A height of its own: the shape sets the width, as on the page.
+	for (const id of ['shape-own', 'shape-own-plain']) {
+		const own = await box(page.locator(`#${id}`))
+		expect([Math.round(own.width), Math.round(own.height)], id).toEqual([100, 100])
+	}
+})
+
+test("in a row, a block's own space above and below stays inside the row, as a plain block's does", async ({
+	page,
+}) => {
+	const plain = await box(page.locator('#spaced-plain'))
+	const content = (await box(page.locator('#spaced-plain p'))).height
+	expect(plain.height, 'the plain block stretches').toBeGreaterThan(content + 40)
+	const stack = await box(page.locator('#spaced-stack'))
+	expect(Math.abs(stack.top - plain.top), 'top').toBeLessThanOrEqual(1)
+	expect(Math.abs(stack.bottom - plain.bottom), 'bottom').toBeLessThanOrEqual(1)
+})
+
+test('in a row, a Centre is as wide as its measure allows, centred, as on the page', async ({
+	page,
+}) => {
+	const centre = page.locator('#row-center')
+	const column = await box(placed(page, 'row-center'))
+	const measure = parseFloat(await css(centre, 'max-width'))
+	const own = await box(centre)
+	expect(Math.abs(own.width - Math.min(column.width, measure)), 'width').toBeLessThanOrEqual(1)
+	const [left, right] = [own.left - column.left, column.right - own.right]
+	expect(Math.abs(left - right), 'centred').toBeLessThanOrEqual(1)
+	// A plain centred column: the same width in the same size of column.
+	const plain = await box(page.locator('#row-center-plain'))
+	expect(Math.abs(plain.width - own.width), 'plain').toBeLessThanOrEqual(1)
+})
+
+test('a centred column is as wide as its measure allows in a stack or an inset, and as wide as its text in a layout aligned sideways, as a Centre is', async ({
+	page,
+}) => {
+	const measure = parseFloat(await css(page.locator('#stack-center'), 'max-width'))
+	for (const where of ['stack', 'inset', 'aligned']) {
+		const centre = await box(page.locator(`#${where}-center`))
+		const plain = await box(page.locator(`#${where}-center-plain`))
+		if (where === 'aligned') expect(centre.width, where).toBeLessThan(measure / 2)
+		else expect(Math.abs(centre.width - measure), where).toBeLessThanOrEqual(1)
+		expect(Math.abs(plain.width - centre.width), `${where}, plain`).toBeLessThanOrEqual(1)
+	}
+})
+
+test('in a row, a Card set to hide or show below a width does, as on the page', async ({
+	page,
+}) => {
+	const shown = (id: string) => placed(page, id).evaluate((el) => el.checkVisibility())
+	expect([await shown('row-hide'), await shown('row-show')], 'wide').toEqual([true, false])
+	await setShellWidth(page, breakpoints().md! - 40)
+	expect([await shown('row-hide'), await shown('row-show')], 'below md').toEqual([false, true])
+})
+
+test('in a row aligned to the top, a Stack and a Card keep their own height, as a plain block does', async ({
+	page,
+}) => {
+	const plain = (await box(page.locator('#top-plain'))).height
+	expect((await box(page.locator('#top-tall'))).height, 'the row is taller').toBeGreaterThan(
+		plain + 40,
+	)
+	for (const id of ['top-stack', 'top-card'])
+		expect(
+			Math.abs((await box(page.locator(`#${id}`))).height - plain),
+			id,
+		).toBeLessThanOrEqual(1)
 })
 
 test('a to-do item with a class of its own keeps its checkbox beside its text', async ({

@@ -42,7 +42,14 @@ import { throughNodeViews } from './nodeViewSelectors.js'
 //   sl-cover — fills at least 100dvh with content centred both axes, spaced by its gap like
 //     the other layouts that hold blocks. --sl-cover-min sets another floor: compact (20rem),
 //     viewport (100vh), or fill-parent (100% — needs a parent chain with defined heights).
-//   sl-aspect-* — presets; bare sl-aspect has no rule (the author sets --sl-aspect inline).
+//   sl-aspect-* — presets; bare sl-aspect has no rule (the author sets --sl-aspect inline). A
+//     shape is a height of the box's own, so a row that stretches leaves it its shape instead
+//     of stretching it (and widening it to keep the shape). A zero-weight default in the
+//     lowest layer: a set height wins, and a picture keeps the reset's sizing.
+//   sl-center — a reading column, as wide as its measure allows and centred. Its automatic
+//     side margins alone would shrink it to its text in a row or stack, so it fills sideways
+//     (not a picture, which keeps its own size), a default in the lowest layer. In a layout
+//     aligned sideways it takes its content's width, as the layout's other items do.
 //   sl-scroll-* — scroll areas. A swipe that reaches the end stops there instead of carrying
 //     on to the page (which can fire the browser's back gesture).
 //   sl-scroll-frame — positions overlays on a scroll area's edges; the scroll area fills it
@@ -78,6 +85,13 @@ export const GAP_LAYOUTS = [
 	'sl-cover',
 ] as const
 export const GAP_LAYOUT_SELECTOR = GAP_LAYOUTS.map((name) => `.${name}`).join(', ')
+
+// Layouts that put their items side by side in rows, which stretch them to the row's height
+// unless aligned (a plain sl-split is, to the top). A component block in one fills its row as a
+// plain block does (nodeViews.ts); a new layout like that belongs here.
+export const ROW_LAYOUT_SELECTOR = ['sl-columns', 'sl-row', 'sl-split', 'sl-grid']
+	.map((name) => `.${name}`)
+	.join(', ')
 
 // Fixed CSS with a child or sibling step goes through the node-view helper
 // (nodeViewSelectors.ts), so it also reaches blocks a component renders. forPlacement is for
@@ -190,5 +204,8 @@ export const SL_LAYOUT = `@layer sl-layout {
 }
 @layer reset {
 	.sl-stack:not(.sl-center) { padding: var(--sf-padding); }
+	:where(.sl-aspect-1-1, .sl-aspect-16-9, .sl-aspect-4-3, .sl-aspect-9-16) { height: min-content; }
+	.sl-center:not(img, svg, video, canvas, audio, iframe, embed, object) { width: -webkit-fill-available; width: stretch; }
+	${forLooks(':is(.sl-align-x-start, .sl-align-x-center, .sl-align-x-end) > .sl-center')} { width: auto; }
 }
 `
