@@ -6,7 +6,6 @@ import {
 	columnCount,
 	openTests,
 	pageWidth,
-	placed,
 	setShellWidth,
 	shellWidths,
 } from './helpers'
@@ -33,6 +32,8 @@ const SAME_AS = {
 	'line-image': 'ref-bleed',
 	'line-block-bleed': 'ref-bleed',
 	'line-card-bleed': 'ref-bleed',
+	'line-code-bleed': 'ref-bleed',
+	'line-video-bleed': 'ref-bleed',
 	'line-columns-bleed': 'ref-bleed',
 	'line-component-columns-bleed': 'ref-bleed',
 	'line-bar-text': 'ref-bar-text',
@@ -102,7 +103,7 @@ for (const shell of SHELLS)
 
 			for (const [id, ref] of Object.entries(SAME_AS)) {
 				const [block, want] = [
-					await box(placed(page, id)),
+					await box(page.locator(`#${id}`)),
 					await box(page.locator(`#${ref}`)),
 				]
 				const sides = (b: typeof block) => `${Math.round(b.left)}–${Math.round(b.right)}`
@@ -118,7 +119,7 @@ for (const shell of SHELLS)
 			}
 
 			for (const id of COLUMNS) {
-				const own = (await box(placed(page, id))).width
+				const own = (await box(page.locator(`#${id}`))).width
 				expect
 					.soft(
 						(await columnCount(page.locator(`#${id}`))) === 1,

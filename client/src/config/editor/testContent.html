@@ -11,7 +11,7 @@
 
 <h2>Blocks rendered by a component</h2>
 
-<h3>Divide lines in a Stack look like those in a plain stack, and the card's is on the card</h3>
+<h3>Divide lines in a Stack look like those in a plain stack</h3>
 <layout-stack id="divide-stack" class="sf-gap-sm sf-divide-y">
 	<p>One</p>
 	<p>Two</p>
@@ -91,13 +91,19 @@
 	<p id="inset-last">On the line</p>
 </div>
 
-<h3>A Card used as an inset: a block set to bleed reaches the card's edges</h3>
+<h3>A Card used as an inset: a block or a video set to bleed reaches the card's edges</h3>
 <layout-card id="card-inset" class="sf-size-md sl-inset">
 	<p id="card-inset-first">On the card's line</p>
 	<div data-container id="card-inset-bleed" class="sl-bleed sf-depth-2">
 		<p>Edge to edge of the card</p>
 	</div>
 	<p id="card-inset-last">On the card's line</p>
+	<iframe
+		data-youtube-video
+		id="card-inset-video"
+		class="sl-bleed"
+		src="https://www.youtube.com/embed/3lTUAWOgoHs"
+	></iframe>
 </layout-card>
 
 <h3>A pinned Card stays at the top of its scroll area</h3>
@@ -144,6 +150,31 @@
 	>
 	<p id="hide-below">Below</p>
 </layout-stack>
+
+<h3>Below md the video is hidden and leaves one gap, not two</h3>
+<layout-stack id="video-hide-stack" class="sf-gap-md">
+	<p id="video-hide-above">Above</p>
+	<iframe
+		data-youtube-video
+		id="video-hide"
+		class="sl-hide-below-md"
+		src="https://www.youtube.com/embed/3lTUAWOgoHs"
+	></iframe>
+	<p id="video-hide-below">Below</p>
+</layout-stack>
+
+<h3>A video fills its width up to 36rem, or the limit in its own style</h3>
+<iframe
+	data-youtube-video
+	id="video-default"
+	src="https://www.youtube.com/embed/3lTUAWOgoHs"
+></iframe>
+<iframe
+	data-youtube-video
+	id="video-narrow"
+	style="max-width: 20rem"
+	src="https://www.youtube.com/embed/3lTUAWOgoHs"
+></iframe>
 
 <h3>A Card set as a row puts its blocks in the parent's columns</h3>
 <layout-columns id="row-parent" columns="3" class="sf-gap-md">
@@ -323,6 +354,63 @@
 	</div>
 </div>
 
+<h3>In a cluster, a Centre is as wide as its measure allows, as a plain centred stack is</h3>
+<div data-container class="sl-cluster sf-gap-md">
+	<p>Before</p>
+	<layout-center id="cluster-center" maxWidth="xs"><p>Centred</p></layout-center>
+</div>
+<div data-container class="sl-cluster sf-gap-md">
+	<p>Before</p>
+	<div
+		data-container
+		id="cluster-center-plain"
+		class="sl-center sl-stack"
+		style="--sl-measure: 20rem"
+	>
+		<p>Centred</p>
+	</div>
+</div>
+
+<h3>In a Cover, a Centre is as wide as its measure allows, as a plain centred stack is</h3>
+<layout-cover minHeight="compact">
+	<layout-center id="cover-center" maxWidth="xs"><p>Centred</p></layout-center>
+</layout-cover>
+<layout-cover minHeight="compact">
+	<div
+		data-container
+		id="cover-center-plain"
+		class="sl-center sl-stack"
+		style="--sl-measure: 20rem"
+	>
+		<p>Centred</p>
+	</div>
+</layout-cover>
+
+<h3>In a row, collapsing Columns holding a long word are as wide as plain columns</h3>
+<layout-columns columns="2" class="sf-gap-md">
+	<layout-columns id="word-columns" columns="2" class="sl-collapse-sm">
+		<p>
+			LlanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogochLlanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch
+		</p>
+		<p>Two</p>
+	</layout-columns>
+	<p>Beside them</p>
+</layout-columns>
+<layout-columns columns="2" class="sf-gap-md">
+	<div
+		data-container
+		id="word-columns-plain"
+		class="sl-columns sl-collapse-sm"
+		style="--sl-cols: repeat(2, 1fr)"
+	>
+		<p>
+			LlanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogochLlanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch
+		</p>
+		<p>Two</p>
+	</div>
+	<p>Beside them</p>
+</layout-columns>
+
 <h3>In a row, a Card set to hide or show below a width does, as on the page</h3>
 <layout-columns columns="3" class="sf-gap-md">
 	<layout-card id="row-hide" class="sl-hide-below-md"><p>Hidden below md</p></layout-card>
@@ -373,6 +461,17 @@
 <h3>A block and a Card set to bleed reach the edges</h3>
 <div data-container id="line-block-bleed" class="sl-bleed sf-depth-1"><p>Edge to edge</p></div>
 <layout-card id="line-card-bleed" class="sf-size-md sl-bleed"><p>Edge to edge</p></layout-card>
+
+<h3>A video set to bleed reaches the edges</h3>
+<iframe
+	data-youtube-video
+	id="line-video-bleed"
+	class="sl-bleed"
+	src="https://www.youtube.com/embed/3lTUAWOgoHs"
+></iframe>
+
+<h3>A code block set to bleed reaches the edges</h3>
+<pre id="line-code-bleed" class="sl-bleed"><code>const edge = true</code></pre>
 
 <h3>A bar set to bleed reaches the edges, its content on the line</h3>
 <div data-container id="line-bar" class="sl-bleed sl-inset-line sf-depth-1">
@@ -526,14 +625,33 @@
 	<p>Next</p>
 </div>
 
-<h3>C2: Columns in the narrow side of a Split measure that side, so they stack</h3>
+<h3>C2: Columns in a Stack in the narrow side of a Split measure the Stack, so they stack</h3>
 <layout-split id="c2-split" split="2/3" class="sf-gap-md">
-	<p>Narrow side text</p>
-	<layout-columns id="c2-columns" columns="3" class="sf-gap-md sl-collapse-sm">
-		<p>x</p>
-		<p>y</p>
-		<p>z</p>
-	</layout-columns>
+	<p>Wide side</p>
+	<layout-stack id="c2-side">
+		<layout-columns id="c2-columns" columns="3" class="sf-gap-md sl-collapse-sm">
+			<p>x</p>
+			<p>y</p>
+			<p>z</p>
+		</layout-columns>
+	</layout-stack>
+</layout-split>
+
+<h3>C3: typed columns in a Stack in the narrow side of a Split measure the Stack, as C2 does</h3>
+<layout-split split="2/3" class="sf-gap-md">
+	<p>Wide side</p>
+	<layout-stack id="c3-side">
+		<div
+			data-container
+			id="c3-columns"
+			class="sl-columns sl-collapse-sm"
+			style="--sl-cols: repeat(3, 1fr)"
+		>
+			<p>a</p>
+			<p>b</p>
+			<p>c</p>
+		</div>
+	</layout-stack>
 </layout-split>
 
 <h3>H1: a top-level paragraph hides when the page is below md</h3>
@@ -578,21 +696,6 @@
 	Each heading says what should happen; today it doesn't. The checks expect these to fail, and
 	report when one starts working, so its check can become a normal one.
 </p>
-
-<h3>K1: typed columns in a narrow side of a Split should stack, as a Columns block does</h3>
-<layout-split split="2/3">
-	<p>Wide side</p>
-	<div
-		data-container
-		id="k1-columns"
-		class="sl-columns sl-collapse-sm"
-		style="--sl-cols: repeat(3, 1fr)"
-	>
-		<p>a</p>
-		<p>b</p>
-		<p>c</p>
-	</div>
-</layout-split>
 
 <h3>K5: hiding a Card's last block should leave no extra space under the block above it</h3>
 <layout-card id="k5-card" class="sf-size-md">

@@ -1,7 +1,8 @@
 import ToolbarNodePicker, {
 	type NodePickerItem,
 } from '@/components/editor/toolbar/ToolbarNodePicker.vue'
-import { prettifySelectedCode } from '@/utils/editor/editorUtils'
+import { type Lowlight } from '@/config/editor/lowlight'
+import { getExtensionOptions, languageName, prettifySelectedCode } from '@/utils/editor/editorUtils'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { Fragment } from '@tiptap/pm/model'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
@@ -207,6 +208,23 @@ const getInsertIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePicker
 		}))
 }
 
+// A code block's language: Auto (worked out from the code) or one the highlighter knows.
+const getLanguageItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem[] => {
+	const lowlight = getExtensionOptions(editor, 'codeBlock')?.lowlight as Lowlight | undefined
+	const current: string | null = ctx.activeNode.attrs.language ?? null
+	const item = (label: string, language: string | null): NodePickerItem => ({
+		label,
+		active: current === language,
+		action: () => editor.chain().focus().updateAttributes('codeBlock', { language }).run(),
+	})
+	return [
+		item('Auto', null),
+		...(lowlight?.listLanguages() ?? []).map((language) =>
+			item(languageName(language), language),
+		),
+	]
+}
+
 export const blockItems = [
 	// --- Undo / Redo ---
 	toolbarButtonItem({
@@ -403,6 +421,12 @@ export const blockItems = [
 	}),
 
 	// --- Code block controls ---
+	toolbarCustomItem(
+		'language',
+		(_e, ctx) => ctx.activeNode.type.name === 'codeBlock',
+		ToolbarNodePicker,
+		{ props: { iconName: 'code', getItems: getLanguageItems }, tooltip: 'Language' },
+	),
 	toolbarButtonItem({
 		id: 'format',
 		tooltip: 'Format Code',

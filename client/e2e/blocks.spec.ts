@@ -1,29 +1,17 @@
 import type { Locator, Page } from '@playwright/test'
 import { expect, test } from './fixtures'
-import {
-	box,
-	breakpoints,
-	css,
-	openTests,
-	placed,
-	setShellWidth,
-	settle,
-	taskItemLayout,
-} from './helpers'
+import { box, breakpoints, css, openTests, setShellWidth, settle, taskItemLayout } from './helpers'
 
-// A block rendered by a component is three boxes: the outer box its parent places, the component's
-// root (wearing the block's classes) and a content box holding its blocks. These check that layout
-// rules reach through them as they do for plain blocks (sf-system.md, "Component blocks"). Looks
-// are the theme's, so a block is compared with a plain twin rather than with a particular look.
+// A block rendered by a component is two boxes: the component's own box (the block, wearing its
+// classes) and a content box holding its blocks. These check that layout rules reach through the
+// content box as they do for plain blocks (sf-system.md, "Component blocks"). Looks are the
+// theme's, so a block is compared with a plain twin rather than with a particular look.
 
 test.beforeEach(async ({ page, themeClass }) => {
 	await openTests(page, themeClass)
 })
 
-/**
- * What a divide line could look like, for each block inside a block: on the element wearing the
- * block's classes, and on a component block's outer box; and for a component's own parts.
- */
+/** What a divide line could look like, for each block inside a block and for a component's own parts. */
 const dividerLooks = (page: Page, id: string) =>
 	page.locator(`#${id}`).evaluate((root) => {
 		const look = (el: Element) => {
@@ -41,34 +29,17 @@ const dividerLooks = (page: Page, id: string) =>
 			].join(' | ')
 		}
 		const content = root.querySelector(':scope > [data-node-view-content]')
-		const blocks = [...(content ?? root).children]
-		const outer = (block: Element) => block.matches('[data-node-view-wrapper]')
 		return {
-			items: blocks.map((block) => look(outer(block) ? block.firstElementChild! : block)),
-			outerBoxes: blocks.filter(outer).map(look),
+			items: [...(content ?? root).children].map(look),
 			ownParts: content ? [...root.children].filter((el) => el !== content).map(look) : [],
 		}
 	})
 
-/** An outer box draws nothing of its own (the reset leaves every border solid but 0 wide). */
-const drawsNothing = (look: string) => {
-	const [style, width, , shadow, , before, after] = look.split(' | ')
-	return (
-		(style === 'none' || width === '0px')
-		&& shadow === 'none'
-		&& before === 'none'
-		&& after === 'none'
-	)
-}
-
-test('divide lines in a Stack look like those in a plain stack, on the card itself', async ({
-	page,
-}) => {
+test('divide lines in a Stack look like those in a plain stack', async ({ page }) => {
 	const block = await dividerLooks(page, 'divide-stack')
 	const twin = await dividerLooks(page, 'divide-stack-twin')
 	expect(twin.items[1], 'the theme draws a divide line').not.toBe(twin.items[0])
 	expect(block.items).toEqual(twin.items)
-	expect(block.outerBoxes.every(drawsNothing), "the card's outer box draws no line").toBe(true)
 })
 
 test('a Stack given padding is padded as a plain stack is, and a Centre only at its sides', async ({
@@ -173,22 +144,25 @@ test('a picture with a shape keeps it in a column narrower than the picture; a c
 
 test('a Card set to bleed reaches the edges of the inset around it', async ({ page }) => {
 	const inset = await box(page.locator('#inset'))
-	const bleed = await box(placed(page, 'inset-bleed'))
+	const bleed = await box(page.locator('#inset-bleed'))
 	const onTheLine = await box(page.locator('#inset-first'))
 	expect(onTheLine.left, 'the theme gives the inset a margin').toBeGreaterThan(inset.left + 1)
 	expect(Math.abs(bleed.left - inset.left)).toBeLessThanOrEqual(1)
 	expect(Math.abs(bleed.right - inset.right)).toBeLessThanOrEqual(1)
 })
 
-test("in a Card used as an inset, a block set to bleed reaches the card's edges", async ({
+test("in a Card used as an inset, a block or a video set to bleed reaches the card's edges", async ({
 	page,
 }) => {
 	const card = page.locator('#card-inset')
 	const edges = await box(card)
 	const bleed = await box(page.locator('#card-inset-bleed'))
 	const first = await box(page.locator('#card-inset-first'))
-	expect(Math.abs(bleed.left - edges.left)).toBeLessThanOrEqual(1)
-	expect(Math.abs(bleed.right - edges.right)).toBeLessThanOrEqual(1)
+	for (const id of ['card-inset-bleed', 'card-inset-video']) {
+		const spans = await box(page.locator(`#${id}`))
+		expect(Math.abs(spans.left - edges.left), id).toBeLessThanOrEqual(1)
+		expect(Math.abs(spans.right - edges.right), id).toBeLessThanOrEqual(1)
+	}
 	// Spaced by the inset's gap alone, like any layout's items.
 	const gap = parseFloat(await css(card, 'row-gap'))
 	expect(gap).toBeGreaterThan(0)
@@ -206,7 +180,7 @@ test('a pinned Card stays at the top of its scroll area', async ({ page }) => {
 	const offset = await pinnedAfterScrolling(
 		page,
 		page.locator('#pin-area'),
-		placed(page, 'pin-card'),
+		page.locator('#pin-card'),
 	)
 	expect(Math.abs(offset)).toBeLessThanOrEqual(1)
 })
@@ -222,14 +196,35 @@ test('a block pinned inside a Card stays at the top of the scroll area around th
 	expect(Math.abs(offset)).toBeLessThanOrEqual(1)
 })
 
-test('below md a hidden Card leaves one gap, not two', async ({ page }) => {
+test('below md a hidden Card or video leaves one gap, not two', async ({ page }) => {
 	await setShellWidth(page, breakpoints().md! - 40)
-	expect(await placed(page, 'hide-card').evaluate((el) => el.checkVisibility())).toBe(false)
-	const gap = parseFloat(await css(page.locator('#hide-stack'), 'row-gap'))
-	const above = await box(page.locator('#hide-above'))
-	const below = await box(page.locator('#hide-below'))
-	expect(gap).toBeGreaterThan(0)
-	expect(Math.abs(below.top - above.bottom - gap)).toBeLessThanOrEqual(1)
+	for (const [hidden, prefix] of [
+		['hide-card', 'hide'],
+		['video-hide', 'video-hide'],
+	] as const) {
+		expect(await page.locator(`#${hidden}`).evaluate((el) => el.checkVisibility())).toBe(false)
+		const gap = parseFloat(await css(page.locator(`#${prefix}-stack`), 'row-gap'))
+		const above = await box(page.locator(`#${prefix}-above`))
+		const below = await box(page.locator(`#${prefix}-below`))
+		expect(gap).toBeGreaterThan(0)
+		expect(Math.abs(below.top - above.bottom - gap), hidden).toBeLessThanOrEqual(1)
+	}
+})
+
+test('a video fills its width up to 36rem, or the limit in its own style, at 16:9', async ({
+	page,
+}) => {
+	const rem = parseFloat(await css(page.locator('html'), 'font-size'))
+	for (const [id, limit] of [
+		['video-default', 36],
+		['video-narrow', 20],
+	] as const) {
+		const video = await box(page.locator(`#${id}`))
+		expect(Math.abs(video.width - limit * rem), `${id}: width`).toBeLessThanOrEqual(1)
+		expect(Math.abs(video.height - (video.width * 9) / 16), `${id}: 16:9`).toBeLessThanOrEqual(
+			1,
+		)
+	}
 })
 
 test("a Card set as a row puts its blocks in the parent's columns", async ({ page }) => {
@@ -326,11 +321,24 @@ test("in a row, a block's own space above and below stays inside the row, as a p
 	expect(Math.abs(stack.bottom - plain.bottom), 'bottom').toBeLessThanOrEqual(1)
 })
 
+/** The first column of the row a block sits in, from the row's own tracks. */
+const firstColumn = (page: Page, id: string) =>
+	page.locator(`#${id}`).evaluate((el) => {
+		const row = el.parentElement!.closest('.sl-columns')!
+		const s = getComputedStyle(row)
+		const left =
+			row.getBoundingClientRect().left
+			+ parseFloat(s.borderLeftWidth)
+			+ parseFloat(s.paddingLeft)
+		const width = parseFloat(s.gridTemplateColumns.split(' ')[0]!)
+		return { left, right: left + width, width }
+	})
+
 test('in a row, a Centre is as wide as its measure allows, centred, as on the page', async ({
 	page,
 }) => {
 	const centre = page.locator('#row-center')
-	const column = await box(placed(page, 'row-center'))
+	const column = await firstColumn(page, 'row-center')
 	const measure = parseFloat(await css(centre, 'max-width'))
 	const own = await box(centre)
 	expect(Math.abs(own.width - Math.min(column.width, measure)), 'width').toBeLessThanOrEqual(1)
@@ -354,10 +362,28 @@ test('a centred column is as wide as its measure allows in a stack or an inset, 
 	}
 })
 
+// Each was narrower, or wider, than its plain twin while a component block was two boxes.
+test('in a cluster or a Cover, a Centre sits as a plain centred stack does', async ({ page }) => {
+	for (const where of ['cluster', 'cover']) {
+		const centre = await box(page.locator(`#${where}-center`))
+		const plain = await box(page.locator(`#${where}-center-plain`))
+		expect(Math.abs(centre.width - plain.width), `${where}: width`).toBeLessThanOrEqual(1)
+		expect(Math.abs(centre.left - plain.left), `${where}: left`).toBeLessThanOrEqual(1)
+	}
+})
+
+test('in a row, collapsing Columns holding a long word are as wide as plain columns', async ({
+	page,
+}) => {
+	const columns = await box(page.locator('#word-columns'))
+	const plain = await box(page.locator('#word-columns-plain'))
+	expect(Math.abs(columns.width - plain.width)).toBeLessThanOrEqual(1)
+})
+
 test('in a row, a Card set to hide or show below a width does, as on the page', async ({
 	page,
 }) => {
-	const shown = (id: string) => placed(page, id).evaluate((el) => el.checkVisibility())
+	const shown = (id: string) => page.locator(`#${id}`).evaluate((el) => el.checkVisibility())
 	expect([await shown('row-hide'), await shown('row-show')], 'wide').toEqual([true, false])
 	await setShellWidth(page, breakpoints().md! - 40)
 	expect([await shown('row-hide'), await shown('row-show')], 'below md').toEqual([false, true])

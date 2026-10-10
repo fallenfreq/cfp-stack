@@ -653,16 +653,14 @@ const editor = useEditor({
 </layout-center>
 
 <layout-center maxWidth="xl" class="sf-gap-md">
-	<div data-youtube-video="">
-		<iframe src="https://www.youtube.com/embed/3lTUAWOgoHs" resp="36rem"></iframe>
-	</div>
+	<iframe data-youtube-video src="https://www.youtube.com/embed/3lTUAWOgoHs"></iframe>
 </layout-center>
 
 <layout-center maxWidth="3xl" class="sf-gap-md">
 	<p>
-		This embed has <code>resp="36rem"</code> set — select it and open
-		<span class="material-symbols-rounded sf-icon">tune</span> the attribute editor to change
-		the responsive max-width or swap the video URL.
+		A video fills its width up to 36rem — select it and open
+		<span class="material-symbols-rounded sf-icon">tune</span> the attribute editor to give it a
+		<code>max-width</code> of its own in its style, or swap the video URL.
 	</p>
 
 	<hr />

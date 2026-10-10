@@ -21,7 +21,12 @@ pickers show again) is fixed, checked and committed; a fresh agent's review foun
 fixed but one the user ruled out (old tags in HTML pasted between sites). Item 23 (K4: a
 block in a row fills it, as a plain block does) is decided with the user, done, checked,
 reviewed three times by fresh agents with every finding fixed or logged (shapes, the Centre's
-width and alignment decided with the user), and committed. Then with the user: K5.
+width and alignment decided with the user), and committed.
+
+**Item 24, a component block is one box** (2026-10-10): steps 1–7 done. Two fresh-agent
+reviews: the first of steps 1–6, the second of its fixes and step 7; every finding fixed or
+declined (item 24, "Review", "Second review"). Not committed. Next: commit when asked, then
+remove the throwaway copies (`~/cfp-stack-onebox`, `~/cfp-stack-base`). K5 after that.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -435,13 +440,13 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       empty page that Save would store).
     - **Logged, predate:**
         - Copy and paste stores display-only extras on the pasted blocks (classes the editor adds,
-          such as `sf` and the to-do item's `sl-split sf-gap-md`, a table's minimum width, a
-          video's `auto` size) and loses a video's width limit (`resp` is written on its box but
-          read only from the iframe). The code view keeps them.
+          such as `sf` and the to-do item's `sl-split sf-gap-md`, a table's minimum width). The
+          code view keeps them. A video's `auto` size and lost width limit: fixed (item 24, the
+          video is one box; its width limit is its own style).
         - A fetch that never answers leaves "Loading editor…" up: tRPC has no timeout.
-        - The video's box rule (`div:has(> div[data-youtube-video])`) relies on rule order: a
+        - ~~The video's box rule (`div:has(> div[data-youtube-video])`) relies on rule order: a
           block added later that reads a plain `div` holding a video directly would be stepped
-          through. None does.
+          through. None does.~~ Gone (item 24): nothing writes that box any more.
 15. **The code view and undo** (found 2026-10-05; fixed 2026-10-06): the code view replaced the
     page inside the page's editor, so Undo and Save took the code for the page. Undo in the code
     view brought the page back behind the code, and switching back flattened it into one
@@ -952,6 +957,7 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
           sites.
 
 23. **A block in a row fills it, as a plain block does** (2026-10-08, K4; decided with the user).
+    Its row rule is superseded by item 24: a component block is now the row's item itself.
     - **Was:** a row of a grid layout stretches its blocks to its height unless it's aligned; the
       Columns and Split blocks' align setting is stretch unless set to top, middle or bottom. A
       plain block filled the row, and so did a Card (its own `height: 100%`), but every other
@@ -1087,11 +1093,156 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
           row's height" mixed width and height; the row layouts' comment said "grid layouts"
           (an inset and a cover are grids too); "a set height wins" wasn't true of pictures.
 
+24. **A component block is one box** (2026-10-10; done, checked and reviewed twice; not
+    committed).
+    Supersedes item 23's row rule and the outer-box parts of item 10.
+    - **Why:** a component block was two boxes: an outer box its layout places, and the
+      component inside it, wearing the block's classes. A plain block is one. Each kind of
+      layout needed a rule for the component to act as the item (item 10's rewriting, item 23's
+      rows), and each round's fixes reached somewhere new.
+    - **The design:** the component's own box is the block's box. It wears what TipTap's outer
+      box did (TipTap's marker, the classes the editor puts on the block, the text-wrapping
+      reset) and the editor's handling (click to select, locking, copy and paste). TipTap needs
+      only its marker on the node view's box, and every component already renders one root
+      element (the component-creator rules).
+    - **Proved** (2026-10-10) in a throwaway copy of the committed code, against a second copy:
+        - The suite: 430 of 448 pass in Chrome and WebKit under both themes, with item 23's row
+          rule, the collapse width container on the outer box and the placement decoration for
+          component blocks all removed. What fails: C2 (below), and the demo page, which only
+          loses its 42 outer boxes: every other box is the same at all three widths in both
+          browsers.
+        - The editor: every editor check passes. Tried as well: the drag handle and the toolbar
+          sit in the same place, a Card moves by its handle, the selection outline is on the card.
+        - Logged differences gone, both browsers (block / plain): a Centre in a cluster 53 / 320
+          → 320 / 320, in a cover the same; a collapsing Columns block holding a long word
+          632 / 856 → 856 / 856.
+        - The stylesheet: 83.0 → 77.9 KB, and no selector names the outer box (66 before).
+        - Found after the first run: the code block's bleed went (its node view puts the classes
+          on an inner `pre`, so it still needs the placement decoration), and a Centre set to
+          bleed (below), found reading the spec.
+    - **Decided with the user** (2026-10-10):
+        - One way per layout. A combination that doubles up is the validator's to flag, not
+          code's to support, when another way does it as easily.
+        - K1 retired. A box can't measure itself, so collapse measures the layout around a
+          block, for blocks and typed classes alike; to stack by a side's width, make the side
+          a layout (a Stack). Measured: a Columns block straight in a Split's 421px side (the
+          Split 1280px) showed three columns until the page was about 680px, where before it
+          stacked; inside a Stack in the side it stacks, both kinds. For the validator list.
+        - A Centre block set to bleed is flagged, as typed `sl-center` with `sl-bleed` already
+          is. Measured: before, the bleed showed nothing (a 320px column); now the Centre spans
+          1440px and its text 1408px. A band with a centred column is a Card or Stack set to
+          bleed, holding a Centre.
+        - The code block gets one box too, then the placement decoration and its list go. Its
+          language picker moves to the floating toolbar, beside Format Code: in the editor the
+          code block is the `pre` a published page has. Later, not now: a way to change a code
+          block's language when not in the editor (the user's words).
+        - Kept, measured: item 23's two centred-column rules. They make a Centre follow rules
+          the spec already has (a picture keeps its size; aligned sideways, items take their
+          content's width). Without them a 32px centred picture is 517px, and a Centre in a
+          centred stack ignores the stack's alignment (14 → 320px).
+    - **Done** (2026-10-10; steps 1–3, 4 and 5–6 each signed off as one):
+        - The stylesheet came out the same as the throwaway copy's, byte for byte: 82.0 → 77.2
+          KB from the seed, no selector naming the outer box. The helper is `forBlocks`; the
+          rule rewriter went from 424 lines to 254.
+        - The editor's classes on a block (its decorations: the highlight of blocks chosen
+          together) and the selection outline are drawn by the node view from its own
+          `decorations` and `selected` props. The trial read TipTap's `decorationClasses` and
+          `onDragStart` with `inject`, but TipTap provides them in the same component the node
+          view runs in, and Vue's `inject` only sees a parent's, so both were undefined. The
+          highlight showed anyway (ProseMirror puts a decoration's classes on the box), until
+          the component drew its box again for new classes and took it off: a new check found
+          it. TipTap's drag start acts only on a `[data-drag-handle]`, which no block has.
+        - The code block's id now reaches its box in the editor (its old view never put it on
+          any element), and its `code` wears `language-*` as on a published page.
+        - A check that measured a Centre's column through the outer box ("in a row, a Centre is
+          as wide as its measure allows") would have compared the Centre with itself; it reads
+          the row's first track now. It passed the same empty way in the trial.
+        - The new twins fail on the committed code (a Centre in a cluster 267px off its twin,
+          collapsing Columns with a long word 244px), and the outline and highlight checks fail
+          without their part of the node view. The handle check passes before and after: it
+          guards the box TipTap's handle measures.
+        - Found, predates: the toolbar's picker buttons have no name for a screen reader
+          (logged in "Editor + Vue components").
+        1. `customComponentNode.ts`: one box.
+        2. `nodeViewSelectors.ts` and its tests: no outer box to map; a child step still reaches
+           into a content box. The served stylesheet compared before and after.
+        3. Layout CSS: `slLayout.ts` (one helper for `forLooks` and `forPlacement`, any new name
+           to the user first; `ROW_LAYOUT_SELECTOR` goes), `nodeViews.ts` (only the content box
+           steps aside), `slCombined.ts`, `generateCss.ts` (bleed, hide and show, comments).
+        4. The code block (`TiptapCodeBlock.vue`), then `placementClasses.ts`,
+           `contentExtensions.ts` and `shared/placementClasses.*`.
+        5. Checks: `helpers.ts` (`placed`, `measuredBox`), `blocks.spec.ts` (`dividerLooks`),
+           `editor.spec.ts` (placement classes on the outer box; a block's own control, which was
+           the code block's picker, becomes the interactive block's button),
+           `componentBlock.spec.ts` (it waited for the code block's picker), `collapse.spec.ts`
+           and the test page (C2 becomes Columns in a Stack in the side), `known.spec.ts` (K1
+           goes), the demo snapshots (outer boxes go, and the code block's picker row). New: the three logged cases above as
+           twins, moving a selected Card by its handle, the code block's bleed, a block chosen with
+           others keeps the highlight when its classes change, a selected block keeps its outline
+           when its classes change, the toolbar's Language picker sets a code block's language.
+        6. Docs: the spec's "Component blocks" (two boxes, not three; placement classes; the
+           component-creator rules about the outer box go), "Container-responsive collapse",
+           the validator list; this plan (items 10 and 23 say what's superseded, the logged
+           list, the checks' K1 line). The alignment paragraph held already.
+    - **Review** (2026-10-10, a fresh agent; each finding shown before acting):
+        - Fixed: a block chosen with others lost its highlight once the cursor moved away, or got
+          it back once unchosen. TipTap passes new decorations to a node view only when its block
+          changes, and the box drew the old ones; the node view now has TipTap redraw it for every
+          change (its `update` option). Check: highlighted exactly while chosen.
+        - Fixed: an author's `white-space` on a component block was overruled by the reset the
+          node view wrote inline. The reset is the stylesheet's weakest rule now (`nodeViews.ts`).
+        - Fixed, as step 7: videos lost bleed, pin, hide, show and row with the placement
+          decoration.
+        - Added to the spec (component author, validator): declaring click, pointerdown,
+          mousedown, copy, cut or paste as a component's own events, or root CSS outside a cascade
+          layer, breaks a component block now that its root is the box.
+        - Declined: mapping a sibling step straight inside `:has()` (none is used; refusing is
+          safe); a check that Columns straight in a Split side measure the split (the validator
+          flags that).
+    - **Also decided with the user** (2026-10-10, after the review):
+        - No `any` in the checks: they reach the editor through TipTap's own type for its element
+          (`TiptapEditorHTMLElement`), and tick blocks as a person does, with the toolbar's
+          "Toggle selection" (`toggleSelection`, `selectBlockAt` in `helpers.ts`): they can't
+          see the app's own types, and a copy of them would need keeping in step by hand. Left:
+          three checks that wait on the app's store or move with its router reach Vue's app
+          object, which Vue doesn't type.
+        - The multi-select extension owns its changes as commands, `addToMultiSelect`,
+          `removeFromMultiSelect` and `clearMultiSelect`, which the toolbar uses (a move,
+          replace, wrap or delete clears it in the same change). New check: the toolbar moves and
+          deletes blocks selected together.
+    - **Step 7, a video is one box** (decided with the user, 2026-10-10): its iframe, wearing its
+      classes, id and style, as an image is its img. Proved in a throwaway first.
+        - Its width limit is its own style (`max-width`); the default (36rem, at 16:9) is the
+          stylesheet's (`embeds.ts`). The `resp` setting and its panel field are gone, and so is
+          the fixed size TipTap wrote.
+        - No pages are stored yet (pages are seeded from the HTML files, which use the new
+          shape), so nothing older is read beyond TipTap's own video shape. The code view writes
+          the video from the same extension (`htmlBlueprint.ts`).
+        - Checks: a video set to bleed, on the page (`line.spec.ts`) and in a Card used as an
+          inset, hidden below md (one gap), its size by default and with its own limit, the code
+          view's video read back, with no fixed size.
+    - **Second review** (2026-10-10, a fresh agent, of the fixes and step 7; each finding shown
+      before acting):
+        - Fixed: a video set to bleed in an inset kept its 36rem default (the user: a video set
+          to bleed spans the edges); the default applies only to a video that doesn't bleed.
+        - Fixed: TipTap's fixed width and height were still settings of the video, which the code
+          view wrote and the attributes panel offered though nothing used them; they're gone.
+        - Fixed: multi-select requests in one change overwrote each other, and positions asked for
+          before a later step weren't moved by it. Each change now carries its requests in order,
+          each moved by the steps after it; the drop of several blocks asks the same way. Shown
+          in a throwaway (the checks can't call the app's commands).
+        - Gone with the old-page reading (no stored pages, the user): a stored `resp` limit lost
+          on load, and an old limit joined badly onto a video's own style.
+    - **Done when:** searching the code for the outer box finds only TipTap's marker where a
+      block's box is found; typecheck, `pnpm test` and the suite pass in Chrome and WebKit under
+      both themes; a fresh agent's review against the spec finds nothing left over; the
+      throwaway copies (`~/cfp-stack-onebox`, `~/cfp-stack-base`) are removed.
+
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in
 Playwright, 2026-10-02). Grid items with auto side margins shrink to fit. Fixed 2026-10-09
 (item 23): `sl-center` fills sideways up to its measure, in a row, an inset or a stack. In a
-cluster or a cover the Centre block still hugs its text (logged below). Moving between two editor addresses
+cluster or a cover the Centre block hugged its text until item 24. Moving between two editor addresses
 kept the page open (found 2026-10-01; fixed 2026-10-03, see "Editor + Vue components").
 
 On a narrow window the floating toolbar differs between browsers (seen 2026-10-03). Chrome
@@ -1101,7 +1252,7 @@ where it starts. Left as is (decided with the user).
 
 **Layout checks** (added 2026-10-01): `pnpm test:ui` runs
 `client/e2e` with Playwright in the installed Chrome and in Playwright's WebKit (since item 19),
-against the dev server. 400 checks, 200 in each browser, about two minutes. On battery, four at
+against the dev server. 464 checks, 232 in each browser, about two and a half minutes. On battery, four at
 once get throttled and time out (2026-10-03); `pnpm test:ui --workers 2` passes.
 
 - **The stylesheet** is built from the seed in a throwaway database in memory
@@ -1119,7 +1270,7 @@ once get throttled and time out (2026-10-03); `pnpm test:ui --workers 2` passes.
   apart (`webkit/`).
 - **The cases** are on `/editor?seed=tests` (`client/src/config/editor/testContent.html`).
   Add a case for each layout fix.
-- **Known not to work yet** (K1 and K5, `e2e/known.spec.ts`): each checks what should happen and
+- **Known not to work yet** (K5, `e2e/known.spec.ts`; K1 retired in item 24): each checks what should happen and
   is marked as expected to fail, with a normal check that every case is set up as described.
   When one is fixed, Playwright reports "expected to fail, but passed": remove its
   `test.fail()` and move the case up the test page.
@@ -1337,15 +1488,19 @@ What's pending:
       iframe before 2.86.0, captured by a code-view round trip); harmless, no CSS uses it.
     - Collapse can shrink a block to zero width. This was checked in Chrome and is now part of
       item 10 (rule 3).
-    - **YouTube, older bugs:** pasting a video stores the
+    - ~~**YouTube, older bugs:** pasting a video stores the
       rendered `width="auto"` / `height="auto"` as real attributes (the code view then shows
       them), and loses its `resp` width limit (the iframe never renders `resp`, so paste
-      resets it to 36rem).
+      resets it to 36rem).~~ Fixed (item 24): neither is written any more.
 9. **Open:** the `* { transition }` fade in `main.css` is a look (motion) — a theme token
    would move it to the theme (new vocab, undecided). Spec-linter candidates are collected in
    item 11.
 10. **NEXT — rules that reach through a node view (design signed off 2026-10-01; steps 1–7
     done, awaiting review and commit).**
+    - **Superseded in part by item 24 (2026-10-10):** a component block is one box. The outer
+      box, placement classes, styling looks apart from placement, the outer box as a width
+      container and `PlacementClasses` are gone; the content box steps aside and child steps
+      are rewritten to reach it, as here.
     - **The structure.** A component block is `[data-node-view-wrapper]` (the box the parent
       places) > component root (wears the author's classes) > `[data-node-view-content]` >
       child blocks. This holds in the editor and on published pages; both are TipTap.
@@ -1549,15 +1704,18 @@ What's pending:
       missing inline `--sl-template`, as agreed.
 
     **Known limits, to document:**
-    - Typed layouts measure the layout around them; layout blocks measure their own space. In a
-      narrow split side, a typed grid stacks only when the whole split is narrow. Check K1.
+    - ~~Typed layouts measure the layout around them; layout blocks measure their own space. In a
+      narrow split side, a typed grid stacks only when the whole split is narrow. Check K1.~~
+      Both measure the layout around them since item 24; to stack by a side's width, make the
+      side a Stack. K1 retired.
     - A component whose own CSS sizes its slot by content, without `sl-` classes, still makes a
       collapsing block inside it 0 wide. In the component rules and the validator section.
 
     **Component-creator contract, for the spec:**
     - Render one root element and let attributes fall through (Vue's default).
     - The blocks are your root's items only if `<slot />` is a direct child of it.
-    - Don't bake placement classes on your root; give the node a default class.
+    - ~~Don't bake placement classes on your root; give the node a default class.~~ The root is
+      the block's box since item 24.
     - Use a named container for your own width rules.
     - Prefer `overflow: clip`.
 
@@ -1611,7 +1769,8 @@ What's pending:
       `align-items: start`, measured by the second review) moves to-do items, which are splits:
       the tick box's label grows from 26px to 52 or 78px. It would also change plain splits on
       app screens (`ToolbarAttributeEditor`, `GoogleMap`). The user's call.
-    - Older differences between a component block and its plain twin (found in item 23):
+    - ~~Older differences between a component block and its plain twin (found in item 23):~~
+      Fixed (item 24): the block is its own box, so it sits as its twin does.
         - A Columns block set to collapse, holding a long word, inside a Columns block keeps its
           column's width while its plain twin widens it (632 against 1534px). A collapsing block's
           outer box is a width container, so its content doesn't widen it; the plain twin isn't
@@ -1636,8 +1795,9 @@ What's pending:
     - In Chrome, a picture with a shape in a row that stretches stretches to the row's height
       (632×1276 for a square); WebKit keeps the shape. Before item 23 too. Found in its third
       review.
-    - TiptapCodeBlock puts the author's classes on a nested `pre`. That node view is editor
-      only, so placement and looks differ from published pages.
+    - ~~TiptapCodeBlock puts the author's classes on a nested `pre`. That node view is editor
+      only, so placement and looks differ from published pages.~~ Fixed (item 24): the editor's
+      code block is the published page's `pre`; its language picker is in the toolbar.
     - Scroll-frame arrows can't show in documents: the `sf-is-overflow-*` script runs only in
       admin lists and toolbars.
     - Atom components can't be selected by clicking.
@@ -2009,6 +2169,10 @@ These are not bugs but unresolved tensions in the current design:
       set: a collection opened with the theme already loaded logs "Cannot access … before
       initialization". Found by the review; unrelated. On Vite (5173) Vue's development build
       rethrows it from setup, so `/admin/pages` shows no list at all. Fixed 2026-10-06: 17.
+- [ ] The toolbar's picker buttons (Insert, Change Type, Wrap In, and Language from item 24)
+      have no name for a screen reader: their name is given to the tooltip around them
+      (`toolbarCustomItem`), not to the button `ToolbarNodePicker` draws. Found 2026-10-10 in
+      Chrome (the button's `aria-label` is empty); predates item 24.
 
 ## Deferred (pending design pass)
 

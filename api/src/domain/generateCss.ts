@@ -23,8 +23,7 @@ import {
 	SIZED_BY_CONTENT_SELECTOR,
 	SL_LAYOUT,
 	SWAP_CLASS_SELECTOR,
-	forLooks,
-	forPlacement,
+	forBlocks,
 } from './css/slLayout.js'
 import { SL_OBJECT } from './css/slObject.js'
 import { ValidationError } from './errors.js'
@@ -389,14 +388,13 @@ function emitThemeBlocks(rules: Map<string, SelectorBlock>, indent: string): str
 	return out
 }
 
-// A theme rule is written for the content tree; a block a component renders has boxes around
-// and inside it (nodeViewSelectors.ts). Every theme rule is a look, so it lands on the element
-// wearing the classes. Rewritten after sorting, so ties keep the order of the selector as
-// written. A selector the helper can't rewrite is emitted as written (which still works for
-// plain blocks) and reported, rather than failing the whole stylesheet.
+// A theme rule is written for the content tree; a block a component renders holds its child
+// blocks in a content box (nodeViewSelectors.ts). Rewritten after sorting, so ties keep the
+// order of the selector as written. A selector the helper can't rewrite is emitted as written
+// (which still works for plain blocks) and reported, rather than failing the whole stylesheet.
 function forNodeViews(selector: string): string {
 	try {
-		return forLooks(selector)
+		return forBlocks(selector)
 	} catch (error) {
 		console.warn(`[sf-system] ${(error as Error).message}; emitted as written`)
 		return selector
@@ -479,10 +477,10 @@ const section = (title: string): string =>
 // conditions). CSS is generated here from the collapse thresholds so the pixel widths
 // can be embedded directly in @container conditions.
 // Each collapsible layout primitive gets a compound selector per breakpoint.
-//   Collapse measures the space a block has: the nearest width container around it. A
-//     layout holding a collapsing element is one, and so is a component block's wrapper
-//     when the block itself collapses (nodeViews.ts), so a layout block measures its own
-//     space. A width container takes no width from its content, so nothing sized by its
+//   Collapse measures the nearest width container around a block (a box can't measure
+//     itself): a layout holding a collapsing element is one. So a block in one side of a
+//     split measures the whole split; to stack by a side's width, make the side a layout (a
+//     stack). A width container takes no width from its content, so nothing sized by its
 //     content becomes one (SIZED_BY_CONTENT_SELECTOR) — it would be 0 wide; what it holds
 //     measures the next box out.
 //   sl-hide-below-* / sl-show-below-* use the same widths to swap what shows: hidden at or
@@ -495,9 +493,8 @@ const section = (title: string): string =>
 //     a top-level block collapses against it.
 //   A top-level block that bleeds out of a document in an inset is wider than the document,
 //     so a layout there collapses by the box it bleeds into (sf-bleed-area, slCombined.ts)
-//     instead. A component block's wrapper bleeds with it, so its root measures it as usual.
-//     A block that bleeds is a width container when it holds a collapsing element, so what's
-//     inside measures it, not the narrower document; it's never sized by its content.
+//     instead. A block that bleeds is a width container when it holds a collapsing element,
+//     so what's inside measures it, not the narrower document; it's never sized by its content.
 
 const COLLAPSE_GRID = ['.sl-columns', '.sl-split', '.sl-grid']
 const COLLAPSE_FLEX = ['.sl-cluster']
@@ -538,13 +535,11 @@ function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
 		body += `\t@container (width > ${value}) {\n`
 		body += `\t\t.sl-show-below-${name}${OUTSIDE_DOCUMENTS} { display: none; }\n`
 		body += '\t}\n'
-		// In a document it's the box the parent places that hides, so a component block's
-		// wrapper goes and leaves no gap.
 		body += `\t@container sf-document (width <= ${value}) {\n`
-		body += `\t\t${forPlacement(`:where(${DOCUMENT}) .sl-hide-below-${name}`)} { display: none; }\n`
+		body += `\t\t:where(${DOCUMENT}) .sl-hide-below-${name} { display: none; }\n`
 		body += '\t}\n'
 		body += `\t@container sf-document (width > ${value}) {\n`
-		body += `\t\t${forPlacement(`:where(${DOCUMENT}) .sl-show-below-${name}`)} { display: none; }\n`
+		body += `\t\t:where(${DOCUMENT}) .sl-show-below-${name} { display: none; }\n`
 		body += '\t}\n'
 	}
 	return `@layer sl-layout {\n${body}}\n`

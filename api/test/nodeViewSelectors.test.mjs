@@ -3,13 +3,10 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { throughNodeViews } from '../src/domain/css/nodeViewSelectors.ts'
 
-const PLACEMENT = ['sl-row', 'sl-bleed', 'sl-pin-', 'sl-hide-below-', 'sl-show-below-']
 const ASIDE =
 	'.sl-stack, .sl-cluster, .sl-columns, .sl-row, .sl-split, .sl-grid, .sl-inset, .sl-cover'
-const looks = { placementClasses: PLACEMENT, stepAside: ASIDE }
-const placed = { ...looks, subject: 'placed' }
+const map = (s) => throughNodeViews(s, ASIDE)
 
-const W = '[data-node-view-wrapper]'
 const C = ':where([data-node-view-content])'
 
 test('selectors with nothing to cross stay as written', () => {
@@ -21,83 +18,38 @@ test('selectors with nothing to cross stay as written', () => {
 		'.sl-scroll-y:has(.sl-pin-top):has(.sl-pin-bottom)',
 		'a.sf-link::after',
 		'a:where(p *, li *, td *, blockquote *)', // a link inside running text (seed)
+		'.sl-pin-top::after',
+		':where(.tiptap.ProseMirror) .sl-hide-below-md',
+		':not(.x)',
+		'.a:not(.b:first-child)',
+		'.a:where(.b :first-child)',
 	])
-		assert.equal(throughNodeViews(s, looks), s)
+		assert.equal(map(s), s)
 })
 
 test('a child step reaches the blocks in a content box', () => {
-	assert.equal(throughNodeViews('.sl-inset > *', placed), `:is(.sl-inset, .sl-inset > ${C}) > *`)
-	// A placement class is on the wrapper too, so the placed box is found directly.
+	assert.equal(map('.sl-inset > *'), `:is(.sl-inset, .sl-inset > ${C}) > *`)
 	assert.equal(
-		throughNodeViews('.sl-inset > .sl-bleed', placed),
-		`:is(.sl-inset, .sl-inset > ${C}) > .sl-bleed`,
+		map('.sl-inset > .sl-bleed.sl-inset'),
+		`:is(.sl-inset, .sl-inset > ${C}) > .sl-bleed.sl-inset`,
 	)
-	// A look lands on the element wearing the classes: the block, or a component's root.
-	assert.equal(
-		throughNodeViews('.sl-inset > .sl-bleed.sl-inset', looks),
-		`:is(.sl-inset, .sl-inset > ${C}) > .sl-bleed.sl-inset, `
-			+ `:is(.sl-inset, .sl-inset > ${C}) > :where(${W}) > .sl-bleed.sl-inset`,
-	)
+	assert.equal(map('.x > :not(:first-child)'), `:is(.x, .x > ${C}) > :not(:first-child)`)
 })
 
-test('dividers: tested between the placed boxes, drawn on the wearer', () => {
+test("in a layout, a content box's first block follows the component's own parts", () => {
 	const q = `:is(.sf-divide-y, .sf-divide-y > ${C})`
-	const aside = `.sf-divide-y:where(${ASIDE}) > * + ${C} >`
 	assert.equal(
-		throughNodeViews('.sf-divide-y > * + *', looks),
-		[
-			`${q} > * + :where(:not(${W}))`,
-			`${q} > * + :where(${W}) > *`,
-			`${aside} :where(:not(${W}, ${W} > *)):where(:first-child)`,
-			`${aside} :where(${W}):where(:first-child) > *`,
-		].join(', '),
+		map('.sf-divide-y > * + *'),
+		`${q} > * + *, .sf-divide-y:where(${ASIDE}) > * + ${C} > :where(:first-child)`,
 	)
-	// Without stepAside, only the first two.
-	assert.equal(
-		throughNodeViews('.sf-divide-y > * + *', { placementClasses: PLACEMENT }),
-		`${q} > * + :where(:not(${W})), ${q} > * + :where(${W}) > *`,
-	)
+	// Without stepAside, only the first.
+	assert.equal(throughNodeViews('.sf-divide-y > * + *'), `${q} > * + *`)
 })
 
 test(':has() lists each way a child can sit', () => {
 	assert.equal(
-		throughNodeViews('.sl-scroll-frame:has(> .sl-scroll-x)::after', looks),
-		'.sl-scroll-frame:has('
-			+ [
-				'> .sl-scroll-x',
-				`> :where(${W}) > .sl-scroll-x`,
-				`> ${C} > .sl-scroll-x`,
-				`> ${C} > :where(${W}) > .sl-scroll-x`,
-			].join(', ')
-			+ ')::after',
-	)
-})
-
-test('a placement class: placed rules skip the root, looks skip the wrapper', () => {
-	assert.equal(throughNodeViews('.sl-pin-top', placed), `.sl-pin-top:where(:not(${W} > *))`)
-	assert.equal(
-		throughNodeViews('.sl-pin-top::after', looks),
-		`.sl-pin-top:where(:not(${W}))::after`,
-	)
-	assert.equal(
-		throughNodeViews('.sf-is-overflow-bottom .sl-pin-bottom::after', looks),
-		`.sf-is-overflow-bottom .sl-pin-bottom:where(:not(${W}))::after`,
-	)
-})
-
-test(':is() / :where() naming a class rule the wrapper out; :not() does not', () => {
-	assert.equal(
-		throughNodeViews(':where(.tiptap.ProseMirror) .sl-hide-below-md', placed),
-		`:where(.tiptap.ProseMirror) .sl-hide-below-md:where(:not(${W} > *))`,
-	)
-	assert.equal(throughNodeViews(':not(.x)', looks), `:not(.x):where(:not(${W}))`)
-})
-
-test('a place test moves to the placed box', () => {
-	const q = `:is(.x, .x > ${C})`
-	assert.equal(
-		throughNodeViews('.x > :not(:first-child)', looks),
-		`${q} > :where(:not(${W}, ${W} > *)):not(:first-child), ${q} > :where(${W}):not(:first-child) > *`,
+		map('.sl-scroll-frame:has(> .sl-scroll-x)::after'),
+		`.sl-scroll-frame:has(> .sl-scroll-x, > ${C} > .sl-scroll-x)::after`,
 	)
 })
 
@@ -106,41 +58,36 @@ test('shapes that cannot be mapped faithfully throw', () => {
 		'.a:has(.b:has(.c))', // nested :has() — the browser drops the whole rule
 		'.a:has(+ .b)', // a sibling step straight inside :has()
 		'.a:not(.b > .c)', // a child step inside :not()
-		'.a:where(.b :first-child)', // a place test in a descendant step inside :where()
-		'.a:not(.b:first-child)', // a place test mixed with other tests
-		`${W} > .x`, // already written for node views
+		'.a:is(.b:has(.c))', // :has() inside :is()
+		'[data-node-view-wrapper] > .x', // already written for node views
 		'> .a', // a leading combinator
 		'.a >', // a trailing combinator
 		'.a::after .b', // a pseudo-element before the last step
 		'.a, ', // an empty selector
-		'.a:has(> .b + .c)', // would need :has() inside :has()
 	])
-		assert.throws(() => throughNodeViews(s, looks), /throughNodeViews/, s)
+		assert.throws(() => map(s), /throughNodeViews/, s)
 })
 
 // Every alternative keeps the weight the selector was written with.
 test('weights are unchanged', () => {
-	const cases = [
-		['.sf-divide-y > * + *', looks],
-		['.sf-divide-x > * + *', looks],
-		['.sl-scroll-frame:has(> .sl-scroll-x)::after', looks],
-		['.sl-scroll-frame:has(> .sl-scroll-x.sf-is-overflow-right .sl-pin-right)::after', looks],
-		['.sf-is-overflow-bottom .sl-pin-bottom::after', looks],
-		['.sl-inset > *', placed],
-		['.sl-inset > .sl-bleed', placed],
-		['.sl-inset > .sl-bleed.sl-inset', looks],
-		['.sl-cluster.sl-scroll-x > *', placed],
-		['.sl-object-cover > img:only-child', looks],
-		['tr:last-child td', looks],
-		['.x > :not(:first-child)', looks],
-		['.a + .b', looks],
-		['.a > .b ~ p:nth-child(2n+1)', looks],
-		['.a .b > .c', placed],
-		['div.x > .y:hover', looks],
-	]
-	for (const [s, options] of cases) {
+	for (const s of [
+		'.sf-divide-y > * + *',
+		'.sf-divide-x > * + *',
+		'.sl-scroll-frame:has(> .sl-scroll-x)::after',
+		'.sl-scroll-frame:has(> .sl-scroll-x.sf-is-overflow-right .sl-pin-right)::after',
+		'.sl-inset > *',
+		'.sl-inset > .sl-bleed.sl-inset',
+		'.sl-cluster.sl-scroll-x > *',
+		'.sl-object-cover > img:only-child',
+		'tr:last-child td',
+		'.x > :not(:first-child)',
+		'.a + .b',
+		'.a > .b ~ p:nth-child(2n+1)',
+		'.a .b > .c',
+		'div.x > .y:hover',
+	]) {
 		const want = specificity(s)
-		for (const alternative of splitList(throughNodeViews(s, options)))
+		for (const alternative of splitList(map(s)))
 			assert.deepEqual(specificity(alternative), want, `${s}\n  → ${alternative}`)
 	}
 })

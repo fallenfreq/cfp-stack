@@ -985,9 +985,9 @@ TipTap puts two boxes between the inset and the blocks, so it works differently 
 and must be the inset's own child. `PageContent` adds the class; a component that uses
 TipTap's `EditorContent` directly adds it itself. The document pads itself to the line. A bleeding block
 pulls out of that padding to the width of TipTap's box around the document, which is
-measured. A plain block that is both `sl-center` and `sl-bleed` differs: it goes edge to
-edge instead of staying centred. That combination isn't supported (Validator and linter,
-Content).
+measured. A block that is both `sl-center` and `sl-bleed`, a Centre block set to bleed
+included, goes edge to edge instead of staying centred. That combination isn't supported
+(Validator and linter, Content).
 
 **Rules**
 
@@ -1110,13 +1110,11 @@ sl-hide-below-md   sl-show-below-md
 **What is measured.** A box can't measure itself, so it measures the nearest width container
 around it. A width container takes no width from its content, so only these boxes become one:
 
-- **A layout block** (a block rendered by a component, such as Columns or Split) measures its
-  own space: its outer box becomes a width container when the block itself collapses.
-  Columns in the narrow side of a Split stack when that side is narrow.
-- **Classes typed on an element** (a plain block, or a component's own markup) measure the
-  nearest layout around it: a layout holding a collapsing element becomes a width container.
-  So a typed `sl-columns sl-collapse-md` in the narrow side of a split stacks only when the
-  whole split is narrow, unless the side is a layout itself.
+- **A layout around it**: a layout holding a collapsing element becomes a width container.
+  So a block that collapses measures the nearest layout around it, whether it's a layout
+  block (Columns) or classes typed on an element. Columns straight in the narrow side of a
+  split stack only when the whole split is narrow; to stack by the side's width, make the side
+  a layout (a Stack) and put the Columns in it.
 - **The document** (the editor and published pages) is always a width container, so a layout
   at the top of a page measures the page.
 - **A layout that bleeds out of a document** (a top-level block set to bleed in an inset) is
@@ -1136,8 +1134,8 @@ measure as usual.
 
 **In a document, hide and show measure the page.** "Hide below md" means the page is
 narrower than md, wherever the element sits, so the layouts around it don't become width
-containers for it. The block's outer box hides, so a hidden block leaves no gap. On app
-screens they measure the nearest layout around them; with none, the element always shows.
+containers for it. On app screens they measure the nearest layout around them; with none, the
+element always shows.
 
 **Nothing else is a width container.** Chrome boxes (a card, a toolbar) aren't: one sized by
 its content would be 0 wide. A component with width rules of its own follows the component
@@ -1228,62 +1226,42 @@ their items with a gap (`GAP_LAYOUTS` in `slLayout.ts`):
   choice, not the default: an element wearing a layout class isn't a flow container, so
   its gap alone spaces its children.
 - **Defaults the author can override** sit in the lowest layer, keyed on markers the node
-  renders but never stores: a responsive video fills its width at 16:9
-  (`embeds.ts`) until an `sl-aspect-*` choice or its own style says
-  otherwise.
+  renders but never stores: a video fills its width at 16:9, up to 36rem unless it bleeds
+  (`embeds.ts`), until an `sl-aspect-*` choice or its own style says otherwise. A video is one box, as an image is: its
+  iframe wears its classes, so it bleeds, pins, hides and shows like any block
+  (`youtubeExtension.ts`).
 - **Component blocks** (blocks rendered by a Vue component, such as the layout blocks) are
-  three boxes; the next section covers how rules reach through them.
+  two boxes; the next section covers how rules reach through them.
 
 ### Component blocks
 
-A block rendered by a Vue component (a TipTap node view) is three boxes, in the editor and on
+A block rendered by a Vue component (a TipTap node view) is two boxes, in the editor and on
 published pages:
 
 ```text
-[data-node-view-wrapper]      outer box: the one its parent places
-  component root              wears the node's classes
-    [data-node-view-content]  content box, rendered where the component puts <slot />
-      the child blocks
+component root                the block's box: wears the node's classes
+  [data-node-view-content]    content box, rendered where the component puts <slot />
+    the child blocks
 ```
+
+The component's root is the block's box, as a plain block is one box: its parent places it,
+and it wears TipTap's `data-node-view-wrapper` marker and the classes the editor adds while
+you work (the selection outline, the highlight of blocks chosen together).
 
 **Rules are written for the content tree.** Theme rules and fixed `sl-` CSS are written as if
 a block's child blocks were its children (`.sf-divide-y > * + *`, `.sl-inset > .sl-bleed`).
-The generator rewrites each rule as it emits the stylesheet, so it also reaches through
-component blocks (`throughNodeViews` in `api/src/domain/css/nodeViewSelectors.ts`):
+The generator rewrites each rule as it emits the stylesheet, so a child step also reaches the
+blocks in a component's content box (`throughNodeViews` in
+`api/src/domain/css/nodeViewSelectors.ts`, used through `forBlocks` in `slLayout.ts`):
 
-- **Looks land on the element wearing the classes**: a plain block, or a component's root,
-  never its outer box. Every theme rule is a look.
-- **Where an item sits is about its outer box.** Position and sibling tests (`:first-child`,
-  `:nth-*`, `+`, `~`) are tested on the box the parent places. Fixed CSS that places an item
-  (an inset's items, bleed, a scrolling cluster's items, pin, hide and show) styles that box.
 - **A layout's content box steps aside** (`display: contents`, `nodeViews.ts`), so the blocks
   inside are the layout's own items. They follow the component's own parts as siblings: in a
   divided layout with a heading of its own, the first block gets a line.
-- **In a row, a block fills it as a plain block does.** A grid layout's row (`sl-columns`,
-  `sl-split`, `sl-grid`, `sl-row`) stretches its blocks to its height unless it's aligned: a
-  plain `sl-split` is aligned to the top, and the Columns and Split blocks stretch unless their
-  align setting says top, middle or bottom. A block with a shape or a height of its own keeps
-  it (Layout primitives). There a component's outer box is a one-cell grid as wide as itself
-  (`nodeViews.ts`), so its root stretches too, keeping its own margins inside the row, and is
-  as wide as a plain block would be.
 - Rewritten rules keep their weight.
 - **What can't be rewritten:** a `:has()` inside another `:has()` (the browser would drop the
   whole rule), a child or sibling step inside `:not()`, `:is()` or `:where()`, and a sibling
   step straight inside `:has()`. A theme rule like that is emitted as written, with a
   warning, and misses component blocks; fixed CSS like that throws as soon as the code loads.
-
-**Placement classes are on the outer box too.** `sl-row`, `sl-bleed`, `sl-pin-*`,
-`sl-hide-below-*` and `sl-show-below-*` say where a block sits among its siblings, so the box
-its parent places has to wear them. The `PlacementClasses` editor extension
-(`client/src/editor/extensions/placementClasses.ts`) adds a block's placement classes to its
-outer box, in the editor and on published pages; they aren't saved. The list is
-`PLACEMENT_CLASSES` (`shared/placementClasses.js`), which the stylesheet uses too.
-
-- Pin, hide and show act only on the outer box.
-- Row and bleed act on the root as well, so its own children still use the parent's columns
-  and line.
-- A theme rule naming a placement class skips the outer box, so a pinned block's shadow
-  draws once.
 
 Which boxes measure width for collapse is under Container-responsive collapse.
 
@@ -1291,13 +1269,19 @@ Which boxes measure width for collapse is under Container-responsive collapse.
 component, so these keep the system's layout working around and inside it:
 
 - **Render one root element and let attributes fall through** (Vue's default, no
-  `inheritAttrs: false`). The root then wears the node's classes.
+  `inheritAttrs: false`). The root is then the block's box: it wears the node's classes and
+  TipTap's marker, without which the block doesn't show.
+- **Don't declare `click`, `pointerdown`, `mousedown`, `copy`, `cut` or `paste` as your
+  component's own events** (`emits`). The editor listens for them on your root; declared, they
+  reach your component instead, and selecting the block by clicking, locking its own parts,
+  and copy and paste stop working.
+- **Keep your CSS in a cascade layer** (`@layer ui`, as the app's components do). Where your
+  block sits (hide, show, pin, bleed) is set on your root in the layout layer, which beats
+  `ui` but loses to CSS outside any layer.
 - **Put `<slot />` directly in the root** when the blocks should be your layout's items.
   Anything in between makes them that box's items instead.
-- **Don't bake placement classes on the root.** The outer box gets only the node's classes,
-  so a baked pin, hide or show does nothing. Give the node a default class instead.
-- **Don't size the root to fill its outer box** (`height: 100%`). In a row it stretches
-  already; a height of your own stops it, and with margins it would overflow the row.
+- **Don't give the root a height of its own to fill a row** (`height: 100%`). In a row it
+  stretches already; a height of your own stops it.
 - **Avoid width containers of your own.** A width container takes no width from its content,
   so your block is 0 wide wherever its width comes from its content (a cluster, a table
   cell). If you need one, name it and query it by name
@@ -1338,20 +1322,25 @@ Each rule's reason is in the section named.
   blocks, and Columns, Split and Cover arrange theirs, so none takes another layout, `sl-row`
   and `sl-inset` included. For a row or a band, use a Card or a plain block. The validator
   needs each component's own layout to see it.
-- `sl-center` doesn't share a block with `sl-bleed`. A centred reading column that also spans
-  edge to edge has no clear meaning. A Centre block set to bleed is fine: its outer box takes
-  the bleed (Side margins and full-bleed).
+- `sl-center` doesn't share a block with `sl-bleed`, a Centre block included. A centred
+  reading column that also spans edge to edge has no clear meaning. For a band holding a
+  centred column, set a Card or a Stack to bleed and put a Centre in it (Side margins and
+  full-bleed).
+- Warn on a collapsing layout straight in a side of a split: it measures the whole split, so
+  it stacks only when the split is narrow. To stack by the side's width, put it in a Stack in
+  that side (Container-responsive collapse).
 
 **Components** (Component blocks, "Writing a component block")
 
 - One root element, with Vue's default attribute handling (no `inheritAttrs: false`); the
   root wears the node's classes.
 - `<slot />` is a direct child of the root.
-- No placement class baked on the root.
 - Warn on a width container in the component's CSS, and on an `@container` query without a
   name.
 - Warn when the component's own CSS sizes the slot by its content.
 - Warn on `overflow: hidden` around the slot.
+- No `click`, `pointerdown`, `mousedown`, `copy`, `cut` or `paste` in `emits`.
+- The component's CSS is in a cascade layer.
 
 ---
 

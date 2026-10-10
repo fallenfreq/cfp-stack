@@ -1,4 +1,3 @@
-import { PLACEMENT_CLASSES } from '@somefreq-app/shared/placementClasses'
 import { throughNodeViews } from './nodeViewSelectors.js'
 
 // What each sl- class does: how it moves, flows and aligns what's inside it. Arrangement is
@@ -15,9 +14,7 @@ import { throughNodeViews } from './nodeViewSelectors.js'
 //     layer, so any padding the theme gives the box wins. A centred column (sl-center) pads
 //     only its sides.
 //   sl-row — joins the parent grid's columns (subgrid). Gaps follow the parent's. Only
-//     changes where cells are drawn; reading and tab order stay the source order. On a
-//     block a component renders, the wrapper and the component both join, so the
-//     component's items reach the parent's columns.
+//     changes where cells are drawn; reading and tab order stay the source order.
 //   sl-inset — a stack whose side margins are grid tracks, so a child can opt into them
 //     (sl-bleed) instead of pulling itself out with a negative margin. The margin is
 //     --sfx-inset-margin: inherited from the inset it sits in, else the page margin. A plain
@@ -54,8 +51,7 @@ import { throughNodeViews } from './nodeViewSelectors.js'
 //     on to the page (which can fire the browser's back gesture).
 //   sl-scroll-frame — positions overlays on a scroll area's edges; the scroll area fills it
 //     and can still shrink (minmax(0, …)).
-//   sl-pin-* — sticky to one edge of the nearest scroll area. It's the box the parent places
-//     that sticks (forPlacement): on a block a component renders, its wrapper.
+//   sl-pin-* — sticky to one edge of the nearest scroll area.
 //   sl-align-x-* / sl-align-y-* — x is sideways and y is up and down, on every layout. After
 //     the layouts, so they beat a layout's own alignment (sl-cover's place-items,
 //     sl-split/sl-cluster's align-items). A grid aligns with justify-items (x) and align-items
@@ -86,25 +82,11 @@ export const GAP_LAYOUTS = [
 ] as const
 export const GAP_LAYOUT_SELECTOR = GAP_LAYOUTS.map((name) => `.${name}`).join(', ')
 
-// Layouts that put their items side by side in rows, which stretch them to the row's height
-// unless aligned (a plain sl-split is, to the top). A component block in one fills its row as a
-// plain block does (nodeViews.ts); a new layout like that belongs here.
-export const ROW_LAYOUT_SELECTOR = ['sl-columns', 'sl-row', 'sl-split', 'sl-grid']
-	.map((name) => `.${name}`)
-	.join(', ')
-
-// Fixed CSS with a child or sibling step goes through the node-view helper
-// (nodeViewSelectors.ts), so it also reaches blocks a component renders. forPlacement is for
-// where an item sits (it styles the box the parent places); forLooks is for everything else
-// (it styles the element wearing the classes). Every theme rule goes through forLooks
+// Fixed CSS with a child or sibling step goes through forBlocks, so it also reaches the blocks in
+// a component's content box (nodeViewSelectors.ts). Every theme rule goes through it too
 // (generateCss.ts).
-const NODE_VIEW_OPTIONS = {
-	placementClasses: PLACEMENT_CLASSES,
-	stepAside: GAP_LAYOUT_SELECTOR,
-}
-export const forLooks = (selector: string): string => throughNodeViews(selector, NODE_VIEW_OPTIONS)
-export const forPlacement = (selector: string): string =>
-	throughNodeViews(selector, { ...NODE_VIEW_OPTIONS, subject: 'placed' })
+export const forBlocks = (selector: string): string =>
+	throughNodeViews(selector, GAP_LAYOUT_SELECTOR)
 
 // The margin before an inset's line: the set margin, or half the width left over past the
 // column's limit if that's more. One sum for an inset's tracks, sl-inset-line's padding and a
@@ -129,9 +111,9 @@ export const SWAP_CLASS_SELECTOR = '[class*="sl-hide-below-"], [class*="sl-show-
 // aligned sideways, and the first column of a split with no column widths set (its default
 // is auto; the editor's Split block always sets them). A width container takes no width from
 // its content, so one in here would be 0 wide. Nothing in here becomes one; what it holds
-// measures the next box out (the collapse layer, nodeViews.ts). Documents only: app screens
-// put popovers and menus inside rows, where what's inside an element isn't laid out by it.
-const AUTO_SPLIT_COLUMN = forPlacement('.sl-split:not([style*="--sl-template"]) > :first-child')
+// measures the next box out (the collapse layer). Documents only: app screens put popovers and
+// menus inside rows, where what's inside an element isn't laid out by it.
+const AUTO_SPLIT_COLUMN = forBlocks('.sl-split:not([style*="--sl-template"]) > :first-child')
 export const SIZED_BY_CONTENT_SELECTOR = [
 	'.tiptap.ProseMirror :is(td, th, .sl-cluster, .sl-cover, .sl-align-x-start, .sl-align-x-center, .sl-align-x-end) *',
 	`.tiptap.ProseMirror ${AUTO_SPLIT_COLUMN}`,
@@ -170,14 +152,14 @@ export const SL_LAYOUT = `@layer sl-layout {
 		row-gap: var(--sf-gap, var(--sf-spacing-md));
 		align-content: start;
 	}
-	${forPlacement('.sl-inset > *')} { grid-column: content; }
+	${forBlocks('.sl-inset > *')} { grid-column: content; }
 	${INSET_DOCUMENT_MOUNT} { grid-column: full; }
 	${INSET_DOCUMENT} { padding-inline: ${LINE_MARGIN}; }
 	:is(.sf-depth-1, .sf-depth-2, .sf-depth-3).sl-inset { --sfx-inset-margin: var(--sf-padding, 0px); --sfx-inset-width: 100%; }
-	${forPlacement('.sl-pin-bottom')} { position: sticky; bottom: 0; z-index: 1; }
-	${forPlacement('.sl-pin-left')} { position: sticky; left: 0; z-index: 1; }
-	${forPlacement('.sl-pin-right')} { position: sticky; right: 0; z-index: 1; }
-	${forPlacement('.sl-pin-top')} { position: sticky; top: 0; z-index: 1; }
+	.sl-pin-bottom { position: sticky; bottom: 0; z-index: 1; }
+	.sl-pin-left { position: sticky; left: 0; z-index: 1; }
+	.sl-pin-right { position: sticky; right: 0; z-index: 1; }
+	.sl-pin-top { position: sticky; top: 0; z-index: 1; }
 	.sl-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
 	.sl-scroll-frame { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); }
 	.sl-scroll-x { overflow-x: auto; overscroll-behavior-x: contain; }
@@ -206,6 +188,6 @@ export const SL_LAYOUT = `@layer sl-layout {
 	.sl-stack:not(.sl-center) { padding: var(--sf-padding); }
 	:where(.sl-aspect-1-1, .sl-aspect-16-9, .sl-aspect-4-3, .sl-aspect-9-16) { height: min-content; }
 	.sl-center:not(img, svg, video, canvas, audio, iframe, embed, object) { width: -webkit-fill-available; width: stretch; }
-	${forLooks(':is(.sl-align-x-start, .sl-align-x-center, .sl-align-x-end) > .sl-center')} { width: auto; }
+	${forBlocks(':is(.sl-align-x-start, .sl-align-x-center, .sl-align-x-end) > .sl-center')} { width: auto; }
 }
 `

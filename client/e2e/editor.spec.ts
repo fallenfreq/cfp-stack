@@ -1,15 +1,20 @@
 import type { Page } from '@playwright/test'
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
+import type { NodeSelection } from '@tiptap/pm/state'
+import type { TiptapEditorHTMLElement } from '@tiptap/vue-3'
 import { expect, test } from './fixtures'
 import {
 	appMessages,
 	box,
+	css,
 	moveTo,
 	nodePosition,
 	openTests,
-	placed,
 	selectBlock,
+	selectBlockAt,
 	settle,
 	taskItemLayout,
+	toggleSelection,
 } from './helpers'
 
 // The editor around the test cases: what's saved, selecting blocks, editing a to-do item,
@@ -19,19 +24,150 @@ test.beforeEach(async ({ page, themeClass }) => {
 	await openTests(page, themeClass)
 })
 
-test('placement classes go on the outer box too, but are never saved', async ({ page }) => {
-	const outer = placed(page, 'pin-card')
-	await expect(outer).toHaveAttribute('data-node-view-wrapper')
-	await expect(outer).toHaveClass(/(^|\s)sl-pin-top(\s|$)/)
-	const saved = await page.evaluate(() => {
-		const editor = (document.querySelector('.tiptap') as any).editor
+/** A block's class as saved. */
+const savedClass = (page: Page, id: string) =>
+	page.evaluate((id) => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		let saved: string | undefined
-		editor.state.doc.descendants((node: any) => {
-			if (node.attrs?.id === 'pin-card') saved = node.attrs.class
+		editor.state.doc.descendants((node) => {
+			if (node.attrs?.id === id) saved = node.attrs.class
 		})
 		return saved
+	}, id)
+
+// A component block is one box, as a plain block is: TipTap's box is the component's own, wearing
+// the block's classes. The selection outline the editor adds to it isn't saved.
+test('a component block is one box, and what the editor adds to it is never saved', async ({
+	page,
+}) => {
+	const card = page.locator('#pin-card')
+	await expect(card).toHaveAttribute('data-node-view-wrapper')
+	await expect(card).toHaveClass(/(^|\s)sl-pin-top(\s|$)/)
+	expect(await card.evaluate((el) => el.parentElement!.matches('[data-node-view-wrapper]'))).toBe(
+		false,
+	)
+	await selectBlock(page, 'pin-card')
+	await expect(card).toHaveClass(/(^|\s)ProseMirror-selectednode(\s|$)/)
+	expect(await savedClass(page, 'pin-card')).toBe('sf-size-md sl-pin-top')
+})
+
+// The block's box wraps its text normally, not as the editor's document does, and wrapping the
+// block sets itself wins.
+test("a component block's own text wrapping wins over the editor's", async ({ page }) => {
+	const card = page.locator('#c1-card')
+	expect(await css(card, 'white-space')).toBe('normal')
+	await page.evaluate(
+		async (at) => {
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			editor.view.dispatch(
+				editor.state.tr.setNodeAttribute(at, 'style', 'white-space: nowrap'),
+			)
+		},
+		await nodePosition(page, 'c1-card'),
+	)
+	await expect.poll(() => css(card, 'white-space')).toBe('nowrap')
+})
+
+// TipTap adds the outline to the selected block's box by hand; the component drawing its box
+// again, for its new classes, took it off.
+test('a selected block keeps its outline when its classes change', async ({ page }) => {
+	await selectBlock(page, 'c1-card')
+	const card = page.locator('#c1-card')
+	await expect(card).toHaveClass(/(^|\s)ProseMirror-selectednode(\s|$)/)
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		const at = editor.state.selection.from
+		editor.view.dispatch(editor.state.tr.setNodeAttribute(at, 'class', 'sf-size-lg'))
 	})
-	expect(saved).toBe('sf-size-md sl-pin-top')
+	await expect(card).toHaveClass(/(^|\s)sf-size-lg(\s|$)/)
+	await expect(card).toHaveClass(/(^|\s)ProseMirror-selectednode(\s|$)/)
+})
+
+// The highlight of blocks chosen together is the editor's class on the block's box. The component
+// draws its box again when the block is selected, left or given new classes; the highlight stays
+// exactly while the block is chosen.
+test('a block chosen with others is highlighted exactly while it is chosen', async ({ page }) => {
+	const card = page.locator('#c1-card')
+	const at = await nodePosition(page, 'c1-card')
+	const highlighted = async (step: string, want: boolean) => {
+		const check = expect(card, step)
+		await (want ? check : check.not).toHaveClass(/(^|\s)sf-on-selected(\s|$)/)
+	}
+	await toggleSelection(page, at)
+	await highlighted('chosen', true)
+	await cursorInParagraph(page)
+	await highlighted('chosen, the cursor elsewhere', true)
+	await page.evaluate((at) => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor.view.dispatch(editor.state.tr.setNodeAttribute(at, 'class', 'sf-size-lg'))
+	}, at)
+	await expect(card).toHaveClass(/(^|\s)sf-size-lg(\s|$)/)
+	await highlighted('chosen, new classes', true)
+	await page.locator('.floating-toolbar').getByRole('button', { name: 'Clear selection' }).click()
+	await highlighted('no longer chosen', false)
+	await selectBlock(page, 'c1-card')
+	await highlighted('no longer chosen, selected', false)
+})
+
+// The toolbar's tools for blocks selected together change the page and empty the selection in
+// one step.
+test('the toolbar moves and deletes blocks selected together, and the selection empties', async ({
+	page,
+}) => {
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor.commands.insertContentAt(
+			editor.state.doc.content.size,
+			'<p id="ms-a">A</p><p id="ms-b">B</p><p id="ms-c">C</p>',
+		)
+	})
+	const last = (n: number) =>
+		page.evaluate((n) => {
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			const ids: unknown[] = []
+			editor.state.doc.forEach((node) => ids.push(node.attrs.id))
+			return ids.slice(-n)
+		}, n)
+	const press = (name: string) =>
+		page.locator('.floating-toolbar').getByRole('button', { name }).click()
+	const chosen = page.locator('.tiptap .sf-on-selected')
+
+	await toggleSelection(page, await nodePosition(page, 'ms-a'))
+	await toggleSelection(page, await nodePosition(page, 'ms-b'))
+	await expect(chosen).toHaveCount(2)
+	await selectBlockAt(page, await nodePosition(page, 'ms-c'))
+	await press('Move after target')
+	expect(await last(3)).toEqual(['ms-c', 'ms-a', 'ms-b'])
+	await expect(chosen).toHaveCount(0)
+
+	await toggleSelection(page, await nodePosition(page, 'ms-a'))
+	await press('Delete selected')
+	expect(await last(2)).toEqual(['ms-c', 'ms-b'])
+	await expect(chosen).toHaveCount(0)
+})
+
+// The drag handle finds a block by its box, which for a component block is the component's own.
+test('a selected Card moves by its drag handle', async ({ page }) => {
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor.commands.insertContentAt(
+			editor.state.doc.content.size,
+			'<p id="move-above">Above</p><layout-card id="move-card" class="sf-size-md"><p>Moved</p></layout-card><p id="move-below">Below</p><p id="move-end">End</p>',
+		)
+	})
+	await selectBlock(page, 'move-card')
+	const below = await box(page.locator('#move-below'))
+	await page.locator('.floating-drag-handle-wrapper').dragTo(page.locator('#move-below'), {
+		targetPosition: { x: 20, y: below.height - 2 },
+	})
+	await settle(page)
+	const order = await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		const ids: string[] = []
+		editor.state.doc.forEach((node) => ids.push(node.attrs.id))
+		return ids.slice(-4)
+	})
+	expect(order).toEqual(['move-above', 'move-below', 'move-card', 'move-end'])
 })
 
 // Focus on the Card's box also put the cursor just before it, between blocks, where text can't go
@@ -47,8 +183,9 @@ test('clicking between the blocks in an inset Card selects the card', async ({ p
 	await page.mouse.click(above.left + 20, (above.bottom + below.top) / 2)
 	await settle(page)
 	const selected = await page.evaluate(() => {
-		const editor = (document.querySelector('.tiptap') as any).editor
-		return editor.state.selection.node?.attrs.id ?? null
+		const { selection } =
+			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+		return 'node' in selection ? (selection as NodeSelection).node.attrs.id : null
 	})
 	expect(selected).toBe('card-inset')
 	expect(warnings).toEqual([])
@@ -142,7 +279,7 @@ test('the block pickers name every block they offer', async ({ page }) => {
 	await page.evaluate(
 		(at) => {
 			document.getElementById('task-plain')!.scrollIntoView({ block: 'center' })
-			const editor = (document.querySelector('.tiptap') as any).editor
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 			editor.chain().focus().setNodeSelection(editor.state.doc.resolve(at).before()).run()
 		},
 		await nodePosition(page, 'task-plain'),
@@ -153,13 +290,15 @@ test('the block pickers name every block they offer', async ({ page }) => {
 /** The cursor at the end of a paragraph straight on the page, so the toolbar acts on it. */
 const cursorInParagraph = (page: Page) =>
 	page.evaluate(() => {
-		const editor = (document.querySelector('.tiptap') as any).editor
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		let end: number | undefined
-		editor.state.doc.forEach((node: any, offset: number) => {
+		editor.state.doc.forEach((node, offset) => {
 			if (end !== undefined || node.type.name !== 'paragraph' || !node.content.size) return
-			editor.view.nodeDOM(offset).scrollIntoView({ block: 'center' })
+			const dom = editor.view.nodeDOM(offset)
+			if (dom instanceof Element) dom.scrollIntoView({ block: 'center' })
 			end = offset + node.nodeSize - 1
 		})
+		if (end === undefined) throw new Error('No paragraph with text straight on the page')
 		editor.chain().focus().setTextSelection(end).run()
 	})
 
@@ -212,8 +351,9 @@ test('a class given to a to-do item while editing shows at once', async ({ page 
 	const at = await nodePosition(page, 'task-plain')
 	// As the Attributes panel writes it: new attributes on the item's node.
 	await page.evaluate((at) => {
-		const editor = (document.querySelector('.tiptap') as any).editor
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		const node = editor.state.doc.nodeAt(at)
+		if (!node) throw new Error(`No block at ${at}`)
 		editor.view.dispatch(
 			editor.state.tr.setNodeMarkup(at, null, { ...node.attrs, class: 'sf-depth-1' }),
 		)
@@ -225,10 +365,17 @@ test('a class given to a to-do item while editing shows at once', async ({ page 
 
 test('ticking a to-do item updates it without redrawing it', async ({ page }) => {
 	const item = page.locator('#task-plain')
-	await item.evaluate((el) => ((el as any).drawnBeforeTicking = true))
+	// A mark of the check's own on the element: a redrawn item is a new element, without it.
+	await item.evaluate(
+		(el: Element & { drawnBeforeTicking?: boolean }) => (el.drawnBeforeTicking = true),
+	)
 	await item.locator(':scope > label input').check()
 	await expect(item).toHaveAttribute('data-checked', 'true')
-	expect(await item.evaluate((el) => (el as any).drawnBeforeTicking)).toBe(true)
+	expect(
+		await item.evaluate(
+			(el: Element & { drawnBeforeTicking?: boolean }) => el.drawnBeforeTicking,
+		),
+	).toBe(true)
 })
 
 test('a to-do item with a class of its own keeps its tick box beside its text as it changes', async ({
@@ -252,29 +399,30 @@ test('selected blocks stay selected when they change in place', async ({ page })
 	// Two dividers after the to-do list, for the last step.
 	const listEnd = async () =>
 		page.evaluate(
-			(at) => (document.querySelector('.tiptap') as any).editor.state.doc.resolve(at).after(),
+			(at) =>
+				document
+					.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+					.editor!.state.doc.resolve(at)
+					.after(),
 			await nodePosition(page, 'task-plain'),
 		)
 	await page.evaluate(
 		(at) => {
-			const editor = (document.querySelector('.tiptap') as any).editor
-			const divider = () => editor.schema.nodes.horizontalRule.create()
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			const divider = () => editor.schema.node('horizontalRule')
 			editor.view.dispatch(editor.state.tr.insert(at, [divider(), divider()]))
 		},
 		await listEnd(),
 	)
 
 	const ids = ['row-column-1', 'row-column-2', 'task-plain', 'task-own']
-	const positions = await Promise.all(ids.map((id) => nodePosition(page, id)))
-	await page.evaluate(
-		(positions) => {
-			const editor = (document.querySelector('.tiptap') as any).editor
-			const key = editor.state.plugins.find((p: any) => p.key.startsWith('multiSelect$')).spec
-				.key
-			editor.view.dispatch(editor.state.tr.setMeta(key, { action: 'addMany', positions }))
-		},
-		[...positions, await listEnd()],
-	)
+	for (const at of [
+		...(await Promise.all(ids.map((id) => nodePosition(page, id)))),
+		await listEnd(),
+	])
+		await toggleSelection(page, at)
+	// The toolbar follows the cursor away from the list, as after a person's next click.
+	await cursorInParagraph(page)
 	// A to-do item's text is after its tick box, which has a name of its own for screen readers.
 	const selected = page.locator(
 		'.tiptap .sf-on-selected:not(hr, li), .tiptap li.sf-on-selected > label + div',
@@ -294,7 +442,7 @@ test('selected blocks stay selected when they change in place', async ({ page })
 	const cursorIn = async (id: string) =>
 		page.evaluate(
 			(at) => {
-				const editor = (document.querySelector('.tiptap') as any).editor
+				const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 				editor
 					.chain()
 					.focus()
@@ -317,7 +465,7 @@ test('selected blocks stay selected when they change in place', async ({ page })
 	const dividers = await page.locator('.tiptap hr').count()
 	await page.evaluate(
 		(at) => {
-			const editor = (document.querySelector('.tiptap') as any).editor
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 			editor.chain().focus().setNodeSelection(at).run()
 		},
 		await listEnd(),
@@ -333,11 +481,13 @@ test('selected blocks stay selected when they change in place', async ({ page })
 test('undo goes back no further than the page as it opened', async ({ page }) => {
 	const content = () =>
 		page.evaluate(() =>
-			JSON.stringify((document.querySelector('.tiptap') as any).editor.getJSON()),
+			JSON.stringify(
+				document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.getJSON(),
+			),
 		)
 	const opened = await content()
 	await page.evaluate(() =>
-		(document.querySelector('.tiptap') as any).editor.commands.focus('end'),
+		document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.commands.focus('end'),
 	)
 	// A letter typed and undone, so Undo is known to reach the editor; then once more.
 	await page.keyboard.type('x')
@@ -355,32 +505,32 @@ test('undo goes back no further than the page as it opened', async ({ page }) =>
 test('a pasted to-do list has the blocks and text of the one copied', async ({ page }) => {
 	const lists = () =>
 		page.evaluate(() => {
-			const shape = (node: any): unknown => ({
+			const shape = (node: ProseMirrorNode): unknown => ({
 				type: node.type.name,
 				text: node.text,
 				content: node.content.content.map(shape),
 			})
 			const found: unknown[] = []
-			;(document.querySelector('.tiptap') as any).editor.state.doc.descendants(
-				(node: any) => {
+			document
+				.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+				.editor!.state.doc.descendants((node) => {
 					if (node.type.name !== 'taskList') return
 					found.push(shape(node))
 					return false
-				},
-			)
+				})
 			return found
 		})
 	const [copied] = await lists()
 	await page.evaluate(
 		(at) => {
-			const editor = (document.querySelector('.tiptap') as any).editor
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 			editor.chain().focus().setNodeSelection(editor.state.doc.resolve(at).before()).run()
 		},
 		await nodePosition(page, 'task-plain'),
 	)
 	await page.keyboard.press('ControlOrMeta+c')
 	await page.evaluate(() =>
-		(document.querySelector('.tiptap') as any).editor.commands.focus('end'),
+		document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.commands.focus('end'),
 	)
 	await page.keyboard.press('ControlOrMeta+v')
 	await settle(page)
@@ -394,14 +544,18 @@ test('a pasted to-do list has the blocks and text of the one copied', async ({ p
 // the code, and after switching back it put the code in the page as a code block.
 const codeViewButton = (page: Page) => page.getByRole('button', { name: 'Code view' })
 const pageContent = (page: Page) =>
-	page.evaluate(() => JSON.stringify((document.querySelector('.tiptap') as any).editor.getJSON()))
+	page.evaluate(() =>
+		JSON.stringify(
+			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.getJSON(),
+		),
+	)
 // The editor on screen: in the code view, the page's is hidden.
 const shownEditor = (page: Page) => page.locator('.tiptap:visible')
 const shownCode = (page: Page) =>
 	page.evaluate(() =>
-		(
-			[...document.querySelectorAll('.tiptap')].find((el) => el.checkVisibility()) as any
-		).editor.getText(),
+		[...document.querySelectorAll<TiptapEditorHTMLElement>('.tiptap')]
+			.find((el) => el.checkVisibility())!
+			.editor!.getText(),
 	)
 // Each switch puts the keys on the editor on screen, and leaving leaves no copy of the code.
 const switchView = async (page: Page, toCode: boolean) => {
@@ -422,6 +576,63 @@ const undo = async (page: Page) => {
 	await settle(page)
 }
 
+// The code view writes a video as the page does, its iframe with its own style, and the page reads
+// it back the same.
+test('a video in the code view is its iframe, and reads back unchanged', async ({ page }) => {
+	const video = () =>
+		page.locator('#video-narrow').evaluate((el) => ({
+			tag: el.tagName,
+			onPage: el.parentElement!.matches('.tiptap'),
+			style: el.getAttribute('style'),
+		}))
+	// A video as YouTube's own embed code writes it, with a fixed size, which the page doesn't keep.
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor.commands.insertContentAt(
+			editor.state.doc.content.size,
+			'<iframe data-youtube-video id="video-sized" width="560" height="315" src="https://www.youtube.com/embed/3lTUAWOgoHs"></iframe>',
+		)
+	})
+	const before = await video()
+	await switchView(page, true)
+	const written = await page.evaluate(
+		(code) => {
+			const html = new DOMParser().parseFromString(code, 'text/html')
+			return ['video-narrow', 'video-sized'].map((id) => {
+				const el = html.getElementById(id)
+				return (
+					el && {
+						tag: el.tagName,
+						marked: el.hasAttribute('data-youtube-video'),
+						style: el.getAttribute('style')?.replace(/;\s*$/, '') ?? null,
+						resp: el.hasAttribute('resp'),
+						fixedSize: el.hasAttribute('width') || el.hasAttribute('height'),
+					}
+				)
+			})
+		},
+		await shownCode(page),
+	)
+	const asVideo = { tag: 'IFRAME', marked: true, resp: false, fixedSize: false }
+	expect(written).toEqual([
+		{ ...asVideo, style: 'max-width: 20rem' },
+		{ ...asVideo, style: null },
+	])
+	// A change in the code, so the page is read back from it.
+	await page.evaluate(() => {
+		const code = [...document.querySelectorAll<TiptapEditorHTMLElement>('.tiptap')].find((el) =>
+			el.checkVisibility(),
+		)!.editor!
+		code.commands.insertContentAt(
+			code.state.doc.content.size - 1,
+			'\n<p>Written in the code view</p>',
+		)
+	})
+	await switchView(page, false)
+	await expect(page.getByText('Written in the code view', { exact: true })).toHaveCount(1)
+	expect(await video()).toEqual(before)
+})
+
 test('undo in the code view undoes only the code', async ({ page }) => {
 	const opened = await pageContent(page)
 	await switchView(page, true)
@@ -441,7 +652,7 @@ test('undo in the code view undoes only the code', async ({ page }) => {
 test('looking at the code and back leaves the page and its undo as they were', async ({ page }) => {
 	const opened = await pageContent(page)
 	await page.evaluate(() =>
-		(document.querySelector('.tiptap') as any).editor.commands.focus('end'),
+		document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.commands.focus('end'),
 	)
 	await page.keyboard.type('x')
 	const typed = await pageContent(page)
@@ -479,9 +690,9 @@ test("the code block's keys stay in the code", async ({ page }) => {
 	await switchView(page, true)
 	const code = await shownCode(page)
 	await page.evaluate(() =>
-		(
-			[...document.querySelectorAll('.tiptap')].find((el) => el.checkVisibility()) as any
-		).editor.commands.focus('end'),
+		[...document.querySelectorAll<TiptapEditorHTMLElement>('.tiptap')]
+			.find((el) => el.checkVisibility())!
+			.editor!.commands.focus('end'),
 	)
 	await settle(page)
 	for (let i = 0; i < 3; i++) await page.keyboard.press('Enter')
@@ -566,26 +777,41 @@ test('leaving the editor logs no errors', async ({ page }) => {
 	expect(errors).toEqual([])
 })
 
-// Focus on a block's own control (the code block's language picker) moved the cursor to just
+// Focus on a block's own control (here the interactive block's button) moved the cursor to just
 // before the block, between blocks, where text can't go. The cursor stays where it was.
 test("using a block's own control leaves the cursor where it was", async ({ page }) => {
 	const warnings = appMessages(page, ['warning'])
-	await page.evaluate(() => {
-		const editor = (document.querySelector('.tiptap') as any).editor
-		editor.commands.insertContentAt(editor.state.doc.content.size, {
-			type: 'codeBlock',
-			content: [{ type: 'text', text: 'code' }],
-		})
-	})
 	await cursorInParagraph(page)
 	await settle(page)
 	const selection = () =>
 		page.evaluate(() =>
-			(document.querySelector('.tiptap') as any).editor.state.selection.toJSON(),
+			document
+				.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+				.editor!.state.selection.toJSON(),
 		)
 	const before = await selection()
-	await page.locator('.tiptap .code-block select').focus()
+	await page.locator('#divide-slot button', { hasText: 'Click me' }).focus()
 	await settle(page)
 	expect(await selection()).toEqual(before)
 	expect(warnings).toEqual([])
+})
+
+// A code block is the published page's pre; its language is chosen from the toolbar.
+test("the toolbar's Language picker sets a code block's language", async ({ page }) => {
+	const code = page.locator('#line-code-bleed code')
+	await code.click()
+	await settle(page)
+	const menu = await openMenu(page, 'code')
+	await expect(menu.locator('.picker-item.sf-on-current')).toHaveText('Auto')
+	await menu.locator('.picker-item', { hasText: 'Python' }).click()
+	await expect(code).toHaveClass(/(^|\s)language-python(\s|$)/)
+	const saved = await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		let language: string | undefined
+		editor.state.doc.descendants((node) => {
+			if (node.attrs?.id === 'line-code-bleed') language = node.attrs.language
+		})
+		return language
+	})
+	expect(saved).toBe('python')
 })

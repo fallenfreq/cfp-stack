@@ -28,6 +28,10 @@ const detectLanguage = (code: string, editor: Editor, setLanguage: string | null
 	return setLanguage
 }
 
+// A code language's name as people know it (highlight.js calls `html` "HTML, XML").
+const languageName = (language: string): string =>
+	highlight.getLanguage(language)?.name?.split(',')[0] ?? language
+
 function getExtensionOptions<T = any>(editor: Editor, name: string): T | undefined {
 	return editor.extensionManager.extensions.find((ext) => ext.name === name)?.options as
 		| T
@@ -54,8 +58,7 @@ const prettifySelectedCode = async (editor: Editor) => {
 	} else if (language === undefined) {
 		message = 'Formatting is only available for code blocks.'
 	} else if (!isPrettierLanguage(language)) {
-		const languageName = highlight.getLanguage(language)?.name?.split(',')[0]
-		message = `Formatting is not supported for the detected language: ${languageName}`
+		message = `Formatting is not supported for the detected language: ${languageName(language)}`
 	}
 
 	if (!language || !isPrettierLanguage(language)) {
@@ -187,6 +190,7 @@ export {
 	getChildBlockPositions,
 	getExtensionOptions,
 	getSiblingPositions,
+	languageName,
 	nodeAt,
 	nodeSelectionPos,
 	prettifySelectedCode,

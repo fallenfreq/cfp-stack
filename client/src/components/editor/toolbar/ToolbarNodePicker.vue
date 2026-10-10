@@ -10,7 +10,9 @@
 					:current="item.active"
 					@mousedown.prevent="select(item)"
 				>
-					<span class="material-symbols-rounded sf-icon">{{ item.iconName }}</span>
+					<span v-if="item.iconName" class="material-symbols-rounded sf-icon">{{
+						item.iconName
+					}}</span>
 					<span>{{ item.label }}</span>
 				</SfButton>
 			</template>
@@ -27,7 +29,8 @@ import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 export interface NodePickerItem {
 	label: string
-	iconName: string
+	// None where the names say it all (a code block's languages).
+	iconName?: string
 	active: boolean
 	action: () => void
 }

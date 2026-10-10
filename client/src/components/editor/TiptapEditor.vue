@@ -37,14 +37,13 @@ import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore.js'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import Placeholder from '@tiptap/extension-placeholder'
-import { EditorContent, VueNodeViewRenderer, type Content, type NodeViewProps } from '@tiptap/vue-3'
-import { onBeforeUnmount, ref, watch, type Component } from 'vue'
+import { EditorContent, type Content } from '@tiptap/vue-3'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import CodeView from './CodeView.vue'
 import CodeViewToggle from './CodeViewToggle.vue'
 import EditorTopBar from './EditorTopBar.vue'
 import FloatingDragHandle from './FloatingDragHandle.vue'
 import FloatingToolbar from './FloatingToolbar.vue'
-import TiptapCodeBlock from './TiptapCodeBlock.vue'
 import ToolbarScrollHint from './ToolbarScrollHint.vue'
 
 // What the editor opens: a stored page, our own HTML (the demo, the layout test cases), or nothing
@@ -73,11 +72,7 @@ const editor = useEditor({
 				dragHandleStore.setFrozenTargetPos(null)
 			},
 		}),
-		...getContentExtensions({
-			tableNodeSelection: true,
-			codeBlockNodeView: () =>
-				VueNodeViewRenderer(TiptapCodeBlock as Component<NodeViewProps>),
-		}),
+		...getContentExtensions({ tableNodeSelection: true }),
 		Placeholder.configure({
 			includeChildren: true,
 			showOnlyCurrent: false,

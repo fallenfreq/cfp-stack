@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test'
+import type { TiptapEditorHTMLElement } from '@tiptap/vue-3'
 import { readFileSync } from 'node:fs'
 
 export interface Box {
@@ -190,13 +191,6 @@ export const box = (target: Locator): Promise<Box> =>
 		return { left, right, top, bottom, width, height }
 	})
 
-/**
- * The box a block's parent places: a component block's outer box (TipTap's node-view wrapper),
- * or a plain block itself. Ids land on the element wearing the classes.
- */
-export const placed = (page: Page, id: string): Locator =>
-	page.locator(`[data-node-view-wrapper]:has(> #${id}), #${id}:not([data-node-view-wrapper] > *)`)
-
 /** How many columns a grid has; 1 means its items are stacked. */
 export const columnCount = (target: Locator): Promise<number> =>
 	target.evaluate(
@@ -217,8 +211,7 @@ export const css = (target: Locator, property: string, pseudo?: string): Promise
 
 /**
  * The width container an element's collapse measures: the nearest one around it, named as the
- * test page names it ('page', 'outer box of #id', '#id'), with the width the query sees (its
- * content box).
+ * test page names it ('page' or '#id'), with the width the query sees (its content box).
  */
 export const measuredBox = (target: Locator): Promise<{ name: string; width: number }> =>
 	target.evaluate((el) => {
@@ -230,11 +223,9 @@ export const measuredBox = (target: Locator): Promise<{ name: string; width: num
 			at.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
 		const name = at.matches('.tiptap.ProseMirror')
 			? 'page'
-			: at.matches('[data-node-view-wrapper]')
-				? `outer box of #${at.firstElementChild?.id}`
-				: at.id
-					? `#${at.id}`
-					: at.tagName.toLowerCase()
+			: at.id
+				? `#${at.id}`
+				: at.tagName.toLowerCase()
 		return { name, width }
 	})
 
@@ -263,30 +254,48 @@ export const pageWidth = (page: Page): Promise<number> =>
 /** The ProseMirror position of the node with this id, for selecting it. */
 export const nodePosition = (page: Page, id: string): Promise<number> =>
 	page.evaluate((id) => {
-		const editor = (document.querySelector('.tiptap') as any).editor
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		let at = -1
-		editor.state.doc.descendants((node: any, pos: number) => {
+		editor.state.doc.descendants((node, pos) => {
 			if (node.attrs?.id === id) at = pos
 		})
 		return at
 	}, id)
 
 /**
- * Select a whole block, in view, and click its crumb in the node path, so the toolbar works on it
- * even inside another block.
+ * Select the whole block at a position, in view, and click its crumb in the node path, so the
+ * toolbar works on it even inside another block.
  */
-export async function selectBlock(page: Page, id: string): Promise<void> {
-	const at = await nodePosition(page, id)
+export async function selectBlockAt(page: Page, at: number): Promise<void> {
 	await page.evaluate((at) => {
-		const editor = (document.querySelector('.tiptap') as any).editor
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		editor.chain().focus().setNodeSelection(at).run()
 	}, at)
 	await page.locator('.node-path button').last().click()
 	// Before clicking, Playwright scrolls the crumb into view, which can move the page (seen under
 	// the test theme); a person's click doesn't.
-	await page.evaluate(
-		(id) => document.getElementById(id)!.scrollIntoView({ block: 'center' }),
-		id,
-	)
+	await page.evaluate((at) => {
+		const dom = document
+			.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+			.editor!.view.nodeDOM(at)
+		if (dom instanceof Element) dom.scrollIntoView({ block: 'center' })
+	}, at)
 	await settle(page)
 }
+
+/**
+ * Add the block at a position to the blocks selected together, or take it out, as a person does:
+ * select it, then press the toolbar's "Toggle selection".
+ */
+export async function toggleSelection(page: Page, at: number): Promise<void> {
+	await selectBlockAt(page, at)
+	await page
+		.locator('.floating-toolbar')
+		.getByRole('button', { name: 'Toggle selection' })
+		.click()
+	await settle(page)
+}
+
+/** selectBlockAt, for the block with this id. */
+export const selectBlock = async (page: Page, id: string): Promise<void> =>
+	selectBlockAt(page, await nodePosition(page, id))

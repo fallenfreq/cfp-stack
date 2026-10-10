@@ -2,7 +2,6 @@ import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import ToolbarNodePicker, {
 	type NodePickerItem,
 } from '@/components/editor/toolbar/ToolbarNodePicker.vue'
-import { multiSelectPluginKey, type MultiSelectAction } from '@/editor/extensions/multiSelect'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import {
 	allAreSiblings,
@@ -17,9 +16,6 @@ import { defineComponent, h } from 'vue'
 import { blockNodeEntries, icon } from './defaultItemsShared'
 import { toolbarButtonItem, toolbarCustomItem } from './toolbarItemFactory'
 import type { ToolbarItemContext } from './types'
-
-const selDispatch = (editor: Editor, action: MultiSelectAction) =>
-	editor.view.dispatch(editor.state.tr.setMeta(multiSelectPluginKey, action))
 
 const selPrevUnselected = (editor: Editor, ctx: ToolbarItemContext): NodePos | null => {
 	if (ctx.nodePos === null) return null
@@ -52,13 +48,16 @@ const selMoveBefore = (editor: Editor, ctx: ToolbarItemContext) => {
 	if (positions.includes(nodePos)) return
 	const sorted = [...positions].sort((a, b) => a - b)
 	const content = Fragment.fromArray(sorted.map((p) => nodeAt(editor.state.doc, p)))
-	let tr = editor.state.tr
-	for (const pos of [...sorted].reverse()) {
-		const node = nodeAt(tr.doc, pos)
-		tr = tr.delete(pos, pos + node.nodeSize)
-	}
-	tr = tr.insert(tr.mapping.map(nodePos), content)
-	editor.view.dispatch(tr.setMeta(multiSelectPluginKey, { action: 'clear' }))
+	editor
+		.chain()
+		.command(({ tr }) => {
+			for (const pos of [...sorted].reverse())
+				tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
+			tr.insert(tr.mapping.map(nodePos), content)
+			return true
+		})
+		.clearMultiSelect()
+		.run()
 }
 
 const selMoveAfter = (editor: Editor, ctx: ToolbarItemContext) => {
@@ -69,14 +68,16 @@ const selMoveAfter = (editor: Editor, ctx: ToolbarItemContext) => {
 	const sorted = [...positions].sort((a, b) => a - b)
 	const content = Fragment.fromArray(sorted.map((p) => nodeAt(editor.state.doc, p)))
 	const targetNode = nodeAt(editor.state.doc, nodePos)
-	let tr = editor.state.tr
-	for (const pos of [...sorted].reverse()) {
-		const node = nodeAt(tr.doc, pos)
-		tr = tr.delete(pos, pos + node.nodeSize)
-	}
-	const insertAt = tr.mapping.map(nodePos + targetNode.nodeSize)
-	tr = tr.insert(insertAt, content)
-	editor.view.dispatch(tr.setMeta(multiSelectPluginKey, { action: 'clear' }))
+	editor
+		.chain()
+		.command(({ tr }) => {
+			for (const pos of [...sorted].reverse())
+				tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
+			tr.insert(tr.mapping.map(nodePos + targetNode.nodeSize), content)
+			return true
+		})
+		.clearMultiSelect()
+		.run()
 }
 
 const selReplace = (editor: Editor, ctx: ToolbarItemContext) => {
@@ -87,17 +88,20 @@ const selReplace = (editor: Editor, ctx: ToolbarItemContext) => {
 	const sorted = [...positions].sort((a, b) => a - b)
 	const content = Fragment.fromArray(sorted.map((p) => nodeAt(editor.state.doc, p)))
 	const targetNode = nodeAt(editor.state.doc, nodePos)
-	let tr = editor.state.tr
-	for (const pos of [...sorted].reverse()) {
-		const node = nodeAt(tr.doc, pos)
-		tr = tr.delete(pos, pos + node.nodeSize)
-	}
-	tr = tr.replaceWith(
-		tr.mapping.map(nodePos),
-		tr.mapping.map(nodePos + targetNode.nodeSize),
-		content,
-	)
-	editor.view.dispatch(tr.setMeta(multiSelectPluginKey, { action: 'clear' }))
+	editor
+		.chain()
+		.command(({ tr }) => {
+			for (const pos of [...sorted].reverse())
+				tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
+			tr.replaceWith(
+				tr.mapping.map(nodePos),
+				tr.mapping.map(nodePos + targetNode.nodeSize),
+				content,
+			)
+			return true
+		})
+		.clearMultiSelect()
+		.run()
 }
 
 const canWrapSiblingsInType = (editor: Editor, positions: NodePos[], typeName: string): boolean => {
@@ -124,11 +128,14 @@ const wrapSiblingsInType = (editor: Editor, positions: NodePos[], typeName: stri
 	if (firstPos === undefined) return
 	const lastPos = sorted[sorted.length - 1] ?? firstPos
 	const wrapper = wrapType.create(null, Fragment.fromArray(sorted.map((p) => nodeAt(doc, p))))
-	editor.view.dispatch(
-		editor.state.tr
-			.replaceWith(firstPos, lastPos + nodeAt(doc, lastPos).nodeSize, wrapper)
-			.setMeta(multiSelectPluginKey, { action: 'clear' }),
-	)
+	editor
+		.chain()
+		.command(({ tr }) => {
+			tr.replaceWith(firstPos, lastPos + nodeAt(doc, lastPos).nodeSize, wrapper)
+			return true
+		})
+		.clearMultiSelect()
+		.run()
 }
 
 const getSelWrapItems = (editor: Editor, _ctx: ToolbarItemContext): NodePickerItem[] => {
@@ -163,13 +170,9 @@ export const multiSelectItems = [
 		action: (editor, ctx) => {
 			const nodePos = ctx.nodePos
 			if (nodePos === null) return
-			const positions = useMultiSelectStore().positions
-			selDispatch(
-				editor,
-				positions.includes(nodePos)
-					? { action: 'remove', pos: nodePos }
-					: { action: 'add', pos: nodePos },
-			)
+			if (useMultiSelectStore().positions.includes(nodePos))
+				editor.commands.removeFromMultiSelect(nodePos)
+			else editor.commands.addToMultiSelect([nodePos])
 		},
 	}),
 
@@ -183,7 +186,7 @@ export const multiSelectItems = [
 			&& selPrevUnselected(editor, ctx) !== null,
 		action: (editor, ctx) => {
 			const pos = selPrevUnselected(editor, ctx)
-			if (pos !== null) selDispatch(editor, { action: 'add', pos })
+			if (pos !== null) editor.commands.addToMultiSelect([pos])
 		},
 	}),
 
@@ -197,7 +200,7 @@ export const multiSelectItems = [
 			&& selNextUnselected(editor, ctx) !== null,
 		action: (editor, ctx) => {
 			const pos = selNextUnselected(editor, ctx)
-			if (pos !== null) selDispatch(editor, { action: 'add', pos })
+			if (pos !== null) editor.commands.addToMultiSelect([pos])
 		},
 	}),
 
@@ -218,7 +221,7 @@ export const multiSelectItems = [
 			const toAdd = getSiblingPositions(editor.state.doc, ctx.nodePos).filter(
 				(p) => !positions.includes(p),
 			)
-			if (toAdd.length) selDispatch(editor, { action: 'addMany', positions: toAdd })
+			if (toAdd.length) editor.commands.addToMultiSelect(toAdd)
 		},
 	}),
 
@@ -233,8 +236,7 @@ export const multiSelectItems = [
 		action: (editor, ctx) => {
 			if (ctx.nodePos === null) return
 			const childPositions = getChildBlockPositions(editor.state.doc, ctx.nodePos)
-			if (childPositions.length)
-				selDispatch(editor, { action: 'addMany', positions: childPositions })
+			if (childPositions.length) editor.commands.addToMultiSelect(childPositions)
 		},
 	}),
 
@@ -302,12 +304,15 @@ export const multiSelectItems = [
 		show: () => useMultiSelectStore().positions.length > 0,
 		action: (editor) => {
 			const positions = useMultiSelectStore().positions
-			let tr = editor.state.tr
-			for (const pos of [...positions].sort((a, b) => b - a)) {
-				const node = nodeAt(tr.doc, pos)
-				tr = tr.delete(pos, pos + node.nodeSize)
-			}
-			editor.view.dispatch(tr.setMeta(multiSelectPluginKey, { action: 'clear' }))
+			editor
+				.chain()
+				.command(({ tr }) => {
+					for (const pos of [...positions].sort((a, b) => b - a))
+						tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
+					return true
+				})
+				.clearMultiSelect()
+				.run()
 		},
 	}),
 
@@ -316,6 +321,6 @@ export const multiSelectItems = [
 		tooltip: 'Clear selection',
 		label: icon('close'),
 		show: () => useMultiSelectStore().positions.length > 0,
-		action: (editor) => selDispatch(editor, { action: 'clear' }),
+		action: (editor) => editor.commands.clearMultiSelect(),
 	}),
 ]

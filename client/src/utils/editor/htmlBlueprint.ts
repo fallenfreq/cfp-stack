@@ -1,10 +1,10 @@
 import { SfHeading } from '@/config/editor/contentExtensions'
+import { YoutubeExtension } from '@/config/editor/youtubeExtension'
 import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExtension'
 import { filterNonDefaultAttrs } from '@/utils/editor/editorUtils'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Image from '@tiptap/extension-image'
 import { TaskItem } from '@tiptap/extension-list'
-import Youtube from '@tiptap/extension-youtube'
 import StarterKit from '@tiptap/starter-kit'
 import {
 	Node as TiptapNode,
@@ -140,28 +140,17 @@ function initGenerateBlueprintHTML(editor: Editor) {
 				},
 			}),
 			// TaskList,
-			Youtube.extend({
+			// The video as the editor writes it (its iframe), with only the attributes it has set.
+			YoutubeExtension.extend({
 				renderHTML({ node, HTMLAttributes }) {
 					const attrs = (node.type.spec.attrs ??= {})
-					const filteredAttributes = filterNonDefaultAttrs(HTMLAttributes, attrs)
-					const domOutputSpec = this.parent?.({ node, HTMLAttributes })
-
-					if (domOutputSpec && Array.isArray(domOutputSpec) && domOutputSpec[2]?.[1]) {
-						domOutputSpec[2][1] = filteredAttributes
-					} else throw new Error('No parent DomOutputSpec or unexpected format')
-
-					return domOutputSpec
-				},
-				addAttributes() {
-					const existingAttributes = this.parent?.() || {}
-					return {
-						...existingAttributes,
-						resp: {
-							default: '',
-							parseHTML: (element) => element.getAttribute('resp'),
-							renderHTML: (attributes) => ({ resp: attributes.resp }),
+					return [
+						'iframe',
+						{
+							...filterNonDefaultAttrs(HTMLAttributes, attrs),
+							'data-youtube-video': '',
 						},
-					}
+					]
 				},
 			}),
 			CodeBlockLowlight,

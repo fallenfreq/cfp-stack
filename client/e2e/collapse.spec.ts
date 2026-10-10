@@ -7,7 +7,6 @@ import {
 	measuredBox,
 	openTests,
 	pageWidth,
-	placed,
 	setShellWidth,
 	shellWidths,
 } from './helpers'
@@ -31,8 +30,13 @@ const COLUMNS = [
 	{ id: 's1-columns', name: 'S1: Columns in an auto split column', measures: '#s1-split' },
 	{
 		id: 'c2-columns',
-		name: "C2: Columns in a Split's narrow side",
-		measures: 'outer box of #c2-columns',
+		name: "C2: Columns in a Stack in a Split's narrow side",
+		measures: '#c2-side',
+	},
+	{
+		id: 'c3-columns',
+		name: "C3: typed columns in a Stack in a Split's narrow side",
+		measures: '#c3-side',
 	},
 ]
 
@@ -75,13 +79,13 @@ for (const widthName of ['wide', 'just below sm', 'just below xs'])
 		for (const c of HIDDEN_BELOW)
 			expect
 				.soft(
-					await isShown(placed(page, c.id)),
+					await isShown(page.locator(`#${c.id}`)),
 					`${c.name} hides exactly when the page (${Math.round(pageAt)}px) is at or below ${c.breakpoint} (${bp[c.breakpoint]}px)`,
 				)
 				.toBe(pageAt > bp[c.breakpoint]!)
 
 		for (const c of NOT_ZERO)
 			expect
-				.soft((await box(placed(page, c.id))).width, `${c.name} isn't 0 wide`)
+				.soft((await box(page.locator(`#${c.id}`))).width, `${c.name} isn't 0 wide`)
 				.toBeGreaterThan(10)
 	})

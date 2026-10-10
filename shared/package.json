@@ -4,10 +4,6 @@
 	"version": "0.0.0",
 	"type": "module",
 	"exports": {
-		"./placementClasses": {
-			"types": "./placementClasses.d.ts",
-			"default": "./placementClasses.js"
-		},
 		"./slug": {
 			"types": "./slug.d.ts",
 			"default": "./slug.js"

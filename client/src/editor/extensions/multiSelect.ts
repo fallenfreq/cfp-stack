@@ -1,21 +1,51 @@
 import { findBlockAtCoords, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import { Fragment, type Node as PMNode } from '@tiptap/pm/model'
-import { NodeSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state'
+import { NodeSelection, Plugin, PluginKey, TextSelection, type Transaction } from '@tiptap/pm/state'
 import { ReplaceAroundStep, ReplaceStep, type Step } from '@tiptap/pm/transform'
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
-import { Extension } from '@tiptap/vue-3'
+import { Extension, type CommandProps } from '@tiptap/vue-3'
 
 export interface MultiSelectState {
 	positions: NodePos[]
 }
 
-export type MultiSelectAction =
-	| { action: 'add'; pos: NodePos }
-	| { action: 'addMany'; positions: NodePos[] }
+type MultiSelectAction =
+	| { action: 'add'; positions: NodePos[] }
 	| { action: 'remove'; pos: NodePos }
 	| { action: 'clear' }
 
+// A change asked for partway through a transaction: its positions are in the document as it was
+// then (after `at` steps), and the steps after map them as they map the rest.
+interface MultiSelectRequest {
+	at: number
+	action: MultiSelectAction
+}
+
 export const multiSelectPluginKey = new PluginKey<MultiSelectState>('multiSelect')
+
+// The one way to change which blocks are selected together: the commands below use it, and so
+// does dropping several blocks. Requests in one transaction apply in the order asked.
+const askMultiSelect = (tr: Transaction, action: MultiSelectAction): Transaction => {
+	const asked: MultiSelectRequest[] = tr.getMeta(multiSelectPluginKey) ?? []
+	return tr.setMeta(multiSelectPluginKey, [...asked, { at: tr.steps.length, action }])
+}
+
+const applyAction = (positions: NodePos[], action: MultiSelectAction): NodePos[] => {
+	if (action.action === 'add') return [...new Set([...positions, ...action.positions])]
+	if (action.action === 'remove') return positions.filter((p) => p !== action.pos)
+	return []
+}
+
+declare module '@tiptap/vue-3' {
+	interface Commands<ReturnType> {
+		multiSelect: {
+			/** Adds blocks, by their positions, to the blocks selected together. */
+			addToMultiSelect: (positions: NodePos[]) => ReturnType
+			removeFromMultiSelect: (pos: NodePos) => ReturnType
+			clearMultiSelect: () => ReturnType
+		}
+	}
+}
 
 // Whether a step changes the block at pos in place, as a change to its attributes or type does
 // (a to-do ticked, a paragraph turned into a heading): it rewrites only the block's start and
@@ -41,6 +71,20 @@ const changedInPlace = (step: Step, pos: number, doc: PMNode): boolean => {
 const MultiSelectExtension = Extension.create({
 	name: 'multiSelect',
 
+	addCommands() {
+		const ask =
+			(action: MultiSelectAction) =>
+			({ tr, dispatch }: CommandProps) => {
+				if (dispatch) askMultiSelect(tr, action)
+				return true
+			}
+		return {
+			addToMultiSelect: (positions) => ask({ action: 'add', positions }),
+			removeFromMultiSelect: (pos) => ask({ action: 'remove', pos }),
+			clearMultiSelect: () => ask({ action: 'clear' }),
+		}
+	},
+
 	addProseMirrorPlugins() {
 		return [
 			multiDragPlugin,
@@ -53,30 +97,21 @@ const MultiSelectExtension = Extension.create({
 					},
 
 					apply(tr, prev) {
+						const asked: MultiSelectRequest[] = tr.getMeta(multiSelectPluginKey) ?? []
 						let positions = prev.positions
+						const applyAskedAt = (at: number) => {
+							for (const { action } of asked.filter((r) => r.at === at))
+								positions = applyAction(positions, action)
+						}
 						tr.steps.forEach((step, i) => {
+							applyAskedAt(i)
 							positions = positions.flatMap((pos) => {
 								if (changedInPlace(step, pos, tr.docs[i]!)) return [pos]
 								const result = step.getMap().mapResult(pos, 1)
 								return result.deleted ? [] : [result.pos as NodePos]
 							})
 						})
-
-						const meta = tr.getMeta(multiSelectPluginKey) as
-							| MultiSelectAction
-							| undefined
-						if (meta) {
-							if (meta.action === 'add' && !positions.includes(meta.pos)) {
-								positions = [...positions, meta.pos]
-							} else if (meta.action === 'addMany') {
-								positions = [...new Set([...positions, ...meta.positions])]
-							} else if (meta.action === 'remove') {
-								positions = positions.filter((p) => p !== meta.pos)
-							} else if (meta.action === 'clear') {
-								positions = []
-							}
-						}
-
+						applyAskedAt(tr.steps.length)
 						return { positions }
 					},
 				},
@@ -209,7 +244,7 @@ const multiDragPlugin = new Plugin({
 						: NodeSelection.create(tr.doc, insertAt)
 				tr = tr.setSelection(newSelection)
 			}
-			tr = tr.setMeta(multiSelectPluginKey, { action: 'clear' })
+			tr = askMultiSelect(tr, { action: 'clear' })
 			view.dragging = null
 			view.dispatch(tr)
 			return true

@@ -1,4 +1,5 @@
 import type { Page, Route } from '@playwright/test'
+import type { JSONContent, TiptapEditorHTMLElement } from '@tiptap/vue-3'
 import { expect, test } from './fixtures'
 import {
 	appMessages,
@@ -323,7 +324,7 @@ test('undo goes back no further than a stored page as it opened in the editor', 
 	const text = page.locator('.tiptap p').first()
 	await expect(text).toHaveText('A paragraph.')
 	await page.evaluate(() =>
-		(document.querySelector('.tiptap') as any).editor.commands.focus('end'),
+		document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.commands.focus('end'),
 	)
 	// A letter typed and undone, so Undo is known to reach the editor; then once more.
 	await page.keyboard.type('x')
@@ -377,7 +378,7 @@ test('Save in the code view saves the page, with the changes made to its code', 
 }) => {
 	await openStored(page, themeClass, oneParagraph)
 	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
-	let saved: any = null
+	let saved: JSONContent | null = null
 	await page.route(
 		(url) => url.pathname.includes('adminPages.update'),
 		(route) => {
@@ -405,9 +406,9 @@ test('Save in the code view saves the page, with the changes made to its code', 
 	await writeCode('<p>From the code.</p>')
 	await save.click()
 	await expect.poll(() => saved).not.toBeNull()
-	const blocks = saved.content.map((block: any) => [
+	const blocks = (saved as JSONContent | null)?.content?.map((block) => [
 		block.type,
-		block.content?.map((text: any) => text.text).join(''),
+		block.content?.map((text) => text.text).join(''),
 	])
 	expect(blocks).toEqual([['paragraph', 'From the code.']])
 	await expect(codeView, 'still in the code view').toHaveAttribute('aria-pressed', 'true')
@@ -614,7 +615,8 @@ test("a promise of ours that fails with nothing waiting says so, another site's 
 	await useTheme(page, themeClass)
 	// The failures the page is told of.
 	await page.evaluate(() => {
-		const heard: string[] = ((window as any).heard = [])
+		// The check's own list on the page.
+		const heard: string[] = ((window as Window & { heard?: string[] }).heard = [])
 		addEventListener('unhandledrejection', (event) => heard.push(event.reason.message))
 	})
 	await page.evaluate(
@@ -630,7 +632,7 @@ test("a promise of ours that fails with nothing waiting says so, another site's 
 	)
 	await page.addScriptTag({ url: '/e2e-not-caught.js' })
 	await expect
-		.poll(() => page.evaluate(() => (window as any).heard))
+		.poll(() => page.evaluate(() => (window as Window & { heard?: string[] }).heard))
 		.toEqual(['Widget failed', 'Ours failed'])
 	const toast = page
 		.getByRole('alert')

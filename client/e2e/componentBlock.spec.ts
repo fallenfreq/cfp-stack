@@ -1,4 +1,6 @@
 import type { Locator, Page } from '@playwright/test'
+import type { NodeSelection } from '@tiptap/pm/state'
+import type { TiptapEditorHTMLElement } from '@tiptap/vue-3'
 import { expect, test } from './fixtures'
 import { copiedText, openSeeded, setClipboard, settle } from './helpers'
 
@@ -10,7 +12,12 @@ import { copiedText, openSeeded, setClipboard, settle } from './helpers'
 const INTERACTIVE = 'a47e28a5-fd9d-40e9-bd74-819301247e9d'
 
 test.beforeEach(async ({ page, themeClass }) => {
-	await openSeeded(page, 'true', '.tiptap .code-block select', themeClass)
+	await openSeeded(
+		page,
+		'true',
+		'.tiptap.ProseMirror li:has-text("HTML source (code view) toggle")',
+		themeClass,
+	)
 	await heading(page).scrollIntoViewIfNeeded()
 	await settle(page)
 	await setClipboard(page, '(nothing copied)')
@@ -27,15 +34,22 @@ const textBelow = (page: Page) => page.locator('.tiptap p', { hasText: 'The comp
 
 /** The page's text, as saved. */
 const pageText = (page: Page): Promise<string> =>
-	page.evaluate(() => (document.querySelector('.tiptap') as any).editor.state.doc.textContent)
+	page.evaluate(
+		() =>
+			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state.doc
+				.textContent,
+	)
 
 /** Where the editor's cursor is: the whole interactive block, or the text of the paragraph it's in. */
 const cursor = (page: Page) =>
 	page.evaluate((INTERACTIVE) => {
-		const { selection } = (document.querySelector('.tiptap') as any).editor.state
-		if (selection.node)
-			return selection.node.type.name === INTERACTIVE ? 'the block' : 'another block'
-		return selection.$from.parent.textContent as string
+		const { selection } =
+			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+		if ('node' in selection)
+			return (selection as NodeSelection).node.type.name === INTERACTIVE
+				? 'the block'
+				: 'another block'
+		return selection.$from.parent.textContent
 	}, INTERACTIVE)
 
 // Each click is let land before typing, as a person's would: keys pressed within the same frame
@@ -62,8 +76,8 @@ test('typing after a click in the slot goes into the slot', async ({ page }) => 
 
 test('typing goes into the slot when the editor puts the cursor there', async ({ page }) => {
 	await page.evaluate(() => {
-		const editor = (document.querySelector('.tiptap') as any).editor
-		editor.state.doc.descendants((node: any, pos: number) => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor.state.doc.descendants((node, pos) => {
 			if (node.textContent.startsWith('This is the editable slot') && node.isTextblock)
 				editor
 					.chain()
@@ -218,9 +232,9 @@ test('a drag from the text above to the text below takes the block whole', async
 
 test('an interactive block in the slot of another works the same', async ({ page }) => {
 	await page.evaluate((INTERACTIVE) => {
-		const editor = (document.querySelector('.tiptap') as any).editor
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		let outer = -1
-		editor.state.doc.descendants((node: any, pos: number) => {
+		editor.state.doc.descendants((node, pos) => {
 			if (outer < 0 && node.type.name === INTERACTIVE) outer = pos
 		})
 		editor.commands.insertContentAt(outer + 1, {
@@ -241,8 +255,9 @@ test('an interactive block in the slot of another works the same', async ({ page
 	await innerHeading.click()
 	await settle(page)
 	const selected = await page.evaluate(() => {
-		const { selection } = (document.querySelector('.tiptap') as any).editor.state
-		return selection.node?.textContent as string | undefined
+		const { selection } =
+			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+		return 'node' in selection ? (selection as NodeSelection).node.textContent : undefined
 	})
 	expect(selected).toMatch(/^Inner/)
 	await page.keyboard.type('Q')
@@ -251,7 +266,9 @@ test('an interactive block in the slot of another works the same', async ({ page
 
 // Published pages are read-only from the start; here the open editor is switched.
 test('in a read-only editor the slot and the block stay as they are', async ({ page }) => {
-	await page.evaluate(() => (document.querySelector('.tiptap') as any).editor.setEditable(false))
+	await page.evaluate(() =>
+		document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.setEditable(false),
+	)
 	const before = await pageText(page)
 	await slotText(page).click()
 	await settle(page)

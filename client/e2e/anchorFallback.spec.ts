@@ -1,4 +1,5 @@
 import type { Browser, Page } from '@playwright/test'
+import type { TiptapEditorHTMLElement } from '@tiptap/vue-3'
 import { expect, test } from './fixtures'
 import { openSeeded, settle } from './helpers'
 
@@ -23,7 +24,7 @@ const NO_CSS_PLACEMENT =
 const panelBeside = (share: number, button: 'first' | 'last' | number) => async (page: Page) => {
 	const paragraph = page.locator('.tiptap p').nth(12)
 	await paragraph.evaluate((el) => {
-		const editor = (document.querySelector('.tiptap') as any).editor
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		editor
 			.chain()
 			.focus()
@@ -57,7 +58,8 @@ const CASES: { name: string; open: (page: Page) => Promise<void> }[] = [
 				.locator('.tiptap p')
 				.nth(12)
 				.evaluate((el) => {
-					const editor = (document.querySelector('.tiptap') as any).editor
+					const editor =
+						document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 					const before = editor.view.posAtDOM(el, 0) - 1
 					editor.commands.insertContentAt(
 						before,

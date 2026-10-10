@@ -2,7 +2,6 @@ import { type ComponentData } from '@/config/editor/editorComponents'
 import {
 	Node,
 	NodeViewContent,
-	NodeViewWrapper,
 	VueNodeViewRenderer,
 	mergeAttributes,
 	nodeViewProps,
@@ -51,7 +50,7 @@ export function createVueNode({
 					props: nodeViewProps,
 					setup(props) {
 						const { editor } = props
-						const wrapperRef = ref<typeof NodeViewWrapper | null>(null)
+						const boxRef = ref<{ $el: HTMLElement } | null>(null)
 
 						// The block's own parts: all its component draws beside its slot (headings, text,
 						// buttons). They aren't editable; the box and slot belong to the editor, so the slot
@@ -59,9 +58,9 @@ export function createVueNode({
 						// a layout, which draws only a box around its slot, has none.
 						let ownParts = false
 						const markOwnParts = () => {
-							const wrapperEl = wrapperRef.value?.$el as HTMLElement | undefined
-							const contentEl = wrapperEl?.querySelector('[data-node-view-content]')
-							if (!wrapperEl || !contentEl) return
+							const boxEl = boxRef.value?.$el as HTMLElement | undefined
+							const contentEl = boxEl?.querySelector('[data-node-view-content]')
+							if (!boxEl || !contentEl) return
 							let found = false
 							const mark = (el: Element) => {
 								for (const child of el.childNodes) {
@@ -77,7 +76,7 @@ export function createVueNode({
 									}
 								}
 							}
-							mark(wrapperEl)
+							mark(boxEl)
 							ownParts = found
 						}
 
@@ -85,14 +84,14 @@ export function createVueNode({
 						// them like page text (text beside the slot too), and typing does nothing. A press in the
 						// slot or the cursor leaving this whole block unlocks it, even once the parts are gone.
 						const setLocked = (locked: boolean) => {
-							const wrapperEl = wrapperRef.value?.$el as HTMLElement | undefined
-							if (!wrapperEl) return
+							const boxEl = boxRef.value?.$el as HTMLElement | undefined
+							if (!boxEl) return
 							if (locked && editor.isEditable)
-								wrapperEl.setAttribute('contenteditable', 'false')
-							else wrapperEl.removeAttribute('contenteditable')
+								boxEl.setAttribute('contenteditable', 'false')
+							else boxEl.removeAttribute('contenteditable')
 						}
 						const isLocked = () =>
-							wrapperRef.value?.$el?.getAttribute('contenteditable') === 'false'
+							boxRef.value?.$el?.getAttribute('contenteditable') === 'false'
 						const wholeBlockSelected = () => {
 							const pos = props.getPos()
 							const { from, to } = editor.state.selection
@@ -109,17 +108,17 @@ export function createVueNode({
 						// see; otherwise copying words highlighted in its own parts is the browser's and cut and
 						// paste do nothing, as on a page. A text box or field of the component's keeps its own.
 						const leaveToBrowser = (event: ClipboardEvent) => {
-							const wrapperEl = wrapperRef.value?.$el as HTMLElement | undefined
-							if (!wrapperEl || !isLocked()) return
+							const boxEl = boxRef.value?.$el as HTMLElement | undefined
+							if (!boxEl || !isLocked()) return
 							const target = event.target as HTMLElement
-							if (target !== wrapperEl && target.isContentEditable) return
+							if (target !== boxEl && target.isContentEditable) return
 							if (target.closest('input, textarea, select')) return
-							const contentEl = wrapperEl.querySelector('[data-node-view-content]')
+							const contentEl = boxEl.querySelector('[data-node-view-content]')
 							const selection = window.getSelection()
 							const from =
 								selection?.isCollapsed === false ? selection.anchorNode : null
 							const highlightedHere =
-								!!from && wrapperEl.contains(from) && !contentEl?.contains(from)
+								!!from && boxEl.contains(from) && !contentEl?.contains(from)
 							if (!highlightedHere && wholeBlockSelected()) return
 							event.stopPropagation()
 							if (event.type !== 'copy') event.preventDefault()
@@ -134,13 +133,13 @@ export function createVueNode({
 							markOwnParts()
 							// Changes inside the slot are the page's, not the component's.
 							observer = new MutationObserver((records) => {
-								const contentEl = wrapperRef.value?.$el?.querySelector(
+								const contentEl = boxRef.value?.$el?.querySelector(
 									'[data-node-view-content]',
 								)
 								if (records.some((record) => !contentEl?.contains(record.target)))
 									markOwnParts()
 							})
-							observer.observe(wrapperRef.value!.$el, {
+							observer.observe(boxRef.value!.$el, {
 								childList: true,
 								characterData: true,
 								subtree: true,
@@ -152,14 +151,24 @@ export function createVueNode({
 							editor.off('selectionUpdate', unlockOffBlock)
 						})
 
+						// The component's own box is the block's box, as a plain block is one box. It wears
+						// TipTap's marker, and draws the editor's classes on the block (its decorations) and
+						// the selection outline, which ProseMirror and TipTap add by hand and a redraw removes.
 						return () =>
 							h(
-								NodeViewWrapper,
+								component,
 								{
+									...props.node.attrs,
+									'data-node-view-wrapper': '',
+									class: [
+										props.node.attrs.class,
+										...props.decorations.map((d) => d.type.attrs.class),
+										{ 'ProseMirror-selectednode': props.selected },
+									],
 									// Focusable, so a press on the block's own parts puts focus on its locked box,
 									// where typing does nothing.
 									tabindex: '-1',
-									ref: wrapperRef,
+									ref: boxRef,
 									// Tap outside the editable content selects the whole node so the
 									// floating toolbar and drag handle position over it.  Works even
 									// with selectable:false — NodeSelection.create does not enforce
@@ -167,14 +176,14 @@ export function createVueNode({
 									// The click's path, not its target: a button of the block's own may be gone
 									// from the page by now (redrawn by its own click).
 									onClick: (event: MouseEvent) => {
-										const wrapper = wrapperRef.value?.$el
-										const content = wrapper?.querySelector(
+										const box = boxRef.value?.$el
+										const content = box?.querySelector(
 											'[data-node-view-content]',
 										)
 										const from = pressedAt
 										pressedAt = null
 										if (
-											!wrapper
+											!box
 											|| !content
 											|| event.composedPath().includes(content)
 										)
@@ -202,13 +211,11 @@ export function createVueNode({
 											y: event.clientY,
 											touch: event.pointerType === 'touch',
 										}
-										const wrapper = wrapperRef.value?.$el as
-											| HTMLElement
-											| undefined
-										const content = wrapper?.querySelector(
+										const box = boxRef.value?.$el as HTMLElement | undefined
+										const content = box?.querySelector(
 											'[data-node-view-content]',
 										)
-										if (!wrapper || !content) return
+										if (!box || !content) return
 										const onOwnParts =
 											ownParts && !content.contains(event.target as Element)
 										setLocked(onOwnParts)
@@ -216,7 +223,7 @@ export function createVueNode({
 										// last caret was: drop a caret left outside the block (text pressed sets anew).
 										const selection = window.getSelection()
 										const caret = selection?.anchorNode
-										if (onOwnParts && caret && !wrapper.contains(caret))
+										if (onOwnParts && caret && !box.contains(caret))
 											selection.removeAllRanges()
 									},
 									// A press on the block's own parts stops at the block; the editor ignores it in
@@ -224,11 +231,11 @@ export function createVueNode({
 									onMousedown: (event: MouseEvent) => {
 										if (!ownParts) return
 										const target = event.target as Element
-										const wrapper = wrapperRef.value?.$el
-										const content = wrapper?.querySelector(
+										const box = boxRef.value?.$el
+										const content = box?.querySelector(
 											'[data-node-view-content]',
 										)
-										if (!wrapper || !content || content.contains(target)) return
+										if (!box || !content || content.contains(target)) return
 										event.stopPropagation()
 									},
 									onCopy: leaveToBrowser,
@@ -236,27 +243,28 @@ export function createVueNode({
 									onPaste: leaveToBrowser,
 								},
 								{
-									default: () => [
-										h(
-											component,
-											{ ...props.node.attrs },
-											{
-												default: () =>
-													h(NodeViewContent, {
-														...(contentAs ? { as: contentAs } : {}),
-														contenteditable: props.editor.isEditable
-															? contenteditable
-															: false,
-														// makes sure the onfocus target is the content if clicked when contenteditable is already true
-														tabindex: '-1',
-													}),
-											},
-										),
-									],
+									default: () =>
+										h(NodeViewContent, {
+											...(contentAs ? { as: contentAs } : {}),
+											contenteditable: props.editor.isEditable
+												? contenteditable
+												: false,
+											// makes sure the onfocus target is the content if clicked when contenteditable is already true
+											tabindex: '-1',
+										}),
 								},
 							)
 					},
 				}),
+				{
+					// A redraw for every change, decorations too: TipTap passes on new decorations only
+					// when the block itself changes, and the box draws them.
+					update: ({ oldNode, newNode, updateProps }) => {
+						if (newNode.type !== oldNode.type) return false
+						updateProps()
+						return true
+					},
+				},
 			)
 		},
 	})

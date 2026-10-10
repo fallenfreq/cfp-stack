@@ -3,7 +3,6 @@ import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExt
 import { CustomTaskItem } from '@/editor/extensions/customTaskItem'
 import Div from '@/editor/extensions/divExtension'
 import FontStyle from '@/editor/extensions/fontStyleMark'
-import { PlacementClasses } from '@/editor/extensions/placementClasses'
 import Span from '@/editor/extensions/spanExtension'
 import TextColor from '@/editor/extensions/textColorMark'
 import Heading, { type Level } from '@tiptap/extension-heading'
@@ -12,14 +11,13 @@ import { TaskList } from '@tiptap/extension-list'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
 import { Plugin } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
-import type { Extensions, NodeViewRenderer } from '@tiptap/vue-3'
+import type { Extensions } from '@tiptap/vue-3'
 import { CodeBlockExtension } from './codeBlockExtension'
 import { registerCustomNodes } from './registerCustomNodes'
 import { YoutubeExtension } from './youtubeExtension'
 
 interface ContentExtensionOptions {
 	tableNodeSelection?: boolean
-	codeBlockNodeView?: () => NodeViewRenderer
 }
 
 // `class` is the source of truth: an appendTransaction plugin keeps any heading
@@ -87,7 +85,6 @@ const cellWidth = {
 
 export function getContentExtensions({
 	tableNodeSelection = false,
-	codeBlockNodeView,
 }: ContentExtensionOptions = {}): Extensions {
 	return [
 		StarterKit.configure({
@@ -142,16 +139,13 @@ export function getContentExtensions({
 		Div,
 		...registerCustomNodes(),
 		AllowAttributesExtension,
-		PlacementClasses,
 		TaskList.configure(),
 		CustomTaskItem.configure({
 			// Checkbox beside the item's content: fixed side + flexible side.
 			HTMLAttributes: { class: 'sl-split sf-gap-md' },
 			nested: true,
 		}),
-		codeBlockNodeView
-			? CodeBlockExtension.extend({ addNodeView: codeBlockNodeView })
-			: CodeBlockExtension,
+		CodeBlockExtension,
 		YoutubeExtension,
 	]
 }
