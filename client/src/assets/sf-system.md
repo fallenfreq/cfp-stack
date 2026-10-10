@@ -1329,6 +1329,8 @@ Each rule's reason is in the section named.
 - Warn on a collapsing layout straight in a side of a split: it measures the whole split, so
   it stacks only when the split is narrow. To stack by the side's width, put it in a Stack in
   that side (Container-responsive collapse).
+- Optionally, a gentle warning for `sl-center` on a video: a Centre holding the video (its
+  style `max-width: none`) lays out the same. Both work; it only points out the usual way.
 
 **Components** (Component blocks, "Writing a component block")
 

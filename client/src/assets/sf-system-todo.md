@@ -23,10 +23,9 @@ block in a row fills it, as a plain block does) is decided with the user, done, 
 reviewed three times by fresh agents with every finding fixed or logged (shapes, the Centre's
 width and alignment decided with the user), and committed.
 
-**Item 24, a component block is one box** (2026-10-10): steps 1–7 done. Two fresh-agent
-reviews: the first of steps 1–6, the second of its fixes and step 7; every finding fixed or
-declined (item 24, "Review", "Second review"). Not committed. Next: commit when asked, then
-remove the throwaway copies (`~/cfp-stack-onebox`, `~/cfp-stack-base`). K5 after that.
+**Item 24, a component block is one box** (2026-10-10): done, reviewed twice by fresh agents
+(item 24, "Review", "Second review"), committed (68caa20, not pushed); the throwaway copies are
+removed. Next: K5.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -1093,8 +1092,7 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
           row's height" mixed width and height; the row layouts' comment said "grid layouts"
           (an inset and a cover are grids too); "a set height wins" wasn't true of pictures.
 
-24. **A component block is one box** (2026-10-10; done, checked and reviewed twice; not
-    committed).
+24. **A component block is one box** (2026-10-10; done, checked, reviewed twice and committed).
     Supersedes item 23's row rule and the outer-box parts of item 10.
     - **Why:** a component block was two boxes: an outer box its layout places, and the
       component inside it, wearing the block's classes. A plain block is one. Each kind of
