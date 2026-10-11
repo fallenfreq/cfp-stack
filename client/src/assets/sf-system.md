@@ -1145,7 +1145,10 @@ leaves no space or line at that edge. The widths split a box's width into bands,
 the classes hidden in it (`widthBands` in `slLayout.ts`); hiding, block spacing and a theme's
 "after another block" are all written once per band from that one list, so they agree. The
 bands need the widths in order, so all the widths are in one unit (any unit); a width in
-another is refused where it's saved.
+another is refused where it's saved. Each block looks back past hide/show blocks for a shown
+one, so a long unbroken run of side-by-side blocks that each hide or show (hundreds, such as a
+desktop and a mobile version of every paragraph) is slow to restyle. Blocks that hide together
+go in one box, and the box hides: that costs nothing.
 
 **Nothing else is a width container.** Chrome boxes (a card, a toolbar) aren't: one sized by
 its content would be 0 wide. A component with width rules of its own follows the component
@@ -1352,6 +1355,9 @@ Each rule's reason is in the section named.
   that side (Container-responsive collapse).
 - Optionally, a gentle warning for `sl-center` on a video: a Centre holding the video (its
   style `max-width: none`) lays out the same. Both work; it only points out the usual way.
+- A gentle warning on a long run of side-by-side blocks that each hide or show by width, say
+  100 in a row: put the blocks that hide together in one box and hide the box
+  (Container-responsive collapse).
 
 **Components** (Component blocks, "Writing a component block")
 
