@@ -11,15 +11,18 @@ import { forBlocks } from './slLayout.js'
 //                                   fills that box. :only-child guard prevents affecting
 //                                   images alongside other content. Reaches through a
 //                                   component's content box too (forBlocks, slLayout.ts).
+// No display here: the reset already shows images as blocks, and a display set here would
+// outweigh the hide and show classes (sl-hide-below-*, sl-show-below-*), so a picture would show
+// at widths it's hidden at.
 
 export const SL_OBJECT = `@layer sl-layout {
-	img.sl-object-cover { object-fit: cover; width: 100%; display: block; }
-	${forBlocks('.sl-object-cover > img:only-child')} { object-fit: cover; width: 100%; height: 100%; display: block; }
-	img.sl-object-contain { object-fit: contain; width: 100%; display: block; }
-	${forBlocks('.sl-object-contain > img:only-child')} { object-fit: contain; width: 100%; height: 100%; display: block; }
-	img.sl-object-fill { object-fit: fill; width: 100%; display: block; }
-	${forBlocks('.sl-object-fill > img:only-child')} { object-fit: fill; width: 100%; height: 100%; display: block; }
-	img.sl-object-none { object-fit: none; display: block; }
-	${forBlocks('.sl-object-none > img:only-child')} { object-fit: none; display: block; }
+	img.sl-object-cover { object-fit: cover; width: 100%; }
+	${forBlocks('.sl-object-cover > img:only-child')} { object-fit: cover; width: 100%; height: 100%; }
+	img.sl-object-contain { object-fit: contain; width: 100%; }
+	${forBlocks('.sl-object-contain > img:only-child')} { object-fit: contain; width: 100%; height: 100%; }
+	img.sl-object-fill { object-fit: fill; width: 100%; }
+	${forBlocks('.sl-object-fill > img:only-child')} { object-fit: fill; width: 100%; height: 100%; }
+	img.sl-object-none { object-fit: none; }
+	${forBlocks('.sl-object-none > img:only-child')} { object-fit: none; }
 }
 `

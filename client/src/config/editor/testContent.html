@@ -193,6 +193,15 @@
 	<p class="sl-show-below-sm">Shown below sm only</p>
 	<p class="sl-hide-below-sm sl-show-below-md">Shown between sm and md only</p>
 </layout-card>
+<layout-card id="hidden-picture-card" class="sf-size-md">
+	<img class="sl-object-cover sl-hide-below-md" src="/favicon.png" />
+	<p>Shown</p>
+</layout-card>
+<layout-card id="swap-card" class="sf-size-md">
+	<p class="sl-show-below-md">Shown below md only</p>
+	<p class="sl-hide-below-md">Hidden below md</p>
+	<p>Shown</p>
+</layout-card>
 <layout-card id="pair-card" class="sf-size-md"
 	><p>One</p>
 	<p>Two</p></layout-card
@@ -206,6 +215,11 @@
 	<p>Two</p>
 </blockquote>
 
+<h3>A picture set to cover its Card hides by the page's width too</h3>
+<layout-card id="hidden-cover-card" class="sl-stack sl-aspect-16-9 sl-object-cover">
+	<img class="sl-hide-below-md" src="/favicon.png" />
+</layout-card>
+
 <h3>Divide lines are drawn only between shown blocks</h3>
 <layout-stack id="hidden-divide" class="sf-gap-sm sf-divide-y">
 	<p class="sl-hide-below-md">Hidden below md</p>
@@ -216,6 +230,11 @@
 <layout-stack id="narrow-divide" class="sf-gap-sm sf-divide-y">
 	<p class="sl-show-below-md">Shown below md only</p>
 	<p>Shown: no line above it above md</p>
+	<p>Shown: a line above it</p>
+</layout-stack>
+<layout-stack id="swap-divide" class="sf-gap-sm sf-divide-y">
+	<p class="sl-show-below-md">Shown below md only</p>
+	<p class="sl-hide-below-md">Hidden below md</p>
 	<p>Shown: a line above it</p>
 </layout-stack>
 

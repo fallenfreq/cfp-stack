@@ -28,8 +28,9 @@ width and alignment decided with the user), and committed.
 copies are removed.
 
 **Item 25, a hidden block leaves nothing behind** (K5, 2026-10-10): done, checked, reviewed twice
-by fresh agents and committed (not pushed). Next: the second review's seven fixes (item 25,
-"Second review"), when the user says go.
+by fresh agents, committed and pushed (a201e51, pushed 2026-10-11, so it's live). The second
+review's fixes (item 25, "Second review") and the third review's (item 25, "Third review") are
+made, checked and committed (not pushed).
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -1297,37 +1298,62 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       and the block after it loses its divide line (spec, validator); an "after another block"
       rule drawn with `::before`/`::after` on a block that is itself a width container measures
       that block (no rule does this). The drag preview of several blocks, outside the document,
-      loses the space after a shown hide/show block (`multiSelect.ts`; it's brief). Older, found
+      loses the space after a shown hide/show block (`multiSelect.ts`; it's brief). ~~Older, found
       in the review: an image with `sl-object-*` and a hide class never hides, as
       `img.sl-object-* { display: block }` outweighs the hide rule (`slObject.ts`), and now the
-      block after it loses its space or line at those widths.
+      block after it loses its space or line at those widths.~~ Fixed (second review, 1).
     - **Second review** (2026-10-11, a fresh agent, of the first review's fixes; each finding
-      shown again before proposing). Proposed to the user, **not made yet** (they asked to
-      commit and compact first):
+      shown again before proposing). Proposed to the user after committing a201e51, then made one
+      at a time with their go-ahead (2026-10-11), committed with the third review's:
         1. A picture set to Crop/Fit/Stretch/Original (`sl-object-*`) and hidden below md never
-           hides (older); new with this change, the block after it loses its space and line
-           while the picture shows. Fix: drop `display: block` from the four `sl-object-*` rules
+           hid (older); new with K5, the block after it lost its space and line while the
+           picture showed. **Made**: `display: block` dropped from the `sl-object-*` rules
            (`slObject.ts`): the reset already shows every image as a block, and that declaration
-           is the only reason they outweigh hiding. Covers the box form too. Add a test-page case
-           and check (a Card: hidden cropped picture, then a block).
-        2. The space checks never check that the two-block reference box is spaced: with all
-           block spacing removed they pass. Add `reference.gaps[0] > 1`.
-        3. The slow-case comment (`slLayout.ts`) understates it ("tens of milliseconds"): say
-           how it grows (square of the run, adding a block and crossing a width), numbers in the
-           plan (above) and the commit message only.
-        4. Wording: `blockSpacing.ts` "made … slower" in present tense; `generateCss.ts` exact
-           on why a hide/show block with no container loses the next block's line (the band
-           copies need a container; "shown at every width" leaves hide/show blocks out).
-        5. No case has a shown hide/show block, then a hidden one, then a block, so band copies
-           written with `+` instead of `~` would pass. Add a Card holding a show-below-md
-           block, a hide-below-md block, then a block.
+           was the only reason they outweighed hiding. Case `#hidden-picture-card`; with the old
+           rule its check fails below md in both browsers.
+        2. The space checks never checked that the two-block reference box is spaced: with all
+           block spacing removed they passed. **Made**: `reference.gaps[0] > 1`; with block
+           spacing removed, all 16 now fail.
+        3. The slow-case comment (`slLayout.ts`) understated it ("tens of milliseconds").
+           **Made**: it says how it grows (square of the run, adding a block and crossing a
+           width); numbers in the plan (above) and the commit message only.
+        4. Wording. **Made**: `blockSpacing.ts` "makes … slower" (present tense); `generateCss.ts`
+           exact on why a hide/show block with no container loses the next block's line (the
+           band copies need a container; "shown at every width" leaves hide/show blocks out).
+        5. No case had a shown hide/show block, then a hidden one, then a block, so band copies
+           written with `+` instead of `~` would pass. **Made**: `#swap-card` (a Card holding a
+           show-below-md block, a hide-below-md block, then a block) and the same in a Stack
+           with divide lines, `#swap-divide`; with every band copy looking one block back, only
+           these two fail, below md in both browsers.
         6. The width check takes any letters as a unit (`640foo`): allow CSS length units only.
-        7. Write the hide rules one class per selector instead of `:is(…)` (same weight; Chrome
-           sorts them by class): 24.3 → 22.6ms to add a block on 2,000 blocks.
+           **Not taken** (decided with the user): no other CSS is checked (a token or rule value
+           only for being empty); the width check is there to sort the widths.
+        7. Write the hide rules one class per selector instead of `:is(…)` (same weight; the
+           browser files each under its class). **Made**, measured on 2,000 blocks, three rounds:
+           Chrome adding a block 24.4 → 22.8ms, typing in the code view 18.9 → 18.2ms, crossing
+           a width 38.4 → 36.5ms; WebKit 8.0 → 8.0, 44 → 40, 99 → 90ms.
            Not taken: making "shown at every width" look only at the block just before (halves the
            pairs case, but worsens the logged app-screen edge).
-    - **Status:** done, checked (520 pass), reviewed twice; the first review's findings fixed or
-      logged; the second review's seven fixes above await the user's go-ahead. Committed.
+    - **Third review** (2026-10-11, a fresh agent, of the second review's fixes; each finding
+      shown again before acting). The fixes held (full suite 520 pass, timings reproduced, the
+      computed look of every element on four pages unchanged by the hide-rule split). Made, with
+      the user's go-ahead:
+        - The picture fix had no check when the class is on a Card and the picture alone inside
+          it hides. Case `#hidden-cover-card` and its check; with the old rule on that form only,
+          it fails below md in both browsers.
+        - Comments: the hide rules are tried on elements, not only blocks; `slObject.ts` names
+          the show classes too (the old rule kept a show-below-md picture shown above md); the
+          slow case grows with the square of the run in Chrome, much less in WebKit (a run of
+          1,000 pairs: adding a block 49ms against 8ms), and a box helps only blocks that hide
+          together; `blockSpacing.ts` "would make"; the app-screen edge comment split in two.
+        - New behaviour, from the picture fix: a cropped or fitted picture with the HTML
+          `hidden` attribute now hides (it showed before). Nothing uses it: the editor keeps only
+          style, class and id.
+        - The resume note said a201e51 wasn't pushed; it was (2026-10-11 02:26), so K5 is live.
+          Not ours: one of its runs failed once while the page reloaded (the shared dev server).
+    - **Status:** done, checked, reviewed three times; the first review's findings fixed or
+      logged. Committed and pushed (a201e51). The second review's fixes 1–5 and 7 and the third
+      review's made and committed (not pushed); the second's 6 not taken.
 
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in

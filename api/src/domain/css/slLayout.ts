@@ -160,8 +160,10 @@ export const NOT_A_BLOCK = '.ProseMirror-widget'
 //   Rules use it as ":where(shown) ~ X", which the browser checks from X back to the first block
 // that matches: almost always the one just before, so it stays fast on long pages. A rule per
 // width instead would search back for a block wearing its one class, past every block before X.
-// The slow case left: each block in a long run of hide/show blocks looks back to the start of the
-// run (a run of a thousand makes adding a block take tens of milliseconds).
+// The slow case left: in a long run of hide/show blocks, each one looks back to the start of the
+// run, so in Chrome the work grows with the square of the run's length (much less in WebKit), both
+// when a block is added and when the page crosses a width. Blocks that hide together cost nothing
+// when they sit in one box and the box hides instead.
 //   The classes are named, not matched by part of the class attribute ([class*=…]): before a
 // "~", a part-match makes Chrome restyle every later block whenever any block's classes change,
 // such as when one is selected.

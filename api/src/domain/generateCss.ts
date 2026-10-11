@@ -399,10 +399,12 @@ function emitThemeBlocks(
 		out += rule(written ?? sel, indent)
 		// A rule that picks a block "after another" is written again for each band, after a block
 		// shown there: in a document by the document's width, elsewhere by the nearest container's,
-		// as hiding is. Elsewhere, two cases measure differently from hiding: a hide/show block with
-		// no container around it never hides, but these rules count it as hidden, so the block after
-		// it loses its line; and a rule drawn with ::before or ::after on a block that is itself a
-		// width container measures that block, not the box around it.
+		// as hiding is. Elsewhere, two cases measure differently from hiding.
+		//   A hide/show block with no container around it never hides, yet the rule skips the block
+		// after it: the band copies need a container to apply, and the rule for blocks shown at
+		// every width leaves hide/show blocks out.
+		//   A rule drawn with ::before or ::after on a block that is itself a width container
+		// measures that block, not the box around it.
 		//   "Elsewhere" is tested on the block styled, not the block before: a test on the block
 		// before fails for every block in a document, and the browser then tries each block before
 		// it in turn, so typing in the code view, with its thousands of highlighted pieces, lags.
@@ -566,12 +568,16 @@ function emitCollapseLayer(
 		body += '\t}\n'
 	}
 	// Emitted after the layout primitives, so it wins over their display on the same element.
+	// One selector per class, not :is(…): the browser files a rule under its class and tries it
+	// only on elements that have it, while an :is() list is tried on every element.
 	for (const band of bands) {
+		const each = (selector: (hidden: string) => string) =>
+			band.hidden.map((hidden) => `\t\t${selector(hidden)}`).join(',\n')
 		body += `\t@container ${band.condition} {\n`
-		body += `\t\t:is(${band.hidden.join(', ')})${OUTSIDE_DOCUMENTS} { display: none; }\n`
+		body += `${each((hidden) => `${hidden}${OUTSIDE_DOCUMENTS}`)} { display: none; }\n`
 		body += '\t}\n'
 		body += `\t@container ${DOCUMENT_CONTAINER} ${band.condition} {\n`
-		body += `\t\t:where(${DOCUMENT}) :is(${band.hidden.join(', ')}) { display: none; }\n`
+		body += `${each((hidden) => `:where(${DOCUMENT}) ${hidden}`)} { display: none; }\n`
 		body += '\t}\n'
 	}
 	return `@layer sl-layout {\n${body}}\n`

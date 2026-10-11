@@ -22,8 +22,8 @@ import {
 //   A block hidden at this width keeps its place in the page, so "after a shown block" is
 //     written once for blocks shown at every width and once per width band (slLayout.ts,
 //     widthBands). The space goes above a block rather than below: below would mean each block
-//     looking ahead for a shown one after it, which made adding a block several times slower on
-//     long pages.
+//     looking ahead for a shown one after it, which would make adding a block several times
+//     slower on long pages.
 
 const FLOW_CONTAINER =
 	':where([data-node-view-content], [data-container], blockquote, li, li[data-checked] > div, td, th)'

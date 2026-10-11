@@ -66,11 +66,14 @@ const SPACE_CASES = [
 	{ id: 'hidden-first-card', pair: 'pair-card', shown: [1, 1, 1, 2] },
 	{ id: 'narrow-last-card', pair: 'pair-card', shown: [2, 2, 2, 1] },
 	{ id: 'between-last-card', pair: 'pair-card', shown: [2, 2, 2, 1] },
+	{ id: 'hidden-picture-card', pair: 'pair-card', shown: [1, 1, 1, 2] },
+	{ id: 'swap-card', pair: 'pair-card', shown: [2, 2, 2, 2] },
 ] as const
 const DIVIDE_CASES = [
 	{ id: 'hidden-divide', shown: [2, 2, 2, 4] },
 	{ id: 'narrow-divide', shown: [3, 3, 3, 2] },
 	{ id: 'nearer-divide', shown: [3, 3, 3, 2] },
+	{ id: 'swap-divide', shown: [2, 2, 2, 2] },
 ] as const
 
 bands().forEach(({ name, px }, band) => {
@@ -78,6 +81,7 @@ bands().forEach(({ name, px }, band) => {
 		await setPageWidth(page, px)
 		for (const { id, pair, shown } of SPACE_CASES) {
 			const reference = await spacing(page, pair)
+			expect(reference.gaps[0], `${pair}: its blocks are spaced`).toBeGreaterThan(1)
 			const got = await spacing(page, id)
 			expect(got.gaps.length + 1, `${id}: blocks shown`).toBe(shown[band])
 			expect(Math.abs(got.above - reference.above), `${id}: space above`).toBeLessThanOrEqual(
@@ -92,6 +96,16 @@ bands().forEach(({ name, px }, band) => {
 					`${id}: space between`,
 				).toBeLessThanOrEqual(1)
 		}
+	})
+
+	test(`a picture set to cover its Card hides by the page's width too, ${name}`, async ({
+		page,
+	}) => {
+		await setPageWidth(page, px)
+		const picture = page.locator('#hidden-cover-card img')
+		expect(await picture.evaluate((img) => img.checkVisibility()), 'shown above md only').toBe(
+			name === 'above md',
+		)
 	})
 
 	test(`divide lines are drawn only between shown blocks, ${name}`, async ({ page }) => {
