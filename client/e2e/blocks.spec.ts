@@ -1,6 +1,15 @@
 import type { Locator, Page } from '@playwright/test'
 import { expect, test } from './fixtures'
-import { box, breakpoints, css, openTests, setShellWidth, settle, taskItemLayout } from './helpers'
+import {
+	box,
+	breakpoints,
+	css,
+	dividerLooks,
+	openTests,
+	setShellWidth,
+	settle,
+	taskItemLayout,
+} from './helpers'
 
 // A block rendered by a component is two boxes: the component's own box (the block, wearing its
 // classes) and a content box holding its blocks. These check that layout rules reach through the
@@ -10,30 +19,6 @@ import { box, breakpoints, css, openTests, setShellWidth, settle, taskItemLayout
 test.beforeEach(async ({ page, themeClass }) => {
 	await openTests(page, themeClass)
 })
-
-/** What a divide line could look like, for each block inside a block and for a component's own parts. */
-const dividerLooks = (page: Page, id: string) =>
-	page.locator(`#${id}`).evaluate((root) => {
-		const look = (el: Element) => {
-			const s = getComputedStyle(el)
-			const before = getComputedStyle(el, '::before').content
-			const after = getComputedStyle(el, '::after').content
-			return [
-				s.borderTopStyle,
-				s.borderTopWidth,
-				s.borderTopColor,
-				s.boxShadow,
-				s.outlineStyle,
-				before,
-				after,
-			].join(' | ')
-		}
-		const content = root.querySelector(':scope > [data-node-view-content]')
-		return {
-			items: [...(content ?? root).children].map(look),
-			ownParts: content ? [...root.children].filter((el) => el !== content).map(look) : [],
-		}
-	})
 
 test('divide lines in a Stack look like those in a plain stack', async ({ page }) => {
 	const block = await dividerLooks(page, 'divide-stack')

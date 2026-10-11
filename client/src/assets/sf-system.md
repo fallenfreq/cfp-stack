@@ -515,7 +515,9 @@ sf-boundary        all four
 
 **Divide** — visual separation between an element's children (applied to the parent).
 Targets `> * + *`. `sf-divide-y` pairs naturally with `sl-stack`; `sf-divide-x` with
-`sl-cluster` or `sl-columns`.
+`sl-cluster` or `sl-columns`. A child hidden at this width (`sl-hide-below-*`,
+`sl-show-below-*`) doesn't count, so lines go only between shown children: hiding the first
+leaves no line at the top (Container-responsive collapse).
 
 ```text
 sf-divide-x    between horizontally arranged children
@@ -1137,13 +1139,21 @@ narrower than md, wherever the element sits, so the layouts around it don't beco
 containers for it. On app screens they measure the nearest layout around them; with none, the
 element always shows.
 
+**A hidden block leaves nothing behind.** It keeps its place in the page, but block spacing and
+divide lines count only the blocks shown at this width, so hiding a box's first or last block
+leaves no space or line at that edge. The widths split a box's width into bands, each listing
+the classes hidden in it (`widthBands` in `slLayout.ts`); hiding, block spacing and a theme's
+"after another block" are all written once per band from that one list, so they agree. The
+bands need the widths in order, so all the widths are in one unit (any unit); a width in
+another is refused where it's saved.
+
 **Nothing else is a width container.** Chrome boxes (a card, a toolbar) aren't: one sized by
 its content would be 0 wide. A component with width rules of its own follows the component
 rules (Editor integration).
 
 The CSS is generated from the theme's breakpoints (the collapse layer in `generateCss.ts`);
 the lists it reads are in `slLayout.ts` (`COLLAPSE_HOST_SELECTOR`,
-`SIZED_BY_CONTENT_SELECTOR`).
+`SIZED_BY_CONTENT_SELECTOR`, `widthBands`).
 
 ---
 
@@ -1219,10 +1229,13 @@ their items with a gap (`GAP_LAYOUTS` in `slLayout.ts`):
 
 - **Elements** opt into the theme by wearing `sf`, set by the node: `blockquote.sf`,
   `code.sf`, `ul.sf`, `ol.sf`. The theme draws them; the reset leaves the rest bare.
-- **Space between blocks** is `blockSpacing.ts`, in the lowest layer so any theme rule
-  wins. It belongs to flow containers — the document, a node view's content box, a plain
-  div block, a quote, a list item, a task item's content, a table cell — whose blocks each
-  get the theme's `md` step below them (`xs` between list items). Layouts are the author's
+- **Space between blocks** is `blockSpacing.ts`, in the lowest layer so a component rule that
+  sets a block's space above it wins (themes set looks, not spacing). It belongs to flow
+  containers — the document, a node view's content box, a plain div block, a quote, a list
+  item, a task item's content, a table cell — where each block after a shown block gets the
+  theme's `md` step above it (`xs` between list items); a block hidden at this width doesn't
+  count. Space under a block merges with the next block's space above, the larger showing, so
+  it can widen a gap but not narrow it. Layouts are the author's
   choice, not the default: an element wearing a layout class isn't a flow container, so
   its gap alone spaces its children.
 - **Defaults the author can override** sit in the lowest layer, keyed on markers the node
@@ -1257,6 +1270,11 @@ blocks in a component's content box (`throughNodeViews` in
 - **A layout's content box steps aside** (`display: contents`, `nodeViews.ts`), so the blocks
   inside are the layout's own items. They follow the component's own parts as siblings: in a
   divided layout with a heading of its own, the first block gets a line.
+- **"After any block" means after a shown block.** A step from any block to a later one
+  (`* + X`, `* ~ X`) is also written once per width band, after a block shown there, so a
+  block hidden at this width isn't counted (Container-responsive collapse). Only "any block"
+  can be: in `h2 + p` a block hidden between the two still counts, as CSS can't say "the
+  nearest shown block before it is a heading".
 - Rewritten rules keep their weight.
 - **What can't be rewritten:** a `:has()` inside another `:has()` (the browser would drop the
   whole rule), a child or sibling step inside `:not()`, `:is()` or `:where()`, and a sibling
@@ -1313,6 +1331,9 @@ Each rule's reason is in the section named.
 - No container units (`cqw`, `cqi`) in values: what they measure depends on where the system
   puts width containers (Container-responsive collapse).
 - `var(--sf-gap)` and `var(--sf-padding)` are read with a fallback, unless unset means none.
+- Warn on a rule that picks a block right after a particular one (`h2 + p`): a block hidden
+  between them still counts, and a theme author can't know where pages hide blocks. "After any
+  block" (`* + *`) counts only shown blocks (Component blocks).
 
 **Content** (classes on a page's blocks, from the class panel or code view)
 
@@ -1343,6 +1364,9 @@ Each rule's reason is in the section named.
 - Warn on `overflow: hidden` around the slot.
 - No `click`, `pointerdown`, `mousedown`, `copy`, `cut` or `paste` in `emits`.
 - The component's CSS is in a cascade layer.
+- Warn on `sl-hide-below-*` or `sl-show-below-*` on an app screen with no layout around it:
+  it never hides, and the rules for shown blocks can't tell, so a divide line after it is lost
+  (Container-responsive collapse).
 
 ---
 

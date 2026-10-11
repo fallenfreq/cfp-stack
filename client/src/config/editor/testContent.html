@@ -163,6 +163,79 @@
 	<p id="video-hide-below">Below</p>
 </layout-stack>
 
+<h3>A hidden block leaves no space behind</h3>
+<p>
+	Each box hides or shows a block by the page's width. The space at its edges, and between its
+	shown blocks, is the same as in the box of its kind below holding two blocks.
+</p>
+<layout-card id="hidden-last-card" class="sf-size-md">
+	<p>Shown</p>
+	<p class="sl-hide-below-md">Hidden below md</p>
+</layout-card>
+<div data-container id="hidden-last-box" class="sf-depth-1 sf-size-md">
+	<p>Shown</p>
+	<p class="sl-hide-below-md">Hidden below md</p>
+</div>
+<blockquote id="hidden-last-quote">
+	<p>Shown</p>
+	<p class="sl-hide-below-md">Hidden below md</p>
+</blockquote>
+<layout-card id="hidden-first-card" class="sf-size-md">
+	<p class="sl-hide-below-md">Hidden below md</p>
+	<p>Shown</p>
+</layout-card>
+<layout-card id="narrow-last-card" class="sf-size-md">
+	<p>Shown</p>
+	<p class="sl-show-below-md">Shown below md only</p>
+</layout-card>
+<layout-card id="between-last-card" class="sf-size-md">
+	<p>Shown</p>
+	<p class="sl-show-below-sm">Shown below sm only</p>
+	<p class="sl-hide-below-sm sl-show-below-md">Shown between sm and md only</p>
+</layout-card>
+<layout-card id="pair-card" class="sf-size-md"
+	><p>One</p>
+	<p>Two</p></layout-card
+>
+<div data-container id="pair-box" class="sf-depth-1 sf-size-md">
+	<p>One</p>
+	<p>Two</p>
+</div>
+<blockquote id="pair-quote">
+	<p>One</p>
+	<p>Two</p>
+</blockquote>
+
+<h3>Divide lines are drawn only between shown blocks</h3>
+<layout-stack id="hidden-divide" class="sf-gap-sm sf-divide-y">
+	<p class="sl-hide-below-md">Hidden below md</p>
+	<p>Shown: no line above it below md</p>
+	<p class="sl-hide-below-md">Hidden below md</p>
+	<p>Shown: a line above it</p>
+</layout-stack>
+<layout-stack id="narrow-divide" class="sf-gap-sm sf-divide-y">
+	<p class="sl-show-below-md">Shown below md only</p>
+	<p>Shown: no line above it above md</p>
+	<p>Shown: a line above it</p>
+</layout-stack>
+
+<h3>In a narrower box that measures its own width, lines still follow the page's width</h3>
+<p>
+	The outer box is 30rem wide and holds collapsing columns, so it measures its own width; hide and
+	show inside it still go by the page's.
+</p>
+<div data-container id="nearer-box" class="sl-stack sf-gap-sm" style="max-width: 30rem">
+	<div data-container id="nearer-divide" class="sl-stack sf-gap-sm sf-divide-y">
+		<p class="sl-show-below-md">Shown below md only (the page's width)</p>
+		<p>Shown: no line above it above md</p>
+		<p>Shown: a line above it</p>
+	</div>
+	<div data-container class="sl-columns sl-collapse-xs">
+		<p>A</p>
+		<p>B</p>
+	</div>
+</div>
+
 <h3>A video fills its width up to 36rem, or the limit in its own style</h3>
 <iframe
 	data-youtube-video
@@ -694,14 +767,7 @@
 <h2>Known not to work yet</h2>
 <p>
 	Each heading says what should happen; today it doesn't. The checks expect these to fail, and
-	report when one starts working, so its check can become a normal one.
+	report when one starts working, so its check can become a normal one. None at the moment.
 </p>
-
-<h3>K5: hiding a Card's last block should leave no extra space under the block above it</h3>
-<layout-card id="k5-card" class="sf-size-md">
-	<p id="k5-last-shown">Shown</p>
-	<p id="k5-hidden" class="sl-hide-below-md">Hidden below md</p>
-</layout-card>
-<layout-card id="k5-reference" class="sf-size-md"><p id="k5-only">The only block</p></layout-card>
 
 <p>End of the test cases.</p>

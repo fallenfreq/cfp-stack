@@ -46,6 +46,37 @@ test("in a layout, a content box's first block follows the component's own parts
 	assert.equal(throughNodeViews('.sf-divide-y > * + *'), `${q} > * + *`)
 })
 
+test('given what counts as shown, "after any block" starts from a shown block', () => {
+	const shown = ':not(.sl-hide-below-md)'
+	const after = (s) => throughNodeViews(s, ASIDE, shown)
+	const q = `:is(.sf-divide-y, .sf-divide-y > ${C})`
+	const from = `:where(${shown})`
+	assert.equal(
+		after('.sf-divide-y > * + *'),
+		`${q} > ${from} ~ *, .sf-divide-y:where(${ASIDE}) > ${from} ~ ${C} > *`,
+	)
+	assert.equal(after('.x > * ~ p'), map(`.x > ${from} ~ p`))
+	for (const alternative of splitList(after('.sf-divide-y > * + *')))
+		assert.deepEqual(specificity(alternative), specificity('.sf-divide-y > * + *'), alternative)
+	// Only from any block, and not inside :has().
+	for (const s of ['h2 + p', '.x > .a + *', '.x:has(> * + .y)', '.x > *::before'])
+		assert.equal(after(s), map(s), s)
+})
+
+test('given only, every element found must match it too', () => {
+	const only = ':where(.o)'
+	const found = splitList(throughNodeViews('.sf-divide-y > * + *::before', ASIDE, '', only))
+	assert.equal(found.length, 2)
+	for (const s of found) assert.ok(s.endsWith(`${only}::before`), s)
+	assert.equal(
+		throughNodeViews('.x:has(> .y) > p', ASIDE, '', only),
+		map('.x:has(> .y) > p').replace(/ > p$/, ` > p${only}`),
+	)
+	// CSS 2's one-colon pseudo-elements stay last, as the browser would drop `:before:where(…)`.
+	for (const s of splitList(throughNodeViews('.sf-divide-y > * + *:before', ASIDE, '', only)))
+		assert.ok(s.endsWith(`${only}:before`), s)
+})
+
 test(':has() lists each way a child can sit', () => {
 	assert.equal(
 		map('.sl-scroll-frame:has(> .sl-scroll-x)::after'),

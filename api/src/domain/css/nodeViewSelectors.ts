@@ -7,6 +7,13 @@
 //   - A layout's content box steps aside (display: contents), so its first block comes right after
 //     the component's own last part. Given stepAside (those layouts), a + or ~ after a child step
 //     reaches it.
+//   - Given shown (what counts as a shown block), a step from any block to a later one
+//     (`* + X`, `* ~ X`) starts from a shown block instead (`:where(shown) ~ X`), so a block
+//     hidden at this width isn't counted. Only "any block" can be read so: CSS can't say "the
+//     nearest shown block before X is a heading", so `h2 + p` still counts hidden blocks. Not
+//     inside :has(), whose blocks may measure another width.
+//   - Given only (a compound), the element the selector finds must match it too: it's added to
+//     the last step, before any pseudo-element.
 // Inserted tests are zero-weight (:where) and a selector's alternatives share one weight, so a
 // rewritten selector keeps the weight it was written with.
 // Shapes it can't map faithfully throw: :has() inside :has() (the browser drops the whole rule),
@@ -17,12 +24,16 @@
 const CBOX = ':where([data-node-view-content])'
 
 const SELECTOR_ARGUMENT = /^:(not|is|where)$/i
+// CSS 2's pseudo-elements, still allowed with one colon.
+const ONE_COLON_PSEUDO_ELEMENT = /^:(before|after|first-line|first-letter)$/i
 const IDENT_CHAR = /[\w\-\u00a0-\uffff]/
 
 type Combinator = '' | ' ' | '>' | '+' | '~'
 
 interface Context {
 	stepAside: string
+	shown: string
+	only: string
 	inHas: boolean
 }
 
@@ -42,9 +53,10 @@ interface Block {
 	parentFound: string[] | null // the parent's, when this block was reached by a child step
 }
 
-// stepAside: the layouts whose content box steps aside, as a selector list.
-export function throughNodeViews(selector: string, stepAside = ''): string {
-	const ctx: Context = { stepAside, inHas: false }
+// stepAside: the layouts whose content box steps aside, as a selector list. shown: what counts as
+// a shown block, as a compound. only: what the element found must also match, as a compound.
+export function throughNodeViews(selector: string, stepAside = '', shown = '', only = ''): string {
+	const ctx: Context = { stepAside, shown, only, inHas: false }
 	try {
 		return mapList(selector, ctx, false).join(', ')
 	} catch (e) {
@@ -54,7 +66,7 @@ export function throughNodeViews(selector: string, stepAside = ''): string {
 
 function mapList(list: string, ctx: Context, relative: boolean): string[] {
 	const out = splitList(list).flatMap((complex) => {
-		const steps = parseSteps(complex, ctx, relative)
+		const steps = afterShown(parseSteps(complex, ctx, relative), ctx)
 		let last: Block | null = null
 		for (const [i, step] of steps.entries()) {
 			if (step.compound.pseudoElement && i < steps.length - 1)
@@ -63,12 +75,33 @@ function mapList(list: string, ctx: Context, relative: boolean): string[] {
 		}
 		if (!last) throw new Error('an empty selector')
 		const pseudoElement = last.compound.pseudoElement
-		return last.found.map((s) => s + pseudoElement)
+		const only = ctx.inHas ? '' : ctx.only
+		return last.found.map((s) => s + only + pseudoElement)
 	})
 	return [...new Set(out)]
 }
 
 // ─── Mapping ─────────────────────────────────────────────────────────────
+
+function afterShown(steps: Step[], ctx: Context): Step[] {
+	if (!ctx.shown || ctx.inHas) return steps
+	const anyThenLater = (i: number): boolean => {
+		const step = steps[i]
+		const next = steps[i + 1]
+		return (
+			!!step
+			&& !step.compound.text
+			&& !step.compound.pseudoElement
+			&& (next?.combinator === '+' || next?.combinator === '~')
+		)
+	}
+	return steps.map((step, i) => ({
+		combinator: anyThenLater(i - 1) ? '~' : step.combinator,
+		compound: anyThenLater(i)
+			? { ...step.compound, text: `:where(${ctx.shown})` }
+			: step.compound,
+	}))
+}
 
 function nextBlock(prev: Block | null, step: Step, ctx: Context, relative: boolean): Block {
 	const { combinator: comb, compound: c } = step
@@ -187,6 +220,8 @@ function parseCompound(text: string, ctx: Context): Compound {
 				if (ctx.inHas || argument === null) throw new Error(':has() inside :has()')
 				const inside = mapList(argument, { ...ctx, inHas: true }, true)
 				c.text += `:has(${inside.join(', ')})`
+			} else if (argument === null && ONE_COLON_PSEUDO_ELEMENT.test(name)) {
+				c.pseudoElement = name
 			} else {
 				if (argument !== null && SELECTOR_ARGUMENT.test(name)) checkArgument(argument, ctx)
 				c.text += text.slice(i, j)

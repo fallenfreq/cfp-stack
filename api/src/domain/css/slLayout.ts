@@ -1,3 +1,4 @@
+import type { CollapseThreshold } from '../collapseThresholds.js'
 import { throughNodeViews } from './nodeViewSelectors.js'
 
 // What each sl- class does: how it moves, flows and aligns what's inside it. Arrangement is
@@ -85,8 +86,8 @@ export const GAP_LAYOUT_SELECTOR = GAP_LAYOUTS.map((name) => `.${name}`).join(',
 // Fixed CSS with a child or sibling step goes through forBlocks, so it also reaches the blocks in
 // a component's content box (nodeViewSelectors.ts). Every theme rule goes through it too
 // (generateCss.ts).
-export const forBlocks = (selector: string): string =>
-	throughNodeViews(selector, GAP_LAYOUT_SELECTOR)
+export const forBlocks = (selector: string, shown = '', only = ''): string =>
+	throughNodeViews(selector, GAP_LAYOUT_SELECTOR, shown, only)
 
 // The margin before an inset's line: the set margin, or half the width left over past the
 // column's limit if that's more. One sum for an inset's tracks, sl-inset-line's padding and a
@@ -105,6 +106,71 @@ export const INSET_DOCUMENT = `${INSET_DOCUMENT_MOUNT} > .tiptap.ProseMirror`
 // by it.
 export const COLLAPSE_CLASS_SELECTOR = '[class*="sl-collapse-"]'
 export const SWAP_CLASS_SELECTOR = '[class*="sl-hide-below-"], [class*="sl-show-below-"]'
+
+// The width container every document is (the collapse layer): hiding in a document measures it,
+// past any nearer container.
+export const DOCUMENT_CONTAINER = 'sf-document'
+
+// What's hidden at each width. sl-hide-below-X hides a block at or below width X and
+// sl-show-below-X above it, but the block keeps its place in the page, so a rule that picks
+// blocks by place ("after another block") still counts it: a hidden first or last block would
+// leave a line or space behind. CSS can't ask whether a block is shown, so the widths are split
+// into bands, each listing every class hidden in it, and the rules that count neighbours are
+// written once per band: hiding itself, block spacing and a theme's "after another block". They
+// all read these bands, so they agree.
+export interface WidthBand {
+	/** A container condition, e.g. `(640px < width <= 768px)`. */
+	condition: string
+	/** The classes hidden in the band, each as a selector (`.sl-hide-below-md`). */
+	hidden: string[]
+}
+
+// The bands, narrowest first. The widths are sorted by number to make them, so they share one
+// unit (setCollapseThreshold refuses another).
+export function widthBands(
+	widths: readonly Pick<CollapseThreshold, 'name' | 'value'>[],
+): WidthBand[] {
+	if (widths.length === 0) return []
+	const sorted = widths
+		.map((w) => ({ ...w, size: Number.parseFloat(w.value) }))
+		.sort((a, b) => a.size - b.size)
+	const bands: WidthBand[] = []
+	for (let i = 0; i <= sorted.length; i++) {
+		const lower = sorted[i - 1]
+		const upper = sorted[i]
+		const range = [lower && `${lower.value} <`, 'width', upper && `<= ${upper.value}`]
+		const hidden = [
+			...sorted
+				.filter((w) => upper && w.size >= upper.size)
+				.map((w) => `.sl-hide-below-${w.name}`),
+			...sorted
+				.filter((w) => lower && w.size <= lower.size)
+				.map((w) => `.sl-show-below-${w.name}`),
+		]
+		bands.push({ condition: `(${range.filter((part) => part).join(' ')})`, hidden })
+	}
+	return bands
+}
+
+// ProseMirror's widgets (the gap cursor) sit among the blocks but aren't blocks.
+export const NOT_A_BLOCK = '.ProseMirror-widget'
+
+// A shown block, as the one before another: shown at every width, it wears none of the hide/show
+// classes (with no widths nothing hides); shown in a band, none of the band's hidden classes.
+//   Rules use it as ":where(shown) ~ X", which the browser checks from X back to the first block
+// that matches: almost always the one just before, so it stays fast on long pages. A rule per
+// width instead would search back for a block wearing its one class, past every block before X.
+// The slow case left: each block in a long run of hide/show blocks looks back to the start of the
+// run (a run of a thousand makes adding a block take tens of milliseconds).
+//   The classes are named, not matched by part of the class attribute ([class*=…]): before a
+// "~", a part-match makes Chrome restyle every later block whenever any block's classes change,
+// such as when one is selected.
+export const shownAlways = (bands: readonly WidthBand[]): string => {
+	const swapping = new Set(bands.flatMap((band) => band.hidden))
+	return `:not(${[...swapping, NOT_A_BLOCK].join(', ')})`
+}
+export const shownIn = (band: WidthBand): string =>
+	`:not(${[...band.hidden, NOT_A_BLOCK].join(', ')})`
 
 // Everything in a document whose width comes from its content, because a box around it sizes
 // what's inside to fit: a table cell, a cluster's items, a cover's centred items, a layout

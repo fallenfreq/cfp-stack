@@ -229,6 +229,36 @@ export const measuredBox = (target: Locator): Promise<{ name: string; width: num
 		return { name, width }
 	})
 
+/**
+ * What a divide line could look like, for each block inside a block and for a component's own
+ * parts. shownOnly leaves out the blocks hidden at this width.
+ */
+export const dividerLooks = (page: Page, id: string, { shownOnly = false } = {}) =>
+	page.locator(`#${id}`).evaluate((root, shownOnly) => {
+		const look = (el: Element) => {
+			const s = getComputedStyle(el)
+			const before = getComputedStyle(el, '::before').content
+			const after = getComputedStyle(el, '::after').content
+			return [
+				s.borderTopStyle,
+				s.borderTopWidth,
+				s.borderTopColor,
+				s.boxShadow,
+				s.outlineStyle,
+				before,
+				after,
+			].join(' | ')
+		}
+		const content = root.querySelector(':scope > [data-node-view-content]')
+		const blocks = [...(content ?? root).children].filter(
+			(el) => !shownOnly || el.checkVisibility(),
+		)
+		return {
+			items: blocks.map(look),
+			ownParts: content ? [...root.children].filter((el) => el !== content).map(look) : [],
+		}
+	}, shownOnly)
+
 /** How a to-do item lays out its checkbox and its text. */
 export const taskItemLayout = (target: Locator) =>
 	target.evaluate((item) => {

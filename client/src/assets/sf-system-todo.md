@@ -24,8 +24,12 @@ reviewed three times by fresh agents with every finding fixed or logged (shapes,
 width and alignment decided with the user), and committed.
 
 **Item 24, a component block is one box** (2026-10-10): done, reviewed twice by fresh agents
-(item 24, "Review", "Second review"), committed (68caa20, not pushed); the throwaway copies are
-removed. Next: K5.
+(item 24, "Review", "Second review"), committed and pushed (68caa20, f56b0fb); the throwaway
+copies are removed.
+
+**Item 25, a hidden block leaves nothing behind** (K5, 2026-10-10): done, checked, reviewed twice
+by fresh agents and committed (not pushed). Next: the second review's seven fixes (item 25,
+"Second review"), when the user says go.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -1236,6 +1240,95 @@ reaches live with `pnpm seed:live` (2026-10-03, above). Candidates:
       both themes; a fresh agent's review against the spec finds nothing left over; the
       throwaway copies (`~/cfp-stack-onebox`, `~/cfp-stack-base`) are removed.
 
+25. **A hidden block leaves nothing behind** (2026-10-10, K5; each step decided with the user).
+    - **Why:** hiding by width (`sl-hide-below-*`, `sl-show-below-*`) leaves a block in its place
+      in the page, so rules that pick blocks by place counted it. Block spacing ("every block but
+      the last") left 32px under a Card's last shown block instead of 16px (Card, plain box,
+      quote, list item, table cell, to-do item; and a narrow-only last block on a wide screen).
+      A divide line ("each block after another") showed above the first shown block when the
+      first was hidden.
+    - **The design:** the generator splits the widths into bands, each listing the classes
+      hidden in it (`widthBands`, `slLayout.ts`). Hiding, block spacing and a theme's "after any
+      block" (`* + X`, through `forBlocks`) are written once per band from that list, after a
+      block shown there. Space goes above each block that comes after a shown one. The widths
+      share one unit so they can be sorted (refused otherwise in `setCollapseThreshold`).
+    - **New behaviour:** space under a block no longer sets the gap below it: it merges with the
+      next block's space above, the larger showing (a theme's `h2 { margin-bottom: 4px }` gave
+      4px, now 16px). Themes set looks, not spacing (spec), and no seeded theme sets margins.
+    - **Ruled out**, measured in Chrome 155 and WebKit:
+        - `margin-trim`: Chrome 155+ and Safari only (Firefox lacks it), and it can't move lines.
+        - Lines in the gaps (`row-rule`): Chrome only; WebKit has no position on it.
+        - Spacing running text by gaps, as layouts do: list items and table cells can't be flex.
+        - A rule per width, searching back for a block wearing its class: 385ms to add a block on
+          a 2,000-block page (7ms today). The bands' rule checks only the block just before.
+          Tailwind dropped its look-back spacing (v3, `:not([hidden]) ~ :not([hidden])`) for
+          speed on large pages.
+        - Space below, looking ahead for a shown block (`:has(~ …)`): 120ms in Chrome; up to
+          437ms in WebKit with a guard.
+        - Every combination of widths (no unit limit): twice the bands, half never applying.
+        - Rewriting "right after a particular block" (`h2 + p`): CSS can't say "the nearest
+          shown block before it is a heading". The validator warns on it (spec).
+    - **Speed** (synthetic page with a code block, old → new): Chrome, 200 blocks: add a block
+      1.0 → 2.6ms, type in the code view 1.1 → 1.9ms, cross a width 1.5 → 4.1ms; 2,000 blocks:
+      8.9 → 24.4, 11.0 → 19.2, 14.9 → 38.4. WebKit the same or faster (2,000: cross a width 212 →
+      100ms). The slow case left: many blocks in a row each wearing its own hide/show class. To
+      find "a visible block before me" the browser steps back one block at a time past hidden
+      ones, so the steps grow with the square of the run (1,000 in a row hidden at this width:
+      149ms to add a block, 300ms to cross a width, in Chrome; 1,000 desktop/mobile pairs
+      56ms / 114ms, as "shown at every width" steps past any hide/show block; 200 in a row:
+      10ms / 22ms). Wrapping the run in one box and hiding the box costs nothing: the box is
+      one block, and nothing inside a hidden box is styled.
+    - **Review** (2026-10-10, a fresh agent; each finding shown before acting):
+        - Fixed: the checks measured only the space at a box's edges, not between shown blocks,
+          and had no case for the "outside documents" copies (a box outside the page, and a
+          divided box in a narrower width container on the page). Each now fails without the
+          part it guards.
+        - Fixed: "shown at every width" matched part of the class attribute (`[class*=…]`), so in
+          Chrome any class change on a block (selecting it) restyled every block after it (9ms on
+          2,000 blocks); the classes are named now (0ms).
+        - Fixed: the docs said any theme rule spacing a block wins; true now only for the space
+          above. Called new behaviour above.
+        - Fixed: a one-colon `:before`/`:after` theme rule lost its app-screen copies (the
+          rewriter read it as a pseudo-class); `.5rem` and `40PX` widths were refused; the
+          comments now name the slow case and the pseudo-element limit.
+    - **Logged:** other place-based rules still count hidden blocks: a picture that is a box's
+      only child (`img:only-child`, `slObject.ts`) and a Split's first column with no widths set
+      (`slLayout.ts`). On app screens, a hide/show block with no layout around it never hides,
+      and the block after it loses its divide line (spec, validator); an "after another block"
+      rule drawn with `::before`/`::after` on a block that is itself a width container measures
+      that block (no rule does this). The drag preview of several blocks, outside the document,
+      loses the space after a shown hide/show block (`multiSelect.ts`; it's brief). Older, found
+      in the review: an image with `sl-object-*` and a hide class never hides, as
+      `img.sl-object-* { display: block }` outweighs the hide rule (`slObject.ts`), and now the
+      block after it loses its space or line at those widths.
+    - **Second review** (2026-10-11, a fresh agent, of the first review's fixes; each finding
+      shown again before proposing). Proposed to the user, **not made yet** (they asked to
+      commit and compact first):
+        1. A picture set to Crop/Fit/Stretch/Original (`sl-object-*`) and hidden below md never
+           hides (older); new with this change, the block after it loses its space and line
+           while the picture shows. Fix: drop `display: block` from the four `sl-object-*` rules
+           (`slObject.ts`): the reset already shows every image as a block, and that declaration
+           is the only reason they outweigh hiding. Covers the box form too. Add a test-page case
+           and check (a Card: hidden cropped picture, then a block).
+        2. The space checks never check that the two-block reference box is spaced: with all
+           block spacing removed they pass. Add `reference.gaps[0] > 1`.
+        3. The slow-case comment (`slLayout.ts`) understates it ("tens of milliseconds"): say
+           how it grows (square of the run, adding a block and crossing a width), numbers in the
+           plan (above) and the commit message only.
+        4. Wording: `blockSpacing.ts` "made … slower" in present tense; `generateCss.ts` exact
+           on why a hide/show block with no container loses the next block's line (the band
+           copies need a container; "shown at every width" leaves hide/show blocks out).
+        5. No case has a shown hide/show block, then a hidden one, then a block, so band copies
+           written with `+` instead of `~` would pass. Add a Card holding a show-below-md
+           block, a hide-below-md block, then a block.
+        6. The width check takes any letters as a unit (`640foo`): allow CSS length units only.
+        7. Write the hide rules one class per selector instead of `:is(…)` (same weight; Chrome
+           sorts them by class): 24.3 → 22.6ms to add a block on 2,000 blocks.
+           Not taken: making "shown at every width" look only at the block just before (halves the
+           pairs case, but worsens the logged app-screen edge).
+    - **Status:** done, checked (520 pass), reviewed twice; the first review's findings fixed or
+      logged; the second review's seven fixes above await the user's go-ahead. Committed.
+
 Also seen 2026-10-02: a plain `sl-center` directly in an `sl-inset` (a grid) shrinks to its
 text instead of being a reading column: one sentence measured 242px at 1440 (checked in
 Playwright, 2026-10-02). Grid items with auto side margins shrink to fit. Fixed 2026-10-09
@@ -1268,7 +1361,7 @@ once get throttled and time out (2026-10-03); `pnpm test:ui --workers 2` passes.
   apart (`webkit/`).
 - **The cases** are on `/editor?seed=tests` (`client/src/config/editor/testContent.html`).
   Add a case for each layout fix.
-- **Known not to work yet** (K5, `e2e/known.spec.ts`; K1 retired in item 24): each checks what should happen and
+- **Known not to work yet** (`e2e/known.spec.ts`; none now: K1 retired in item 24, K5 fixed in item 25): each checks what should happen and
   is marked as expected to fail, with a normal check that every case is set up as described.
   When one is fixed, Playwright reports "expected to fail, but passed": remove its
   `test.fail()` and move the case up the test page.
@@ -1799,8 +1892,9 @@ What's pending:
     - Scroll-frame arrows can't show in documents: the `sf-is-overflow-*` script runs only in
       admin lists and toolbars.
     - Atom components can't be selected by clicking.
-    - A hidden last block leaves the previous block's bottom space (plain elements too): 32px
-      under the last shown block in a Card instead of 16px. Check K5.
+    - ~~A hidden last block leaves the previous block's bottom space (plain elements too): 32px
+      under the last shown block in a Card instead of 16px. Check K5.~~ Fixed (item 25), with
+      divide lines above a hidden first block.
     - The class picker offers only gap, padding, radius and collapse.
 
 11. **Linter / validator (not built).** The rules are in the spec, "Validator and linter (not

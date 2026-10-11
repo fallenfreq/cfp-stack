@@ -11,7 +11,7 @@ import {
 } from '../schemas/theme.js'
 import { type ClassRuleWithClasses, listAllRules } from './classRules.js'
 import { type CollapseThreshold, listCollapseThresholds } from './collapseThresholds.js'
-import { BLOCK_SPACING } from './css/blockSpacing.js'
+import { blockSpacing } from './css/blockSpacing.js'
 import { SF_ELEMENT_DEFAULTS } from './css/elementDefaults.js'
 import { EMBEDS } from './css/embeds.js'
 import { NODE_VIEWS } from './css/nodeViews.js'
@@ -20,10 +20,15 @@ import { BLEEDS_FROM_DOCUMENT, SL_COMBINED } from './css/slCombined.js'
 import {
 	COLLAPSE_CLASS_SELECTOR,
 	COLLAPSE_HOST_SELECTOR,
+	DOCUMENT_CONTAINER,
 	SIZED_BY_CONTENT_SELECTOR,
 	SL_LAYOUT,
 	SWAP_CLASS_SELECTOR,
+	type WidthBand,
 	forBlocks,
+	shownAlways,
+	shownIn,
+	widthBands,
 } from './css/slLayout.js'
 import { SL_OBJECT } from './css/slObject.js'
 import { ValidationError } from './errors.js'
@@ -57,29 +62,31 @@ export async function emitStylesheet(db: Db): Promise<string> {
 
 	const buckets = classifyTokens(rootTokens)
 	const rulesByLayer = groupRulesByLayer(allRules)
+	const bands = widthBands(collapseThresholds)
+	const rich = (layer: Layer) => emitRichLayer(layer, themesList, rootTheme, rulesByLayer, bands)
 
 	const sections = [
 		HEADER,
 		RESET,
 		SF_ELEMENT_DEFAULTS,
 		emitTokenBlocks(themesList, tokensByTheme),
-		emitRichLayer('sf-element', themesList, rootTheme, rulesByLayer),
-		emitRichLayer('sf-bundle', themesList, rootTheme, rulesByLayer),
-		emitRichLayer('sf-variant', themesList, rootTheme, rulesByLayer),
-		emitRichLayer('sf-context', themesList, rootTheme, rulesByLayer),
+		rich('sf-element'),
+		rich('sf-bundle'),
+		rich('sf-variant'),
+		rich('sf-context'),
 		emitSemanticLayer(buckets.semantic),
 		emitUtilityLayer(buckets),
-		emitRichLayer('sf-state', themesList, rootTheme, rulesByLayer),
-		emitRichLayer('sl-layout', themesList, rootTheme, rulesByLayer),
+		rich('sf-state'),
+		rich('sl-layout'),
 		// Hand-written blocks come after the DB rules of their layer, so they sit
 		// above every cascade_order at equal specificity.
 		SL_LAYOUT,
 		SL_OBJECT,
 		SL_COMBINED,
-		emitCollapseLayer(collapseThresholds),
+		emitCollapseLayer(collapseThresholds, bands),
 		// How a TipTap document's blocks sit, in the editor and on published pages.
 		NODE_VIEWS,
-		BLOCK_SPACING,
+		blockSpacing(bands),
 		EMBEDS,
 		emitEditorLayer(buckets),
 	]
@@ -349,6 +356,7 @@ function emitRichLayer(
 	themesList: Theme[],
 	rootTheme: Theme,
 	rulesByLayer: Map<Layer, LayerRules>,
+	bands: readonly WidthBand[],
 ): string {
 	const layerMap = rulesByLayer.get(layer)
 	if (!layerMap || layerMap.size === 0) return ''
@@ -356,7 +364,7 @@ function emitRichLayer(
 	let body = ''
 
 	const rootRules = layerMap.get(rootTheme.id)
-	if (rootRules) body += emitThemeBlocks(rootRules, '\t')
+	if (rootRules) body += emitThemeBlocks(rootRules, '\t', bands)
 
 	// Theme rules are scoped rather than prefixed: @scope adds no specificity, so a
 	// theme restyles a class without outranking root compounds, and the nearest
@@ -366,7 +374,7 @@ function emitRichLayer(
 		if (theme.isRoot) continue
 		const themeRules = layerMap.get(theme.id)
 		if (!themeRules) continue
-		body += `\t@scope (.${theme.activationClass}) {\n${emitThemeBlocks(themeRules, '\t\t')}\t}\n`
+		body += `\t@scope (.${theme.activationClass}) {\n${emitThemeBlocks(themeRules, '\t\t', bands)}\t}\n`
 	}
 
 	if (body.length === 0) return ''
@@ -375,15 +383,36 @@ function emitRichLayer(
 
 // Within a layer, equal-specificity ties go to the later rule: sort by cascade_order,
 // then alphabetically so unordered classes keep a stable, deterministic output.
-function emitThemeBlocks(rules: Map<string, SelectorBlock>, indent: string): string {
+function emitThemeBlocks(
+	rules: Map<string, SelectorBlock>,
+	indent: string,
+	bands: readonly WidthBand[],
+): string {
 	let out = ''
 	const sorted = [...rules.entries()].sort(
 		([a, ba], [b, bb]) => ba.order - bb.order || a.localeCompare(b),
 	)
 	for (const [sel, { props }] of sorted) {
-		out += `${indent}${forNodeViews(sel)} {\n`
-		for (const { property, value } of props) out += `${indent}\t${property}: ${value};\n`
-		out += `${indent}}\n`
+		const rule = (selector: string, at: string) =>
+			`${at}${selector} {\n${props.map((p) => `${at}\t${p.property}: ${p.value};\n`).join('')}${at}}\n`
+		const written = forNodeViews(sel, shownAlways(bands))
+		out += rule(written ?? sel, indent)
+		// A rule that picks a block "after another" is written again for each band, after a block
+		// shown there: in a document by the document's width, elsewhere by the nearest container's,
+		// as hiding is. Elsewhere, two cases measure differently from hiding: a hide/show block with
+		// no container around it never hides, but these rules count it as hidden, so the block after
+		// it loses its line; and a rule drawn with ::before or ::after on a block that is itself a
+		// width container measures that block, not the box around it.
+		//   "Elsewhere" is tested on the block styled, not the block before: a test on the block
+		// before fails for every block in a document, and the browser then tries each block before
+		// it in turn, so typing in the code view, with its thousands of highlighted pieces, lags.
+		if (written === null || written === forBlocks(sel)) continue
+		for (const band of bands) {
+			const inDocuments = forBlocks(sel, shownIn(band))
+			const elsewhere = forBlocks(sel, shownIn(band), OUTSIDE_DOCUMENTS)
+			out += `${indent}@container ${DOCUMENT_CONTAINER} ${band.condition} {\n${rule(inDocuments, `${indent}\t`)}${indent}}\n`
+			out += `${indent}@container ${band.condition} {\n${rule(elsewhere, `${indent}\t`)}${indent}}\n`
+		}
 	}
 	return out
 }
@@ -392,12 +421,12 @@ function emitThemeBlocks(rules: Map<string, SelectorBlock>, indent: string): str
 // blocks in a content box (nodeViewSelectors.ts). Rewritten after sorting, so ties keep the
 // order of the selector as written. A selector the helper can't rewrite is emitted as written
 // (which still works for plain blocks) and reported, rather than failing the whole stylesheet.
-function forNodeViews(selector: string): string {
+function forNodeViews(selector: string, shown: string): string | null {
 	try {
-		return forBlocks(selector)
+		return forBlocks(selector, shown)
 	} catch (error) {
 		console.warn(`[sf-system] ${(error as Error).message}; emitted as written`)
-		return selector
+		return null
 	}
 }
 
@@ -484,7 +513,9 @@ const section = (title: string): string =>
 //     content becomes one (SIZED_BY_CONTENT_SELECTOR) — it would be 0 wide; what it holds
 //     measures the next box out.
 //   sl-hide-below-* / sl-show-below-* use the same widths to swap what shows: hidden at or
-//     below the width, or shown only then (a menu button in place of inline links). In a
+//     below the width, or shown only then (a menu button in place of inline links). They're
+//     written per width band (slLayout.ts, widthBands), the bands block spacing and a theme's
+//     "after another block" read too, so all three agree on what's shown. In a
 //     document (the editor and published pages) they measure the document: "hide below md"
 //     means the page is narrower than md, so a layout there doesn't become a container for
 //     them. On app screens they measure their container; with none around them they always
@@ -512,11 +543,14 @@ function stackRules(name: string, scope: string): string {
 	)
 }
 
-function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
+function emitCollapseLayer(
+	collapseThresholds: CollapseThreshold[],
+	bands: readonly WidthBand[],
+): string {
 	if (collapseThresholds.length === 0) return ''
 
 	const notSized = `:where(:not(${SIZED_BY_CONTENT_SELECTOR}))`
-	let body = `\t${DOCUMENT} { container: sf-document / inline-size; }\n`
+	let body = `\t${DOCUMENT} { container: ${DOCUMENT_CONTAINER} / inline-size; }\n`
 	for (const host of [
 		...hostsFor(notSized, COLLAPSE_CLASS_SELECTOR),
 		...hostsFor(`${notSized}${OUTSIDE_DOCUMENTS}`, SWAP_CLASS_SELECTOR),
@@ -526,20 +560,18 @@ function emitCollapseLayer(collapseThresholds: CollapseThreshold[]): string {
 	for (const { name, value } of collapseThresholds) {
 		body += `\t@container (width <= ${value}) {\n`
 		body += stackRules(name, `:where(:not(${BLEEDS_FROM_DOCUMENT}))`)
-		body += `\t\t.sl-hide-below-${name}${OUTSIDE_DOCUMENTS} { display: none; }\n`
 		body += '\t}\n'
 		body += `\t@container sf-bleed-area (width <= ${value}) {\n`
 		body += stackRules(name, `:where(${BLEEDS_FROM_DOCUMENT})`)
 		body += '\t}\n'
-		// Emitted after the layout primitives, so it wins over their display on the same element.
-		body += `\t@container (width > ${value}) {\n`
-		body += `\t\t.sl-show-below-${name}${OUTSIDE_DOCUMENTS} { display: none; }\n`
+	}
+	// Emitted after the layout primitives, so it wins over their display on the same element.
+	for (const band of bands) {
+		body += `\t@container ${band.condition} {\n`
+		body += `\t\t:is(${band.hidden.join(', ')})${OUTSIDE_DOCUMENTS} { display: none; }\n`
 		body += '\t}\n'
-		body += `\t@container sf-document (width <= ${value}) {\n`
-		body += `\t\t:where(${DOCUMENT}) .sl-hide-below-${name} { display: none; }\n`
-		body += '\t}\n'
-		body += `\t@container sf-document (width > ${value}) {\n`
-		body += `\t\t:where(${DOCUMENT}) .sl-show-below-${name} { display: none; }\n`
+		body += `\t@container ${DOCUMENT_CONTAINER} ${band.condition} {\n`
+		body += `\t\t:where(${DOCUMENT}) :is(${band.hidden.join(', ')}) { display: none; }\n`
 		body += '\t}\n'
 	}
 	return `@layer sl-layout {\n${body}}\n`
