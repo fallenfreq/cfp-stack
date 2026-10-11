@@ -1,24 +1,102 @@
 <script setup lang="ts">
 import initialContent from '@/config/editor/initialContent.html?raw'
+import { cancelModal, showConfirm } from '@/services/promptModal'
 import { useEditorStore } from '@/stores/editorStore'
 import { paramString } from '@/utils/router'
 import type { Content } from '@tiptap/vue-3'
-import { ref, shallowRef, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { onBeforeUnmount, ref, shallowRef, watch } from 'vue'
+import {
+	onBeforeRouteLeave,
+	onBeforeRouteUpdate,
+	useRoute,
+	useRouter,
+	type RouteLocationNormalized,
+} from 'vue-router'
 
 const route = useRoute()
+// Where the browser's history is, which vue-router follows.
+const routerHistory = useRouter().options.history
 const store = useEditorStore()
 
 // The view stays while its address changes (the Demo link from a page, back to the page), so each
 // address opens in a new editor, as arriving does: undo and Save can't reach the page before.
-// Saving a new page gives it an address; that's the page already open, so it stays. Only what
-// the address opens counts (what whatOpens reads), not its hash.
+// Only what the address opens counts (what whatOpens reads), not its hash.
+const opens = (at: RouteLocationNormalized) =>
+	JSON.stringify([paramString(at.params.slug), at.query.seed, at.query.autoTag])
+const isEditor = (at: RouteLocationNormalized) => at.name === 'editor' || at.name === 'editor-page'
+// Saving a new page gives it an address; that's the page already open, so it stays.
+const isOpenPage = (at: RouteLocationNormalized) => {
+	const slug = paramString(at.params.slug)
+	return slug !== '' && slug === store.currentSlug
+}
 const opened = ref(0)
-watch([() => route.params.slug, () => route.query.seed, () => route.query.autoTag], () => {
-	if (route.name !== 'editor' && route.name !== 'editor-page') return
-	const slug = paramString(route.params.slug)
-	if (!slug || slug !== store.currentSlug) opened.value++
-})
+watch(
+	() => opens(route),
+	() => {
+		if (isEditor(route) && !isOpenPage(route)) opened.value++
+	},
+)
+
+// Leaving the page on screen with edits Save could keep asks first.
+const mayLoseEdits = () => store.couldSave && store.hasUnsavedChanges()
+
+// Each move through this view, and how the newest ends. vue-router gives up a move a newer one
+// overtakes, but the older one's answer still counts for Back and Forward: refused, they're taken
+// back in the history. So an overtaken move ends as the newest does, or the address and the page
+// shown come apart.
+let moves = 0
+let newest: Promise<boolean> = Promise.resolve(true)
+// The move whose question is on screen, which a newer move takes down (it asks again if it must).
+let asking = 0
+
+function mayLeave(to: RouteLocationNormalized, from: RouteLocationNormalized) {
+	const move = ++moves
+	if (asking) cancelModal()
+	newest = decide(move, to, from)
+	return newest
+}
+
+async function decide(move: number, to: RouteLocationNormalized, from: RouteLocationNormalized) {
+	const keepsPage = isEditor(to) && (opens(to) === opens(from) || isOpenPage(to))
+	if (keepsPage) return true
+	// Back and Forward have moved the browser's history to `to` already; a link does once let through.
+	const byHistory = routerHistory.location === to.fullPath
+	// A save under way finishes first, so what it stores isn't asked about.
+	await store.whenSaved()
+	if (move !== moves) return endAsNewest(to, byHistory)
+	if (!mayLoseEdits()) return true
+	asking = move
+	const leave = await showConfirm('Leave without saving your changes?', { okText: 'Leave' })
+	if (asking === move) asking = 0
+	if (move !== moves) return endAsNewest(to, byHistory)
+	return leave
+}
+
+// Refused, an overtaken Back or Forward is taken back once the newer one has been: WebKit drops
+// the second of two steps through the history taken at once.
+async function endAsNewest(to: RouteLocationNormalized, byHistory: boolean) {
+	const leave = await newest
+	if (!leave && byHistory) await historyAt(to.fullPath)
+	return leave
+}
+const historyAt = (place: string) =>
+	new Promise<void>((done) => {
+		const check = () => {
+			if (routerHistory.location !== place) return
+			window.removeEventListener('popstate', check)
+			done()
+		}
+		window.addEventListener('popstate', check)
+		check()
+	})
+onBeforeRouteLeave(mayLeave)
+onBeforeRouteUpdate(mayLeave)
+// Closing the tab or reloading: the browser asks, in its own words.
+const askBeforeUnload = (event: BeforeUnloadEvent) => {
+	if (mayLoseEdits()) event.preventDefault()
+}
+window.addEventListener('beforeunload', askBeforeUnload)
+onBeforeUnmount(() => window.removeEventListener('beforeunload', askBeforeUnload))
 
 interface Opening {
 	content: Content

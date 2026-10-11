@@ -7,7 +7,7 @@
 		class="prompt-modal sf-scrim"
 		:aria-labelledby="labelId"
 		@cancel.prevent="cancelModal"
-		@close="cancelModal"
+		@close="onClose"
 	>
 		<!-- The page outside is shut off from screen readers while this is open. -->
 		<SfAnnouncer />
@@ -86,6 +86,12 @@ watch(request, async (current) => {
 	if (current && !el.open) el.showModal()
 	if (!current && el.open) el.close()
 })
+
+// The browser says a dialog closed a moment after it does; by then the next question may have
+// opened it again, and that close belongs to the question before.
+const onClose = () => {
+	if (!dialog.value?.open) cancelModal()
+}
 
 const submit = () => {
 	const current = request.value

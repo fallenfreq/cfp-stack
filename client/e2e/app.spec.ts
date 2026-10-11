@@ -414,6 +414,387 @@ test('Save in the code view saves the page, with the changes made to its code', 
 	await expect(codeView, 'still in the code view').toHaveAttribute('aria-pressed', 'true')
 })
 
+/** Type at the end of the page in the editor, once it has the keys (it takes them a frame later). */
+async function typeAtEnd(page: Page, text: string) {
+	await page.locator('.tiptap').first().waitFor()
+	await page.evaluate(() =>
+		document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.commands.focus('end'),
+	)
+	await expect(page.locator('.tiptap').first()).toBeFocused()
+	await page.keyboard.type(text)
+}
+
+const leaveQuestion = (page: Page) =>
+	page.getByRole('dialog', { name: 'Leave without saving your changes?' })
+
+/** Press Save, opening the editor's actions first if they're closed. */
+async function pressSave(page: Page) {
+	const actions = page.getByRole('button', { name: 'Editor actions' })
+	if ((await actions.getAttribute('aria-expanded')) !== 'true') await actions.click()
+	await page.getByRole('button', { name: 'Save' }).click()
+}
+
+/** Whether closing the tab asks first (the browser's own question, answered Stay). */
+async function closingAsks(page: Page): Promise<boolean> {
+	let asked = false
+	page.once('dialog', (dialog) => {
+		asked = dialog.type() === 'beforeunload'
+		return dialog.dismiss()
+	})
+	await page.close({ runBeforeUnload: true })
+	// Answered Stay, the tab stays; with no question, it's gone.
+	await expect.poll(() => asked || page.isClosed()).toBe(true)
+	return asked
+}
+
+// Leaving the editor dropped what wasn't saved, without a word: a link, Back, another page in the
+// editor, closing the tab.
+test('leaving a page with unsaved edits asks first, and Cancel keeps them', async ({
+	page,
+	themeClass,
+}) => {
+	await openStored(page, themeClass, oneParagraph)
+	// A page of the app before it, for Back.
+	await moveTo(page, '/contact')
+	await moveTo(page, '/editor/stored')
+	const text = page.locator('.tiptap p').first()
+	await expect(text).toHaveText('A paragraph.')
+	await typeAtEnd(page, ' Typed.')
+	const question = leaveQuestion(page)
+	const contact = page.getByRole('link', { name: 'Contact' }).first()
+	const ways: [string, () => Promise<unknown>][] = [
+		['a link', () => contact.click()],
+		['Back', () => page.goBack()],
+		[
+			'another page in the editor',
+			async () => {
+				await page.getByRole('button', { name: 'Demo' }).click()
+				await page.getByRole('link', { name: 'Editor' }).click()
+			},
+		],
+	]
+	for (const [way, leave] of ways) {
+		await leave()
+		await expect(question, way).toBeVisible()
+		await question.getByRole('button', { name: 'Cancel' }).click()
+		await expect(question, way).toBeHidden()
+		await expect(page, way).toHaveURL(/\/editor\/stored$/)
+		await expect(text, way).toHaveText('A paragraph. Typed.')
+	}
+	// A question straight after another stays: the dialog took the first one's late close (Chrome)
+	// as Cancel for the second.
+	await contact.click()
+	await expect(question).toBeVisible()
+	// Cancel, then Back in the same moment, faster than a person.
+	await page.evaluate(() => {
+		const buttons = document.querySelectorAll<HTMLButtonElement>('dialog[open] button')
+		;[...buttons].find((button) => button.textContent?.trim() === 'Cancel')!.click()
+		history.back()
+	})
+	await expect(question).toBeVisible()
+	await settle(page)
+	await settle(page)
+	await expect(question, 'still asking').toBeVisible()
+	await question.getByRole('button', { name: 'Cancel' }).click()
+	await expect(page).toHaveURL(/\/editor\/stored$/)
+
+	// Left for another page in the editor, the edits made there are asked about too.
+	await page.getByRole('button', { name: 'Demo' }).click()
+	await page.getByRole('link', { name: 'Editor' }).click()
+	await question.getByRole('button', { name: 'Leave' }).click()
+	await expect(page).toHaveURL(/\/editor\?seed=true$/)
+	const demo = page.locator('.tiptap').first()
+	await typeAtEnd(page, 'Typed in the demo.')
+	await expect(demo).toContainText('Typed in the demo.')
+	expect(await closingAsks(page), 'closing the tab').toBe(true)
+	await expect(demo, 'kept on Stay').toContainText('Typed in the demo.')
+})
+
+// Code typed in the code view goes into the page only on leaving the code view or on Save.
+test('leaving with code not yet put into the page asks first', async ({ page, themeClass }) => {
+	await openStored(page, themeClass, oneParagraph)
+	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
+	await page.getByRole('button', { name: 'Code view' }).click()
+	await page.locator('.tiptap:visible').click()
+	await page.keyboard.press('ControlOrMeta+a')
+	await page.keyboard.type('<p>From the code.</p>')
+	await page.getByRole('link', { name: 'Contact' }).first().click()
+	await expect(leaveQuestion(page)).toBeVisible()
+})
+
+// Only edits Save would keep are asked about: none for a page as it opened, undone back to it, or
+// saved (what's typed while it saves isn't), and none for a visitor, who can't save.
+test('leaving asks only about edits Save would keep', async ({ page, themeClass }) => {
+	const contact = page.getByRole('link', { name: 'Contact' }).first()
+	const leavesFreely = async (why: string) => {
+		await contact.click()
+		await expect(page, why).toHaveURL(/\/contact$/)
+		await expect(leaveQuestion(page), why).toHaveCount(0)
+	}
+	const text = page.locator('.tiptap p').first()
+	await openStored(page, themeClass, oneParagraph)
+	await expect(text).toHaveText('A paragraph.')
+	await leavesFreely('as it opened')
+
+	await moveTo(page, '/editor/stored')
+	await expect(text).toHaveText('A paragraph.')
+	await typeAtEnd(page, 'x')
+	await expect(text).toHaveText('A paragraph.x')
+	await page.keyboard.press('ControlOrMeta+z')
+	await expect(text).toHaveText('A paragraph.')
+	await leavesFreely('undone back')
+
+	await moveTo(page, '/editor/stored')
+	await expect(text).toHaveText('A paragraph.')
+	await page.route(
+		(url) => url.pathname.includes('adminPages.update'),
+		(route) => route.fulfill({ json: [{ result: { data: { json: null } } }] }),
+	)
+	await typeAtEnd(page, ' Typed.')
+	await expect(text).toHaveText('A paragraph. Typed.')
+	await pressSave(page)
+	await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+	await leavesFreely('saved')
+
+	// A new page moves to its own address when it's first saved: that's not leaving it, even with
+	// more typed while it saved, which stays unsaved.
+	let finishSave!: () => void
+	const saveHeld = new Promise<void>((resolve) => (finishSave = resolve))
+	await page.route(
+		(url) => url.pathname.includes('adminPages.create'),
+		async (route) => {
+			await saveHeld
+			await route.fulfill({
+				json: [{ result: { data: { json: { pageId: 2, slug: 'new-page' } } } }],
+			})
+		},
+	)
+	await moveTo(page, '/editor')
+	await typeAtEnd(page, 'A new page.')
+	await expect(text).toHaveText('A new page.')
+	// Nor is a place on the same page.
+	await moveTo(page, '/editor#further')
+	await expect(leaveQuestion(page), 'a place on the page').toHaveCount(0)
+	await expect(text).toHaveText('A new page.')
+	await pressSave(page)
+	await page.getByRole('textbox', { name: 'Page name' }).fill('New page')
+	await page.getByRole('button', { name: 'Submit' }).click()
+	await typeAtEnd(page, ' More.')
+	finishSave()
+	await expect(page).toHaveURL(/\/editor\/new-page$/)
+	await expect(leaveQuestion(page), 'given its address').toHaveCount(0)
+	await expect(text).toHaveText('A new page. More.')
+	await contact.click()
+	await expect(leaveQuestion(page), 'typed while it saved').toBeVisible()
+	await leaveQuestion(page).getByRole('button', { name: 'Leave' }).click()
+	await expect(page).toHaveURL(/\/contact$/)
+
+	// A visitor, signed out, on the demo.
+	await page.unrouteAll()
+	await steadyRequests(page)
+	const demo = page.locator('.tiptap').first()
+	await page.goto('/editor?seed=true')
+	await typeAtEnd(page, 'Typed by a visitor.')
+	await expect(demo).toContainText('Typed by a visitor.')
+	await leavesFreely('a visitor')
+	await moveTo(page, '/editor?seed=true')
+	await typeAtEnd(page, 'Typed by a visitor.')
+	await expect(demo).toContainText('Typed by a visitor.')
+	expect(await closingAsks(page), 'a visitor closing the tab').toBe(false)
+})
+
+// An admin whose sign-in has ended counts as signed out, as here once the server refuses a save
+// for it, yet can sign in again and save.
+test('an admin whose sign-in has ended is still asked before leaving', async ({
+	page,
+	themeClass,
+}) => {
+	await openStored(page, themeClass, oneParagraph)
+	const text = page.locator('.tiptap p').first()
+	await expect(text).toHaveText('A paragraph.')
+	await page.route(
+		(url) => url.pathname.includes('adminPages.update'),
+		(route) =>
+			route.fulfill({
+				status: 401,
+				json: [
+					{
+						error: {
+							json: {
+								message: 'Not signed in',
+								code: -32001,
+								data: { code: 'UNAUTHORIZED', httpStatus: 401 },
+							},
+						},
+					},
+				],
+			}),
+	)
+	await typeAtEnd(page, ' Typed.')
+	await expect(text).toHaveText('A paragraph. Typed.')
+	await pressSave(page)
+	await expect(page.getByText('Not signed in')).toBeVisible()
+	const contact = page.getByRole('link', { name: 'Contact' }).first()
+	const question = leaveQuestion(page)
+	await contact.click()
+	await question.getByRole('button', { name: 'Leave' }).click()
+	await expect(page).toHaveURL(/\/contact$/)
+
+	// And on a page opened after.
+	await moveTo(page, '/editor')
+	await typeAtEnd(page, 'A new page.')
+	await expect(text).toHaveText('A new page.')
+	await contact.click()
+	await expect(question, 'a page opened after').toBeVisible()
+	await question.getByRole('button', { name: 'Cancel' }).click()
+	expect(await closingAsks(page), 'closing the tab').toBe(true)
+})
+
+// Back or Forward pressed again while leaving asks: the address bar ends on the page shown.
+// vue-router gives up the older move, but its answer still moves the history.
+test('Back and Forward while leaving asks keep the address on the page shown', async ({
+	page,
+	themeClass,
+}) => {
+	await openStored(page, themeClass, oneParagraph)
+	await moveTo(page, '/contact')
+	await moveTo(page, '/')
+	await moveTo(page, '/editor/stored')
+	const question = leaveQuestion(page)
+	const text = page.locator('.tiptap p').first()
+	await expect(text).toHaveText('A paragraph.')
+	await typeAtEnd(page, ' Typed.')
+	await expect(text).toHaveText('A paragraph. Typed.')
+	const onThePage = async (why: string) => {
+		await settle(page)
+		await expect(page, why).toHaveURL(/\/editor\/stored$/)
+		await expect(text, why).toHaveText('A paragraph. Typed.')
+	}
+
+	await page.goBack()
+	await expect(question).toBeVisible()
+	await page.goBack()
+	await expect(question).toBeVisible()
+	await question.getByRole('button', { name: 'Cancel' }).click()
+	await onThePage('Back twice, then Cancel')
+
+	await page.goBack()
+	await expect(question).toBeVisible()
+	await page.goForward()
+	await expect(question, 'Forward to the page takes the question down').toHaveCount(0)
+	await onThePage('Back, then Forward')
+
+	await page.goBack()
+	await expect(question).toBeVisible()
+	await page.goBack()
+	await expect(question).toBeVisible()
+	await question.getByRole('button', { name: 'Leave' }).click()
+	await expect(page.locator('main h1')).toHaveText('Contact')
+	await settle(page)
+	await expect(page, 'Back twice, then Leave').toHaveURL(/\/contact$/)
+})
+
+// Leaving while a save is under way, its name question included, waits for it, then asks only
+// if something is still unsaved. Meanwhile a new page's save leaves the address alone: changing
+// it cancelled the move, or took the place of the page Back went to.
+test('leaving while a save is under way waits for it', async ({ page, themeClass }) => {
+	const contact = page.getByRole('link', { name: 'Contact' }).first()
+	const question = leaveQuestion(page)
+	const text = page.locator('.tiptap p').first()
+	const name = page.getByRole('textbox', { name: 'Page name' })
+	/** Answer API calls to `call` with `data`, each once the function returned is called. */
+	const hold = async (call: string, data: unknown) => {
+		let finish!: () => void
+		const held = new Promise<void>((resolve) => (finish = resolve))
+		await page.route(
+			(url) => url.pathname.includes(call),
+			async (route) => {
+				await held
+				await route.fulfill({ json: [{ result: { data: { json: data } } }] })
+			},
+		)
+		return finish
+	}
+	let creates = 0
+	page.on('request', (request) => {
+		if (request.url().includes('adminPages.create')) creates++
+	})
+
+	// A stored page. A move overtaken while it waits asks nothing (vue-router drops it): here by a
+	// place on the page, with more typed while it saved.
+	await openStored(page, themeClass, oneParagraph)
+	await expect(text).toHaveText('A paragraph.')
+	let finishSave = await hold('adminPages.update', null)
+	await typeAtEnd(page, ' Typed.')
+	await expect(text).toHaveText('A paragraph. Typed.')
+	await pressSave(page)
+	await typeAtEnd(page, ' More.')
+	await expect(text).toHaveText('A paragraph. Typed. More.')
+	await contact.click()
+	await moveTo(page, '/editor/stored#further')
+	finishSave()
+	await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+	await settle(page)
+	await expect(question, 'overtaken').toHaveCount(0)
+	await expect(page).toHaveURL(/\/editor\/stored#further$/)
+
+	// Nothing is asked while it saves, nor once it has.
+	finishSave = await hold('adminPages.update', null)
+	await pressSave(page)
+	await contact.click()
+	await settle(page)
+	await expect(question, 'while it saves').toHaveCount(0)
+	await expect(page).toHaveURL(/\/editor\/stored#further$/)
+	finishSave()
+	await expect(page).toHaveURL(/\/contact$/)
+	await expect(question, 'once saved').toHaveCount(0)
+
+	// A new page, Back while its name is asked for: that question stays, and once the page is
+	// named and saved it leaves without another.
+	finishSave = await hold('adminPages.create', { pageId: 2, slug: 'new-page' })
+	await moveTo(page, '/editor')
+	await typeAtEnd(page, 'A new page.')
+	await expect(text).toHaveText('A new page.')
+	await pressSave(page)
+	await expect(name).toBeVisible()
+	await page.goBack()
+	await settle(page)
+	await expect(name, 'still asked for').toBeVisible()
+	await name.fill('New page')
+	await page.getByRole('button', { name: 'Submit' }).click()
+	await settle(page)
+	await expect(question, 'while it saves').toHaveCount(0)
+	finishSave()
+	await expect(page).toHaveURL(/\/contact$/)
+	await expect(question, 'once saved').toHaveCount(0)
+	expect(creates, 'saved').toBe(1)
+
+	// A new page, a link while its first save is under way, more typed meanwhile: asked once it
+	// has saved. Staying, the page shows its address at the next save.
+	finishSave = await hold('adminPages.create', { pageId: 3, slug: 'another-page' })
+	await moveTo(page, '/editor')
+	await typeAtEnd(page, 'Another page.')
+	await expect(text).toHaveText('Another page.')
+	await pressSave(page)
+	await name.fill('Another page')
+	await page.getByRole('button', { name: 'Submit' }).click()
+	await typeAtEnd(page, ' More.')
+	await expect(text).toHaveText('Another page. More.')
+	await contact.click()
+	await settle(page)
+	await expect(question, 'while it saves').toHaveCount(0)
+	finishSave()
+	await expect(question, 'more typed meanwhile').toBeVisible()
+	await question.getByRole('button', { name: 'Cancel' }).click()
+	await expect(page, 'the address left alone').toHaveURL(/\/editor$/)
+	await expect(text).toHaveText('Another page. More.')
+	await pressSave(page)
+	await expect(page, 'shown at the next save').toHaveURL(/\/editor\/another-page$/)
+	await contact.click()
+	await expect(page).toHaveURL(/\/contact$/)
+	await expect(question).toHaveCount(0)
+})
+
 // A change the server refuses on the admin pages says why, in the words errors.ts gives each kind,
 // and the list reloads to show what the server has (a row deleted elsewhere goes). With no answer
 // it doesn't: a reload would get none either, and say so again.

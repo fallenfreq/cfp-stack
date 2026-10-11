@@ -30,7 +30,11 @@ copies are removed.
 **Item 25, a hidden block leaves nothing behind** (K5, 2026-10-10): done, checked, reviewed twice
 by fresh agents, committed and pushed (a201e51, pushed 2026-10-11, so it's live). The second
 review's fixes (item 25, "Second review") and the third review's (item 25, "Third review") are
-made, checked and committed (not pushed).
+made, checked, committed and pushed (85c0350, 17eee1b, 2026-10-11).
+
+**Unsaved edits** (2026-10-11): leaving the editor asks first ("Editor + Vue components",
+"Nothing warned before unsaved edits were lost"). Done, checked, reviewed three times by fresh
+agents (the third stopped early), findings fixed or left as rare; not committed.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -2274,10 +2278,73 @@ These are not bugs but unresolved tensions in the current design:
       (TipTap's `setContent` is recorded for undo), so Save would then store an empty page.
       The same for the demo. Checked in Chrome 2026-10-03; predates the fix above. Fixed
       2026-10-06: candidate 14.
-- [ ] Nothing warns before unsaved edits are lost. Leaving the editor drops them (predates);
-      moving to another editor address now does too, where it used to keep the page open.
-      Opening a page no longer says the content changed (candidate 14), so a warning can count
-      the editor's update events as edits.
+- [x] Nothing warned before unsaved edits were lost: a link, Back, another page in the editor,
+      closing the tab or reloading dropped them (proved in Chrome and WebKit). Fixed 2026-10-11,
+      decided with the user.
+    - **What asks:** leaving the page with unsaved edits asks "Leave without saving your
+      changes?" (Leave, Cancel); closing the tab or reloading asks the browser's own question,
+      and so does a reload from script, such as the new-version toast's Refresh in another tab
+      (Playwright's Chrome and WebKit, the tab in front; one behind another wasn't tried). A
+      place on the same page (`#…`) and a new page's move to its own address on its first save
+      aren't leaving.
+    - **Who:** an admin, and one whose sign-in has since ended (a save refused), who can sign in
+      again and save; kept for the visit, so a page opened after asks too (`couldSave`,
+      approved). A visitor can't save, so isn't asked.
+    - **Unsaved:** the page differs from how it opened or was last saved, compared as content
+      (`editorStore.ts`, `hasUnsavedChanges`, approved), so undoing back to it is no edit; or
+      the code view holds code not yet put into the page. What's typed while it saves stays
+      unsaved. Measured first: nothing changes a page after it opens (a stored page, the demo,
+      the test page, a new page; waiting, clicking, arrows, the code view and back).
+    - **While a save is under way** (its name question included), leaving waits for it
+      (`whenSaved`, approved), then asks only if something is still unsaved. Meanwhile a new
+      page's save leaves the address alone: changing it cancelled the move, or took the place
+      in the history of the page Back went to. Staying, the page shows its address at the next
+      save.
+    - **Back and Forward pressed again** while leaving waits or asks: vue-router gives up the
+      older move, but its answer still moves the history (refused, a Back or Forward is taken
+      back). So an overtaken move ends as the newest does, its question taken down, and when
+      both are refused they're taken back one after the other: WebKit drops the second of two
+      steps through the history taken at once (tried on a bare page; Chrome takes both).
+    - **Asking** (`TiptapEditorDemo.vue`) uses the view's own rule for when an address opens
+      another page, so the two can't disagree.
+    - **Found with it:** a question opened within about 30ms of the last one closing cancelled
+      itself (the user saw none; the checks did). Chrome says a dialog closed that long after it
+      does, and the dialog took any close as Cancel. Since it moved to the browser's dialog
+      (28 Sep). `PromptModal.vue` now ignores a close once the dialog is open again (approved).
+    - **Review** (a fresh agent), four found and fixed, all from this change: an admin whose
+      sign-in had ended wasn't asked; leaving during a new page's first save left the question
+      up with Leave doing nothing, and Back lost the page before from the history; Back while
+      the name was asked for dropped the save; Save then a quick click asked while it saved. Two
+      check steps didn't confirm their typing, and the dialog's step caught its bug only
+      sometimes. Left as is: a new page whose collection fails to be set asks before leaving;
+      its content is stored but the save said it failed (the collection: the next item).
+    - **Second review** (another fresh agent), three found and fixed, all from this change: an
+      overtaken Back or Forward left the address bar on another page than the one shown;
+      signing in again after a refused save asked twice; a page opened after the sign-in ended
+      didn't ask. Not taken: a save that never finishes keeps a move waiting with no sign
+      (agreed: leaving waits for the save).
+    - **Third review** (another fresh agent, stopped early to save usage, decided with the
+      user): the second review's fix for signing in again (Leave stopped the browser asking)
+      left the browser silent after Leave for another page in the editor, so edits made there
+      were lost on closing the tab. Taken out: signing in again from this tab after a refused
+      save asks twice, the app and then the browser. Two rare cases left (below).
+    - **Checked:** `app.spec.ts`, six checks. Each fails with its part taken out: the question,
+      the browser's, admins only, an ended sign-in kept, content compared (undo), the saved copy,
+      the code view, `#…`, a new page's own address, waiting for a save, the address left alone,
+      an overtaken move ending as the newest, its question taken down, steps back one at a time
+      (WebKit), the dialog's late close (Chrome; WebKit hasn't the bug). The browser still asks
+      after Leave for another page in the editor (fails with the third review's flag back).
+    - **Limits:** Safari on iPhone and iPad shows no question on closing a tab, as far as
+      known (not tried on a phone); moving within the app still asks. The PWA work's
+      `client/README.md` (uncommitted) says Refresh loses what's unsaved in other tabs: with a
+      tab in front, a reload from script now asks first; a tab behind wasn't tried. Found by the
+      third review, left as rare and losing no edits: Back, Back, Forward while a save is under
+      way, then Cancel, leaves the address bar on another page in Chrome (one run; each
+      overtaken move waits for the newest, not the next, so two steps back are taken at once);
+      a Back waiting for a new page's first save, overtaken by a link to the page already shown
+      (vue-router runs no guard for it), leaves the address bar on the page before and the new
+      page's address unshown until its next save. An overtaken move whose history never reaches
+      its place keeps waiting (read in code).
 - [ ] A new page whose collection fails to be set after it's made never gets it: the next Save
       updates the page without its collection. Read in code, not tried.
 - [x] `FloatingToolbar.vue`'s unmount reads the closed editor's view, logging "\[tiptap error]

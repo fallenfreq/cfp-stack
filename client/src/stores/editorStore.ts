@@ -2,14 +2,16 @@ import { queryClient } from '@/config/queryClient'
 import router from '@/router'
 import { notifyError } from '@/services/errors'
 import { showPrompt } from '@/services/promptModal'
+import { hasRole } from '@/services/session'
 import { notify } from '@/services/toast'
 import { trpc } from '@/trpc'
 import { prettifyCode } from '@/utils/codeFormatting'
 import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
 import { useMutation } from '@tanstack/vue-query'
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
 import type { Editor } from '@tiptap/vue-3'
 import { defineStore } from 'pinia'
-import { ref, shallowRef, type ShallowRef } from 'vue'
+import { ref, shallowRef, watch, type ShallowRef } from 'vue'
 
 type PageChanges = Parameters<typeof trpc.adminPages.update.mutate>[0]
 
@@ -27,9 +29,23 @@ export const useEditorStore = defineStore('editor', () => {
 	let savedName: string | null = null
 	const currentPublished = ref(false)
 	const pendingAutoTag = ref<number | null>(null)
+	// The page on screen as it opened or was last saved, to tell edits from.
+	let savedDoc: ProseMirrorNode | null = null
+
+	// Whether whoever edits could save, for the rest of the visit: an admin, or one whose sign-in
+	// has since ended (a save refused), who can sign in again and save.
+	const couldSave = ref(false)
+	watch(
+		() => hasRole('admin'),
+		(admin) => {
+			if (admin) couldSave.value = true
+		},
+		{ immediate: true },
+	)
 
 	const setEditor = (newEditor: Editor | null) => {
 		editor.value = newEditor
+		savedDoc = newEditor?.state.doc ?? null
 		isCodeView.value = codeViewDefault
 		generateBlueprintHTML = null
 		// No editor, no page being edited: what opens next starts unnamed and unsaved, so Save
@@ -127,9 +143,47 @@ export const useEditorStore = defineStore('editor', () => {
 		queryClient,
 	)
 
+	// The save under way, from its start (its name question included) to its end, and how many
+	// moves away from the page are waiting for it.
+	let saving: Promise<void> | null = null
+	let movesWaiting = 0
+
+	/**
+	 * Finishes once any save under way has (at once if none is), for leaving the page to wait on.
+	 * Meanwhile a new page's save leaves the address alone (`showAddress`).
+	 */
+	const whenSaved = async () => {
+		if (!saving) return
+		movesWaiting++
+		try {
+			await saving
+		} finally {
+			movesWaiting--
+		}
+	}
+
+	// A page given an address by its first save shows it, unless a move away is waiting for the
+	// save: changing the address would cancel that move, or take the place in the history of the
+	// page Back went to. Staying instead, it shows at the next save.
+	const showAddress = () => {
+		const slug = currentSlug.value
+		if (!slug || movesWaiting || router.currentRoute.value.params.slug === slug) return
+		router.replace({ name: 'editor-page', params: { slug } })
+	}
+
+	const save = async () => {
+		const run = saveNow()
+		saving = run
+		try {
+			await run
+		} finally {
+			if (saving === run) saving = null
+		}
+	}
+
 	// Saves the editor on screen. If another opens while it saves (the address moved on), the save
 	// still finishes, but the page it made stays out of the editor now on screen.
-	const save = async () => {
+	const saveNow = async () => {
 		const from = editor.value
 		if (!from) return
 		// What's saved is the page, with the code view's changes in it.
@@ -140,6 +194,8 @@ export const useEditorStore = defineStore('editor', () => {
 		}
 		const stillOpen = () => editor.value === from
 		saveStatus.value = 'saving'
+		// The page as it's sent: what's typed while it saves stays unsaved.
+		const doc = from.state.doc
 		const json = from.getJSON()
 		const contentJson = JSON.stringify(
 			json.content?.length ? json : { type: 'doc', content: [{ type: 'paragraph' }] },
@@ -169,8 +225,10 @@ export const useEditorStore = defineStore('editor', () => {
 					await updatePage.mutateAsync({ pageId: result.pageId, tagIds: [autoTag] })
 					if (stillOpen()) pendingAutoTag.value = null
 				}
-				if (stillOpen())
-					router.replace({ name: 'editor-page', params: { slug: result.slug } })
+			}
+			if (stillOpen()) {
+				savedDoc = doc
+				showAddress()
 			}
 			saveStatus.value = 'saved'
 			setTimeout(() => {
@@ -211,6 +269,16 @@ export const useEditorStore = defineStore('editor', () => {
 		queryClient,
 	)
 
+	/**
+	 * Whether the page on screen has edits Save hasn't stored: it differs from how it opened or was
+	 * last saved (undoing back to that is no edit), or the code view holds code not yet put into it.
+	 */
+	const hasUnsavedChanges = () => {
+		const open = editor.value
+		if (!open || !savedDoc) return false
+		return !open.state.doc.eq(savedDoc) || (isCodeView.value && code.value !== pageCode.value)
+	}
+
 	// A page not saved yet keeps the name for its first save.
 	const renamePage = (newName: string) => {
 		const name = newName.trim()
@@ -234,6 +302,9 @@ export const useEditorStore = defineStore('editor', () => {
 		fetchPage,
 		setPage,
 		save,
+		whenSaved,
+		couldSave,
+		hasUnsavedChanges,
 		renamePage,
 	}
 })
