@@ -141,32 +141,22 @@ export const useEditorStore = defineStore('editor', () => {
 		queryClient,
 	)
 
-	// The save under way, from its start (its name question included) to its end, and how many
-	// moves away from the page are waiting for it.
+	// The save under way, from its start (its name question included) to its end.
 	let saving: Promise<void> | null = null
-	let movesWaiting = 0
 
-	/**
-	 * Finishes once any save under way has (at once if none is), for leaving the page to wait on.
-	 * Meanwhile a new page's save leaves the address alone (`showAddress`).
-	 */
-	const whenSaved = async () => {
-		if (!saving) return
-		movesWaiting++
-		try {
-			await saving
-		} finally {
-			movesWaiting--
-		}
-	}
+	/** The save under way, its name question included, or null: leaving waits for it. */
+	const saveUnderWay = () => saving
 
-	// A page given an address by its first save shows it, unless a move away is waiting for the
-	// save: changing the address would cancel that move, or take the place in the history of the
-	// page Back went to. Staying instead, it shows at the next save.
-	const showAddress = () => {
+	// A page given an address by its first save shows it, unless a Back or Forward the editor took
+	// back is still landing: the address would take the place in the history of the page it went
+	// to. It shows at the next save instead. The save ends once it shows, so a move waiting for
+	// the save can't cancel it.
+	const showAddress = async () => {
 		const slug = currentSlug.value
-		if (!slug || movesWaiting || router.currentRoute.value.params.slug === slug) return
-		router.replace({ name: 'editor-page', params: { slug } })
+		const shown = router.currentRoute.value
+		if (!slug || shown.params.slug === slug) return
+		if (router.options.history.location !== shown.fullPath) return
+		await router.replace({ name: 'editor-page', params: { slug } })
 	}
 
 	const save = async () => {
@@ -228,7 +218,7 @@ export const useEditorStore = defineStore('editor', () => {
 			}
 			if (stillOpen()) {
 				savedDoc = doc
-				showAddress()
+				await showAddress()
 			}
 			saveStatus.value = 'saved'
 			setTimeout(() => {
@@ -302,7 +292,7 @@ export const useEditorStore = defineStore('editor', () => {
 		fetchPage,
 		setPage,
 		save,
-		whenSaved,
+		saveUnderWay,
 		couldSave,
 		hasUnsavedChanges,
 		renamePage,

@@ -14,9 +14,13 @@ import {
 } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 // Where the browser's history is, which vue-router follows.
-const routerHistory = useRouter().options.history
+const routerHistory = router.options.history
 const store = useEditorStore()
+// Ends what the view listens for when it closes.
+const closed = new AbortController()
+onBeforeUnmount(() => closed.abort())
 
 // The view stays while its address changes (the Demo link from a page, back to the page), so each
 // address opens in a new editor, as arriving does: undo and Save can't reach the page before.
@@ -40,63 +44,82 @@ watch(
 // Leaving the page on screen with edits Save could keep asks first.
 const mayLoseEdits = () => store.couldSave && store.hasUnsavedChanges()
 
-// Each move through this view, and how the newest ends. vue-router gives up a move a newer one
-// overtakes, but the older one's answer still counts for Back and Forward: refused, they're taken
-// back in the history. So an overtaken move ends as the newest does, or the address and the page
-// shown come apart.
-let moves = 0
-let newest: Promise<boolean> = Promise.resolve(true)
-// The move whose question is on screen, which a newer move takes down (it asks again if it must).
-let asking = 0
+// A move away that must wait for a save or ask is refused at once, so the address stays on the
+// page shown (vue-router takes a Back or Forward back), and held: only the newest, which Leave
+// makes again. `at` is a Back or Forward's place in the history.
+let held: { to: string; at: number | null } | null = null
+onBeforeUnmount(() => (held = null))
+// The held move's question is on screen.
+let asking = false
+// The held move being made again, which goes.
+let goingAgain: string | null = null
 
 function mayLeave(to: RouteLocationNormalized, from: RouteLocationNormalized) {
-	const move = ++moves
-	if (asking) cancelModal()
-	newest = decide(move, to, from)
-	return newest
+	const again = to.fullPath === goingAgain
+	goingAgain = null
+	// A place on the page shown is newer than a held move, which it drops: the page stays.
+	if (isEditor(to) && opens(to) === opens(from)) {
+		held = null
+		if (asking) cancelModal()
+		return true
+	}
+	if (again || (isEditor(to) && isOpenPage(to))) return true
+	if (!store.saveUnderWay() && !mayLoseEdits()) return true
+	const deciding = held !== null
+	// Back and Forward have moved the history to `to` already; a link hasn't.
+	held = { to: to.fullPath, at: routerHistory.location === to.fullPath ? historyPlace() : null }
+	if (!deciding) void decide()
+	return false
 }
 
-async function decide(move: number, to: RouteLocationNormalized, from: RouteLocationNormalized) {
-	const keepsPage = isEditor(to) && (opens(to) === opens(from) || isOpenPage(to))
-	if (keepsPage) return true
-	// Back and Forward have moved the browser's history to `to` already; a link does once let through.
-	const byHistory = routerHistory.location === to.fullPath
+async function decide() {
 	// A save under way finishes first, so what it stores isn't asked about.
-	await store.whenSaved()
-	if (move !== moves) return endAsNewest(to, byHistory)
-	if (!mayLoseEdits()) return true
-	asking = move
-	const leave = await showConfirm('Leave without saving your changes?', { okText: 'Leave' })
-	if (asking === move) asking = 0
-	if (move !== moves) return endAsNewest(to, byHistory)
-	return leave
+	await store.saveUnderWay()
+	if (held && mayLoseEdits()) {
+		asking = true
+		const leave = await showConfirm('Leave without saving your changes?', { okText: 'Leave' })
+		asking = false
+		if (!leave) held = null
+	}
+	const move = held
+	held = null
+	if (!move) return
+	// A Back or Forward is made again once the step taken back has landed (made meanwhile, it was
+	// lost in Chrome and went a page too far in WebKit). A move held meanwhile is newer: it decides.
+	if (move.at !== null) await historyOnPage()
+	if (held) return
+	const here = historyPlace()
+	goingAgain = move.to
+	if (move.at === null || here === null) router.push(move.to)
+	else if (move.at !== here) router.go(move.at - here)
 }
 
-// Refused, an overtaken Back or Forward is taken back once the newer one has been: WebKit drops
-// the second of two steps through the history taken at once.
-async function endAsNewest(to: RouteLocationNormalized, byHistory: boolean) {
-	const leave = await newest
-	if (!leave && byHistory) await historyAt(to.fullPath)
-	return leave
+// Where the history is, by vue-router's count of its entries.
+const historyPlace = () => {
+	const { position } = routerHistory.state
+	return typeof position === 'number' ? position : null
 }
-const historyAt = (place: string) =>
+// Finishes once the history is on the page shown, unless the view closes first.
+const historyOnPage = () =>
 	new Promise<void>((done) => {
 		const check = () => {
-			if (routerHistory.location !== place) return
+			if (routerHistory.location !== route.fullPath) return
 			window.removeEventListener('popstate', check)
 			done()
 		}
-		window.addEventListener('popstate', check)
+		window.addEventListener('popstate', check, { signal: closed.signal })
 		check()
 	})
 onBeforeRouteLeave(mayLeave)
 onBeforeRouteUpdate(mayLeave)
 // Closing the tab or reloading: the browser asks, in its own words.
-const askBeforeUnload = (event: BeforeUnloadEvent) => {
-	if (mayLoseEdits()) event.preventDefault()
-}
-window.addEventListener('beforeunload', askBeforeUnload)
-onBeforeUnmount(() => window.removeEventListener('beforeunload', askBeforeUnload))
+window.addEventListener(
+	'beforeunload',
+	(event) => {
+		if (mayLoseEdits()) event.preventDefault()
+	},
+	{ signal: closed.signal },
+)
 
 interface Opening {
 	content: Content

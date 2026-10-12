@@ -42,14 +42,10 @@ collection set apart from it, and a page going blank when sign-in lands ("Editor
 components"). Done, checked, reviewed once by a fresh agent and its finding fixed; committed
 and pushed (032fa1f, 2026-10-12, so it's live).
 
-**Next, suggested** (2026-10-12): make leaving the editor simpler when Back or Forward is
-pressed again ("Nothing warned before unsaved edits were lost"). Each review of it found a
-rarer sequence, and another agent's review note (2026-10-11) put the risk there: overtaken moves
-ending as the newest, history steps taken back one at a time, and a wait for a place in the
-history that's never cleaned up if the place never comes. Its advice, kept here: keep the rules
-for what's unsaved; agree a small policy for leaving first (stay usable, edits kept, the address
-on the page shown, a save under way shown); then try a simpler way against the existing cases,
-in Chrome and WebKit.
+**Leaving the editor made simpler** (2026-10-12, policy agreed with the user, as another agent's
+review note advised): a move that waits or asks is refused at once and held, so the address
+stays on the page shown ("Nothing warned before unsaved edits were lost", "Leaving that waits
+or asks"). Done, checked, reviewed once by a fresh agent and its finding fixed; not committed.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -2324,15 +2320,23 @@ These are not bugs but unresolved tensions in the current design:
       unsaved. Measured first: nothing changes a page after it opens (a stored page, the demo,
       the test page, a new page; waiting, clicking, arrows, the code view and back).
     - **While a save is under way** (its name question included), leaving waits for it
-      (`whenSaved`, approved), then asks only if something is still unsaved. Meanwhile a new
-      page's save leaves the address alone: changing it cancelled the move, or took the place
-      in the history of the page Back went to. Staying, the page shows its address at the next
-      save.
-    - **Back and Forward pressed again** while leaving waits or asks: vue-router gives up the
-      older move, but its answer still moves the history (refused, a Back or Forward is taken
-      back). So an overtaken move ends as the newest does, its question taken down, and when
-      both are refused they're taken back one after the other: WebKit drops the second of two
-      steps through the history taken at once (tried on a bare page; Chrome takes both).
+      (`saveUnderWay`, approved), then asks only if something is still unsaved. A new page's
+      first save shows its address at once, unless a Back the editor took back is still
+      landing (it would take that page's place in the history): then at the next save.
+    - **Leaving that waits or asks** (made simpler 2026-10-12, policy agreed with the user):
+      the move is refused at once, so the address stays on the page shown (vue-router takes a
+      Back or Forward back), and held. Only the newest is held: Back or Forward again replaces
+      it (Back twice points one page back, as the address hasn't moved), and a place on the
+      page drops it, its question too. Leave makes it again: a link is followed, a Back or
+      Forward goes the same steps through the history once the step taken back has landed
+      (sooner, Chrome lost the move and WebKit went a page too far, tried on plain pages).
+      The address flashes to where Back went and back: the browser moves the history before
+      the page hears of it (the Navigation API could stop it first; not in Safari 17.4).
+    - **Before** (5c6e3a5), an overtaken move ended as the newest did and refused moves were
+      taken back one at a time. Measured: while asked, the address showed where Back went;
+      Back, Back, Forward during a save, then Cancel, left the address bar on the home page
+      in Chrome, 5 runs of 5 (WebKit right, 5 of 5; the third review had seen it once). An
+      overtaken move whose history never reached its place kept waiting (read in code).
     - **Asking** (`TiptapEditorDemo.vue`) uses the view's own rule for when an address opens
       another page, so the two can't disagree.
     - **Found with it:** a question opened within about 30ms of the last one closing cancelled
@@ -2358,21 +2362,28 @@ These are not bugs but unresolved tensions in the current design:
       save asks twice, the app and then the browser. Two rare cases left (below).
     - **Checked:** `app.spec.ts`, six checks. Each fails with its part taken out: the question,
       the browser's, admins only, an ended sign-in kept, content compared (undo), the saved copy,
-      the code view, `#…`, a new page's own address, waiting for a save, the address left alone,
-      an overtaken move ending as the newest, its question taken down, steps back one at a time
-      (WebKit), the dialog's late close (Chrome; WebKit hasn't the bug). The browser still asks
-      after Leave for another page in the editor (fails with the third review's flag back).
+      the code view, `#…`, a new page's own address, the dialog's late close (Chrome; WebKit
+      hasn't the bug). The browser still asks after Leave for another page in the editor (fails
+      with the third review's flag back). Made simpler (2026-10-12), each fails with its part
+      taken out, in Chrome and WebKit: the committed code (the address while asked, and while
+      a new page's name is asked for), waiting for a save, a save alone holding the move, a
+      place on the page dropping the held move, and its question, Leave let through, the same
+      steps through the history (Forward after it finds the page again). No check reaches the
+      wait for the step back to land, nor the address held meanwhile: a save answered the
+      moment Back landed still finished after it, with or without them (6 runs each).
     - **Limits:** Safari on iPhone and iPad shows no question on closing a tab, as far as
       known (not tried on a phone); moving within the app still asks. The PWA work's
       `client/README.md` (uncommitted) says Refresh loses what's unsaved in other tabs: with a
-      tab in front, a reload from script now asks first; a tab behind wasn't tried. Found by the
-      third review, left as rare and losing no edits: Back, Back, Forward while a save is under
-      way, then Cancel, leaves the address bar on another page in Chrome (one run; each
-      overtaken move waits for the newest, not the next, so two steps back are taken at once);
-      a Back waiting for a new page's first save, overtaken by a link to the page already shown
-      (vue-router runs no guard for it), leaves the address bar on the page before and the new
-      page's address unshown until its next save. An overtaken move whose history never reaches
-      its place keeps waiting (read in code).
+      tab in front, a reload from script now asks first; a tab behind wasn't tried. The third
+      review's two rare cases (the address bar left on another page) and the wait that never
+      ended went with the simpler way (2026-10-12).
+    - **Review of the simpler way** (a fresh agent, 2026-10-12): one found and fixed, from this
+      change: leaving while a new page's first save ran, with nothing to ask, cancelled
+      showing its address, so Back found a blank `/editor` (6 runs of 6). The save now ends
+      once its address shows; checked (fails without it, Chrome and WebKit). Left, read in
+      code only: a hash typed in the address bar makes an entry vue-router numbers as the one
+      before, so Leave on a Back past it falls a step short (the app has no `#…` links of
+      that kind); a Leave the router-wide sign-in check sends elsewhere asks again (older).
 - [x] A new page whose collection fails to be set after it's made never gets it: the next Save
       updates the page without its collection. Read in code, not tried. Fixed 2026-10-12: the
       page and its collections are one write (`adminPages.create` takes `tagIds`, written in
