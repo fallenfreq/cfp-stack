@@ -838,6 +838,55 @@ test('Back and Forward while leaving asks keep the address on the page shown', a
 	await expect(page.locator('main h1')).toHaveText('Contact')
 })
 
+// A `#` typed in the address bar, or a link to one on a page (a bare `#` too), adds an entry to
+// the history; a link to the `#` already shown doesn't. A jump back over them while leaving asks
+// (Back held, an older page picked) keeps the address on the page shown, and Leave goes to the
+// page picked. vue-router numbered an added entry as the one before it
+// (patches/vue-router@4.5.1.patch), so both steps fell short.
+test('a jump back over a # typed in the address bar keeps the address on the page shown', async ({
+	page,
+	themeClass,
+}) => {
+	await openStored(page, themeClass, oneParagraph)
+	await moveTo(page, '/contact')
+	// Links on the page: to the top, a bare `#`, and to the `#` shown once typed.
+	await page.evaluate(() => {
+		for (const [href, name] of [
+			['#', 'Top'],
+			['#further', 'Further'],
+		] as const) {
+			const link = document.createElement('a')
+			link.href = href
+			link.textContent = name
+			document.querySelector('main')?.append(link)
+		}
+	})
+	await page.getByRole('link', { name: 'Top' }).click()
+	await page.goto('/contact#further')
+	await page.getByRole('link', { name: 'Further' }).click()
+	await moveTo(page, '/editor/stored')
+	const question = leaveQuestion(page)
+	const text = page.locator('.tiptap p').first()
+	await expect(text).toHaveText('A paragraph.')
+	await typeAtEnd(page, ' Typed.')
+	await expect(text).toHaveText('A paragraph. Typed.')
+
+	await page.evaluate(() => history.go(-3))
+	await expect(question).toBeVisible()
+	await settle(page)
+	await expect(page, 'a jump of three back, asked').toHaveURL(/\/editor\/stored$/)
+	await expect(text).toHaveText('A paragraph. Typed.')
+	await question.getByRole('button', { name: 'Leave' }).click()
+	await expect(page.locator('main h1')).toHaveText('Contact')
+	await expect(page, 'then Leave: the page picked').toHaveURL(/\/contact$/)
+	await page.goForward()
+	await page.goForward()
+	await expect(page, 'the history as it was').toHaveURL(/\/contact#further$/)
+	await page.goForward()
+	await expect(text).toHaveText('A paragraph.')
+	await expect(page).toHaveURL(/\/editor\/stored$/)
+})
+
 // Leaving while a save is under way, its name question included, waits for it, then asks only
 // if something is still unsaved. A new page's first save shows its address at once: the move
 // waiting is held, refused, so the address can't take its place.

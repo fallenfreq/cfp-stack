@@ -9,3 +9,6 @@ onlyBuiltDependencies:
     - esbuild
     - vue-demi
     - workerd
+
+patchedDependencies:
+    vue-router@4.5.1: patches/vue-router@4.5.1.patch

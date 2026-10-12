@@ -1,0 +1,85 @@
+diff --git a/dist/vue-router.cjs b/dist/vue-router.cjs
+index 9b0758e9c09772486dd342cf563d710cc26eddf1..2d3dc56ced371cef7fc1e908fdc3ed304b330095 100644
+--- a/dist/vue-router.cjs
++++ b/dist/vue-router.cjs
+@@ -589,6 +589,12 @@ function useHistoryListeners(base, historyState, currentLocation, replace) {
+             delta = fromState ? state.position - fromState.position : 0;
+         }
+         else {
++            // Patched (cfp-stack, patches/vue-router@4.5.1.patch): a `#` that changed the address is a
++            // new entry, after the one before; to the address shown, the browser reused the entry. A
++            // bare `#` is left out of `to` and `from`, and out of the address once seen, so one there
++            // is new.
++            if (to !== from || location.href.endsWith('#'))
++                historyState.value = assign({}, fromState, { back: from, forward: null, position: fromState.position + 1 });
+             replace(to);
+         }
+         // Here we could also revert the navigation by calling history.go(-delta)
+diff --git a/dist/vue-router.esm-browser.js b/dist/vue-router.esm-browser.js
+index fb07c5a68e3d7320cb1031631384140bc2ffa30a..7dae1b03d51e73cf8ba6c4f0b80cefcd558f04cf 100644
+--- a/dist/vue-router.esm-browser.js
++++ b/dist/vue-router.esm-browser.js
+@@ -587,6 +587,12 @@ function useHistoryListeners(base, historyState, currentLocation, replace) {
+             delta = fromState ? state.position - fromState.position : 0;
+         }
+         else {
++            // Patched (cfp-stack, patches/vue-router@4.5.1.patch): a `#` that changed the address is a
++            // new entry, after the one before; to the address shown, the browser reused the entry. A
++            // bare `#` is left out of `to` and `from`, and out of the address once seen, so one there
++            // is new.
++            if (to !== from || location.href.endsWith('#'))
++                historyState.value = assign({}, fromState, { back: from, forward: null, position: fromState.position + 1 });
+             replace(to);
+         }
+         // Here we could also revert the navigation by calling history.go(-delta)
+diff --git a/dist/vue-router.global.js b/dist/vue-router.global.js
+index 0319995dc0ec0d15c7bf78a599ff01f7d91359da..b51e0c0a3e26edb44e604751c3d433de161e34bb 100644
+--- a/dist/vue-router.global.js
++++ b/dist/vue-router.global.js
+@@ -587,6 +587,12 @@ var VueRouter = (function (exports, vue) {
+               delta = fromState ? state.position - fromState.position : 0;
+           }
+           else {
++              // Patched (cfp-stack, patches/vue-router@4.5.1.patch): a `#` that changed the address is a
++              // new entry, after the one before; to the address shown, the browser reused the entry. A
++              // bare `#` is left out of `to` and `from`, and out of the address once seen, so one there
++              // is new.
++              if (to !== from || location.href.endsWith('#'))
++                  historyState.value = assign({}, fromState, { back: from, forward: null, position: fromState.position + 1 });
+               replace(to);
+           }
+           // Here we could also revert the navigation by calling history.go(-delta)
+diff --git a/dist/vue-router.mjs b/dist/vue-router.mjs
+index 2fd74f4991fc54267e8be4a65b22fb23a1f2014b..c051087c4c77fa745de259905b5e64e464a5a1a5 100644
+--- a/dist/vue-router.mjs
++++ b/dist/vue-router.mjs
+@@ -588,6 +588,12 @@ function useHistoryListeners(base, historyState, currentLocation, replace) {
+             delta = fromState ? state.position - fromState.position : 0;
+         }
+         else {
++            // Patched (cfp-stack, patches/vue-router@4.5.1.patch): a `#` that changed the address is a
++            // new entry, after the one before; to the address shown, the browser reused the entry. A
++            // bare `#` is left out of `to` and `from`, and out of the address once seen, so one there
++            // is new.
++            if (to !== from || location.href.endsWith('#'))
++                historyState.value = assign({}, fromState, { back: from, forward: null, position: fromState.position + 1 });
+             replace(to);
+         }
+         // Here we could also revert the navigation by calling history.go(-delta)
+diff --git a/dist/vue-router.prod.cjs b/dist/vue-router.prod.cjs
+index 08529e2366e694192a168e555cfbdcb4ccce833f..183fbc94a115dd20997a83378cde8fe9aec3ddae 100644
+--- a/dist/vue-router.prod.cjs
++++ b/dist/vue-router.prod.cjs
+@@ -538,6 +538,12 @@ function useHistoryListeners(base, historyState, currentLocation, replace) {
+             delta = fromState ? state.position - fromState.position : 0;
+         }
+         else {
++            // Patched (cfp-stack, patches/vue-router@4.5.1.patch): a `#` that changed the address is a
++            // new entry, after the one before; to the address shown, the browser reused the entry. A
++            // bare `#` is left out of `to` and `from`, and out of the address once seen, so one there
++            // is new.
++            if (to !== from || location.href.endsWith('#'))
++                historyState.value = assign({}, fromState, { back: from, forward: null, position: fromState.position + 1 });
+             replace(to);
+         }
+         // Here we could also revert the navigation by calling history.go(-delta)

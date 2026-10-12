@@ -45,7 +45,10 @@ and pushed (032fa1f, 2026-10-12, so it's live).
 **Leaving the editor made simpler** (2026-10-12, policy agreed with the user, as another agent's
 review note advised): a move that waits or asks is refused at once and held, so the address
 stays on the page shown ("Nothing warned before unsaved edits were lost", "Leaving that waits
-or asks"). Done, checked, reviewed once by a fresh agent and its finding fixed; not committed.
+or asks"). Done, checked, reviewed once by a fresh agent and its finding fixed; committed and
+pushed (6f44ab3, 2026-10-12). Then a `#` in the address bar, vue-router patched (same entry,
+"A `#` typed in the address bar"): done, checked, reviewed once by a fresh agent and its
+finding fixed; committed (2026-10-12), not pushed.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -2380,10 +2383,37 @@ These are not bugs but unresolved tensions in the current design:
     - **Review of the simpler way** (a fresh agent, 2026-10-12): one found and fixed, from this
       change: leaving while a new page's first save ran, with nothing to ask, cancelled
       showing its address, so Back found a blank `/editor` (6 runs of 6). The save now ends
-      once its address shows; checked (fails without it, Chrome and WebKit). Left, read in
-      code only: a hash typed in the address bar makes an entry vue-router numbers as the one
-      before, so Leave on a Back past it falls a step short (the app has no `#…` links of
-      that kind); a Leave the router-wide sign-in check sends elsewhere asks again (older).
+      once its address shows; checked (fails without it, Chrome and WebKit). Left: a Leave
+      the router-wide sign-in check sends elsewhere asks again (older, read in code only).
+    - **A `#` typed in the address bar** (measured 2026-10-12, Chrome and WebKit, one
+      run each): vue-router (4.5.1, and 5.4) numbers the entry it makes as the one before,
+      so a step count across it is one short. A `#…` typed on the page before, then from the
+      editor a jump back over it (Back held, an older page picked): vue-router's step back
+      lands on the typed entry, so the address shows that page while the editor stays (edits
+      on screen), and Leave does nothing, waiting for the history to reach the page. Before
+      this change Leave worked, but Cancel left the same wrong address. The review's own
+      case, a `#…` typed on the editor then Back, Back, Leave, works: Back from it stays on
+      the page. A link to a `#` on the page makes the same entry. Known upstream: vuejs/router
+      #1314 (2022), closed by its maintainer as a caveat ("avoid manually changing the hash");
+      their way out is the Navigation API (open PR #2551), Safari 26.2+, past the floor. The
+      reason it's hard (measured, plain page, Chrome and WebKit): a `#` that adds an entry and
+      a link to the `#` already shown, which reuses it, both reach the page as the same
+      popstate with no state. Fixed (2026-10-12, `patches/vue-router@4.5.1.patch`, a pnpm
+      patch): vue-router numbers the entry one after the one before when the address changed,
+      the same when it didn't. A bare `#` (a link to the top) changes the address, but
+      vue-router's addresses leave it out, and it takes it out of the address bar once seen:
+      one there is new. Checked: a jump of three back over a bare `#`, a typed `#` and a link
+      to the same `#` asks with the address on the editor, Leave goes to the page picked,
+      Forward finds the history as it was (fails without the patch, without its bare `#`
+      part, and without its second half, Chrome and WebKit); the full browser suite passes.
+      Reviewed once by a fresh agent: the bare `#` was its one finding, fixed; nothing else
+      broke (vue-router's undo and redirect, a first load with a `#`, a `#` on the editor, a
+      jump forward over one). Limits: the same address typed again
+      in Chrome adds an entry, still numbered as the one before. The step vue-router reports
+      stays unknown (0), as before, so the scroll it keeps for the page left goes under the
+      wrong number; nothing reads it without a `scrollBehavior`, which the app hasn't. On an
+      upgrade of vue-router the patch must apply again (pnpm stops if it doesn't); dropped
+      once vue-router numbers it itself.
 - [x] A new page whose collection fails to be set after it's made never gets it: the next Save
       updates the page without its collection. Read in code, not tried. Fixed 2026-10-12: the
       page and its collections are one write (`adminPages.create` takes `tagIds`, written in
