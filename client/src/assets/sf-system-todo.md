@@ -39,8 +39,8 @@ agents (the third stopped early), findings fixed or left as rare; committed and 
 **Three fixes started from another agent's patches** (2026-10-12; the patches weren't applied,
 read as a guide instead, decided with the user): toolbar buttons without a name, a new page's
 collection set apart from it, and a page going blank when sign-in lands ("Editor + Vue
-components"). Done, checked, reviewed once by a fresh agent and its finding fixed; committed,
-not pushed.
+components"). Done, checked, reviewed once by a fresh agent and its finding fixed; committed
+and pushed (032fa1f, 2026-10-12, so it's live).
 
 **Next, suggested** (2026-10-12): make leaving the editor simpler when Back or Forward is
 pressed again ("Nothing warned before unsaved edits were lost"). Each review of it found a
