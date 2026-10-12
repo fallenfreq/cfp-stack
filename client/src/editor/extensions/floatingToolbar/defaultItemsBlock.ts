@@ -474,6 +474,7 @@ export const blockItems = [
 	toolbarButtonItem({
 		id: 'table-add-row-before',
 		label: '+ Row ↑',
+		tooltip: 'Add a row above',
 		show: isInTable,
 		disabled: (editor) => !editor.can().addRowBefore(),
 		action: (editor) => editor.chain().focus().addRowBefore().run(),
@@ -481,6 +482,7 @@ export const blockItems = [
 	toolbarButtonItem({
 		id: 'table-add-row-after',
 		label: '+ Row ↓',
+		tooltip: 'Add a row below',
 		show: isInTable,
 		disabled: (editor) => !editor.can().addRowAfter(),
 		action: (editor) => editor.chain().focus().addRowAfter().run(),
@@ -488,6 +490,7 @@ export const blockItems = [
 	toolbarButtonItem({
 		id: 'table-delete-row',
 		label: 'Del Row',
+		tooltip: 'Delete row',
 		show: isInTable,
 		disabled: (editor) => !editor.can().deleteRow(),
 		action: (editor) => editor.chain().focus().deleteRow().run(),
@@ -495,6 +498,7 @@ export const blockItems = [
 	toolbarButtonItem({
 		id: 'table-add-col-before',
 		label: '+ Col ←',
+		tooltip: 'Add a column on the left',
 		show: isInTable,
 		disabled: (editor) => !editor.can().addColumnBefore(),
 		action: (editor) => editor.chain().focus().addColumnBefore().run(),
@@ -502,6 +506,7 @@ export const blockItems = [
 	toolbarButtonItem({
 		id: 'table-add-col-after',
 		label: '+ Col →',
+		tooltip: 'Add a column on the right',
 		show: isInTable,
 		disabled: (editor) => !editor.can().addColumnAfter(),
 		action: (editor) => editor.chain().focus().addColumnAfter().run(),
@@ -509,6 +514,7 @@ export const blockItems = [
 	toolbarButtonItem({
 		id: 'table-delete-col',
 		label: 'Del Col',
+		tooltip: 'Delete column',
 		show: isInTable,
 		disabled: (editor) => !editor.can().deleteColumn(),
 		action: (editor) => editor.chain().focus().deleteColumn().run(),

@@ -1,6 +1,7 @@
 <template>
 	<ToolbarRevealInput
 		icon-name="edit"
+		:tooltip="tooltip"
 		placeholder="https://example.com/image.png"
 		:initial-url="initialUrl"
 		:on-apply="applyUrl"
@@ -13,7 +14,7 @@ import type { Editor } from '@tiptap/vue-3'
 import { computed } from 'vue'
 import ToolbarRevealInput from './ToolbarRevealInput.vue'
 
-const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
+const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
 const initialUrl = computed(() => (props.context.activeNode.attrs.src as string) ?? '')
 

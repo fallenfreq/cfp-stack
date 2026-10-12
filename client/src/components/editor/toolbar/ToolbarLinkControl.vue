@@ -1,6 +1,7 @@
 <template>
 	<ToolbarRevealInput
 		icon-name="link"
+		:tooltip="tooltip"
 		placeholder="https://example.com"
 		:initial-url="linkHref"
 		:on-apply="applyLink"
@@ -15,7 +16,7 @@ import type { Editor } from '@tiptap/vue-3'
 import { computed } from 'vue'
 import ToolbarRevealInput from './ToolbarRevealInput.vue'
 
-const props = defineProps<{ editor: Editor; context: ToolbarItemContext }>()
+const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
 const linkHref = computed(() => (props.editor.getAttributes('link').href as string) ?? '')
 const isLinkActive = computed(() => props.editor.isActive('link'))

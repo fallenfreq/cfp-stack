@@ -261,6 +261,102 @@ test("another page opened in a collection's sheet leaves nothing of the one befo
 	await expect(sheet.locator('.tiptap'), 'nothing of the page before').toHaveCount(0)
 })
 
+// Sign-in can land after a page's public copy is asked for, with it (the home page's are asked
+// together) or later. The read moves to the admin's copy, and the public copy stays on screen until
+// it arrives: the home page went blank meanwhile. The copy of another page or collection never
+// stays: a collection moved to while the admin's list loaded kept the list before.
+test('sign-in landing keeps the page on screen, and never another page', async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	// Who's signed in and the admin's copies, each held until let through.
+	const held: Record<string, Promise<void>> = {}
+	const hold = (call: string) => {
+		let release!: () => void
+		held[call] = new Promise<void>((resolve) => (release = resolve))
+		return release
+	}
+	let published = true
+	const replies = (call: string, input: { slug?: string; collectionSlug?: string }) => {
+		const copy = call.startsWith('admin') ? 'admin' : 'public'
+		if (call === 'publicPages.getBySlug' && !published) return null
+		if (call === 'session.get')
+			return { name: 'Admin', email: 'admin@example.test', roles: ['admin'] }
+		if (call.endsWith('Tags.getBySlug'))
+			return { tagId: 1, name: input.slug, slug: input.slug, published: true }
+		if (call.endsWith('Pages.getBySlug'))
+			return storedPage(input.slug!, 'Home', [
+				{ type: 'paragraph', content: [{ type: 'text', text: `The ${copy} home.` }] },
+			])
+		if (call.endsWith('Pages.listByCollection'))
+			return [{ slug: 'listed', name: `${copy} in ${input.collectionSlug}`, imageUrl: null }]
+		return undefined
+	}
+	// As fakeReplies does: a batch with other calls in it goes to the API for theirs.
+	await page.route('**/trpc/**', async (route) => {
+		const url = new URL(route.request().url())
+		const calls = url.pathname.replace('/trpc/', '').split(',')
+		const inputs = JSON.parse(url.searchParams.get('input') ?? '{}')
+		const answers = calls.map((call, at) => replies(call, inputs[at]?.json ?? {}))
+		if (answers.every((answer) => answer === undefined)) return route.fallback()
+		await Promise.all(
+			Object.entries(held).map(
+				([name, wait]) => calls.some((call) => call.startsWith(name)) && wait,
+			),
+		)
+		const real = answers.includes(undefined) ? await (await route.fetch()).json() : []
+		return route.fulfill({
+			json: answers.map((answer, at) =>
+				answer === undefined ? real[at] : { result: { data: { json: answer } } },
+			),
+		})
+	})
+	const asked = (call: string) => page.waitForRequest((request) => request.url().includes(call))
+
+	let letThrough = hold('adminPages.')
+	let adminRead = asked('adminPages.getBySlug')
+	await page.goto('/')
+	await useTheme(page, themeClass)
+	await adminRead
+	await settle(page)
+	const text = page.locator('main .tiptap p')
+	await expect(text, 'while the admin copy loads').toHaveText('The public home.')
+	letThrough()
+	await expect(text).toHaveText('The admin home.')
+
+	// Not published, the public read finds nothing, which doesn't stand in: there is a page.
+	published = false
+	letThrough = hold('adminPages.')
+	adminRead = asked('adminPages.getBySlug')
+	await page.goto('/')
+	await adminRead
+	await settle(page)
+	await expect(page.locator('main').getByText('Loading…')).toBeVisible()
+	await expect(page.getByText('Nothing here yet.'), 'not published').toHaveCount(0)
+	letThrough()
+	await expect(text).toHaveText('The admin home.')
+
+	// A collection's list is asked for after sign-in is known, unless that's slow. Then a collection
+	// seen before, while the admin's list still loads: its own public list shows, not the one before.
+	const letSignIn = hold('session.get')
+	letThrough = hold('adminPages.')
+	await page.goto('/c/second')
+	await expect(page.getByText('public in second')).toBeVisible()
+	await moveTo(page, '/c/first')
+	await expect(page.getByText('public in first')).toBeVisible()
+	adminRead = asked('adminPages.listByCollection')
+	letSignIn()
+	await adminRead
+	await settle(page)
+	await expect(page.getByText('public in first'), 'while the admin list loads').toBeVisible()
+	await moveTo(page, '/c/second')
+	await expect(page.getByText('public in second')).toBeVisible()
+	await expect(page.getByText('public in first'), 'the collection before').toHaveCount(0)
+	letThrough()
+	await expect(page.getByText('admin in second')).toBeVisible()
+})
+
 // Each dark mode switch registered the secret pink mode key, and the second was refused with a
 // log line; the key is the app's.
 test('opening a page logs nothing, and the pink mode key works', async ({ page }) => {
@@ -934,6 +1030,67 @@ test('a name the server refuses in the editor goes back to the one it has', asyn
 	await expect(toast).toContainText('×2')
 	await expect(toast).toHaveCount(1)
 	await expect(name).toHaveValue('Stored')
+})
+
+// A page made from a collection goes into it as it's made, in one write. Made first, a page whose
+// collection then failed was left out of it for good: Save only updated it after. A save that
+// fails stores nothing, so the next sends it all again.
+test('a new page made from a collection is saved into it in one write', async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+	})
+	const writes: [string, string, unknown][] = []
+	let refuse = true
+	await page.route(
+		(url) => /adminPages\.(create|update)/.test(url.pathname),
+		(route) => {
+			const { json } = route.request().postDataJSON()[0]
+			writes.push([
+				new URL(route.request().url()).pathname.split('.').pop()!,
+				json.name,
+				json.tagIds,
+			])
+			if (!refuse)
+				return route.fulfill({
+					json: [{ result: { data: { json: { pageId: 2, slug: 'collected' } } } }],
+				})
+			return route.fulfill({
+				status: 500,
+				json: [
+					{
+						error: {
+							json: {
+								message: 'Internal Server Error',
+								code: -32603,
+								data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: 500 },
+							},
+						},
+					},
+				],
+			})
+		},
+	)
+	await page.goto('/editor?autoTag=7')
+	await useTheme(page, themeClass)
+	const save = async () => {
+		await pressSave(page)
+		await page.getByRole('textbox', { name: 'Page name' }).fill('Collected')
+		await page.getByRole('button', { name: 'Submit' }).click()
+	}
+	await typeAtEnd(page, 'A new page.')
+	await save()
+	await expect.poll(() => writes.length).toBe(1)
+	refuse = false
+	await save()
+	await expect(page).toHaveURL(/\/editor\/collected$/)
+	expect(writes).toEqual([
+		['create', 'Collected', [7]],
+		['create', 'Collected', [7]],
+	])
 })
 
 // A tag box ticked for a save that fails is unticked again: the list reloads as it was, which

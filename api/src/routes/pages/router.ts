@@ -1,9 +1,9 @@
-import { and, desc, eq, inArray } from 'drizzle-orm'
+import { and, desc, eq, inArray, type SQLWrapper } from 'drizzle-orm'
 import type { BatchItem } from 'drizzle-orm/batch'
 import { createSelectSchema } from 'drizzle-orm/zod'
 import { z } from 'zod'
 import { adminProcedure, publicProcedure, router } from '../../config/trpc.js'
-import { writeTogether } from '../../db.js'
+import { type Db, newestId, writeTogether } from '../../db.js'
 import {
 	conflictIfSlugTaken,
 	definedFields,
@@ -45,6 +45,17 @@ const pageInput = createSelectSchema(sitePages, {
 
 // A page's collections: at most 50. They're bound to one query, and D1 takes at most 100 values.
 const collectionIds = z.array(siteTagInput.shape.tagId).max(50)
+
+// The page paired with each collection named, from a select, as a marker's tags are: a collection
+// that isn't there (deleted meanwhile) is left out, and so is the page if it went since the check.
+const insertPageTags = (db: Db, pageId: number | SQLWrapper, tagIds: number[]) =>
+	db.insert(sitePageTags).select(
+		db
+			.select({ pageId: sitePages.pageId, tagId: siteTags.tagId })
+			.from(sitePages)
+			.crossJoin(siteTags)
+			.where(and(eq(sitePages.pageId, pageId), inArray(siteTags.tagId, tagIds))),
+	)
 
 const listColumns = {
 	pageId: sitePages.pageId,
@@ -146,11 +157,14 @@ export const adminPagesRouter = router({
 			return { ...page, tags }
 		}),
 
+	// A new page and its collections are written together: a page made first, whose collections
+	// then failed, would be left out of them.
 	create: adminProcedure
 		.input(
 			pageInput
 				.pick({ name: true, imageUrl: true, contentJson: true })
-				.partial({ imageUrl: true }),
+				.partial({ imageUrl: true })
+				.extend({ tagIds: collectionIds.optional() }),
 		)
 		.mutation(({ input, ctx }) => {
 			const values = {
@@ -158,14 +172,22 @@ export const adminPagesRouter = router({
 				contentJson: input.contentJson,
 				...(input.imageUrl != null ? { imageUrl: input.imageUrl } : {}),
 			}
+			const tagIds = input.tagIds ?? []
 			return insertWithUniqueSlug(
 				ctx.db,
-				(slug) =>
-					ctx.db
-						.insert(sitePages)
-						.values({ ...values, slug })
-						.returning({ pageId: sitePages.pageId, slug: sitePages.slug })
-						.get(),
+				async (slug) => {
+					const [[made]] = await ctx.db.batch([
+						ctx.db
+							.insert(sitePages)
+							.values({ ...values, slug })
+							.returning({ pageId: sitePages.pageId, slug: sitePages.slug }),
+						...(tagIds.length > 0
+							? [insertPageTags(ctx.db, newestId(ctx.db, sitePages.pageId), tagIds)]
+							: []),
+					])
+					if (!made) throw new Error('Failed to insert the page')
+					return made
+				},
 				input.name,
 				sitePages.slug,
 			)
@@ -199,24 +221,7 @@ export const adminPagesRouter = router({
 			}
 			if (tagIds !== undefined) {
 				writes.push(ctx.db.delete(sitePageTags).where(eq(sitePageTags.pageId, pageId)))
-				// Paired from a select, as a marker's tags are: a collection that isn't there
-				// (deleted meanwhile) is left out, and so is the page if it went since the check.
-				if (tagIds.length > 0) {
-					writes.push(
-						ctx.db.insert(sitePageTags).select(
-							ctx.db
-								.select({ pageId: sitePages.pageId, tagId: siteTags.tagId })
-								.from(sitePages)
-								.crossJoin(siteTags)
-								.where(
-									and(
-										eq(sitePages.pageId, pageId),
-										inArray(siteTags.tagId, tagIds),
-									),
-								),
-						),
-					)
-				}
+				if (tagIds.length > 0) writes.push(insertPageTags(ctx.db, pageId, tagIds))
 			}
 			await conflictIfSlugTaken(writeTogether(ctx.db, writes), sitePages.slug)
 			return { pageId }

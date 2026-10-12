@@ -34,7 +34,22 @@ made, checked, committed and pushed (85c0350, 17eee1b, 2026-10-11).
 
 **Unsaved edits** (2026-10-11): leaving the editor asks first ("Editor + Vue components",
 "Nothing warned before unsaved edits were lost"). Done, checked, reviewed three times by fresh
-agents (the third stopped early), findings fixed or left as rare; not committed.
+agents (the third stopped early), findings fixed or left as rare; committed and pushed (5c6e3a5).
+
+**Three fixes started from another agent's patches** (2026-10-12; the patches weren't applied,
+read as a guide instead, decided with the user): toolbar buttons without a name, a new page's
+collection set apart from it, and a page going blank when sign-in lands ("Editor + Vue
+components"). Done, checked, reviewed once by a fresh agent and its finding fixed; committed,
+not pushed.
+
+**Next, suggested** (2026-10-12): make leaving the editor simpler when Back or Forward is
+pressed again ("Nothing warned before unsaved edits were lost"). Each review of it found a
+rarer sequence, and another agent's review note (2026-10-11) put the risk there: overtaken moves
+ending as the newest, history steps taken back one at a time, and a wait for a place in the
+history that's never cleaned up if the place never comes. Its advice, kept here: keep the rules
+for what's unsaved; agree a small policy for leaving first (stay usable, edits kept, the address
+on the page shown, a save under way shown); then try a simpler way against the existing cases,
+in Chrome and WebKit.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -2272,8 +2287,21 @@ These are not bugs but unresolved tensions in the current design:
 - [x] The sign-in libraries are unmaintained: `oidc-client` 1.11 (its successor is
       `oidc-client-ts`) under `vue-oidc-client` 1.0.0-alpha.5 (last released 2022), both used
       by Zitadel's own `@zitadel/vue`. Removed with the server sign-in above (2026-10-04).
-- [ ] `usePage` blanks when sign-in lands: the home page and a page preview show nothing until
-      the admin copy arrives (the collection list keeps its own now).
+- [x] `usePage` blanks when sign-in lands: the home page and a page preview show nothing until
+      the admin copy arrives (the collection list keeps its own now). Fixed 2026-10-12: the
+      home page's public copy and sign-in are asked together, and the read moved to the admin's
+      copy before the public one was stored, so a placeholder taken from the read before had
+      nothing to show (another agent's patch did that; tried the same way, it blanked too).
+      `usePageQuery` (name approved) reads both copies, each only while it's the one wanted, and
+      shows the admin's or, until it arrives, the public copy of the same page if that found
+      one; it serves the collection list too. Review (a fresh agent, 2026-10-12), one found and
+      fixed, from this change: an admin opening the home page unpublished was offered "Create
+      a page named “Home”" while the admin copy loaded, the public read's "not there" standing
+      in for it; a step in the check below fails with it standing in again. That list's own placeholder showed a collection seen before with
+      the list before it, while the admin's loaded: Vue Query reuses a placeholder it has shown
+      while its function stays the same. Checked: `app.spec.ts`, "sign-in landing keeps the
+      page on screen, and never another page" (Chrome, WebKit), which fails with the reads
+      before, with only the collection's before, and with a placeholder from the read before.
 - [x] Undo straight after a page opens empties it: loading the content counts as an edit
       (TipTap's `setContent` is recorded for undo), so Save would then store an empty page.
       The same for the demo. Checked in Chrome 2026-10-03; predates the fix above. Fixed
@@ -2345,8 +2373,16 @@ These are not bugs but unresolved tensions in the current design:
       (vue-router runs no guard for it), leaves the address bar on the page before and the new
       page's address unshown until its next save. An overtaken move whose history never reaches
       its place keeps waiting (read in code).
-- [ ] A new page whose collection fails to be set after it's made never gets it: the next Save
-      updates the page without its collection. Read in code, not tried.
+- [x] A new page whose collection fails to be set after it's made never gets it: the next Save
+      updates the page without its collection. Read in code, not tried. Fixed 2026-10-12: the
+      page and its collections are one write (`adminPages.create` takes `tagIds`, written in
+      one batch), so there's no page left outside its collection; a save that fails stores
+      nothing and the next sends it all again. Another agent's patch retried the collection on
+      the next Save instead, which needed a stored page's address to stop setting collections.
+      Checked: `pagesAndCollections.test.mjs`, "a new page goes into its collections as it is
+      made", and `app.spec.ts`, "a new page made from a collection is saved into it in one
+      write" (Chrome, WebKit), which fails with the collection set after and with it dropped
+      after a failed save.
 - [x] `FloatingToolbar.vue`'s unmount reads the closed editor's view, logging "\[tiptap error]
       The editor view is not available". It removes its listeners first, so nothing leaks.
       Predates; it now also shows on every move between editor addresses. Fixed 2026-10-06: 17.
@@ -2354,10 +2390,25 @@ These are not bugs but unresolved tensions in the current design:
       set: a collection opened with the theme already loaded logs "Cannot access … before
       initialization". Found by the review; unrelated. On Vite (5173) Vue's development build
       rethrows it from setup, so `/admin/pages` shows no list at all. Fixed 2026-10-06: 17.
-- [ ] The toolbar's picker buttons (Insert, Change Type, Wrap In, and Language from item 24)
+- [x] The toolbar's picker buttons (Insert, Change Type, Wrap In, and Language from item 24)
       have no name for a screen reader: their name is given to the tooltip around them
       (`toolbarCustomItem`), not to the button `ToolbarNodePicker` draws. Found 2026-10-10 in
-      Chrome (the button's `aria-label` is empty); predates item 24.
+      Chrome (the button's `aria-label` is empty); predates item 24. Twelve buttons were without
+      a name, not the five pickers another agent's patch named one by one: Link, Color (no
+      name at all), Font, Aspect ratio, Corners, Shadow and Attributes read their icon's word
+      ("tune"); a picture's and a video's address buttons and the address box's Apply and
+      Remove had none either. Each part that drew a button named it by hand, or forgot to.
+      Fixed 2026-10-12 in the button, decided with the user: `ToolbarButton` needs a `tooltip`
+      (approved), which shows on hover and names a button without words; one with words shows
+      them as its `label` (approved), its name. The type check refuses a toolbar button
+      without a tooltip, and a toolbar item too (`toolbarButtonItem`, `toolbarCustomItem`,
+      which hands it to the component's button); tried by taking three out. The selection
+      count isn't a button, so it's a plain `toolbarItem`. New tooltips: "Image address",
+      "Video address", "Apply", "Remove link" (the review's wording), the table's "Add a row
+      above", "Add a row below", "Delete row", "Add a column on the left", "Add a column on the
+      right", "Delete column"; the Code view toggle and an attribute's remove button show
+      theirs now too. Without the tooltip around the whole item, the Link box's parts sit the
+      toolbar's gap apart, as a picture's and a video's did already.
 
 ## Deferred (pending design pass)
 

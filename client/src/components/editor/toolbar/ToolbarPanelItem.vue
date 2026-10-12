@@ -9,11 +9,9 @@
 		<template #trigger="trigger">
 			<!-- A custom trigger spreads the slot props onto its own button. -->
 			<slot name="trigger" v-bind="trigger">
-				<SfTooltip :text="tooltip">
-					<ToolbarButton v-bind="trigger" :aria-label="tooltip">
-						<ToolbarIcon>{{ icon }}</ToolbarIcon>
-					</ToolbarButton>
-				</SfTooltip>
+				<ToolbarButton v-bind="trigger" :tooltip="tooltip">
+					<ToolbarIcon>{{ icon }}</ToolbarIcon>
+				</ToolbarButton>
 			</slot>
 		</template>
 		<slot />

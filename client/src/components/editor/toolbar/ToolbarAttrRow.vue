@@ -63,7 +63,7 @@
 
 			<span v-if="isAtDefault" class="attr-default-badge sf-loudness-1">default</span>
 
-			<ToolbarButton :aria-label="`Remove ${attrKey}`" @click="emit('remove', attrKey)">
+			<ToolbarButton :tooltip="`Remove ${attrKey}`" @click="emit('remove', attrKey)">
 				<ToolbarIcon>close</ToolbarIcon>
 			</ToolbarButton>
 		</div>

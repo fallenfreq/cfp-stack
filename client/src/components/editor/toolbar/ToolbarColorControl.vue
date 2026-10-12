@@ -1,11 +1,9 @@
 <template>
 	<ToolbarPanelItem :open="open" :tooltip="tooltip" align="end" @update:open="setOpen">
 		<template #trigger="trigger">
-			<SfTooltip :text="tooltip">
-				<ToolbarButton v-bind="trigger">
-					<span class="color-swatch sf-swatch sf-size-2xs" :style="swatchStyle" />
-				</ToolbarButton>
-			</SfTooltip>
+			<ToolbarButton v-bind="trigger" :tooltip="tooltip">
+				<span class="color-swatch sf-swatch sf-size-2xs" :style="swatchStyle" />
+			</ToolbarButton>
 		</template>
 		<ColorPicker :value="currentColor" @commit="onCommit" @remove="onRemove" />
 	</ToolbarPanelItem>

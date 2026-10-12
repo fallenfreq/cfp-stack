@@ -2,15 +2,17 @@
 	<!-- Rule bend: fixed-position floating chrome would normally take sf-depth-2 +
 	     sf-is-overlay (which also promotes buttons to pill radius). Left off so this
 	     reads as a plain toolbar button — visually consistent with the inline-code
-	     button in the floating toolbar. -->
-	<ToolbarButton
-		class="code-view-toggle"
-		aria-label="Code view"
-		:pressed="editorStore.isCodeView"
-		@click="editorStore.toggleCodeView"
-	>
-		<ToolbarIcon>{{ editorStore.isCodeView ? 'text_fields' : 'code' }}</ToolbarIcon>
-	</ToolbarButton>
+	     button in the floating toolbar. Placed by its own box, which holds the button's tooltip
+	     too. -->
+	<div class="code-view-toggle">
+		<ToolbarButton
+			tooltip="Code view"
+			:pressed="editorStore.isCodeView"
+			@click="editorStore.toggleCodeView"
+		>
+			<ToolbarIcon>{{ editorStore.isCodeView ? 'text_fields' : 'code' }}</ToolbarIcon>
+		</ToolbarButton>
+	</div>
 </template>
 
 <script setup lang="ts">

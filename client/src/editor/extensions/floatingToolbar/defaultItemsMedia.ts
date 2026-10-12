@@ -9,11 +9,13 @@ export const mediaItems = [
 		'image-url',
 		(_e, ctx) => ctx.activeNode.type.name === 'image',
 		ToolbarImageUrlControl,
+		{ tooltip: 'Image address' },
 	),
 	toolbarCustomItem(
 		'youtube-url',
 		(_e, ctx) => ctx.activeNode.type.name === 'youtube',
 		ToolbarYouTubeUrlControl,
+		{ tooltip: 'Video address' },
 	),
 
 	// --- Link controls ---

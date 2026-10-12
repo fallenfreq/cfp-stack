@@ -1,14 +1,11 @@
-import SfTooltip from '@/components/SfTooltip.vue'
 import ToolbarButton from '@/components/editor/toolbar/ToolbarButton.vue'
 import type { Editor } from '@tiptap/vue-3'
 import type { Component, VNodeChild } from 'vue'
 import { defineComponent, h } from 'vue'
 import type { ToolbarItem, ToolbarItemContext } from './types'
 
-const withTooltip = (node: VNodeChild, tooltip?: string): VNodeChild =>
-	tooltip ? h(SfTooltip, { text: tooltip, placement: 'top' }, () => node) : node
-
-function toolbarItem(
+// An item that draws what it likes; a button is one of the kinds below.
+export function toolbarItem(
 	id: string,
 	show: (editor: Editor, context: ToolbarItemContext) => boolean,
 	render: (editor: Editor, context: ToolbarItemContext) => VNodeChild,
@@ -31,15 +28,16 @@ interface ButtonItemBase {
 	active?: (editor: Editor, context: ToolbarItemContext) => boolean
 	disabled?: (editor: Editor, context: ToolbarItemContext) => boolean
 	action: (editor: Editor, context: ToolbarItemContext) => void
-}
-
-/** Icon-only button — tooltip is required so it can never be accidentally omitted. */
-type IconButtonItem = ButtonItemBase & {
-	label: (editor: Editor, context: ToolbarItemContext) => VNodeChild
+	// Shows on hover; a button without words is named by it too.
 	tooltip: string
 }
 
-/** Text-label button — self-descriptive, no tooltip needed. */
+/** An icon button. */
+type IconButtonItem = ButtonItemBase & {
+	label: (editor: Editor, context: ToolbarItemContext) => VNodeChild
+}
+
+/** A button with words, which are its name. */
 type TextButtonItem = ButtonItemBase & {
 	label: string
 }
@@ -48,19 +46,19 @@ type ButtonItemOptions = IconButtonItem | TextButtonItem
 
 interface CustomItemOptions {
 	props?: Record<string, unknown>
-	tooltip?: string
+	tooltip: string
 }
 
+// The component draws its own button, so the tooltip goes to it as its `tooltip` prop.
 export function toolbarCustomItem(
 	id: string,
 	show: (editor: Editor, context: ToolbarItemContext) => boolean,
 	component: Component,
-	options?: CustomItemOptions,
+	options: CustomItemOptions,
 ): ToolbarItem {
-	return toolbarItem(id, show, (editor, context) => {
-		const inner = h(component, { editor, context, ...options?.props })
-		return withTooltip(inner, options?.tooltip)
-	})
+	return toolbarItem(id, show, (editor, context) =>
+		h(component, { editor, context, tooltip: options.tooltip, ...options.props }),
+	)
 }
 
 function isIconItem(o: ButtonItemOptions): o is IconButtonItem {
@@ -69,17 +67,14 @@ function isIconItem(o: ButtonItemOptions): o is IconButtonItem {
 
 export function toolbarButtonItem(options: ButtonItemOptions): ToolbarItem {
 	return toolbarItem(options.id, options.show, (editor, context) => {
-		const btn = h(
-			ToolbarButton,
-			{
-				current: options.active?.(editor, context) ?? false,
-				disabled: options.disabled?.(editor, context) ?? false,
-				// An icon has no words, so its tooltip is also its name.
-				'aria-label': isIconItem(options) ? options.tooltip : undefined,
-				onClick: () => options.action(editor, context),
-			},
-			isIconItem(options) ? () => options.label(editor, context) : () => options.label,
-		)
-		return withTooltip(btn, isIconItem(options) ? options.tooltip : undefined)
+		const props = {
+			tooltip: options.tooltip,
+			current: options.active?.(editor, context) ?? false,
+			disabled: options.disabled?.(editor, context) ?? false,
+			onClick: () => options.action(editor, context),
+		}
+		return isIconItem(options)
+			? h(ToolbarButton, props, () => options.label(editor, context))
+			: h(ToolbarButton, { ...props, label: options.label })
 	})
 }

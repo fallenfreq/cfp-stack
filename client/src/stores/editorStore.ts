@@ -13,6 +13,7 @@ import type { Editor } from '@tiptap/vue-3'
 import { defineStore } from 'pinia'
 import { ref, shallowRef, watch, type ShallowRef } from 'vue'
 
+type NewPage = Parameters<typeof trpc.adminPages.create.mutate>[0]
 type PageChanges = Parameters<typeof trpc.adminPages.update.mutate>[0]
 
 export const useEditorStore = defineStore('editor', () => {
@@ -132,10 +133,7 @@ export const useEditorStore = defineStore('editor', () => {
 
 	// The page's writes; one the server refuses says why (config/queryClient.ts).
 	const createPage = useMutation(
-		{
-			mutationFn: (input: { name: string; contentJson: string }) =>
-				trpc.adminPages.create.mutate(input),
-		},
+		{ mutationFn: (input: NewPage) => trpc.adminPages.create.mutate(input) },
 		queryClient,
 	)
 	const updatePage = useMutation(
@@ -213,17 +211,19 @@ export const useEditorStore = defineStore('editor', () => {
 						return
 					}
 				}
-				const result = await createPage.mutateAsync({ name, contentJson })
+				// Made with its collection, in one write.
+				const result = await createPage.mutateAsync({
+					name,
+					contentJson,
+					tagIds: autoTag === null ? undefined : [autoTag],
+				})
 				if (!result?.pageId) throw new Error('Failed to create page: no ID returned')
 				if (stillOpen()) {
 					currentPageId.value = result.pageId
 					currentSlug.value = result.slug
 					currentName.value = name
 					savedName = name
-				}
-				if (autoTag !== null) {
-					await updatePage.mutateAsync({ pageId: result.pageId, tagIds: [autoTag] })
-					if (stillOpen()) pendingAutoTag.value = null
+					pendingAutoTag.value = null
 				}
 			}
 			if (stillOpen()) {

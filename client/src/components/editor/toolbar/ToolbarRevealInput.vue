@@ -1,6 +1,6 @@
 <template>
 	<div class="toolbar-reveal">
-		<ToolbarButton @click="toggle">
+		<ToolbarButton :tooltip="tooltip" @click="toggle">
 			<ToolbarIcon>{{ iconName }}</ToolbarIcon>
 		</ToolbarButton>
 		<template v-if="revealed">
@@ -9,14 +9,15 @@
 				v-model="localUrl"
 				type="url"
 				class="toolbar-url-input sf sf-field sf-size-xs sf-text-xs sf-on-focus"
+				:aria-label="tooltip"
 				:placeholder="placeholder ?? 'https://'"
 				@keydown.enter.prevent="apply"
 				@keydown.escape.prevent="collapse"
 			/>
-			<ToolbarButton @click="apply">
+			<ToolbarButton tooltip="Apply" @click="apply">
 				<ToolbarIcon>check</ToolbarIcon>
 			</ToolbarButton>
-			<ToolbarButton v-if="onRemove" @click="remove">
+			<ToolbarButton v-if="onRemove" tooltip="Remove link" @click="remove">
 				<ToolbarIcon>link_off</ToolbarIcon>
 			</ToolbarButton>
 		</template>
@@ -30,6 +31,7 @@ import ToolbarIcon from './ToolbarIcon.vue'
 
 const props = defineProps<{
 	iconName: string
+	tooltip: string
 	placeholder?: string
 	initialUrl: string
 	onApply: (url: string) => void

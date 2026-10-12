@@ -12,9 +12,9 @@ import {
 } from '@/utils/editor/editorUtils'
 import { Fragment } from '@tiptap/pm/model'
 import type { Editor } from '@tiptap/vue-3'
-import { defineComponent, h } from 'vue'
+import { h } from 'vue'
 import { blockNodeEntries, icon } from './defaultItemsShared'
-import { toolbarButtonItem, toolbarCustomItem } from './toolbarItemFactory'
+import { toolbarButtonItem, toolbarCustomItem, toolbarItem } from './toolbarItemFactory'
 import type { ToolbarItemContext } from './types'
 
 const selPrevUnselected = (editor: Editor, ctx: ToolbarItemContext): NodePos | null => {
@@ -240,21 +240,16 @@ export const multiSelectItems = [
 		},
 	}),
 
-	toolbarCustomItem(
+	// Not a button: how many blocks are selected.
+	toolbarItem(
 		'sel-count',
 		() => useMultiSelectStore().positions.length > 0,
-		defineComponent({
-			inheritAttrs: false,
-			setup() {
-				const store = useMultiSelectStore()
-				return () =>
-					h(
-						'span',
-						{ class: 'sel-count sf-loudness-1 sf-single-line sf-text-xs' },
-						`${store.positions.length} selected`,
-					)
-			},
-		}),
+		() =>
+			h(
+				'span',
+				{ class: 'sel-count sf-loudness-1 sf-single-line sf-text-xs' },
+				`${useMultiSelectStore().positions.length} selected`,
+			),
 	),
 
 	toolbarButtonItem({
