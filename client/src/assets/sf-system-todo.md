@@ -48,7 +48,7 @@ stays on the page shown ("Nothing warned before unsaved edits were lost", "Leavi
 or asks"). Done, checked, reviewed once by a fresh agent and its finding fixed; committed and
 pushed (6f44ab3, 2026-10-12). Then a `#` in the address bar, vue-router patched (same entry,
 "A `#` typed in the address bar"): done, checked, reviewed once by a fresh agent and its
-finding fixed; committed (2026-10-12), not pushed.
+finding fixed; committed and pushed (1294637, 2026-10-12).
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -2411,9 +2411,16 @@ These are not bugs but unresolved tensions in the current design:
       jump forward over one). Limits: the same address typed again
       in Chrome adds an entry, still numbered as the one before. The step vue-router reports
       stays unknown (0), as before, so the scroll it keeps for the page left goes under the
-      wrong number; nothing reads it without a `scrollBehavior`, which the app hasn't. On an
+      wrong number ("Back and Forward put the page back where it was scrolled"). On an
       upgrade of vue-router the patch must apply again (pnpm stops if it doesn't); dropped
       once vue-router numbers it itself.
+- [ ] Back and Forward put the page back where it was scrolled: the router has no
+      `scrollBehavior`, so vue-router doesn't (read in code; what the browser does on its own
+      wasn't tried). If one is added, with the `#` patch: vue-router 4.5.1 keeps the scroll of
+      the page left at a `#` under the wrong number, since the patch leaves the step unknown
+      (0); vue-router since #2780 (merged 2026-08-19) skips keeping it for an unknown step.
+      Then the patch reports the step as well (1 for a new entry), which also changes
+      vue-router's redirect from a `#`: refused, it keeps the `#` entry (read in code).
 - [x] A new page whose collection fails to be set after it's made never gets it: the next Save
       updates the page without its collection. Read in code, not tried. Fixed 2026-10-12: the
       page and its collections are one write (`adminPages.create` takes `tagIds`, written in
