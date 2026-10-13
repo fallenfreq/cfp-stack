@@ -842,7 +842,7 @@ test('Back and Forward while leaving asks keep the address on the page shown', a
 // the history; a link to the `#` already shown doesn't. A jump back over them while leaving asks
 // (Back held, an older page picked) keeps the address on the page shown, and Leave goes to the
 // page picked. vue-router numbered an added entry as the one before it
-// (patches/vue-router@4.5.1.patch), so both steps fell short.
+// (patches/vue-router@5.4.0.patch), so both steps fell short.
 test('a jump back over a # typed in the address bar keeps the address on the page shown', async ({
 	page,
 	themeClass,

@@ -46,11 +46,11 @@
 		"@tiptap/vue-3": "^3.31.4",
 		"@trpc/client": "11.0.0-rc.402",
 		"lowlight": "^3.3.0",
-		"pinia": "^3.0.3",
+		"pinia": "^3.0.4",
 		"postcss-safe-parser": "^7.0.1",
 		"typescript": "6.0.3",
-		"vue": "^3.5.21",
-		"vue-router": "^4.5.1"
+		"vue": "^3.5.43",
+		"vue-router": "^5.4.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.63.0",

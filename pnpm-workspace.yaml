@@ -10,5 +10,12 @@ onlyBuiltDependencies:
     - vue-demi
     - workerd
 
+# Dependencies a package uses without declaring them.
+packageExtensions:
+    # Its TypeScript parser (client/plugins/piniaHMR.ts) needs @babel/parser 7.
+    recast:
+        dependencies:
+            '@babel/parser': ^7.20.5
+
 patchedDependencies:
-    vue-router@4.5.1: patches/vue-router@4.5.1.patch
+    vue-router@5.4.0: patches/vue-router@5.4.0.patch

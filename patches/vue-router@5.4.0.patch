@@ -1,0 +1,80 @@
+diff --git a/dist/vue-router.cjs b/dist/vue-router.cjs
+index 086389941cb5c92326b2fa13b2a750c53240aae8..1cdf65e40eac22f354f934d8851e83286f35a287 100644
+--- a/dist/vue-router.cjs
++++ b/dist/vue-router.cjs
+@@ -819,7 +819,14 @@ function useHistoryListeners(base, historyState, currentLocation, replace) {
+ 				return;
+ 			}
+ 			delta = fromState ? state.position - fromState.position : 0;
+-		} else replace(to);
++		} else {
++			// Patched (cfp-stack, patches/vue-router@5.4.0.patch): a `#` that changed the address is a
++			// new entry, after the one before; to the address shown, the browser reused the entry. A
++			// bare `#` is left out of `to` and `from`, and out of the address once seen, so one there
++			// is new.
++			if (to !== from || location.href.endsWith('#')) historyState.value = assign({}, fromState, { back: from, forward: null, position: fromState.position + 1 });
++			replace(to);
++		}
+ 		listeners.forEach((listener) => {
+ 			listener(currentLocation.value, from, {
+ 				delta,
+diff --git a/dist/vue-router.esm-browser.js b/dist/vue-router.esm-browser.js
+index 236a44375334452c89520ee30a20c23a7fb74483..445ad8a5dd28b7e84f5f8be35ec122e3b71ed956 100644
+--- a/dist/vue-router.esm-browser.js
++++ b/dist/vue-router.esm-browser.js
+@@ -818,7 +818,14 @@ function useHistoryListeners(base, historyState, currentLocation, replace) {
+ 				return;
+ 			}
+ 			delta = fromState ? state.position - fromState.position : 0;
+-		} else replace(to);
++		} else {
++			// Patched (cfp-stack, patches/vue-router@5.4.0.patch): a `#` that changed the address is a
++			// new entry, after the one before; to the address shown, the browser reused the entry. A
++			// bare `#` is left out of `to` and `from`, and out of the address once seen, so one there
++			// is new.
++			if (to !== from || location.href.endsWith('#')) historyState.value = assign({}, fromState, { back: from, forward: null, position: fromState.position + 1 });
++			replace(to);
++		}
+ 		listeners.forEach((listener) => {
+ 			listener(currentLocation.value, from, {
+ 				delta,
+diff --git a/dist/vue-router.global.js b/dist/vue-router.global.js
+index b5d9f73570e9749a1b059e3d80f03847e4b1ec7c..ce8c67955470f45c0899415e189eb0e34f2c1c67 100644
+--- a/dist/vue-router.global.js
++++ b/dist/vue-router.global.js
+@@ -965,7 +965,14 @@ var VueRouter = (function(exports, vue) {
+ 					return;
+ 				}
+ 				delta = fromState ? state.position - fromState.position : 0;
+-			} else replace(to);
++			} else {
++				// Patched (cfp-stack, patches/vue-router@5.4.0.patch): a `#` that changed the address is a
++				// new entry, after the one before; to the address shown, the browser reused the entry. A
++				// bare `#` is left out of `to` and `from`, and out of the address once seen, so one there
++				// is new.
++				if (to !== from || location.href.endsWith('#')) historyState.value = assign({}, fromState, { back: from, forward: null, position: fromState.position + 1 });
++				replace(to);
++			}
+ 			listeners.forEach((listener) => {
+ 				listener(currentLocation.value, from, {
+ 					delta,
+diff --git a/dist/vue-router.js b/dist/vue-router.js
+index 17294a1a8b5dfe809017bf9f47daf33faed25abd..bb828ea5ea233707aae8fca46993c95968b2784e 100644
+--- a/dist/vue-router.js
++++ b/dist/vue-router.js
+@@ -41,7 +41,14 @@ function useHistoryListeners(base, historyState, currentLocation, replace) {
+ 				return;
+ 			}
+ 			delta = fromState ? state.position - fromState.position : 0;
+-		} else replace(to);
++		} else {
++			// Patched (cfp-stack, patches/vue-router@5.4.0.patch): a `#` that changed the address is a
++			// new entry, after the one before; to the address shown, the browser reused the entry. A
++			// bare `#` is left out of `to` and `from`, and out of the address once seen, so one there
++			// is new.
++			if (to !== from || location.href.endsWith('#')) historyState.value = assign({}, fromState, { back: from, forward: null, position: fromState.position + 1 });
++			replace(to);
++		}
+ 		listeners.forEach((listener) => {
+ 			listener(currentLocation.value, from, {
+ 				delta,
