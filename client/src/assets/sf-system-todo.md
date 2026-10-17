@@ -2470,24 +2470,17 @@ These are not bugs but unresolved tensions in the current design:
     - **Limits:**
         - An admin's reload of a collection, sign-in known late, can land near the place
           rather than on it (read only).
-        - A reload of a page with pictures opens at its top, until pictures carry their sizes
-          (below).
+        - A reload of a page whose pictures are still loading opens at its top.
         - Leaving a page before it has loaded keeps its place as the top.
         - Back across a `#` link inside a page doesn't return where the reader was: WebKit
           scrolls to the `#` before the app hears of it (measured).
         - The plugin is experimental: an upgrade may change it.
 - [x] Idea (2026-10-15, logged with the user): in the editor, the cursor back where it was
       left. Done 2026-10-17 for stored pages (`RememberCursor`, above).
-- [ ] Picture sizes (2026-10-16, logged with the user; to do, after the place work). A picture
-      without a chosen shape (`sl-aspect-*`) has no height until it loads. So the page grows
-      as each picture arrives and its text jumps, and a reload of a page with pictures opens
-      at its top, because its place would land in another part of the page (measured
-      2026-10-15 by the scroll review). If each picture carried its width and height, the
-      page would be its full height at once. Other people build pages with this, so it
-      belongs in the spec (`sf-system.md`), not only in our editor. Still to decide:
-    - what a picture carries;
-    - how a size gets there (read when a picture is added, and for seeded pages);
-    - what a picture without one does.
+- [x] Picture sizes (decided with the user, 2026-10-17): the author gives a picture its size,
+      and the validator warns on one without (spec, "A picture's space before it loads"). The
+      editor setting sizes itself was rejected. Found on the way: in WebKit a picture
+      covering its Card is 32px taller than the Card's inside once loaded; not looked into.
 - [x] A new page whose collection fails to be set after it's made never gets it: the next Save
       updates the page without its collection. Read in code, not tried. Fixed 2026-10-12: the
       page and its collections are one write (`adminPages.create` takes `tagIds`, written in

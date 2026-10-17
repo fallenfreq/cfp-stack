@@ -878,6 +878,12 @@ keep its shape). A centred column (`sl-center`) is as wide as its measure allows
 stack or an inset, not as wide as its text; in a layout aligned sideways it takes its
 content's width, as the other items do.
 
+**A picture's space before it loads.** Until its file arrives a picture has no height, and
+the page grows when it does, unless it has a size of its own: its width and height in the
+HTML (the file's), a shape with a fill (`sl-aspect-*` with `sl-object-cover`, `-contain` or
+`-fill`), or a frame with a shape that it covers. A shape alone isn't enough: the width still
+comes from the file.
+
 **Rows that share columns** — `sl-row` on a child of a grid layout (`sl-split`,
 `sl-columns`, `sl-grid`) makes it span every column and put its own children on the
 parent's columns. Separate row elements then line up as if their cells were in one grid:
@@ -1358,6 +1364,8 @@ Each rule's reason is in the section named.
 - A gentle warning on a long run of side-by-side blocks that each hide or show by width, say
   100 in a row: put the blocks that hide together in one box and hide the box
   (Container-responsive collapse).
+- Warn on a picture with no size of its own (Layout primitives, "A picture's space before it
+  loads").
 
 **Components** (Component blocks, "Writing a component block")
 
