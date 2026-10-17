@@ -52,9 +52,9 @@ finding fixed; committed and pushed (1294637, 2026-10-12). vue-router then upgra
 and the patch redone on it (2026-10-13, same entry).
 
 **Back and Forward keep the page's place** (2026-10-17, "Editor + Vue components", "Back and
-Forward put the page back where it was scrolled"): redesigned simpler with the user, done and
-checked, reviewed once by a fresh agent and its two findings fixed; not committed. The other session's PWA work is uncommitted in the
-same tree, `main.ts` included: stage only this change's hunks.
+Forward put the page back where it was scrolled"): redesigned simpler with the user, done,
+checked, reviewed once by a fresh agent and its two findings fixed; committed (210c159), not
+pushed.
 
 **Next:** item 10 (rules that reach through a node view) and the layout checks below are
 committed (2026-10-01). The browser floor is raised to Safari 17.4 (2026-10-01, decided with
@@ -2424,48 +2424,70 @@ These are not bugs but unresolved tensions in the current design:
       place, once the browser floor reaches Safari 26.2.
 - [x] Back and Forward put the page back where it was scrolled. They opened a page at its top,
       or 230px down, wherever it was left (measured 2026-10-15, Chrome and WebKit): the
-      browser put the place back before the page had arrived. Fixed 2026-10-17, decided with
-      the user: "works in the best case, or ends up at the top when it can't". vue-router's own
-      scroll restoring keeps the places (`ScrollRestoration` from `vue-router/experimental`;
-      5.4 deprecates `scrollBehavior`), registered once in `App.vue`, with one rule of ours
-      (`router/pagePlace.ts`): - After a move (Back, Forward, a link, a reload), a page goes back to where it was
-      scrolled once it's long enough to reach it, if that's within a second and none of
-      its pictures is still loading. Otherwise it stays at its top. - Scrolling, clicking or typing first leaves it where the reader puts it. - A page not seen yet opens at its top, or at its `#`. - Per page, not per visit (agreed). Changing only the query (a page opened in a
-      collection's sheet) keeps the place. - Back and Forward find a page's data and pictures already in (measured, both
-      browsers).
-      In the editor the place is the cursor instead (`RememberCursor`, approved): - A stored page opens where its cursor was last time in this browser (local storage),
-      the cursor's line just under the editor's top bar (decided with the user). What's
-      above it is then off the screen, so a picture there arriving late doesn't push it
-      down (measured, pictures 1 to 40 lines above). - A picture, a rule or table cells kept selected come back as a cursor next to them. - A page with none kept opens at its top, the cursor at its start. So does a new page
-      until Save names it, and so do the demo and the layout test cases. - Save naming a page moves nothing.
-      A first design was dropped with the user as too much for what it gave: each page saying
-      when its content was in, then a version that held the place until the page settled. Its
-      review's findings no longer apply.
-      Reviewed once by a fresh agent (2026-10-17). Its two findings were both shown running in
-      Chrome and WebKit, and fixed: - The cursor came back at the bottom edge of the screen, and a picture just above it
-      arriving late pushed it off. Fixing this needed two more changes. The top bar now
-      gives its height as it shows, not a frame later (`EditorTopBar`). The cursor now goes
-      in with the focus, because WebKit's focus sometimes moved it to the page's start
-      (measured). - A selected picture came back as a cursor where none can be, with ProseMirror's
-      warning.
-      Checked in `app.spec.ts` (Chrome, WebKit), and the full suite passes: - "a page goes back where it was scrolled, or stays at its top when it can't"; - "a page whose pictures are still loading stays at its top"; - "opening a page in a sheet, and Save naming a new page, keep the place"; - "the editor opens a stored page where its cursor was left".
-      Measured on the way: a check that holds a page's requests across a reload makes Chrome
-      take the page down before it's left, so its place is kept as the top. A slow connection
-      (simulated) doesn't, so the checks make content late on moves instead.
-      Limits: - An admin's reload of a collection, sign-in known late, can land near the place
-      rather than on it (read only). - A reload of a page with pictures opens at its top, until pictures carry their sizes
-      (below). - Leaving a page before it has loaded keeps its place as the top. - Back across a `#` link inside a page doesn't return where the reader was: WebKit
-      scrolls to the `#` before the app hears of it (measured). - The plugin is experimental: an upgrade may change it.
+      browser put the place back before the page had arrived. Fixed 2026-10-17 (210c159),
+      decided with the user: "works in the best case, or ends up at the top when it can't".
+    - **Pages:** vue-router's own scroll restoring keeps the places (`ScrollRestoration` from
+      `vue-router/experimental`; 5.4 deprecates `scrollBehavior`), registered once in
+      `App.vue`, with one rule of ours (`router/pagePlace.ts`):
+        - After a move (Back, Forward, a link, a reload), a page goes back to where it was
+          scrolled once it's long enough to reach it, if that's within a second and none of
+          its pictures is still loading. Otherwise it stays at its top.
+        - Scrolling, clicking or typing first leaves it where the reader puts it.
+        - A page not seen yet opens at its top, or at its `#`.
+        - Per page, not per visit (agreed). Changing only the query (a page opened in a
+          collection's sheet) keeps the place.
+        - Back and Forward find a page's data and pictures already in (measured, both
+          browsers).
+    - **The editor:** the place is the cursor instead (`RememberCursor`, approved).
+        - A stored page opens where its cursor was last time in this browser (local
+          storage), the cursor's line just under the editor's top bar (decided with the
+          user). What's above it is then off the screen, so a picture there arriving late
+          doesn't push it down (measured, pictures 1 to 40 lines above).
+        - A picture, a rule or table cells kept selected come back as a cursor next to them.
+        - A page with none kept opens at its top, the cursor at its start. So does a new page
+          until Save names it, and so do the demo and the layout test cases.
+        - Save naming a page moves nothing.
+    - **A first design was dropped** with the user as too much for what it gave: each page
+      saying when its content was in, then a version that held the place until the page
+      settled. Its review's findings no longer apply.
+    - **Reviewed** once by a fresh agent (2026-10-17). Its two findings were both shown
+      running in Chrome and WebKit, and fixed:
+        - The cursor came back at the bottom edge of the screen, and a picture just above it
+          arriving late pushed it off. Fixing this needed two more changes. The top bar now
+          gives its height as it shows, not a frame later (`EditorTopBar`). The cursor now
+          goes in with the focus, because WebKit's focus sometimes moved it to the page's
+          start (measured).
+        - A selected picture came back as a cursor where none can be, with ProseMirror's
+          warning.
+    - **Checked** in `app.spec.ts` (Chrome, WebKit), and the full suite passes:
+        - "a page goes back where it was scrolled, or stays at its top when it can't";
+        - "a page whose pictures are still loading stays at its top";
+        - "opening a page in a sheet, and Save naming a new page, keep the place";
+        - "the editor opens a stored page where its cursor was left".
+    - **Measured on the way:** a check that holds a page's requests across a reload makes
+      Chrome take the page down before it's left, so its place is kept as the top. A slow
+      connection (simulated) doesn't, so the checks make content late on moves instead.
+    - **Limits:**
+        - An admin's reload of a collection, sign-in known late, can land near the place
+          rather than on it (read only).
+        - A reload of a page with pictures opens at its top, until pictures carry their sizes
+          (below).
+        - Leaving a page before it has loaded keeps its place as the top.
+        - Back across a `#` link inside a page doesn't return where the reader was: WebKit
+          scrolls to the `#` before the app hears of it (measured).
+        - The plugin is experimental: an upgrade may change it.
 - [x] Idea (2026-10-15, logged with the user): in the editor, the cursor back where it was
       left. Done 2026-10-17 for stored pages (`RememberCursor`, above).
 - [ ] Picture sizes (2026-10-16, logged with the user; to do, after the place work). A picture
       without a chosen shape (`sl-aspect-*`) has no height until it loads. So the page grows
       as each picture arrives and its text jumps, and a reload of a page with pictures opens
       at its top, because its place would land in another part of the page (measured
-      2026-10-15 by the scroll review). If each
-      picture carried its width and height, the page would be its full height at once. Other
-      people build pages with this, so it belongs in the spec (`sf-system.md`), not only in
-      our editor. Still to decide: - what a picture carries; - how a size gets there (read when a picture is added, and for seeded pages); - what a picture without one does.
+      2026-10-15 by the scroll review). If each picture carried its width and height, the
+      page would be its full height at once. Other people build pages with this, so it
+      belongs in the spec (`sf-system.md`), not only in our editor. Still to decide:
+    - what a picture carries;
+    - how a size gets there (read when a picture is added, and for seeded pages);
+    - what a picture without one does.
 - [x] A new page whose collection fails to be set after it's made never gets it: the next Save
       updates the page without its collection. Read in code, not tried. Fixed 2026-10-12: the
       page and its collections are one write (`adminPages.create` takes `tagIds`, written in
