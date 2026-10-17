@@ -33,6 +33,7 @@ import {
 	MultiSelectExtension,
 	multiSelectPluginKey,
 } from '@/editor/extensions/multiSelect'
+import { RememberCursor } from '@/editor/extensions/rememberCursor'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore.js'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
@@ -83,9 +84,10 @@ const editor = useEditor({
 		}),
 		// TipTap has a core extension called commands, and two extensions can't share a name.
 		Commands.extend({ name: 'slashCommands' }).configure({ suggestion }),
+		// The cursor is kept for a stored page (a new one once Save names it), and puts it in.
+		RememberCursor.configure({ key: () => useEditorStore().currentSlug }),
 	],
 	content: '',
-	autofocus: true,
 	parseOptions: {},
 })
 

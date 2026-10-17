@@ -66,13 +66,16 @@ import NodePath from './NodePath.vue'
 defineProps<{ editor: Editor }>()
 
 // The bar's height while it's shown: the page frame leaves room past the end of the page for
-// the last line to sit under it.
+// the last line to sit under it, and a cursor put back comes back under it (RememberCursor). It's
+// there as the bar shows, as the page opens, not a frame later.
 const bar = ref<HTMLElement | null>(null)
 const page = document.documentElement.style
-const barHeight = new ResizeObserver(([entry]) =>
-	page.setProperty('--editor-top-bar-height', `${entry!.borderBoxSize[0]!.blockSize}px`),
-)
-onMounted(() => barHeight.observe(bar.value!))
+const giveHeight = (px: number) => page.setProperty('--editor-top-bar-height', `${px}px`)
+const barHeight = new ResizeObserver(([entry]) => giveHeight(entry!.borderBoxSize[0]!.blockSize))
+onMounted(() => {
+	giveHeight(bar.value!.getBoundingClientRect().height)
+	barHeight.observe(bar.value!)
+})
 onBeforeUnmount(() => {
 	barHeight.disconnect()
 	page.removeProperty('--editor-top-bar-height')

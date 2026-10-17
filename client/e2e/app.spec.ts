@@ -887,6 +887,272 @@ test('a jump back over a # typed in the address bar keeps the address on the pag
 	await expect(page).toHaveURL(/\/editor\/stored$/)
 })
 
+/** A stored page of sixty paragraphs, long enough to scroll, after what's `before` them. */
+const longPage = (slug: string, name: string, before: unknown[] = []) =>
+	storedPage(slug, name, [
+		...before,
+		...Array.from({ length: 60 }, (_, at) => ({
+			type: 'paragraph',
+			content: [{ type: 'text', text: `Paragraph ${at + 1}.` }],
+		})),
+	])
+const picture = { type: 'image', attrs: { src: 'https://placehold.co/800x600' } }
+
+const scrolled = (page: Page) => page.evaluate(() => Math.round(scrollY))
+async function scrollPageTo(page: Page, top: number) {
+	await page.evaluate((top) => window.scrollTo(0, top), top)
+	await settle(page)
+}
+/** Holds each request to `url` for `late.ms` before it's answered as usual. */
+async function holdRequests(page: Page, url: string, late: { ms: number }) {
+	await page.route(url, async (route) => {
+		await new Promise((resolve) => setTimeout(resolve, late.ms))
+		await route.fallback()
+	})
+}
+
+// Each page keeps where it was scrolled while the tab is open, and goes back there however it's
+// reached (Back, Forward, a link, a reload) when it can within a second; otherwise it stays at its
+// top, and the reader scrolling first keeps it there. Back and Forward opened a page at the top:
+// the browser put the place back before the page had arrived.
+test("a page goes back where it was scrolled, or stays at its top when it can't", async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	await fakeReplies(page, { 'Pages.getBySlug': longPage('home', 'Home') })
+	await page.goto('/')
+	await useTheme(page, themeClass)
+	await expect(page.getByText('Paragraph 60.')).toBeVisible()
+	await scrollPageTo(page, 1000)
+
+	await moveTo(page, '/preview/other')
+	await expect(page.getByText('Paragraph 60.')).toBeVisible()
+	await settle(page)
+	expect(await scrolled(page), 'a page not seen opens at its top').toBe(0)
+	await scrollPageTo(page, 1500)
+	await page.goBack()
+	await expect.poll(() => scrolled(page), 'Back: home where it was left').toBe(1000)
+	await page.goForward()
+	await expect.poll(() => scrolled(page), 'Forward: the preview where it was left').toBe(1500)
+
+	// Three more pages left lower down, then a reload (which puts its page back too) so the next
+	// visit to each fetches it again. Holding its requests across a reload instead makes Chrome
+	// take the page down before it's left (measured), which no slow connection does.
+	for (const slug of ['moment', 'late', 'scrolled']) {
+		await moveTo(page, `/preview/${slug}`)
+		await expect(page.getByText('Paragraph 60.')).toBeVisible()
+		await scrollPageTo(page, 1500)
+	}
+	await moveTo(page, '/')
+	await expect.poll(() => scrolled(page), 'home where it was left').toBe(1000)
+	await page.reload()
+	await expect.poll(() => scrolled(page), 'a reload').toBe(1000)
+
+	const late = { ms: 200 }
+	await holdRequests(page, '**/trpc/**', late)
+	await moveTo(page, '/preview/moment')
+	await expect.poll(() => scrolled(page), 'its content a moment late').toBe(1500)
+	late.ms = 1500
+	await moveTo(page, '/preview/late')
+	await expect(page.getByText('Paragraph 60.')).toBeVisible()
+	await settle(page)
+	expect(await scrolled(page), 'its content too late: its top').toBe(0)
+	late.ms = 500
+	await moveTo(page, '/preview/scrolled')
+	await page.mouse.wheel(0, 100)
+	await expect(page.getByText('Paragraph 60.')).toBeVisible()
+	await page.waitForTimeout(1000)
+	// Where the wheel took it: nowhere on a page too short yet, or down a little.
+	expect(await scrolled(page), 'the reader scrolling first').toBeLessThanOrEqual(100)
+})
+
+// A page still loading a picture when it could reach its place stays at its top: the picture would
+// push the place down. Back and Forward find its pictures in.
+test('a page whose pictures are still loading stays at its top', async ({ page, themeClass }) => {
+	await steadyRequests(page)
+	await fakeReplies(page, { 'Pages.getBySlug': longPage('home', 'Home', [picture]) })
+	await page.goto('/')
+	await useTheme(page, themeClass)
+	await expect(page.getByText('Paragraph 60.')).toBeVisible()
+	await scrollPageTo(page, 1000)
+
+	const late = { ms: 1500 }
+	await holdRequests(page, 'https://placehold.co/**', late)
+	await page.reload()
+	await expect(page.getByText('Paragraph 60.')).toBeVisible()
+	await page
+		.locator('main img')
+		.evaluate((img: HTMLImageElement) => img.decode().catch(() => undefined))
+	await settle(page)
+	expect(await scrolled(page), 'a reload, the picture still loading').toBe(0)
+	await scrollPageTo(page, 1000)
+	await moveTo(page, '/contact')
+	await expect(page.locator('main h1')).toHaveText('Contact')
+	await page.goBack()
+	await expect.poll(() => scrolled(page), 'Back: the picture in').toBe(1000)
+})
+
+// Changing the address without changing the page keeps the place: a page opened in a collection's
+// sheet and closed (the query alone changes), and Save giving a new page its address.
+test('opening a page in a sheet, and Save naming a new page, keep the place', async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+		...sheetCollection(
+			Array.from({ length: 40 }, (_, at) => ({ slug: `listed-${at}`, name: `Listed ${at}` })),
+		),
+	})
+	await page.goto('/c/test')
+	await useTheme(page, themeClass)
+	await expect(page.getByText('Listed 39')).toBeVisible()
+	await scrollPageTo(page, 800)
+	await moveTo(page, '/c/test?open=in-sheet')
+	await expect(page.locator('.sheet .tiptap p')).toHaveText('Shown to the end')
+	await settle(page)
+	expect(await scrolled(page), 'a page opened in the sheet').toBe(800)
+	await page.getByRole('button', { name: 'Close' }).click()
+	await expect(page.locator('.sheet')).toHaveCount(0)
+	expect(await scrolled(page), 'and closed').toBe(800)
+
+	await page.route(
+		(url) => url.pathname.includes('adminPages.create'),
+		(route) =>
+			route.fulfill({ json: [{ result: { data: { json: { pageId: 2, slug: 'named' } } } }] }),
+	)
+	await moveTo(page, '/editor')
+	await typeAtEnd(page, 'A new page.')
+	// Long enough to scroll.
+	await page.evaluate(() => {
+		const more = { type: 'paragraph', content: [{ type: 'text', text: 'More.' }] }
+		document
+			.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+			.editor!.commands.insertContent(Array(60).fill(more))
+	})
+	await settle(page)
+	await scrollPageTo(page, 1000)
+	await pressSave(page)
+	await page.getByRole('textbox', { name: 'Page name' }).fill('Named')
+	// The check's click brings Save into view, which can scroll a little: the place is taken as
+	// Save names the page.
+	const named = await scrolled(page)
+	expect(named, 'down the page').toBeGreaterThan(900)
+	await page.getByRole('button', { name: 'Submit' }).click()
+	await expect(page).toHaveURL(/\/editor\/named$/)
+	await settle(page)
+	expect(await scrolled(page), 'Save gave the page its address').toBe(named)
+
+	// A new page opens at its top, with the cursor in.
+	await moveTo(page, '/contact')
+	await expect(page.locator('main h1')).toHaveText('Contact')
+	await moveTo(page, '/editor')
+	await expect(page.locator('.tiptap').first(), 'the next new page').toBeFocused()
+	expect(await scrolled(page), 'at its top').toBe(0)
+})
+
+// In the editor the place is the cursor: a stored page opens where its cursor was last time, in
+// this browser, its line just under the editor's top bar, and stays there as a picture a few lines
+// above it arrives. A picture kept selected comes back as a cursor next to it. A page with none
+// kept opens at its top, the cursor at its start, as the layout test cases always do.
+test('the editor opens a stored page where its cursor was left', async ({ page, themeClass }) => {
+	const warnings: string[] = []
+	page.on('console', (message) => {
+		if (message.type() === 'warning' || message.type() === 'error')
+			warnings.push(message.text())
+	})
+	const content: unknown[] = Array.from({ length: 60 }, (_, at) => ({
+		type: 'paragraph',
+		content: [{ type: 'text', text: `Paragraph ${at + 1}.` }],
+	}))
+	// A picture at the top, and one between paragraphs 46 and 47.
+	content.splice(46, 0, picture)
+	await openStored(page, themeClass, {
+		pageId: 1,
+		...storedPage('stored', 'Stored', [picture, ...content]),
+	})
+	const editor = page.locator('.tiptap').first()
+	await expect(editor, 'none kept: the cursor in').toBeFocused()
+	expect(await scrolled(page), 'at its top').toBe(0)
+	const line = page.locator('.tiptap p', { hasText: /^Paragraph 50\.$/ })
+	const cursorIn = () =>
+		page.evaluate(() => {
+			const { $head } =
+				document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state.selection
+			return $head.parent.inlineContent ? $head.parent.textContent : null
+		})
+	const lineTop = () => line.evaluate((el) => Math.round(el.getBoundingClientRect().top))
+	const underTheBar = async () => {
+		const bar = await page
+			.locator('.editor-top-bar')
+			.evaluate((el) => Math.round(el.getBoundingClientRect().bottom))
+		const top = await lineTop()
+		return top >= bar && top < bar + 40
+	}
+	await line.click()
+	// The editor takes a click's cursor a moment after it.
+	await expect.poll(cursorIn).toBe('Paragraph 50.')
+
+	await moveTo(page, '/contact')
+	await expect(page.locator('main h1')).toHaveText('Contact')
+	await page.goBack()
+	await expect(editor, 'Back').toBeFocused()
+	expect(await cursorIn(), 'the cursor where it was left').toBe('Paragraph 50.')
+	await expect.poll(underTheBar, 'its line just under the bar').toBe(true)
+
+	const late = { ms: 1000 }
+	await holdRequests(page, 'https://placehold.co/**', late)
+	await page.reload()
+	await expect(editor, 'a reload').toBeFocused()
+	expect(await cursorIn(), 'the cursor where it was left').toBe('Paragraph 50.')
+	await expect.poll(underTheBar, 'its line just under the bar').toBe(true)
+	const before = await lineTop()
+	await page
+		.locator('.tiptap img')
+		.evaluateAll((pictures: HTMLImageElement[]) =>
+			Promise.all(pictures.map((picture) => picture.decode().catch(() => undefined))),
+		)
+	await settle(page)
+	expect(await lineTop(), 'still, once the pictures above it are in').toBe(before)
+
+	await page.locator('.tiptap img').nth(1).click()
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() =>
+					(
+						document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+							.selection as {
+							node?: { type: { name: string } }
+						}
+					).node?.type.name,
+			),
+		)
+		.toBe('image')
+	await moveTo(page, '/contact')
+	await expect(page.locator('main h1')).toHaveText('Contact')
+	await page.goBack()
+	await expect(editor, 'Back').toBeFocused()
+	expect(await cursorIn(), 'a picture kept selected: a cursor next to it').toBe('Paragraph 47.')
+
+	await moveTo(page, '/editor?seed=tests')
+	await page.locator('#align-cluster-x-end-last').waitFor({ state: 'attached' })
+	await page.locator('.tiptap p').nth(40).click()
+	await moveTo(page, '/contact')
+	await expect(page.locator('main h1')).toHaveText('Contact')
+	await page.goBack()
+	await page.locator('#align-cluster-x-end-last').waitFor({ state: 'attached' })
+	await expect(editor, 'the layout test cases: the cursor in').toBeFocused()
+	await settle(page)
+	expect(await scrolled(page), 'at their top').toBe(0)
+	expect(
+		warnings.filter((warning) => warning.includes('TextSelection')),
+		'no cursor where none can be',
+	).toEqual([])
+})
+
 // Leaving while a save is under way, its name question included, waits for it, then asks only
 // if something is still unsaved. A new page's first save shows its address at once: the move
 // waiting is held, refused, so the address can't take its place.

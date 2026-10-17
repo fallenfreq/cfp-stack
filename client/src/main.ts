@@ -4,8 +4,10 @@ import { notifyError } from '@/services/errors'
 import { whenSignInKnown } from '@/services/session'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
+import { ScrollRestoration } from 'vue-router/experimental'
 import App from './App.vue'
 import router from './router'
+import { pagePlace } from './router/pagePlace'
 
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { queryClient } from './config/queryClient'
@@ -39,6 +41,9 @@ window.addEventListener('unhandledrejection', (event) => {
 app.use(globalKeyPlugin)
 app.use(createPinia())
 app.use(VueQueryPlugin, { queryClient })
+// Each page keeps where it was scrolled (router/pagePlace.ts). Before the router, as the plugin
+// needs.
+app.use(ScrollRestoration, { router, ...pagePlace })
 app.use(router)
 
 // Fire-and-forget — palette computed refs update reactively when tokens arrive.

@@ -5,9 +5,12 @@ import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
 import { hasRole, signedIn, signOut } from '@/services/session'
 import { computed, markRaw } from 'vue'
 import { RouterView } from 'vue-router'
+import { useScrollRestoration } from 'vue-router/experimental'
 
 // Code block colours on every page, not only in the editor.
 useSyntaxHighlighting()
+// Every page's place is kept and put back (router/pagePlace.ts).
+useScrollRestoration()
 
 const navItems = computed<NavItem[]>(() => {
 	return [
