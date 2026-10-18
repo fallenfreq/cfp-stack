@@ -33,13 +33,13 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
       its paragraph keeps only what carries over.
 
 2. **One id, one block.** Pasting a copied block gave the copy the block's id, and taking an
-   item out of a list or quote gave both halves its id (Enter did too: step 1). An id is for one
-   block: when a change leaves an id on more blocks than before, and a block that was already
-   there still has it, the blocks the change put in go without it. A block is put in when the
-   change writes it anew: a paste, a drop, a list split in two, but also a block moved, wrapped
-   or changed. Those leave the id on as many blocks as before, so the rule leaves them. The page
-   is read only when a block put in has an id, so typing costs nothing; no list of ids is kept
-   alongside the page.
+   item out of a list, quote or Card gave both halves its id (Enter did too: step 1). An id is
+   for one block: when a change leaves an id on more blocks than before, and a block that was
+   already there still has it, the blocks the change put in go without it. A block is put in
+   when the change writes it anew: a paste, a drop, a list split in two, but also a block moved,
+   wrapped or changed. Those leave the id on as many blocks as before, so the rule leaves them.
+   The page is read only when a block put in has an id, so typing costs nothing; no list of ids
+   is kept alongside the page.
     - Ids the author writes are kept as written, even two the same. The code view and opening a
       page replace the whole page, so no block in it was already there. The Attributes panel
       saves its changes as settings of the block that's there; today it writes the block anew,
@@ -49,33 +49,35 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
       share the id …", added to `sf-system.md`, "Validator and linter".
     - Where: one rule run after each change, in the extension that gives blocks their id
       (`allowAttributesExtension.ts`). Copies come from many places (paste, drop, the drag
-      handle's copy, a list or quote split in two), so no one command owns them.
+      handle's copy, a list, quote or Card split in two), so no one command owns them.
     - The cases, each a check in `editor.spec.ts`:
 
-        | Change                                                                                       | The id ends up on                                                                          |
-        | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-        | Paste a copy of a block (a paragraph, a Card, a table, a to-do list)                         | the block copied, not the copy                                                             |
-        | Drop a copy (dragged with Alt, or the drag handle's copy)                                    | the block copied, not the copy                                                             |
-        | Select a block, cut it and paste it                                                          | the pasted block                                                                           |
-        | Select a block's text (not the block), cut it and paste it                                   | the empty line left behind, not the pasted text                                            |
-        | Paste blocks from another app or page                                                        | each, unless the page has it; the first block joins the line at the cursor and its id goes |
-        | Drag a block to move it                                                                      | the block, moved                                                                           |
-        | Enter anywhere in a paragraph, heading, list or to-do item                                   | the block it was pressed in, as step 1 says                                                |
-        | Take an item out of a list or quote (Backspace, Enter on an empty item, Shift-Tab, a button) | the top half, or the list left when it's the first item                                    |
-        | Join two blocks with Backspace or Delete                                                     | the first; the second's goes. If the first is empty, the second                            |
-        | Add a table row or column                                                                    | nothing new: the new row and cells have none                                               |
-        | Wrap or unwrap a block, or change it with Change Type                                        | the block                                                                                  |
-        | Give a block an id another has, in its Attributes panel (paragraph, picture, video, line)    | both                                                                                       |
-        | Write two blocks with one id in the code view                                                | both                                                                                       |
-        | Two blocks the author gave one id: move, wrap, change or type in one                         | both                                                                                       |
-        | Two blocks the author gave one id: cut one and paste it                                      | the other: the page still has it                                                           |
-        | Undo, redo                                                                                   | as it was before the change, or after                                                      |
+        | Change                                                                                             | The id ends up on                                                                          |
+        | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+        | Paste a copy of a block (a paragraph, a Card, a table, a to-do list)                               | the block copied, not the copy                                                             |
+        | Drop a copy (dragged with Alt, or the drag handle's copy)                                          | the block copied, not the copy                                                             |
+        | Select a block, cut it and paste it                                                                | the pasted block                                                                           |
+        | Select a block's text (not the block), cut it and paste it                                         | the empty line left behind, not the pasted text                                            |
+        | Paste blocks from another app or page                                                              | each, unless the page has it; the first block joins the line at the cursor and its id goes |
+        | Drag a block to move it                                                                            | the block, moved                                                                           |
+        | Enter anywhere in a paragraph, heading, list or to-do item                                         | the block it was pressed in, as step 1 says                                                |
+        | Take an item out of a list, quote or Card (Backspace, Enter on an empty line, Shift-Tab, a button) | the top half, or the list left when it's the first item                                    |
+        | Join two blocks with Backspace or Delete                                                           | the first; the second's goes. If the first is empty, the second                            |
+        | Add a table row or column                                                                          | nothing new: the new row and cells have none                                               |
+        | Wrap or unwrap a block, or change it with Change Type                                              | the block                                                                                  |
+        | Give a block an id another has, in its Attributes panel (paragraph, picture, video, line)          | both                                                                                       |
+        | Write two blocks with one id in the code view                                                      | both                                                                                       |
+        | Two blocks the author gave one id: move, wrap, change or type in one                               | both                                                                                       |
+        | Two blocks the author gave one id: cut one and paste it                                            | the other: the page still has it                                                           |
+        | Undo, redo                                                                                         | as it was before the change, or after                                                      |
 
-3. **Changing a block's kind keeps what the author set.** Four ways of changing a block's kind
+3. **Changing a block's kind keeps what the author set.** Five ways of changing a block's kind
    take its id and class off: Numbered List on a bullet list (TipTap's `toggleList`), Task List
    on a list (the app's `switchListType`, `defaultItemsBlock.ts`), a heading made from more than
-   one selected paragraph (TipTap's `setNode`), and a list made from a heading (TipTap's
-   `clearNodes`). Change Type keeps them. Where it's fixed is found when the step is planned.
+   one selected paragraph (TipTap's `setNode`), a list made from a heading (TipTap's
+   `clearNodes`), and an item taken out of a list, whose paragraph stays and the item's own go
+   (Enter on an empty item; Backspace and Shift-Tab to measure). Change Type keeps them. Where
+   it's fixed is found when the step is planned.
 4. **Copying takes the code view's version.** The editor draws some built-in blocks with classes
    of its own, which aren't saved and don't show in the code view: lists `sf`, quotes
    `sf sf-depth-1`, code blocks `sf hljs`, to-do items `sl-split sf-gap-md`, tables
@@ -140,5 +142,20 @@ Later, the owner's call:
   authors write the ids mostly only flag duplicates (Webflow, WordPress); here most duplicates
   come from the editor itself, so both steps stay, with the validator for what authors write.
 - **Plan signed off** (2026-10-18), with the decisions above.
+- **Step 1 done** (2026-10-18): a patch to TipTap's Enter (`splitBlock`, `splitListItem`:
+  `patches/@tiptap__core@3.31.4.patch`), and the id doesn't carry over (`keepOnSplit`). Pressed in
+  34 places (paragraphs, headings, quotes, table cells, list and to-do items, selections, nested
+  items), Enter matches the table, and undo puts the page back each time; four checks in
+  `editor.spec.ts`, each failing without its part. Reviewed by an agent; its seven findings
+  checked and fixed. Text selected from the start of one block into the next made Enter do
+  nothing or move a type and an id: the block is now read once the text is gone, which also stops
+  TipTap losing text in one case. A selected list item split its list with the id on both. An
+  empty heading at the end of a nested item came out as two lines. Typing after Enter at the
+  start undid in two steps; now one, unless an id comes off the empty line (as with TipTap's
+  headings). Not named by the plan: an empty line with text above it in a nested item moves out
+  as a new item, with the item's class and style, and keeps its own. Found, outside this step:
+  Enter on an empty middle line of a quote or a Card splits it with its id on both (step 2,
+  whose table now names Cards); an item taken out of a list loses its own id and class (now in
+  step 3). The owner agreed to both, and to the nested item's line. Unit tests pass (4 + 34).
 
-Next: step 1, in a session of its own.
+Next: step 2, in a session of its own.

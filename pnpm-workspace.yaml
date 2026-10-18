@@ -17,8 +17,12 @@ packageExtensions:
         dependencies:
             '@babel/parser': ^7.20.5
 
-# A `#` entry reaches vue-router unnumbered, so steps across it land wrong (vuejs/router#1314);
-# the patch numbers it after the one before. Drop it once vue-router does that itself, or for its
-# Navigation API router (vuejs/router#2551) once the browser floor reaches Safari 26.2.
 patchedDependencies:
+    # TipTap's Enter gives the new block what carries over (`keepOnSplit`) only at the end of a
+    # block (ueberdosis/tiptap#4591); the patch does it wherever Enter is pressed, and an empty
+    # nested item moved out a level keeps its own. Drop it once TipTap does that itself.
+    '@tiptap/core@3.31.4': patches/@tiptap__core@3.31.4.patch
+    # A `#` entry reaches vue-router unnumbered, so steps across it land wrong (vuejs/router#1314);
+    # the patch numbers it after the one before. Drop it once vue-router does that itself, or for
+    # its Navigation API router (vuejs/router#2551) once the browser floor reaches Safari 26.2.
     vue-router@5.4.0: patches/vue-router@5.4.0.patch

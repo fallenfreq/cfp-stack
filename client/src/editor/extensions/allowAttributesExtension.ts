@@ -51,6 +51,8 @@ const AllowAttributesExtension = Extension.create({
 					},
 					id: {
 						default: null,
+						// An id is for one block: the block Enter makes goes without it.
+						keepOnSplit: false,
 						parseHTML: (element) => element.getAttribute('id'),
 						renderHTML: (attributes) => {
 							return attributes.id ? { id: attributes.id } : null

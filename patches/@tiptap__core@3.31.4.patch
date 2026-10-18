@@ -1,0 +1,294 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index bc8b2ae67ccd77ba690a9615d72fd4203364a4f3..f093d3b61b2bffa94675800fabb145a36a3bbc19 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -2683,6 +2683,11 @@ const sinkListItem = (typeOrName) => ({ state, dispatch }) => {
+ };
+ //#endregion
+ //#region src/commands/splitBlock.ts
++// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): a block left as it is adds no
++// step, so that typing after Enter undoes with it, as before.
++function setMarkupIfChanged(tr, pos, type, attrs) {
++	if (!tr.doc.nodeAt(pos).hasMarkup(type, type.create(attrs).attrs)) tr.setNodeMarkup(pos, type, attrs);
++}
+ function ensureMarks(state, splittableMarks) {
+ 	const marks = state.storedMarks || state.selection.$to.parentOffset && state.selection.$from.marks();
+ 	if (marks) {
+@@ -2699,40 +2704,59 @@ const splitBlock = ({ keepMarks = true } = {}) => ({ tr, state, dispatch, editor
+ 		if (!$from.parentOffset || !(0, _tiptap_pm_transform.canSplit)(doc, $from.pos)) return false;
+ 		if (dispatch) {
+ 			if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
+-			tr.split($from.pos).scrollIntoView();
++			// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the second half gets
++			// what carries over, as when text is split; TipTap copied the whole block.
++			tr.split($from.pos, 1, [{
++				type: $from.parent.type,
++				attrs: newAttributes
++			}]).scrollIntoView();
+ 		}
+ 		return true;
+ 	}
+ 	if (!$from.parent.isBlock) return false;
+-	const atEnd = $to.parentOffset === $to.parent.content.size;
+-	const deflt = $from.depth === 0 ? void 0 : defaultBlockAt($from.node(-1).contentMatchAt($from.indexAfter(-1)));
+-	let types = atEnd && deflt ? [{
+-		type: deflt,
+-		attrs: newAttributes
+-	}] : void 0;
++	// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the block is read once the
++	// selection is deleted, as deleting it can remove the block it started in. The new block
++	// gets what carries over (`keepOnSplit`) in the middle and at the start too, not a copy of
++	// the whole block (ueberdosis/tiptap#4591); at the start, the line with the text keeps
++	// everything, and the empty line above is the new one.
+ 	const deletedTr = selection instanceof _tiptap_pm_state.TextSelection && !selection.empty ? _tiptap_pm_state.EditorState.create({
+ 		doc: tr.doc,
+ 		selection
+ 	}).tr.deleteSelection() : null;
+ 	const splitDoc = deletedTr ? deletedTr.doc : tr.doc;
+ 	const splitPos = deletedTr ? deletedTr.mapping.map($from.pos) : $from.pos;
++	const $split = splitDoc.resolve(splitPos);
++	const block = $split.parent;
++	const atEnd = $split.parentOffset === block.content.size;
++	const atStart = !atEnd && !$split.parentOffset;
++	const carried = getSplittedAttributes(extensionAttributes, block.type.name, block.attrs);
++	const afterAttributes = atStart ? block.attrs : carried;
++	const deflt = $split.depth === 0 ? void 0 : defaultBlockAt($split.node(-1).contentMatchAt($split.indexAfter(-1)));
++	let types = atEnd && deflt ? [{
++		type: deflt,
++		attrs: carried
++	}] : void 0;
+ 	let can = (0, _tiptap_pm_transform.canSplit)(splitDoc, splitPos, 1, types);
+ 	if (!types && !can && (0, _tiptap_pm_transform.canSplit)(splitDoc, splitPos, 1, deflt ? [{ type: deflt }] : void 0)) {
+ 		can = true;
+ 		types = deflt ? [{
+ 			type: deflt,
+-			attrs: newAttributes
++			attrs: afterAttributes
+ 		}] : void 0;
+ 	}
+ 	if (dispatch) {
+ 		if (can) {
+ 			const mapFrom = tr.steps.length;
+ 			if (selection instanceof _tiptap_pm_state.TextSelection) tr.deleteSelection();
+-			tr.split(tr.mapping.slice(mapFrom).map($from.pos), 1, types);
+-			if (deflt && !atEnd && !$from.parentOffset && $from.parent.type !== deflt) {
+-				const first = tr.mapping.slice(mapFrom).map($from.before());
++			tr.split(tr.mapping.slice(mapFrom).map($from.pos), 1, types || [{
++				type: block.type,
++				attrs: afterAttributes
++			}]);
++			if (atStart) {
++				const first = $split.before();
+ 				const $first = tr.doc.resolve(first);
+-				if ($from.node(-1).canReplaceWith($first.index(), $first.index() + 1, deflt)) tr.setNodeMarkup(tr.mapping.slice(mapFrom).map($from.before()), deflt);
++				const plain = deflt && block.type !== deflt && $split.node(-1).canReplaceWith($first.index(), $first.index() + 1, deflt);
++				setMarkupIfChanged(tr, first, plain ? deflt : block.type, carried);
+ 			}
+ 		}
+ 		if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
+@@ -2758,12 +2782,20 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+ 			const depthBefore = $from.index(-1) ? 1 : $from.index(-2) ? 2 : 3;
+ 			for (let d = $from.depth - depthBefore; d >= $from.depth - 3; d -= 1) wrap = _tiptap_pm_model.Fragment.from($from.node(d).copy(wrap));
+ 			const depthAfter = $from.indexAfter(-1) < $from.node(-2).childCount ? 1 : $from.indexAfter(-2) < $from.node(-3).childCount ? 2 : 3;
++			// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the item moves out a
++			// level with what it has, and its empty line keeps its own; TipTap made both anew.
++			// When the line has blocks above it in the item, they stay in it, and the item out a
++			// level is new.
+ 			const newNextTypeAttributes = {
+-				...getSplittedAttributes(extensionAttributes, $from.node().type.name, $from.node().attrs),
++				...$from.node().attrs,
+ 				...overrideAttrs
+ 			};
++			const itemAttributes = depthBefore === 1 ? {
++				...getSplittedAttributes(extensionAttributes, type.name, grandParent.attrs),
++				...overrideAttrs
++			} : grandParent.attrs;
+ 			const nextType = ((_type$contentMatch$de = type.contentMatch.defaultType) === null || _type$contentMatch$de === void 0 ? void 0 : _type$contentMatch$de.createAndFill(newNextTypeAttributes)) || void 0;
+-			wrap = wrap.append(_tiptap_pm_model.Fragment.from(type.createAndFill(null, nextType) || void 0));
++			wrap = wrap.append(_tiptap_pm_model.Fragment.from(type.createAndFill(itemAttributes, nextType) || void 0));
+ 			const start = $from.before($from.depth - (depthBefore - 1));
+ 			tr.replace(start, $from.after(-depthAfter), new _tiptap_pm_model.Slice(wrap, 4 - depthBefore, 0));
+ 			let sel = -1;
+@@ -2786,18 +2818,22 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+ 		...overrideAttrs
+ 	};
+ 	const splitsAtStartOfItem = $from.parentOffset === 0 && $from.index(-1) === 0;
++	// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the block in the item splits
++	// as splitBlock does, not copied whole: at its start, the line with the text keeps
++	// everything.
++	const splitsAtStartOfBlock = !nextType && $from.parentOffset === 0;
+ 	const itemStart = $from.before(-1);
+ 	tr.delete($from.pos, $to.pos);
+ 	const trailingTypeAttributes = splitsAtStartOfItem ? grandParent.attrs : newTypeAttributes;
+-	const types = nextType ? [{
++	const types = [{
+ 		type,
+ 		attrs: trailingTypeAttributes
+-	}, {
++	}, nextType ? {
+ 		type: nextType,
+ 		attrs: newNextTypeAttributes
+-	}] : [{
+-		type,
+-		attrs: trailingTypeAttributes
++	} : {
++		type: $from.parent.type,
++		attrs: splitsAtStartOfBlock ? $from.parent.attrs : newNextTypeAttributes
+ 	}];
+ 	if (!(0, _tiptap_pm_transform.canSplit)(tr.doc, $from.pos, 2)) return false;
+ 	if (dispatch) {
+@@ -2806,6 +2842,7 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+ 		const marks = storedMarks || selection.$to.parentOffset && selection.$from.marks();
+ 		tr.split($from.pos, 2, types).scrollIntoView();
+ 		if (splitsAtStartOfItem) tr.setNodeMarkup(itemStart, void 0, newTypeAttributes);
++		if (splitsAtStartOfBlock) setMarkupIfChanged(tr, $from.before(), $from.parent.type, newNextTypeAttributes);
+ 		if (!marks || !dispatch) return true;
+ 		const filteredMarks = marks.filter((mark) => splittableMarks.includes(mark.type.name));
+ 		tr.ensureMarks(filteredMarks);
+diff --git a/dist/index.js b/dist/index.js
+index 957903bc2f41b88239c054bb3f8a56829acdd9c6..eb65c6486f6efa07d1304e5f91db7f502a2b80c0 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -2671,6 +2671,11 @@ const sinkListItem$1 = (typeOrName) => ({ state, dispatch }) => {
+ };
+ //#endregion
+ //#region src/commands/splitBlock.ts
++// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): a block left as it is adds no
++// step, so that typing after Enter undoes with it, as before.
++function setMarkupIfChanged(tr, pos, type, attrs) {
++	if (!tr.doc.nodeAt(pos).hasMarkup(type, type.create(attrs).attrs)) tr.setNodeMarkup(pos, type, attrs);
++}
+ function ensureMarks(state, splittableMarks) {
+ 	const marks = state.storedMarks || state.selection.$to.parentOffset && state.selection.$from.marks();
+ 	if (marks) {
+@@ -2687,40 +2692,59 @@ const splitBlock = ({ keepMarks = true } = {}) => ({ tr, state, dispatch, editor
+ 		if (!$from.parentOffset || !canSplit(doc, $from.pos)) return false;
+ 		if (dispatch) {
+ 			if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
+-			tr.split($from.pos).scrollIntoView();
++			// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the second half gets
++			// what carries over, as when text is split; TipTap copied the whole block.
++			tr.split($from.pos, 1, [{
++				type: $from.parent.type,
++				attrs: newAttributes
++			}]).scrollIntoView();
+ 		}
+ 		return true;
+ 	}
+ 	if (!$from.parent.isBlock) return false;
+-	const atEnd = $to.parentOffset === $to.parent.content.size;
+-	const deflt = $from.depth === 0 ? void 0 : defaultBlockAt($from.node(-1).contentMatchAt($from.indexAfter(-1)));
+-	let types = atEnd && deflt ? [{
+-		type: deflt,
+-		attrs: newAttributes
+-	}] : void 0;
++	// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the block is read once the
++	// selection is deleted, as deleting it can remove the block it started in. The new block
++	// gets what carries over (`keepOnSplit`) in the middle and at the start too, not a copy of
++	// the whole block (ueberdosis/tiptap#4591); at the start, the line with the text keeps
++	// everything, and the empty line above is the new one.
+ 	const deletedTr = selection instanceof TextSelection && !selection.empty ? EditorState.create({
+ 		doc: tr.doc,
+ 		selection
+ 	}).tr.deleteSelection() : null;
+ 	const splitDoc = deletedTr ? deletedTr.doc : tr.doc;
+ 	const splitPos = deletedTr ? deletedTr.mapping.map($from.pos) : $from.pos;
++	const $split = splitDoc.resolve(splitPos);
++	const block = $split.parent;
++	const atEnd = $split.parentOffset === block.content.size;
++	const atStart = !atEnd && !$split.parentOffset;
++	const carried = getSplittedAttributes(extensionAttributes, block.type.name, block.attrs);
++	const afterAttributes = atStart ? block.attrs : carried;
++	const deflt = $split.depth === 0 ? void 0 : defaultBlockAt($split.node(-1).contentMatchAt($split.indexAfter(-1)));
++	let types = atEnd && deflt ? [{
++		type: deflt,
++		attrs: carried
++	}] : void 0;
+ 	let can = canSplit(splitDoc, splitPos, 1, types);
+ 	if (!types && !can && canSplit(splitDoc, splitPos, 1, deflt ? [{ type: deflt }] : void 0)) {
+ 		can = true;
+ 		types = deflt ? [{
+ 			type: deflt,
+-			attrs: newAttributes
++			attrs: afterAttributes
+ 		}] : void 0;
+ 	}
+ 	if (dispatch) {
+ 		if (can) {
+ 			const mapFrom = tr.steps.length;
+ 			if (selection instanceof TextSelection) tr.deleteSelection();
+-			tr.split(tr.mapping.slice(mapFrom).map($from.pos), 1, types);
+-			if (deflt && !atEnd && !$from.parentOffset && $from.parent.type !== deflt) {
+-				const first = tr.mapping.slice(mapFrom).map($from.before());
++			tr.split(tr.mapping.slice(mapFrom).map($from.pos), 1, types || [{
++				type: block.type,
++				attrs: afterAttributes
++			}]);
++			if (atStart) {
++				const first = $split.before();
+ 				const $first = tr.doc.resolve(first);
+-				if ($from.node(-1).canReplaceWith($first.index(), $first.index() + 1, deflt)) tr.setNodeMarkup(tr.mapping.slice(mapFrom).map($from.before()), deflt);
++				const plain = deflt && block.type !== deflt && $split.node(-1).canReplaceWith($first.index(), $first.index() + 1, deflt);
++				setMarkupIfChanged(tr, first, plain ? deflt : block.type, carried);
+ 			}
+ 		}
+ 		if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
+@@ -2746,12 +2770,20 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+ 			const depthBefore = $from.index(-1) ? 1 : $from.index(-2) ? 2 : 3;
+ 			for (let d = $from.depth - depthBefore; d >= $from.depth - 3; d -= 1) wrap = Fragment$1.from($from.node(d).copy(wrap));
+ 			const depthAfter = $from.indexAfter(-1) < $from.node(-2).childCount ? 1 : $from.indexAfter(-2) < $from.node(-3).childCount ? 2 : 3;
++			// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the item moves out a
++			// level with what it has, and its empty line keeps its own; TipTap made both anew.
++			// When the line has blocks above it in the item, they stay in it, and the item out a
++			// level is new.
+ 			const newNextTypeAttributes = {
+-				...getSplittedAttributes(extensionAttributes, $from.node().type.name, $from.node().attrs),
++				...$from.node().attrs,
+ 				...overrideAttrs
+ 			};
++			const itemAttributes = depthBefore === 1 ? {
++				...getSplittedAttributes(extensionAttributes, type.name, grandParent.attrs),
++				...overrideAttrs
++			} : grandParent.attrs;
+ 			const nextType = ((_type$contentMatch$de = type.contentMatch.defaultType) === null || _type$contentMatch$de === void 0 ? void 0 : _type$contentMatch$de.createAndFill(newNextTypeAttributes)) || void 0;
+-			wrap = wrap.append(Fragment$1.from(type.createAndFill(null, nextType) || void 0));
++			wrap = wrap.append(Fragment$1.from(type.createAndFill(itemAttributes, nextType) || void 0));
+ 			const start = $from.before($from.depth - (depthBefore - 1));
+ 			tr.replace(start, $from.after(-depthAfter), new Slice(wrap, 4 - depthBefore, 0));
+ 			let sel = -1;
+@@ -2774,18 +2806,22 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+ 		...overrideAttrs
+ 	};
+ 	const splitsAtStartOfItem = $from.parentOffset === 0 && $from.index(-1) === 0;
++	// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the block in the item splits
++	// as splitBlock does, not copied whole: at its start, the line with the text keeps
++	// everything.
++	const splitsAtStartOfBlock = !nextType && $from.parentOffset === 0;
+ 	const itemStart = $from.before(-1);
+ 	tr.delete($from.pos, $to.pos);
+ 	const trailingTypeAttributes = splitsAtStartOfItem ? grandParent.attrs : newTypeAttributes;
+-	const types = nextType ? [{
++	const types = [{
+ 		type,
+ 		attrs: trailingTypeAttributes
+-	}, {
++	}, nextType ? {
+ 		type: nextType,
+ 		attrs: newNextTypeAttributes
+-	}] : [{
+-		type,
+-		attrs: trailingTypeAttributes
++	} : {
++		type: $from.parent.type,
++		attrs: splitsAtStartOfBlock ? $from.parent.attrs : newNextTypeAttributes
+ 	}];
+ 	if (!canSplit(tr.doc, $from.pos, 2)) return false;
+ 	if (dispatch) {
+@@ -2794,6 +2830,7 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+ 		const marks = storedMarks || selection.$to.parentOffset && selection.$from.marks();
+ 		tr.split($from.pos, 2, types).scrollIntoView();
+ 		if (splitsAtStartOfItem) tr.setNodeMarkup(itemStart, void 0, newTypeAttributes);
++		if (splitsAtStartOfBlock) setMarkupIfChanged(tr, $from.before(), $from.parent.type, newNextTypeAttributes);
+ 		if (!marks || !dispatch) return true;
+ 		const filteredMarks = marks.filter((mark) => splittableMarks.includes(mark.type.name));
+ 		tr.ensureMarks(filteredMarks);

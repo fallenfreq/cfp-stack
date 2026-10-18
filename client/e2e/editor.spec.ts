@@ -539,6 +539,264 @@ test('a pasted to-do list has the blocks and text of the one copied', async ({ p
 	expect(after[1]).toEqual(copied)
 })
 
+const insertAtEnd = (page: Page, html: string) =>
+	page.evaluate((html) => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor.commands.insertContentAt(editor.state.doc.content.size, html)
+	}, html)
+/**
+ * The cursor this far into the text of the block with this id, or the text selected from there to
+ * this far into another's. Returns the index on the page of the block it starts in (for an item,
+ * its list).
+ */
+const cursorAt = (page: Page, id: string, offset: number, to?: [id: string, offset: number]) =>
+	page.evaluate(
+		([from, to]) => {
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			const at = ([
+				id,
+				offset,
+			]: readonly [
+				string,
+				number,
+			]) => {
+				let found = -1
+				editor.state.doc.descendants((node, pos) => {
+					if (node.attrs?.id === id) found = pos + 1 + offset
+				})
+				return found
+			}
+			editor
+				.chain()
+				.focus()
+				.setTextSelection(to ? { from: at(from), to: at(to) } : at(from))
+				.run()
+			return editor.state.doc.resolve(at(from)).index(0)
+		},
+		[[id, offset], to] as const,
+	)
+/**
+ * The two blocks Enter made from the block at this index on the page, or a list's two items unless
+ * the list was split: which of the id, the class `lead`, the style and the tick each has, then its
+ * text.
+ */
+const madeAt = (page: Page, index: number, listSplit = false) =>
+	page.evaluate(
+		([index, listSplit]) => {
+			const doc =
+				document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state.doc
+			const has = (node: ProseMirrorNode) => {
+				const name =
+					{ paragraph: 'p', heading: 'h2', bulletList: 'ul', taskList: 'ul' }[
+						node.type.name
+					] ?? 'li'
+				const what = [
+					node.attrs.id && 'id',
+					/(^|\s)lead(\s|$)/.test(node.attrs.class ?? '') && 'class',
+					node.attrs.style && 'style',
+					node.attrs.checked && 'ticked',
+				].filter(Boolean)
+				return what.length ? `${name}: ${what.join(' ')}` : name
+			}
+			const describe = (node: ProseMirrorNode): string =>
+				node.isTextblock
+					? `${has(node)} "${node.textContent}"`
+					: `${has(node)}, ${describe(node.firstChild!)}`
+			const block = doc.child(index)
+			const two =
+				block.type.name.endsWith('List') && !listSplit
+					? [block.child(0), block.child(1)]
+					: [block, doc.child(index + 1)]
+			return two.map(describe)
+		},
+		[index, listSplit] as const,
+	)
+const own = 'class="lead" style="color: red"'
+
+// Enter splits a block in two: the block it was pressed in keeps everything, and the new one gets
+// the class and style, not the id. In the middle and at the start, TipTap copies the whole block
+// (patches/@tiptap__core@3.31.4.patch). An item and the paragraph in it each split so.
+test('Enter leaves everything on the block it was pressed in, and gives the new one the class and style', async ({
+	page,
+}) => {
+	const blocks = {
+		Paragraph: {
+			html: (id: string) => `<p id="${id}" ${own}>Our story</p>`,
+			end: ['p: id class style "Our story"', 'p: class style ""'],
+			middle: ['p: id class style "Our"', 'p: class style " story"'],
+			start: ['p: class style ""', 'p: id class style "Our story"'],
+		},
+		Heading: {
+			html: (id: string) => `<h2 id="${id}" ${own}>Our story</h2>`,
+			end: ['h2: id class style "Our story"', 'p: class style ""'],
+			middle: ['h2: id class style "Our"', 'h2: class style " story"'],
+			start: ['p: class style ""', 'h2: id class style "Our story"'],
+		},
+		'List item': {
+			html: (id: string) =>
+				`<ul><li id="${id}-item" ${own}><p id="${id}" ${own}>Our story</p></li></ul>`,
+			end: [
+				'li: id class style, p: id class style "Our story"',
+				'li: class style, p: class style ""',
+			],
+			middle: [
+				'li: id class style, p: id class style "Our"',
+				'li: class style, p: class style " story"',
+			],
+			start: [
+				'li: class style, p: class style ""',
+				'li: id class style, p: id class style "Our story"',
+			],
+		},
+		'To-do item': {
+			html: (id: string) =>
+				`<ul data-type="taskList"><li data-type="taskItem" data-checked="true" id="${id}-item" ${own}><p id="${id}" ${own}>Our story</p></li></ul>`,
+			end: [
+				'li: id class style ticked, p: id class style "Our story"',
+				'li: class style, p: class style ""',
+			],
+			middle: [
+				'li: id class style ticked, p: id class style "Our"',
+				'li: class style, p: class style " story"',
+			],
+			start: [
+				'li: class style, p: class style ""',
+				'li: id class style ticked, p: id class style "Our story"',
+			],
+		},
+	}
+	const offsets = { end: 'Our story'.length, middle: 3, start: 0 }
+	const cases = Object.entries(blocks).flatMap(([kind, block]) =>
+		(['end', 'middle', 'start'] as const).map((place) => ({
+			kind,
+			place,
+			id: `enter-${kind.replace(/\W/g, '')}-${place}`,
+			html: block.html,
+			made: block[place],
+		})),
+	)
+	await insertAtEnd(page, cases.map(({ id, html }) => html(id)).join(''))
+	for (const { kind, place, id, made } of cases) {
+		const index = await cursorAt(page, id, offsets[place])
+		await page.keyboard.press('Enter')
+		await settle(page)
+		expect.soft(await madeAt(page, index), `${kind}, ${place}`).toEqual(made)
+	}
+})
+
+// With text selected, Enter splits the block the cursor is left in once the text is gone: from the
+// start of one block into the next, the first goes. With an item selected, its list splits before
+// it. TipTap reads the block the selection started in, and copies a list whole
+// (patches/@tiptap__core@3.31.4.patch).
+test('Enter with text or an item selected gives the new block the class and style too', async ({
+	page,
+}) => {
+	await insertAtEnd(
+		page,
+		`<h2 id="enter-selected-first">Alpha one</h2><p id="enter-selected" ${own}>Bravo two</p>`,
+	)
+	const index = await cursorAt(page, 'enter-selected-first', 0, ['enter-selected', 5])
+	await page.keyboard.press('Enter')
+	await settle(page)
+	expect.soft(await madeAt(page, index), 'text selected').toEqual([
+		'p: class style ""',
+		'p: id class style " two"',
+	])
+
+	await insertAtEnd(
+		page,
+		`<ul id="enter-list" ${own}><li><p>One</p></li><li id="enter-item"><p>Two</p></li></ul>`,
+	)
+	const list = await page.evaluate(
+		(at) => {
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			editor.chain().focus().setNodeSelection(at).run()
+			return editor.state.doc.resolve(at).index(0)
+		},
+		await nodePosition(page, 'enter-item'),
+	)
+	await page.keyboard.press('Enter')
+	await settle(page)
+	expect.soft(await madeAt(page, list, true), 'an item selected').toEqual([
+		'ul: id class style, li, p "One"',
+		'ul: class style, li: id, p "Two"',
+	])
+})
+
+// A paragraph that Enter leaves as it is adds no change of its own, so typing after Enter at its
+// start undoes with it, as with TipTap's own Enter (patches/@tiptap__core@3.31.4.patch).
+test('Enter at the start of a paragraph and typing after it undo together', async ({ page }) => {
+	// Outside the undo history: put in just before, it would undo with them.
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor
+			.chain()
+			.setMeta('addToHistory', false)
+			.insertContentAt(editor.state.doc.content.size, '<p>Our story</p>')
+			.run()
+	})
+	const content = () =>
+		page.evaluate(() =>
+			JSON.stringify(
+				document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.getJSON(),
+			),
+		)
+	const before = await content()
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		const { doc } = editor.state
+		editor
+			.chain()
+			.focus()
+			.setTextSelection(doc.content.size - doc.lastChild!.nodeSize + 1)
+			.run()
+	})
+	await page.keyboard.press('Enter')
+	await page.keyboard.type('X')
+	await page.keyboard.press('ControlOrMeta+z')
+	await settle(page)
+	expect(await content()).toBe(before)
+})
+
+// Enter on an empty line at the end of a nested list moves it out a level, with what it has.
+// TipTap makes it anew, with nothing on it (patches/@tiptap__core@3.31.4.patch). When the line has
+// text above it in its item, the item stays, and the one out a level is new: it gets the class and
+// style. A heading there comes out as a paragraph, as an item starts with one.
+test('an empty line at the end of a nested list keeps its own when Enter moves it out a level', async ({
+	page,
+}) => {
+	const lists = {
+		'Last item': {
+			html: (id: string) =>
+				`<ul><li><p>Outer</p><ul><li><p>Inner</p></li><li id="${id}-item" ${own}><p id="${id}" ${own}></p></li></ul></li></ul>`,
+			made: ['li, p "Outer"', 'li: id class style, p: id class style ""'],
+		},
+		'Only item': {
+			html: (id: string) =>
+				`<ul><li><p>Outer</p><ul><li id="${id}-item" ${own}><p id="${id}" ${own}></p></li></ul></li></ul>`,
+			made: ['li, p "Outer"', 'li: id class style, p: id class style ""'],
+		},
+		'Last to-do item': {
+			html: (id: string) =>
+				`<ul data-type="taskList"><li data-type="taskItem"><p>Outer</p><ul data-type="taskList"><li data-type="taskItem"><p>Inner</p></li><li data-type="taskItem" data-checked="true" id="${id}-item" ${own}><p id="${id}" ${own}></p></li></ul></li></ul>`,
+			made: ['li, p "Outer"', 'li: id class style ticked, p: id class style ""'],
+		},
+		'Heading after the text of an item': {
+			html: (id: string) =>
+				`<ul><li><p>Outer</p><ul><li id="${id}-item" ${own}><p>Inner</p><h2 id="${id}" ${own}></h2></li></ul></li></ul>`,
+			made: ['li, p "Outer"', 'li: class style, p: id class style ""'],
+		},
+	}
+	for (const [kind, { html, made }] of Object.entries(lists)) {
+		const id = `moved-${kind.replace(/\W/g, '')}`
+		await insertAtEnd(page, html(id))
+		const index = await cursorAt(page, id, 0)
+		await page.keyboard.press('Enter')
+		await settle(page)
+		expect.soft(await madeAt(page, index), kind).toEqual(made)
+	}
+})
+
 // The code view is the page as code, in an editor of its own. It used to replace the page in the
 // page's editor, so Undo crossed between them: in the code view it brought the page back behind
 // the code, and after switching back it put the code in the page as a code block.
