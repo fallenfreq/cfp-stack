@@ -71,14 +71,30 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
         | Two blocks the author gave one id: cut one and paste it                                            | the other: the page still has it                                                           |
         | Undo, redo                                                                                         | as it was before the change, or after                                                      |
 
-3. **Changing a block's kind keeps what the author set.** Five ways of changing a block's kind
+3. **A block changed in place is the block that was there.** The id rule (step 2) tells a block
+   put in from one already there by where the change wrote. A change to a block's settings or
+   type written as the whole block (`setNodeMarkup`, as TipTap's `updateAttributes` and the
+   Attributes panel did) writes there too, so an id given that way, which another block has, is
+   taken off; only a setting saved alone (`setNodeAttribute`) is safe. The blocks selected
+   together already count a block changed in place as the same block (`changedInPlace`,
+   `multiSelect.ts`): one test, shared by both, and the rule leaves such a block however the
+   change was written.
+    - Where: the test moves to where both read it, found when the step is planned. A check gives
+      a paragraph and a picture an id another block has, written as the whole block.
+4. **Moving blocks selected together moves each once.** A block and one inside it can be chosen
+   together ("Add all children" keeps the block chosen), and the tools for blocks selected together
+   (Move before or after, Replace, dragging them) take each on its own: the inner one moves inside
+   its block and again by itself, so its text is copied, id and all. A block inside a chosen block
+   counts as chosen with it, decided once in the selection (`multiSelect.ts`), not in each tool;
+   what the highlight and the count show is found when the step is planned.
+5. **Changing a block's kind keeps what the author set.** Five ways of changing a block's kind
    take its id and class off: Numbered List on a bullet list (TipTap's `toggleList`), Task List
    on a list (the app's `switchListType`, `defaultItemsBlock.ts`), a heading made from more than
    one selected paragraph (TipTap's `setNode`), a list made from a heading (TipTap's
    `clearNodes`), and an item taken out of a list, whose paragraph stays and the item's own go
    (Enter on an empty item; Backspace and Shift-Tab to measure). Change Type keeps them. Where
    it's fixed is found when the step is planned.
-4. **Copying takes the code view's version.** The editor draws some built-in blocks with classes
+6. **Copying takes the code view's version.** The editor draws some built-in blocks with classes
    of its own, which aren't saved and don't show in the code view: lists `sf`, quotes
    `sf sf-depth-1`, code blocks `sf hljs`, to-do items `sl-split sf-gap-md`, tables
    `tiptap-table` (and a `min-width` style). Copying took the page as drawn, so pasting saved them
@@ -89,7 +105,7 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
       to-do list has no drawn tick boxes there.
     - `editor.spec.ts`, "a pasted to-do list has the blocks and text of the one copied", says the
       classes are kept on paste: it changes with this step.
-5. **The code view refuses what the page can't keep.** Leaving the code view dropped without a
+7. **The code view refuses what the page can't keep.** Leaving the code view dropped without a
    word a paragraph's `title`, `lang`, `data-…` and `onclick`, and HTML comments (a link's
    `title` was kept). An unknown element is refused today; so is anything else the page can't
    keep: the code view stays open and says what and where ("The page can't keep `title` on
@@ -101,7 +117,7 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
 Later, the owner's call:
 
 - A heading's level class (`sf-heading-2`) is saved on every heading and shows in the code view.
-  f0b5f39 saved it because drawing it the way lists are drawn ran into step 4's bug. After step 4
+  f0b5f39 saved it because drawing it the way lists are drawn ran into step 6's bug. After step 6
   it could be drawn only, as the level is the heading's own setting.
 - Keeping HTML comments written in the code view (owner, 2026-10-18: not now).
 
@@ -122,6 +138,13 @@ Later, the owner's call:
 - **Changing a block's kind is a step of its own** (owner, 2026-10-18): it loses ids, it doesn't
   copy them.
 - **Copying takes the code view's version, not the page as drawn** (owner, 2026-10-18).
+- **A block changed in place is the block that was there**, for the id rule and the blocks
+  selected together alike, however the change is written (owner, 2026-10-18): the rule doesn't
+  depend on each caller saving a setting alone.
+- **The Attributes panel saves a setting as a setting** (owner, 2026-10-18): the block stays
+  selected, as a picture did.
+- **Moving blocks selected together is a step of its own** (owner, 2026-10-18): it copies text,
+  ids or not, so it's fixed in the selection, not in the id rule.
 
 ## Progress
 
@@ -138,7 +161,7 @@ Later, the owner's call:
   wrap writes the block anew too; it's the count that spares it, so the panel writes every block
   anew today, not only a picture. Enter's step left out the paragraph in a list item. Rows added
   for cutting a block's text, pasting from elsewhere, joining blocks and table rows. Four changes
-  of kind lose a block's id and class (now step 3). The reviewer found that builders where
+  of kind lose a block's id and class (now step 5). The reviewer found that builders where
   authors write the ids mostly only flag duplicates (Webflow, WordPress); here most duplicates
   come from the editor itself, so both steps stay, with the validator for what authors write.
 - **Plan signed off** (2026-10-18), with the decisions above.
@@ -156,7 +179,7 @@ Later, the owner's call:
   as a new item, with the item's class and style, and keeps its own. Found, outside this step:
   Enter on an empty middle line of a quote or a Card splits it with its id on both (step 2,
   whose table now names Cards); an item taken out of a list loses its own id and class (now in
-  step 3). The owner agreed to both, and to the nested item's line. Unit tests pass (4 + 34).
+  step 5). The owner agreed to both, and to the nested item's line. Unit tests pass (4 + 34).
 - **Step 2 done** (2026-10-18): the rule, run after each change (`allowAttributesExtension.ts`),
   and the Attributes panel saves an attribute as a setting of the block (`setNodeAttribute`), so
   an id given there stays. A probe in Chrome showed the rule deciding each row of the table as
@@ -168,6 +191,9 @@ Later, the owner's call:
   are back in the page, as with a picture; before, the selection became a cursor in the block, and
   the keys went straight back to the page. Found, outside this step: moving blocks selected
   together, with a block and one inside it both chosen, copies the inner one, and both copies keep
-  its id (every block with it was put in, so the rule keeps them all). Unit tests pass (4 + 34).
+  its id (every block with it was put in, so the rule keeps them all; now step 4). The owner
+  agreed that the rule should leave a block changed in place however the change is written,
+  rather than rely on the panel saving a setting alone (now step 3); the panel keeps its change,
+  and its keys after Enter are parked (`sf-system-todo.md`, Editor). Unit tests pass (4 + 34).
 
 Next: step 3, in a session of its own.

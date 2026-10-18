@@ -133,6 +133,8 @@ settings for every selected block.
   read like developer text (the class-name check prints its pattern). Rewording them is open.
 - **Leaving after the sign-in check.** A Leave that the router-wide sign-in check sends elsewhere
   asks again (read in the code only).
+- **The keys after a change in the Attributes panel.** Enter in one of its fields leaves the
+  block selected but the keys off the page: Undo and the arrow keys work once you click back in.
 
 ## Popovers and browsers
 
