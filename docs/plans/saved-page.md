@@ -157,5 +157,17 @@ Later, the owner's call:
   Enter on an empty middle line of a quote or a Card splits it with its id on both (step 2,
   whose table now names Cards); an item taken out of a list loses its own id and class (now in
   step 3). The owner agreed to both, and to the nested item's line. Unit tests pass (4 + 34).
+- **Step 2 done** (2026-10-18): the rule, run after each change (`allowAttributesExtension.ts`),
+  and the Attributes panel saves an attribute as a setting of the block (`setNodeAttribute`), so
+  an id given there stays. A probe in Chrome showed the rule deciding each row of the table as
+  planned; six checks in `editor.spec.ts`, each failing without its part. The rule takes under a
+  millisecond a change on a page of 9,000 blocks. Reviewed by an agent; its findings checked. A
+  block deleted and brought back by Undo, while another has its id, now has a check (without undo
+  left alone, it came back without its id), and so does a block moved. New: after a change in the
+  panel, a paragraph or heading stays selected, Escape closes the panel, and Undo works once you
+  are back in the page, as with a picture; before, the selection became a cursor in the block, and
+  the keys went straight back to the page. Found, outside this step: moving blocks selected
+  together, with a block and one inside it both chosen, copies the inner one, and both copies keep
+  its id (every block with it was put in, so the rule keeps them all). Unit tests pass (4 + 34).
 
-Next: step 2, in a session of its own.
+Next: step 3, in a session of its own.

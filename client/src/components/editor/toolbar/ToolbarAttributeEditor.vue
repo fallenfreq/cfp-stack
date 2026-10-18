@@ -162,18 +162,17 @@ const classAddableKeys = computed(() =>
 const allRowCount = computed(() => attrRows.value.length + classTokenRows.value.length)
 const allAddableCount = computed(() => addableKeys.value.length + classAddableKeys.value.length)
 
-const dispatch = (newAttrs: Record<string, unknown>) => {
+// A setting of the block that's there. Written anew (`setNodeMarkup`), a block given an id
+// another block has would look like a copy, and the editor would take the id off
+// (allowAttributesExtension.ts).
+const dispatch = (key: string, value: unknown) => {
 	if (capturedPos.value === null) return
 	props.editor.view.dispatch(
-		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, newAttrs),
+		props.editor.state.tr.setNodeAttribute(capturedPos.value, key, value),
 	)
 }
 
-const dispatchClass = (newClass: string) => {
-	if (capturedPos.value === null) return
-	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	dispatch({ ...node.attrs, class: newClass || null })
-}
+const dispatchClass = (newClass: string) => dispatch('class', newClass || null)
 
 const onUpdate = (key: string, value: unknown) => {
 	if (capturedPos.value === null) return
@@ -182,8 +181,7 @@ const onUpdate = (key: string, value: unknown) => {
 		dispatchClass(setClassToken(currentClass.value, spec.prefix, value as string))
 		return
 	}
-	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	dispatch({ ...node.attrs, [key]: value })
+	dispatch(key, value)
 }
 
 const onRemove = (key: string) => {
@@ -195,8 +193,7 @@ const onRemove = (key: string) => {
 		return
 	}
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const specDefault = node.type.spec.attrs?.[key]?.default ?? null
-	dispatch({ ...node.attrs, [key]: specDefault })
+	dispatch(key, node.type.spec.attrs?.[key]?.default ?? null)
 }
 
 const startAdd = (key: string) => {

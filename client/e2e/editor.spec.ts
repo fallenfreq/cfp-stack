@@ -797,6 +797,440 @@ test('an empty line at the end of a nested list keeps its own when Enter moves i
 	}
 })
 
+/** The blocks with this id, in page order: where each is, its type and its text. */
+const withId = (page: Page, id: string) =>
+	page.evaluate((id) => {
+		const found: { at: number; type: string; text: string }[] = []
+		document
+			.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+			.editor!.state.doc.descendants((node, at) => {
+				if (node.attrs.id === id)
+					found.push({ at, type: node.type.name, text: node.textContent })
+			})
+		return found
+	}, id)
+const textsWithId = async (page: Page, id: string) =>
+	(await withId(page, id)).map(({ text }) => text)
+/** How many blocks on the page are of the type and text of the one with this id. */
+const copiesOf = (page: Page, id: string) =>
+	page.evaluate((id) => {
+		const { doc } = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+		let copied: ProseMirrorNode | undefined
+		doc.descendants((node) => {
+			if (node.attrs.id === id) copied ??= node
+		})
+		let count = 0
+		doc.descendants((node) => {
+			if (node.type === copied!.type && node.textContent === copied!.textContent) count++
+		})
+		return count
+	}, id)
+/** Selects the block with this id, copies it, and pastes it at the end of the page. */
+const pasteCopy = async (page: Page, id: string, cut = false) => {
+	await page.evaluate(
+		(at) => {
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			editor.chain().focus().setNodeSelection(at).run()
+		},
+		(await withId(page, id))[0]!.at,
+	)
+	await page.keyboard.press(cut ? 'ControlOrMeta+x' : 'ControlOrMeta+c')
+	await page.evaluate(() =>
+		document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.commands.focus('end'),
+	)
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+}
+/** cursorAt, with the block scrolled to the middle of the screen, so its toolbar is in view. */
+const cursorInView = async (page: Page, id: string, offset: number) => {
+	await page
+		.locator(`.tiptap #${id}`)
+		.last()
+		.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+	return cursorAt(page, id, offset)
+}
+/** Drags the block with this id by its handle to just under another, Alt held for a copy. */
+const dragUnder = async (page: Page, id: string, under: string, copy = false) => {
+	await selectBlock(page, id)
+	const target = page.locator(`#${under}`)
+	const { height } = await box(target)
+	if (copy) await page.keyboard.down('Alt')
+	await page.locator('.floating-drag-handle-wrapper').dragTo(target, {
+		targetPosition: { x: 20, y: height - 2 },
+	})
+	if (copy) await page.keyboard.up('Alt')
+	await settle(page)
+}
+
+// An id is for one block: a copy goes without an id the page has, and the block copied keeps it
+// (allowAttributesExtension.ts).
+test('a copy goes without an id the page has', async ({ page }) => {
+	await insertAtEnd(
+		page,
+		'<p id="copy-p">Copy me</p>'
+			+ '<layout-card id="copy-card" class="sf-size-md"><p id="copy-card-p">In the Card</p></layout-card>'
+			+ '<table id="copy-table"><tbody><tr><td id="copy-cell"><p>Cell</p></td></tr></tbody></table>'
+			+ '<ul data-type="taskList" id="copy-list"><li data-type="taskItem" id="copy-item"><p>To do</p></li></ul>'
+			+ '<p id="drop-p">Drop me</p><p id="drop-under">Under this</p>'
+			+ '<p id="pasted-had">Here already</p><p id="paste-into">Here</p>'
+			+ '<p id="twin">First</p><p id="twin">Second</p>',
+	)
+	const blocks = {
+		'a paragraph': ['copy-p'],
+		'a Card': ['copy-card', 'copy-card-p'],
+		'a table': ['copy-table', 'copy-cell'],
+		'a to-do list': ['copy-list', 'copy-item'],
+	}
+	for (const [kind, ids] of Object.entries(blocks)) {
+		const before = await Promise.all(ids.map((id) => withId(page, id)))
+		await pasteCopy(page, ids[0]!)
+		expect.soft(await copiesOf(page, ids[0]!), `${kind}, pasted`).toBe(2)
+		for (const [i, id] of ids.entries())
+			expect.soft(await withId(page, id), `${kind}: ${id}`).toEqual(before[i])
+	}
+
+	const dropped = await withId(page, 'drop-p')
+	await dragUnder(page, 'drop-p', 'drop-under', true)
+	expect.soft(await copiesOf(page, 'drop-p'), 'a copy dropped').toBe(2)
+	expect.soft(await withId(page, 'drop-p'), 'a copy dropped: drop-p').toEqual(dropped)
+
+	// Copied from another page, as a person selects it.
+	await page.evaluate(() => {
+		const elsewhere = document.createElement('div')
+		elsewhere.id = 'elsewhere'
+		elsewhere.innerHTML =
+			'<p id="pasted-first">One</p><p id="pasted-new">Two</p><p id="pasted-had">Three</p>'
+		document.body.append(elsewhere)
+		getSelection()!.selectAllChildren(elsewhere)
+	})
+	await page.keyboard.press('ControlOrMeta+c')
+	await page.locator('#elsewhere').evaluate((el) => el.remove())
+	const had = await withId(page, 'pasted-had')
+	await cursorAt(page, 'paste-into', 2)
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	// The first block joins the line at the cursor, which keeps its own.
+	expect.soft(await textsWithId(page, 'pasted-first'), 'from elsewhere: the first').toEqual([])
+	expect.soft(await textsWithId(page, 'pasted-new'), 'from elsewhere: a new id').toEqual(['Two'])
+	expect.soft(await withId(page, 'pasted-had'), 'from elsewhere: an id the page has').toEqual(had)
+
+	// Two blocks the author gave one id: one cut and pasted is a copy of the one left.
+	await pasteCopy(page, 'twin', true)
+	expect.soft(await textsWithId(page, 'twin'), 'one of two with an id, cut and pasted').toEqual([
+		'Second',
+	])
+	await expect.soft(page.locator('.tiptap p:not([id])', { hasText: /^First$/ })).toHaveCount(1)
+})
+
+// What's cut or moved isn't a copy: no block already there has its id.
+test('a block cut and pasted, or moved, keeps its id', async ({ page }) => {
+	await insertAtEnd(
+		page,
+		'<p id="cut-p">Cut me</p><p id="cut-text">Cut my text</p>'
+			+ '<p id="move-p">Move me</p><p id="move-under">Under this</p><p>End</p>',
+	)
+	await pasteCopy(page, 'cut-p', true)
+	expect.soft(await textsWithId(page, 'cut-p'), 'a block cut and pasted').toEqual(['Cut me'])
+
+	// Its text alone: the line it leaves keeps the id, and the text pasted into an empty line
+	// takes that line's.
+	await page.evaluate(
+		([at, size]) => {
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			editor
+				.chain()
+				.focus()
+				.setTextSelection({ from: at + 1, to: at + 1 + size })
+				.run()
+		},
+		[(await withId(page, 'cut-text'))[0]!.at, 'Cut my text'.length] as const,
+	)
+	await page.keyboard.press('ControlOrMeta+x')
+	await page.evaluate(() =>
+		document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.commands.focus('end'),
+	)
+	await page.keyboard.press('Enter')
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	expect.soft(await textsWithId(page, 'cut-text'), "a block's text cut and pasted").toEqual([''])
+	await expect
+		.soft(page.locator('.tiptap p:not([id])', { hasText: /^Cut my text$/ }))
+		.toHaveCount(1)
+
+	await dragUnder(page, 'move-p', 'move-under')
+	const [moved] = await withId(page, 'move-p')
+	expect.soft(moved?.text, 'a block moved').toBe('Move me')
+	expect
+		.soft(moved?.at, 'a block moved, under')
+		.toBeGreaterThan((await withId(page, 'move-under'))[0]!.at)
+})
+
+/** The cursor on the first empty line in the block with this id. */
+const cursorOnEmptyLine = (page: Page, id: string) =>
+	page.evaluate((id) => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		let at = -1
+		editor.state.doc.descendants((node, pos) => {
+			if (
+				at < 0
+				&& node.isTextblock
+				&& !node.content.size
+				&& editor.state.doc.resolve(pos).node().attrs.id === id
+			)
+				at = pos + 1
+		})
+		editor.chain().focus().setTextSelection(at).run()
+	}, id)
+
+// Taking an item out of the middle splits its list, quote or Card in two, and the block put in
+// below goes without the id (allowAttributesExtension.ts). Taken out at the start, the list left
+// keeps it.
+test('an item taken out of a list, quote or Card leaves the id on the top half', async ({
+	page,
+}) => {
+	const list = (id: string) =>
+		`<ul id="${id}"><li><p>Above</p></li><li id="${id}-item"><p>Out</p></li><li><p>Below</p></li></ul>`
+	const first = (id: string) =>
+		`<ul id="${id}"><li id="${id}-item"><p>Out</p></li><li><p>Below</p></li></ul>`
+	await insertAtEnd(
+		page,
+		'<blockquote id="out-quote"><p>Above</p><p></p><p>Below</p></blockquote>'
+			+ '<layout-card id="out-card" class="sf-size-md"><p>Above</p><p></p><p>Below</p></layout-card>'
+			+ list('out-tab')
+			+ list('out-button')
+			+ first('out-first-tab')
+			+ first('out-first-backspace'),
+	)
+	for (const [kind, id] of [
+		['a quote, Enter on an empty line', 'out-quote'],
+		['a Card, Enter on an empty line', 'out-card'],
+	]) {
+		await cursorOnEmptyLine(page, id!)
+		await page.keyboard.press('Enter')
+		await settle(page)
+		expect.soft(await textsWithId(page, id!), kind).toEqual(['Above'])
+	}
+
+	await cursorAt(page, 'out-tab-item', 1)
+	await page.keyboard.press('Shift+Tab')
+	await settle(page)
+	expect.soft(await textsWithId(page, 'out-tab'), 'a list, Shift-Tab').toEqual(['Above'])
+
+	await cursorInView(page, 'out-button-item', 1)
+	await page.locator('.floating-toolbar').getByRole('button', { name: 'Bullet List' }).click()
+	await settle(page)
+	expect.soft(await textsWithId(page, 'out-button'), 'a list, the Bullet List button').toEqual([
+		'Above',
+	])
+
+	for (const [kind, id, key] of [
+		['the first item, Shift-Tab', 'out-first-tab', 'Shift+Tab'],
+		['the first item, Backspace', 'out-first-backspace', 'Backspace'],
+	]) {
+		await cursorAt(page, `${id}-item`, 1)
+		await page.keyboard.press(key!)
+		await settle(page)
+		expect.soft(await textsWithId(page, id!), kind).toEqual(['Below'])
+	}
+})
+
+// Joining blocks, adding rows and columns, wrapping and changing a block write blocks anew, and
+// leave each id on as many blocks as before: the rule leaves them.
+test('changes that write a block anew leave its id where it was', async ({ page }) => {
+	await insertAtEnd(
+		page,
+		'<p id="join-a">First</p><p id="join-b">Second</p>'
+			+ '<p id="join-c">First</p><p id="join-d">Second</p>'
+			+ '<p id="join-e"></p><p id="join-f">Second</p>'
+			+ '<table id="grow-table"><tbody><tr><td id="grow-cell"><p>Cell</p></td></tr></tbody></table>'
+			+ '<p id="change-p">Change me</p>',
+	)
+	const joins = [
+		{
+			kind: 'Backspace',
+			key: 'Backspace',
+			ids: ['join-a', 'join-b'],
+			at: 0,
+			made: [['FirstSecond'], []],
+		},
+		{
+			kind: 'Delete',
+			key: 'Delete',
+			ids: ['join-c', 'join-d'],
+			at: 'First'.length,
+			made: [['FirstSecond'], []],
+		},
+		{
+			kind: 'Backspace after an empty block',
+			key: 'Backspace',
+			ids: ['join-e', 'join-f'],
+			at: 0,
+			made: [[], ['Second']],
+		},
+	] as const
+	for (const { kind, key, ids, at, made } of joins) {
+		await cursorAt(page, key === 'Delete' ? ids[0] : ids[1], at)
+		await page.keyboard.press(key)
+		await settle(page)
+		expect
+			.soft(await textsWithId(page, ids[0]), `joined with ${kind}: the first`)
+			.toEqual(made[0])
+		expect
+			.soft(await textsWithId(page, ids[1]), `joined with ${kind}: the second`)
+			.toEqual(made[1])
+	}
+
+	const toolbar = page.locator('.floating-toolbar')
+	await cursorInView(page, 'grow-cell', 1)
+	await toolbar.getByRole('button', { name: '+ Row ↓' }).click()
+	await toolbar.getByRole('button', { name: '+ Col →' }).click()
+	await settle(page)
+	const table = await page.evaluate(() => {
+		const { doc } = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+		const found = { cells: 0, ids: [] as string[] }
+		doc.descendants((node) => {
+			if (node.attrs.id !== 'grow-table') return
+			node.descendants((inner) => {
+				if (inner.type.name === 'tableCell') found.cells++
+				if (inner.attrs.id) found.ids.push(inner.attrs.id)
+			})
+			return false
+		})
+		return found
+	})
+	expect.soft(table, 'a row and a column added').toEqual({ cells: 4, ids: ['grow-cell'] })
+	expect
+		.soft(await textsWithId(page, 'grow-table'), 'a row and a column added: the table')
+		.toEqual(['Cell'])
+
+	const changed = async () =>
+		(await withId(page, 'change-p')).map(({ type, text }) => `${type} "${text}"`)
+	await cursorInView(page, 'change-p', 1)
+	await toolbar.getByRole('button', { name: 'Blockquote' }).click()
+	await settle(page)
+	expect.soft(await changed(), 'wrapped in a quote').toEqual(['paragraph "Change me"'])
+	// Wrapped, the toolbar is on the quote.
+	await toolbar.getByRole('button', { name: 'Unwrap' }).click()
+	await settle(page)
+	expect.soft(await changed(), 'unwrapped').toEqual(['paragraph "Change me"'])
+	await cursorInView(page, 'change-p', 1)
+	await (await openMenu(page, 'change_circle')).getByText('Heading 2', { exact: true }).click()
+	await settle(page)
+	expect.soft(await changed(), 'changed with Change Type').toEqual(['heading "Change me"'])
+})
+
+// Ids the author gives are theirs, even two the same: the validator, once built, warns of those
+// (client/src/assets/sf-system.md, "Validator and linter"). The Attributes panel saves an id as a
+// setting of the block that's there, so the block isn't put in anew.
+test('ids the author gives are kept, even two the same', async ({ page }) => {
+	await insertAtEnd(
+		page,
+		'<p id="given">Has the id</p><p id="give-p">A paragraph</p><img id="give-img" src="/favicon.ico">'
+			+ '<iframe data-youtube-video id="give-video" src="https://www.youtube.com/embed/3lTUAWOgoHs"></iframe>'
+			+ '<hr id="give-line">',
+	)
+	for (const id of ['give-p', 'give-img', 'give-video', 'give-line']) {
+		await selectBlock(page, id)
+		const tune = page.locator('.floating-toolbar button:has(span:text-is("tune"))')
+		await tune.click()
+		const panel = page.locator(`#${await tune.getAttribute('popovertarget')}`)
+		await panel.getByLabel('id', { exact: true }).fill('given')
+		await page.keyboard.press('Enter')
+		await page.keyboard.press('Escape')
+		await settle(page)
+	}
+	expect
+		.soft(
+			(await withId(page, 'given')).map(({ type }) => type),
+			'given in the panel',
+		)
+		.toEqual([
+			'paragraph',
+			'paragraph',
+			'image',
+			'youtube',
+			'horizontalRule',
+		])
+
+	await switchView(page, true)
+	await replaceCode(
+		page,
+		'<p id="written">One</p><p id="written">Two</p><p id="move-under">Under</p>',
+	)
+	await switchView(page, false)
+	expect
+		.soft(await textsWithId(page, 'written'), 'written in the code view')
+		.toEqual(['One', 'Two'])
+
+	// The second of the two each time.
+	await dragUnder(page, 'written', 'move-under')
+	const [, moved] = await withId(page, 'written')
+	expect.soft(await textsWithId(page, 'written'), 'one moved').toEqual(['One', 'Two'])
+	expect
+		.soft(moved?.at, 'one moved, under')
+		.toBeGreaterThan((await withId(page, 'move-under'))[0]!.at)
+	await cursorInView(page, 'written', 1)
+	await page.keyboard.type('x')
+	await (await openMenu(page, 'change_circle')).getByText('Heading 2', { exact: true }).click()
+	await page.locator('.floating-toolbar').getByRole('button', { name: 'Blockquote' }).click()
+	await settle(page)
+	expect
+		.soft(
+			(await withId(page, 'written')).map(({ type, text }) => `${type} "${text}"`),
+			'one typed in, changed and wrapped',
+		)
+		.toEqual(['paragraph "One"', 'heading "Txwo"'])
+})
+
+// Undo and redo put back what was there: a pasted copy and the id taken off it go and come back
+// together, and a block deleted comes back with its id, though another block has it.
+test('undo and redo put the ids back as they were', async ({ page }) => {
+	// Outside the undo history: put in just before, it would undo with the paste.
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor
+			.chain()
+			.setMeta('addToHistory', false)
+			.insertContentAt(
+				editor.state.doc.content.size,
+				'<p id="undo-twin">One</p><p id="undo-twin">Two</p><p id="undo-p">Copy me</p>',
+			)
+			.run()
+	})
+	const copied = await withId(page, 'undo-p')
+	await pasteCopy(page, 'undo-p')
+	for (const [step, copies] of [
+		['pasted', 2],
+		['undone', 1],
+		['redone', 2],
+	] as const) {
+		if (step === 'undone') await undo(page)
+		if (step === 'redone') {
+			await page.keyboard.press('ControlOrMeta+Shift+z')
+			await settle(page)
+		}
+		expect.soft(await copiesOf(page, 'undo-p'), step).toBe(copies)
+		expect.soft(await withId(page, 'undo-p'), `${step}: undo-p`).toEqual(copied)
+	}
+
+	// One of two blocks the author gave one id.
+	await page.evaluate(
+		(at) => {
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			editor.chain().focus().setNodeSelection(at).run()
+		},
+		(await withId(page, 'undo-twin'))[0]!.at,
+	)
+	await page.keyboard.press('Backspace')
+	await settle(page)
+	expect.soft(await textsWithId(page, 'undo-twin'), 'one of two deleted').toEqual(['Two'])
+	await undo(page)
+	expect.soft(await textsWithId(page, 'undo-twin'), 'undone').toEqual(['One', 'Two'])
+	await page.keyboard.press('ControlOrMeta+Shift+z')
+	await settle(page)
+	expect.soft(await textsWithId(page, 'undo-twin'), 'redone').toEqual(['Two'])
+})
+
 // The code view is the page as code, in an editor of its own. It used to replace the page in the
 // page's editor, so Undo crossed between them: in the code view it brought the page back behind
 // the code, and after switching back it put the code in the page as a code block.

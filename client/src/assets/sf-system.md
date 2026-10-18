@@ -1344,8 +1344,9 @@ Each rule's reason is in the section named.
   between them still counts, and a theme author can't know where pages hide blocks. "After any
   block" (`* + *`) counts only shown blocks (Component blocks).
 
-**Content** (classes on a page's blocks, from the class panel or code view)
+**Content** (classes and ids on a page's blocks, from the panels or code view)
 
+- Warn on two blocks with one id ("two blocks share the id …"): a link to it goes to the first.
 - One arrangement per box: `sl-inset` doesn't share a block with `sl-stack`, `sl-cluster`,
   `sl-columns`, `sl-split` or `sl-grid` (Side margins and full-bleed).
 - That counts the layout a block's component gives it: a Stack and a Centre stack their
