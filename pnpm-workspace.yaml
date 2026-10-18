@@ -17,5 +17,8 @@ packageExtensions:
         dependencies:
             '@babel/parser': ^7.20.5
 
+# A `#` entry reaches vue-router unnumbered, so steps across it land wrong (vuejs/router#1314);
+# the patch numbers it after the one before. Drop it once vue-router does that itself, or for its
+# Navigation API router (vuejs/router#2551) once the browser floor reaches Safari 26.2.
 patchedDependencies:
     vue-router@5.4.0: patches/vue-router@5.4.0.patch
