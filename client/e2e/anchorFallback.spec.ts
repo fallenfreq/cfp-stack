@@ -232,9 +232,10 @@ for (const c of SHORT_SCREEN)
 		browserName,
 		themeClass,
 	}) => {
-		// Known not to work yet in Safari 26 (sf-system-todo.md, 19): where the panel fits nowhere,
-		// it runs off the top of the screen, as WebKit doesn't slide it back. When fixed, Playwright
-		// reports "expected to fail, but passed": remove test.fail().
+		// Known not to work yet in Safari 26 (sf-system-todo.md, "A panel that fits nowhere, in
+		// WebKit"): where the panel fits nowhere, it runs off the top of the screen, as WebKit
+		// doesn't slide it back. When fixed, Playwright reports "expected to fail, but passed":
+		// remove test.fail().
 		test.fail(browserName === 'webkit' && c.name === 'a panel on a short screen')
 		const css = await placementsWhileScrolling(browser, c, themeClass, false)
 		const script = await placementsWhileScrolling(browser, c, themeClass, true)

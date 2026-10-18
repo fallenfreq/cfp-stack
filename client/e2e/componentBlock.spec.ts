@@ -7,7 +7,7 @@ import { copiedText, openSeeded, setClipboard, settle } from './helpers'
 // A component block's own parts and its slot, mostly on the demo's interactive block (TiptapTest):
 // its heading, text and button aren't editable, its slot holds page blocks. Any component that
 // draws parts of its own gets these rules; layouts, which draw none, stay as they were. Rules
-// decided with the owner (sf-system-todo.md, 18).
+// decided with the owner; each check below states one.
 
 const INTERACTIVE = 'a47e28a5-fd9d-40e9-bd74-819301247e9d'
 
@@ -216,9 +216,10 @@ test('the known-limit case is set up: text above, the block, text below', async 
 	expect(order).toBe(true)
 })
 
-// Known not to work yet in Chrome (sf-system-todo.md, 18): the drag ends as a cursor where it
-// stops, as it did before; across a Card it takes the Card. WebKit takes the block. When fixed,
-// Playwright reports "expected to fail, but passed": remove test.fail().
+// Known not to work yet in Chrome (sf-system-todo.md, "A drag across a component block"): the
+// drag ends as a cursor where it stops, as it did before; across a Card it takes the Card. WebKit
+// takes the block. When fixed, Playwright reports "expected to fail, but passed": remove
+// test.fail().
 test('a drag from the text above to the text below takes the block whole', async ({
 	page,
 	browserName,
