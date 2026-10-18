@@ -110,22 +110,14 @@ settings for every selected block.
   any is.
 - **Picking before the theme's tokens arrive.** They load in the background; picking padding
   before they arrive leaves an empty row and sets no class, even once they come.
-- **Display-only extras get stored.** Copy and paste store classes the editor adds (`sf`, the
-  to-do item's `sl-split sf-gap-md`, a table's minimum width) on the pasted blocks, and the code
-  view keeps them. A code view round trip stores `sl-split sf-gap-md` as a to-do item's own
-  class (harmless: the item merges them anyway).
-- **Enter in a to-do item** gives the new item the same class and the same `id`, so two items
-  share an id.
 - **No timeout.** A fetch that never answers leaves "Loading editor…" up: tRPC has no timeout.
   A save that never finishes keeps a move away waiting with no sign (agreed: leaving waits for
   the save).
-- **The code view drops what isn't an element.** Switching back drops without a word attributes
-  the page doesn't know (`data-*`, `title`, `lang`, `onclick`), HTML comments, and a line break
-  before bare text at the top (it becomes a space). Only elements are refused.
-- **The code view, minor.** It sits flush under the top bar. Keys typed on the page in the moment
-  the code is being written (about 0.1s) aren't in the code, and are replaced (undoably) only if
-  the code is then edited. With two refused elements the message names the last. Tab could
-  indent (TipTap's `enableTabIndentation`), but then Tab wouldn't leave the code view.
+- **The code view, minor.** It sits flush under the top bar. A line break before bare text at the
+  top becomes a space when switching back. Keys typed on the page in the moment the code is being
+  written (about 0.1s) aren't in the code, and are replaced (undoably) only if the code is then
+  edited. With two refused elements the message names the last. Tab could indent (TipTap's
+  `enableTabIndentation`), but then Tab wouldn't leave the code view.
 - **A sheet's embedded video** stops as the sheet slides away and loads again in the closing
   copy of the page.
 - **A table cell's alignment** is also its own `align` attribute: taking `text-align` out of the
