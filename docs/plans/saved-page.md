@@ -64,36 +64,39 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
         | Take an item out of a list, quote or Card (Backspace, Enter on an empty line, Shift-Tab, a button) | the top half, or the list left when it's the first item                                    |
         | Join two blocks with Backspace or Delete                                                           | the first; the second's goes. If the first is empty, the second                            |
         | Add a table row or column                                                                          | nothing new: the new row and cells have none                                               |
-        | Wrap or unwrap a block, or change it with Change Type                                              | the block                                                                                  |
+        | Wrap or unwrap a block, or change it with Change Type, the cursor in it                            | the block                                                                                  |
         | Give a block an id another has, in its Attributes panel (paragraph, picture, video, line)          | both                                                                                       |
         | Write two blocks with one id in the code view                                                      | both                                                                                       |
         | Two blocks the author gave one id: move, wrap, change or type in one                               | both                                                                                       |
         | Two blocks the author gave one id: cut one and paste it                                            | the other: the page still has it                                                           |
         | Undo, redo                                                                                         | as it was before the change, or after                                                      |
 
-3. **A block changed in place is the block that was there.** The id rule (step 2) tells a block
-   put in from one already there by where the change wrote. A change to a block's settings or
-   type written as the whole block (`setNodeMarkup`, as TipTap's `updateAttributes` and the
-   Attributes panel did) writes there too, so an id given that way, which another block has, is
-   taken off; only a setting saved alone (`setNodeAttribute`) is safe. The blocks selected
-   together already count a block changed in place as the same block (`changedInPlace`,
-   `multiSelect.ts`): one test, shared by both, and the rule leaves such a block however the
-   change was written.
-    - Where: the test moves to where both read it, found when the step is planned. A check gives
-      a paragraph and a picture an id another block has, written as the whole block.
+3. **Dropped: a block changed in place** (owner, 2026-10-19). The id rule was to count a block
+   whose settings or type were written as the whole block as the one that was there. Nothing in
+   the app gives an id that way (the Attributes panel saves it as a setting), and TipTap's Change
+   Type writes a block that way with its Card's id on it (step 5), which the rule takes off.
 4. **Moving blocks selected together moves each once.** A block and one inside it can be chosen
    together ("Add all children" keeps the block chosen), and the tools for blocks selected together
    (Move before or after, Replace, dragging them) take each on its own: the inner one moves inside
    its block and again by itself, so its text is copied, id and all. A block inside a chosen block
    counts as chosen with it, decided once in the selection (`multiSelect.ts`), not in each tool;
    what the highlight and the count show is found when the step is planned.
-5. **Changing a block's kind keeps what the author set.** Five ways of changing a block's kind
-   take its id and class off: Numbered List on a bullet list (TipTap's `toggleList`), Task List
-   on a list (the app's `switchListType`, `defaultItemsBlock.ts`), a heading made from more than
-   one selected paragraph (TipTap's `setNode`), a list made from a heading (TipTap's
-   `clearNodes`), and an item taken out of a list, whose paragraph stays and the item's own go
-   (Enter on an empty item; Backspace and Shift-Tab to measure). Change Type keeps them. Where
-   it's fixed is found when the step is planned.
+    - A chosen picture written anew (the Corners control) or pasted over stays chosen
+      (`changedInPlace`), and no check covers it: one is added with this step.
+5. **Changing a block's kind keeps what the author set.** These take a block's id and class off:
+   Numbered List on a bullet list (TipTap's `toggleList`), Task List on a list (the app's
+   `switchListType`, `defaultItemsBlock.ts`), a heading made from more than one selected
+   paragraph (TipTap's `setNode`), a list made from a heading (TipTap's `clearNodes`), an item
+   taken out of a list, whose paragraph stays and the item's own go (Enter on an empty item;
+   Backspace and Shift-Tab to measure), `## ` or a code fence typed at a block's start (TipTap's
+   text shortcuts), and a heading's text pasted at the start of a paragraph, which makes the
+   paragraph the heading. Change Type keeps them with the cursor in the block. On a block
+   selected as a block, Change Type and the Heading and Code Block buttons give it the settings
+   of the block around it instead of its own (TipTap's `setNode` and `toggleNode` copy the
+   selection's parent's): a Card's class and style, and its id, which the id rule takes off.
+   Where it's fixed is found when the step is planned.
+    - Worse: Code Block deletes what a code block can't hold, so a span in the paragraph goes,
+      its text with it.
 6. **Copying takes the code view's version.** The editor draws some built-in blocks with classes
    of its own, which aren't saved and don't show in the code view: lists `sf`, quotes
    `sf sf-depth-1`, code blocks `sf hljs`, to-do items `sl-split sf-gap-md`, tables
@@ -135,14 +138,15 @@ Later, the owner's call:
   fixed.
 - **Enter carries the class and style over, not the id; an empty nested item moved out a level
   keeps its own** (owner, 2026-10-18).
-- **Changing a block's kind is a step of its own** (owner, 2026-10-18): it loses ids, it doesn't
-  copy them.
+- **Changing a block's kind is a step of its own** (owner, 2026-10-18): it loses ids; the one it
+  copies, from the block around it, the id rule takes off.
 - **Copying takes the code view's version, not the page as drawn** (owner, 2026-10-18).
-- **A block changed in place is the block that was there**, for the id rule and the blocks
-  selected together alike, however the change is written (owner, 2026-10-18): the rule doesn't
-  depend on each caller saving a setting alone.
-- **The Attributes panel saves a setting as a setting** (owner, 2026-10-18): the block stays
-  selected, as a picture did.
+- **A block written whole counts as put in; ids are given as settings** (owner, 2026-10-19). The
+  rule tells the editor's duplicates from the author's by how the change was written. Counting a
+  block written whole as the one there (step 3, dropped) would have kept the id Change Type
+  copies. A tool that gives ids saves them as settings, with a check like the Attributes panel's.
+- **The Attributes panel saves a setting as a setting** (owner, 2026-10-18): an id given there
+  stays, even one another block has, and the block stays selected, as a picture did.
 - **Moving blocks selected together is a step of its own** (owner, 2026-10-18): it copies text,
   ids or not, so it's fixed in the selection, not in the id rule.
 
@@ -195,5 +199,15 @@ Later, the owner's call:
   agreed that the rule should leave a block changed in place however the change is written,
   rather than rely on the panel saving a setting alone (now step 3); the panel keeps its change,
   and its keys after Enter are parked (`sf-system-todo.md`, Editor). Unit tests pass (4 + 34).
+- **Step 3 planned again, then dropped** (2026-10-19), from probes in Chrome. A copied picture,
+  line or video pasted over a selected one is the same change as one written anew, so step 3 was
+  planned for blocks with content only. A fresh agent's review of that plan found that Change
+  Type, Heading and Code Block on a block selected as a block write it that way with the
+  settings of the block around it (TipTap's `setNode`, `toggleNode`): the rule takes the copied
+  id off today, and with step 3 the page would have kept two. Nothing in the app gives an id
+  written as the whole block, so the owner dropped the step; no code changed. Found on the way,
+  now in step 5: those changes lose the block's own id and class, so do `## ` typed at its start
+  and a heading's text pasted at a paragraph's start, and Code Block deletes a span's text. In
+  step 4: no check covers a chosen picture staying chosen when written anew.
 
-Next: step 3, in a session of its own.
+Next: step 4, in a session of its own.
