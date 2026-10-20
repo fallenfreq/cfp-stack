@@ -68,6 +68,30 @@ const changedInPlace = (step: Step, pos: number, doc: PMNode): boolean => {
 	)
 }
 
+// The chosen blocks that move, in page order. A block and one inside it can both be chosen, but
+// the one inside moves with its block: moving it again would copy it.
+const blocksToMove = (doc: PMNode, positions: NodePos[]): NodePos[] => {
+	let end = -1
+	return [...positions]
+		.sort((a, b) => a - b)
+		.filter((pos) => {
+			if (pos < end) return false
+			end = pos + nodeAt(doc, pos).nodeSize
+			return true
+		})
+}
+
+// The blocks that move to the target, or null when the target is one of them or inside one: the
+// toolbar's tools and a drop both ask.
+export const blocksToMoveTo = (
+	doc: PMNode,
+	positions: NodePos[],
+	target: NodePos,
+): NodePos[] | null => {
+	const blocks = blocksToMove(doc, positions)
+	return blocks.some((p) => target >= p && target < p + nodeAt(doc, p).nodeSize) ? null : blocks
+}
+
 const MultiSelectExtension = Extension.create({
 	name: 'multiSelect',
 
@@ -176,18 +200,16 @@ const createMultiDragPreview = (view: EditorView, sorted: NodePos[]): HTMLElemen
 
 export const buildMultiDragSlice = (view: EditorView, pos: number, event: DragEvent) => {
 	const positions = multiSelectPluginKey.getState(view.state)?.positions ?? []
-	if (positions.length < 2) return null
-
 	const doc = view.state.doc
 	const dragNode = doc.nodeAt(pos)
 	if (!dragNode) return null
 
-	// Activate if the dragged node is selected or is an ancestor of a selected node
-	// (handles the case where activeDepth shows a parent of the selected items)
-	const isRelevant = positions.some((p) => p === pos || (p > pos && p < pos + dragNode.nodeSize))
-	if (!isRelevant) return null
-
-	const sorted = [...positions].sort((a, b) => a - b)
+	// Activate if the dragged node is one that moves or is an ancestor of one (handles the case
+	// where activeDepth shows a parent of the selected items). A block inside one that moves is
+	// dragged on its own, chosen or not; so is one block to move.
+	const sorted = blocksToMove(doc, positions)
+	const isRelevant = sorted.some((p) => p === pos || (p > pos && p < pos + dragNode.nodeSize))
+	if (!isRelevant || sorted.length < 2) return null
 	const [firstPos] = sorted
 	if (firstPos === undefined) return null
 
@@ -218,7 +240,7 @@ const multiDragPlugin = new Plugin({
 			const target = findBlockAtCoords(view, event)
 			// Return true to consume the event without inserting — prevents PM's own drop
 			// handler from inserting the placeholder slice (phantom copy of the first node).
-			if (!target || sorted.includes(target.pos)) return true
+			if (!target || !blocksToMoveTo(view.state.doc, sorted, target.pos)) return true
 
 			const { pos: targetPos, node: targetNode, insertBefore } = target
 			const doc = view.state.doc

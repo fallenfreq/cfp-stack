@@ -76,13 +76,18 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    the app gives an id that way (the Attributes panel saves it as a setting), and TipTap's Change
    Type writes a block that way with its Card's id on it (step 5), which the rule takes off.
 4. **Moving blocks selected together moves each once.** A block and one inside it can be chosen
-   together ("Add all children" keeps the block chosen), and the tools for blocks selected together
-   (Move before or after, Replace, dragging them) take each on its own: the inner one moves inside
-   its block and again by itself, so its text is copied, id and all. A block inside a chosen block
-   counts as chosen with it, decided once in the selection (`multiSelect.ts`), not in each tool;
-   what the highlight and the count show is found when the step is planned.
-    - A chosen picture written anew (the Corners control) or pasted over stays chosen
-      (`changedInPlace`), and no check covers it: one is added with this step.
+   together ("Add all children" keeps the block chosen), and the tools that move them (Move
+   before or after, Replace, dragging them) took each on its own: the inner one moved inside its
+   block and again by itself, so its text was copied, id and all. Choosing stays as it is; the
+   tools that move take a block inside a chosen one with its block (`blocksToMoveTo`,
+   `multiSelect.ts`), and the drag's preview shows what moves. Nothing moves beside or over a
+   block inside one that moves, by the toolbar or a drop.
+    - New: a block inside one that moves, dragged by its own handle, goes on its own, chosen or
+      not, and one block to move is an ordinary drag (Alt copies it). Before, a chosen one
+      dragged every chosen block.
+    - A chosen picture pasted over stays chosen (`changedInPlace`), and no check covered it: one
+      is added with this step. With blocks chosen the toolbar shows only the selection's tools,
+      so the Corners control can't reach it.
 5. **Changing a block's kind keeps what the author set.** These take a block's id and class off:
    Numbered List on a bullet list (TipTap's `toggleList`), Task List on a list (the app's
    `switchListType`, `defaultItemsBlock.ts`), a heading made from more than one selected
@@ -149,6 +154,10 @@ Later, the owner's call:
   stays, even one another block has, and the block stays selected, as a picture did.
 - **Moving blocks selected together is a step of its own** (owner, 2026-10-18): it copies text,
   ids or not, so it's fixed in the selection, not in the id rule.
+- **A block and one inside it can be chosen together; moving takes the inner one with its
+  block** (owner, 2026-10-19), so it's fixed where they move, not in the selection. Settings for
+  every selected block, once built, may want both (`sf-system-todo.md`, "Settings for every
+  selected block"); only moving them copied.
 
 ## Progress
 
@@ -209,5 +218,19 @@ Later, the owner's call:
   now in step 5: those changes lose the block's own id and class, so do `## ` typed at its start
   and a heading's text pasted at a paragraph's start, and Code Block deletes a span's text. In
   step 4: no check covers a chosen picture staying chosen when written anew.
+- **Step 4 done** (2026-10-20): Move before or after, Replace and a drag take a block inside a
+  chosen one with its block, and nothing moves beside or over a block inside one that moves
+  (`blocksToMoveTo`, `multiSelect.ts`); choosing is as it was. Measured in Chrome: a Card chosen
+  with its paragraphs, moved by each tool or dragged, copied them, and no longer does; Delete
+  already worked. Two checks in `editor.spec.ts`, each part failing without it. Reviewed by an
+  agent; its findings checked. A drop onto a block inside a Card that moves still moved the other
+  blocks there (from before, and new when that block was chosen): now refused, as in the
+  toolbar. Checks added for Move before, Replace, a block moved beside its own Card, and the drop.
+  Found, outside this step: Wrap selection, with a block not chosen between two chosen ones,
+  deletes it (Undo brings it back); a drag of several blocks ignores Alt; the handle of a block
+  not chosen that holds chosen ones drags those, or itself when there's one; the drag picture
+  counts "nodes". Raised. Unit tests pass (4 + 34). On a busy machine, three WebKit checks timed
+  out in a full run of `editor.spec.ts` (each passes alone), and "undo in the code view undoes
+  only the code" left the first letter typed, as it does without this step.
 
-Next: step 4, in a session of its own.
+Next: step 5, in a session of its own.

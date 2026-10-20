@@ -2,6 +2,7 @@ import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import ToolbarNodePicker, {
 	type NodePickerItem,
 } from '@/components/editor/toolbar/ToolbarNodePicker.vue'
+import { blocksToMoveTo } from '@/editor/extensions/multiSelect'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import {
 	allAreSiblings,
@@ -41,12 +42,14 @@ const selNextUnselected = (editor: Editor, ctx: ToolbarItemContext): NodePos | n
 	return null
 }
 
+const selBlocksToMoveTo = (editor: Editor, target: NodePos): NodePos[] | null =>
+	blocksToMoveTo(editor.state.doc, useMultiSelectStore().positions, target)
+
 const selMoveBefore = (editor: Editor, ctx: ToolbarItemContext) => {
 	const nodePos = ctx.nodePos
 	if (nodePos === null) return
-	const positions = useMultiSelectStore().positions
-	if (positions.includes(nodePos)) return
-	const sorted = [...positions].sort((a, b) => a - b)
+	const sorted = selBlocksToMoveTo(editor, nodePos)
+	if (!sorted) return
 	const content = Fragment.fromArray(sorted.map((p) => nodeAt(editor.state.doc, p)))
 	editor
 		.chain()
@@ -63,9 +66,8 @@ const selMoveBefore = (editor: Editor, ctx: ToolbarItemContext) => {
 const selMoveAfter = (editor: Editor, ctx: ToolbarItemContext) => {
 	const nodePos = ctx.nodePos
 	if (nodePos === null) return
-	const positions = useMultiSelectStore().positions
-	if (positions.includes(nodePos)) return
-	const sorted = [...positions].sort((a, b) => a - b)
+	const sorted = selBlocksToMoveTo(editor, nodePos)
+	if (!sorted) return
 	const content = Fragment.fromArray(sorted.map((p) => nodeAt(editor.state.doc, p)))
 	const targetNode = nodeAt(editor.state.doc, nodePos)
 	editor
@@ -83,9 +85,8 @@ const selMoveAfter = (editor: Editor, ctx: ToolbarItemContext) => {
 const selReplace = (editor: Editor, ctx: ToolbarItemContext) => {
 	const nodePos = ctx.nodePos
 	if (nodePos === null) return
-	const positions = useMultiSelectStore().positions
-	if (positions.includes(nodePos)) return
-	const sorted = [...positions].sort((a, b) => a - b)
+	const sorted = selBlocksToMoveTo(editor, nodePos)
+	if (!sorted) return
 	const content = Fragment.fromArray(sorted.map((p) => nodeAt(editor.state.doc, p)))
 	const targetNode = nodeAt(editor.state.doc, nodePos)
 	editor
@@ -257,8 +258,7 @@ export const multiSelectItems = [
 		tooltip: 'Move before target',
 		label: icon('vertical_align_top'),
 		show: () => useMultiSelectStore().positions.length > 0,
-		disabled: (_, ctx) =>
-			ctx.nodePos === null || useMultiSelectStore().positions.includes(ctx.nodePos),
+		disabled: (editor, ctx) => ctx.nodePos === null || !selBlocksToMoveTo(editor, ctx.nodePos),
 		action: selMoveBefore,
 	}),
 
@@ -267,8 +267,7 @@ export const multiSelectItems = [
 		tooltip: 'Move after target',
 		label: icon('vertical_align_bottom'),
 		show: () => useMultiSelectStore().positions.length > 0,
-		disabled: (_, ctx) =>
-			ctx.nodePos === null || useMultiSelectStore().positions.includes(ctx.nodePos),
+		disabled: (editor, ctx) => ctx.nodePos === null || !selBlocksToMoveTo(editor, ctx.nodePos),
 		action: selMoveAfter,
 	}),
 
@@ -277,8 +276,7 @@ export const multiSelectItems = [
 		tooltip: 'Replace target',
 		label: icon('find_replace'),
 		show: () => useMultiSelectStore().positions.length > 0,
-		disabled: (_, ctx) =>
-			ctx.nodePos === null || useMultiSelectStore().positions.includes(ctx.nodePos),
+		disabled: (editor, ctx) => ctx.nodePos === null || !selBlocksToMoveTo(editor, ctx.nodePos),
 		action: selReplace,
 	}),
 

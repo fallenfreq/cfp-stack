@@ -146,6 +146,157 @@ test('the toolbar moves and deletes blocks selected together, and the selection 
 	await expect(chosen).toHaveCount(0)
 })
 
+// A block and one inside it can both be chosen, but the one inside moves with its block: moved
+// again by itself, it was copied, id and all (multiSelect.ts, blocksToMoveTo). Nothing moves beside
+// or over a block inside one that moves.
+test('blocks selected together move once each, a block inside another with it', async ({
+	page,
+}) => {
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor.commands.insertContentAt(
+			editor.state.doc.content.size,
+			'<p id="mo-top">Top</p><layout-card id="mo-card" class="sf-size-md"><p id="mo-one">One</p><p id="mo-two">Two</p></layout-card><p id="mo-x">X</p><p id="mo-mid">Mid</p><p id="mo-target">Target</p><p id="mo-end">End</p>',
+		)
+	})
+	// Each of these blocks, by its id, or its text if it has none.
+	const blocks = () =>
+		page.evaluate(() => {
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			const found: string[] = []
+			editor.state.doc.descendants((node) => {
+				const name = node.attrs.id ?? node.textContent
+				if (node.isBlock && name && (found.length || name.startsWith('mo-')))
+					found.push(name)
+			})
+			return found
+		})
+	const tool = (name: string) => page.locator('.floating-toolbar').getByRole('button', { name })
+	const chosen = page.locator('.tiptap .sf-on-selected')
+	const at = (id: string) => nodePosition(page, id)
+	// The block's drag handle, dragged to the top or bottom edge of another.
+	const drag = async (id: string, to: string, edge: 'top' | 'bottom') => {
+		await selectBlockAt(page, await at(id))
+		const { height } = await box(page.locator(`#${to}`))
+		await page.locator('.floating-drag-handle-wrapper').dragTo(page.locator(`#${to}`), {
+			targetPosition: { x: 20, y: edge === 'top' ? 2 : height - 2 },
+		})
+		await settle(page)
+	}
+	const chooseCardAndMid = async () => {
+		await toggleSelection(page, await at('mo-card'))
+		await tool('Add all children').click()
+		await toggleSelection(page, await at('mo-mid'))
+		await expect(chosen).toHaveCount(4)
+	}
+
+	await toggleSelection(page, await at('mo-card'))
+	await toggleSelection(page, await at('mo-mid'))
+	await selectBlockAt(page, await at('mo-one'))
+	for (const name of ['Move before target', 'Move after target', 'Replace target'])
+		await expect(tool(name), `${name}, a target inside the Card`).toBeDisabled()
+	const before = await blocks()
+	await drag('mo-mid', 'mo-one', 'top')
+	expect(await blocks(), 'dropped inside the Card').toEqual(before)
+
+	await selectBlockAt(page, await at('mo-card'))
+	await tool('Add all children').click()
+	await expect(chosen).toHaveCount(4)
+	await selectBlockAt(page, await at('mo-target'))
+	await tool('Move after target').click()
+	expect(await blocks()).toEqual([
+		'mo-top',
+		'mo-x',
+		'mo-target',
+		'mo-card',
+		'mo-one',
+		'mo-two',
+		'mo-mid',
+		'mo-end',
+	])
+
+	await chooseCardAndMid()
+	await selectBlockAt(page, await at('mo-top'))
+	await tool('Move before target').click()
+	expect(await blocks()).toEqual([
+		'mo-card',
+		'mo-one',
+		'mo-two',
+		'mo-mid',
+		'mo-top',
+		'mo-x',
+		'mo-target',
+		'mo-end',
+	])
+
+	await chooseCardAndMid()
+	await selectBlockAt(page, await at('mo-x'))
+	await tool('Replace target').click()
+	expect(await blocks()).toEqual([
+		'mo-top',
+		'mo-card',
+		'mo-one',
+		'mo-two',
+		'mo-mid',
+		'mo-target',
+		'mo-end',
+	])
+
+	await chooseCardAndMid()
+	// The blocks in the picture that follows the pointer: the last one handed to the browser (the
+	// handle hands it the block's own first).
+	await page.evaluate(() => {
+		const { setDragImage } = DataTransfer.prototype
+		DataTransfer.prototype.setDragImage = function (image, x, y) {
+			document.body.dataset.dragImage = [...image.querySelectorAll('.tiptap > *')]
+				.map((block) => block.id)
+				.join(' ')
+			setDragImage.call(this, image, x, y)
+		}
+	})
+	await drag('mo-card', 'mo-end', 'bottom')
+	await expect(page.locator('body')).toHaveAttribute('data-drag-image', 'mo-card mo-mid')
+	expect(await blocks()).toEqual([
+		'mo-top',
+		'mo-target',
+		'mo-end',
+		'mo-card',
+		'mo-one',
+		'mo-two',
+		'mo-mid',
+	])
+
+	// A block inside one that moves, dragged by its own handle, goes on its own, chosen or not.
+	await chooseCardAndMid()
+	await drag('mo-one', 'mo-target', 'bottom')
+	expect(await blocks()).toEqual([
+		'mo-top',
+		'mo-target',
+		'mo-one',
+		'mo-end',
+		'mo-card',
+		'mo-two',
+		'mo-mid',
+	])
+
+	// A block moves beside the block it's in.
+	await selectBlockAt(page, await at('mo-card'))
+	await tool('Clear selection').click()
+	await toggleSelection(page, await at('mo-two'))
+	await selectBlockAt(page, await at('mo-card'))
+	await expect(tool('Move before target')).toBeEnabled()
+	await tool('Move before target').click()
+	expect(await blocks()).toEqual([
+		'mo-top',
+		'mo-target',
+		'mo-one',
+		'mo-end',
+		'mo-two',
+		'mo-card',
+		'mo-mid',
+	])
+})
+
 // The drag handle finds a block by its box, which for a component block is the component's own.
 test('a selected Card moves by its drag handle', async ({ page }) => {
 	await page.evaluate(() => {
@@ -474,6 +625,22 @@ test('selected blocks stay selected when they change in place', async ({ page })
 	await expect(page.locator('.tiptap hr')).toHaveCount(dividers - 1)
 	await expect(selectedDivider, 'a divider deleted: the next one stays unselected').toHaveCount(0)
 	await expect(selected, 'a divider deleted').toHaveText(texts)
+})
+
+// A picture has no content: one pasted over a chosen one is written in its place, which its
+// position alone counts as deleting it (multiSelect.ts, changedInPlace). It stays chosen.
+test('a picture pasted over a chosen one stays chosen', async ({ page }) => {
+	await toggleSelection(page, await nodePosition(page, 'center-picture'))
+	await selectBlock(page, 'shape-picture')
+	await page.keyboard.press('ControlOrMeta+c')
+	await selectBlock(page, 'center-picture')
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	await expect(page.locator('.tiptap #center-picture')).toHaveCount(0)
+	// The copy goes without the id the page has, so it's found by its class.
+	const chosenPicture = page.locator('.tiptap img.sf-on-selected')
+	await expect(chosenPicture).toHaveCount(1)
+	await expect(chosenPicture).toHaveClass(/(^|\s)sl-aspect-16-9(\s|$)/)
 })
 
 // Opening a page isn't an edit: the editor opens with it, outside the undo history. Undo after it
