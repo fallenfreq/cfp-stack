@@ -30,7 +30,7 @@ import {
 } from '@/editor/extensions/dragHandle'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { getExtensionOptions } from '@/utils/editor/editorUtils'
-import { Fragment, Slice } from '@tiptap/pm/model'
+import { Fragment, Slice, type Node as PMNode } from '@tiptap/pm/model'
 import type { Editor } from '@tiptap/vue-3'
 import { computed } from 'vue'
 
@@ -74,6 +74,9 @@ const pixelPos = computed<{ top: number; left: number } | null>(() => {
 	return { top: rect.top - HANDLE_GAP, left: rect.left }
 })
 
+// The block dragged, and the page as the drag began.
+let dragged: { pos: number; doc: PMNode } | null = null
+
 const onMousedown = () => {
 	const view = props.editor.view
 	if (view.composing) return
@@ -100,6 +103,7 @@ const onDragstart = (event: DragEvent) => {
 	// Lock the target so hover changes during the drag don't move the handle.
 	// PM selection is intentionally NOT mutated — toolbar items stay stable.
 	store.setFrozenTargetPos(pos)
+	dragged = { pos, doc: view.state.doc }
 	store.setIsDragging(true)
 
 	// Multi-drag takes precedence when the drag target is part of an active
@@ -128,10 +132,20 @@ const onDragend = () => {
 	// ProseMirror's own dragend listener won't fire.
 	// eslint-disable-next-line vue/no-mutating-props
 	props.editor.view.dragging = null
+	// A drag that moved nothing selects the block dragged, as a drop selects the block dropped.
+	const view = props.editor.view
+	if (dragged && view.state.doc === dragged.doc)
+		props.editor.commands.setNodeSelection(dragged.pos)
+	dragged = null
 	// Browser DnD causes the editor to lose focus during the drag.  Without this,
 	// the mousemove guard (!view.hasFocus()) blocks hover updates until the user
-	// clicks, making the handle appear broken after every drop.
-	props.editor.view.focus()
+	// clicks, making the handle appear broken after every drop.  Given focus, WebKit
+	// scrolls to the browser's selection (preventScroll or not), which a drop leaves
+	// where the block was, and which can be off the screen: it's put first where the
+	// editor's is, on the block dropped or dragged.
+	const { node, offset } = view.domAtPos(view.state.selection.from)
+	document.getSelection()?.collapse(node, offset)
+	view.focus()
 }
 </script>
 

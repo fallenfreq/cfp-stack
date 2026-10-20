@@ -238,7 +238,7 @@ Later, the owner's call:
   Unit tests pass (4 + 34). Afterwards the three tools and the drop share one move
   (`moveBlocks`), and all 180 runs of `editor.spec.ts` pass. Before, on a very busy machine, some
   WebKit runs failed: timeouts that pass alone, and "undo in the code view undoes only the code",
-  which fails without this step too. A WebKit bug found on the way is in `sf-system-todo.md`: the
-  page jumps to its top after a drag.
+  which fails without this step too. A WebKit bug found on the way, the page jumping to its top
+  after a drag, was fixed next (`FloatingDragHandle.vue`).
 
 Next: step 5, in a session of its own.

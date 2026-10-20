@@ -279,9 +279,7 @@ test('blocks selected together move once each, a block inside another with it', 
 		'mo-mid',
 	])
 
-	// A block moves beside the block it's in. After a drag, WebKit is at the page's top
-	// (sf-system-todo.md, "Editor"): selecting the Card brings its toolbar back.
-	await selectBlockAt(page, await at('mo-card'))
+	// A block moves beside the block it's in.
 	await tool('Clear selection').click()
 	await toggleSelection(page, await at('mo-two'))
 	await selectBlockAt(page, await at('mo-card'))
@@ -320,6 +318,103 @@ test('a selected Card moves by its drag handle', async ({ page }) => {
 		return ids.slice(-4)
 	})
 	expect(order).toEqual(['move-above', 'move-below', 'move-card', 'move-end'])
+})
+
+// The editor has no focus during a drag. Given it back, WebKit scrolls to the browser's selection,
+// which a drop leaves where the block was, or which can be off the screen (FloatingDragHandle.vue,
+// onDragend): the page went to its top or to the cursor.
+test('a block dragged by its handle lands where it is let go, and the page stays there', async ({
+	page,
+}) => {
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		const filler = Array.from({ length: 40 }, (_, i) => `<p>Filler ${i}</p>`).join('')
+		editor.commands.insertContentAt(
+			editor.state.doc.content.size,
+			`<p id="stay-a">A</p><p id="stay-b">B</p><p id="stay-c">C</p>${filler}<p id="stay-far">Far</p><p id="stay-end">End</p>`,
+		)
+	})
+	const handle = page.locator('.floating-drag-handle-wrapper')
+	const order = () =>
+		page.evaluate(() =>
+			[...document.querySelectorAll('.tiptap [id^="stay-"]')]
+				.map((block) => block.id)
+				.join(' '),
+		)
+	const scrolled = () => page.evaluate(() => Math.round(scrollY))
+	// Presses the handle and lets go on a block's bottom edge, so it lands under it, the page first
+	// scrolled to it with the button held, as a drag near the window's edge scrolls it; with no
+	// block, on the bar at the page's top. Returns where the page was when let go.
+	const drag = async (under?: string) => {
+		const from = await box(handle)
+		await page.mouse.move(from.left + from.width / 2, from.top + from.height / 2)
+		await page.mouse.down()
+		await page.mouse.move(from.left + 30, from.top + 60, { steps: 5 })
+		if (under) {
+			const target = page.locator(`#${under}`)
+			await target.evaluate((block) => block.scrollIntoView({ block: 'center' }))
+			const { left, bottom } = await box(target)
+			await page.mouse.move(left + 20, bottom - 2, { steps: 5 })
+		} else {
+			const bar = await box(page.locator('.editor-top-bar'))
+			await page.mouse.move(bar.left + bar.width / 2, bar.top + bar.height / 2, { steps: 5 })
+		}
+		const letGo = await scrolled()
+		await page.mouse.up()
+		await settle(page)
+		return letGo
+	}
+	// The cursor in End, off the screen, and the handle on a block the pointer is over.
+	const cursorAwayAndHover = async (id: string) => {
+		await page.evaluate(
+			(at) =>
+				document
+					.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+					.editor!.chain()
+					.setTextSelection(at + 1)
+					.focus(undefined, { scrollIntoView: false })
+					.run(),
+			await nodePosition(page, 'stay-end'),
+		)
+		const block = page.locator(`#${id}`)
+		await block.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+		await block.hover({ position: { x: 5, y: 5 } })
+		await expect
+			.poll(async () => Math.round((await box(block)).top - (await box(handle)).bottom))
+			.toBe(10)
+	}
+
+	await selectBlock(page, 'stay-a')
+	let letGo = await drag('stay-b')
+	expect(await order(), 'a short drag').toBe('stay-b stay-a stay-c stay-far stay-end')
+	expect(await scrolled(), 'a short drag').toBe(letGo)
+
+	// Up the page: a block taken from above the screen would change how far the page is scrolled in
+	// Chrome, which keeps what's on the screen where it was.
+	await selectBlock(page, 'stay-far')
+	letGo = await drag('stay-a')
+	expect(await order(), 'a long drag').toBe('stay-b stay-a stay-far stay-c stay-end')
+	expect(await scrolled(), 'a long drag').toBe(letGo)
+
+	await cursorAwayAndHover('stay-b')
+	letGo = await drag('stay-c')
+	expect(await order(), 'the cursor off the screen').toBe(
+		'stay-a stay-far stay-c stay-b stay-end',
+	)
+	expect(await scrolled(), 'the cursor off the screen').toBe(letGo)
+
+	// Let go outside the page's text: nothing moves, and the block dragged is selected, as a block
+	// dropped is.
+	await cursorAwayAndHover('stay-c')
+	letGo = await drag()
+	expect(await order(), 'let go outside').toBe('stay-a stay-far stay-c stay-b stay-end')
+	expect(await scrolled(), 'let go outside').toBe(letGo)
+	const selected = await page.evaluate(() => {
+		const { selection } =
+			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+		return 'node' in selection ? (selection as NodeSelection).node.attrs.id : null
+	})
+	expect(selected).toBe('stay-c')
 })
 
 // Focus on the Card's box also put the cursor just before it, between blocks, where text can't go

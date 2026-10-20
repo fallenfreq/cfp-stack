@@ -138,10 +138,11 @@ settings for every selected block.
 - **Dragging blocks selected together.** A drag of several ignores Alt and always moves them
   (`multiSelect.ts`, `handleDrop`). The handle of a block that isn't chosen but holds chosen ones
   drags those, or itself when there's one. The drag's picture counts "nodes", not blocks.
-- **The page jumps to its top after a drag, in WebKit.** As a drag by the handle ends, the handle
-  gives the editor its focus back (`FloatingDragHandle.vue`, `onDragend`), and WebKit then scrolls
-  to the page's top; with that call skipped, it stays (Playwright's WebKit, not tried in Safari).
-  `editor.spec.ts`, "blocks selected together move once each", selects a block again because of it.
+- **A list item dropped on another item's text.** On the top half of the text it splits that item:
+  an empty item keeps its id, its text goes to a new one without, and the empty line is selected.
+  On the bottom half it lands right, but nothing is selected and WebKit moves the page a little.
+  The drop's place is the paragraph inside the item (`findBlockAtCoords`), where an item can't go
+  (`dragHandle.ts`, `handleDrop`). Dropped below the list, it lands right and is selected.
 
 ## Popovers and browsers
 
