@@ -2,7 +2,7 @@ import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import ToolbarNodePicker, {
 	type NodePickerItem,
 } from '@/components/editor/toolbar/ToolbarNodePicker.vue'
-import { blocksToMoveTo } from '@/editor/extensions/multiSelect'
+import { blocksToMoveTo, moveBlocks } from '@/editor/extensions/multiSelect'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import {
 	allAreSiblings,
@@ -45,60 +45,23 @@ const selNextUnselected = (editor: Editor, ctx: ToolbarItemContext): NodePos | n
 const selBlocksToMoveTo = (editor: Editor, target: NodePos): NodePos[] | null =>
 	blocksToMoveTo(editor.state.doc, useMultiSelectStore().positions, target)
 
-const selMoveBefore = (editor: Editor, ctx: ToolbarItemContext) => {
+// Moves the chosen blocks before the target, after it, or in its place.
+const selMove = (
+	editor: Editor,
+	ctx: ToolbarItemContext,
+	where: 'before' | 'after' | 'replace',
+) => {
 	const nodePos = ctx.nodePos
 	if (nodePos === null) return
-	const sorted = selBlocksToMoveTo(editor, nodePos)
-	if (!sorted) return
-	const content = Fragment.fromArray(sorted.map((p) => nodeAt(editor.state.doc, p)))
+	const blocks = selBlocksToMoveTo(editor, nodePos)
+	if (!blocks) return
+	const end = nodePos + nodeAt(editor.state.doc, nodePos).nodeSize
+	const from = where === 'after' ? end : nodePos
+	const to = where === 'before' ? nodePos : end
 	editor
 		.chain()
 		.command(({ tr }) => {
-			for (const pos of [...sorted].reverse())
-				tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
-			tr.insert(tr.mapping.map(nodePos), content)
-			return true
-		})
-		.clearMultiSelect()
-		.run()
-}
-
-const selMoveAfter = (editor: Editor, ctx: ToolbarItemContext) => {
-	const nodePos = ctx.nodePos
-	if (nodePos === null) return
-	const sorted = selBlocksToMoveTo(editor, nodePos)
-	if (!sorted) return
-	const content = Fragment.fromArray(sorted.map((p) => nodeAt(editor.state.doc, p)))
-	const targetNode = nodeAt(editor.state.doc, nodePos)
-	editor
-		.chain()
-		.command(({ tr }) => {
-			for (const pos of [...sorted].reverse())
-				tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
-			tr.insert(tr.mapping.map(nodePos + targetNode.nodeSize), content)
-			return true
-		})
-		.clearMultiSelect()
-		.run()
-}
-
-const selReplace = (editor: Editor, ctx: ToolbarItemContext) => {
-	const nodePos = ctx.nodePos
-	if (nodePos === null) return
-	const sorted = selBlocksToMoveTo(editor, nodePos)
-	if (!sorted) return
-	const content = Fragment.fromArray(sorted.map((p) => nodeAt(editor.state.doc, p)))
-	const targetNode = nodeAt(editor.state.doc, nodePos)
-	editor
-		.chain()
-		.command(({ tr }) => {
-			for (const pos of [...sorted].reverse())
-				tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
-			tr.replaceWith(
-				tr.mapping.map(nodePos),
-				tr.mapping.map(nodePos + targetNode.nodeSize),
-				content,
-			)
+			moveBlocks(tr, blocks, from, to)
 			return true
 		})
 		.clearMultiSelect()
@@ -259,7 +222,7 @@ export const multiSelectItems = [
 		label: icon('vertical_align_top'),
 		show: () => useMultiSelectStore().positions.length > 0,
 		disabled: (editor, ctx) => ctx.nodePos === null || !selBlocksToMoveTo(editor, ctx.nodePos),
-		action: selMoveBefore,
+		action: (editor, ctx) => selMove(editor, ctx, 'before'),
 	}),
 
 	toolbarButtonItem({
@@ -268,7 +231,7 @@ export const multiSelectItems = [
 		label: icon('vertical_align_bottom'),
 		show: () => useMultiSelectStore().positions.length > 0,
 		disabled: (editor, ctx) => ctx.nodePos === null || !selBlocksToMoveTo(editor, ctx.nodePos),
-		action: selMoveAfter,
+		action: (editor, ctx) => selMove(editor, ctx, 'after'),
 	}),
 
 	toolbarButtonItem({
@@ -277,7 +240,7 @@ export const multiSelectItems = [
 		label: icon('find_replace'),
 		show: () => useMultiSelectStore().positions.length > 0,
 		disabled: (editor, ctx) => ctx.nodePos === null || !selBlocksToMoveTo(editor, ctx.nodePos),
-		action: selReplace,
+		action: (editor, ctx) => selMove(editor, ctx, 'replace'),
 	}),
 
 	toolbarCustomItem(

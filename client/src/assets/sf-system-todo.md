@@ -138,6 +138,10 @@ settings for every selected block.
 - **Dragging blocks selected together.** A drag of several ignores Alt and always moves them
   (`multiSelect.ts`, `handleDrop`). The handle of a block that isn't chosen but holds chosen ones
   drags those, or itself when there's one. The drag's picture counts "nodes", not blocks.
+- **The page jumps to its top after a drag, in WebKit.** As a drag by the handle ends, the handle
+  gives the editor its focus back (`FloatingDragHandle.vue`, `onDragend`), and WebKit then scrolls
+  to the page's top; with that call skipped, it stays (Playwright's WebKit, not tried in Safari).
+  `editor.spec.ts`, "blocks selected together move once each", selects a block again because of it.
 
 ## Popovers and browsers
 

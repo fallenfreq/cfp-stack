@@ -279,7 +279,8 @@ test('blocks selected together move once each, a block inside another with it', 
 		'mo-mid',
 	])
 
-	// A block moves beside the block it's in.
+	// A block moves beside the block it's in. After a drag, WebKit is at the page's top
+	// (sf-system-todo.md, "Editor"): selecting the Card brings its toolbar back.
 	await selectBlockAt(page, await at('mo-card'))
 	await tool('Clear selection').click()
 	await toggleSelection(page, await at('mo-two'))

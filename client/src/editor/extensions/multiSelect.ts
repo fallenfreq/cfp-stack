@@ -92,6 +92,18 @@ export const blocksToMoveTo = (
 	return blocks.some((p) => target >= p && target < p + nodeAt(doc, p).nodeSize) ? null : blocks
 }
 
+// Moves blocksToMoveTo's blocks in one go: takes them out, then puts them in place of from–to
+// (positions in the page as it was; from = to puts them there). Returns where they start.
+export const moveBlocks = (tr: Transaction, blocks: NodePos[], from: number, to = from): number => {
+	const start = tr.steps.length
+	const content = Fragment.fromArray(blocks.map((p) => nodeAt(tr.doc, p)))
+	for (const pos of [...blocks].reverse()) tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
+	const mapping = tr.mapping.slice(start)
+	const at = mapping.map(from)
+	tr.replaceWith(at, mapping.map(to), content)
+	return at
+}
+
 const MultiSelectExtension = Extension.create({
 	name: 'multiSelect',
 
@@ -243,17 +255,12 @@ const multiDragPlugin = new Plugin({
 			if (!target || !blocksToMoveTo(view.state.doc, sorted, target.pos)) return true
 
 			const { pos: targetPos, node: targetNode, insertBefore } = target
-			const doc = view.state.doc
-			const content = Fragment.fromArray(sorted.map((p) => nodeAt(doc, p)))
 			let tr = view.state.tr
-			for (const p of [...sorted].reverse()) {
-				const node = tr.doc.nodeAt(p)!
-				tr = tr.delete(p, p + node.nodeSize)
-			}
-			const insertAt = insertBefore
-				? tr.mapping.map(targetPos)
-				: tr.mapping.map(targetPos + targetNode.nodeSize)
-			tr = tr.insert(insertAt, content)
+			const insertAt = moveBlocks(
+				tr,
+				sorted,
+				insertBefore ? targetPos : targetPos + targetNode.nodeSize,
+			)
 			// Mirror native single-drag behavior: select the first dropped node so the
 			// toolbar repositions to it.  NodeSelection for selectable nodes (gives the
 			// "node-selected" outline); TextSelection spanning the node for

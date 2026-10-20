@@ -235,8 +235,10 @@ Later, the owner's call:
   deletes it (Undo brings it back); a drag of several blocks ignores Alt; the handle of a block
   not chosen that holds chosen ones drags those, or itself when there's one; the drag picture
   counts "nodes". The owner made Wrap step 8, the rest are in `sf-system-todo.md`, "Editor".
-  Unit tests pass (4 + 34). On a busy machine, three WebKit checks timed out in a full run of
-  `editor.spec.ts` (each passes alone), and "undo in the code view undoes only the code" left the
-  first letter typed, as it does without this step.
+  Unit tests pass (4 + 34). Afterwards the three tools and the drop share one move
+  (`moveBlocks`), and all 180 runs of `editor.spec.ts` pass. Before, on a very busy machine, some
+  WebKit runs failed: timeouts that pass alone, and "undo in the code view undoes only the code",
+  which fails without this step too. A WebKit bug found on the way is in `sf-system-todo.md`: the
+  page jumps to its top after a drag.
 
 Next: step 5, in a session of its own.
