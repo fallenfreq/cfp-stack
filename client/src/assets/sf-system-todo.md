@@ -135,6 +135,9 @@ settings for every selected block.
   asks again (read in the code only).
 - **The keys after a change in the Attributes panel.** Enter in one of its fields leaves the
   block selected but the keys off the page: Undo and the arrow keys work once you click back in.
+- **Dragging blocks selected together.** A drag of several ignores Alt and always moves them
+  (`multiSelect.ts`, `handleDrop`). The handle of a block that isn't chosen but holds chosen ones
+  drags those, or itself when there's one. The drag's picture counts "nodes", not blocks.
 
 ## Popovers and browsers
 

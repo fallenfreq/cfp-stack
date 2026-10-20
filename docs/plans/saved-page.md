@@ -121,6 +121,11 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    there, so what the page adds or rewrites itself (spaces, attribute order, a link's `rel`)
    never refuses their code. Some things have to go (`onclick` runs code): the author takes them
    out. Comments are refused too, for now.
+8. **Wrap selection keeps the blocks between.** With A and C chosen and B between them, Wrap
+   selection put A and C in a quote or Card and deleted B without a word (Undo brings it back): it
+   replaces everything from the first chosen block to the end of the last
+   (`defaultItemsMultiSelect.ts`, `wrapSiblingsInType`). What becomes of B is found when the step
+   is planned.
 
 Later, the owner's call:
 
@@ -229,8 +234,9 @@ Later, the owner's call:
   Found, outside this step: Wrap selection, with a block not chosen between two chosen ones,
   deletes it (Undo brings it back); a drag of several blocks ignores Alt; the handle of a block
   not chosen that holds chosen ones drags those, or itself when there's one; the drag picture
-  counts "nodes". Raised. Unit tests pass (4 + 34). On a busy machine, three WebKit checks timed
-  out in a full run of `editor.spec.ts` (each passes alone), and "undo in the code view undoes
-  only the code" left the first letter typed, as it does without this step.
+  counts "nodes". The owner made Wrap step 8, the rest are in `sf-system-todo.md`, "Editor".
+  Unit tests pass (4 + 34). On a busy machine, three WebKit checks timed out in a full run of
+  `editor.spec.ts` (each passes alone), and "undo in the code view undoes only the code" left the
+  first letter typed, as it does without this step.
 
 Next: step 5, in a session of its own.
