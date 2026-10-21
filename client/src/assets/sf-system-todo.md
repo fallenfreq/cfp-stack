@@ -151,6 +151,14 @@ settings for every selected block.
 - **What's selected after an Alt-copy of a Card or a to-do item.** The selection across the copy
   (`dropBlocks`, `multiSelect.ts`) becomes a cursor in the next block when the copy's id is taken
   off (`allowAttributesExtension.ts`), so the toolbar follows that block.
+- **The toolbar's target with the page or a Card selected whole.** After Ctrl-A the node path
+  shows only the page, but the toolbar shows the first block's tools, and a list's buttons change
+  only that list. A Card selected whole after a deeper crumb was picked keeps its crumb current,
+  while the list tools act on its first list (`resolveDragHandleTargetFromSelection`,
+  `dragHandle.ts`).
+- **A chosen list that changes kind leaves the choice.** A list chosen with Toggle selection, then
+  changed to or from a to-do list by the keys or the slash menu, drops out of the blocks chosen:
+  `changedInPlace` (`multiSelect.ts`) doesn't count a list written anew.
 
 ## Popovers and browsers
 

@@ -1523,12 +1523,14 @@ test('an item taken out of a list, quote or Card leaves the id on the top half',
 	await settle(page)
 	expect.soft(await textsWithId(page, 'out-tab'), 'a list, Shift-Tab').toEqual(['Above'])
 
+	// The line's own Bullet List button: the list's turns the whole list into lines.
 	await cursorInView(page, 'out-button-item', 1)
+	await pickInPath(page, 3)
 	await page.locator('.floating-toolbar').getByRole('button', { name: 'Bullet List' }).click()
 	await settle(page)
-	expect.soft(await textsWithId(page, 'out-button'), 'a list, the Bullet List button').toEqual([
-		'Above',
-	])
+	expect
+		.soft(await textsWithId(page, 'out-button'), "a list, the line's Bullet List button")
+		.toEqual(['Above'])
 
 	for (const [kind, id, key] of [
 		['the first item, Shift-Tab', 'out-first-tab', 'Shift+Tab'],
@@ -1624,6 +1626,527 @@ test('changes that write a block anew leave its id where it was', async ({ page 
 	await (await openMenu(page, 'change_circle')).getByText('Heading 2', { exact: true }).click()
 	await settle(page)
 	expect.soft(await changed(), 'changed with Change Type').toEqual(['heading "Change me"'])
+})
+
+/** An id, and a class and style to tell the block by (typesWithSettings). */
+const ownSettings = (id: string) => `id="${id}" class="c-${id}" style="color: red"`
+/**
+ * Each block with these ids: its type, the block it's in (that block's id, or its type without
+ * one), a to-do item's tick, and whether it lost the class or style `ownSettings` gave it. An id on
+ * two blocks names both.
+ */
+const typesWithSettings = (page: Page, ids: readonly string[]) =>
+	page.evaluate((ids) => {
+		const { doc } = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+		const found: Record<string, string> = {}
+		const look = (parent: ProseMirrorNode) =>
+			parent.forEach((node) => {
+				const { id } = node.attrs
+				if (ids.includes(id)) {
+					// A heading's level class is the editor's own.
+					const classes = String(node.attrs.class)
+						.split(' ')
+						.filter(
+							(name) =>
+								name
+								&& !(
+									node.type.name === 'heading' && name.startsWith('sf-heading-')
+								),
+						)
+					const kept =
+						classes.join(' ') === `c-${id}` && node.attrs.style === 'color: red'
+					const seen =
+						`${node.type.name} in ${parent.attrs.id ?? parent.type.name}`
+						+ (node.attrs.checked ? ', ticked' : '')
+						+ (kept ? '' : ', its class or style gone')
+					found[id] = found[id] === undefined ? seen : `${found[id]}, and ${seen}`
+				}
+				look(node)
+			})
+		look(doc)
+		return found
+	}, ids)
+/** What's selected: a block as a whole, by its id, or where in which lines the text is. */
+const selectedPlace = (page: Page) =>
+	page.evaluate(() => {
+		const { selection } =
+			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+		if ('node' in selection) return `#${(selection as NodeSelection).node.attrs.id} selected`
+		const { $anchor, $head, empty } = selection
+		const at = ($pos: typeof $head) =>
+			`${$pos.parent.attrs.id ?? `"${$pos.parent.textContent}"`} at ${$pos.parentOffset}`
+		return empty ? at($head) : `${at($anchor)} to ${at($head)}`
+	})
+/** Points the toolbar at the block this deep around the selection, by its node-path crumb. */
+const pickInPath = async (page: Page, depth: number) => {
+	await page.locator('.node-path button').nth(depth).click()
+	// Before clicking, Playwright scrolls the crumb into view, which can move the page (as in
+	// selectBlockAt): the cursor's line goes back in view.
+	await page.evaluate(() => {
+		const { view } = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		const { node } = view.domAtPos(view.state.selection.head)
+		;(node instanceof Element ? node : node.parentElement)?.scrollIntoView({ block: 'center' })
+	})
+	await settle(page)
+}
+
+// A change that writes a block anew as another type, but is meant to leave the same block, keeps
+// its id, class and style; only what the change is for is new. TipTap's commands gave the new
+// block the type's defaults, or the settings of the block around the selection
+// (patches/@tiptap__core@3.32.0.patch). The list's buttons and Change Type change the list the
+// node path points at; the keys, the list the cursor is in.
+test('a block whose type changes keeps its own id, class and style', async ({ page }) => {
+	const list = (id: string, tag = 'ul') =>
+		`<${tag} ${ownSettings(id)}><li ${ownSettings(`${id}-1`)}><p ${ownSettings(`${id}-1p`)}>One</p></li>`
+		+ `<li ${ownSettings(`${id}-2`)}><p ${ownSettings(`${id}-2p`)}>Two</p></li></${tag}>`
+	const listIds = (id: string) => [id, `${id}-1`, `${id}-1p`, `${id}-2`, `${id}-2p`]
+	const listAs = (id: string, listType: string, itemType: string) => ({
+		[id]: `${listType} in doc`,
+		[`${id}-1`]: `${itemType} in ${id}`,
+		[`${id}-1p`]: `paragraph in ${id}-1`,
+		[`${id}-2`]: `${itemType} in ${id}`,
+		[`${id}-2p`]: `paragraph in ${id}-2`,
+	})
+	const tasks = (id: string) =>
+		`<ul data-type="taskList" ${ownSettings(id)}><li data-type="taskItem" data-checked="true" ${ownSettings(`${id}-1`)}>`
+		+ `<p ${ownSettings(`${id}-1p`)}>One</p></li><li data-type="taskItem" data-checked="false" ${ownSettings(`${id}-2`)}>`
+		+ `<p ${ownSettings(`${id}-2p`)}>Two</p></li></ul>`
+	// A bullet list whose first item holds a bullet list.
+	const nested = (id: string) =>
+		`<ul ${ownSettings(id)}><li ${ownSettings(`${id}-1`)}><p ${ownSettings(`${id}-1p`)}>One</p>`
+		+ `<ul ${ownSettings(`${id}-in`)}><li ${ownSettings(`${id}-3`)}><p ${ownSettings(`${id}-3p`)}>Inner</p></li></ul></li></ul>`
+	const nestedIds = (id: string) => [id, `${id}-1`, `${id}-1p`, `${id}-in`, `${id}-3`, `${id}-3p`]
+	const nestedAs = (id: string, outer: [string, string], inner: [string, string]) => ({
+		[id]: `${outer[0]} in doc`,
+		[`${id}-1`]: `${outer[1]} in ${id}`,
+		[`${id}-1p`]: `paragraph in ${id}-1`,
+		[`${id}-in`]: `${inner[0]} in ${id}-1`,
+		[`${id}-3`]: `${inner[1]} in ${id}-in`,
+		[`${id}-3p`]: `paragraph in ${id}-3`,
+	})
+	const bullets: [string, string] = ['bulletList', 'listItem']
+	const card = (id: string) =>
+		`<layout-card ${ownSettings(id)}><p ${ownSettings(`${id}-p`)}>In a card</p></layout-card>`
+	const toolbar = page.locator('.floating-toolbar')
+	const button = (name: string) => toolbar.getByRole('button', { name, exact: true })
+	const changeTypeTo = async (name: string) =>
+		(await openMenu(page, 'change_circle')).getByText(name, { exact: true }).click()
+	// The node path's crumbs, by depth: a block straight on the page (a list, or a line) is the
+	// first after the page's own; the line in a list's item, or a list in the item, the third.
+	const [onThePage, inAnItem] = [1, 3]
+	const cases: {
+		kind: string
+		html: string
+		ids: string[]
+		change: () => Promise<unknown>
+		made: Record<string, string>
+		/** What's selected after (selectedPlace). */
+		selected?: string
+		/** What one Undo then gives back. */
+		undone?: Record<string, string>
+	}[] = [
+		{
+			kind: "the list's Numbered List button, the cursor in an item",
+			html: list('kt-v'),
+			ids: listIds('kt-v'),
+			change: async () => {
+				await cursorInView(page, 'kt-v-1p', 1)
+				await pickInPath(page, onThePage)
+				await button('Numbered List').click()
+			},
+			made: listAs('kt-v', 'orderedList', 'listItem'),
+			selected: 'kt-v-1p at 1',
+			undone: listAs('kt-v', 'bulletList', 'listItem'),
+		},
+		{
+			kind: 'Mod-Shift-9, the cursor in a bullet item',
+			html: list('kt-k'),
+			ids: listIds('kt-k'),
+			change: async () => {
+				await cursorAt(page, 'kt-k-1p', 1)
+				await page.keyboard.press('ControlOrMeta+Shift+9')
+			},
+			made: listAs('kt-k', 'taskList', 'taskItem'),
+		},
+		{
+			kind: 'Heading 2 on text across two lines',
+			html: `<p ${ownSettings('kt-e-a')}>Alpha</p><p ${ownSettings('kt-e-b')}>Beta</p>`,
+			ids: ['kt-e-a', 'kt-e-b'],
+			change: async () => {
+				await cursorAt(page, 'kt-e-a', 1, ['kt-e-b', 2])
+				await button('Heading 2').click()
+			},
+			made: { 'kt-e-a': 'heading in doc', 'kt-e-b': 'heading in doc' },
+		},
+		{
+			kind: 'Bullet List on a heading',
+			html: `<h2 ${ownSettings('kt-f')}>Head</h2>`,
+			ids: ['kt-f'],
+			change: async () => {
+				await cursorInView(page, 'kt-f', 1)
+				await button('Bullet List').click()
+			},
+			made: { 'kt-f': 'paragraph in listItem' },
+		},
+		{
+			kind: '"## " typed at the start of a line',
+			html: `<p ${ownSettings('kt-j')}>Text</p>`,
+			ids: ['kt-j'],
+			change: async () => {
+				await cursorAt(page, 'kt-j', 0)
+				await page.keyboard.type('## ')
+			},
+			made: { 'kt-j': 'heading in doc' },
+		},
+		{
+			kind: 'Backspace in an empty code block',
+			html: `<pre ${ownSettings('kt-c')}><code></code></pre>`,
+			ids: ['kt-c'],
+			change: async () => {
+				await cursorAt(page, 'kt-c', 0)
+				await page.keyboard.press('Backspace')
+			},
+			made: { 'kt-c': 'paragraph in doc' },
+		},
+		// Already right before the patch, and kept by its parts together: the line goes out of the
+		// list, and the item it was in goes, as it does when the line is taken out.
+		{
+			kind: "Mod-Alt-2, the cursor in an item's line",
+			html: list('kt-i'),
+			ids: listIds('kt-i'),
+			change: async () => {
+				await cursorAt(page, 'kt-i-2p', 1)
+				await page.keyboard.press('ControlOrMeta+Alt+2')
+			},
+			made: {
+				'kt-i': 'bulletList in doc',
+				'kt-i-1': 'listItem in kt-i',
+				'kt-i-1p': 'paragraph in kt-i-1',
+				'kt-i-2p': 'heading in doc',
+			},
+		},
+		// The target is the list: its own type makes every item a line.
+		{
+			kind: "the list's Bullet List button on a bullet list, the cursor in it",
+			html: list('kt-o'),
+			ids: listIds('kt-o'),
+			change: async () => {
+				await cursorInView(page, 'kt-o-2p', 1)
+				await pickInPath(page, onThePage)
+				await button('Bullet List').click()
+			},
+			made: { 'kt-o-1p': 'paragraph in doc', 'kt-o-2p': 'paragraph in doc' },
+			selected: 'kt-o-2p at 1',
+		},
+		// A new list joins the list above it, not the one below, whose settings would go.
+		{
+			kind: "the line's Bullet List button on a line just above a bullet list",
+			html: `<p ${ownSettings('kt-a')}>Above</p>${list('kt-b')}`,
+			ids: ['kt-a', ...listIds('kt-b')],
+			change: async () => {
+				await cursorInView(page, 'kt-a', 1)
+				await pickInPath(page, onThePage)
+				await button('Bullet List').click()
+			},
+			made: { 'kt-a': 'paragraph in listItem', ...listAs('kt-b', 'bulletList', 'listItem') },
+		},
+		{
+			kind: "the list's Task List button, the cursor in a nested item, the node path on the outer list",
+			html: nested('kt-no'),
+			ids: nestedIds('kt-no'),
+			change: async () => {
+				await cursorInView(page, 'kt-no-3p', 1)
+				await pickInPath(page, onThePage)
+				await button('Task List').click()
+			},
+			made: nestedAs('kt-no', ['taskList', 'taskItem'], bullets),
+			selected: 'kt-no-3p at 1',
+		},
+		{
+			kind: "the list's Numbered List button, the cursor in a nested item, the node path on it",
+			html: nested('kt-np'),
+			ids: nestedIds('kt-np'),
+			change: async () => {
+				await cursorInView(page, 'kt-np-3p', 1)
+				await pickInPath(page, inAnItem)
+				await button('Numbered List').click()
+			},
+			made: nestedAs('kt-np', bullets, ['orderedList', 'listItem']),
+			selected: 'kt-np-3p at 1',
+		},
+		{
+			kind: 'Change Type to Task List, the cursor in a nested item, the node path on the outer list',
+			html: nested('kt-nc'),
+			ids: nestedIds('kt-nc'),
+			change: async () => {
+				await cursorInView(page, 'kt-nc-3p', 1)
+				await pickInPath(page, onThePage)
+				await changeTypeTo('Task List')
+			},
+			made: nestedAs('kt-nc', ['taskList', 'taskItem'], bullets),
+			selected: 'kt-nc-3p at 1',
+		},
+		{
+			kind: 'Mod-Shift-9, the cursor in a nested bullet item',
+			html: nested('kt-nk'),
+			ids: nestedIds('kt-nk'),
+			change: async () => {
+				await cursorAt(page, 'kt-nk-3p', 1)
+				await page.keyboard.press('ControlOrMeta+Shift+9')
+			},
+			made: nestedAs('kt-nk', bullets, ['taskList', 'taskItem']),
+		},
+		{
+			kind: "the list's Task List button, the list selected as a whole",
+			html: list('kt-s'),
+			ids: listIds('kt-s'),
+			change: async () => {
+				await selectBlock(page, 'kt-s')
+				await button('Task List').click()
+			},
+			made: listAs('kt-s', 'taskList', 'taskItem'),
+			selected: '#kt-s selected',
+			undone: listAs('kt-s', 'bulletList', 'listItem'),
+		},
+		{
+			kind: "the list's Bullet List button on a bullet list selected as a whole",
+			html: list('kt-w'),
+			ids: listIds('kt-w'),
+			change: async () => {
+				await selectBlock(page, 'kt-w')
+				await button('Bullet List').click()
+			},
+			made: { 'kt-w-1p': 'paragraph in doc', 'kt-w-2p': 'paragraph in doc' },
+			selected: 'kt-w-1p at 0 to kt-w-2p at 3',
+		},
+		{
+			kind: 'Mod-Shift-7, the list selected as a whole',
+			html: list('kt-7'),
+			ids: listIds('kt-7'),
+			change: async () => {
+				await selectBlock(page, 'kt-7')
+				await page.keyboard.press('ControlOrMeta+Shift+7')
+			},
+			made: listAs('kt-7', 'orderedList', 'listItem'),
+			selected: '#kt-7 selected',
+		},
+		{
+			kind: 'Change Type to Bullet List, a to-do list selected as a whole',
+			html: tasks('kt-t'),
+			ids: listIds('kt-t'),
+			change: async () => {
+				await selectBlock(page, 'kt-t')
+				await changeTypeTo('Bullet List')
+			},
+			made: listAs('kt-t', 'bulletList', 'listItem'),
+		},
+		{
+			kind: "the list's Numbered List button, a nested list selected as a whole",
+			html: nested('kt-n'),
+			ids: nestedIds('kt-n'),
+			change: async () => {
+				await selectBlock(page, 'kt-n-in')
+				await button('Numbered List').click()
+			},
+			made: nestedAs('kt-n', bullets, ['orderedList', 'listItem']),
+		},
+		// Two lists stay two: joined, one's settings would go.
+		{
+			kind: "the list's Numbered List button on a bullet list just under a numbered list",
+			html: list('kt-jo', 'ol') + list('kt-ju'),
+			ids: [...listIds('kt-jo'), ...listIds('kt-ju')],
+			change: async () => {
+				await cursorInView(page, 'kt-ju-1p', 1)
+				await pickInPath(page, onThePage)
+				await button('Numbered List').click()
+			},
+			made: {
+				...listAs('kt-jo', 'orderedList', 'listItem'),
+				...listAs('kt-ju', 'orderedList', 'listItem'),
+			},
+		},
+		{
+			kind: "the list's Task List button on a bullet list just under a to-do list",
+			html: tasks('kt-jt') + list('kt-jb'),
+			ids: [...listIds('kt-jt'), ...listIds('kt-jb')],
+			change: async () => {
+				await selectBlock(page, 'kt-jb')
+				await button('Task List').click()
+			},
+			made: {
+				...listAs('kt-jt', 'taskList', 'taskItem'),
+				'kt-jt-1': 'taskItem in kt-jt, ticked',
+				...listAs('kt-jb', 'taskList', 'taskItem'),
+			},
+		},
+		// On the page, a block selected as a whole took the page's settings, which are none: in a
+		// Card, it took the Card's.
+		{
+			kind: 'the Heading 2 button, a line in a Card selected as a whole',
+			html: card('kt-h'),
+			ids: ['kt-h-p'],
+			change: async () => {
+				await selectBlock(page, 'kt-h-p')
+				await button('Heading 2').click()
+			},
+			made: { 'kt-h-p': 'heading in kt-h' },
+		},
+		{
+			kind: 'Change Type to Heading 1, a line in a Card selected as a whole',
+			html: card('kt-m'),
+			ids: ['kt-m-p'],
+			change: async () => {
+				await selectBlock(page, 'kt-m-p')
+				await changeTypeTo('Heading 1')
+			},
+			made: { 'kt-m-p': 'heading in kt-m' },
+		},
+		{
+			kind: "the list's Numbered List button, the cursor in a nested item, the node path on the outer list",
+			html: nested('kt-nb'),
+			ids: nestedIds('kt-nb'),
+			change: async () => {
+				await cursorInView(page, 'kt-nb-3p', 1)
+				await pickInPath(page, onThePage)
+				await button('Numbered List').click()
+			},
+			made: nestedAs('kt-nb', ['orderedList', 'listItem'], bullets),
+			selected: 'kt-nb-3p at 1',
+		},
+		{
+			kind: "the list's Task List button, text selected across its items",
+			html: list('kt-ts'),
+			ids: listIds('kt-ts'),
+			change: async () => {
+				await cursorAt(page, 'kt-ts-1p', 1, ['kt-ts-2p', 2])
+				await pickInPath(page, onThePage)
+				await button('Task List').click()
+			},
+			made: listAs('kt-ts', 'taskList', 'taskItem'),
+			selected: 'kt-ts-1p at 1 to kt-ts-2p at 2',
+		},
+		{
+			kind: "the list's Numbered List button on a bullet list just above a numbered list",
+			html: list('kt-ja') + list('kt-jn', 'ol'),
+			ids: [...listIds('kt-ja'), ...listIds('kt-jn')],
+			change: async () => {
+				await cursorInView(page, 'kt-ja-1p', 1)
+				await pickInPath(page, onThePage)
+				await button('Numbered List').click()
+			},
+			made: {
+				...listAs('kt-ja', 'orderedList', 'listItem'),
+				...listAs('kt-jn', 'orderedList', 'listItem'),
+			},
+		},
+		// The lists inside stay as they are, ticks and all.
+		{
+			kind: "the list's Bullet List button on a to-do list holding a to-do list",
+			html:
+				`<ul data-type="taskList" ${ownSettings('kt-tt')}><li data-type="taskItem" data-checked="false" ${ownSettings('kt-tt-1')}>`
+				+ `<p ${ownSettings('kt-tt-1p')}>One</p><ul data-type="taskList" ${ownSettings('kt-tt-in')}>`
+				+ `<li data-type="taskItem" data-checked="true" ${ownSettings('kt-tt-3')}><p ${ownSettings('kt-tt-3p')}>Inner</p></li></ul></li></ul>`,
+			ids: nestedIds('kt-tt'),
+			change: async () => {
+				await selectBlock(page, 'kt-tt')
+				await button('Bullet List').click()
+			},
+			made: {
+				...nestedAs('kt-tt', bullets, ['taskList', 'taskItem']),
+				'kt-tt-3': 'taskItem in kt-tt-in, ticked',
+			},
+		},
+		{
+			kind: "the slash menu's Ordered List, the cursor in a bullet item",
+			html: list('kt-sl'),
+			ids: listIds('kt-sl'),
+			change: async () => {
+				await cursorInView(page, 'kt-sl-1p', 'One'.length)
+				await page.keyboard.type(' /Ordered')
+				await page.locator('.dropdown-menu .menu-item', { hasText: 'Ordered List' }).click()
+			},
+			made: listAs('kt-sl', 'orderedList', 'listItem'),
+		},
+		// The line's own button takes one item out, as for a bullet line. Last, as the button is
+		// new: the rows before it then run without it too.
+		{
+			kind: "the line's Task List button in a to-do item",
+			html: tasks('kt-l'),
+			ids: listIds('kt-l'),
+			change: async () => {
+				await cursorInView(page, 'kt-l-2p', 1)
+				await pickInPath(page, inAnItem)
+				await button('Task List').click()
+			},
+			made: {
+				'kt-l': 'taskList in doc',
+				'kt-l-1': 'taskItem in kt-l, ticked',
+				'kt-l-1p': 'paragraph in kt-l-1',
+				'kt-l-2p': 'paragraph in doc',
+			},
+		},
+	]
+	// A line between, so that no two lists join; put in outside the undo history, so that an Undo
+	// below takes back only the change before it.
+	await page.evaluate(
+		(html) => {
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			editor
+				.chain()
+				.command(({ tr }) => {
+					tr.setMeta('addToHistory', false)
+					return true
+				})
+				.insertContentAt(editor.state.doc.content.size, html)
+				.run()
+		},
+		cases.map(({ html }) => `${html}<p>Between</p>`).join(''),
+	)
+	for (const { kind, ids, change, made, selected, undone } of cases) {
+		await change()
+		await settle(page)
+		expect.soft(await typesWithSettings(page, ids), kind).toEqual(made)
+		if (selected) expect.soft(await selectedPlace(page), `${kind}: selected`).toBe(selected)
+		if (!undone) continue
+		await page.keyboard.press('ControlOrMeta+z')
+		await settle(page)
+		expect.soft(await typesWithSettings(page, ids), `${kind}, undone`).toEqual(undone)
+	}
+
+	// An Alt-drag copy holds the very lines of the list copied: after a list button the cursor is
+	// still in the copy (dropBlocks, multiSelect.ts).
+	await insertAtEnd(
+		page,
+		'<ul id="kt-copied"><li><p>One</p></li><li><p>Two</p></li></ul><p id="kt-copy-under">Under</p>',
+	)
+	const copyAt = await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		let [list, under] = [-1, -1]
+		editor.state.doc.forEach((node, pos) => {
+			if (node.attrs.id === 'kt-copied') list = pos
+			if (node.attrs.id === 'kt-copy-under') under = pos + node.nodeSize
+		})
+		const copied = editor.state.doc.nodeAt(list)!
+		editor.view.dispatch(editor.state.tr.insert(under, copied))
+		// In the copy's second line, one letter in.
+		const at = under + 1 + copied.firstChild!.nodeSize + 3
+		editor.chain().focus().setTextSelection(at).run()
+		return editor.state.doc.resolve(at).index(0)
+	})
+	await pickInPath(page, onThePage)
+	await button('Task List').click()
+	await settle(page)
+	expect
+		.soft(
+			await page.evaluate(() => {
+				const { doc, selection } =
+					document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+				const { $head } = selection
+				return `${doc.child($head.index(0)).type.name} ${$head.index(0)}, "${$head.parent.textContent}" at ${$head.parentOffset}`
+			}),
+			'a copied list: the cursor after Task List',
+		)
+		.toBe(`taskList ${copyAt}, "Two" at 1`)
 })
 
 // Ids the author gives are theirs, even two the same: the validator, once built, warns of those

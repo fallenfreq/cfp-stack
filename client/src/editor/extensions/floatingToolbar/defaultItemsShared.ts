@@ -49,15 +49,6 @@ export const NODE_META: Record<string, { label: string; iconName: string }> = {
 	tableHeader: { label: 'Table Header', iconName: 'table_chart' },
 }
 
-// Lists whose items are a different node type can't be converted via the
-// canReplaceNodeType path because their item schemas don't validate each
-// other's content (bulletList/orderedList → listItem+, taskList → taskItem+).
-export const LIST_ITEM_MAP: Record<string, string> = {
-	bulletList: 'listItem',
-	orderedList: 'listItem',
-	taskList: 'taskItem',
-}
-
 // Mirrors FloatingToolbar's resolveActive() position logic — shared by all helpers below.
 export const resolveActivePos = (editor: Editor, ctx: ToolbarItemContext) => {
 	const { selection } = editor.state

@@ -20,7 +20,13 @@ packageExtensions:
 patchedDependencies:
     # TipTap's Enter gives the new block what carries over (`keepOnSplit`) only at the end of a
     # block (ueberdosis/tiptap#4591); the patch does it wherever Enter is pressed, and an empty
-    # nested item moved out a level keeps its own. Drop it once TipTap does that itself.
+    # nested item moved out a level keeps its own. Its commands that change a block's type
+    # (setNode, toggleNode, clearNodes, toggleList) and its typing shortcuts
+    # (textblockTypeInputRule) give the new block the type's defaults or the settings of the block
+    # around it; the patch keeps the block's own. Its list command also changes a list selected
+    # as a whole, leaves the lists inside it as they are, and doesn't join a list changing type
+    # with one beside it, nor lines made into a list with the list below. Drop each part once
+    # TipTap does that itself, or has an option for it.
     '@tiptap/core@3.32.0': patches/@tiptap__core@3.32.0.patch
     # A `#` entry reaches vue-router unnumbered, so steps across it land wrong (vuejs/router#1314);
     # the patch numbers it after the one before. Drop it once vue-router does that itself, or for

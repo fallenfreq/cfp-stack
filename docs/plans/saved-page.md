@@ -88,20 +88,13 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
     - A chosen picture pasted over stays chosen (`changedInPlace`), and no check covered it: one
       is added with this step. With blocks chosen the toolbar shows only the selection's tools,
       so the Corners control can't reach it.
-5. **Changing a block's kind keeps what the author set.** These take a block's id and class off:
-   Numbered List on a bullet list (TipTap's `toggleList`), Task List on a list (the app's
-   `switchListType`, `defaultItemsBlock.ts`), a heading made from more than one selected
-   paragraph (TipTap's `setNode`), a list made from a heading (TipTap's `clearNodes`), an item
-   taken out of a list, whose paragraph stays and the item's own go (Enter on an empty item;
-   Backspace and Shift-Tab to measure), `## ` or a code fence typed at a block's start (TipTap's
-   text shortcuts), and a heading's text pasted at the start of a paragraph, which makes the
-   paragraph the heading. Change Type keeps them with the cursor in the block. On a block
-   selected as a block, Change Type and the Heading and Code Block buttons give it the settings
-   of the block around it instead of its own (TipTap's `setNode` and `toggleNode` copy the
-   selection's parent's): a Card's class and style, and its id, which the id rule takes off.
-   Where it's fixed is found when the step is planned.
-    - Worse: Code Block deletes what a code block can't hold, so a span in the paragraph goes,
-      its text with it.
+5. **Changing a block's kind keeps what the author set.** A change that writes a block anew but
+   is meant to leave the same block, of another kind, keeps its id, class and style, and any
+   other setting its new kind has; only what the change is for is new. TipTap's commands gave the
+   new block the kind's defaults, or the settings of the block around the selection: the list
+   buttons and keys, Change Type, the Heading and Code Block buttons, `## ` and a code fence
+   typed, Backspace in an empty code block. An item taken out of a list goes, its settings with
+   it, as a quote's do with Unwrap; the line keeps its own.
 6. **Copying takes the code view's version.** The editor draws some built-in blocks with classes
    of its own, which aren't saved and don't show in the code view: lists `sf`, quotes
    `sf sf-depth-1`, code blocks `sf hljs`, to-do items `sl-split sf-gap-md`, tables
@@ -113,6 +106,8 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
       to-do list has no drawn tick boxes there.
     - `editor.spec.ts`, "a pasted to-do list has the blocks and text of the one copied", says the
       classes are kept on paste: it changes with this step.
+    - Until then, a list pasted from the page carries those classes to its new kind when its kind
+      changes (step 5 keeps them): a to-do list's items made bullet items show no bullets.
 7. **The code view refuses what the page can't keep.** Leaving the code view dropped without a
    word a paragraph's `title`, `lang`, `data-…` and `onclick`, and HTML comments (a link's
    `title` was kept). An unknown element is refused today; so is anything else the page can't
@@ -126,6 +121,14 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    replaces everything from the first chosen block to the end of the last
    (`defaultItemsMultiSelect.ts`, `wrapSiblingsInType`). What becomes of B is found when the step
    is planned.
+9. **Pasted text and the line it lands in.** A heading's text pasted at a line's start, or into an
+   empty line, makes the line a heading with the copied heading's class and style, and the line
+   loses its own: ProseMirror keeps a copied heading's kind on purpose. Text copied across two
+   lines and pasted at a line's start gives the line the copied line's settings, and it loses its
+   id. What pasted text keeps is found when the step is planned.
+10. **A span's text survives a change of kind.** Code Block, a code fence typed, and Backspace or
+    Delete into a code block delete a span with its text; bold and links keep their text.
+    ProseMirror clears what a code block can't hold (`clearIncompatible`).
 
 Later, the owner's call:
 
@@ -163,6 +166,16 @@ Later, the owner's call:
   block** (owner, 2026-10-19), so it's fixed where they move, not in the selection. Settings for
   every selected block, once built, may want both (`sf-system-todo.md`, "Settings for every
   selected block"); only moving them copied.
+- **A block changing kind keeps its settings; TipTap is upgraded first, then patched** (owner,
+  2026-10-21). TipTap 3.32.0 changes a list between bullet and to-do itself, which the app's own
+  code did for the toolbar only; the patch keeps the settings where its commands write the block.
+- **The toolbar's list tools change the list the node path points at** (owner, 2026-10-21), as its
+  other block tools act on their target; the keys and the slash menu change the list the cursor is
+  in. A list's button for its own kind takes every item out; a line in a list has its own Bullet,
+  Numbered and Task List buttons, which take its item out.
+- **A list changing kind stays apart from the lists beside it, and the lists in it stay as they
+  are** (owner, 2026-10-21): joined, one's settings would go. A numbered list then starts its own
+  numbers; the author can set where in the Attributes panel.
 
 ## Progress
 
@@ -240,5 +253,24 @@ Later, the owner's call:
   WebKit runs failed: timeouts that pass alone, and "undo in the code view undoes only the code",
   which fails without this step too. A WebKit bug found on the way, the page jumping to its top
   after a drag, was fixed next (`FloatingDragHandle.vue`).
+- **Step 5 done** (2026-10-21). TipTap went to 3.32.0 first (2f609f5): its list command changes a
+  list between bullet and to-do with every item. Before, the keys and the slash menu took the item
+  out into a new list, and in a nested list split the outer one in three; the app's own
+  `switchListType` did it for the toolbar only, and is gone. The patch
+  (`patches/@tiptap__core@3.32.0.patch`) keeps a block's settings in `setNode`, `toggleNode`,
+  `clearNodes`, `toggleList` and the typing shortcuts. `toggleList` also changes a list selected
+  as a whole (the buttons there kept only its first item in a list), leaves the lists in it as
+  they are (3.32.0 changed them too, and dropped their ticks), and joins no list changing kind;
+  lines made into a list join only the list above. The toolbar's list buttons and Change Type
+  change the list the node path points at (`changeTargetList`, `defaultItemsBlock.ts`), a line has
+  a Task List button, and a list's item type comes from TipTap (`LIST_ITEM_MAP` is gone). Measured
+  in Chrome; one check in `editor.spec.ts`, of 30 cases, each part of the patch and the toolbar
+  failing its own without it. The plan, the fixes the first code review led to, and the code were
+  reviewed by an agent five times in all; every finding checked. Unit tests pass (4 + 34); all 660
+  runs of the Playwright checks pass. Found, outside this step: pasting (now step 9), a span's text
+  (now step 10), a list pasted from the page carrying its drawn classes (step 6), the toolbar's
+  target with the page or a Card selected whole, and a chosen list leaving the choice
+  (`sf-system-todo.md`, "Editor"). Text selected from a list into the line after it, then the
+  line's list button, makes the line part of the list, as before.
 
-Next: step 5, in a session of its own.
+Next: step 6, in a session of its own.

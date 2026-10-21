@@ -1,8 +1,46 @@
 diff --git a/dist/index.cjs b/dist/index.cjs
-index 046d626d413aa7d710572e470c38807f3a4703be..042c8f8a7c8abe261eda9d84923507a7d77b9e7c 100644
+index 046d626d413aa7d710572e470c38807f3a4703be..d05202d73a6ce14b7352972a08cd81f88b5e8e0e 100644
 --- a/dist/index.cjs
 +++ b/dist/index.cjs
-@@ -2805,6 +2805,11 @@ const sinkListItem = (typeOrName) => ({ state, dispatch }) => {
+@@ -215,7 +215,9 @@ const clearNodes = () => ({ state, tr, dispatch }) => {
+ 			const targetLiftDepth = (0, _tiptap_pm_transform.liftTarget)(nodeRange);
+ 			if (node.type.isTextblock) {
+ 				const { defaultType } = $mappedFrom.parent.contentMatchAt($mappedFrom.index());
+-				tr.setNodeMarkup(nodeRange.start, defaultType);
++				// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the block keeps its own
++				// settings.
++				tr.setNodeMarkup(nodeRange.start, defaultType, node.attrs);
+ 			}
+ 			if (targetLiftDepth || targetLiftDepth === 0) tr.lift(nodeRange, targetLiftDepth);
+ 		});
+@@ -2736,11 +2738,23 @@ const setNode = (typeOrName, attributes = {}) => ({ state, dispatch, chain }) =>
+ 			...attributes
+ 		})(state)) return true;
+ 		return commands.clearNodes();
+-	}).command(({ state: updatedState }) => {
+-		return (0, _tiptap_pm_commands.setBlockType)(type, {
++	}).command(({ state: updatedState, tr }) => {
++		if (!(0, _tiptap_pm_commands.setBlockType)(type, {
+ 			...attributesToCopy,
+ 			...attributes
+-		})(updatedState, dispatch);
++		})(updatedState)) return false;
++		// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): each block keeps its own
++		// settings; TipTap gave every block those of the selection's parent: none for text across
++		// blocks, the surrounding block's for one selected as a whole. The check above is TipTap's
++		// own, so can() answers as before.
++		if (dispatch) {
++			for (const { $from, $to } of updatedState.selection.ranges) tr.setBlockType($from.pos, $to.pos, type, (node) => ({
++				...node.attrs,
++				...attributes
++			}));
++			tr.scrollIntoView();
++		}
++		return true;
+ 	}).run();
+ };
+ //#endregion
+@@ -2805,6 +2819,11 @@ const sinkListItem = (typeOrName) => ({ state, dispatch }) => {
  };
  //#endregion
  //#region src/commands/splitBlock.ts
@@ -14,7 +52,7 @@ index 046d626d413aa7d710572e470c38807f3a4703be..042c8f8a7c8abe261eda9d84923507a7
  function ensureMarks(state, splittableMarks) {
  	const marks = state.storedMarks || state.selection.$to.parentOffset && state.selection.$from.marks();
  	if (marks) {
-@@ -2821,40 +2826,59 @@ const splitBlock = ({ keepMarks = true } = {}) => ({ tr, state, dispatch, editor
+@@ -2821,40 +2840,59 @@ const splitBlock = ({ keepMarks = true } = {}) => ({ tr, state, dispatch, editor
  		if (!$from.parentOffset || !(0, _tiptap_pm_transform.canSplit)(doc, $from.pos)) return false;
  		if (dispatch) {
  			if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
@@ -86,7 +124,7 @@ index 046d626d413aa7d710572e470c38807f3a4703be..042c8f8a7c8abe261eda9d84923507a7
  			}
  		}
  		if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
-@@ -2880,12 +2904,20 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2880,12 +2918,20 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  			const depthBefore = $from.index(-1) ? 1 : $from.index(-2) ? 2 : 3;
  			for (let d = $from.depth - depthBefore; d >= $from.depth - 3; d -= 1) wrap = _tiptap_pm_model.Fragment.from($from.node(d).copy(wrap));
  			const depthAfter = $from.indexAfter(-1) < $from.node(-2).childCount ? 1 : $from.indexAfter(-2) < $from.node(-3).childCount ? 2 : 3;
@@ -109,7 +147,7 @@ index 046d626d413aa7d710572e470c38807f3a4703be..042c8f8a7c8abe261eda9d84923507a7
  			const start = $from.before($from.depth - (depthBefore - 1));
  			tr.replace(start, $from.after(-depthAfter), new _tiptap_pm_model.Slice(wrap, 4 - depthBefore, 0));
  			let sel = -1;
-@@ -2908,18 +2940,22 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2908,18 +2954,22 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  		...overrideAttrs
  	};
  	const splitsAtStartOfItem = $from.parentOffset === 0 && $from.index(-1) === 0;
@@ -137,7 +175,7 @@ index 046d626d413aa7d710572e470c38807f3a4703be..042c8f8a7c8abe261eda9d84923507a7
  	}];
  	if (!(0, _tiptap_pm_transform.canSplit)(tr.doc, $from.pos, 2)) return false;
  	if (dispatch) {
-@@ -2928,6 +2964,7 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2928,6 +2978,7 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  		const marks = storedMarks || selection.$to.parentOffset && selection.$from.marks();
  		tr.split($from.pos, 2, types).scrollIntoView();
  		if (splitsAtStartOfItem) tr.setNodeMarkup(itemStart, void 0, newTypeAttributes);
@@ -145,11 +183,200 @@ index 046d626d413aa7d710572e470c38807f3a4703be..042c8f8a7c8abe261eda9d84923507a7
  		if (!marks || !dispatch) return true;
  		const filteredMarks = marks.filter((mark) => splittableMarks.includes(mark.type.name));
  		tr.ensureMarks(filteredMarks);
+@@ -2950,9 +3001,10 @@ function createNode(type, content, attrs) {
+ /** Converts and appends the content accumulated for the current list item. */
+ function flushPendingContent(state, itemType) {
+ 	if (state.pendingContent.length === 0) return true;
+-	const item = createNode(itemType, _tiptap_pm_model.Fragment.from(state.pendingContent));
++	const item = createNode(itemType, _tiptap_pm_model.Fragment.from(state.pendingContent), state.attrs);
+ 	if (!item) return false;
+ 	state.items.push(item);
++	state.attrs = null;
+ 	state.pendingContent = [];
+ 	return true;
+ }
+@@ -2972,6 +3024,12 @@ function appendContentNode(node, state, itemType) {
+ //#region src/commands/utils/appendNestedList.ts
+ /** Preserves a nested list when supported or flattens its converted items. */
+ function appendNestedList(sourceList, state, context, convertListItems) {
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): a list inside an item stays as it is
++	// when the new item can hold it; only the list changed changes.
++	if (context.itemType.validContent(_tiptap_pm_model.Fragment.from([...state.pendingContent, sourceList]))) {
++		state.pendingContent.push(sourceList);
++		return true;
++	}
+ 	const nestedItems = convertListItems(sourceList, context);
+ 	if (!nestedItems) return false;
+ 	const nestedList = createNode(context.listType, _tiptap_pm_model.Fragment.from(nestedItems), sourceList.attrs);
+@@ -2988,9 +3046,12 @@ function appendNestedList(sourceList, state, context, convertListItems) {
+ //#region src/commands/utils/convertListItem.ts
+ /** Converts one source list item into one or more target list items. */
+ function convertListItem(sourceItem, context, convertListItems) {
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the item made first keeps the item's
++	// settings, its id too, so an item made in two has it once.
+ 	const state = {
+ 		items: [],
+-		pendingContent: []
++		pendingContent: [],
++		attrs: sourceItem.attrs
+ 	};
+ 	for (let index = 0; index < sourceItem.childCount; index += 1) {
+ 		const child = sourceItem.child(index);
+@@ -3076,6 +3137,17 @@ const toggleList = (listTypeOrName, itemTypeOrName, keepMarks, attributes = {})
+ 	const { $from, $to } = selection;
+ 	const range = $from.blockRange($to);
+ 	const marks = storedMarks || selection.$to.parentOffset && selection.$from.marks();
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): a list selected as a whole changes
++	// as it does with all its text selected, then is selected again; changed to its own kind, no
++	// list stays, and its text stays selected.
++	if (selection instanceof _tiptap_pm_state.NodeSelection && isList(selection.node.type.name, extensions)) return chain().command(({ tr: trx }) => {
++		trx.setSelection(_tiptap_pm_state.TextSelection.between(trx.doc.resolve(selection.from + 1), trx.doc.resolve(selection.to - 1)));
++		return true;
++	}).toggleList(listType, itemType, keepMarks, attributes).command(({ tr: trx }) => {
++		const list = trx.doc.nodeAt(selection.from);
++		if (list && isList(list.type.name, extensions)) trx.setSelection(_tiptap_pm_state.NodeSelection.create(trx.doc, selection.from));
++		return true;
++	}).run();
+ 	if (!range) return false;
+ 	const parentList = findParentNode((node) => isList(node.type.name, extensions))(selection);
+ 	const isAllSelection = selection.from === 0 && selection.to === state.doc.content.size;
+@@ -3101,9 +3173,16 @@ const toggleList = (listTypeOrName, itemTypeOrName, keepMarks, attributes = {})
+ 			return commands.liftListItem(itemType);
+ 		}
+ 		if (isList(currentList.node.type.name, extensions) && listType.validContent(currentList.node.content)) return chain().command(() => {
+-			tr.setNodeMarkup(currentList.pos, listType);
++			// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the list keeps its own
++			// settings.
++			tr.setNodeMarkup(currentList.pos, listType, {
++				...currentList.node.attrs,
++				...attributes
++			});
+ 			return true;
+-		}).command(() => joinListBackwards(tr, listType)).command(() => joinListForwards(tr, listType)).run();
++		// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): a list changing type doesn't
++		// join a list beside it, whose settings, or its own, would go.
++		}).run();
+ 		if (isList(currentList.node.type.name, extensions)) {
+ 			var _currentList$node$fir;
+ 			const currentItemType = (_currentList$node$fir = currentList.node.firstChild) === null || _currentList$node$fir === void 0 ? void 0 : _currentList$node$fir.type;
+@@ -3123,7 +3202,12 @@ const toggleList = (listTypeOrName, itemTypeOrName, keepMarks, attributes = {})
+ 					const headOffset = $head.parentOffset;
+ 					let newList;
+ 					try {
+-						newList = listType.create(attributes, convertedContent);
++						// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the list keeps
++						// its own settings.
++						newList = listType.create({
++							...currentList.node.attrs,
++							...attributes
++						}, convertedContent);
+ 					} catch {
+ 						return false;
+ 					}
+@@ -3138,21 +3222,25 @@ const toggleList = (listTypeOrName, itemTypeOrName, keepMarks, attributes = {})
+ 						}
+ 					}
+ 					return true;
+-				}).command(() => joinListBackwards(tr, listType)).command(() => joinListForwards(tr, listType)).run();
++				// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): a list changing type
++				// doesn't join a list beside it, whose settings, or its own, would go.
++				}).run();
+ 			}
+ 		}
+ 	}
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): lines made into a list join the list
++	// above them, as the `- ` shortcut does, not the one below, whose settings would go.
+ 	if (!keepMarks || !marks || !dispatch) return chain().command(() => {
+ 		if (can().wrapInList(listType, attributes)) return true;
+ 		return commands.clearNodes();
+-	}).wrapInList(listType, attributes).command(() => joinListBackwards(tr, listType)).command(() => joinListForwards(tr, listType)).run();
++	}).wrapInList(listType, attributes).command(() => joinListBackwards(tr, listType)).run();
+ 	return chain().command(() => {
+ 		const canWrapInList = can().wrapInList(listType, attributes);
+ 		const filteredMarks = marks.filter((mark) => splittableMarks.includes(mark.type.name));
+ 		tr.ensureMarks(filteredMarks);
+ 		if (canWrapInList) return true;
+ 		return commands.clearNodes();
+-	}).wrapInList(listType, attributes).command(() => joinListBackwards(tr, listType)).command(() => joinListForwards(tr, listType)).run();
++	}).wrapInList(listType, attributes).command(() => joinListBackwards(tr, listType)).run();
+ };
+ //#endregion
+ //#region src/commands/toggleMark.ts
+@@ -3168,13 +3256,10 @@ const toggleNode = (typeOrName, toggleTypeOrName, attributes = {}) => ({ state,
+ 	const type = getNodeType(typeOrName, state.schema);
+ 	const toggleType = getNodeType(toggleTypeOrName, state.schema);
+ 	const isActive = isNodeActive(state, type, attributes);
+-	let attributesToCopy;
+-	if (state.selection.$anchor.sameParent(state.selection.$head)) attributesToCopy = state.selection.$anchor.parent.attrs;
+-	if (isActive) return commands.setNode(toggleType, attributesToCopy);
+-	return commands.setNode(type, {
+-		...attributesToCopy,
+-		...attributes
+-	});
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): setNode keeps each block's own
++	// settings.
++	if (isActive) return commands.setNode(toggleType);
++	return commands.setNode(type, attributes);
+ };
+ //#endregion
+ //#region src/commands/toggleWrap.ts
+@@ -7353,7 +7438,12 @@ function textblockTypeInputRule(config) {
+ 			const $start = state.doc.resolve(range.from);
+ 			const attributes = callOrReturn(config.getAttributes, void 0, match) || {};
+ 			if (!$start.node(-1).canReplaceWith($start.index(-1), $start.indexAfter(-1), config.type)) return null;
+-			state.tr.delete(range.from, range.to).setBlockType(range.from, range.from, config.type, attributes);
++			// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the block keeps its own
++			// settings.
++			state.tr.delete(range.from, range.to).setBlockType(range.from, range.from, config.type, (node) => ({
++				...node.attrs,
++				...attributes
++			}));
+ 		},
+ 		undoable: config.undoable
+ 	});
 diff --git a/dist/index.js b/dist/index.js
-index c39cdd1f3be6bd4e757248bae19c245da06a626c..21fb5b2d5aa87f520583fd0a7437c80881cce5ca 100644
+index c39cdd1f3be6bd4e757248bae19c245da06a626c..77d6b95652edf19f4d1c0566f200cf5b79a70e22 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -2793,6 +2793,11 @@ const sinkListItem$1 = (typeOrName) => ({ state, dispatch }) => {
+@@ -203,7 +203,9 @@ const clearNodes = () => ({ state, tr, dispatch }) => {
+ 			const targetLiftDepth = liftTarget(nodeRange);
+ 			if (node.type.isTextblock) {
+ 				const { defaultType } = $mappedFrom.parent.contentMatchAt($mappedFrom.index());
+-				tr.setNodeMarkup(nodeRange.start, defaultType);
++				// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the block keeps its own
++				// settings.
++				tr.setNodeMarkup(nodeRange.start, defaultType, node.attrs);
+ 			}
+ 			if (targetLiftDepth || targetLiftDepth === 0) tr.lift(nodeRange, targetLiftDepth);
+ 		});
+@@ -2724,11 +2726,23 @@ const setNode = (typeOrName, attributes = {}) => ({ state, dispatch, chain }) =>
+ 			...attributes
+ 		})(state)) return true;
+ 		return commands.clearNodes();
+-	}).command(({ state: updatedState }) => {
+-		return setBlockType(type, {
++	}).command(({ state: updatedState, tr }) => {
++		if (!setBlockType(type, {
+ 			...attributesToCopy,
+ 			...attributes
+-		})(updatedState, dispatch);
++		})(updatedState)) return false;
++		// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): each block keeps its own
++		// settings; TipTap gave every block those of the selection's parent: none for text across
++		// blocks, the surrounding block's for one selected as a whole. The check above is TipTap's
++		// own, so can() answers as before.
++		if (dispatch) {
++			for (const { $from, $to } of updatedState.selection.ranges) tr.setBlockType($from.pos, $to.pos, type, (node) => ({
++				...node.attrs,
++				...attributes
++			}));
++			tr.scrollIntoView();
++		}
++		return true;
+ 	}).run();
+ };
+ //#endregion
+@@ -2793,6 +2807,11 @@ const sinkListItem$1 = (typeOrName) => ({ state, dispatch }) => {
  };
  //#endregion
  //#region src/commands/splitBlock.ts
@@ -161,7 +388,7 @@ index c39cdd1f3be6bd4e757248bae19c245da06a626c..21fb5b2d5aa87f520583fd0a7437c808
  function ensureMarks(state, splittableMarks) {
  	const marks = state.storedMarks || state.selection.$to.parentOffset && state.selection.$from.marks();
  	if (marks) {
-@@ -2809,40 +2814,59 @@ const splitBlock = ({ keepMarks = true } = {}) => ({ tr, state, dispatch, editor
+@@ -2809,40 +2828,59 @@ const splitBlock = ({ keepMarks = true } = {}) => ({ tr, state, dispatch, editor
  		if (!$from.parentOffset || !canSplit(doc, $from.pos)) return false;
  		if (dispatch) {
  			if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
@@ -233,7 +460,7 @@ index c39cdd1f3be6bd4e757248bae19c245da06a626c..21fb5b2d5aa87f520583fd0a7437c808
  			}
  		}
  		if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
-@@ -2868,12 +2892,20 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2868,12 +2906,20 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  			const depthBefore = $from.index(-1) ? 1 : $from.index(-2) ? 2 : 3;
  			for (let d = $from.depth - depthBefore; d >= $from.depth - 3; d -= 1) wrap = Fragment$1.from($from.node(d).copy(wrap));
  			const depthAfter = $from.indexAfter(-1) < $from.node(-2).childCount ? 1 : $from.indexAfter(-2) < $from.node(-3).childCount ? 2 : 3;
@@ -256,7 +483,7 @@ index c39cdd1f3be6bd4e757248bae19c245da06a626c..21fb5b2d5aa87f520583fd0a7437c808
  			const start = $from.before($from.depth - (depthBefore - 1));
  			tr.replace(start, $from.after(-depthAfter), new Slice(wrap, 4 - depthBefore, 0));
  			let sel = -1;
-@@ -2896,18 +2928,22 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2896,18 +2942,22 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  		...overrideAttrs
  	};
  	const splitsAtStartOfItem = $from.parentOffset === 0 && $from.index(-1) === 0;
@@ -284,7 +511,7 @@ index c39cdd1f3be6bd4e757248bae19c245da06a626c..21fb5b2d5aa87f520583fd0a7437c808
  	}];
  	if (!canSplit(tr.doc, $from.pos, 2)) return false;
  	if (dispatch) {
-@@ -2916,6 +2952,7 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2916,6 +2966,7 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  		const marks = storedMarks || selection.$to.parentOffset && selection.$from.marks();
  		tr.split($from.pos, 2, types).scrollIntoView();
  		if (splitsAtStartOfItem) tr.setNodeMarkup(itemStart, void 0, newTypeAttributes);
@@ -292,3 +519,154 @@ index c39cdd1f3be6bd4e757248bae19c245da06a626c..21fb5b2d5aa87f520583fd0a7437c808
  		if (!marks || !dispatch) return true;
  		const filteredMarks = marks.filter((mark) => splittableMarks.includes(mark.type.name));
  		tr.ensureMarks(filteredMarks);
+@@ -2938,9 +2989,10 @@ function createNode(type, content, attrs) {
+ /** Converts and appends the content accumulated for the current list item. */
+ function flushPendingContent(state, itemType) {
+ 	if (state.pendingContent.length === 0) return true;
+-	const item = createNode(itemType, Fragment$1.from(state.pendingContent));
++	const item = createNode(itemType, Fragment$1.from(state.pendingContent), state.attrs);
+ 	if (!item) return false;
+ 	state.items.push(item);
++	state.attrs = null;
+ 	state.pendingContent = [];
+ 	return true;
+ }
+@@ -2960,6 +3012,12 @@ function appendContentNode(node, state, itemType) {
+ //#region src/commands/utils/appendNestedList.ts
+ /** Preserves a nested list when supported or flattens its converted items. */
+ function appendNestedList(sourceList, state, context, convertListItems) {
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): a list inside an item stays as it is
++	// when the new item can hold it; only the list changed changes.
++	if (context.itemType.validContent(Fragment$1.from([...state.pendingContent, sourceList]))) {
++		state.pendingContent.push(sourceList);
++		return true;
++	}
+ 	const nestedItems = convertListItems(sourceList, context);
+ 	if (!nestedItems) return false;
+ 	const nestedList = createNode(context.listType, Fragment$1.from(nestedItems), sourceList.attrs);
+@@ -2976,9 +3034,12 @@ function appendNestedList(sourceList, state, context, convertListItems) {
+ //#region src/commands/utils/convertListItem.ts
+ /** Converts one source list item into one or more target list items. */
+ function convertListItem(sourceItem, context, convertListItems) {
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the item made first keeps the item's
++	// settings, its id too, so an item made in two has it once.
+ 	const state = {
+ 		items: [],
+-		pendingContent: []
++		pendingContent: [],
++		attrs: sourceItem.attrs
+ 	};
+ 	for (let index = 0; index < sourceItem.childCount; index += 1) {
+ 		const child = sourceItem.child(index);
+@@ -3064,6 +3125,17 @@ const toggleList = (listTypeOrName, itemTypeOrName, keepMarks, attributes = {})
+ 	const { $from, $to } = selection;
+ 	const range = $from.blockRange($to);
+ 	const marks = storedMarks || selection.$to.parentOffset && selection.$from.marks();
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): a list selected as a whole changes
++	// as it does with all its text selected, then is selected again; changed to its own kind, no
++	// list stays, and its text stays selected.
++	if (selection instanceof NodeSelection && isList(selection.node.type.name, extensions)) return chain().command(({ tr: trx }) => {
++		trx.setSelection(TextSelection.between(trx.doc.resolve(selection.from + 1), trx.doc.resolve(selection.to - 1)));
++		return true;
++	}).toggleList(listType, itemType, keepMarks, attributes).command(({ tr: trx }) => {
++		const list = trx.doc.nodeAt(selection.from);
++		if (list && isList(list.type.name, extensions)) trx.setSelection(NodeSelection.create(trx.doc, selection.from));
++		return true;
++	}).run();
+ 	if (!range) return false;
+ 	const parentList = findParentNode((node) => isList(node.type.name, extensions))(selection);
+ 	const isAllSelection = selection.from === 0 && selection.to === state.doc.content.size;
+@@ -3089,9 +3161,16 @@ const toggleList = (listTypeOrName, itemTypeOrName, keepMarks, attributes = {})
+ 			return commands.liftListItem(itemType);
+ 		}
+ 		if (isList(currentList.node.type.name, extensions) && listType.validContent(currentList.node.content)) return chain().command(() => {
+-			tr.setNodeMarkup(currentList.pos, listType);
++			// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the list keeps its own
++			// settings.
++			tr.setNodeMarkup(currentList.pos, listType, {
++				...currentList.node.attrs,
++				...attributes
++			});
+ 			return true;
+-		}).command(() => joinListBackwards(tr, listType)).command(() => joinListForwards(tr, listType)).run();
++		// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): a list changing type doesn't
++		// join a list beside it, whose settings, or its own, would go.
++		}).run();
+ 		if (isList(currentList.node.type.name, extensions)) {
+ 			var _currentList$node$fir;
+ 			const currentItemType = (_currentList$node$fir = currentList.node.firstChild) === null || _currentList$node$fir === void 0 ? void 0 : _currentList$node$fir.type;
+@@ -3111,7 +3190,12 @@ const toggleList = (listTypeOrName, itemTypeOrName, keepMarks, attributes = {})
+ 					const headOffset = $head.parentOffset;
+ 					let newList;
+ 					try {
+-						newList = listType.create(attributes, convertedContent);
++						// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the list keeps
++						// its own settings.
++						newList = listType.create({
++							...currentList.node.attrs,
++							...attributes
++						}, convertedContent);
+ 					} catch {
+ 						return false;
+ 					}
+@@ -3126,21 +3210,25 @@ const toggleList = (listTypeOrName, itemTypeOrName, keepMarks, attributes = {})
+ 						}
+ 					}
+ 					return true;
+-				}).command(() => joinListBackwards(tr, listType)).command(() => joinListForwards(tr, listType)).run();
++				// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): a list changing type
++				// doesn't join a list beside it, whose settings, or its own, would go.
++				}).run();
+ 			}
+ 		}
+ 	}
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): lines made into a list join the list
++	// above them, as the `- ` shortcut does, not the one below, whose settings would go.
+ 	if (!keepMarks || !marks || !dispatch) return chain().command(() => {
+ 		if (can().wrapInList(listType, attributes)) return true;
+ 		return commands.clearNodes();
+-	}).wrapInList(listType, attributes).command(() => joinListBackwards(tr, listType)).command(() => joinListForwards(tr, listType)).run();
++	}).wrapInList(listType, attributes).command(() => joinListBackwards(tr, listType)).run();
+ 	return chain().command(() => {
+ 		const canWrapInList = can().wrapInList(listType, attributes);
+ 		const filteredMarks = marks.filter((mark) => splittableMarks.includes(mark.type.name));
+ 		tr.ensureMarks(filteredMarks);
+ 		if (canWrapInList) return true;
+ 		return commands.clearNodes();
+-	}).wrapInList(listType, attributes).command(() => joinListBackwards(tr, listType)).command(() => joinListForwards(tr, listType)).run();
++	}).wrapInList(listType, attributes).command(() => joinListBackwards(tr, listType)).run();
+ };
+ //#endregion
+ //#region src/commands/toggleMark.ts
+@@ -3156,13 +3244,10 @@ const toggleNode = (typeOrName, toggleTypeOrName, attributes = {}) => ({ state,
+ 	const type = getNodeType(typeOrName, state.schema);
+ 	const toggleType = getNodeType(toggleTypeOrName, state.schema);
+ 	const isActive = isNodeActive(state, type, attributes);
+-	let attributesToCopy;
+-	if (state.selection.$anchor.sameParent(state.selection.$head)) attributesToCopy = state.selection.$anchor.parent.attrs;
+-	if (isActive) return commands.setNode(toggleType, attributesToCopy);
+-	return commands.setNode(type, {
+-		...attributesToCopy,
+-		...attributes
+-	});
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): setNode keeps each block's own
++	// settings.
++	if (isActive) return commands.setNode(toggleType);
++	return commands.setNode(type, attributes);
+ };
+ //#endregion
+ //#region src/commands/toggleWrap.ts
+@@ -7341,7 +7426,12 @@ function textblockTypeInputRule(config) {
+ 			const $start = state.doc.resolve(range.from);
+ 			const attributes = callOrReturn(config.getAttributes, void 0, match) || {};
+ 			if (!$start.node(-1).canReplaceWith($start.index(-1), $start.indexAfter(-1), config.type)) return null;
+-			state.tr.delete(range.from, range.to).setBlockType(range.from, range.from, config.type, attributes);
++			// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the block keeps its own
++			// settings.
++			state.tr.delete(range.from, range.to).setBlockType(range.from, range.from, config.type, (node) => ({
++				...node.attrs,
++				...attributes
++			}));
+ 		},
+ 		undoable: config.undoable
+ 	});

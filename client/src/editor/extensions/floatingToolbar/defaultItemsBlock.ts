@@ -4,7 +4,8 @@ import ToolbarNodePicker, {
 import { type Lowlight } from '@/config/editor/lowlight'
 import { getExtensionOptions, languageName, prettifySelectedCode } from '@/utils/editor/editorUtils'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
-import { Fragment } from '@tiptap/pm/model'
+import type { BulletListOptions, OrderedListOptions, TaskListOptions } from '@tiptap/extension-list'
+import { Fragment, type ResolvedPos } from '@tiptap/pm/model'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
 import {
@@ -17,54 +18,12 @@ import {
 	isListNode,
 	isParagraphOrHeading,
 	isTextblock,
-	LIST_ITEM_MAP,
 	NODE_META,
 	replaceNodeType,
 	resolveActivePos,
 } from './defaultItemsShared'
 import { toolbarButtonItem, toolbarCustomItem } from './toolbarItemFactory'
 import type { ToolbarItemContext } from './types'
-
-// TipTap's toggleList fast-path uses setNodeMarkup when validContent passes — this only works
-// when both lists share the same item type (listItem for bullet/ordered). For taskList the item
-// type is taskItem, so the check fails and the fallback doesn't convert item types either.
-// This function rewrites each item node to the target type via a direct transaction.
-const switchListType = (
-	editor: Editor,
-	ctx: ToolbarItemContext,
-	targetListTypeName: string,
-	targetItemTypeName: string,
-) => {
-	const { state, view } = editor
-	const { schema } = state
-	const targetListType = schema.nodes[targetListTypeName]
-	const targetItemType = schema.nodes[targetItemTypeName]
-	if (!targetListType || !targetItemType) return
-
-	const { $pos, depth } = resolveActivePos(editor, ctx)
-	if (depth === 0) return
-	const listNode = $pos.node(depth)
-	const listPos = $pos.before(depth)
-
-	const newItems: ReturnType<typeof targetItemType.create>[] = []
-	listNode.forEach((item) => {
-		newItems.push(
-			targetItemType.create(
-				targetItemTypeName === 'taskItem' ? { checked: false } : {},
-				item.content,
-			),
-		)
-	})
-
-	const cursorOffset = state.selection.from - listPos
-	const tr = state.tr.replaceWith(
-		listPos,
-		listPos + listNode.nodeSize,
-		targetListType.create({}, newItems),
-	)
-	tr.setSelection(TextSelection.near(tr.doc.resolve(listPos + cursorOffset)))
-	view.dispatch(tr)
-}
 
 // Same pattern as canReplaceNodeType but for wrapping: parent accepts wrapType and
 // wrapType accepts the active node as its sole child.
@@ -99,9 +58,51 @@ const wrapNodeInType = (editor: Editor, ctx: ToolbarItemContext, typeName: strin
 	)
 }
 
+// The type of item a list holds, as its TipTap extension has it; undefined for any other block.
+const listItemType = (editor: Editor, typeName: string) =>
+	getExtensionOptions<Partial<BulletListOptions | OrderedListOptions | TaskListOptions>>(
+		editor,
+		typeName,
+	)?.itemTypeName
+
+// The list's buttons and Change Type change the list the toolbar is on, the node path's target,
+// as its other block tools do; the keys change the list the cursor is in. TipTap's list command
+// acts on the selection, so the list is selected as a whole for it
+// (patches/@tiptap__core@3.32.0.patch), then a cursor or text selection is put back: where the
+// command wrote the list anew, its items one for one, the text is where it was. Any other
+// selection ends with the list selected.
+const changeTargetList = (editor: Editor, ctx: ToolbarItemContext, typeName: string) => {
+	const at = ctx.nodePos
+	const list = at === null ? null : editor.state.doc.nodeAt(at)
+	const itemType = listItemType(editor, typeName)
+	if (at === null || !list || !listItemType(editor, list.type.name) || !itemType) return
+	const { selection } = editor.state
+	editor
+		.chain()
+		.focus()
+		.setNodeSelection(at)
+		.toggleList(typeName, itemType)
+		.command(({ tr }) => {
+			if (!(selection instanceof TextSelection)) return true
+			const back = ({ pos, parent }: ResolvedPos) => {
+				const mapped = tr.mapping.mapResult(pos)
+				if (!mapped.deleted) return mapped.pos
+				return pos <= tr.doc.content.size && tr.doc.resolve(pos).parent === parent
+					? pos
+					: null
+			}
+			const anchor = back(selection.$anchor)
+			const head = back(selection.$head)
+			if (anchor !== null && head !== null)
+				tr.setSelection(TextSelection.create(tr.doc, anchor, head))
+			return true
+		})
+		.run()
+}
+
 const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem[] => {
 	const items: NodePickerItem[] = []
-	const sourceItemType = LIST_ITEM_MAP[ctx.activeNode.type.name]
+	const sourceItemType = listItemType(editor, ctx.activeNode.type.name)
 	for (const { typeName, type, attrs, label, iconName } of blockNodeEntries(editor)) {
 		const hasAttrs = Object.keys(attrs).length > 0
 		// setNode is cursor-based — only use it when the active node IS the textblock
@@ -112,22 +113,22 @@ const getTurnIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerIt
 			ctx.activeNode.type.isTextblock
 			&& type.isTextblock
 			&& editor.can().setNode(typeName, attrs)
-		const canReplace = !canSet && canReplaceNodeType(editor, ctx, typeName, attrs)
-		// Cross-item-type list switch (taskList ↔ bulletList/orderedList) — needs
-		// switchListType because canReplaceNodeType's validContent check rejects
-		// converting between listItem+ and taskItem+ content.
-		const targetItemType = LIST_ITEM_MAP[typeName]
-		const isListSwitch =
-			!hasAttrs && !!sourceItemType && !!targetItemType && sourceItemType !== targetItemType
-		if (!canSet && !canReplace && !isListSwitch) continue
+		// A list to another list, as the list's buttons do.
+		const isListChange =
+			!!sourceItemType
+			&& !!listItemType(editor, typeName)
+			&& typeName !== ctx.activeNode.type.name
+		const canReplace =
+			!canSet && !isListChange && canReplaceNodeType(editor, ctx, typeName, attrs)
+		if (!canSet && !canReplace && !isListChange) continue
 		items.push({
 			label,
 			iconName,
 			active: hasAttrs ? editor.isActive(typeName, attrs) : editor.isActive(typeName),
 			action: () => {
 				if (canSet) editor.chain().focus().setNode(typeName, attrs).run()
+				else if (isListChange) changeTargetList(editor, ctx, typeName)
 				else if (canReplace) replaceNodeType(editor, ctx, typeName, attrs)
-				else if (isListSwitch) switchListType(editor, ctx, typeName, targetItemType!)
 			},
 		})
 	}
@@ -354,6 +355,20 @@ export const blockItems = [
 		},
 		action: (editor) => editor.chain().focus().toggleOrderedList().run(),
 	}),
+	toolbarButtonItem({
+		id: 'task-list',
+		tooltip: 'Task List',
+		label: icon('checklist'),
+		show: isParagraphOrHeading,
+		active: (editor, ctx) => {
+			const { $pos, depth } = resolveActivePos(editor, ctx)
+			return (
+				(depth > 0 && $pos.node(depth - 1).type.name === 'taskList')
+				|| (depth > 1 && $pos.node(depth - 2).type.name === 'taskList')
+			)
+		},
+		action: (editor) => editor.chain().focus().toggleTaskList().run(),
+	}),
 
 	// --- Insert / Turn into / Wrap in / Unwrap / Delete ---
 	toolbarCustomItem(
@@ -442,10 +457,7 @@ export const blockItems = [
 		label: icon('format_list_bulleted'),
 		show: isListNode,
 		active: (_editor, ctx) => ctx.activeNode.type.name === 'bulletList',
-		action: (editor, ctx) =>
-			ctx.activeNode.type.name === 'taskList'
-				? switchListType(editor, ctx, 'bulletList', 'listItem')
-				: editor.chain().focus().toggleBulletList().run(),
+		action: (editor, ctx) => changeTargetList(editor, ctx, 'bulletList'),
 	}),
 	toolbarButtonItem({
 		id: 'list-ordered',
@@ -453,10 +465,7 @@ export const blockItems = [
 		label: icon('format_list_numbered'),
 		show: isListNode,
 		active: (_editor, ctx) => ctx.activeNode.type.name === 'orderedList',
-		action: (editor, ctx) =>
-			ctx.activeNode.type.name === 'taskList'
-				? switchListType(editor, ctx, 'orderedList', 'listItem')
-				: editor.chain().focus().toggleOrderedList().run(),
+		action: (editor, ctx) => changeTargetList(editor, ctx, 'orderedList'),
 	}),
 	toolbarButtonItem({
 		id: 'list-task',
@@ -464,10 +473,7 @@ export const blockItems = [
 		label: icon('checklist'),
 		show: isListNode,
 		active: (_editor, ctx) => ctx.activeNode.type.name === 'taskList',
-		action: (editor, ctx) =>
-			ctx.activeNode.type.name !== 'taskList'
-				? switchListType(editor, ctx, 'taskList', 'taskItem')
-				: editor.chain().focus().toggleTaskList().run(),
+		action: (editor, ctx) => changeTargetList(editor, ctx, 'taskList'),
 	}),
 
 	// --- Table controls ---
