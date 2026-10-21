@@ -1,6 +1,7 @@
-import { findBlockAtCoords, type NodePos } from '@/utils/editor/editorUtils'
+import { dropBlocks } from '@/editor/extensions/multiSelect'
+import { type NodePos } from '@/utils/editor/editorUtils'
 import type { Node as ProseMirrorNode, Slice } from '@tiptap/pm/model'
-import { NodeSelection, Plugin, TextSelection } from '@tiptap/pm/state'
+import { NodeSelection, Plugin } from '@tiptap/pm/state'
 import { dropPoint } from '@tiptap/pm/transform'
 import { type EditorView } from '@tiptap/pm/view'
 import { Extension } from '@tiptap/vue-3'
@@ -28,10 +29,9 @@ interface DragHandleOptions {
 	) => { slice: Slice; move: boolean } | null
 	setHoverPos: (pos: number) => void
 	onHoverLost: () => void
-	// Fired from the plugin's handleDrop, before PM dispatches the drop
-	// transaction.  Depth is computed from the drop coordinates via the same
-	// dropPoint utility PM uses internally — wire this to setActiveDepth so the
-	// toolbar follows the dragged node when its depth changes on drop.
+	// Fired from the plugin's handleDrop, before the drop transaction is
+	// dispatched, with the dropped block's depth — wire this to setActiveDepth so
+	// the toolbar follows the dragged node when its depth changes on drop.
 	onDrop: (depth: number) => void
 	// Called from the single-drag branch of handleDrop, BEFORE dispatch.  Wires
 	// to clearing isDragging/frozenTargetPos so the handle doesn't render with
@@ -216,10 +216,10 @@ const DragHandle = Extension.create<DragHandleOptions>({
 					// Two-branch drop handler.
 					//
 					// Branch 1 — pendingDrag set (drag started from our unified handle):
-					//   we own the entire drop.  Resolve target via findBlockAtCoords,
-					//   delete source, insert slice, set the new selection on the dropped
-					//   node so the toolbar follows it.  PM selection was never mutated
-					//   during the drag, so toolbar items couldn't shrink mid-drag.
+					//   we own the entire drop (dropBlocks, multiSelect.ts, as for several
+					//   blocks): the block goes where it fits and is selected so the toolbar
+					//   follows it.  PM selection was never mutated during the drag, so
+					//   toolbar items couldn't shrink mid-drag.
 					//
 					// Branch 2 — no pendingDrag (external drop, paste, etc.):
 					//   non-consuming observer.  Compute the dropped node's new depth from
@@ -228,53 +228,15 @@ const DragHandle = Extension.create<DragHandleOptions>({
 					//   FloatingToolbar's transaction listener.
 					handleDrop(view, event, slice) {
 						if (pendingDrag) {
-							const source = pendingDrag.pos
+							const source = pendingDrag.pos as NodePos
 							pendingDrag = null
-
-							const doc = view.state.doc
-							const sourceNode = doc.nodeAt(source)
-							const target = findBlockAtCoords(view, event)
-							// Reject drop-on-self AND drop-inside-self (e.g. dragging a list
-							// and dropping inside one of its children).  Without this guard,
-							// the delete would collapse the target position into source's gap
-							// and the subsequent insert/selection would land in undefined territory.
-							if (
-								!target
-								|| !sourceNode
-								|| (target.pos >= source
-									&& target.pos < source + sourceNode.nodeSize)
-							) {
-								view.dragging = null
-								options.onSingleDropConsumed?.()
-								return true
-							}
-
-							const move = view.dragging?.move ?? true
-							let tr = view.state.tr
-							if (move) {
-								tr = tr.delete(source, source + sourceNode.nodeSize)
-							}
-							const insertAt = target.insertBefore
-								? tr.mapping.map(target.pos)
-								: tr.mapping.map(target.pos + target.node.nodeSize)
-							tr = tr.insert(insertAt, sourceNode)
-
-							const inserted = tr.doc.nodeAt(insertAt)
-							if (inserted) {
-								const newSelection =
-									inserted.type.spec.selectable === false
-										? TextSelection.create(
-												tr.doc,
-												insertAt,
-												insertAt + inserted.nodeSize,
-											)
-										: NodeSelection.create(tr.doc, insertAt)
-								tr = tr.setSelection(newSelection)
-							}
-
-							const $insert = tr.doc.resolve(insertAt)
-							const newDepth = $insert.depth + 1
-							if (newDepth > 0) options.onDrop(newDepth)
+							const tr = dropBlocks(
+								view,
+								event,
+								[source],
+								view.dragging?.move === false,
+							)
+							if (tr) options.onDrop(tr.selection.$from.depth + 1)
 
 							// Clear drag state BEFORE dispatch so the handle, which repositions on
 							// every transaction (FloatingDragHandle.vue), sees isDragging=false and
@@ -282,7 +244,7 @@ const DragHandle = Extension.create<DragHandleOptions>({
 							// frozen source pos that no longer exists after the delete.
 							options.onSingleDropConsumed?.()
 							view.dragging = null
-							view.dispatch(tr)
+							if (tr) view.dispatch(tr)
 							return true
 						}
 

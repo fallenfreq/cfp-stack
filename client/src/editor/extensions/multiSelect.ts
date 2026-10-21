@@ -1,7 +1,7 @@
 import { findBlockAtCoords, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import { Fragment, type Node as PMNode } from '@tiptap/pm/model'
 import { NodeSelection, Plugin, PluginKey, TextSelection, type Transaction } from '@tiptap/pm/state'
-import { ReplaceAroundStep, ReplaceStep, type Step } from '@tiptap/pm/transform'
+import { ReplaceAroundStep, ReplaceStep, Transform, type Step } from '@tiptap/pm/transform'
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
 import { Extension, type CommandProps } from '@tiptap/vue-3'
 
@@ -70,7 +70,7 @@ const changedInPlace = (step: Step, pos: number, doc: PMNode): boolean => {
 
 // The chosen blocks that move, in page order. A block and one inside it can both be chosen, but
 // the one inside moves with its block: moving it again would copy it.
-const blocksToMove = (doc: PMNode, positions: NodePos[]): NodePos[] => {
+export const blocksToMove = (doc: PMNode, positions: NodePos[]): NodePos[] => {
 	let end = -1
 	return [...positions]
 		.sort((a, b) => a - b)
@@ -92,16 +92,118 @@ export const blocksToMoveTo = (
 	return blocks.some((p) => target >= p && target < p + nodeAt(doc, p).nodeSize) ? null : blocks
 }
 
-// Moves blocksToMoveTo's blocks in one go: takes them out, then puts them in place of from–to
-// (positions in the page as it was; from = to puts them there). Returns where they start.
-export const moveBlocks = (tr: Transaction, blocks: NodePos[], from: number, to = from): number => {
+// Where blocks are put: before or after a block (the Move tools), in its place (Replace), or, in a
+// drag, beside it and, when they can't be there, at the end nearer the drop of a block around it.
+export type MoveSide = 'before' | 'after' | 'replace' | 'nearer'
+
+// Where blocks go, in the page as it is: in place of from–to, with what's put in there.
+export interface BlockPlace {
+	from: number
+	to: number
+	content: Fragment
+}
+
+// Where blocks put at a spot (from = to), or in place of a block (from–to), go; null when nowhere.
+// The page decides what a block may hold, and putting blocks where it doesn't allow them would have
+// ProseMirror split blocks or add empty lines to make them fit. So: at the spot if they fit as they
+// are, else beside the nearest block around it that holds them, else where one new wrapper holds
+// them all (a new list around items), as ProseMirror's own drop does (dropPoint, which here keeps a
+// Move tool's side, and checks the wrapper holds every block, not just the first). Replace takes
+// only blocks that fit there as they are: a wrapper would make a paragraph a list item. For a move,
+// the fit is checked on the page with the blocks taken out: one taken out can be the line an item
+// must start with. A move to where the blocks already are goes nowhere; a copy goes there.
+export const whereBlocksGo = (
+	doc: PMNode,
+	blocks: NodePos[],
+	from: number,
+	to: number,
+	side: MoveSide,
+	copy = false,
+): BlockPlace | null => {
+	const content = Fragment.fromArray(blocks.map((p) => nodeAt(doc, p)))
+	const end = (p: NodePos) => p + nodeAt(doc, p).nodeSize
+	const into = new Transform(doc)
+	if (!copy) for (const p of [...blocks].reverse()) into.delete(p, end(p))
+	const $into = (pos: number) => into.doc.resolve(into.mapping.map(pos))
+	if (side === 'replace') {
+		const $a = $into(from)
+		const $b = $into(to)
+		return $a.sameParent($b) && $a.parent.canReplace($a.index(), $b.index(), content)
+			? { from, to, content }
+			: null
+	}
+	const together = blocks.every((p, i) => i === 0 || p === end(blocks[i - 1]!))
+	const alreadyThere = (pos: number) =>
+		!copy && together && pos >= blocks[0]! && pos <= end(blocks.at(-1)!)
+	const $from = doc.resolve(from)
+	for (const wrap of [false, true]) {
+		for (let d = $from.depth; d >= 0; d--) {
+			const around = d < $from.depth
+			const after =
+				around
+				&& (side === 'after'
+					|| (side === 'nearer' && from > ($from.start(d + 1) + $from.end(d + 1)) / 2))
+			const pos = !around ? from : after ? $from.after(d + 1) : $from.before(d + 1)
+			const $pos = $into(pos)
+			const put = wrap ? wrapper($pos.parent, $pos.index(), content) : content
+			if (!put || !$pos.parent.canReplace($pos.index(), $pos.index(), put)) continue
+			return alreadyThere(pos) ? null : { from: pos, to: pos, content: put }
+		}
+	}
+	return null
+}
+
+// The blocks inside the new wrapper (or wrappers: a table and a row around cells) that the parent
+// takes at index i, or null when there's none or it can't hold them all.
+const wrapper = (parent: PMNode, i: number, content: Fragment): Fragment | null => {
+	const wrapping = parent.contentMatchAt(i).findWrapping(content.firstChild!.type)
+	if (!wrapping?.length) return null
+	return wrapping.reduceRight<Fragment | null>(
+		(inner, type) =>
+			inner && type.validContent(inner) ? Fragment.from(type.create(null, inner)) : null,
+		content,
+	)
+}
+
+// Moves blocksToMoveTo's blocks in one go, to where whereBlocksGo put them: takes them out, then
+// puts in what it gave. Returns where they start.
+export const moveBlocks = (tr: Transaction, blocks: NodePos[], place: BlockPlace): number => {
 	const start = tr.steps.length
-	const content = Fragment.fromArray(blocks.map((p) => nodeAt(tr.doc, p)))
 	for (const pos of [...blocks].reverse()) tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
 	const mapping = tr.mapping.slice(start)
-	const at = mapping.map(from)
-	tr.replaceWith(at, mapping.map(to), content)
+	const at = mapping.map(place.from)
+	tr.replaceWith(at, mapping.map(place.to), place.content)
 	return at
+}
+
+// A drop of blocks dragged by the handle, moved or (Alt) copied to where whereBlocksGo puts them
+// from beside the block under the pointer, with the first selected so the toolbar follows it (a
+// TextSelection across a selectable: false block, which a NodeSelection can't hold). Null when
+// nothing moves: let go on one of them or inside one, or where they can't go.
+export const dropBlocks = (
+	view: EditorView,
+	event: MouseEvent,
+	blocks: NodePos[],
+	copy: boolean,
+): Transaction | null => {
+	const { doc } = view.state
+	const target = findBlockAtCoords(view, event)
+	const moving = target && blocksToMoveTo(doc, blocks, target.pos)
+	if (!target || !moving) return null
+	const spot = target.insertBefore ? target.pos : target.pos + target.node.nodeSize
+	const place = whereBlocksGo(doc, moving, spot, spot, 'nearer', copy)
+	if (!place) return null
+	const tr = view.state.tr
+	const at = copy ? place.from : moveBlocks(tr, moving, place)
+	if (copy) tr.insert(at, place.content)
+	const first = tr.doc.nodeAt(at)
+	if (first)
+		tr.setSelection(
+			first.type.spec.selectable === false
+				? TextSelection.create(tr.doc, at, at + first.nodeSize)
+				: NodeSelection.create(tr.doc, at),
+		)
+	return tr
 }
 
 const MultiSelectExtension = Extension.create({
@@ -171,12 +273,12 @@ const MultiSelectExtension = Extension.create({
 })
 
 // --- Multi-drag ---
-// Positions of the nodes being dragged. Set by buildMultiDragSlice (called from the drag
+// Positions of the blocks being dragged. Set by buildMultiDragSlice (called from the drag
 // handle's dragstart), cleared on drop or dragend.
 let pendingMultiDrag: NodePos[] | null = null
 
-// The picture that follows the pointer while dragging several nodes: a floating card with
-// a count and copies of the first three nodes. It's placed at the page's corner and all but
+// The picture that follows the pointer while dragging several blocks: a floating card with
+// a count and copies of the first three blocks. It's placed at the page's corner and all but
 // invisible; the browser takes its snapshot from it, then it's removed.
 const createMultiDragPreview = (view: EditorView, sorted: NodePos[]): HTMLElement => {
 	const wrap = document.createElement('div')
@@ -187,7 +289,7 @@ const createMultiDragPreview = (view: EditorView, sorted: NodePos[]): HTMLElemen
 	const count = document.createElement('span')
 	count.className =
 		'sf-counter sf-single-line sf-size-2xs sf-text-xs sf-loudness-3 sf-variant-primary'
-	count.textContent = `${sorted.length} nodes`
+	count.textContent = `${sorted.length} blocks`
 	count.style.alignSelf = 'start'
 	wrap.appendChild(count)
 
@@ -235,10 +337,10 @@ export const buildMultiDragSlice = (view: EditorView, pos: number, event: DragEv
 	}
 
 	const firstNode = nodeAt(doc, firstPos)
-	// Placeholder slice — handleDrop overrides the actual operation
+	// A placeholder slice: handleDrop does the drop. Alt copies, as with one block.
 	return {
 		slice: doc.slice(firstPos, firstPos + firstNode.nodeSize),
-		move: false as const,
+		move: !event.altKey,
 	}
 }
 
@@ -246,36 +348,13 @@ const multiDragPlugin = new Plugin({
 	props: {
 		handleDrop(view, event) {
 			if (!pendingMultiDrag) return false
-			const sorted = pendingMultiDrag
+			const blocks = pendingMultiDrag
 			pendingMultiDrag = null
-
-			const target = findBlockAtCoords(view, event)
-			// Return true to consume the event without inserting — prevents PM's own drop
-			// handler from inserting the placeholder slice (phantom copy of the first node).
-			if (!target || !blocksToMoveTo(view.state.doc, sorted, target.pos)) return true
-
-			const { pos: targetPos, node: targetNode, insertBefore } = target
-			let tr = view.state.tr
-			const insertAt = moveBlocks(
-				tr,
-				sorted,
-				insertBefore ? targetPos : targetPos + targetNode.nodeSize,
-			)
-			// Mirror native single-drag behavior: select the first dropped node so the
-			// toolbar repositions to it.  NodeSelection for selectable nodes (gives the
-			// "node-selected" outline); TextSelection spanning the node for
-			// selectable:false wrappers (NodeSelection.create would throw).
-			const firstInserted = tr.doc.nodeAt(insertAt)
-			if (firstInserted) {
-				const newSelection =
-					firstInserted.type.spec.selectable === false
-						? TextSelection.create(tr.doc, insertAt, insertAt + firstInserted.nodeSize)
-						: NodeSelection.create(tr.doc, insertAt)
-				tr = tr.setSelection(newSelection)
-			}
-			tr = askMultiSelect(tr, { action: 'clear' })
+			const tr = dropBlocks(view, event, blocks, view.dragging?.move === false)
 			view.dragging = null
-			view.dispatch(tr)
+			if (tr) view.dispatch(askMultiSelect(tr, { action: 'clear' }))
+			// Handled even when nothing moves: ProseMirror's own drop would put in the placeholder
+			// slice, a copy of the first block.
 			return true
 		},
 	},

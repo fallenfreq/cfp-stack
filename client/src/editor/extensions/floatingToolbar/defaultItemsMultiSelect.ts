@@ -2,7 +2,13 @@ import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
 import ToolbarNodePicker, {
 	type NodePickerItem,
 } from '@/components/editor/toolbar/ToolbarNodePicker.vue'
-import { blocksToMoveTo, moveBlocks } from '@/editor/extensions/multiSelect'
+import {
+	blocksToMove,
+	blocksToMoveTo,
+	moveBlocks,
+	whereBlocksGo,
+	type MoveSide,
+} from '@/editor/extensions/multiSelect'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import {
 	allAreSiblings,
@@ -42,26 +48,35 @@ const selNextUnselected = (editor: Editor, ctx: ToolbarItemContext): NodePos | n
 	return null
 }
 
-const selBlocksToMoveTo = (editor: Editor, target: NodePos): NodePos[] | null =>
-	blocksToMoveTo(editor.state.doc, useMultiSelectStore().positions, target)
-
-// Moves the chosen blocks before the target, after it, or in its place.
-const selMove = (
+// The chosen blocks that move before the target, after it, or in its place, and where they go; null
+// when they can't (the target is one of them or inside one, or they don't fit or are there already:
+// whereBlocksGo), and the tool is greyed out.
+const selMovePlace = (
 	editor: Editor,
 	ctx: ToolbarItemContext,
-	where: 'before' | 'after' | 'replace',
+	where: Exclude<MoveSide, 'nearer'>,
 ) => {
 	const nodePos = ctx.nodePos
-	if (nodePos === null) return
-	const blocks = selBlocksToMoveTo(editor, nodePos)
-	if (!blocks) return
-	const end = nodePos + nodeAt(editor.state.doc, nodePos).nodeSize
+	if (nodePos === null) return null
+	const doc = editor.state.doc
+	const blocks = blocksToMoveTo(doc, useMultiSelectStore().positions, nodePos)
+	if (!blocks) return null
+	const end = nodePos + nodeAt(doc, nodePos).nodeSize
 	const from = where === 'after' ? end : nodePos
 	const to = where === 'before' ? nodePos : end
+	const place = whereBlocksGo(doc, blocks, from, to, where)
+	return place && { blocks, place }
+}
+
+// Moves the chosen blocks before the target, after it, or in its place. Asked first: a chain sends
+// its change whatever its commands return, and would clear the chosen blocks with nothing moved.
+const selMove = (editor: Editor, ctx: ToolbarItemContext, where: Exclude<MoveSide, 'nearer'>) => {
+	const move = selMovePlace(editor, ctx, where)
+	if (!move) return
 	editor
 		.chain()
 		.command(({ tr }) => {
-			moveBlocks(tr, blocks, from, to)
+			moveBlocks(tr, move.blocks, move.place)
 			return true
 		})
 		.clearMultiSelect()
@@ -221,7 +236,7 @@ export const multiSelectItems = [
 		tooltip: 'Move before target',
 		label: icon('vertical_align_top'),
 		show: () => useMultiSelectStore().positions.length > 0,
-		disabled: (editor, ctx) => ctx.nodePos === null || !selBlocksToMoveTo(editor, ctx.nodePos),
+		disabled: (editor, ctx) => !selMovePlace(editor, ctx, 'before'),
 		action: (editor, ctx) => selMove(editor, ctx, 'before'),
 	}),
 
@@ -230,7 +245,7 @@ export const multiSelectItems = [
 		tooltip: 'Move after target',
 		label: icon('vertical_align_bottom'),
 		show: () => useMultiSelectStore().positions.length > 0,
-		disabled: (editor, ctx) => ctx.nodePos === null || !selBlocksToMoveTo(editor, ctx.nodePos),
+		disabled: (editor, ctx) => !selMovePlace(editor, ctx, 'after'),
 		action: (editor, ctx) => selMove(editor, ctx, 'after'),
 	}),
 
@@ -239,7 +254,7 @@ export const multiSelectItems = [
 		tooltip: 'Replace target',
 		label: icon('find_replace'),
 		show: () => useMultiSelectStore().positions.length > 0,
-		disabled: (editor, ctx) => ctx.nodePos === null || !selBlocksToMoveTo(editor, ctx.nodePos),
+		disabled: (editor, ctx) => !selMovePlace(editor, ctx, 'replace'),
 		action: (editor, ctx) => selMove(editor, ctx, 'replace'),
 	}),
 
@@ -259,12 +274,15 @@ export const multiSelectItems = [
 		label: icon('delete'),
 		show: () => useMultiSelectStore().positions.length > 0,
 		action: (editor) => {
-			const positions = useMultiSelectStore().positions
+			const blocks = blocksToMove(editor.state.doc, useMultiSelectStore().positions)
 			editor
 				.chain()
 				.command(({ tr }) => {
-					for (const pos of [...positions].sort((a, b) => b - a))
-						tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
+					// As the Delete key takes each (tr.deleteRange): a list or quote left empty goes
+					// too. Last first, and a block inside a chosen one goes with it: deleted first, it
+					// would take its emptied block, then what came next in that block's place.
+					for (const pos of [...blocks].reverse())
+						tr.deleteRange(pos, pos + nodeAt(tr.doc, pos).nodeSize)
 					return true
 				})
 				.clearMultiSelect()

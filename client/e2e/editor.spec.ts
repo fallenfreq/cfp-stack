@@ -417,6 +417,241 @@ test('a block dragged by its handle lands where it is let go, and the page stays
 	expect(selected).toBe('stay-c')
 })
 
+/**
+ * The page from the block with this id on: each block's type and id (or a line's text, without
+ * one), and what it holds, `ul#a[li#b[p#c]] p"No id"`.
+ */
+const shapeFrom = (page: Page, id: string) =>
+	page.evaluate((id) => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		const short: Record<string, string> = {
+			bulletList: 'ul',
+			listItem: 'li',
+			taskList: 'tasks',
+			taskItem: 'task',
+			paragraph: 'p',
+			heading: 'h',
+			blockquote: 'quote',
+		}
+		const shape = (node: ProseMirrorNode): string => {
+			const own =
+				(short[node.type.name] ?? node.type.name)
+				+ (node.attrs.id ? `#${node.attrs.id}` : '')
+			if (node.isTextblock) return node.attrs.id ? own : `${own}"${node.textContent}"`
+			const held: string[] = []
+			node.forEach((child) => held.push(shape(child)))
+			return held.length ? `${own}[${held.join(' ')}]` : own
+		}
+		const shapes: string[] = []
+		editor.state.doc.forEach((node) => {
+			if (shapes.length || node.attrs.id === id) shapes.push(shape(node))
+		})
+		return shapes.join(' ')
+	}, id)
+/** The id of the block selected whole, if one is. */
+const selectedId = (page: Page) =>
+	page.evaluate(() => {
+		const { selection } =
+			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+		return 'node' in selection ? ((selection as NodeSelection).node.attrs.id as string) : null
+	})
+
+// The page decides what a block may hold. A block let go where it isn't allowed was forced in:
+// the block there was split or given an empty line. It goes beside the nearest block around that
+// holds it, at the end nearer the drop, or in a new list, as ProseMirror's own drop does; and it's
+// selected, which kept WebKit from scrolling to where it was (multiSelect.ts, whereBlocksGo).
+test('a block let go where it is not allowed goes beside the nearest block that holds it', async ({
+	page,
+}) => {
+	await insertAtEnd(
+		page,
+		'<p id="fit-p">Para</p>'
+			+ '<ul id="fit-ul"><li id="fit-1"><p id="fit-1p">One</p></li><li id="fit-2"><p id="fit-2p">Two</p></li><li id="fit-3"><p id="fit-3p">Three</p></li></ul>'
+			+ '<ul data-type="taskList" id="fit-tl"><li data-type="taskItem" data-checked="false" id="fit-t1"><p id="fit-t1p">Task</p></li></ul>'
+			+ '<h2 id="fit-h">Heading</h2><p id="fit-end">End</p>',
+	)
+	const tasks = 'tasks#fit-tl[task#fit-t1[p#fit-t1p]]'
+	const chosen = page.locator('.tiptap .sf-on-selected')
+	// The block's handle, let go on the top or bottom edge of another. Returns where the page's first
+	// block was on the screen as the drag began.
+	const dragOnto = async (id: string, onto: string, edge: 'top' | 'bottom') => {
+		await selectBlock(page, id)
+		const { top } = await box(page.locator('#fit-p'))
+		const target = page.locator(`#${onto}`)
+		const { height } = await box(target)
+		await page.locator('.floating-drag-handle-wrapper').dragTo(target, {
+			targetPosition: { x: 20, y: edge === 'top' ? 2 : height - 2 },
+		})
+		await settle(page)
+		return top
+	}
+
+	await dragOnto('fit-1', 'fit-3p', 'top')
+	expect(await shapeFrom(page, 'fit-p'), 'an item on the top of an item').toBe(
+		`p#fit-p ul#fit-ul[li#fit-2[p#fit-2p] li#fit-1[p#fit-1p] li#fit-3[p#fit-3p]] ${tasks} h#fit-h p#fit-end`,
+	)
+	expect(await selectedId(page), 'an item on the top of an item').toBe('fit-1')
+
+	const top = await dragOnto('fit-2', 'fit-3p', 'bottom')
+	expect(await shapeFrom(page, 'fit-p'), 'an item on the bottom of an item').toBe(
+		`p#fit-p ul#fit-ul[li#fit-1[p#fit-1p] li#fit-3[p#fit-3p] li#fit-2[p#fit-2p]] ${tasks} h#fit-h p#fit-end`,
+	)
+	expect(await selectedId(page), 'an item on the bottom of an item').toBe('fit-2')
+	expect(Math.abs((await box(page.locator('#fit-p'))).top - top)).toBeLessThan(3)
+
+	// An item can't start with a heading: it goes above the list, the end nearer the drop.
+	await dragOnto('fit-h', 'fit-1p', 'top')
+	expect(await shapeFrom(page, 'fit-p'), "a heading on an item's text").toBe(
+		`p#fit-p h#fit-h ul#fit-ul[li#fit-1[p#fit-1p] li#fit-3[p#fit-3p] li#fit-2[p#fit-2p]] ${tasks} p#fit-end`,
+	)
+
+	// No list or task holds a bullet item as it is: it goes beside the task list, in a new list.
+	await dragOnto('fit-2', 'fit-t1p', 'top')
+	expect(await shapeFrom(page, 'fit-p'), "a bullet item on a task's text").toBe(
+		`p#fit-p h#fit-h ul#fit-ul[li#fit-1[p#fit-1p] li#fit-3[p#fit-3p]] ul[li#fit-2[p#fit-2p]] ${tasks} p#fit-end`,
+	)
+
+	// A paragraph and an item chosen together fit nowhere as they are, nor in one new list: nothing
+	// moves, and they stay chosen. (The drop is seen to happen: one that never came would pass too.)
+	await toggleSelection(page, await nodePosition(page, 'fit-p'))
+	await toggleSelection(page, await nodePosition(page, 'fit-1'))
+	const before = await shapeFrom(page, 'fit-p')
+	await page.evaluate(() =>
+		document.addEventListener(
+			'drop',
+			() => {
+				document.body.dataset.dropped = ''
+			},
+			{ capture: true, once: true },
+		),
+	)
+	await dragOnto('fit-1', 'fit-end', 'top')
+	await expect(page.locator('body')).toHaveAttribute('data-dropped', '')
+	expect(await shapeFrom(page, 'fit-p'), 'a paragraph and an item').toBe(before)
+	await expect(chosen).toHaveCount(2)
+})
+
+// Going out of the block it was let go in, a dragged block goes to that block's end nearer the
+// drop, where ProseMirror's drop line shows; the Move tools keep the side asked for.
+test('a block dragged out of the block it was let go in goes to its end nearer the drop', async ({
+	page,
+}) => {
+	await insertAtEnd(
+		page,
+		'<p id="ne-top">Top</p><ul id="ne-ul"><li id="ne-pa"><p id="ne-pap">Parent</p>'
+			+ '<ul id="ne-kids"><li id="ne-k1"><p id="ne-k1p">Child one</p></li><li id="ne-k2"><p id="ne-k2p">Child two</p></li><li id="ne-k3"><p id="ne-k3p">Child three</p></li></ul></li>'
+			+ '<li id="ne-x"><p id="ne-xp">Other</p></li></ul><img id="ne-img" src="/favicon.ico"><p id="ne-end">End</p>',
+	)
+	const dragOnto = async (id: string, onto: string, edge: 'top' | 'bottom') => {
+		await selectBlock(page, id)
+		const target = page.locator(`#${onto}`)
+		const { height } = await box(target)
+		await page.locator('.floating-drag-handle-wrapper').dragTo(target, {
+			targetPosition: { x: 20, y: edge === 'top' ? 2 : height - 2 },
+		})
+		await settle(page)
+	}
+	const kids = 'ul#ne-kids[li#ne-k1[p#ne-k1p] li#ne-k2[p#ne-k2p] li#ne-k3[p#ne-k3p]]'
+
+	// An item can't hold another as it is: it goes beside the item, above it, its text being at its
+	// top.
+	await dragOnto('ne-x', 'ne-pap', 'bottom')
+	expect(await shapeFrom(page, 'ne-top'), "an item on the bottom of a parent item's text").toBe(
+		`p#ne-top ul#ne-ul[li#ne-x[p#ne-xp] li#ne-pa[p#ne-pap ${kids}]] image#ne-img p#ne-end`,
+	)
+
+	// An item starts with a line of text: a picture goes beside the list, above it.
+	await dragOnto('ne-img', 'ne-xp', 'top')
+	expect(await shapeFrom(page, 'ne-top'), "a picture on the top of an item's text").toBe(
+		`p#ne-top image#ne-img ul#ne-ul[li#ne-x[p#ne-xp] li#ne-pa[p#ne-pap ${kids}]] p#ne-end`,
+	)
+})
+
+// The Move tools put blocks as a drag does, on the side asked for, and are greyed out where the
+// blocks would go nowhere, or where they already are. Replace only where they fit as they are: in
+// a new item, a paragraph put in place of one would become a list item.
+test('the Move tools put blocks where they fit, and are greyed out where they would go nowhere', async ({
+	page,
+}) => {
+	await insertAtEnd(
+		page,
+		'<p id="mv-top">Top</p>'
+			+ '<ul id="mv-ul"><li id="mv-1"><p id="mv-1p">One</p><ul id="mv-n"><li id="mv-n1"><p id="mv-n1p">Nested</p></li></ul></li><li id="mv-2"><p id="mv-2p">Two</p></li><li id="mv-3"><p id="mv-3p">Three</p></li></ul>'
+			+ '<p id="mv-p">Para</p><p id="mv-end">End</p>',
+	)
+	const tool = (name: string) => page.locator('.floating-toolbar').getByRole('button', { name })
+	const at = (id: string) => nodePosition(page, id)
+	const choose = async (ids: string[], target: string) => {
+		for (const id of ids) await toggleSelection(page, await at(id))
+		await selectBlockAt(page, await at(target))
+	}
+	const first = 'li#mv-1[p#mv-1p ul#mv-n[li#mv-n1[p#mv-n1p]]]'
+
+	await choose(['mv-3'], 'mv-1p')
+	await tool('Move after target').click()
+	expect(
+		await shapeFrom(page, 'mv-top'),
+		'Move after the text of an item that holds a list',
+	).toBe(`p#mv-top ul#mv-ul[${first} li#mv-3[p#mv-3p] li#mv-2[p#mv-2p]] p#mv-p p#mv-end`)
+
+	await choose(['mv-p'], 'mv-2')
+	await tool('Move before target').click()
+	expect(await shapeFrom(page, 'mv-top'), 'a paragraph, Move before an item').toBe(
+		`p#mv-top p#mv-p ul#mv-ul[${first} li#mv-3[p#mv-3p] li#mv-2[p#mv-2p]] p#mv-end`,
+	)
+
+	await choose(['mv-p'], 'mv-2')
+	await expect(tool('Replace target'), 'a paragraph in place of an item').toBeDisabled()
+	await toggleSelection(page, await at('mv-3'))
+	await selectBlockAt(page, await at('mv-end'))
+	for (const name of ['Move before target', 'Move after target'])
+		await expect(tool(name), `${name}, a paragraph and an item`).toBeDisabled()
+	await tool('Clear selection').click()
+
+	await choose(['mv-1p'], 'mv-n')
+	await expect(tool('Move before target'), 'where the block already is').toBeDisabled()
+	await tool('Clear selection').click()
+
+	// The fit is that of the page with the blocks taken out: an item's first line, moved with a
+	// heading to before its second, would leave the item starting with the heading.
+	await insertAtEnd(
+		page,
+		'<h3 id="mv-h">Heading</h3><ul id="mv-two"><li id="mv-t"><p id="mv-t1">First line</p><p id="mv-t2">Second line</p></li></ul><p id="mv-last">Last</p>',
+	)
+	await choose(['mv-h', 'mv-t1'], 'mv-t2')
+	await expect(tool('Replace target'), "a heading and an item's first line").toBeDisabled()
+	await tool('Move before target').click()
+	expect(await shapeFrom(page, 'mv-end'), "a heading and an item's first line").toBe(
+		'p#mv-end h#mv-h p#mv-t1 ul#mv-two[li#mv-t[p#mv-t2]] p#mv-last',
+	)
+})
+
+// The Delete key takes a list or quote left empty with the block (ProseMirror's deleteRange);
+// "Delete selected" left an empty item. A block inside a chosen one goes with its block: deleted
+// first, it took its emptied block, then the block after it in its place.
+test('Delete selected takes blocks out as the Delete key does', async ({ page }) => {
+	await insertAtEnd(
+		page,
+		'<p id="dl-top">Top</p><ul id="dl-ul"><li id="dl-solo"><p>Solo</p></li></ul>'
+			+ '<blockquote id="dl-q"><p id="dl-qp">Quote</p></blockquote><p id="dl-next">Next</p><p id="dl-end">End</p>',
+	)
+	const press = (name: string) =>
+		page.locator('.floating-toolbar').getByRole('button', { name }).click()
+
+	await toggleSelection(page, await nodePosition(page, 'dl-solo'))
+	await press('Delete selected')
+	expect(await shapeFrom(page, 'dl-top'), "a list's only item").toBe(
+		'p#dl-top quote#dl-q[p#dl-qp] p#dl-next p#dl-end',
+	)
+
+	await toggleSelection(page, await nodePosition(page, 'dl-q'))
+	await toggleSelection(page, await nodePosition(page, 'dl-qp'))
+	await press('Delete selected')
+	expect(await shapeFrom(page, 'dl-top'), 'a quote and its only line').toBe(
+		'p#dl-top p#dl-next p#dl-end',
+	)
+})
+
 // Focus on the Card's box also put the cursor just before it, between blocks, where text can't go
 // (the editor warns once).
 test('clicking between the blocks in an inset Card selects the card', async ({ page }) => {
@@ -1134,7 +1369,8 @@ test('a copy goes without an id the page has', async ({ page }) => {
 			+ '<layout-card id="copy-card" class="sf-size-md"><p id="copy-card-p">In the Card</p></layout-card>'
 			+ '<table id="copy-table"><tbody><tr><td id="copy-cell"><p>Cell</p></td></tr></tbody></table>'
 			+ '<ul data-type="taskList" id="copy-list"><li data-type="taskItem" id="copy-item"><p>To do</p></li></ul>'
-			+ '<p id="drop-p">Drop me</p><p id="drop-under">Under this</p>'
+			+ '<p id="drop-p">Drop me</p><p id="drop-a">Drop A</p><p id="drop-b">Drop B</p>'
+			+ '<p id="drop-under">Under this</p>'
 			+ '<p id="pasted-had">Here already</p><p id="paste-into">Here</p>'
 			+ '<p id="twin">First</p><p id="twin">Second</p>',
 	)
@@ -1156,6 +1392,14 @@ test('a copy goes without an id the page has', async ({ page }) => {
 	await dragUnder(page, 'drop-p', 'drop-under', true)
 	expect.soft(await copiesOf(page, 'drop-p'), 'a copy dropped').toBe(2)
 	expect.soft(await withId(page, 'drop-p'), 'a copy dropped: drop-p').toEqual(dropped)
+
+	const both = await Promise.all(['drop-a', 'drop-b'].map((id) => withId(page, id)))
+	for (const found of both) await toggleSelection(page, found[0]!.at)
+	await dragUnder(page, 'drop-a', 'drop-under', true)
+	for (const [i, id] of ['drop-a', 'drop-b'].entries()) {
+		expect.soft(await copiesOf(page, id), `two copied together: ${id}`).toBe(2)
+		expect.soft(await withId(page, id), `two copied together: ${id}`).toEqual(both[i])
+	}
 
 	// Copied from another page, as a person selects it.
 	await page.evaluate(() => {

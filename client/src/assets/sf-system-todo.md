@@ -135,14 +135,22 @@ settings for every selected block.
   asks again (read in the code only).
 - **The keys after a change in the Attributes panel.** Enter in one of its fields leaves the
   block selected but the keys off the page: Undo and the arrow keys work once you click back in.
-- **Dragging blocks selected together.** A drag of several ignores Alt and always moves them
-  (`multiSelect.ts`, `handleDrop`). The handle of a block that isn't chosen but holds chosen ones
-  drags those, or itself when there's one. The drag's picture counts "nodes", not blocks.
-- **A list item dropped on another item's text.** On the top half of the text it splits that item:
-  an empty item keeps its id, its text goes to a new one without, and the empty line is selected.
-  On the bottom half it lands right, but nothing is selected and WebKit moves the page a little.
-  The drop's place is the paragraph inside the item (`findBlockAtCoords`), where an item can't go
-  (`dragHandle.ts`, `handleDrop`). Dropped below the list, it lands right and is selected.
+- **The handle of a block holding chosen ones.** When the block isn't chosen itself, its handle
+  drags the chosen blocks inside it, or itself when there's one (`multiSelect.ts`,
+  `buildMultiDragSlice`).
+- **The drop line.** ProseMirror's (StarterKit's dropcursor) goes where the pointer is in the
+  text, so it can show a different place from where a block lands (a paragraph let go on the top
+  of another: the line below it, the block above), and nothing shows that a drop is refused. One
+  place for both would be the app's own line (a new class).
+- **Paste and blocks that don't fit.** Paste fits what's pasted its own way, not checked against
+  the drop's cases (`multiSelect.ts`, `whereBlocksGo`): a list item into an item's text, a
+  heading at an item's start.
+- **Alt-copy by hand.** A real Option-drag in macOS Chrome and Safari is unchecked: the handle
+  allows only a move (`effectAllowed`, `FloatingDragHandle.vue`), and Playwright's Alt may not
+  show what a person gets.
+- **What's selected after an Alt-copy of a Card or a to-do item.** The selection across the copy
+  (`dropBlocks`, `multiSelect.ts`) becomes a cursor in the next block when the copy's id is taken
+  off (`allowAttributesExtension.ts`), so the toolbar follows that block.
 
 ## Popovers and browsers
 
