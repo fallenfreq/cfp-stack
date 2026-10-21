@@ -1113,7 +1113,7 @@ const own = 'class="lead" style="color: red"'
 
 // Enter splits a block in two: the block it was pressed in keeps everything, and the new one gets
 // the class and style, not the id. In the middle and at the start, TipTap copies the whole block
-// (patches/@tiptap__core@3.31.4.patch). An item and the paragraph in it each split so.
+// (patches/@tiptap__core@3.32.0.patch). An item and the paragraph in it each split so.
 test('Enter leaves everything on the block it was pressed in, and gives the new one the class and style', async ({
 	page,
 }) => {
@@ -1185,7 +1185,7 @@ test('Enter leaves everything on the block it was pressed in, and gives the new 
 // With text selected, Enter splits the block the cursor is left in once the text is gone: from the
 // start of one block into the next, the first goes. With an item selected, its list splits before
 // it. TipTap reads the block the selection started in, and copies a list whole
-// (patches/@tiptap__core@3.31.4.patch).
+// (patches/@tiptap__core@3.32.0.patch).
 test('Enter with text or an item selected gives the new block the class and style too', async ({
 	page,
 }) => {
@@ -1222,7 +1222,7 @@ test('Enter with text or an item selected gives the new block the class and styl
 })
 
 // A paragraph that Enter leaves as it is adds no change of its own, so typing after Enter at its
-// start undoes with it, as with TipTap's own Enter (patches/@tiptap__core@3.31.4.patch).
+// start undoes with it, as with TipTap's own Enter (patches/@tiptap__core@3.32.0.patch).
 test('Enter at the start of a paragraph and typing after it undo together', async ({ page }) => {
 	// Outside the undo history: put in just before, it would undo with them.
 	await page.evaluate(() => {
@@ -1257,7 +1257,7 @@ test('Enter at the start of a paragraph and typing after it undo together', asyn
 })
 
 // Enter on an empty line at the end of a nested list moves it out a level, with what it has.
-// TipTap makes it anew, with nothing on it (patches/@tiptap__core@3.31.4.patch). When the line has
+// TipTap makes it anew, with nothing on it (patches/@tiptap__core@3.32.0.patch). When the line has
 // text above it in its item, the item stays, and the one out a level is new: it gets the class and
 // style. A heading there comes out as a paragraph, as an item starts with one.
 test('an empty line at the end of a nested list keeps its own when Enter moves it out a level', async ({

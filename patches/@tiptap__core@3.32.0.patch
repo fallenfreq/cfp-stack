@@ -1,12 +1,12 @@
 diff --git a/dist/index.cjs b/dist/index.cjs
-index bc8b2ae67ccd77ba690a9615d72fd4203364a4f3..f093d3b61b2bffa94675800fabb145a36a3bbc19 100644
+index 046d626d413aa7d710572e470c38807f3a4703be..042c8f8a7c8abe261eda9d84923507a7d77b9e7c 100644
 --- a/dist/index.cjs
 +++ b/dist/index.cjs
-@@ -2683,6 +2683,11 @@ const sinkListItem = (typeOrName) => ({ state, dispatch }) => {
+@@ -2805,6 +2805,11 @@ const sinkListItem = (typeOrName) => ({ state, dispatch }) => {
  };
  //#endregion
  //#region src/commands/splitBlock.ts
-+// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): a block left as it is adds no
++// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): a block left as it is adds no
 +// step, so that typing after Enter undoes with it, as before.
 +function setMarkupIfChanged(tr, pos, type, attrs) {
 +	if (!tr.doc.nodeAt(pos).hasMarkup(type, type.create(attrs).attrs)) tr.setNodeMarkup(pos, type, attrs);
@@ -14,12 +14,12 @@ index bc8b2ae67ccd77ba690a9615d72fd4203364a4f3..f093d3b61b2bffa94675800fabb145a3
  function ensureMarks(state, splittableMarks) {
  	const marks = state.storedMarks || state.selection.$to.parentOffset && state.selection.$from.marks();
  	if (marks) {
-@@ -2699,40 +2704,59 @@ const splitBlock = ({ keepMarks = true } = {}) => ({ tr, state, dispatch, editor
+@@ -2821,40 +2826,59 @@ const splitBlock = ({ keepMarks = true } = {}) => ({ tr, state, dispatch, editor
  		if (!$from.parentOffset || !(0, _tiptap_pm_transform.canSplit)(doc, $from.pos)) return false;
  		if (dispatch) {
  			if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
 -			tr.split($from.pos).scrollIntoView();
-+			// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the second half gets
++			// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the second half gets
 +			// what carries over, as when text is split; TipTap copied the whole block.
 +			tr.split($from.pos, 1, [{
 +				type: $from.parent.type,
@@ -35,7 +35,7 @@ index bc8b2ae67ccd77ba690a9615d72fd4203364a4f3..f093d3b61b2bffa94675800fabb145a3
 -		type: deflt,
 -		attrs: newAttributes
 -	}] : void 0;
-+	// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the block is read once the
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the block is read once the
 +	// selection is deleted, as deleting it can remove the block it started in. The new block
 +	// gets what carries over (`keepOnSplit`) in the middle and at the start too, not a copy of
 +	// the whole block (ueberdosis/tiptap#4591); at the start, the line with the text keeps
@@ -86,11 +86,11 @@ index bc8b2ae67ccd77ba690a9615d72fd4203364a4f3..f093d3b61b2bffa94675800fabb145a3
  			}
  		}
  		if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
-@@ -2758,12 +2782,20 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2880,12 +2904,20 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  			const depthBefore = $from.index(-1) ? 1 : $from.index(-2) ? 2 : 3;
  			for (let d = $from.depth - depthBefore; d >= $from.depth - 3; d -= 1) wrap = _tiptap_pm_model.Fragment.from($from.node(d).copy(wrap));
  			const depthAfter = $from.indexAfter(-1) < $from.node(-2).childCount ? 1 : $from.indexAfter(-2) < $from.node(-3).childCount ? 2 : 3;
-+			// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the item moves out a
++			// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the item moves out a
 +			// level with what it has, and its empty line keeps its own; TipTap made both anew.
 +			// When the line has blocks above it in the item, they stay in it, and the item out a
 +			// level is new.
@@ -109,11 +109,11 @@ index bc8b2ae67ccd77ba690a9615d72fd4203364a4f3..f093d3b61b2bffa94675800fabb145a3
  			const start = $from.before($from.depth - (depthBefore - 1));
  			tr.replace(start, $from.after(-depthAfter), new _tiptap_pm_model.Slice(wrap, 4 - depthBefore, 0));
  			let sel = -1;
-@@ -2786,18 +2818,22 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2908,18 +2940,22 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  		...overrideAttrs
  	};
  	const splitsAtStartOfItem = $from.parentOffset === 0 && $from.index(-1) === 0;
-+	// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the block in the item splits
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the block in the item splits
 +	// as splitBlock does, not copied whole: at its start, the line with the text keeps
 +	// everything.
 +	const splitsAtStartOfBlock = !nextType && $from.parentOffset === 0;
@@ -137,7 +137,7 @@ index bc8b2ae67ccd77ba690a9615d72fd4203364a4f3..f093d3b61b2bffa94675800fabb145a3
  	}];
  	if (!(0, _tiptap_pm_transform.canSplit)(tr.doc, $from.pos, 2)) return false;
  	if (dispatch) {
-@@ -2806,6 +2842,7 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2928,6 +2964,7 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  		const marks = storedMarks || selection.$to.parentOffset && selection.$from.marks();
  		tr.split($from.pos, 2, types).scrollIntoView();
  		if (splitsAtStartOfItem) tr.setNodeMarkup(itemStart, void 0, newTypeAttributes);
@@ -146,14 +146,14 @@ index bc8b2ae67ccd77ba690a9615d72fd4203364a4f3..f093d3b61b2bffa94675800fabb145a3
  		const filteredMarks = marks.filter((mark) => splittableMarks.includes(mark.type.name));
  		tr.ensureMarks(filteredMarks);
 diff --git a/dist/index.js b/dist/index.js
-index 957903bc2f41b88239c054bb3f8a56829acdd9c6..eb65c6486f6efa07d1304e5f91db7f502a2b80c0 100644
+index c39cdd1f3be6bd4e757248bae19c245da06a626c..21fb5b2d5aa87f520583fd0a7437c80881cce5ca 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -2671,6 +2671,11 @@ const sinkListItem$1 = (typeOrName) => ({ state, dispatch }) => {
+@@ -2793,6 +2793,11 @@ const sinkListItem$1 = (typeOrName) => ({ state, dispatch }) => {
  };
  //#endregion
  //#region src/commands/splitBlock.ts
-+// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): a block left as it is adds no
++// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): a block left as it is adds no
 +// step, so that typing after Enter undoes with it, as before.
 +function setMarkupIfChanged(tr, pos, type, attrs) {
 +	if (!tr.doc.nodeAt(pos).hasMarkup(type, type.create(attrs).attrs)) tr.setNodeMarkup(pos, type, attrs);
@@ -161,12 +161,12 @@ index 957903bc2f41b88239c054bb3f8a56829acdd9c6..eb65c6486f6efa07d1304e5f91db7f50
  function ensureMarks(state, splittableMarks) {
  	const marks = state.storedMarks || state.selection.$to.parentOffset && state.selection.$from.marks();
  	if (marks) {
-@@ -2687,40 +2692,59 @@ const splitBlock = ({ keepMarks = true } = {}) => ({ tr, state, dispatch, editor
+@@ -2809,40 +2814,59 @@ const splitBlock = ({ keepMarks = true } = {}) => ({ tr, state, dispatch, editor
  		if (!$from.parentOffset || !canSplit(doc, $from.pos)) return false;
  		if (dispatch) {
  			if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
 -			tr.split($from.pos).scrollIntoView();
-+			// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the second half gets
++			// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the second half gets
 +			// what carries over, as when text is split; TipTap copied the whole block.
 +			tr.split($from.pos, 1, [{
 +				type: $from.parent.type,
@@ -182,7 +182,7 @@ index 957903bc2f41b88239c054bb3f8a56829acdd9c6..eb65c6486f6efa07d1304e5f91db7f50
 -		type: deflt,
 -		attrs: newAttributes
 -	}] : void 0;
-+	// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the block is read once the
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the block is read once the
 +	// selection is deleted, as deleting it can remove the block it started in. The new block
 +	// gets what carries over (`keepOnSplit`) in the middle and at the start too, not a copy of
 +	// the whole block (ueberdosis/tiptap#4591); at the start, the line with the text keeps
@@ -233,11 +233,11 @@ index 957903bc2f41b88239c054bb3f8a56829acdd9c6..eb65c6486f6efa07d1304e5f91db7f50
  			}
  		}
  		if (keepMarks) ensureMarks(state, editor.extensionManager.splittableMarks);
-@@ -2746,12 +2770,20 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2868,12 +2892,20 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  			const depthBefore = $from.index(-1) ? 1 : $from.index(-2) ? 2 : 3;
  			for (let d = $from.depth - depthBefore; d >= $from.depth - 3; d -= 1) wrap = Fragment$1.from($from.node(d).copy(wrap));
  			const depthAfter = $from.indexAfter(-1) < $from.node(-2).childCount ? 1 : $from.indexAfter(-2) < $from.node(-3).childCount ? 2 : 3;
-+			// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the item moves out a
++			// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the item moves out a
 +			// level with what it has, and its empty line keeps its own; TipTap made both anew.
 +			// When the line has blocks above it in the item, they stay in it, and the item out a
 +			// level is new.
@@ -256,11 +256,11 @@ index 957903bc2f41b88239c054bb3f8a56829acdd9c6..eb65c6486f6efa07d1304e5f91db7f50
  			const start = $from.before($from.depth - (depthBefore - 1));
  			tr.replace(start, $from.after(-depthAfter), new Slice(wrap, 4 - depthBefore, 0));
  			let sel = -1;
-@@ -2774,18 +2806,22 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2896,18 +2928,22 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  		...overrideAttrs
  	};
  	const splitsAtStartOfItem = $from.parentOffset === 0 && $from.index(-1) === 0;
-+	// Patched (cfp-stack, patches/@tiptap__core@3.31.4.patch): the block in the item splits
++	// Patched (cfp-stack, patches/@tiptap__core@3.32.0.patch): the block in the item splits
 +	// as splitBlock does, not copied whole: at its start, the line with the text keeps
 +	// everything.
 +	const splitsAtStartOfBlock = !nextType && $from.parentOffset === 0;
@@ -284,7 +284,7 @@ index 957903bc2f41b88239c054bb3f8a56829acdd9c6..eb65c6486f6efa07d1304e5f91db7f50
  	}];
  	if (!canSplit(tr.doc, $from.pos, 2)) return false;
  	if (dispatch) {
-@@ -2794,6 +2830,7 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
+@@ -2916,6 +2952,7 @@ const splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr, state, dispatch
  		const marks = storedMarks || selection.$to.parentOffset && selection.$from.marks();
  		tr.split($from.pos, 2, types).scrollIntoView();
  		if (splitsAtStartOfItem) tr.setNodeMarkup(itemStart, void 0, newTypeAttributes);
