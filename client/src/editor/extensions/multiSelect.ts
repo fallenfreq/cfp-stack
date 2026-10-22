@@ -36,7 +36,9 @@ const applyAction = (positions: NodePos[], action: MultiSelectAction): NodePos[]
 	return []
 }
 
-declare module '@tiptap/vue-3' {
+// On @tiptap/core, where TipTap declares its types: added through @tiptap/vue-3, which passes them
+// on, they're lost when TypeScript reads a package that adds to them on core after this file.
+declare module '@tiptap/core' {
 	interface Commands<ReturnType> {
 		multiSelect: {
 			/** Adds blocks, by their positions, to the blocks selected together. */

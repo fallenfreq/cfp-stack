@@ -9,6 +9,8 @@ import {
 	type ParentConfig,
 } from '@tiptap/vue-3'
 
+// On @tiptap/core, where TipTap declares its types: added through @tiptap/vue-3, which passes them
+// on, they're lost when TypeScript reads a package that adds to them on core after this file.
 declare module '@tiptap/core' {
 	interface NodeConfig<Options, Storage> {
 		/**
