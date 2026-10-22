@@ -167,6 +167,26 @@ test("a stored page sits on the page's line, as an app screen does", async ({
 	expect(Math.abs((await box(title)).left - nav.left)).toBeLessThanOrEqual(1)
 })
 
+// A visitor's page is drawn by the same blocks as the editor, so with their own look (ownLook.ts).
+test("a stored page's blocks are drawn with their own look", async ({ page }) => {
+	await steadyRequests(page)
+	const text = (text: string) => [{ type: 'text', text }]
+	await fakeReplies(page, {
+		'Pages.getBySlug': storedPage('home', 'Home', [
+			{ type: 'heading', attrs: { level: 1 }, content: text('Home') },
+			{
+				type: 'bulletList',
+				content: [
+					{ type: 'listItem', content: [{ type: 'paragraph', content: text('Item') }] },
+				],
+			},
+		]),
+	})
+	await page.goto('/')
+	await expect(page.locator('.page-content h1')).toHaveClass('sf-heading-1')
+	await expect(page.locator('.page-content ul')).toHaveClass('sf')
+})
+
 test("a page in a collection's sheet sits on the sheet's line, and bleeds to its edges", async ({
 	page,
 	themeClass,

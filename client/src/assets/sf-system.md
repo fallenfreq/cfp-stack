@@ -1237,7 +1237,11 @@ with the theme (`api/src/domain/css/`), so it can read the one list of layouts t
 their items with a gap (`GAP_LAYOUTS` in `slLayout.ts`):
 
 - **Elements** opt into the theme by wearing `sf`, set by the node: `blockquote.sf`,
-  `code.sf`, `ul.sf`, `ol.sf`. The theme draws them; the reset leaves the rest bare.
+  `code.sf`, `ul.sf`, `ol.sf`. The theme draws them; the reset leaves the rest bare. A block's
+  own look is drawn, as a component's template draws its own, and is never one of its settings
+  (`ownLook`): it isn't saved, copied or in the code view. Inline code is written with its `sf`,
+  as code has no settings for a paste to save it in. A heading wears its level's `sf-heading-*`
+  unless it has one of its own.
 - **Space between blocks** is `blockSpacing.ts`, in the lowest layer so a component rule that
   sets a block's space above it wins (themes set looks, not spacing). It belongs to flow
   containers — the document, a node view's content box, a plain div block, a quote, a list
@@ -1367,6 +1371,9 @@ Each rule's reason is in the section named.
   (Container-responsive collapse).
 - Warn on a picture with no size of its own (Layout primitives, "A picture's space before it
   loads").
+- Warn on an `sf-heading-*` class on a block that isn't a heading, as the line Enter makes after
+  a heading with one of its own gets, and on two on one heading: body text takes its weight from
+  a utility, not a heading's bundle, and a heading has one prominence (Vocabulary governance).
 
 **Components** (Component blocks, "Writing a component block")
 

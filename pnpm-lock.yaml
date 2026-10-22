@@ -158,6 +158,12 @@ importers:
       '@tanstack/vue-query':
         specifier: ^5.79.0
         version: 5.87.1(vue@3.5.43(typescript@6.0.3))
+      '@tiptap/core':
+        specifier: ^3.32.0
+        version: 3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0)
+      '@tiptap/extension-blockquote':
+        specifier: ^3.32.0
+        version: 3.32.0(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
       '@tiptap/extension-code-block-lowlight':
         specifier: ^3.32.0
         version: 3.32.0(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))(@tiptap/extension-code-block@3.32.0(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)(highlight.js@11.11.1)(lowlight@3.3.0)

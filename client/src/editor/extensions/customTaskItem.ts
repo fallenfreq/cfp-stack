@@ -1,6 +1,5 @@
 import { TaskItem, type TaskItemOptions } from '@tiptap/extension-list'
 import type { Node as PMNode } from '@tiptap/pm/model'
-import { mergeAttributes } from '@tiptap/vue-3'
 
 // Mobile drag-select that crosses a selectable:true block converts to a
 // NodeSelection — native touch handles vanish and the synthetic click on the
@@ -8,6 +7,9 @@ import { mergeAttributes } from '@tiptap/vue-3'
 // selectable:false nodes so the gutter handle still drags task items.
 export const CustomTaskItem = TaskItem.extend<TaskItemOptions>({
 	selectable: false,
+
+	// Checkbox beside the item's content: fixed side + flexible side.
+	ownLook: () => ({ class: 'sl-split sf-gap-md' }),
 
 	// The item's text is in the div after its tick box (TipTap's markup), else in the item itself.
 	// Replaces TipTap's rule, which from 3.30 takes the first div anywhere, losing text before a
@@ -22,17 +24,15 @@ export const CustomTaskItem = TaskItem.extend<TaskItemOptions>({
 		]
 	},
 
-	// TipTap's item sets its own attributes over the configured ones, drawing it and again on each
-	// update, so a class of its own replaced the checkbox-beside-text layout. Merge them as saving
-	// does, and redraw the item when anything but the tick changes (a removed id or style goes too).
-	// Ticks and typing update in place, keeping the class as drawn: the layout's and the selection's.
+	// TipTap's item sets its own attributes again on each update, so a class of its own would
+	// replace what's drawn with it: its look and the selection's. Redraw the item when anything but the
+	// tick changes (a removed id or style goes too); ticks and typing update in place, keeping the
+	// class as drawn.
 	addNodeView() {
 		const create = this.parent?.()
 		return (props) => {
 			const view = create!(props)
 			const dom = view.dom as HTMLElement
-			const attributes = mergeAttributes(this.options.HTMLAttributes, props.HTMLAttributes)
-			for (const [name, value] of Object.entries(attributes)) dom.setAttribute(name, value)
 			let shown = props.node
 			const onlyTicked = (node: PMNode) =>
 				node.type === shown.type

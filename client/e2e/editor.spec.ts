@@ -999,7 +999,6 @@ test('undo goes back no further than the page as it opened', async ({ page }) =>
 
 // The editor reads back the HTML it writes, which copying puts on the clipboard: a to-do item's
 // tick box is drawn, not text. A pasted to-do list started its first item with an empty span.
-// Its blocks and text are compared; the classes the editor adds for display are kept on paste.
 test('a pasted to-do list has the blocks and text of the one copied', async ({ page }) => {
 	const lists = () =>
 		page.evaluate(() => {
@@ -1643,18 +1642,7 @@ const typesWithSettings = (page: Page, ids: readonly string[]) =>
 			parent.forEach((node) => {
 				const { id } = node.attrs
 				if (ids.includes(id)) {
-					// A heading's level class is the editor's own.
-					const classes = String(node.attrs.class)
-						.split(' ')
-						.filter(
-							(name) =>
-								name
-								&& !(
-									node.type.name === 'heading' && name.startsWith('sf-heading-')
-								),
-						)
-					const kept =
-						classes.join(' ') === `c-${id}` && node.attrs.style === 'color: red'
+					const kept = node.attrs.class === `c-${id}` && node.attrs.style === 'color: red'
 					const seen =
 						`${node.type.name} in ${parent.attrs.id ?? parent.type.name}`
 						+ (node.attrs.checked ? ', ticked' : '')
@@ -2447,6 +2435,111 @@ test('a table written with column widths comes back without them', async ({ page
 	await expect(table.locator('td')).toHaveText(['One', 'Two'])
 	expect(await pageContent(page), 'no widths kept').not.toMatch(/"colwidth":\[/)
 	expect((await box(table)).width).toBeLessThanOrEqual((await box(page.locator('.tiptap'))).width)
+})
+
+/**
+ * Each block of the type and text of the one with this id, in page order: its class and style as
+ * saved and as drawn, a style as the browser reads it (copying writes one with a closing
+ * semicolon).
+ */
+const looks = (page: Page, id: string) =>
+	page.evaluate((id) => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		const { doc } = editor.state
+		let looked: ProseMirrorNode | undefined
+		doc.descendants((node) => {
+			if (node.attrs.id === id) looked ??= node
+		})
+		const found: string[] = []
+		const read = document.createElement('i')
+		doc.descendants((node, at) => {
+			if (node.type !== looked!.type || node.textContent !== looked!.textContent) return
+			const drawn = editor.view.nodeDOM(at) as HTMLElement
+			read.setAttribute('style', node.attrs.style ?? '')
+			found.push(
+				`saved "${node.attrs.class}" "${read.style.cssText}", `
+					+ `drawn "${drawn.className}" "${drawn.style.cssText}"`,
+			)
+		})
+		return found
+	}, id)
+
+// A built-in block's look is drawn, as a component's template draws its own (ownLook.ts): it was
+// written into the block's HTML, so a copy saved it as the block's own, and the code view showed it
+// on the copy only. A heading's was saved on every heading.
+test("a block's own look is drawn, never saved, copied or written in the code view", async ({
+	page,
+}) => {
+	await insertAtEnd(
+		page,
+		'<blockquote id="look-quote"><p>Quote</p></blockquote>'
+			+ '<pre id="look-code"><code>let look = 1</code></pre>'
+			+ '<ul id="look-bullets"><li><p>Bullet</p></li></ul>'
+			+ '<ol id="look-numbers"><li><p>Number</p></li></ol>'
+			+ '<ul data-type="taskList" id="look-todo"><li data-type="taskItem" id="look-todo-item" data-checked="false"><p>To do</p></li></ul>'
+			+ '<table id="look-table"><tr><td id="look-cell"><p>A</p></td><td><p>B</p></td></tr></table>'
+			+ '<table id="look-table-own" style="width: 300px"><tr><td><p>Own</p></td></tr></table>'
+			+ '<table id="look-table-wide"><tr><td colwidth="100"><p>W</p></td><td colwidth="150"><p>X</p></td></tr></table>'
+			+ '<h2 id="look-h2">Level</h2>'
+			+ '<h2 id="look-h2-own" class="sf-heading-1">Own prominence</h2>',
+	)
+	await settle(page)
+	const blocks = {
+		'look-quote': ['look-quote', 'class "sf sf-depth-1"'],
+		'look-code': ['look-code', 'class "sf hljs"'],
+		'look-bullets': ['look-bullets', 'class "sf"'],
+		'look-numbers': ['look-numbers', 'class "sf"'],
+		'look-todo': ['look-todo-item', 'class "sl-split sf-gap-md"'],
+		'look-table': ['look-table', 'style "min-width: 50px;"'],
+		'look-table-own': ['look-table-own', 'its own style only'],
+		'look-table-wide': ['look-table-wide', 'style "width: 250px;"'],
+		'look-h2': ['look-h2', 'class "sf-heading-2"'],
+		'look-h2-own': ['look-h2-own', 'its own class only'],
+	} as const
+	for (const id of Object.keys(blocks)) await pasteCopy(page, id)
+	const drawnAs = {
+		'class "sf sf-depth-1"': 'saved "" "", drawn "sf sf-depth-1" ""',
+		'class "sf hljs"': 'saved "" "", drawn "sf hljs" ""',
+		'class "sf"': 'saved "" "", drawn "sf" ""',
+		'class "sl-split sf-gap-md"': 'saved "" "", drawn "sl-split sf-gap-md" ""',
+		'style "min-width: 50px;"': 'saved "" "", drawn "" "min-width: 50px;"',
+		'its own style only': 'saved "" "width: 300px;", drawn "" "width: 300px;"',
+		'style "width: 250px;"': 'saved "" "", drawn "" "width: 250px;"',
+		'class "sf-heading-2"': 'saved "" "", drawn "sf-heading-2" ""',
+		'its own class only': 'saved "sf-heading-1" "", drawn "sf-heading-1" ""',
+	}
+	for (const [copied, [id, look]] of Object.entries(blocks))
+		expect.soft(await looks(page, id), `${copied}, and its copy: ${look}`).toEqual([
+			drawnAs[look],
+			drawnAs[look],
+		])
+
+	// The look follows the block as it changes.
+	await cursorAt(page, 'look-h2', 0)
+	await page.keyboard.press('ControlOrMeta+Alt+3')
+	await cursorInView(page, 'look-cell', 1)
+	await page.locator('.floating-toolbar').getByRole('button', { name: '+ Col →' }).click()
+	await settle(page)
+	expect
+		.soft((await looks(page, 'look-h2'))[0], 'made H3')
+		.toBe('saved "" "", drawn "sf-heading-3" ""')
+	expect
+		.soft((await looks(page, 'look-table'))[0], 'a column added')
+		.toBe('saved "" "", drawn "" "min-width: 75px;"')
+
+	await switchView(page, true)
+	const code = await shownCode(page)
+	const written = code.slice(code.indexOf('<blockquote id="look-quote"'))
+	const settings = written.match(/ (class|style)="[^"]*"/g)?.map((set) => set.replace(';"', '"'))
+	expect.soft(settings, 'the code view').toEqual([
+		' style="width: 300px"',
+		' class="sf-heading-1"',
+		' style="width: 300px"',
+		' class="sf-heading-1"',
+	])
+	await expect
+		.soft(shownEditor(page).locator('pre'), "the code view's own code block")
+		.toHaveClass('sf hljs')
 })
 
 // It used to drop what it couldn't read without a word: a marquee came back as a paragraph.

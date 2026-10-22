@@ -177,7 +177,7 @@ div  0 -171 0 0  contents normal
 h3.sf-heading-3  24 3818 552 28  block normal
 p  24 3857 552 26  block normal
 code.sf  88 3860 58 20  inline normal
-table.tiptap-table  24 3895 552 171  table normal
+table  24 3895 552 171  table normal
 colgroup  24 3895 552 171  table-column-group normal
 col  24 3895 151 171  table-column normal
 col  175 3895 242 171  table-column normal
@@ -236,7 +236,7 @@ p  24 5323 552 130  block normal
 em  68 5352 30 20  inline normal
 span.material-symbols-rounded.sf-icon  81 5381 16 16  inline-block normal
 strong  100 5378 51 20  inline normal
-pre.sf.hljs.sl-bleed.sf-is-edge-left.sf-is-edge-right  0 5469 600 336  block normal
+pre.sl-bleed.sf-is-edge-left.sf-is-edge-right.sf.hljs  0 5469 600 336  block normal
 code.language-typescript  16 5484 394 306  inline normal
 span.hljs-keyword  16 5484 58 20  inline normal
 span.hljs-keyword  218 5484 38 20  inline normal

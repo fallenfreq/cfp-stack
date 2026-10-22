@@ -6,7 +6,7 @@
 
 <layout-center maxWidth="3xl" class="sf-gap-md">
 	<div data-container="">
-		<h1 class="sf-heading-1">Block Builder</h1>
+		<h1>Block Builder</h1>
 		<p>
 			A <strong>rich content editor</strong> for Vue 3, built on <em>Tiptap</em> and
 			<em>ProseMirror</em>. Every block is draggable, every node is configurable, and layouts
@@ -16,7 +16,7 @@
 	</div>
 
 	<layout-card class="sf-variant-featured sf-loudness-2 sf-size-md">
-		<h3 class="sf-heading-3">Quick Reference</h3>
+		<h3>Quick Reference</h3>
 		<layout-columns columns="2" class="sf-gap-md sl-collapse-xs">
 			<ul>
 				<li>
@@ -41,7 +41,7 @@
 	<hr />
 
 	<div data-container="">
-		<h2 class="sf-heading-2">Layout Components</h2>
+		<h2>Layout Components</h2>
 		<p>
 			Layout components are block containers inserted via the <code>/</code> command. They
 			control arrangement without touching CSS, and all support the global attribute editor
@@ -50,7 +50,7 @@
 	</div>
 
 	<layout-card class="sf-size-md">
-		<h3 class="sf-heading-3">LayoutStack</h3>
+		<h3>LayoutStack</h3>
 		<p>
 			A <strong>flex-column container</strong> with configurable <em>gap</em>,
 			<em>padding</em>, and <em>align</em> props. Use it to group blocks with consistent
@@ -68,7 +68,7 @@
 	</layout-card>
 
 	<div data-container="">
-		<h3 class="sf-heading-3">LayoutSplit</h3>
+		<h3>LayoutSplit</h3>
 		<p>
 			Creates a <strong>two-column asymmetric grid</strong>. The <code>split</code> prop sets
 			the ratio: 1/4, 1/3, 2/5, 1/2, 3/5, 2/3, or 3/4. The two cards below are the two direct
@@ -79,14 +79,14 @@
 	</div>
 	<layout-split split="1/2" class="sf-gap-md sl-collapse-sm">
 		<layout-card class="sf-variant-alt-1 sf-size-md">
-			<h3 class="sf-heading-3">Left column</h3>
+			<h3>Left column</h3>
 			<p>
 				Any block content can go inside — paragraphs, lists, nested layout components,
 				images, code blocks. This is a <code>split="1/2"</code> (equal width) layout.
 			</p>
 		</layout-card>
 		<layout-card class="sf-variant-alt-1 sf-size-md">
-			<h3 class="sf-heading-3">Right column</h3>
+			<h3>Right column</h3>
 			<p>
 				The <code>sf-gap-*</code> class sets the gutter. Try the attribute editor on the
 				LayoutSplit wrapper to change the split ratio or gap live.
@@ -95,7 +95,7 @@
 	</layout-split>
 
 	<div data-container="">
-		<h3 class="sf-heading-3">LayoutColumns</h3>
+		<h3>LayoutColumns</h3>
 		<p>
 			An <strong>N-column equal grid</strong> — 2, 3, or 4 columns. Each direct child becomes
 			one cell. The three cards below are in a <code>columns="3"</code> grid.
@@ -103,15 +103,15 @@
 	</div>
 	<layout-columns columns="3" class="sf-gap-md sl-collapse-sm">
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">Column 1</h3>
+			<h3>Column 1</h3>
 			<p>2, 3, or 4 equal columns. Each direct child is one cell.</p>
 		</layout-card>
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">Column 2</h3>
+			<h3>Column 2</h3>
 			<p>The <code>gap</code> prop controls the gutter between columns.</p>
 		</layout-card>
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">Column 3</h3>
+			<h3>Column 3</h3>
 			<p>
 				The <code>sl-collapse-sm</code> class sets the breakpoint at which it stacks to one
 				column.
@@ -121,7 +121,7 @@
 
 	<layout-split split="2/3" class="sf-gap-md sl-collapse-sm">
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">LayoutCard</h3>
+			<h3>LayoutCard</h3>
 			<p>
 				A <code>sf-depth-1</code> surface container. Add <code>sf-loudness-3</code> for a
 				prominent card, <code>sf-loudness-1</code> for a quiet de-emphasised card,
@@ -133,7 +133,7 @@
 			</p>
 		</layout-card>
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">LayoutCenter</h3>
+			<h3>LayoutCenter</h3>
 			<p>
 				Constrains children to a max-width and centres them horizontally. Options: xs
 				(20rem) through 3xl (48rem) or full. This page uses it as the top-level reading
@@ -146,7 +146,7 @@
 	<hr />
 
 	<div data-container="">
-		<h2 class="sf-heading-2">Text &amp; Block Formatting</h2>
+		<h2>Text &amp; Block Formatting</h2>
 		<p>
 			Select any text to reveal the <strong>floating toolbar</strong>. Inline formatting works
 			on any text node: <strong>bold</strong>, <em>italic</em>, <s>strikethrough</s>,
@@ -166,7 +166,7 @@
 	</blockquote>
 
 	<div data-container="">
-		<h2 class="sf-heading-2">Block Types</h2>
+		<h2>Block Types</h2>
 		<p>
 			Every block type is available from the <code>/</code> command palette. Headings, lists,
 			and blockquotes also have markdown shortcuts that fire as you type. Horizontal rules are
@@ -176,7 +176,7 @@
 
 	<layout-columns columns="3" class="sf-gap-md sl-collapse-sm">
 		<layout-stack class="sf-gap-sm">
-			<h3 class="sf-heading-3">Lists</h3>
+			<h3>Lists</h3>
 			<ul>
 				<li>
 					<p>Bullet — type <code>-</code> to start</p>
@@ -196,7 +196,7 @@
 		</layout-stack>
 
 		<layout-stack class="sf-gap-sm">
-			<h3 class="sf-heading-3">Images</h3>
+			<h3>Images</h3>
 			<p>
 				Insert via <code>/image</code>. Select to reveal the
 				<span class="material-symbols-rounded sf-icon">edit</span> URL editor.
@@ -205,7 +205,7 @@
 		</layout-stack>
 
 		<layout-stack class="sf-gap-sm">
-			<h3 class="sf-heading-3">Tables</h3>
+			<h3>Tables</h3>
 			<p>Insert via <code>/table</code>. Click any cell for row and column controls.</p>
 			<table>
 				<tr>
@@ -233,7 +233,7 @@
 	</layout-columns>
 
 	<div data-container="">
-		<h2 class="sf-heading-2">Aspect Ratio &amp; Image Fill</h2>
+		<h2>Aspect Ratio &amp; Image Fill</h2>
 		<p>
 			Select any image or block and use the
 			<span class="material-symbols-rounded sf-icon">aspect_ratio</span> toolbar to lock it to
@@ -269,7 +269,7 @@
 	</layout-split>
 
 	<div data-container="">
-		<h2 class="sf-heading-2">Code Blocks</h2>
+		<h2>Code Blocks</h2>
 		<p>
 			Syntax highlighting for JavaScript, TypeScript, Python, JSON, CSS, and HTML. Select
 			<em>auto</em> for automatic detection. When a code block is focused the toolbar shows a
@@ -299,7 +299,7 @@ const editor = useEditor({
 	<hr />
 
 	<div data-container="">
-		<h2 class="sf-heading-2">The Floating Toolbar</h2>
+		<h2>The Floating Toolbar</h2>
 		<p>
 			The toolbar appears above any selected node or text range and adapts its controls to
 			what makes sense in context. Hovering over a button shows a tooltip. Every icon below is
@@ -309,7 +309,7 @@ const editor = useEditor({
 
 	<layout-columns columns="3" class="sf-gap-md sl-collapse-sm">
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">Block Conversion</h3>
+			<h3>Block Conversion</h3>
 			<p>Available on most block nodes:</p>
 			<ul>
 				<li>
@@ -342,7 +342,7 @@ const editor = useEditor({
 		</layout-card>
 
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">Inline Formatting</h3>
+			<h3>Inline Formatting</h3>
 			<p>Shown when cursor is in a text block:</p>
 			<ul>
 				<li>
@@ -380,7 +380,7 @@ const editor = useEditor({
 		</layout-card>
 
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">Attribute Editor</h3>
+			<h3>Attribute Editor</h3>
 			<p>
 				Available on every node at depth &gt; 0.
 				<span class="material-symbols-rounded sf-icon">tune</span> opens a panel where you
@@ -408,7 +408,7 @@ const editor = useEditor({
 
 	<layout-columns columns="3" class="sf-gap-md sl-collapse-sm">
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">Table Controls</h3>
+			<h3>Table Controls</h3>
 			<p>Appear only when the cursor is inside a table cell:</p>
 			<ul>
 				<li>
@@ -427,7 +427,7 @@ const editor = useEditor({
 		</layout-card>
 
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">List Controls</h3>
+			<h3>List Controls</h3>
 			<p>Appear when the active node is a list wrapper:</p>
 			<ul>
 				<li>
@@ -455,7 +455,7 @@ const editor = useEditor({
 		</layout-card>
 
 		<layout-card class="sf-size-md">
-			<h3 class="sf-heading-3">Media &amp; Code Controls</h3>
+			<h3>Media &amp; Code Controls</h3>
 			<ul>
 				<li>
 					<p>
@@ -483,7 +483,7 @@ const editor = useEditor({
 	</layout-columns>
 
 	<layout-card class="sf-size-md">
-		<h3 class="sf-heading-3">Code View</h3>
+		<h3>Code View</h3>
 		<p>
 			The <code>&lt; &gt;</code> button at the bottom-right of the editor toggles between the
 			visual editor and raw HTML source. Edits made in code view are parsed back into the
@@ -493,11 +493,11 @@ const editor = useEditor({
 		</p>
 	</layout-card>
 
-	<h2 class="sf-heading-2">Node Path &amp; Depth Control</h2>
+	<h2>Node Path &amp; Depth Control</h2>
 
 	<layout-split split="1/2" class="sf-gap-md sl-collapse-sm">
 		<layout-card class="sf-variant-alt-1 sf-size-md">
-			<h3 class="sf-heading-3">The Node Path Breadcrumb</h3>
+			<h3>The Node Path Breadcrumb</h3>
 			<p>
 				At the top of the editor a breadcrumb shows the full ancestor path of the cursor —
 				for example: <code>doc › LayoutCard › p</code>. Clicking any segment sets the
@@ -522,7 +522,7 @@ const editor = useEditor({
 		</layout-card>
 
 		<layout-card class="sf-variant-alt-1 sf-size-md">
-			<h3 class="sf-heading-3">How the Depth Ceiling Works</h3>
+			<h3>How the Depth Ceiling Works</h3>
 			<p>
 				Active depth is a <em>ceiling</em>, not an exact level. At active depth 2, blocks at
 				depth 1 <strong>and</strong> depth 2 both get handles.
@@ -552,11 +552,11 @@ const editor = useEditor({
 		</layout-card>
 	</layout-split>
 
-	<h2 class="sf-heading-2">Drag Handle &amp; Multi-select</h2>
+	<h2>Drag Handle &amp; Multi-select</h2>
 
 	<layout-split split="1/2" class="sf-gap-md sl-collapse-sm">
 		<layout-card class="sf-variant-alt-1 sf-size-md">
-			<h3 class="sf-heading-3">Drag Handle</h3>
+			<h3>Drag Handle</h3>
 			<p>
 				A ⠿ handle appears to the left of any draggable block when you hover near it. Drag
 				it to reorder. The handle fades after 2 seconds of inactivity — move the cursor back
@@ -570,7 +570,7 @@ const editor = useEditor({
 		</layout-card>
 
 		<layout-card class="sf-variant-alt-1 sf-size-md">
-			<h3 class="sf-heading-3">Multi-select (Virtual Selection)</h3>
+			<h3>Multi-select (Virtual Selection)</h3>
 			<p>When a selection is active the toolbar switches to virtual-selection mode:</p>
 			<ul>
 				<li>
@@ -627,7 +627,7 @@ const editor = useEditor({
 	</layout-split>
 
 	<div data-container="">
-		<h2 class="sf-heading-2">Interactive Vue Component Nodes</h2>
+		<h2>Interactive Vue Component Nodes</h2>
 		<p>
 			Any Vue component can be a first-class editor node — with full reactivity, state, event
 			handlers, and lifecycle hooks — while its slot content stays editable by the user. The
@@ -666,7 +666,7 @@ const editor = useEditor({
 	<hr />
 
 	<layout-card class="sf-loudness-1 sf-size-lg">
-		<h3 class="sf-heading-3">What's Shipped</h3>
+		<h3>What's Shipped</h3>
 		<ul data-type="taskList">
 			<li data-checked data-type="taskItem">
 				<p>Floating toolbar with context-aware items and tooltips</p>

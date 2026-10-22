@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { useEditor } from '@/composables/editor/useEditor'
 import { CodeBlockExtension } from '@/config/editor/codeBlockExtension'
+import { OwnLook } from '@/editor/extensions/ownLook'
 import { useEditorStore } from '@/stores/editorStore'
 import { Document } from '@tiptap/extension-document'
 import { Text } from '@tiptap/extension-text'
@@ -25,6 +26,7 @@ const editor = useEditor({
 			defaultLanguage: 'html',
 		}),
 		UndoRedo,
+		OwnLook,
 	],
 	content: {
 		type: 'doc',

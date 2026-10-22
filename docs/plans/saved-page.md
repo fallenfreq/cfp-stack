@@ -95,19 +95,21 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    buttons and keys, Change Type, the Heading and Code Block buttons, `## ` and a code fence
    typed, Backspace in an empty code block. An item taken out of a list goes, its settings with
    it, as a quote's do with Unwrap; the line keeps its own.
-6. **Copying takes the code view's version.** The editor draws some built-in blocks with classes
-   of its own, which aren't saved and don't show in the code view: lists `sf`, quotes
-   `sf sf-depth-1`, code blocks `sf hljs`, to-do items `sl-split sf-gap-md`, tables
-   `tiptap-table` (and a `min-width` style). Copying took the page as drawn, so pasting saved them
-   as the block's own, and the code view then showed them on the copy only. Copying writes what
-   the code view writes, so they are drawn only, like a component's own look (the Card's
-   `layout-card sf-depth-1`). Headings are the exception until "Later" below.
-    - To check: another app (email, Google Docs) then gets the code view's HTML, so a pasted
-      to-do list has no drawn tick boxes there.
-    - `editor.spec.ts`, "a pasted to-do list has the blocks and text of the one copied", says the
-      classes are kept on paste: it changes with this step.
-    - Until then, a list pasted from the page carries those classes to its new kind when its kind
-      changes (step 5 keeps them): a to-do list's items made bullet items show no bullets.
+6. **A block's own look is drawn, not saved.** The editor draws some built-in blocks with a look
+   of its own: lists `sf`, quotes `sf sf-depth-1`, code blocks `sf hljs`, to-do items
+   `sl-split sf-gap-md`, a table TipTap's width from its columns, a heading its level's
+   `sf-heading-*`. It was written into the block's HTML, which copying writes, so a paste saved it
+   as the block's own and the code view showed it on the copy only; a heading's the editor saved
+   on every heading, kept in step with its level. Each block's look is drawn now, as a component's
+   template draws its own (the Card's `layout-card sf-depth-1`), and is never one of its settings:
+   each block sets it up as its `ownLook`, which `ownLook.ts` draws.
+    - A heading wears its level's `sf-heading-*` unless it has one of its own: its prominence can
+      differ from its level (`sf-system.md`, "Headings"). The editor replaced the author's with
+      its level's, and took one off any other block.
+    - Inline code keeps its `sf` in its HTML: code has no settings for a paste to save it in.
+      Tables lose `tiptap-table`, which nothing has styled since 2b3cb95.
+    - Another app gets the blocks without the editor's classes, and still gets a to-do list's
+      tick boxes (TipTap's HTML).
 7. **The code view refuses what the page can't keep.** Leaving the code view dropped without a
    word a paragraph's `title`, `lang`, `data-…` and `onclick`, and HTML comments (a link's
    `title` was kept). An unknown element is refused today; so is anything else the page can't
@@ -132,9 +134,6 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
 
 Later, the owner's call:
 
-- A heading's level class (`sf-heading-2`) is saved on every heading and shows in the code view.
-  f0b5f39 saved it because drawing it the way lists are drawn ran into step 6's bug. After step 6
-  it could be drawn only, as the level is the heading's own setting.
 - Keeping HTML comments written in the code view (owner, 2026-10-18: not now).
 
 ### Decisions
@@ -153,7 +152,11 @@ Later, the owner's call:
   keeps its own** (owner, 2026-10-18).
 - **Changing a block's kind is a step of its own** (owner, 2026-10-18): it loses ids; the one it
   copies, from the block around it, the id rule takes off.
-- **Copying takes the code view's version, not the page as drawn** (owner, 2026-10-18).
+- **A block's own look is drawn, never one of its settings** (owner, 2026-10-22), as a
+  component's is, so copying, the code view and the saved page need nothing of their own. Each
+  block sets its look up with the rest of it, and one extension draws them all. It replaces
+  copying the code view's version (2026-10-18), which left a heading's class saved and another
+  app without a to-do list's tick boxes.
 - **A block written whole counts as put in; ids are given as settings** (owner, 2026-10-19). The
   rule tells the editor's duplicates from the author's by how the change was written. Counting a
   block written whole as the one there (step 3, dropped) would have kept the id Change Type
@@ -273,4 +276,26 @@ Later, the owner's call:
   (`sf-system-todo.md`, "Editor"). Text selected from a list into the line after it, then the
   line's list button, makes the line part of the list, as before.
 
-Next: step 6, in a session of its own.
+- **Step 6 done** (2026-10-22). Planned first as copying the code view's version; the owner chose
+  drawing each block's look instead, as a component's template draws its own, so copying, the
+  code view and the saved page need nothing of their own. Each built-in block sets up its look as
+  its `ownLook` (the quote and the lists, now extended outside StarterKit; the code block, the
+  to-do item, the table, the heading), and `OwnLook` (`ownLook.ts`) draws them as decorations,
+  again with each change, in the page editor, on visitors' pages and in the code view's own code
+  block. The heading's class-writing plugin is gone, and the demo page's headings lose their level
+  classes; a table is written with its own style only, and loses `tiptap-table`, which nothing
+  styled. `@tiptap/core` and `@tiptap/extension-blockquote` join the client's dependencies (a
+  block's `ownLook` is typed on TipTap's core; the quote is extended). Measured in Chrome: a copy
+  saves nothing the editor drew, and drawing costs nothing measurable per change, on the test page
+  or one ten times its size. One check in `editor.spec.ts` and one in `app.spec.ts`, each of 15
+  parts failing its own rows without it. The plan and the code were each reviewed by an agent;
+  every finding checked: a row added for a table whose columns all have widths, one dropped that
+  an older check covers. New: a heading with an `sf-heading-*` of its own is drawn by it, and any
+  other block keeps one (a validator rule is listed in `sf-system.md`); a block's classes are kept
+  as written (the heading plugin rewrote every block's spacing); a table's width follows its
+  columns; the look comes after a block's own classes, so two lines of the demo layout snapshots
+  changed, their boxes the same. Unit tests pass (4 + 34); all 668 runs of the Playwright checks
+  pass. Found, outside this step: a copied block's style comes back as the browser writes it
+  (`color: red;` for `color: red`), as ProseMirror writes styles through `style.cssText`.
+
+Next: step 7, in a session of its own.
