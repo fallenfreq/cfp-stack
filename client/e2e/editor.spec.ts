@@ -9,6 +9,7 @@ import {
 	css,
 	moveTo,
 	nodePosition,
+	openSeeded,
 	openTests,
 	selectBlock,
 	selectBlockAt,
@@ -2423,18 +2424,19 @@ test('a table written with a head and foot comes back with all its rows', async 
 	await expect(page.locator('.tiptap tr')).toHaveText(['Head', 'Body', 'Foot'])
 })
 
-// Tables from elsewhere give their columns widths; the page keeps none, so a table fits its column.
-test('a table written with column widths comes back without them', async ({ page }) => {
+// Tables from elsewhere give their columns widths in the table's column list: the page keeps them,
+// as the cells' own, as TipTap does.
+test('a table written with column widths keeps them', async ({ page }) => {
 	await switchView(page, true)
 	await replaceCode(
 		page,
 		'<table><colgroup><col width="900"><col width="900"></colgroup><tbody><tr><td>One</td><td>Two</td></tr></tbody></table>',
 	)
 	await switchView(page, false)
-	const table = page.locator('.tiptap table')
-	await expect(table.locator('td')).toHaveText(['One', 'Two'])
-	expect(await pageContent(page), 'no widths kept').not.toMatch(/"colwidth":\[/)
-	expect((await box(table)).width).toBeLessThanOrEqual((await box(page.locator('.tiptap'))).width)
+	await expect(page.locator('.tiptap table td')).toHaveText(['One', 'Two'])
+	expect((await pageContent(page)).match(/"colwidth":\[900\]/g), 'the widths kept').toHaveLength(
+		2,
+	)
 })
 
 /**
@@ -2552,6 +2554,248 @@ test("code the page can't read keeps the code view open, saying what", async ({ 
 	await expect(codeViewButton(page)).toHaveAttribute('aria-pressed', 'true')
 	expect(await pageContent(page)).toBe(opened)
 })
+
+// The code view's code replaced, as one edit.
+const writeCode = (page: Page, code: string) =>
+	page.evaluate((code) => {
+		const editor = [...document.querySelectorAll<TiptapEditorHTMLElement>('.tiptap')].find(
+			(el) => el.checkVisibility(),
+		)!.editor!
+		editor.commands.setContent({
+			type: 'doc',
+			content: [{ type: 'codeBlock', content: [{ type: 'text', text: code }] }],
+		})
+	}, code)
+
+// The messages shown, dismissed: out of the way of the Code view button.
+const dismissMessages = async (page: Page) => {
+	for (const dismiss of await page
+		.locator('.toast')
+		.getByRole('button', { name: 'Dismiss' })
+		.all())
+		await dismiss.click()
+	await expect(page.locator('.toast')).toHaveCount(0)
+}
+
+// It used to drop what it couldn't keep without a word: a paragraph's title, a comment.
+test("code the page can't keep keeps the code view open, saying what", async ({ page }) => {
+	const opened = await pageContent(page)
+	await switchView(page, true)
+	const refused: [code: string, message: string][] = [
+		[
+			'<p title="Note" lang="fr" dir="rtl" data-note="1" onclick="go()">P</p>',
+			`The page can't keep title="Note" on <p> (and 4 more).`,
+		],
+		['<p id="intro" title="Note">P</p>', `The page can't keep title="Note" on <p id="intro">.`],
+		[
+			'<p><a href="https://example.test" id="here">Link</a></p>',
+			`The page can't keep id="here" on <a>.`,
+		],
+		['<p>Kept</p><!-- a note -->', "The page can't keep comments: <!-- a note -->."],
+		// Inline code is written with a class of its own.
+		['<p><code class="mine">c</code></p>', "The page can't keep the class mine on <code>."],
+		[
+			'<p><span style="color: red; font-size: 2em">Big</span></p>',
+			"The page can't keep font-size in the style of <span>.",
+		],
+		[
+			'<pre><code>a<strong>b</strong></code></pre>',
+			"The page can't keep <strong>b</strong> inside <code>.",
+		],
+		[
+			'<p><strong><strong>x</strong></strong></p>',
+			"The page can't keep <strong><strong>x</strong></strong> inside <p>.",
+		],
+		['<pre>a<br>b</pre>', "The page can't keep <br> inside <pre>."],
+		[
+			'<p><a href="https://example.test"></a>Text</p>',
+			`The page can't keep <a href="https://example.test"></a> inside <p>.`,
+		],
+		[
+			'<pre><code class="language-js" title="Code">x</code></pre>',
+			`The page can't keep title="Code" on <code>.`,
+		],
+		[
+			'<table><thead class="head"><tr><th>H</th></tr></thead></table>',
+			"The page can't keep the class head on <thead>.",
+		],
+		// What the page writes of a block itself, written otherwise: the tick isn't the item's.
+		[
+			'<ul data-type="taskList"><li data-type="taskItem"><label><input type="checkbox" checked></label><div><p>Done</p></div></li></ul>',
+			"The page can't keep checked on <input>.",
+		],
+		[
+			'<table><colgroup><col style="width: 300px"></colgroup><tr><td>Cell</td></tr></table>',
+			"The page can't keep width in the style of <col>.",
+		],
+		// Each of a kind paired with the page's own, in order: the second column's width is lost.
+		[
+			'<table><colgroup><col width="100"><col style="width: 300px"></colgroup><tr><td>A</td><td>B</td></tr></table>',
+			"The page can't keep width in the style of <col>.",
+		],
+		[
+			'<ul data-type="taskList"><li data-type="taskItem"><label><input type="checkbox"></label><div><p>A</p></div><div>B</div></li></ul>',
+			"The page can't keep <div>B</div> inside <li>.",
+		],
+		// A column's width the cell doesn't read, its own being its own: the first table's is kept.
+		[
+			'<table><colgroup><col width="300"></colgroup><tr><td>A</td></tr></table><table><colgroup><col width="300"></colgroup><tr><td colwidth="100">B</td></tr></table>',
+			`The page can't keep width="300" on <col>.`,
+		],
+		// A style the page makes into bold, but doesn't keep (owner, 2026-10-27: refused for now), and
+		// one it only looks at.
+		[
+			'<p><em style="font-weight: bold">Bold</em></p>',
+			"The page can't keep font-weight in the style of <em>.",
+		],
+		[
+			'<p><b style="font-weight: 300">Bold</b></p>',
+			"The page can't keep font-weight in the style of <b>.",
+		],
+		// What a rule that takes an element apart reads of it isn't kept.
+		[
+			'<table><tbody id="rows"><tr><td>A</td></tr></tbody></table>',
+			`The page can't keep id="rows" on <tbody>.`,
+		],
+		// A value the page can't read leaves the rest of the code checked.
+		[
+			'<ol start=""><li><p>A</p></li></ol><p title="Note">P</p>',
+			`The page can't keep title="Note" on <p>.`,
+		],
+		// A comment in a style hides nothing after it.
+		[
+			'<p><span style="color: red; /* big */ font-size: 2em">B</span></p>',
+			"The page can't keep font-size in the style of <span>.",
+		],
+		// A style's properties as written, not their parts.
+		[
+			'<p><span style="color: red; margin: 0 auto">Centred</span></p>',
+			"The page can't keep margin in the style of <span>.",
+		],
+		// Each asked about on its own: the width, which the cells read, is kept.
+		[
+			'<table><colgroup><col width="900" title="Wide"></colgroup><tr><td>Cell</td></tr></table>',
+			`The page can't keep title="Wide" on <col>.`,
+		],
+		[`<p title='say "hi"'>P</p>`, `The page can't keep title="say &quot;hi&quot;" on <p>.`],
+		[
+			'<layout-card variant="wide"><p>C</p></layout-card>',
+			`The page can't keep variant="wide" on <layout-card>.`,
+		],
+		[
+			'<layout-columns columns="7"><p>C</p></layout-columns>',
+			`The page can't read this code: Expected one of 2, 3, 4, got "7".`,
+		],
+		// Anything else the page can't take says why: its code blocks have no bash.
+		[
+			'<pre><code class="language-bash">ls</code></pre>',
+			"The page can't read this code: Unknown language: `bash` is not registered.",
+		],
+	]
+	for (const [code, message] of refused) {
+		await writeCode(page, code)
+		await codeViewButton(page).click()
+		await expect.soft(page.getByText(message, { exact: true }), code).toBeVisible()
+		await dismissMessages(page)
+	}
+	await expect(codeViewButton(page)).toHaveAttribute('aria-pressed', 'true')
+	expect(await pageContent(page)).toBe(opened)
+})
+
+// What the page adds or rewrites itself, a setting at its default and what the page writes of a
+// block itself never refuse the code.
+test('code the page rewrites itself goes into the page', async ({ page }) => {
+	const kept = [
+		'<p style="color:red" class="  a   b ">Spaces</p>',
+		'<p><a href="https://example.test">a</a><a href="https://example.test">b</a> <b>B</b> <i>I</i> <del>D</del></p>',
+		'<table><tbody><tr><td colspan="1">Cell</td></tr></tbody></table>',
+		'<ol start="1"><li><p>One</p></li></ol>',
+		'<layout-columns columns="2"><p>C</p></layout-columns>',
+		'<pre><code class="language-js">x</code></pre>',
+		'<ul data-type="taskList"><li data-type="taskItem" data-checked><label><input type="checkbox" checked><span></span></label><div><p>Done</p></div></li></ul>',
+		'<table><colgroup><col style="min-width: 25px"></colgroup><tr><td>Cell</td></tr></table>',
+		// Read and written the page's own way: a cell's alignment as text-align; an empty id.
+		'<table><tr><td align="center" style="text-align: center">Cell</td></tr></table>',
+		'<p id="">No id</p>',
+		// A column's width the cells read, though the first row has fewer cells than columns.
+		'<table><colgroup><col width="100"><col width="200"></colgroup><tr><td>A</td></tr><tr><td>1</td><td>2</td></tr></table>',
+		'<div data-youtube-video><iframe src="https://www.youtube.com/embed/3lTUAWOgoHs"></iframe></div>',
+		// A colour's classes, read by the colour, written as its style: a see-through step means
+		// something only beside its colour. Last: coloured text stops the code view opening again
+		// (sf-system-todo.md, "Editor").
+		'<p><span class="sf-color-primary sf-color-alpha-3">Colour</span></p>',
+	]
+	for (const code of kept) {
+		await switchView(page, true)
+		await writeCode(page, code)
+		await codeViewButton(page).click()
+		await expect.soft(codeViewButton(page), code).toHaveAttribute('aria-pressed', 'false')
+		// Refused: out of the code view, for the next.
+		if ((await codeViewButton(page).getAttribute('aria-pressed')) === 'true') {
+			await dismissMessages(page)
+			await writeCode(page, '<p>Next</p>')
+			await codeViewButton(page).click()
+		}
+		await expect(codeViewButton(page)).toHaveAttribute('aria-pressed', 'false')
+	}
+})
+
+// The page's own code, as the code view writes it, reads back with nothing refused: a cell's
+// alignment, which it writes as an attribute, and a bold space at a line's end, which the page
+// takes out.
+test("the page's own code for an aligned cell and a bold space goes back into the page", async ({
+	page,
+}) => {
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		const text = (text: string) => ({ type: 'paragraph', content: [{ type: 'text', text }] })
+		editor.commands.setContent({
+			type: 'doc',
+			content: [
+				{
+					type: 'table',
+					content: [
+						{
+							type: 'tableRow',
+							content: [
+								{
+									type: 'tableCell',
+									attrs: { align: 'center' },
+									content: [text('Cell')],
+								},
+							],
+						},
+					],
+				},
+				{
+					type: 'paragraph',
+					content: [
+						{ type: 'text', text: 'Hello' },
+						{ type: 'text', text: ' ', marks: [{ type: 'bold' }] },
+					],
+				},
+			],
+		})
+	})
+	await switchView(page, true)
+	await writeCode(page, `${await shownCode(page)}\n<p>Added in the code view</p>`)
+	await switchView(page, false)
+	await expect(page.getByText('Added in the code view', { exact: true })).toHaveCount(1)
+})
+
+for (const [name, seed, last] of [
+	['the test page', 'tests', '#align-cluster-x-end-last'],
+	['the demo page', 'true', '.tiptap.ProseMirror li:has-text("HTML source (code view) toggle")'],
+] as const) {
+	test(`${name}'s own code goes back into the page`, async ({ page, themeClass }) => {
+		await openSeeded(page, seed, last, themeClass)
+		await switchView(page, true)
+		const code = await shownCode(page)
+		await writeCode(page, `${code}\n<p>Added in the code view</p>`)
+		await switchView(page, false)
+		await expect(page.getByText('Added in the code view', { exact: true })).toHaveCount(1)
+	})
+}
 
 // The page's toolbar works on the page; over the code view it would stay where it was.
 test("the page's toolbar and path aren't shown in the code view", async ({ page }) => {

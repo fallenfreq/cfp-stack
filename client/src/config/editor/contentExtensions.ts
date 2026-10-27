@@ -44,17 +44,6 @@ export const SfHeading = Heading.extend({
 	},
 }).configure({ levels: [1, 2, 3] })
 
-// A cell's width is its own `colwidth`, as TipTap writes it. TipTap also reads the table's
-// `<col width>`, which tables from elsewhere carry: kept, those tables didn't fit their column.
-const cellWidth = {
-	default: null,
-	parseHTML: (cell: HTMLElement) =>
-		cell
-			.getAttribute('colwidth')
-			?.split(',')
-			.map((width) => parseInt(width, 10)) ?? null,
-}
-
 export function getContentExtensions({
 	tableNodeSelection = false,
 }: ContentExtensionOptions = {}): Extensions {
@@ -114,16 +103,8 @@ export function getContentExtensions({
 			// in step as columns change, cells without widths don't need.
 			View: null,
 		}),
-		TableCell.extend({
-			addAttributes() {
-				return { ...this.parent?.(), colwidth: cellWidth }
-			},
-		}),
-		TableHeader.extend({
-			addAttributes() {
-				return { ...this.parent?.(), colwidth: cellWidth }
-			},
-		}),
+		TableCell,
+		TableHeader,
 		TableRow,
 		Span,
 		TextColor,

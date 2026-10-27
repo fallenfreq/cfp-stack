@@ -118,6 +118,23 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    there, so what the page adds or rewrites itself (spaces, attribute order, a link's `rel`)
    never refuses their code. Some things have to go (`onclick` runs code): the author takes them
    out. Comments are refused too, for now.
+    - What's asked about: each attribute, class name and style property. Kept: what's written for
+      the element, or the same part the page writes there (a to-do item's tick box, a table's
+      column list); an attribute the page reads, to write its own way (a cell's `align`, as
+      `text-align`), for another element (a column's width, for its cells) or leaving out its
+      default (`colspan="1"`); a class name its setting reads (a colour's); spaces the page takes
+      out (a bold space at a line's end); what the page tells an element by
+      (`data-type="taskList"`). A style the page only turns into a mark (bold from `font-weight` on
+      `<em>`) isn't kept, so it's refused, for now. An element nothing is written for is refused:
+      bold in a code block, but also bold in bold, a `<br>` in a code block and an empty link.
+    - A table's column widths (`<col width>`) are kept as the cells' own, as TipTap keeps them.
+      The page took them out (since 1f7835e), so a table from elsewhere would fit its column; one
+      wider than it now makes the page scroll sideways, the layout's to fix (owner, 2026-10-27;
+      `sf-system-todo.md`, "Layout").
+    - Where: TipTap's check first, as before (an element it doesn't know, a value a setting can't
+      take, which now says what it takes), then `cantKeep.ts`: it reads the code with the page's
+      rules, writes it back as the page does, and compares each element with what was written for
+      it. It names the first thing in the code, and how many more.
 8. **Wrap selection keeps the blocks between.** With A and C chosen and B between them, Wrap
    selection put A and C in a quote or Card and deleted B without a word (Undo brings it back): it
    replaces everything from the first chosen block to the end of the last
@@ -135,6 +152,9 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
 Later, the owner's call:
 
 - Keeping HTML comments written in the code view (owner, 2026-10-18: not now).
+- Pasting warns of what the page can't keep, as the code view does (owner, 2026-10-27).
+- Keeping a style the page turns into a mark (`font-weight: bold` on `<em>`), which the code view
+  refuses for now (owner, 2026-10-27).
 
 ### Decisions
 
@@ -157,6 +177,14 @@ Later, the owner's call:
   block sets its look up with the rest of it, and one extension draws them all. It replaces
   copying the code view's version (2026-10-18), which left a heading's class saved and another
   app without a to-do list's tick boxes.
+- **The code view's check adds to TipTap's, not repeats it** (owner, 2026-10-23). TipTap refuses
+  an element it doesn't know and a value a setting can't take; a block's list of settings drops
+  any other attribute without a word, even from the saved form, and no TipTap option reports it.
+- **What's kept is what the page writes back or reads** (owner, 2026-10-27): the check watches
+  which attributes the page's rules read, in place of rules of its own for defaults, alignment and
+  column widths, which three reviews found faults in.
+- **One rule for anything lost, no table's own** (owner, 2026-10-27): a table's column widths are
+  kept as TipTap keeps them, rather than taken out by a rule of the page's.
 - **A block written whole counts as put in; ids are given as settings** (owner, 2026-10-19). The
   rule tells the editor's duplicates from the author's by how the change was written. Counting a
   block written whole as the one there (step 3, dropped) would have kept the id Change Type
@@ -298,4 +326,38 @@ Later, the owner's call:
   pass. Found, outside this step: a copied block's style comes back as the browser writes it
   (`color: red;` for `color: red`), as ProseMirror writes styles through `style.cssText`.
 
-Next: step 7, in a session of its own.
+- **Step 7 done** (2026-10-27). Leaving or saving from the code view refuses code the page can't
+  keep, naming the first thing and how many more (`cantKeep.ts`). TipTap reads the code first, as
+  before, refusing an element it doesn't know and a value a setting can't take, which now says
+  what it takes. The check then reads it with a copy of the page's rules that notes which element
+  each block and mark came from and which attributes the rules read, writes it back as the page
+  does, and compares each element with what was written for it: what's missing is kept if the page
+  read it. Measured in Chrome: what the plan named is refused, and so is the rest found dropped
+  (`cite`, `reversed`, a link's id, classes on bold or inline code, a span's other styles, a Card
+  attribute it doesn't have, bold in a code block, comments); the test and demo pages' own code
+  reads back. Leaving takes 50-70 ms on the test page, about 270 ms on ten times it, 45 ms for a
+  pasted table of 1,000 cells that loses something in each. Checks in `editor.spec.ts`: refused
+  code with its message, code the page rewrites itself, and the pages' own code; each part fails
+  its own rows without it. Reviewed by agents four times, and the rule's design once. The first
+  check told rewritten from lost by rules of its own (a default, a bare element, taking things out
+  and reading the page again); the reviews found the page's own code refused (an aligned cell, a
+  bold space at a line's end, a see-through theme colour), losses let through (a to-do ticked
+  only by its tick box, a second column's width, everything once a value read as "not a number"),
+  and seconds to leave: the rule is now what the page reads. An error while the page took the
+  code said only "Something went wrong"; messages fixed (a dropped element shown as written,
+  quotes, a style's properties as written). New, the owner's calls: a table's column widths
+  (`<col width>`) are kept, as TipTap keeps them; the page took them out (since 1f7835e) so a
+  table from elsewhere fit its column. A style the page only turns into a mark (`font-weight` on
+  `<em>`) is refused, for now (plan, "Later"). Unit tests pass (4 + 34); all 688 runs of the
+  Playwright checks pass. Found, outside this step (`sf-system-todo.md`, "Editor" and "Layout"): a
+  table wider than its column makes the page scroll sideways (now reached by pasted widths); the
+  code view's writer has no colour or font mark, so a page with coloured text can't open it, and
+  writes a video's start where the page doesn't read it, so it's lost after an edit there; a
+  theme colour comes back from the code view as a style; a span block with a colour is read back
+  as coloured text; a table's drawn column widths don't follow a column added; a table in a table
+  gives its widths to the outer cells; the code block's highlighter has no bash; the check goes by
+  names and elements, so a value the page reads but can't take (`<td align="justify">`) or a mark
+  lost on part of an element's text (bold on inline code) isn't refused. Parked: pasting warns of
+  what the page can't keep, as the code view does (plan, "Later").
+
+Next: step 8, in a session of its own.

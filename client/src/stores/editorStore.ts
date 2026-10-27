@@ -6,10 +6,11 @@ import { hasRole } from '@/services/session'
 import { notify } from '@/services/toast'
 import { trpc } from '@/trpc'
 import { prettifyCode } from '@/utils/codeFormatting'
+import { cantKeep } from '@/utils/editor/cantKeep'
 import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
 import { useMutation } from '@tanstack/vue-query'
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
-import type { Editor } from '@tiptap/vue-3'
+import { createDocument, type Editor } from '@tiptap/vue-3'
 import { defineStore } from 'pinia'
 import { ref, shallowRef, watch, type ShallowRef } from 'vue'
 
@@ -68,18 +69,25 @@ export const useEditorStore = defineStore('editor', () => {
 	const pageCode = ref('')
 
 	// Changed code goes into the page as one edit, which Undo takes back. Returns why not if the
-	// page can't read it.
+	// page can't read it, or would lose some of it.
 	const applyCode = (): string | null => {
-		if (!editor.value || code.value === pageCode.value) return null
+		const into = editor.value
+		if (!into || code.value === pageCode.value) return null
 		try {
-			editor.value.commands.setContent(code.value, { errorOnInvalidContent: true })
+			const doc = createDocument(code.value, into.schema, {}, { errorOnInvalidContent: true })
+			const lost = cantKeep(into.schema, code.value)
+			if (lost) return lost
+			into.commands.setContent(doc)
 		} catch (error) {
-			// TipTap's check quotes the last element it refused; its opening tag finds it.
+			// TipTap's check quotes the last element it refused; its opening tag finds it. Anything
+			// else says why: a value a setting can't take says what it takes (a Columns block's
+			// columns: 2, 3 or 4), the code block's highlighter a language it doesn't have.
 			const cause =
 				error instanceof Error && error.cause instanceof Error ? error.cause.message : ''
 			const tag = cause.match(/<[^>]*>/)?.[0]
-			return tag
-				? `The page can't read ${tag} in this code.`
+			if (tag) return `The page can't read ${tag} in this code.`
+			return error instanceof Error
+				? `The page can't read this code: ${error.message.replace(/[^.!?]$/, '$&.')}`
 				: "The page can't read this code."
 		}
 		pageCode.value = code.value
