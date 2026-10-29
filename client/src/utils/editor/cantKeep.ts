@@ -19,7 +19,7 @@ const short = (text: string, most = 30) =>
 const quoted = (value: string) => `"${short(value).replaceAll('"', '&quot;')}"`
 const label = (el: Element) => `<${el.localName}${el.id ? ` id=${quoted(el.id)}` : ''}>`
 // What its rule tells an element by (`data-type="taskList"`), not one of its settings.
-const kindOf = (rule: TagParseRule) =>
+export const kindOf = (rule: TagParseRule) =>
 	new Set([...rule.tag.matchAll(/\[([\w-]+)/g)].flatMap(([, name]) => name ?? []))
 // A style property's name as the browser takes it: in any case, but a custom one's (`--x`) as is.
 const property = (name: string) => (name.startsWith('--') ? name : name.toLowerCase())
@@ -162,8 +162,8 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 	}
 	const written = (el: Element) => writtenFor.get(index.get(el)!) ?? []
 	// What the page writes at an element's place: what was written for it, or else what it writes
-	// there as part of the block around it (a code block's code, a to-do item's tick box), the same
-	// one of that tag (a table's second column).
+	// there as part of the block around it (a code block's code, a table's body), the same one of
+	// that tag where it writes several.
 	const writtenAt = (el: Element): Element[] => {
 		const own = written(el)
 		const around = el.parentElement
@@ -199,9 +199,13 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 		const ownRule = rule && written(el).length ? rule : null
 		const read = (what: string) =>
 			!!(reads.other.get(el)?.has(what) || (ownRule && reads.own.get(el)?.has(what)))
-		// Nothing written for it, nor read by another element (a column's width, by its cells), nor
-		// taken apart for what it holds (a table's head, a video's box).
-		const readElsewhere = attributes.some(({ name }) => reads.other.get(el)?.has(name))
+		// Nothing written for it, nor read by another element (a column, by its cells, even one with
+		// no width: it holds its place), nor taken apart for what it holds (a table's head, a video's
+		// box), nor left out for what others read in it (a column list).
+		const readElsewhere =
+			reads.other.has(el)
+			|| (!!rule?.ignore
+				&& [...el.querySelectorAll('*')].some((part) => reads.other.has(part)))
 		if (!rule?.skip && !writtenAs.length && !readElsewhere) {
 			// Spaces the page takes out at a line's start or end (a bold space) leave nothing to write.
 			if (!el.children.length && el.textContent && !el.textContent.trim()) return []

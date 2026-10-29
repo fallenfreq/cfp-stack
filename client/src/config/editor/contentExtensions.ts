@@ -11,6 +11,8 @@ import Heading, { type Level } from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
 import { BulletList, OrderedList, TaskList } from '@tiptap/extension-list'
 import { createColGroup, Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
+import { DOMSerializer, type Node as PMNode } from '@tiptap/pm/model'
+import type { NodeView } from '@tiptap/pm/view'
 import StarterKit from '@tiptap/starter-kit'
 import type { Extensions } from '@tiptap/vue-3'
 import { CodeBlockExtension } from './codeBlockExtension'
@@ -44,6 +46,47 @@ export const SfHeading = Heading.extend({
 	},
 }).configure({ levels: [1, 2, 3] })
 
+// A table as the page writes it, drawn with a column list from its cells' widths as TipTap draws
+// one (`createColGroup`), again with each change: the widths are the cells', so the list isn't
+// written. TipTap's own view (`TableView`) draws it inside a box of the editor's own (the table
+// wasn't the block, and didn't fill its column), and sets the table's width over its own style.
+class DrawnTable implements NodeView {
+	dom: HTMLElement
+	contentDOM: HTMLElement
+	private node: PMNode
+	private readonly cellMinWidth: number
+	private columns: HTMLElement | null = null
+	private drawn = ''
+
+	constructor(node: PMNode, cellMinWidth: number) {
+		const { dom, contentDOM } = DOMSerializer.renderSpec(document, node.type.spec.toDOM!(node))
+		if (!contentDOM) throw new Error('The table is no longer written holding its rows')
+		this.dom = dom
+		this.contentDOM = contentDOM
+		this.node = node
+		this.cellMinWidth = cellMinWidth
+		this.drawColumns()
+	}
+
+	// Its own settings changed: drawn again, as written.
+	update(node: PMNode) {
+		if (!node.sameMarkup(this.node)) return false
+		this.node = node
+		this.drawColumns()
+		return true
+	}
+
+	private drawColumns() {
+		const { colgroup } = createColGroup(this.node, this.cellMinWidth)
+		const drawn = JSON.stringify(colgroup ?? null)
+		if (drawn === this.drawn) return
+		this.drawn = drawn
+		this.columns?.remove()
+		this.columns = colgroup ? DOMSerializer.renderSpec(document, colgroup).dom : null
+		if (this.columns) this.dom.insertBefore(this.columns, this.contentDOM)
+	}
+}
+
 export function getContentExtensions({
 	tableNodeSelection = false,
 }: ContentExtensionOptions = {}): Extensions {
@@ -66,9 +109,9 @@ export function getContentExtensions({
 		OrderedList.extend({ ownLook: () => ({ class: 'sf' }) }),
 		SfHeading,
 		Image,
-		// TipTap writes a tbody and a colgroup without claiming them, and its content check refuses
-		// unclaimed elements. Column widths come from the cells. A head or foot written in the code
-		// view holds rows like any other.
+		// A pasted table's tbody and colgroup (TipTap writes both) are claimed: TipTap's content check
+		// refuses unclaimed elements. Column widths come from the cells. A head or foot written in the
+		// code view holds rows like any other.
 		Table.extend({
 			parseHTML() {
 				return [
@@ -79,13 +122,14 @@ export function getContentExtensions({
 					{ tag: 'colgroup', ignore: true },
 				]
 			},
-			// Written with its own style only. TipTap gives a table without one a width from its
-			// columns as its style, which a paste would save as the table's: it's drawn instead.
+			// Written with its own style and its rows. TipTap gives a table without a style a width
+			// from its columns, which a paste would save as the table's own, and a column list, a
+			// second copy of its cells' widths that the page doesn't read: both are drawn instead.
 			renderHTML({ node, HTMLAttributes }) {
 				const spec = this.parent?.({ node, HTMLAttributes })
 				if (!Array.isArray(spec) || spec[0] !== 'table')
 					throw new Error("TipTap's table is no longer written as a table")
-				return ['table', { ...spec[1], style: HTMLAttributes.style }, ...spec.slice(2)]
+				return ['table', { ...spec[1], style: HTMLAttributes.style }, ['tbody', 0]]
 			},
 			ownLook(node) {
 				if (node.attrs.style) return null
@@ -98,10 +142,7 @@ export function getContentExtensions({
 			},
 		}).configure({
 			allowTableNodeSelection: tableNodeSelection,
-			// Drawn as saved. TipTap's view wraps the table in a box of the editor's own (the table
-			// wasn't the block, and didn't fill its column); what else it does, keeping column widths
-			// in step as columns change, cells without widths don't need.
-			View: null,
+			View: DrawnTable,
 		}),
 		TableCell,
 		TableHeader,

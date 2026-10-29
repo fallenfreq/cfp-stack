@@ -118,31 +118,35 @@ settings for every selected block.
 - **No timeout.** A fetch that never answers leaves "Loading editor…" up: tRPC has no timeout.
   A save that never finishes keeps a move away waiting with no sign (agreed: leaving waits for
   the save).
-- **The code view's writer isn't the page's** (`htmlBlueprint.ts`). Text coloured from the
-  toolbar, or given a font, is a mark it doesn't have: the code view won't open ("There is no mark
-  type textColor in this schema", measured for colour). It writes each setting under its own name,
-  not as the setting writes itself: a video's start in an attribute the page doesn't read, so
-  it's lost after any edit there (measured); a cell's alignment as `align`, which reads back.
+- **A video whose address isn't YouTube's** shows nothing: TipTap writes its iframe without the
+  address, so a copy has none, and nor does the code view's code, so an edit there loses it. A
+  paste or the code view brings one in: the code view's check counts the address as kept, as the
+  page reads it (measured).
 - **A span block with a colour in its style** (from its panel, or a saved page) reads back from
   the code view as coloured text, its class and id gone, which the code view refuses: the colour's
   rule takes any span with a colour, before the span block's.
 - **The code view's check goes by names, not values.** An attribute the page writes with a value
   of its own (a video's `autoplay`, `loop`), or reads but can't take (`<ol start="x">`, written as
   `start="NaN"`; `<td align="justify">`; `<col width="50%">`, read as 50 pixels), isn't refused;
-  nor is text in what the page writes itself (a tick box's label) or after it (text after a to-do
-  item's own `<div>`). Bold or a link
-  on inline code goes, as inline code takes no other mark, while the element keeps it on the rest
-  of its text: the check goes by element.
+  nor is an option typed into a video's address (`autoplay=1`), which the page writes again its
+  own way. Bold or a link on inline code goes, as inline code takes no other mark, while the
+  element keeps it on the rest of its text: the check goes by element.
+- **A video's address comes back in the page's form.** After an edit in the code view, a
+  `youtu.be/…` or `/shorts/…` address is saved as `watch?v=…`: the same video for visitors. A start
+  set on a `youtu.be/…` or `/embed/…` address is lost there, as TipTap writes none in those (nor
+  did visitors see it).
 - **A theme colour comes back from the code view as a style.** Text given `sf-color-primary`
   (with or without a see-through step) is read as the colour's value, and written as
   `style="color: rgba(…)"`, not as the class: the palette doesn't parse a theme's colour that holds
   a `var()` fallback (`colorPalette.ts`; measured by an agent).
-- **A table in a table gives the outer cells its column widths**: TipTap reads a cell's width from
-  any `colgroup > col` in its table, the inner table's too (`parseColwidth`, extension-table).
-- **A table's drawn column widths don't follow its columns.** With widths (pasted with a table, or
-  a cell's own `colwidth`), a column added or taken out leaves the widths drawn as they were until
-  the page opens again: the new column takes its neighbour's, the last none (measured; saved
-  right). TipTap's table view, which keeps them in step, is off (`contentExtensions.ts`).
+- **A pasted column list's widths can land on the wrong columns.** TipTap reads a cell's width
+  from the `<col>` at the cell's place in its row, not its column, and from any `colgroup > col` in
+  its table, an inner table's too (`parseColwidth`, extension-table): after a merged cell, in a
+  short first row, in a table in a table. The code view's check goes by names, so it can't tell
+  (measured by an agent).
+- **A table whose first row has fewer cells than the next** gets the missing cell first, not
+  last: its text moves a column right (prosemirror-tables' `fixTables`; a shorter later row gets it
+  last; measured).
 - **The code block's highlighter has no bash or cpp**, which highlight.js has: a code block in one,
   written in the code view, is refused ("Unknown language: `bash` is not registered").
 - **The code view, minor.** It sits flush under the top bar. A line break before bare text at the
@@ -154,7 +158,9 @@ settings for every selected block.
 - **A sheet's embedded video** stops as the sheet slides away and loads again in the closing
   copy of the page.
 - **A table cell's alignment** is also its own `align` attribute: taking `text-align` out of the
-  cell's `style` alone leaves it aligned.
+  cell's `style` alone leaves it aligned. A cell aligned by its setting alone (pasted as
+  `align="center"`, or from a saved page) gets `text-align` in its own style too once copied or
+  through the code view.
 - **Work on every keystroke.** The scroll hint (`ToolbarScrollHint`) reads where the node path
   sits after every change, which makes the browser lay out the page there and then (1–2 ms a
   letter, the biggest single item; not looked into). Why an arrow press is two changes isn't

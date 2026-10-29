@@ -13,7 +13,7 @@ export const YoutubeExtension = Youtube.extend({
 		]
 	},
 	// TipTap writes its box holding the iframe; only the iframe is written, without TipTap's fixed
-	// size, marked as a video.
+	// size, marked as a video. Its start is in its address, where it's read, not again on its own.
 	renderHTML({ node, HTMLAttributes }) {
 		const spec = this.parent?.({ node, HTMLAttributes })
 		if (!Array.isArray(spec) || !Array.isArray(spec[2]))
@@ -21,6 +21,7 @@ export const YoutubeExtension = Youtube.extend({
 		const iframe: Record<string, unknown> = { ...spec[2][1] }
 		delete iframe.width
 		delete iframe.height
+		delete iframe.start
 		return ['iframe', { ...iframe, 'data-youtube-video': '' }]
 	},
 	// Nor is TipTap's fixed size a setting of the video's.

@@ -2619,28 +2619,30 @@ test("code the page can't keep keeps the code view open, saying what", async ({ 
 			'<table><thead class="head"><tr><th>H</th></tr></thead></table>',
 			"The page can't keep the class head on <thead>.",
 		],
-		// What the page writes of a block itself, written otherwise: the tick isn't the item's.
+		// What the page draws of a setting, written: a tick box (TipTap's own markup; the tick is the
+		// item's data-checked), a column list but for the widths its cells read.
 		[
-			'<ul data-type="taskList"><li data-type="taskItem"><label><input type="checkbox" checked></label><div><p>Done</p></div></li></ul>',
-			"The page can't keep checked on <input>.",
+			'<ul data-type="taskList"><li data-type="taskItem" data-checked><label><input type="checkbox" checked><span></span></label><div><p>Done</p></div></li></ul>',
+			`The page can't keep <label><input type="checkbox" checked="… inside <li> (and 3 more).`,
 		],
 		[
-			'<table><colgroup><col style="width: 300px"></colgroup><tr><td>Cell</td></tr></table>',
-			"The page can't keep width in the style of <col>.",
+			'<table><colgroup><col style="min-width: 25px"></colgroup><tr><td>Cell</td></tr></table>',
+			"The page can't keep min-width in the style of <col>.",
 		],
-		// Each of a kind paired with the page's own, in order: the second column's width is lost.
+		// A column's width as a style isn't read: the second column's is lost.
 		[
 			'<table><colgroup><col width="100"><col style="width: 300px"></colgroup><tr><td>A</td><td>B</td></tr></table>',
 			"The page can't keep width in the style of <col>.",
 		],
+		// Only the column list is kept for the widths its cells read, not what's around the table.
 		[
-			'<ul data-type="taskList"><li data-type="taskItem"><label><input type="checkbox"></label><div><p>A</p></div><div>B</div></li></ul>',
-			"The page can't keep <div>B</div> inside <li>.",
+			'<b><table><colgroup><col width="100"></colgroup><tr><td><pre><code>x</code></pre></td></tr></table></b>',
+			`The page can't keep <b><table><colgroup><col width="100"></….`,
 		],
 		// A column's width the cell doesn't read, its own being its own: the first table's is kept.
 		[
 			'<table><colgroup><col width="300"></colgroup><tr><td>A</td></tr></table><table><colgroup><col width="300"></colgroup><tr><td colwidth="100">B</td></tr></table>',
-			`The page can't keep width="300" on <col>.`,
+			`The page can't keep <colgroup><col width="300"></colgroup> inside <table> (and 1 more).`,
 		],
 		// A style the page makes into bold, but doesn't keep (owner, 2026-10-27: refused for now), and
 		// one it only looks at.
@@ -2682,6 +2684,11 @@ test("code the page can't keep keeps the code view open, saying what", async ({ 
 			'<layout-card variant="wide"><p>C</p></layout-card>',
 			`The page can't keep variant="wide" on <layout-card>.`,
 		],
+		// A video's start is read from its address only.
+		[
+			'<iframe data-youtube-video src="https://www.youtube.com/embed/3lTUAWOgoHs" start="60"></iframe>',
+			`The page can't keep start="60" on <iframe>.`,
+		],
 		[
 			'<layout-columns columns="7"><p>C</p></layout-columns>',
 			`The page can't read this code: Expected one of 2, 3, 4, got "7".`,
@@ -2712,17 +2719,17 @@ test('code the page rewrites itself goes into the page', async ({ page }) => {
 		'<ol start="1"><li><p>One</p></li></ol>',
 		'<layout-columns columns="2"><p>C</p></layout-columns>',
 		'<pre><code class="language-js">x</code></pre>',
-		'<ul data-type="taskList"><li data-type="taskItem" data-checked><label><input type="checkbox" checked><span></span></label><div><p>Done</p></div></li></ul>',
-		'<table><colgroup><col style="min-width: 25px"></colgroup><tr><td>Cell</td></tr></table>',
+		'<ul data-type="taskList"><li data-type="taskItem" data-checked><p>Done</p></li></ul>',
 		// Read and written the page's own way: a cell's alignment as text-align; an empty id.
 		'<table><tr><td align="center" style="text-align: center">Cell</td></tr></table>',
 		'<p id="">No id</p>',
-		// A column's width the cells read, though the first row has fewer cells than columns.
+		// A column's width the cells read, though the first row has fewer cells than columns; a column
+		// without one holds its place.
 		'<table><colgroup><col width="100"><col width="200"></colgroup><tr><td>A</td></tr><tr><td>1</td><td>2</td></tr></table>',
+		'<table><colgroup><col><col width="200"></colgroup><tr><td>A</td><td>B</td></tr></table>',
 		'<div data-youtube-video><iframe src="https://www.youtube.com/embed/3lTUAWOgoHs"></iframe></div>',
 		// A colour's classes, read by the colour, written as its style: a see-through step means
-		// something only beside its colour. Last: coloured text stops the code view opening again
-		// (sf-system-todo.md, "Editor").
+		// something only beside its colour.
 		'<p><span class="sf-color-primary sf-color-alpha-3">Colour</span></p>',
 	]
 	for (const code of kept) {
@@ -2741,8 +2748,8 @@ test('code the page rewrites itself goes into the page', async ({ page }) => {
 })
 
 // The page's own code, as the code view writes it, reads back with nothing refused: a cell's
-// alignment, which it writes as an attribute, and a bold space at a line's end, which the page
-// takes out.
+// alignment, which it writes as its style, and a bold space at a line's end, which the page takes
+// out.
 test("the page's own code for an aligned cell and a bold space goes back into the page", async ({
 	page,
 }) => {
@@ -2796,6 +2803,80 @@ for (const [name, seed, last] of [
 		await expect(page.getByText('Added in the code view', { exact: true })).toHaveCount(1)
 	})
 }
+
+// The code view writes the page as the page writes it (as a copy is), leaving out what every block
+// of its kind has, and the page reads it back as it was. It had a writer of its own, which had no
+// colour or font, so it wouldn't open, and wrote a video's start where the page doesn't read it.
+test('the code view writes each block as the page does, and reads it back the same', async ({
+	page,
+}) => {
+	// What's on the page, as the page reads it, and the code view's code for it.
+	const rows: [onThePage: string, code: string][] = [
+		[
+			'<p><span style="color: red;">Red</span> and <span class="sf-font-2 sf-text-lg">big</span></p>',
+			'<p><span style="color: red;">Red</span> and <span class="sf-font-2 sf-text-lg">big</span></p>',
+		],
+		[
+			'<iframe data-youtube-video src="https://www.youtube.com/embed/3lTUAWOgoHs?start=30"></iframe>',
+			'<iframe src="https://www.youtube.com/embed/3lTUAWOgoHs?start=30&amp;rel=1" data-youtube-video=""></iframe>',
+		],
+		// What every one of its kind has, left out: a link's target, a Stack's align, an unticked
+		// item's data-checked, inline code's sf.
+		[
+			'<p><a href="/a" target="_blank">Link</a> and <code class="sf">code</code></p>',
+			'<p><a href="/a">Link</a> and <code>code</code></p>',
+		],
+		[
+			'<layout-stack align="stretch"><p>Stack</p></layout-stack>',
+			'<layout-stack><p>Stack</p></layout-stack>',
+		],
+		// Each setting once: a to-do item's tick, a column's width, not what the page draws of them
+		// (the tick box, the column list).
+		[
+			'<ul data-type="taskList"><li data-type="taskItem" data-checked="true"><label><input type="checkbox" checked><span></span></label><div><p>Done</p></div></li><li data-type="taskItem" data-checked="false"><p>To do</p></li></ul>',
+			'<ul data-type="taskList"><li data-checked="true" data-type="taskItem"><p>Done</p></li><li data-type="taskItem"><p>To do</p></li></ul>',
+		],
+		[
+			'<table><colgroup><col style="width: 120px"><col></colgroup><tr><td colwidth="120" style="text-align: center;"><p>Centred</p></td><td><p>B</p></td></tr></table>',
+			'<table><tbody><tr><td colwidth="120" style="text-align: center;"><p>Centred</p></td><td><p>B</p></td></tr></tbody></table>',
+		],
+	]
+	// Code as its elements, attributes and words, however it's spaced; without the empty line the
+	// page keeps after a last block that isn't one.
+	const tidied = (code: string) =>
+		page.evaluate((code) => {
+			const body = new DOMParser().parseFromString(code, 'text/html').body
+			const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
+			const texts: Text[] = []
+			for (let at = walker.nextNode(); at; at = walker.nextNode()) texts.push(at as Text)
+			for (const text of texts) {
+				text.data = text.data.trim()
+				if (!text.data) text.remove()
+			}
+			return body.innerHTML.replace(/<p><\/p>$/, '')
+		}, code)
+	for (const [onThePage, code] of rows) {
+		await page.evaluate((html) => {
+			document
+				.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+				.editor!.commands.setContent(html)
+		}, onThePage)
+		const before = await pageContent(page)
+		await switchView(page, true)
+		const shown = await shownCode(page)
+		expect.soft(await tidied(shown), onThePage).toBe(await tidied(code))
+		await writeCode(page, `${shown}\n<p>Added in the code view</p>`)
+		await switchView(page, false)
+		const after = await page.evaluate(() => {
+			const json = document
+				.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+				.editor!.getJSON()
+			json.content?.pop()
+			return JSON.stringify(json)
+		})
+		expect.soft(after, `${onThePage}, read back`).toBe(before)
+	}
+})
 
 // The page's toolbar works on the page; over the code view it would stay where it was.
 test("the page's toolbar and path aren't shown in the code view", async ({ page }) => {

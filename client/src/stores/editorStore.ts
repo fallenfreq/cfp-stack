@@ -7,7 +7,7 @@ import { notify } from '@/services/toast'
 import { trpc } from '@/trpc'
 import { prettifyCode } from '@/utils/codeFormatting'
 import { cantKeep } from '@/utils/editor/cantKeep'
-import { initGenerateBlueprintHTML } from '@/utils/editor/htmlBlueprint'
+import { codeViewHtml } from '@/utils/editor/codeViewHtml'
 import { useMutation } from '@tanstack/vue-query'
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
 import { createDocument, type Editor } from '@tiptap/vue-3'
@@ -21,7 +21,6 @@ export const useEditorStore = defineStore('editor', () => {
 	const codeViewDefault = false
 	const isCodeView = ref(codeViewDefault)
 	const editor: ShallowRef<Editor | null> = shallowRef(null)
-	let generateBlueprintHTML: ReturnType<typeof initGenerateBlueprintHTML> | null = null
 
 	const saveStatus = ref<'idle' | 'saving' | 'saved' | 'error'>('idle')
 	const currentPageId = ref<number | null>(null)
@@ -49,7 +48,6 @@ export const useEditorStore = defineStore('editor', () => {
 		editor.value = newEditor
 		savedDoc = newEditor?.state.doc ?? null
 		isCodeView.value = codeViewDefault
-		generateBlueprintHTML = null
 		// No editor, no page being edited: what opens next starts unnamed and unsaved, so Save
 		// can't write it over the page edited before.
 		if (!newEditor) {
@@ -112,8 +110,7 @@ export const useEditorStore = defineStore('editor', () => {
 			return
 		}
 		try {
-			if (!generateBlueprintHTML) generateBlueprintHTML = initGenerateBlueprintHTML(from)
-			const written = await prettifyCode(generateBlueprintHTML(), 'html')
+			const written = await prettifyCode(codeViewHtml(from.state.doc), 'html')
 			// Another page opened meanwhile.
 			if (editor.value !== from) return
 			code.value = written

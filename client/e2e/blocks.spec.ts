@@ -212,6 +212,31 @@ test('a video fills its width up to 36rem, or the limit in its own style, at 16:
 	}
 })
 
+// A table's column widths are drawn by its view's column list, again with each change. Drawn from
+// its HTML, a column added left the widths where they were until the page opened again: the new
+// column took its neighbour's.
+test("a table's columns are as wide as their cells say, also after a column is added", async ({
+	page,
+}) => {
+	const widths = () =>
+		page
+			.locator('#t3-table td')
+			.evaluateAll((cells) =>
+				cells.map((cell) => Math.round(cell.getBoundingClientRect().width)),
+			)
+	expect(await widths()).toEqual([100, 200])
+	await page.locator('#t3-a p').click()
+	await page.locator('.floating-toolbar').getByRole('button', { name: '+ Col →' }).click()
+	await settle(page)
+	const [first, , last] = await widths()
+	expect([first, last], 'the columns there').toEqual([100, 200])
+	// A cell's own size wins where it's the larger, as with TipTap's column list.
+	expect(Math.round((await box(page.locator('#t3-own'))).width), 'its own width').toBe(160)
+	expect(Math.round((await box(page.locator('#t3-own-min'))).width), 'its own least width').toBe(
+		220,
+	)
+})
+
 test("a Card set as a row puts its blocks in the parent's columns", async ({ page }) => {
 	const within = async (cell: Locator, column: Locator) => {
 		const [c, col] = [await box(cell), await box(column)]

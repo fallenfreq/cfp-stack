@@ -1239,9 +1239,10 @@ their items with a gap (`GAP_LAYOUTS` in `slLayout.ts`):
 - **Elements** opt into the theme by wearing `sf`, set by the node: `blockquote.sf`,
   `code.sf`, `ul.sf`, `ol.sf`. The theme draws them; the reset leaves the rest bare. A block's
   own look is drawn, as a component's template draws its own, and is never one of its settings
-  (`ownLook`): it isn't saved, copied or in the code view. Inline code is written with its `sf`,
-  as code has no settings for a paste to save it in. A heading wears its level's `sf-heading-*`
-  unless it has one of its own.
+  (`ownLook`): it isn't saved, copied or in the code view. Nor is what a block draws from its
+  settings: a to-do item's tick box, a table's column list (drawn by their views), so its HTML
+  holds each setting once. Inline code is written with its `sf`, as code has no settings for a
+  paste to save it in. A heading wears its level's `sf-heading-*` unless it has one of its own.
 - **Space between blocks** is `blockSpacing.ts`, in the lowest layer so a component rule that
   sets a block's space above it wins (themes set looks, not spacing). It belongs to flow
   containers — the document, a node view's content box, a plain div block, a quote, a list

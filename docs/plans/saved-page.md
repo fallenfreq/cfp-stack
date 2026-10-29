@@ -119,14 +119,15 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    never refuses their code. Some things have to go (`onclick` runs code): the author takes them
    out. Comments are refused too, for now.
     - What's asked about: each attribute, class name and style property. Kept: what's written for
-      the element, or the same part the page writes there (a to-do item's tick box, a table's
-      column list); an attribute the page reads, to write its own way (a cell's `align`, as
-      `text-align`), for another element (a column's width, for its cells) or leaving out its
-      default (`colspan="1"`); a class name its setting reads (a colour's); spaces the page takes
-      out (a bold space at a line's end); what the page tells an element by
-      (`data-type="taskList"`). A style the page only turns into a mark (bold from `font-weight` on
-      `<em>`) isn't kept, so it's refused, for now. An element nothing is written for is refused:
-      bold in a code block, but also bold in bold, a `<br>` in a code block and an empty link.
+      the element, or the same part the page writes there (a code block's code; until step 11, a
+      to-do item's tick box and a table's column list); an attribute the page reads, to write its
+      own way (a cell's `align`, as `text-align`), for another element (a column's width, for its
+      cells) or leaving out its default (`colspan="1"`); a class name its setting reads (a
+      colour's); spaces the page takes out (a bold space at a line's end); what the page tells an
+      element by (`data-type="taskList"`). A style the page only turns into a mark (bold from
+      `font-weight` on `<em>`) isn't kept, so it's refused, for now. An element nothing is written
+      for is refused: bold in a code block, but also bold in bold, a `<br>` in a code block and an
+      empty link.
     - A table's column widths (`<col width>`) are kept as the cells' own, as TipTap keeps them.
       The page took them out (since 1f7835e), so a table from elsewhere would fit its column; one
       wider than it now makes the page scroll sideways, the layout's to fix (owner, 2026-10-27;
@@ -148,6 +149,23 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
 10. **A span's text survives a change of kind.** Code Block, a code fence typed, and Backspace or
     Delete into a code block delete a span with its text; bold and links keep their text.
     ProseMirror clears what a code block can't hold (`clearIncompatible`).
+11. **The code view writes the page as the page does.** It had a writer of its own
+    (`htmlBlueprint.ts`), a partial copy of the page's blocks: with coloured text or a font it
+    wouldn't open, and it wrote a video's start where the page doesn't read it, so an edit there
+    lost it. It's now the page's own writer, as a copy is written (`codeViewHtml.ts`), leaving out
+    what every block of its kind has (a link's `target="_blank"`, a Stack's `align="stretch"`), but
+    not what tells its kind (`data-type="taskList"`). Done before step 8 (owner, 2026-10-28).
+    - A block's HTML holds each of its settings once, as a component's does, and what it draws
+      from them is drawn (step 6's rule). Two blocks wrote a drawing beside the setting, which the
+      page doesn't read, so in the code view a tick or a width changed there did nothing: a to-do
+      item its tick box (its view draws it, as before), a table its column list (its view draws
+      it now, as TipTap does, again with each change, so a column added no longer leaves the widths
+      where they were). A video's start is written in its address only (`youtubeExtension.ts`),
+      where TipTap writes it for a `watch?v=` address.
+    - New: a copy pasted into another app has no tick boxes or column widths (step 6 kept the
+      boxes); an app built on TipTap reads both. A tick box or a column list as a style written in
+      the code view is refused. A video's address is written in the page's form
+      (`…/embed/…?start=30&rel=1`).
 
 Later, the owner's call:
 
@@ -155,6 +173,7 @@ Later, the owner's call:
 - Pasting warns of what the page can't keep, as the code view does (owner, 2026-10-27).
 - Keeping a style the page turns into a mark (`font-weight: bold` on `<em>`), which the code view
   refuses for now (owner, 2026-10-27).
+- A copy pasted into another app shows tick boxes and column widths (owner, 2026-10-29).
 
 ### Decisions
 
@@ -185,6 +204,13 @@ Later, the owner's call:
   column widths, which three reviews found faults in.
 - **One rule for anything lost, no table's own** (owner, 2026-10-27): a table's column widths are
   kept as TipTap keeps them, rather than taken out by a rule of the page's.
+- **The code view writes with the page's writer** (owner, 2026-10-28): its own had drifted from
+  the page's, and a writer that describes no block can't. What every block of its kind has is
+  left out.
+- **A block's HTML holds each setting once; what it draws, it draws** (owner, 2026-10-29), as a
+  component's does, rather than the code view writing two blocks its own way: the tick box and the
+  column list were written beside the settings they draw, so editing them in the code view did
+  nothing. Copies to other apps go without them for now.
 - **A block written whole counts as put in; ids are given as settings** (owner, 2026-10-19). The
   rule tells the editor's duplicates from the author's by how the change was written. Counting a
   block written whole as the one there (step 3, dropped) would have kept the id Change Type
@@ -359,5 +385,34 @@ Later, the owner's call:
   names and elements, so a value the page reads but can't take (`<td align="justify">`) or a mark
   lost on part of an element's text (bold on inline code) isn't refused. Parked: pasting warns of
   what the page can't keep, as the code view does (plan, "Later").
+
+- **Step 11 done** (2026-10-29), before step 8. The code view writes the page with the page's own
+  writer, leaving out what every block of its kind has (`codeViewHtml.ts`); its own writer
+  (`htmlBlueprint.ts`) is gone. Measured in Chrome: with coloured text or a font the code view
+  didn't open, and a video's start was lost after an edit there. Now every block and mark, with
+  each setting on its own (151 cases), comes back through it but the six known (`sf-system-todo.md`,
+  "Editor"), as do both seeded pages. The first review found the code view showing a to-do item's
+  tick box and a table's column list, which look editable but the page doesn't read: the owner
+  chose one rule, that a block's HTML holds each setting once and what it draws it draws. The
+  to-do item is written without its tick box (its view draws it), the table without its column
+  list (its view draws TipTap's, `DrawnTable`, again with each change), a video's start only in
+  its address. Tables are drawn as TipTap's column list draws them (20 of 20, Chrome and WebKit),
+  and a column added no longer leaves the widths where they were; the demo page's snapshots are as
+  committed. The code view's check keeps a column list for the widths its cells read, and a `<col>`
+  with no width, but not what's around a table. The second review found that drawing each cell's
+  width as its look overrode a cell's own `min-width` (the table's view replaced it), and the
+  check's first rule for column lists both too wide and too narrow (fixed); the third, that the
+  view kept outside changes to the table on screen (now redrawn, as before). ProseMirror's check
+  against a setting written as HTML holds in the code view's writer (shown with a block written
+  so). Checks: in `editor.spec.ts`, what the code view writes for each kind and that it comes back,
+  and the changed rows; in `blocks.spec.ts`, a table's widths after a column is added (T3 on the
+  test page); each part fails its own without it. Unit tests pass (4 + 34); all 696 runs of the
+  Playwright checks pass. New, the owner's calls: a copy pasted into another app has no tick boxes
+  or column widths (plan, "Later"); a tick box or a column list as a style written in the code
+  view is refused. Found, outside this step (`sf-system-todo.md`, "Editor"): a video whose address
+  isn't YouTube's shows nothing and loses it on an edit in the code view; a video's address comes
+  back in the page's form, and a start on a `youtu.be` or `/embed/` address is lost there; a cell
+  aligned by its setting alone gets `text-align` in its own style once copied; a short first row
+  gets its missing cell first; a pasted column list's widths can land on the wrong columns.
 
 Next: step 8, in a session of its own.

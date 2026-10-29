@@ -701,6 +701,26 @@
 	</tbody>
 </table>
 
+<h3>
+	T3: columns as wide as their cells say, also after a column is added; a cell's own size kept
+</h3>
+<table id="t3-table">
+	<tbody>
+		<tr>
+			<td id="t3-a" colwidth="100"><p>100</p></td>
+			<td id="t3-b" colwidth="200"><p>200</p></td>
+		</tr>
+	</tbody>
+</table>
+<table>
+	<tbody>
+		<tr>
+			<td id="t3-own" colwidth="100" style="width: 160px"><p>Own</p></td>
+			<td id="t3-own-min" style="min-width: 220px"><p>None</p></td>
+		</tr>
+	</tbody>
+</table>
+
 <h3>S1: Columns in the first column of a typed split with no column widths measure the split</h3>
 <div data-container id="s1-split" class="sl-split">
 	<layout-columns id="s1-columns" columns="3" class="sf-gap-md sl-collapse-sm">

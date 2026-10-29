@@ -1,5 +1,6 @@
 import { TaskItem, type TaskItemOptions } from '@tiptap/extension-list'
 import type { Node as PMNode } from '@tiptap/pm/model'
+import { mergeAttributes } from '@tiptap/vue-3'
 
 // Mobile drag-select that crosses a selectable:true block converts to a
 // NodeSelection — native touch handles vanish and the synthetic click on the
@@ -11,9 +12,9 @@ export const CustomTaskItem = TaskItem.extend<TaskItemOptions>({
 	// Checkbox beside the item's content: fixed side + flexible side.
 	ownLook: () => ({ class: 'sl-split sf-gap-md' }),
 
-	// The item's text is in the div after its tick box (TipTap's markup), else in the item itself.
-	// Replaces TipTap's rule, which from 3.30 takes the first div anywhere, losing text before a
-	// Div block.
+	// The item's text is in the item itself (its own markup), or in the div after a tick box
+	// (TipTap's, pasted). Replaces TipTap's rule, which from 3.30 takes the first div anywhere,
+	// losing text before a Div block.
 	parseHTML() {
 		return [
 			{
@@ -21,6 +22,18 @@ export const CustomTaskItem = TaskItem.extend<TaskItemOptions>({
 				priority: 51,
 				contentElement: (li) => li.querySelector(':scope > label + div') ?? li,
 			},
+		]
+	},
+
+	// Written as its settings and its content, as a component is; its view draws the tick box.
+	// TipTap writes the box too, a second tick beside `data-checked` that the page doesn't read.
+	renderHTML({ HTMLAttributes }) {
+		return [
+			'li',
+			mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+				'data-type': this.name,
+			}),
+			0,
 		]
 	},
 
