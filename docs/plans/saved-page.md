@@ -138,9 +138,10 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
       it. It names the first thing in the code, and how many more.
 8. **Wrap selection keeps the blocks between.** With A and C chosen and B between them, Wrap
    selection put A and C in a quote or Card and deleted B without a word (Undo brings it back): it
-   replaces everything from the first chosen block to the end of the last
-   (`defaultItemsMultiSelect.ts`, `wrapSiblingsInType`). What becomes of B is found when the step
-   is planned.
+   replaced everything from the first chosen block to the end of the last
+   (`defaultItemsMultiSelect.ts`). The chosen blocks go into the new block where the first was,
+   and B stays, after it, with a cursor in it, as the Move tools gather the chosen blocks and leave
+   the rest; the boxes offered are those the page can hold there with B after (`selWrapPlace`).
 9. **Pasted text and the line it lands in.** A heading's text pasted at a line's start, or into an
    empty line, makes the line a heading with the copied heading's class and style, and the line
    loses its own: ProseMirror keeps a copied heading's kind on purpose. Text copied across two
@@ -223,6 +224,9 @@ Later, the owner's call:
   block** (owner, 2026-10-19), so it's fixed where they move, not in the selection. Settings for
   every selected block, once built, may want both (`sf-system-todo.md`, "Settings for every
   selected block"); only moving them copied.
+- **Wrap selection puts the chosen blocks in the new block where the first was; the rest stay,
+  after it** (owner, 2026-10-30), as the Move tools gather the chosen blocks: a block not chosen
+  is neither deleted nor put in a box the author didn't ask for.
 - **A block changing kind keeps its settings; TipTap is upgraded first, then patched** (owner,
   2026-10-21). TipTap 3.32.0 changes a list between bullet and to-do itself, which the app's own
   code did for the toolbar only; the patch keeps the settings where its commands write the block.
@@ -415,4 +419,18 @@ Later, the owner's call:
   aligned by its setting alone gets `text-align` in its own style once copied; a short first row
   gets its missing cell first; a pasted column list's widths can land on the wrong columns.
 
-Next: step 8, in a session of its own.
+- **Step 8 done** (2026-10-30). Wrap selection puts the chosen blocks in the new block where the
+  first was, and the blocks between stay, after it; the kinds offered are worked out from the same
+  result (`selWrapPlace`). Measured in Chrome: with A and C chosen, B was deleted (Undo brought it
+  back). The other chosen blocks are taken out, then the first is replaced (`selWrap`), so a block
+  between isn't touched: a cursor in it, or it selected, stays. Otherwise the selection lands as
+  before, in the new block or on the block after it (14 cases, side by side and with a gap). The
+  same kinds are offered as before, in 16 places (the page, a Card, Columns, a Stack, a quote, a
+  list item, a to-do item, a table cell), Chrome and WebKit. A check in `editor.spec.ts`; each
+  part fails on a version without it, and the Undo and side-by-side parts pin what already worked.
+  Reviewed by an agent; its findings checked: rewriting A to C in one change moved a cursor out of
+  B (fixed; taking every chosen block out instead, as the Move tools do, moved a selection on the
+  first out of the new block), and only the check's first part failed without the fix (extended).
+  Unit tests pass (4 + 34); all 700 runs of the Playwright checks pass.
+
+Next: step 9, in a session of its own.

@@ -653,6 +653,59 @@ test('Delete selected takes blocks out as the Delete key does', async ({ page })
 	)
 })
 
+// Wrap selection puts the chosen blocks in the new block, where the first was, and a block between
+// them not chosen stays, after it, with the cursor in it. It was deleted: everything from the first
+// to the last went.
+test('Wrap selection keeps the blocks between the chosen ones', async ({ page }) => {
+	// Outside the undo history: put in just before, it would undo with the wrap.
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor
+			.chain()
+			.setMeta('addToHistory', false)
+			.insertContentAt(
+				editor.state.doc.content.size,
+				'<p id="wr-top">Top</p><p id="wr-a">A</p><p id="wr-b">B</p><p id="wr-c">C</p><p id="wr-end">End</p>',
+			)
+			.run()
+	})
+	const card = '1e4d245a-16ac-4e60-96e9-1cf4ff6e2b93'
+	const chosen = page.locator('.tiptap .sf-on-selected')
+	// Chooses the blocks, puts the selection somewhere, and wraps them in a Card.
+	const wrapInCard = async (ids: string[], select: () => Promise<unknown>) => {
+		for (const id of ids) await toggleSelection(page, await nodePosition(page, id))
+		await select()
+		const menu = await openMenu(page, 'wrap_text')
+		await menu.locator('.picker-item', { hasText: 'layout-card' }).click()
+		await settle(page)
+	}
+	const undo = async () => {
+		await page.locator('.floating-toolbar').getByRole('button', { name: 'Undo' }).click()
+		await settle(page)
+		expect(await shapeFrom(page, 'wr-top'), 'undone').toBe(
+			'p#wr-top p#wr-a p#wr-b p#wr-c p#wr-end',
+		)
+	}
+
+	await wrapInCard(['wr-a', 'wr-c'], () => cursorAt(page, 'wr-b', 1))
+	expect(await shapeFrom(page, 'wr-top'), 'a block between not chosen').toBe(
+		`p#wr-top ${card}[p#wr-a p#wr-c] p#wr-b p#wr-end`,
+	)
+	expect(await selectedPlace(page), 'the cursor in it').toBe('wr-b at 1')
+	await expect(chosen).toHaveCount(0)
+	await undo()
+	await wrapInCard(['wr-a', 'wr-c'], () => selectBlock(page, 'wr-b'))
+	expect(await selectedPlace(page), 'it selected').toBe('#wr-b selected')
+	await undo()
+
+	// A selection on the first chosen block goes into the new block.
+	await wrapInCard(['wr-a', 'wr-b'], () => selectBlock(page, 'wr-a'))
+	expect(await shapeFrom(page, 'wr-top'), 'blocks side by side').toBe(
+		`p#wr-top ${card}[p#wr-a p#wr-b] p#wr-c p#wr-end`,
+	)
+	expect(await selectedPlace(page), 'the first selected').toBe('wr-a at 0')
+})
+
 // Focus on the Card's box also put the cursor just before it, between blocks, where text can't go
 // (the editor warns once).
 test('clicking between the blocks in an inset Card selects the card', async ({ page }) => {

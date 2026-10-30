@@ -17,7 +17,7 @@ import {
 	nodeAt,
 	type NodePos,
 } from '@/utils/editor/editorUtils'
-import { Fragment } from '@tiptap/pm/model'
+import { Fragment, type NodeType } from '@tiptap/pm/model'
 import type { Editor } from '@tiptap/vue-3'
 import { h } from 'vue'
 import { blockNodeEntries, icon } from './defaultItemsShared'
@@ -83,34 +83,42 @@ const selMove = (editor: Editor, ctx: ToolbarItemContext, where: Exclude<MoveSid
 		.run()
 }
 
-const canWrapSiblingsInType = (editor: Editor, positions: NodePos[], typeName: string): boolean => {
-	const wrapType = editor.state.schema.nodes[typeName]
-	if (!wrapType) return false
+// What Wrap selection makes: a new block of this kind holding the chosen blocks, where the first
+// was, and the blocks between them after it; null when the page or the new block can't hold that,
+// and the kind isn't offered. The chosen blocks are in one block (the tool shows only then).
+const selWrapPlace = (editor: Editor, type: NodeType) => {
 	const doc = editor.state.doc
-	const sorted = [...positions].sort((a, b) => a - b)
-	const [firstPos] = sorted
-	if (firstPos === undefined) return false
-	const $first = doc.resolve(firstPos)
-	const startIndex = $first.index()
-	return (
-		$first.parent.canReplaceWith(startIndex, startIndex + sorted.length, wrapType)
-		&& wrapType.validContent(Fragment.fromArray(sorted.map((p) => nodeAt(doc, p))))
+	const [first, ...others] = [...useMultiSelectStore().positions].sort((a, b) => a - b)
+	if (first === undefined) return null
+	const last = others.at(-1) ?? first
+	const chosen = Fragment.fromArray([first, ...others].map((p) => nodeAt(doc, p)))
+	if (!type.validContent(chosen)) return null
+	const box = type.create(null, chosen)
+	const between = getSiblingPositions(doc, first)
+		.filter((p) => p > first && p < last && !others.includes(p))
+		.map((p) => nodeAt(doc, p))
+	const $first = doc.resolve(first)
+	const fits = $first.parent.canReplace(
+		$first.index(),
+		doc.resolve(last).index() + 1,
+		Fragment.fromArray([box, ...between]),
 	)
+	return fits ? { first, others, box } : null
 }
 
-const wrapSiblingsInType = (editor: Editor, positions: NodePos[], typeName: string): void => {
-	const wrapType = editor.state.schema.nodes[typeName]
-	if (!wrapType) return
-	const doc = editor.state.doc
-	const sorted = [...positions].sort((a, b) => a - b)
-	const [firstPos] = sorted
-	if (firstPos === undefined) return
-	const lastPos = sorted[sorted.length - 1] ?? firstPos
-	const wrapper = wrapType.create(null, Fragment.fromArray(sorted.map((p) => nodeAt(doc, p))))
+// Puts the chosen blocks in a new block of this kind, where the first was: the others are taken
+// out, last first, then the first is replaced. The blocks between aren't touched, so a cursor in
+// one stays, and a selection on the first goes into the new block.
+const selWrap = (editor: Editor, type: NodeType) => {
+	const wrap = selWrapPlace(editor, type)
+	if (!wrap) return
+	const { first, others, box } = wrap
 	editor
 		.chain()
 		.command(({ tr }) => {
-			tr.replaceWith(firstPos, lastPos + nodeAt(doc, lastPos).nodeSize, wrapper)
+			for (const pos of [...others].reverse())
+				tr.delete(pos, pos + nodeAt(tr.doc, pos).nodeSize)
+			tr.replaceWith(first, first + nodeAt(tr.doc, first).nodeSize, box)
 			return true
 		})
 		.clearMultiSelect()
@@ -118,16 +126,10 @@ const wrapSiblingsInType = (editor: Editor, positions: NodePos[], typeName: stri
 }
 
 const getSelWrapItems = (editor: Editor, _ctx: ToolbarItemContext): NodePickerItem[] => {
-	const positions = useMultiSelectStore().positions
 	const items: NodePickerItem[] = []
-	for (const { typeName, label, iconName } of blockNodeEntries(editor)) {
-		if (!canWrapSiblingsInType(editor, positions, typeName)) continue
-		items.push({
-			label,
-			iconName,
-			active: false,
-			action: () => wrapSiblingsInType(editor, positions, typeName),
-		})
+	for (const { type, label, iconName } of blockNodeEntries(editor)) {
+		if (!selWrapPlace(editor, type)) continue
+		items.push({ label, iconName, active: false, action: () => selWrap(editor, type) })
 	}
 	return items
 }
