@@ -13,6 +13,7 @@ import {
 	openTests,
 	selectBlock,
 	selectBlockAt,
+	setClipboard,
 	settle,
 	taskItemLayout,
 	toggleSelection,
@@ -1523,6 +1524,580 @@ test('a block cut and pasted, or moved, keeps its id', async ({ page }) => {
 	expect
 		.soft(moved?.at, 'a block moved, under')
 		.toBeGreaterThan((await withId(page, 'move-under'))[0]!.at)
+})
+
+// The lines copied from, then a dash, the line pasted into, a dash (pastedShape reads between).
+const copySources =
+	'<h2 id="sh" class="sh-c" style="color: red">Heading text</h2>'
+	+ '<pre id="sc" class="sc-c"><code>code one\ncode two</code></pre>'
+	+ '<p id="sp0" class="p0-c">para zero</p>'
+	+ '<ul id="sl" class="sl-c"><li id="sl1" class="li1-c"><p>item one</p></li><li id="sl2" class="li2-c"><p>item two</p></li><li id="sl3"><p>item three</p></li></ul>'
+	+ '<blockquote id="sq" class="sq-c"><p id="sqp">quote text</p></blockquote>'
+	+ '<p id="sp1" class="p1-c">para one</p><p id="sp2" class="p2-c" style="color: blue">para two</p>'
+	+ '<ul data-type="taskList" id="st"><li data-type="taskItem" data-checked="true" id="st1"><p>todo text</p></li></ul>'
+	+ '<p id="sp3">before</p><img id="si" src="/no-picture.png"><p id="sp4">after the picture</p>'
+	+ '<table><tbody><tr><td id="sc1"><p>one</p></td><td><p>cell two</p></td></tr></tbody></table>'
+	+ '<p id="sp5">after</p><p id="sp6">x words **bold** y</p>'
+/** The page as the copy sources and this line to paste into, outside the undo history. */
+const pasteInto = (page: Page, html: string, sources = copySources) =>
+	page.evaluate((html) => {
+		document
+			.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+			.editor!.chain()
+			.setMeta('addToHistory', false)
+			.setContent(html)
+			.run()
+	}, `${sources}<p id="dash-1">—</p>${html}<p id="dash-2">—</p>`)
+/** The position this far into the first line of the block with this id. */
+const linePosition = (page: Page, id: string, offset: number) =>
+	page.evaluate(
+		([id, offset]) => {
+			const { doc } =
+				document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+			let found = -1
+			doc.descendants((node, pos) => {
+				if (found >= 0) return false
+				if (node.attrs.id !== id) return
+				if (node.isTextblock) found = pos + 1 + offset
+				else
+					node.descendants((line, at) => {
+						if (found < 0 && line.isTextblock) found = pos + 1 + at + 1 + offset
+					})
+			})
+			return found
+		},
+		[id, offset] as const,
+	)
+const selectText = (page: Page, from: number, to = from) =>
+	page.evaluate(
+		([from, to]) => {
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			editor.chain().focus().setTextSelection({ from, to }).run()
+		},
+		[from, to] as const,
+	)
+/**
+ * The blocks between the dashes: each one's type, id, class, style and a to-do item's tick (+), a
+ * line's text (⏎ for a line break), and what it holds: `ul#a.c[li[p "Text"]] p{color: red} "Line"`.
+ */
+const pastedShape = (page: Page) =>
+	page.evaluate(() => {
+		const { doc } = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
+		const short: Record<string, string> = {
+			paragraph: 'p',
+			listItem: 'li',
+			bulletList: 'ul',
+			taskList: 'todo',
+			taskItem: 'ti',
+			blockquote: 'quote',
+			codeBlock: 'code',
+		}
+		const shape = (node: ProseMirrorNode): string => {
+			const { id, class: name, style, level, checked } = node.attrs
+			const own =
+				(node.type.name === 'heading'
+					? `h${level}`
+					: (short[node.type.name] ?? node.type.name))
+				+ (id ? `#${id}` : '')
+				+ (name ? `.${name}` : '')
+				+ (style ? `{${String(style).replace(/;$/, '')}}` : '')
+				+ (checked ? '+' : '')
+			if (node.isTextblock) return `${own} "${node.textContent.replace(/\n/g, '⏎')}"`
+			const held: string[] = []
+			node.forEach((child) => held.push(shape(child)))
+			return `${own}[${held.join(' ')}]`
+		}
+		const shapes: string[] = []
+		let between = false
+		doc.forEach((node) => {
+			if (node.attrs.id === 'dash-2') between = false
+			if (between) shapes.push(shape(node))
+			if (node.attrs.id === 'dash-1') between = true
+		})
+		return shapes.join(' ')
+	})
+
+// What a copy holds and where it goes (copyAndPaste.ts). Text from inside one line is its text, and
+// joins the line it lands in, which keeps its kind and settings: ProseMirror copied the line around
+// it, which made a line it was pasted at the start of, or an empty one, a heading, a list or a quote.
+// Copied lines go in as they were: inside a line, it splits as Enter splits it, the second half
+// with the line's class and style, not the copied line's; in a list each line becomes an item.
+test('pasted text joins the line, and pasted lines go in as Enter would split it', async ({
+	page,
+}) => {
+	const line = 'p#tp.tp-c{margin-top: 4px}'
+	const lineMade = 'p.tp-c{margin-top: 4px}'
+	const blue = 'p.p2-c{color: blue}'
+	const card = '1e4d245a-16ac-4e60-96e9-1cf4ff6e2b93'
+	const items12 = 'li.li1-c[p "item one"] li.li2-c[p "item two"]'
+	const places = {
+		'line start': ['<p id="tp" class="tp-c" style="margin-top: 4px">Target line</p>', 'tp', 0],
+		'line middle': ['<p id="tp" class="tp-c" style="margin-top: 4px">Target line</p>', 'tp', 7],
+		'line end': ['<p id="tp" class="tp-c" style="margin-top: 4px">Target line</p>', 'tp', 11],
+		'empty line': ['<p id="te" class="te-c"></p>', 'te', 0],
+		'empty heading': ['<h3 id="th" class="th-c"></h3>', 'th', 0],
+		'heading middle': ['<h3 id="th" class="th-c">Target head</h3>', 'th', 7],
+		'list item start': [
+			'<ul id="tl"><li id="tl1" class="tl1-c"><p>Target item</p></li></ul>',
+			'tl1',
+			0,
+		],
+		'list item middle': [
+			'<ul id="tl"><li id="tl1" class="tl1-c"><p>Target item</p></li></ul>',
+			'tl1',
+			7,
+		],
+		'list item end': [
+			'<ul id="tl"><li id="tl1" class="tl1-c"><p>Target item</p></li></ul>',
+			'tl1',
+			11,
+		],
+		'empty list item': [
+			'<ul id="tl"><li id="tl1" class="tl1-c"><p>Target item</p></li><li id="tl2" class="tl2-c"><p></p></li></ul>',
+			'tl2',
+			0,
+		],
+		'to-do item middle': [
+			'<ul data-type="taskList" id="tt"><li data-type="taskItem" data-checked="true" id="tt1" class="tt1-c"><p>Target todo</p></li></ul>',
+			'tt1',
+			7,
+		],
+		'quote line middle': [
+			'<blockquote id="tq"><p id="tqp" class="tqp-c">Target quote</p></blockquote>',
+			'tqp',
+			7,
+		],
+		'quote line end': [
+			'<blockquote id="tq"><p id="tqp" class="tqp-c">Target quote</p></blockquote>',
+			'tqp',
+			12,
+		],
+		'code middle': ['<pre id="tc" class="tc-c"><code>Target code</code></pre>', 'tc', 7],
+		'empty line in a Card': [
+			'<layout-card id="tk" class="sf-size-md"><p id="te" class="te-c"></p></layout-card>',
+			'te',
+			0,
+		],
+	} as const
+	const copies = {
+		'part of a heading': [
+			['sh', 0],
+			['sh', 4],
+		],
+		"all of a heading's text": [
+			['sh', 0],
+			['sh', 12],
+		],
+		'one line of code': [
+			['sc', 0],
+			['sc', 4],
+		],
+		'two lines of code': [
+			['sc', 5],
+			['sc', 13],
+		],
+		'part of a list item': [
+			['sl1', 0],
+			['sl1', 4],
+		],
+		"part of a quote's line": [
+			['sqp', 0],
+			['sqp', 5],
+		],
+		'part of a to-do item': [
+			['st1', 0],
+			['st1', 4],
+		],
+		'across two lines': [
+			['sp1', 5],
+			['sp2', 4],
+		],
+		'across two list items': [
+			['sl1', 5],
+			['sl2', 4],
+		],
+		'three list items': [
+			['sl1', 0],
+			['sl3', 10],
+		],
+		'a line and a list': [
+			['sp0', 0],
+			['sl3', 10],
+		],
+		"a quote's line and the next": [
+			['sqp', 0],
+			['sp1', 4],
+		],
+		'a picture between lines': [
+			['sp3', 3],
+			['sp4', 3],
+		],
+		'from inside a cell': [
+			['sc1', 0],
+			['sp5', 5],
+		],
+		'from the end of a line': [
+			['sp1', 8],
+			['sp2', 4],
+		],
+		'words and a space': [
+			['sp6', 2],
+			['sp6', 8],
+		],
+		'two stars around a word': [
+			['sp6', 8],
+			['sp6', 16],
+		],
+	} as const
+	const cases: [keyof typeof copies, keyof typeof places, string][] = [
+		// Text: the line keeps its kind and settings.
+		['part of a heading', 'line start', `${line} "HeadTarget line"`],
+		['part of a heading', 'empty line', 'p#te.te-c "Head"'],
+		["all of a heading's text", 'empty heading', 'h3#th.th-c "Heading text"'],
+		['part of a list item', 'line start', `${line} "itemTarget line"`],
+		[
+			'part of a list item',
+			'empty list item',
+			'ul#tl[li#tl1.tl1-c[p "Target item"] li#tl2.tl2-c[p "item"]]',
+		],
+		["part of a quote's line", 'empty line', 'p#te.te-c "quote"'],
+		['part of a to-do item', 'line start', `${line} "todoTarget line"`],
+		['one line of code', 'empty line', 'p#te.te-c "code"'],
+		// A code block's lines are lines: as copied in an empty line, text beside an item's line.
+		['two lines of code', 'empty line', 'code.sc-c "one⏎code"'],
+		[
+			'two lines of code',
+			'empty list item',
+			'ul#tl[li#tl1.tl1-c[p "Target item"] li#tl2.tl2-c[p "one⏎code"]]',
+		],
+		// Lines: the second half keeps the line's class and style; at the start, the line keeps all.
+		['across two lines', 'line middle', `${line} "Target one" ${lineMade} "paraline"`],
+		['across two lines', 'line start', `p.p1-c "one" ${line} "paraTarget line"`],
+		['across two lines', 'line end', `${line} "Target lineone" ${blue} "para"`],
+		['across two lines', 'empty line', `p.p1-c "one" ${blue} "para"`],
+		['across two lines', 'heading middle', 'h3#th.th-c "Target one" h3.th-c "parahead"'],
+		[
+			'across two lines',
+			'to-do item middle',
+			'todo#tt[ti#tt1.tt1-c+[p "Target one"] ti.tt1-c[p "paratodo"]]',
+		],
+		['across two lines', 'code middle', 'code#tc.tc-c "Target one⏎⏎paracode"'],
+		['across two list items', 'line middle', `${line} "Target one" ${lineMade} "itemline"`],
+		// Lists: copied by their text, still a list; in a list, each line an item.
+		['three list items', 'empty line', `ul.sl-c[${items12} li[p "item three"]]`],
+		['three list items', 'line start', `ul.sl-c[${items12}] ${line} "item threeTarget line"`],
+		[
+			'three list items',
+			'line middle',
+			`${line} "Target item one" ul.sl-c[li.li2-c[p "item two"]] ${lineMade} "item threeline"`,
+		],
+		[
+			'three list items',
+			'list item middle',
+			'ul#tl[li#tl1.tl1-c[p "Target item one"] li.li2-c[p "item two"] li.tl1-c[p "item threeitem"]]',
+		],
+		[
+			'three list items',
+			'to-do item middle',
+			'todo#tt[ti#tt1.tt1-c+[p "Target item one" ul.sl-c[li.li2-c[p "item two"]]] ti.tt1-c[p "item threetodo"]]',
+		],
+		[
+			'across two lines',
+			'empty list item',
+			`ul#tl[li#tl1.tl1-c[p "Target item"] li#tl2.tl2-c[p.p1-c "one"] li.tl2-c[${blue} "para"]]`,
+		],
+		[
+			'a line and a list',
+			'list item start',
+			`ul#tl[li.tl1-c[p.p0-c "para zero"] ${items12} li#tl1.tl1-c[p "item threeTarget item"]]`,
+		],
+		[
+			'a line and a list',
+			'list item end',
+			`ul#tl[li#tl1.tl1-c[p "Target itempara zero"] ${items12} li[p "item three"]]`,
+		],
+		[
+			'a line and a list',
+			'empty list item',
+			`ul#tl[li#tl1.tl1-c[p "Target item"] li#tl2.tl2-c[p.p0-c "para zero"] ${items12} li[p "item three"]]`,
+		],
+		// The item pasted into keeps itself: a copied list's first line goes in it.
+		[
+			'three list items',
+			'empty list item',
+			'ul#tl[li#tl1.tl1-c[p "Target item"] li#tl2.tl2-c[p "item one"] li.li2-c[p "item two"] li[p "item three"]]',
+		],
+		// A quote's line joining a quote's line leaves the quote whole.
+		[
+			"a quote's line and the next",
+			'quote line middle',
+			'quote#tq[p#tqp.tqp-c "Target quote text" p.tqp-c "paraquote"]',
+		],
+		[
+			"a quote's line and the next",
+			'quote line end',
+			'quote#tq[p#tqp.tqp-c "Target quotequote text" p.p1-c "para"]',
+		],
+		// A picture in a list goes in the item before: an item starts with a line.
+		[
+			'a picture between lines',
+			'list item middle',
+			'ul#tl[li#tl1.tl1-c[p "Target ore" image[]] li.tl1-c[p "aftitem"]]',
+		],
+		[
+			'a picture between lines',
+			'list item end',
+			'ul#tl[li#tl1.tl1-c[p "Target itemore" image[]] li.tl1-c[p "aft"]]',
+		],
+		// A table's lines stay in it, and a Card the empty line is alone in stays.
+		[
+			'from inside a cell',
+			'empty list item',
+			'ul#tl[li#tl1.tl1-c[p "Target item"] li#tl2.tl2-c[p "" table[tableRow[tableCell[p "one"] tableCell[p "cell two"]]]] li.tl2-c[p "after"]]',
+		],
+		[
+			'across two lines',
+			'empty line in a Card',
+			`${card}#tk.sf-size-md[p.p1-c "one" ${blue} "para"]`,
+		],
+		// As written: spaces, and what a paste rule would turn into bold.
+		['words and a space', 'line middle', `${line} "Target words line"`],
+		['two stars around a word', 'line middle', `${line} "Target **bold**line"`],
+		['from the end of a line', 'line middle', `${line} "Target " ${lineMade} "paraline"`],
+	]
+	const copy = async (name: keyof typeof copies) => {
+		const [[fromId, fromOffset], [toId, toOffset]] = copies[name]
+		const from = await linePosition(page, fromId, fromOffset)
+		await selectText(page, from, await linePosition(page, toId, toOffset))
+		await page.keyboard.press('ControlOrMeta+c')
+	}
+	for (const [copied, place, shape] of cases) {
+		const [html, id, offset] = places[place]
+		await pasteInto(page, html)
+		await copy(copied)
+		await selectText(page, await linePosition(page, id, offset))
+		await page.keyboard.press('ControlOrMeta+v')
+		await settle(page)
+		expect.soft(await pastedShape(page), `${copied}, pasted at the ${place}`).toBe(shape)
+	}
+
+	// Copied from a line's end, the cursor after what's pasted.
+	await pasteInto(page, places['line middle'][0])
+	await copy('from the end of a line')
+	await selectText(page, await linePosition(page, 'tp', 7))
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	expect
+		.soft(await selectedPlace(page), "copied from a line's end: the cursor")
+		.toBe('"paraline" at 4')
+
+	// Plain text is text: into an empty heading, or over all of a heading's text, the heading stays.
+	await pasteInto(page, places['empty heading'][0])
+	await setClipboard(page, 'word')
+	await selectText(page, await linePosition(page, 'th', 0))
+	await settle(page)
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	expect
+		.soft(await pastedShape(page), 'plain text, into an empty heading')
+		.toBe('h3#th.th-c "word"')
+	await pasteInto(page, places['heading middle'][0])
+	await setClipboard(page, 'New title')
+	await selectText(page, await linePosition(page, 'th', 0), await linePosition(page, 'th', 11))
+	await settle(page)
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	expect
+		.soft(await pastedShape(page), "plain text, over all of a heading's text")
+		.toBe('h3#th.th-c "New title"')
+
+	// Over a block selected whole, text gives a plain line, as typing does.
+	await pasteInto(page, places['line start'][0])
+	await copy('part of a heading')
+	await selectBlock(page, 'tp')
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	expect.soft(await pastedShape(page), 'text over a block selected whole').toBe('p "Head"')
+
+	// Over text selected across lines: the selection goes first, as with Enter.
+	await pasteInto(page, `${places['line start'][0]}<p id="tp2">Next line</p>`)
+	await copy('across two lines')
+	await selectText(page, await linePosition(page, 'tp', 2), await linePosition(page, 'tp2', 4))
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	expect
+		.soft(await pastedShape(page), 'lines over text across lines')
+		.toBe(`${line} "Taone" ${lineMade} "para line"`)
+
+	// The cursor after what's pasted, and Undo puts the line back as it was.
+	await pasteInto(page, places['line middle'][0])
+	await copy('across two lines')
+	await selectText(page, await linePosition(page, 'tp', 7))
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	expect.soft(await selectedPlace(page), 'the cursor after the paste').toBe('"paraline" at 4')
+	await page.keyboard.press('ControlOrMeta+z')
+	await settle(page)
+	expect.soft(await pastedShape(page), 'undone').toBe(`${line} "Target line"`)
+
+	// Lines from another page, as a person selects them.
+	await pasteInto(page, places['line middle'][0])
+	await page.evaluate(() => {
+		const elsewhere = document.createElement('div')
+		elsewhere.id = 'elsewhere'
+		elsewhere.innerHTML = '<h2>One</h2><p>Two</p><p>Three</p>'
+		document.body.append(elsewhere)
+		getSelection()!.selectAllChildren(elsewhere)
+	})
+	await page.keyboard.press('ControlOrMeta+c')
+	await page.locator('#elsewhere').evaluate((el) => el.remove())
+	await selectText(page, await linePosition(page, 'tp', 7))
+	// The editor takes the focus back a frame later (TipTap's focus).
+	await settle(page)
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	const fromElsewhere = await pastedShape(page)
+	expect
+		.soft(fromElsewhere, 'from another page, the first line')
+		.toMatch(new RegExp(`^${line.replace(/[{}.]/g, '\\$&')} "Target One" `))
+	expect
+		.soft(fromElsewhere, 'from another page, the second half')
+		.toMatch(new RegExp(` ${lineMade.replace(/[{}.]/g, '\\$&')} "Threeline"$`))
+
+	// Code copied in VS Code, pasted into a line: a code block, the code block's own paste going first.
+	await pasteInto(page, places['line middle'][0])
+	await selectText(page, await linePosition(page, 'tp', 7))
+	await settle(page)
+	await page.evaluate(() => {
+		const clipboardData = new DataTransfer()
+		clipboardData.setData('text/plain', 'one()\ntwo()')
+		clipboardData.setData('text/html', '<div><div>one()</div><div>two()</div></div>')
+		clipboardData.setData('vscode-editor-data', JSON.stringify({ mode: 'javascript' }))
+		const paste = new ClipboardEvent('paste', {
+			clipboardData,
+			bubbles: true,
+			cancelable: true,
+		})
+		document.querySelector('.tiptap')!.dispatchEvent(paste)
+	})
+	await settle(page)
+	expect.soft(await pastedShape(page), 'code from VS Code').toContain('code "one()⏎two()"')
+
+	// A web address pasted over words links them: the link's own paste goes first.
+	await pasteInto(page, places['line start'][0])
+	await setClipboard(page, 'https://example.com')
+	await selectText(page, await linePosition(page, 'tp', 0), await linePosition(page, 'tp', 6))
+	await settle(page)
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	await expect
+		.soft(page.locator('.tiptap #tp a[href="https://example.com"]'))
+		.toHaveText('Target')
+})
+
+/**
+ * Drags the text selected from one place to another with the browser's drag events: Playwright's
+ * mouse starts no drag of selected text.
+ */
+const dragText = (page: Page, from: number, to: number) =>
+	page.evaluate(
+		([from, to]) => {
+			const { view } = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			const point = (pos: number) => {
+				const { left, top, bottom } = view.coordsAtPos(pos)
+				return { clientX: left + 1, clientY: (top + bottom) / 2 }
+			}
+			const dataTransfer = new DataTransfer()
+			const event = (pos: number) => ({
+				...point(pos),
+				bubbles: true,
+				cancelable: true,
+				dataTransfer,
+			})
+			// The line itself: the drag handle can sit over the point.
+			const at = (pos: number) => {
+				const { node } = view.domAtPos(pos)
+				return node instanceof Element ? node : node.parentElement!
+			}
+			const source = at(from)
+			source.dispatchEvent(new DragEvent('dragstart', event(from)))
+			const target = at(to)
+			target.dispatchEvent(new DragEvent('dragover', event(to)))
+			target.dispatchEvent(new DragEvent('drop', event(to)))
+			source.dispatchEvent(new DragEvent('dragend', event(to)))
+		},
+		[from, to] as const,
+	)
+/** Drops this HTML at the position, as dragged in from another page: no drag starts in the editor. */
+const dropFromElsewhere = (page: Page, html: string, to: number) =>
+	page.evaluate(
+		([html, to]) => {
+			const { view } = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			const { left, top, bottom } = view.coordsAtPos(to)
+			const dataTransfer = new DataTransfer()
+			dataTransfer.setData('text/html', html)
+			dataTransfer.setData('text/plain', html.replace(/<[^>]*>/g, ''))
+			const at = { clientX: left + 1, clientY: (top + bottom) / 2 }
+			const event = { ...at, bubbles: true, cancelable: true, dataTransfer }
+			const { node } = view.domAtPos(to)
+			const target = node instanceof Element ? node : node.parentElement!
+			target.dispatchEvent(new DragEvent('dragover', event))
+			target.dispatchEvent(new DragEvent('drop', event))
+		},
+		[html, to] as const,
+	)
+
+// A drop puts the dragged copy in as a paste does, after it leaves where it was, and selects it
+// (copyAndPaste.ts).
+test('dragged text joins the line it is dropped in, and lines dropped in code are text', async ({
+	page,
+}) => {
+	// Short, so where it's dragged from and to are both on screen.
+	const heading = '<h2 id="sh" class="sh-c" style="color: red">Heading text</h2>'
+	const lines = '<p id="sp1" class="p1-c">para one</p><p id="sp2" class="p2-c">para two</p>'
+	await pasteInto(
+		page,
+		'<p id="tp" class="tp-c" style="margin-top: 4px">Target line</p>',
+		heading,
+	)
+	await selectText(page, await linePosition(page, 'sh', 0), await linePosition(page, 'sh', 4))
+	await dragText(page, await linePosition(page, 'sh', 2), await linePosition(page, 'tp', 0))
+	await settle(page)
+	expect
+		.soft(await pastedShape(page), 'text dropped at the start of a line')
+		.toBe('p#tp.tp-c{margin-top: 4px} "HeadTarget line"')
+	expect.soft(await selectedPlace(page), 'what was dropped, selected').toBe('tp at 0 to tp at 4')
+
+	// A heading from another page, as text beside the line's.
+	await pasteInto(page, '<p id="tp" class="tp-c" style="margin-top: 4px">Target line</p>', lines)
+	await dropFromElsewhere(page, '<h2>Elsewhere</h2>', await linePosition(page, 'tp', 0))
+	await settle(page)
+	expect
+		.soft(await pastedShape(page), 'a heading from another page, at the start of a line')
+		.toBe('p#tp.tp-c{margin-top: 4px} "ElsewhereTarget line"')
+	expect
+		.soft(await selectedPlace(page), 'the heading dropped, selected')
+		.toBe('tp at 0 to tp at 9')
+
+	// Lines in the middle of a line, as a paste puts them.
+	await pasteInto(page, '<p id="tp" class="tp-c" style="margin-top: 4px">Target line</p>', lines)
+	await selectText(page, await linePosition(page, 'sp1', 5), await linePosition(page, 'sp2', 4))
+	await dragText(page, await linePosition(page, 'sp1', 6), await linePosition(page, 'tp', 7))
+	await settle(page)
+	expect
+		.soft(await pastedShape(page), 'lines dropped in the middle of a line')
+		.toBe('p#tp.tp-c{margin-top: 4px} "Target one" p.tp-c{margin-top: 4px} "paraline"')
+	expect
+		.soft(await selectedPlace(page), 'the lines dropped, selected')
+		.toBe('tp at 7 to "paraline" at 4')
+
+	await pasteInto(page, '<pre id="tc" class="tc-c"><code>Target code</code></pre>', lines)
+	await selectText(page, await linePosition(page, 'sp1', 5), await linePosition(page, 'sp2', 4))
+	await dragText(page, await linePosition(page, 'sp1', 6), await linePosition(page, 'tc', 7))
+	await settle(page)
+	expect
+		.soft(await pastedShape(page), 'lines dropped in code')
+		.toBe('code#tc.tc-c "Target one⏎⏎paracode"')
 })
 
 /** The cursor on the first empty line in the block with this id. */

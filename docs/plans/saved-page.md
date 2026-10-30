@@ -142,11 +142,23 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    (`defaultItemsMultiSelect.ts`). The chosen blocks go into the new block where the first was,
    and B stays, after it, with a cursor in it, as the Move tools gather the chosen blocks and leave
    the rest; the boxes offered are those the page can hold there with B after (`selWrapPlace`).
-9. **Pasted text and the line it lands in.** A heading's text pasted at a line's start, or into an
-   empty line, makes the line a heading with the copied heading's class and style, and the line
-   loses its own: ProseMirror keeps a copied heading's kind on purpose. Text copied across two
-   lines and pasted at a line's start gives the line the copied line's settings, and it loses its
-   id. What pasted text keeps is found when the step is planned.
+9. **What a copy holds, and where it goes.** Text from inside a heading, a code block, a list or
+   to-do item or a quote, pasted or dropped at a line's start or into an empty line, made the line
+   that kind with the copied block's class and style, its own gone: ProseMirror copies the line
+   around the text. Text across lines gave the second half of the line the copied line's kind,
+   class and style, and a quote's line pasted into a quote split it. Now (`copyAndPaste.ts`), for
+   paste and drop alike, text from inside one line is copied as a plain line's text, and joins the
+   line, which keeps its kind and settings; so do plain text and one plain line from another app,
+   wherever they land. Copied lines go in as they were: inside a line, it splits as
+   Enter splits it (the top half keeps everything, the second half gets its class and style), and
+   the cut first and last lines join the text beside them; at its start the copy goes above the
+   line, at its end below, and in place of an empty line. In a list each line becomes an item, as
+   typing them with Enter would, and a copied list's items join it; the item pasted into keeps
+   itself. A block copied whole pastes as before; in code, everything is text.
+    - New: all of a heading's text pasted into an empty line gives a plain line (the heading is
+      copied as a block); another app is given a plain line's text for part of a line; text over a
+      block selected whole gives a plain line, as typing does; lines dragged into code are text,
+      as pasted.
 10. **A span's text survives a change of kind.** Code Block, a code fence typed, and Backspace or
     Delete into a code block delete a span with its text; bold and links keep their text.
     ProseMirror clears what a code block can't hold (`clearIncompatible`).
@@ -227,6 +239,16 @@ Later, the owner's call:
 - **Wrap selection puts the chosen blocks in the new block where the first was; the rest stay,
   after it** (owner, 2026-10-30), as the Move tools gather the chosen blocks: a block not chosen
   is neither deleted nor put in a box the author didn't ask for.
+- **Text pastes as text; copied lines go in as they were, the line split as Enter splits it**
+  (owner, 2026-10-30): a line that text is pasted into keeps its own kind and settings, as with
+  text typed in. One rule for every copy, paste and drop, settled as a spec of every case before
+  any code: fixing text from one line alone would have left text across lines, which a list
+  copied by its items' text needs as lines. Refusing the paste, or putting the text above or
+  below the line, was weighed: a paste is too basic to refuse, and the cursor is where the author
+  wants the text.
+- **In a list, pasted lines become items, as typing them with Enter would** (owner, 2026-10-30,
+  for now): a copied list's items join the list, and the item pasted into keeps itself, wherever
+  in it the cursor is.
 - **A block changing kind keeps its settings; TipTap is upgraded first, then patched** (owner,
   2026-10-21). TipTap 3.32.0 changes a list between bullet and to-do itself, which the app's own
   code did for the toolbar only; the patch keeps the settings where its commands write the block.
@@ -433,4 +455,19 @@ Later, the owner's call:
   first out of the new block), and only the check's first part failed without the fix (extended).
   Unit tests pass (4 + 34); all 700 runs of the Playwright checks pass.
 
-Next: step 9, in a session of its own.
+- **Step 9 done** (2026-10-30). Planned first for text from inside one line alone; the owner wanted
+  one rule for every copy, so a spec of every case came before the code: 255 cases, 15 kinds of
+  copy in 17 places, the list rule settled on the way. Today's paste did as the spec says in 152 of
+  them; now all 255, in Chrome and WebKit, one Undo each, the cursor where it was; dragged, the
+  same, a moved line keeping its id (step 2). Copy, paste and drop in one place (`CopyAndPaste`,
+  last, so a block's own paste goes first: code from VS Code). Two checks in `editor.spec.ts`; each
+  of 21 parts fails on a version without it. Reviewed by an agent; its findings checked and fixed: a
+  picture, line or video between copied lines was lost in a list (it goes in the item before); a
+  Card, Stack, Cover or column whose only line was empty went with it (the copy goes in after the
+  line, which then goes); plain text into an empty heading, or over all its text, made it a plain
+  line (a plain line alone is text); a copy from inside one line lost ProseMirror's mark, so spaces
+  went and paste rules ran (`**bold**` turned bold); the cursor went too far after a copy from a
+  line's end; a cell's text left its table. Unit tests pass (4 + 34); all 708 runs of the
+  Playwright checks pass.
+
+Next: step 10, in a session of its own.

@@ -1,5 +1,6 @@
 import { enumAttr } from '@/editor/enumAttr'
 import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExtension'
+import { CopyAndPaste } from '@/editor/extensions/copyAndPaste'
 import { CustomTaskItem } from '@/editor/extensions/customTaskItem'
 import Div from '@/editor/extensions/divExtension'
 import FontStyle from '@/editor/extensions/fontStyleMark'
@@ -158,5 +159,6 @@ export function getContentExtensions({
 		CustomTaskItem.configure({ nested: true }),
 		CodeBlockExtension,
 		YoutubeExtension,
+		CopyAndPaste,
 	]
 }
