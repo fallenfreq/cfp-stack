@@ -168,7 +168,9 @@ export const CopyAndPaste = Extension.create({
 
 		// The copy in an empty item, the author's (`own`) or the one Enter made: its first line in the
 		// item's line (that line's text, when an item can't start with it), the rest after the item.
-		// In Enter's item, a copied list gives its items in place of it, as they were.
+		// In Enter's item, a copied list gives its items in place of it, as they were. What the item
+		// holds after its line (a nested list, more lines: Enter carries them into the item it makes)
+		// goes at the end of the item the copy ends in, as typing the copy with Enter would carry it.
 		const putInEmptyItem = (
 			tr: Transaction,
 			$line: ResolvedPos,
@@ -177,10 +179,13 @@ export const CopyAndPaste = Extension.create({
 		): [number, number] => {
 			const item = $line.node(-1)
 			const itemPos = $line.before(-1)
-			const $item = tr.doc.resolve(itemPos)
 			let blocks = rest.content
 			const first = blocks.firstChild
 			if (!first) return [itemPos, itemPos]
+			const held = item.content.cut($line.after() - $line.before())
+			if (held.size) tr.delete($line.after(), itemPos + item.nodeSize - 1)
+			const itemEnd = itemPos + item.nodeSize - held.size
+			const $item = tr.doc.resolve(itemPos)
 			const steps = tr.steps.length
 			const index = $item.index()
 			const starts = first.isTextblock && item.type.contentMatch.matchType(first.type)
@@ -190,19 +195,25 @@ export const CopyAndPaste = Extension.create({
 			const fits = isList(first)
 				? $item.parent.canReplace(index, index + 1, first.content)
 				: !found
+			let end: number
 			if (!own && !starts && fits) {
-				tr.delete(itemPos, itemPos + item.nodeSize)
-				return [itemPos, putInList(tr, itemPos, blocks, item)]
+				tr.delete(itemPos, itemEnd)
+				end = putInList(tr, itemPos, blocks, item)
+			} else {
+				if (starts) {
+					tr.replaceWith($line.before(), $line.after(), first)
+					blocks = blocks.cut(first.nodeSize)
+				} else if (found) {
+					tr.insert($line.pos, found[0].content)
+					blocks = withoutLine(blocks, found[1], -1)[0]
+				}
+				end = putInList(tr, tr.mapping.slice(steps).map(itemEnd), blocks, item)
 			}
-			if (starts) {
-				tr.replaceWith($line.before(), $line.after(), first)
-				blocks = blocks.cut(first.nodeSize)
-			} else if (found) {
-				tr.insert($line.pos, found[0].content)
-				blocks = withoutLine(blocks, found[1], -1)[0]
-			}
-			const afterItem = tr.mapping.slice(steps).map(itemPos + item.nodeSize)
-			return [itemPos, putInList(tr, afterItem, blocks, item)]
+			if (!held.size) return [itemPos, end]
+			const last = tr.doc.resolve(end).nodeBefore
+			if (last && ITEMS.includes(last.type.name)) tr.insert(end - 1, held)
+			else tr.replaceRange(end, end, new Slice(held, 0, 0))
+			return [itemPos, end - 1]
 		}
 
 		// The lines between the halves, where they meet: in a list as putInList puts them (the second

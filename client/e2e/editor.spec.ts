@@ -1673,6 +1673,11 @@ test('pasted text joins the line, and pasted lines go in as Enter would split it
 			12,
 		],
 		'code middle': ['<pre id="tc" class="tc-c"><code>Target code</code></pre>', 'tc', 7],
+		'list item end, holding a nested list': [
+			'<ul id="tl"><li id="tl1" class="tl1-c"><p>Target item</p><ul id="tn"><li id="tn1"><p>nested</p></li></ul></li></ul>',
+			'tl1',
+			11,
+		],
 		'empty line in a Card': [
 			'<layout-card id="tk" class="sf-size-md"><p id="te" class="te-c"></p></layout-card>',
 			'te',
@@ -1859,6 +1864,18 @@ test('pasted text joins the line, and pasted lines go in as Enter would split it
 			'across two lines',
 			'empty line in a Card',
 			`${card}#tk.sf-size-md[p.p1-c "one" ${blue} "para"]`,
+		],
+		// What the item held after the line goes at the end of the item the copy ends in, as Enter
+		// carries it.
+		[
+			'across two list items',
+			'list item end, holding a nested list',
+			'ul#tl[li#tl1.tl1-c[p "Target itemone"] li.li2-c[p "item" ul#tn[li#tn1[p "nested"]]]]',
+		],
+		[
+			'a picture between lines',
+			'list item end, holding a nested list',
+			'ul#tl[li#tl1.tl1-c[p "Target itemore" image[]] li.tl1-c[p "aft" ul#tn[li#tn1[p "nested"]]]]',
 		],
 		// As written: spaces, and what a paste rule would turn into bold.
 		['words and a space', 'line middle', `${line} "Target words line"`],
