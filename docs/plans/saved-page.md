@@ -179,6 +179,31 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
       boxes); an app built on TipTap reads both. A tick box or a column list as a style written in
       the code view is refused. A video's address is written in the page's form
       (`…/embed/…?start=30&rel=1`).
+12. **A block copied whole goes in as copied lines do, lists included.** A block selected whole
+    and pasted into a list went in the item the cursor is in, as one of its blocks, where step 9
+    makes copied lines items (measured 2026-10-30): a paragraph at an item's end was a second line
+    of the item; in an item's middle, the item's line split inside the item, not as Enter splits
+    it; at the start of a list's first item, the block went above the list. A list of another kind
+    joined or nested depending on its items' type (a numbered list became bullets, a to-do list
+    nested), and a heading or code block pasted into an empty item gave it its text, no longer a
+    heading. Now (owner, 2026-10-31), blocks copied whole go in as copied lines do, and in a list:
+    - A plain line becomes an item, made as Enter makes one. Items that join a list, copied by
+      their text or an item selected whole, take its kind (a to-do's tick goes; bullets in a to-do
+      list are unticked).
+    - Anything an item can't start with (a heading, code, a quote, a picture, a table, a list
+      copied whole) keeps its kind and goes under the line it's pasted on: at an item's end or
+      middle, in that item; into an empty item, under its line, as an item starts with a line; at
+      an item's start, in the empty item Enter makes above. A list copied whole so nests, whatever
+      its kind.
+    - What's pasted replaces an empty line, never what holds it (a Card, a quote, an item, a list):
+      lines fill an empty item, which keeps its id and class.
+    - What an item held after the cursor goes at the end of the item the copy ends in.
+    - Text copied from inside a block comes without it (owner, 2026-10-31, found in review): the
+      blocks the selection sits in (a Card, a Stack, a quote, an item) aren't copied, as text from
+      inside one line comes without the line's kind; a list of the items copied is, and an item
+      copied with its line and its sub-items, which nest. A list's items copied from inside a Card
+      went into the item pasted at, the Card holding them.
+    - Blocks dragged by their handle are a fix of their own (`sf-system-todo.md`, "Editor").
 
 Later, the owner's call:
 
@@ -249,6 +274,17 @@ Later, the owner's call:
 - **In a list, pasted lines become items, as typing them with Enter would** (owner, 2026-10-30,
   for now): a copied list's items join the list, and the item pasted into keeps itself, wherever
   in it the cursor is.
+- **A block copied whole goes in as copied lines do; in a list, what an item can't start with
+  keeps its kind, under the line it's pasted on** (owner, 2026-10-31). Items joining a list take its
+  kind; a list that nests keeps its own, so a list copied whole nests. What's pasted replaces an
+  empty line, never what holds it, so a list never goes by itself, its id with it. Weighed and
+  dropped: an empty item giving its place to the copy, a block put in the item above (above the
+  list at its start, the list going when left empty), and a heading's text filling an empty item.
+- **Text copied from inside a block comes without the blocks around it** (owner, 2026-10-31): a
+  Card, a Stack, a quote or an item the selection sits in isn't copied, as the line around text
+  from inside one line isn't; a list of the items copied is, for its items, and an item copied
+  with its line and its sub-items, so they still nest. Lines copied from inside a quote lose the
+  quote: selecting the quote itself copies it, as with a Card.
 - **A block changing kind keeps its settings; TipTap is upgraded first, then patched** (owner,
   2026-10-21). TipTap 3.32.0 changes a list between bullet and to-do itself, which the app's own
   code did for the toolbar only; the patch keeps the settings where its commands write the block.
@@ -469,5 +505,27 @@ Later, the owner's call:
   went and paste rules ran (`**bold**` turned bold); the cursor went too far after a copy from a
   line's end; a cell's text left its table. Unit tests pass (4 + 34); all 708 runs of the
   Playwright checks pass.
+
+- **Step 12 done** (2026-10-31), before step 10. The rules settled one by one with the owner,
+  then a spec of every case before the code: 137 cases, 13 kinds of copy (blocks copied whole,
+  lists copied by their text) in 15 places. The app did as the spec says in 89 of them; now all
+  137, in Chrome and WebKit, one Undo each; dragged, the same. Step 9's 255 still do, five changed
+  by the new rules, the cursor where it was. Found on the way: an item holding a nested list,
+  copied by its text into a list, threw (`Invalid content for node listItem`), and ProseMirror's
+  paste took over. A check in `editor.spec.ts`, and two of step 9's cases changed; each part fails
+  on a version without it, but for the Undo and as-before parts, which pin what already worked.
+  Reviewed three times by an agent; its findings checked and fixed: a list copied by its text from
+  inside a Card or Stack went into the item, the Card holding it (a new rule, the owner's: text
+  copied from inside a block comes without it, but for an item copied with its sub-items); a list
+  item selected whole split the list (it joins it, of its kind); a copy starting inside a nested
+  item, at an item's start, went in the item above or above the list (in the item Enter makes);
+  an item copied with its sub-items, pasted inside a line outside a list, threw, as since step 9
+  (an empty item holds them, as at a line's end), and copied from its line's end they nested (only
+  the sub-items are copied, and join); the cursor stopped before a last picture, or
+  selected the author's picture after it, or the picture at the page's end (the line after, a new
+  one at the end). Kept, with the owner: at an item's second line, paste splits the item as Enter
+  does.
+  Logged (`sf-system-todo.md`): a picture dragged by itself, and an item's second line. Unit tests
+  pass (4 + 34); all 712 runs of the Playwright checks pass.
 
 Next: step 10, in a session of its own.

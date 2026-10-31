@@ -32,18 +32,6 @@ const cutLine = (slice: Slice, side: -1 | 1): PMNode | null => {
 	return null
 }
 
-// The first line in the content, through no table cell, and how deep it is.
-const firstLine = (content: Fragment): [PMNode, number] | null => {
-	let node = content.firstChild
-	let depth = 1
-	while (node && !node.isTextblock) {
-		if (node.type.spec.isolating) return null
-		node = node.firstChild
-		depth++
-	}
-	return node ? [node, depth] : null
-}
-
 // The content without its line `depth` levels down at the start (side -1) or end (1), a block it
 // leaves empty going too, and how deep it's still open on that side.
 const withoutLine = (content: Fragment, depth: number, side: -1 | 1): [Fragment, number] => {
@@ -57,13 +45,18 @@ const withoutLine = (content: Fragment, depth: number, side: -1 | 1): [Fragment,
 	return [content.replaceChild(index, node.copy(inner)), open + 1]
 }
 
+// Blocks copied whole: selected as a block, not by their text.
+const copiedWhole = (slice: Slice) =>
+	slice.openStart === 0 && slice.openEnd === 0 && !!slice.content.firstChild?.isBlock
+
 // How a copy goes in at $from..$to: as text (one line beside the line's text, or a plain line
-// anywhere: plain text, a line copied from inside one), as lines, or as ProseMirror puts it (null:
-// blocks copied whole, table cells, into code).
+// anywhere: plain text, a line copied from inside one), as lines (blocks copied whole too), or as
+// ProseMirror puts it (null: table cells, into code).
 const howToPut = ($from: ResolvedPos, $to: ResolvedPos, slice: Slice): 'text' | 'lines' | null => {
 	if (!$from.parent.isTextblock || !$to.parent.isTextblock) return null
 	if ($from.parent.type.spec.code || $to.parent.type.spec.code) return null
 	if (!slice.content.firstChild?.isBlock) return null
+	if (copiedWhole(slice)) return 'lines'
 	if (!cutLine(slice, -1) && !cutLine(slice, 1)) return null
 	const line = oneLine(slice)
 	if (!line) return 'lines'
@@ -77,8 +70,18 @@ const isPlainLine = (slice: Slice, line: PMNode) =>
 	slice.content.firstChild === line
 	&& line.type === line.type.schema.topNodeType.contentMatch.defaultType
 
-// A block of blocks, as a list is of its items: not a line, nor a picture with nothing in it.
-const isList = (block: PMNode) => !block.isTextblock && block.childCount > 0
+// A block of items: a list, of any kind.
+const isList = (block: PMNode) =>
+	block.childCount > 0 && block.content.content.every((child) => ITEMS.includes(child.type.name))
+
+// The items a copied block gives a list: an item copied whole, or a list's items copied by their
+// text. A list copied whole is a block of its own.
+const itemsOf = (block: PMNode, whole: boolean) =>
+	ITEMS.includes(block.type.name)
+		? Fragment.from(block)
+		: !whole && isList(block)
+			? block.content
+			: null
 
 // Where the transaction's last step put what it put in.
 const lastPut = (tr: Transaction): [number, number] => {
@@ -87,20 +90,61 @@ const lastPut = (tr: Transaction): [number, number] => {
 	return put
 }
 
-const lastTextblockEnd = (doc: PMNode, from: number, to: number) => {
+// A new empty line at the page's end, the cursor in it: the line after a picture that ends the
+// page, which the editor adds anyway once the paste is in (TipTap's trailing node).
+const newLastLine = (tr: Transaction) => {
+	const end = tr.doc.content.size
+	tr.insert(end, tr.doc.type.contentMatch.defaultType!.create())
+	return TextSelection.create(tr.doc, end + 1)
+}
+
+// Where the last line put in at from..to ends: -1 when what's put in ends with no line (a picture).
+const lastLineEnd = (doc: PMNode, from: number, to: number) => {
 	let end = -1
 	doc.nodesBetween(from, to, (node, pos) => {
-		if (node.isTextblock && pos + node.nodeSize <= to) end = pos + node.nodeSize - 1
+		if (pos + node.nodeSize > to) return
+		if (node.isTextblock) end = pos + node.nodeSize - 1
+		else if (node.isBlock && node.isLeaf) end = -1
+		return !node.isTextblock
 	})
 	return end
 }
 
-// What a copy holds: text from inside one line is copied as a plain line's text, without the
-// line's kind or settings. ProseMirror copies the line around it, so pasted at a line's start or
-// into an empty line it made that line a heading, a list or a quote, its own settings gone. Still a
-// line, open on both sides: ProseMirror marks it as its own copy (`data-pm-slice`), and reads it
-// back as written, spaces and all, where it would read bare text as another app's.
-const copiedText = (slice: Slice) => {
+// An item copied with its line's text and the list it holds: an item and its sub-items.
+const withSubItems = (item: PMNode) =>
+	!!item.firstChild?.isTextblock
+	&& item.firstChild.content.size > 0
+	&& item.content.content.some(isList)
+
+// The copy without the blocks its text sat in, open at both ends around all it holds (a Card, a
+// Stack, a quote, an item whose sub-items alone are copied). ProseMirror copies them too, and
+// pasted they came in around the lines: in a list, a Card in the item, holding the copied items. A
+// list of the items copied stays, as does one of an item copied with its sub-items, which nest.
+const withoutAround = (slice: Slice) => {
+	let { content, openStart, openEnd } = slice
+	while (content.childCount === 1 && openStart > 1 && openEnd > 1) {
+		const node = content.firstChild!
+		if (
+			node.isTextblock
+			|| node.type.spec.isolating
+			|| (isList(node) && (node.childCount > 1 || withSubItems(node.firstChild!)))
+		)
+			break
+		content = node.content
+		openStart--
+		openEnd--
+	}
+	return new Slice(content, openStart, openEnd)
+}
+
+// What a copy holds: what's selected, without the blocks around it (withoutAround). Text from
+// inside one line is copied as a plain line's text, without the line's kind or settings.
+// ProseMirror copies the line around it, so pasted at a line's start or into an empty line it made
+// that line a heading, a list or a quote, its own settings gone. Still a line, open on both sides:
+// ProseMirror marks it as its own copy (`data-pm-slice`), and reads it back as written, spaces and
+// all, where it would read bare text as another app's.
+const copiedText = (copied: Slice) => {
+	const slice = withoutAround(copied)
 	const line = oneLine(slice)
 	// A code block's text across its lines is its lines.
 	if (!line || line.textContent.includes('\n')) return slice
@@ -110,10 +154,12 @@ const copiedText = (slice: Slice) => {
 }
 
 // What a copy holds and where it goes, for paste and drop alike. Text joins the line it lands in,
-// which keeps its kind and settings. Copied lines go in as they were: in the middle of a line, the
-// line splits as Enter splits it and they go between the halves, the first and last, when cut,
-// joining the text beside them; at its start they go above it, at its end below, and in place of
-// an empty line. In a list each becomes an item, as typing them with Enter would.
+// which keeps its kind and settings. Copied lines, and blocks copied whole, go in as they were: in
+// the middle of a line, the line splits as Enter splits it and they go between the halves, the
+// first and last, when cut, joining the text beside them; at its start they go above it, at its
+// end below, and in place of an empty line, never what holds it. In a list a plain line becomes an
+// item, as typing it with Enter would, and copied items become items of the list's kind; anything
+// else keeps its kind, under the line.
 export const CopyAndPaste = Extension.create({
 	name: 'copyAndPaste',
 	// After every other paste and drop, so a block's own goes first: code pasted from VS Code is a
@@ -133,49 +179,69 @@ export const CopyAndPaste = Extension.create({
 			return true
 		}
 
-		// Blocks put in a list at `at`, between its items, as typing them with Enter would: a line in a
-		// new item made as Enter makes one from `item`, a copied list's items as they were. A block an
-		// item can't start with goes inside the item before. Returns where they end.
-		const putInList = (tr: Transaction, at: number, blocks: Fragment, item: PMNode) => {
+		// Blocks put in a list at `at`, between its items, as typing them with Enter would: a plain
+		// line in a new item made as Enter makes one from `item`; the items of a list copied by their
+		// text as this list's items, its kind. Anything else (a block an item can't start with, a list
+		// copied whole) keeps its kind, inside the item before. Returns where they start and end.
+		const putInList = (
+			tr: Transaction,
+			at: number,
+			blocks: Fragment,
+			item: PMNode,
+			whole: boolean,
+		): [number, number] => {
 			let pos = at
-			blocks.forEach((block) => {
-				const $pos = tr.doc.resolve(pos)
-				const index = $pos.index()
-				let put: Fragment | null = null
-				if (isList(block) && $pos.parent.canReplace(index, index, block.content))
-					put = block.content
-				else if (item.type.validContent(Fragment.from(block)))
-					put = Fragment.from(item.type.create(carried(item), block))
-				if (put) {
-					tr.insert(pos, put)
-					pos += put.size
-					return
-				}
-				const before = $pos.nodeBefore
+			let start = -1
+			const add = (node: PMNode) => {
+				if (start < 0) start = pos
+				tr.insert(pos, node)
+				pos += node.nodeSize
+			}
+			const inside = (block: PMNode) => {
+				const before = tr.doc.resolve(pos).nodeBefore
 				if (
 					before?.canReplace(before.childCount, before.childCount, Fragment.from(block))
 				) {
+					if (start < 0) start = pos - 1
 					tr.insert(pos - 1, block)
 					pos += block.nodeSize
 					return
 				}
+				if (start < 0) start = pos
 				const steps = tr.steps.length
 				tr.replaceRange(pos, pos, new Slice(Fragment.from(block), 0, 0))
 				pos = tr.mapping.slice(steps).map(pos, 1)
+			}
+			blocks.forEach((block) => {
+				const items = itemsOf(block, whole)
+				if (items)
+					items.forEach((child) => {
+						// An item with no line to start it (its line joined the text before, or the copy
+						// starts inside a block it holds): what it holds goes in the item before.
+						if (item.type.validContent(child.content))
+							add(item.type.create(child.attrs, child.content, child.marks))
+						else child.forEach(inside)
+					})
+				else if (item.type.validContent(Fragment.from(block)))
+					add(item.type.create(carried(item), block))
+				else inside(block)
 			})
-			return pos
+			return [start < 0 ? at : start, pos]
 		}
 
-		// The copy in an empty item, the author's (`own`) or the one Enter made: its first line in the
-		// item's line (that line's text, when an item can't start with it), the rest after the item.
-		// In Enter's item, a copied list gives its items in place of it, as they were. What the item
-		// holds after its line (a nested list, more lines: Enter carries them into the item it makes)
-		// goes at the end of the item the copy ends in, as typing the copy with Enter would carry it.
+		// The copy in an empty item: the author's (`own`), or the one Enter made above or below the
+		// line. A plain line fills the item's line, as does, in the author's item, the line of the
+		// first item copied. In Enter's item, copied items take its place (above the line, when the
+		// first starts with a line), and below the line anything else does, going in the item above;
+		// otherwise the item stays, the copy under its empty line. What the item holds after its line
+		// (a nested list, more lines: Enter carries them into the item it makes) goes at the end of
+		// the item the copy ends in, as typing the copy with Enter would carry it.
 		const putInEmptyItem = (
 			tr: Transaction,
 			$line: ResolvedPos,
 			rest: Slice,
-			own: boolean,
+			place: 'own' | 'above' | 'below',
+			whole: boolean,
 		): [number, number] => {
 			const item = $line.node(-1)
 			const itemPos = $line.before(-1)
@@ -185,35 +251,39 @@ export const CopyAndPaste = Extension.create({
 			const held = item.content.cut($line.after() - $line.before())
 			if (held.size) tr.delete($line.after(), itemPos + item.nodeSize - 1)
 			const itemEnd = itemPos + item.nodeSize - held.size
-			const $item = tr.doc.resolve(itemPos)
-			const steps = tr.steps.length
-			const index = $item.index()
-			const starts = first.isTextblock && item.type.contentMatch.matchType(first.type)
-			const found = starts ? null : firstLine(blocks)
-			// Enter's item, with nothing to start it: a copied list's items, or a block with no line to
-			// give (a picture), in place of it.
-			const fits = isList(first)
-				? $item.parent.canReplace(index, index + 1, first.content)
-				: !found
-			let end: number
-			if (!own && !starts && fits) {
+			const starts = (line: PMNode) =>
+				line.isTextblock && item.type.contentMatch.matchType(line.type)
+			// The first item the copy gives, and its line: the copy can start inside a block it holds.
+			const firstItem = itemsOf(first, whole)?.firstChild
+			const line =
+				firstItem && item.type.validContent(firstItem.content) ? firstItem.firstChild : null
+			const goes = place === 'below' ? !starts(first) : place === 'above' && !!line
+			let put: [number, number]
+			if (goes) {
 				tr.delete(itemPos, itemEnd)
-				end = putInList(tr, itemPos, blocks, item)
+				put = putInList(tr, itemPos, blocks, item, whole)
 			} else {
-				if (starts) {
+				const steps = tr.steps.length
+				let filled = true
+				if (starts(first)) {
 					tr.replaceWith($line.before(), $line.after(), first)
 					blocks = blocks.cut(first.nodeSize)
-				} else if (found) {
-					tr.insert($line.pos, found[0].content)
-					blocks = withoutLine(blocks, found[1], -1)[0]
-				}
-				end = putInList(tr, tr.mapping.slice(steps).map(itemEnd), blocks, item)
+				} else if (line) {
+					tr.insert($line.pos, line.content)
+					// In its list, or the item copied whole.
+					blocks = withoutLine(blocks, firstItem === first ? 2 : 3, -1)[0]
+				} else filled = false
+				const after = tr.mapping.slice(steps).map(itemEnd)
+				const [start, end] = putInList(tr, after, blocks, item, whole)
+				// The item's line is put in only when the copy fills it.
+				put = [filled ? itemPos : start, end]
 			}
-			if (!held.size) return [itemPos, end]
+			const [from, end] = put
+			if (!held.size) return [from, end]
 			const last = tr.doc.resolve(end).nodeBefore
 			if (last && ITEMS.includes(last.type.name)) tr.insert(end - 1, held)
 			else tr.replaceRange(end, end, new Slice(held, 0, 0))
-			return [itemPos, end - 1]
+			return [from, end - 1]
 		}
 
 		// The lines between the halves, where they meet: in a list as putInList puts them (the second
@@ -223,15 +293,21 @@ export const CopyAndPaste = Extension.create({
 			firstEnd: number,
 			secondStart: number,
 			rest: Slice,
+			whole: boolean,
 		): [number, number] => {
 			const $second = tr.doc.resolve(secondStart)
 			const depth = tr.doc.resolve(firstEnd).sharedDepth(secondStart) + 1
 			const gap = $second.before(depth)
 			const second = $second.node(depth)
 			if (ITEMS.includes(second.type.name))
-				return [gap, putInList(tr, gap, rest.content, second)]
+				return putInList(tr, gap, rest.content, second, whole)
 			const $gap = tr.doc.resolve(gap)
-			if ($gap.parent.canReplace($gap.index(), $gap.index(), rest.content)) {
+			// An item the copy cut can have no line to start it (its line joined to the text before, or
+			// the copy started inside its sub-items): as ProseMirror fits it.
+			const list = rest.content.firstChild
+			const cut = list && isList(list) ? list.firstChild! : null
+			const lineless = !!cut && !cut.type.validContent(cut.content)
+			if (!lineless && $gap.parent.canReplace($gap.index(), $gap.index(), rest.content)) {
 				tr.insert(gap, rest.content)
 				return [gap, gap + rest.content.size]
 			}
@@ -246,6 +322,7 @@ export const CopyAndPaste = Extension.create({
 		// halves meet, or in place of the empty half or the empty line. Then the cursor goes after
 		// what's put in, or for a drop it's selected, as ProseMirror does.
 		const putLines = (chain: ChainedCommands, slice: Slice, uiEvent: 'paste' | 'drop') => {
+			const whole = copiedWhole(slice)
 			let pos = 0
 			let steps = 0
 			let before = false
@@ -295,15 +372,21 @@ export const CopyAndPaste = Extension.create({
 					if (tail) tr.insert(secondStart, tail.content)
 					let start = firstEnd
 					let end = tail ? secondStart + tail.content.size : firstEnd
+					// What's put in ends with no line (a picture): the cursor goes to the line after it, not a
+					// picture there, which typing would replace; at the page's end, a new one.
+					let lineAfter = false
 					if (rest.content.size) {
 						const placing = tr.steps.length
-						const empty = (at: number, own: boolean): [number, number] => {
+						const empty = (
+							at: number,
+							place: 'own' | 'above' | 'below',
+						): [number, number] => {
 							const $line = tr.doc.resolve(at)
 							const inItem =
 								$line.depth >= 2
 								&& ITEMS.includes($line.node(-1).type.name)
 								&& $line.index(-1) === 0
-							if (inItem) return putInEmptyItem(tr, $line, rest, own)
+							if (inItem) return putInEmptyItem(tr, $line, rest, place, whole)
 							// Put in after the empty line, which then goes: replaced, the line would take with
 							// it a Card or Stack it's alone in (replaceRange widens to what it fills).
 							tr.replaceRange($line.after(), $line.after(), rest)
@@ -315,17 +398,18 @@ export const CopyAndPaste = Extension.create({
 						}
 						const [from, to] =
 							!before && !after
-								? empty(pos, true)
+								? empty(pos, 'own')
 								: !before
-									? empty(firstEnd, false)
+									? empty(firstEnd, 'above')
 									: !after
-										? empty(secondStart, false)
-										: putBetween(tr, firstEnd, secondStart, rest)
+										? empty(secondStart, 'below')
+										: putBetween(tr, firstEnd, secondStart, rest, whole)
 						if (!head) start = from
 						if (tail) end = tr.mapping.slice(placing).map(end)
 						else {
-							const lastEnd = lastTextblockEnd(tr.doc, from, to)
+							const lastEnd = lastLineEnd(tr.doc, from, to)
 							end = lastEnd < 0 ? to : lastEnd
+							lineAfter = lastEnd < 0
 						}
 					}
 					if (head) {
@@ -334,11 +418,10 @@ export const CopyAndPaste = Extension.create({
 						end = tr.mapping.slice(heading).map(end)
 					}
 					const $end = tr.doc.resolve(end)
-					tr.setSelection(
-						uiEvent === 'drop'
-							? TextSelection.between(tr.doc.resolve(start), $end)
-							: TextSelection.near($end, -1),
-					)
+					if (uiEvent === 'drop')
+						tr.setSelection(TextSelection.between(tr.doc.resolve(start), $end))
+					else if (!lineAfter) tr.setSelection(TextSelection.near($end, -1))
+					else tr.setSelection(TextSelection.findFrom($end, 1, true) ?? newLastLine(tr))
 					return true
 				})
 				.command(({ tr }) => marked(tr, uiEvent))
@@ -390,12 +473,8 @@ export const CopyAndPaste = Extension.create({
 						const pos = tr.mapping.map(dropAt)
 						const $pos = tr.doc.resolve(pos)
 						// Into code, the copy's text, as pasting puts it; a block dragged whole goes beside it.
-						const wholeBlock =
-							slice.openStart === 0
-							&& slice.openEnd === 0
-							&& slice.content.firstChild?.isBlock
 						if ($pos.parent.type.spec.code) {
-							if (wholeBlock) return false
+							if (copiedWhole(slice)) return false
 							const text = event.dataTransfer?.getData('text/plain') ?? ''
 							tr.insertText(text, pos)
 							tr.setSelection(TextSelection.create(tr.doc, pos, pos + text.length))

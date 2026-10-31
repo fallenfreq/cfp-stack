@@ -184,6 +184,22 @@ settings for every selected block.
 - **Paste and blocks that don't fit.** Paste fits what's pasted its own way, not checked against
   the drop's cases (`multiSelect.ts`, `whereBlocksGo`): a list item into an item's text, a
   heading at an item's start.
+- **A block dragged by its handle onto a list item** becomes a second line of the item, under its
+  line, where pasted it goes in as `saved-page.md` step 12 says (a line an item, a list nested):
+  the handle has its own placement (`dropBlocks`, `multiSelect.ts`; owner, 2026-10-31: a fix of
+  its own). A picture dragged by itself goes where ProseMirror drops a block, between blocks
+  (`dropPoint`): at an item's start, above the list, where pasted it goes in the item Enter makes.
+- **An item holding more than one line.** Its second line, copied by its text from inside the
+  first, becomes an item of its own when pasted in a list, not a line of the item the first line
+  joins (`copyAndPaste.ts`, `putInList`; since step 9). Pasting at its second line splits the item
+  as Enter does, a block copied whole too, which stayed in the item before step 12 (owner,
+  2026-10-31: kept for now).
+- **Sub-items copied from their item's line end.** Ending inside them, only the sub-items are
+  copied, and in a list they join it; going on into the next item, the item comes too, and they
+  nest under the item pasted at (`copyAndPaste.ts`, `withSubItems`).
+- **Styles from another page.** Items copied from a web page in Chrome can bring the browser's own
+  inline styles (`style="box-sizing: border-box; …"`), saved on the blocks pasted (seen with a copy
+  made in the page, not yet with a real site).
 - **Alt-copy by hand.** A real Option-drag in macOS Chrome and Safari is unchecked: the handle
   allows only a move (`effectAllowed`, `FloatingDragHandle.vue`), and Playwright's Alt may not
   show what a person gets.

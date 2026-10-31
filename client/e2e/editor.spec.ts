@@ -1768,12 +1768,12 @@ test('pasted text joins the line, and pasted lines go in as Enter would split it
 		["part of a quote's line", 'empty line', 'p#te.te-c "quote"'],
 		['part of a to-do item', 'line start', `${line} "todoTarget line"`],
 		['one line of code', 'empty line', 'p#te.te-c "code"'],
-		// A code block's lines are lines: as copied in an empty line, text beside an item's line.
+		// A code block's lines are lines: as copied in an empty line, under an empty item's line.
 		['two lines of code', 'empty line', 'code.sc-c "one⏎code"'],
 		[
 			'two lines of code',
 			'empty list item',
-			'ul#tl[li#tl1.tl1-c[p "Target item"] li#tl2.tl2-c[p "one⏎code"]]',
+			'ul#tl[li#tl1.tl1-c[p "Target item"] li#tl2.tl2-c[p "" code.sc-c "one⏎code"]]',
 		],
 		// Lines: the second half keeps the line's class and style; at the start, the line keeps all.
 		['across two lines', 'line middle', `${line} "Target one" ${lineMade} "paraline"`],
@@ -1788,7 +1788,7 @@ test('pasted text joins the line, and pasted lines go in as Enter would split it
 		],
 		['across two lines', 'code middle', 'code#tc.tc-c "Target one⏎⏎paracode"'],
 		['across two list items', 'line middle', `${line} "Target one" ${lineMade} "itemline"`],
-		// Lists: copied by their text, still a list; in a list, each line an item.
+		// Lists: copied by their text, still a list; in a list, each line an item of its kind.
 		['three list items', 'empty line', `ul.sl-c[${items12} li[p "item three"]]`],
 		['three list items', 'line start', `ul.sl-c[${items12}] ${line} "item threeTarget line"`],
 		[
@@ -1804,7 +1804,7 @@ test('pasted text joins the line, and pasted lines go in as Enter would split it
 		[
 			'three list items',
 			'to-do item middle',
-			'todo#tt[ti#tt1.tt1-c+[p "Target item one" ul.sl-c[li.li2-c[p "item two"]]] ti.tt1-c[p "item threetodo"]]',
+			'todo#tt[ti#tt1.tt1-c+[p "Target item one"] ti.li2-c[p "item two"] ti.tt1-c[p "item threetodo"]]',
 		],
 		[
 			'across two lines',
@@ -2010,6 +2010,273 @@ test('pasted text joins the line, and pasted lines go in as Enter would split it
 	await expect
 		.soft(page.locator('.tiptap #tp a[href="https://example.com"]'))
 		.toHaveText('Target')
+})
+
+// Blocks copied whole go in as copied lines do (copyAndPaste.ts): ProseMirror put one in the item
+// the cursor was in, as one of its blocks, or above the list at its start. In a list a plain line
+// becomes an item, made as Enter makes one; items copied by their text take the list's kind; and
+// anything else keeps its kind, under the line it's pasted on. What's pasted replaces an empty
+// line, never what holds it.
+test('blocks copied whole go in as copied lines do, and in a list, under the line', async ({
+	page,
+}) => {
+	const sources =
+		'<ul id="wl" class="wl-c"><li class="w1-c"><p>copy one</p></li><li><p>copy two</p></li></ul>'
+		+ '<p id="wp" class="wp-c">copied line</p><img id="wi" src="/no-picture.png">'
+		+ '<h2 id="wh" class="wh-c">Heading text</h2><p id="wa" class="wa-c">para</p>'
+		+ '<ul data-type="taskList">'
+		+ '<li data-type="taskItem" data-checked="true" id="wt1"><p>todo one</p></li>'
+		+ '<li data-type="taskItem" data-checked="true" id="wt2" class="t2-c"><p>todo two</p></li>'
+		+ '<li data-type="taskItem" id="wt3" class="t3-c"><p>todo three</p></li></ul>'
+		+ '<ul><li id="wn1"><p>has nest</p><ul class="nn-c"><li id="wn11"><p>nested one</p></li><li id="wn12"><p>nested two</p></li></ul></li>'
+		+ '<li id="wn2" class="n2-c"><p>after nest</p></li></ul>'
+		+ '<layout-card class="sf-size-md"><ul class="sc-c"><li id="kc1" class="c1-c"><p>card one</p></li>'
+		+ '<li class="c2-c"><p>card two</p></li><li id="kc3" class="c3-c"><p>card three</p></li></ul></layout-card>'
+		+ '<layout-card class="sf-size-md"><p id="kl1">kline one</p><p class="k2-c">kline two</p>'
+		+ '<p id="kl3">kline three</p></layout-card>'
+		+ '<blockquote><p id="ql1">qline one</p><p class="q2-c">qline two</p><p id="ql3">qline three</p></blockquote>'
+	const list = '<ul id="tl"><li id="tl1" class="tl1-c"><p>Target item</p></li></ul>'
+	const line = 'p#tp.tp-c{margin-top: 4px}'
+	const card = '1e4d245a-16ac-4e60-96e9-1cf4ff6e2b93'
+	const copied = 'ul.wl-c[li.w1-c[p "copy one"] li[p "copy two"]]'
+	const places = {
+		'item start': [list, 'tl1', 0],
+		'item middle': [list, 'tl1', 7],
+		'item end': [list, 'tl1', 11],
+		'empty item': [
+			'<ul id="tl"><li id="tl1" class="tl1-c"><p>Target item</p></li><li id="tl2" class="tl2-c"><p></p></li></ul>',
+			'tl2',
+			0,
+		],
+		"a list's only item, empty": [
+			'<ul id="to"><li id="to1" class="to1-c"><p></p></li></ul>',
+			'to1',
+			0,
+		],
+		'to-do item end': [
+			'<ul data-type="taskList" id="tt"><li data-type="taskItem" data-checked="true" id="tt1" class="tt1-c"><p>Target todo</p></li></ul>',
+			'tt1',
+			11,
+		],
+		'line middle': ['<p id="tp" class="tp-c" style="margin-top: 4px">Target line</p>', 'tp', 7],
+		'empty line': ['<p id="te" class="te-c"></p>', 'te', 0],
+		'item end, a picture after the list': [
+			`${list}<img id="ti" src="/no-picture.png">`,
+			'tl1',
+			11,
+		],
+		'empty line in a Card': [
+			'<layout-card id="tk" class="sf-size-md"><p id="te" class="te-c"></p></layout-card>',
+			'te',
+			0,
+		],
+	} as const
+	// A block selected whole, or text from one place to another.
+	const copies = {
+		'a list': 'wl',
+		'a paragraph': 'wp',
+		'a picture': 'wi',
+		'a heading and a line': [
+			['wh', 0],
+			['wa', 4],
+		],
+		'to-do items': [
+			['wt1', 5],
+			['wt3', 4],
+		],
+		'an item holding a list': [
+			['wn1', 4],
+			['wn2', 5],
+		],
+		'a to-do item': 'wt1',
+		'from inside a nested item': [
+			['wn11', 6],
+			['wn2', 5],
+		],
+		'items in a Card': [
+			['kc1', 5],
+			['kc3', 4],
+		],
+		'lines in a Card': [
+			['kl1', 6],
+			['kl3', 5],
+		],
+		'lines in a quote': [
+			['ql1', 6],
+			['ql3', 5],
+		],
+		'an item and its sub-items': [
+			['wn1', 0],
+			['wn11', 10],
+		],
+		'an item and its sub-items, into the second': [
+			['wn1', 0],
+			['wn12', 6],
+		],
+		"from an item's line end into its sub-items": [
+			['wn1', 8],
+			['wn12', 6],
+		],
+	} as const
+	const cases: [keyof typeof copies, keyof typeof places, string][] = [
+		// A list copied whole nests, under the line, at an item's start in the item Enter makes; the
+		// list pasted into stays.
+		['a list', 'item start', `ul#tl[li.tl1-c[p "" ${copied}] li#tl1.tl1-c[p "Target item"]]`],
+		['a list', 'item middle', `ul#tl[li#tl1.tl1-c[p "Target " ${copied}] li.tl1-c[p "item"]]`],
+		['a list', "a list's only item, empty", `ul#to[li#to1.to1-c[p "" ${copied}]]`],
+		// A plain line copied whole is an item, made as Enter makes one: a to-do's unticked.
+		[
+			'a paragraph',
+			'item end',
+			'ul#tl[li#tl1.tl1-c[p "Target item"] li.tl1-c[p.wp-c "copied line"]]',
+		],
+		[
+			'a paragraph',
+			'to-do item end',
+			'todo#tt[ti#tt1.tt1-c+[p "Target todo"] ti.tt1-c[p.wp-c "copied line"]]',
+		],
+		['a picture', 'item start', 'ul#tl[li.tl1-c[p "" image[]] li#tl1.tl1-c[p "Target item"]]'],
+		// A heading is a block, copied by its text too: under the empty item's line, not its text.
+		[
+			'a heading and a line',
+			'empty item',
+			'ul#tl[li#tl1.tl1-c[p "Target item"] li#tl2.tl2-c[p "" h2.wh-c "Heading text"] li.tl2-c[p.wa-c "para"]]',
+		],
+		// Items copied by their text take the list's kind: a to-do's tick goes.
+		[
+			'to-do items',
+			'item end',
+			'ul#tl[li#tl1.tl1-c[p "Target itemone"] li.t2-c[p "todo two"] li.t3-c[p "todo"]]',
+		],
+		// A list in an item copied by its text stays in the item, which the item's line joins.
+		[
+			'an item holding a list',
+			'item end',
+			'ul#tl[li#tl1.tl1-c[p "Target itemnest" ul.nn-c[li[p "nested one"] li[p "nested two"]]] li.n2-c[p "after"]]',
+		],
+		// An item copied whole joins the list as its items do, of its kind.
+		['a to-do item', 'item end', 'ul#tl[li#tl1.tl1-c[p "Target item"] li[p "todo one"]]'],
+		// A copy starting inside what an item holds, at an item's start: in the item Enter makes.
+		[
+			'from inside a nested item',
+			'item start',
+			'ul#tl[li.tl1-c[p "" ul.nn-c[li[p " one"] li[p "nested two"]]] li#tl1.tl1-c[p "afterTarget item"]]',
+		],
+		// The blocks the copied text sat in don't come with it: a Card, a quote. A list stays.
+		[
+			'items in a Card',
+			'item end',
+			'ul#tl[li#tl1.tl1-c[p "Target itemone"] li.c2-c[p "card two"] li.c3-c[p "card"]]',
+		],
+		[
+			'lines in a Card',
+			'line middle',
+			`${line} "Target one" p.k2-c "kline two" p.tp-c{margin-top: 4px} "klineline"`,
+		],
+		['lines in a quote', 'empty line', 'p "one" p.q2-c "qline two" p "qline"'],
+		// An item copied with its sub-items stays an item: they nest. Outside a list, its line joined
+		// to the text before, an empty one holds them; copied from its line's end, they're the copy.
+		[
+			'an item and its sub-items',
+			'item end',
+			'ul#tl[li#tl1.tl1-c[p "Target itemhas nest" ul.nn-c[li[p "nested one"]]]]',
+		],
+		[
+			'an item and its sub-items, into the second',
+			'line middle',
+			`${line} "Target has nest" ul[li[p "" ul.nn-c[li[p "nested one"]]]] p.tp-c{margin-top: 4px} "nestedline"`,
+		],
+		[
+			"from an item's line end into its sub-items",
+			'item end',
+			'ul#tl[li#tl1.tl1-c[p "Target item"] li[p "nested one"] li[p "nested"]]',
+		],
+		// Outside a list, as ProseMirror puts a block, but a Card its empty line is alone in stays.
+		['a list', 'line middle', `${line} "Target " ${copied} p.tp-c{margin-top: 4px} "line"`],
+		['a paragraph', 'empty line in a Card', `${card}#tk.sf-size-md[p.wp-c "copied line"]`],
+	]
+	const copy = async (name: keyof typeof copies) => {
+		const what = copies[name]
+		if (typeof what === 'string') await selectBlock(page, what)
+		else {
+			const [[fromId, fromOffset], [toId, toOffset]] = what
+			const from = await linePosition(page, fromId, fromOffset)
+			await selectText(page, from, await linePosition(page, toId, toOffset))
+		}
+		await page.keyboard.press('ControlOrMeta+c')
+	}
+	const paste = async (copied: keyof typeof copies, place: keyof typeof places) => {
+		const [html, id, offset] = places[place]
+		await pasteInto(page, html, sources)
+		await copy(copied)
+		await selectText(page, await linePosition(page, id, offset))
+		await page.keyboard.press('ControlOrMeta+v')
+		await settle(page)
+	}
+	for (const [copied, place, shape] of cases) {
+		await paste(copied, place)
+		expect.soft(await pastedShape(page), `${copied}, pasted at the ${place}`).toBe(shape)
+	}
+
+	// The cursor after what's pasted; after a picture, in the line after it. One Undo puts it back.
+	await paste('a paragraph', 'line middle')
+	expect
+		.soft(await selectedPlace(page), 'the cursor after a paragraph')
+		.toBe('"copied line" at 11')
+	await paste('a picture', 'item start')
+	expect
+		.soft(await selectedPlace(page), 'the cursor after a picture under a line')
+		.toBe('"Target item" at 0')
+	await paste('a picture', 'item end')
+	expect.soft(await selectedPlace(page), 'the cursor after a picture').toBe('dash-2 at 0')
+	// Not on a picture after it, which typing would replace.
+	await paste('a picture', 'item end, a picture after the list')
+	expect
+		.soft(await selectedPlace(page), 'the cursor after a picture, a picture next')
+		.toBe('dash-2 at 0')
+	// At the page's end, in a new last line.
+	await page.evaluate((html) => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor.chain().setMeta('addToHistory', false).setContent(html).run()
+	}, `${sources}<p id="dash-1">—</p><p id="te"></p>`)
+	await copy('a picture')
+	await selectText(page, await linePosition(page, 'te', 0))
+	await page.keyboard.press('ControlOrMeta+v')
+	await settle(page)
+	expect
+		.soft(await selectedPlace(page), "the cursor after a picture at the page's end")
+		.toBe('"" at 0')
+	await page.keyboard.type('X')
+	await settle(page)
+	expect
+		.soft(await pastedShape(page), "typing after a picture at the page's end")
+		.toBe('image[] p "X"')
+	// Pictures and a line between, from another app: after the last picture.
+	await pasteInto(page, list, sources)
+	await selectText(page, await linePosition(page, 'tl1', 11))
+	await settle(page)
+	await page.evaluate(() => {
+		const clipboardData = new DataTransfer()
+		clipboardData.setData(
+			'text/html',
+			'<img src="/no-picture.png"><p>app text</p><img src="/no-picture.png">',
+		)
+		const paste = new ClipboardEvent('paste', {
+			clipboardData,
+			bubbles: true,
+			cancelable: true,
+		})
+		document.querySelector('.tiptap')!.dispatchEvent(paste)
+	})
+	await settle(page)
+	expect
+		.soft(await pastedShape(page), 'pictures from another app')
+		.toBe('ul#tl[li#tl1.tl1-c[p "Target item" image[]] li.tl1-c[p "app text" image[]]]')
+	expect.soft(await selectedPlace(page), 'the cursor after the last picture').toBe('dash-2 at 0')
+	await paste('a picture', 'item end')
+	await page.keyboard.press('ControlOrMeta+z')
+	await settle(page)
+	expect.soft(await pastedShape(page), 'undone').toBe('ul#tl[li#tl1.tl1-c[p "Target item"]]')
 })
 
 /**
