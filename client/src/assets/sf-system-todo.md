@@ -184,18 +184,18 @@ settings for every selected block.
 - **Paste and blocks that don't fit.** Paste fits what's pasted its own way, not checked against
   the drop's cases (`multiSelect.ts`, `whereBlocksGo`): a list item into an item's text, a
   heading at an item's start. Outside a list, a list item selected whole gets a new list around
-  it, of the first kind that can hold it, so a numbered item becomes a bullet (ProseMirror's
-  fitting, before step 12 too).
+  it, of the first kind that can hold it, so a numbered item becomes a bullet (ProseMirror's own
+  fitting).
 - **A block dragged by its handle onto a list item** becomes a second line of the item, under its
-  line, where pasted it goes in as `saved-page.md` step 12 says (a line an item, a list nested):
+  line, where pasted it goes in as copied lines do (a line an item, a list nested):
   the handle has its own placement (`dropBlocks`, `multiSelect.ts`; owner, 2026-10-31: a fix of
   its own). A picture dragged by itself goes where ProseMirror drops a block, between blocks
   (`dropPoint`): at an item's start, above the list, where pasted it goes in the item Enter makes.
 - **An item holding more than one line.** Its second line, copied by its text from inside the
   first, becomes an item of its own when pasted in a list, not a line of the item the first line
-  joins (`copyAndPaste.ts`, `putInList`; since step 9). Pasting at its second line splits the item
-  as Enter does, a block copied whole too, which stayed in the item before step 12 (owner,
-  2026-10-31: kept for now).
+  joins (`copyAndPaste.ts`, `putInList`). Pasting at its second line splits the item as Enter
+  does, a block copied whole too, which used to stay in the item (owner, 2026-10-31: kept for
+  now).
 - **Sub-items copied from their item's line end.** Ending inside them, only the sub-items are
   copied, and in a list they join it; going on into the next item, the item comes too, and they
   nest under the item pasted at (`copyAndPaste.ts`, `withSubItems`).
@@ -292,6 +292,14 @@ settings for every selected block.
 - **A code block's language outside the editor** (the user's words): later, not now.
 - **Room past the end on every page** while a panel is open, if a panel at a page's very end
   needs it. Closing it after scrolling into the room would jump the page back.
+- **Keeping HTML comments written in the code view,** which refuses them for now (owner,
+  2026-10-18: not now).
+- **Pasting warns of what the page can't keep,** as leaving the code view does (owner,
+  2026-10-27).
+- **Keeping a style the page turns into a mark** (`font-weight: bold` on `<em>`), which the code
+  view refuses for now (owner, 2026-10-27).
+- **Tick boxes and column widths in a copy to another app.** A copy has neither, as a block's HTML
+  holds each setting once and its view draws them (owner, 2026-10-29: later).
 
 ## For the docs
 
