@@ -183,7 +183,9 @@ settings for every selected block.
   place for both would be the app's own line (a new class).
 - **Paste and blocks that don't fit.** Paste fits what's pasted its own way, not checked against
   the drop's cases (`multiSelect.ts`, `whereBlocksGo`): a list item into an item's text, a
-  heading at an item's start.
+  heading at an item's start. Outside a list, a list item selected whole gets a new list around
+  it, of the first kind that can hold it, so a numbered item becomes a bullet (ProseMirror's
+  fitting, before step 12 too).
 - **A block dragged by its handle onto a list item** becomes a second line of the item, under its
   line, where pasted it goes in as `saved-page.md` step 12 says (a line an item, a list nested):
   the handle has its own placement (`dropBlocks`, `multiSelect.ts`; owner, 2026-10-31: a fix of
@@ -214,6 +216,18 @@ settings for every selected block.
 - **A chosen list that changes kind leaves the choice.** A list chosen with Toggle selection, then
   changed to or from a to-do list by the keys or the slash menu, drops out of the blocks chosen:
   `changedInPlace` (`multiSelect.ts`) doesn't count a list written anew.
+- **A span's words in a line made code.** Making the line a code block, or joining it to one with
+  Backspace or Delete, deletes a span in it with its words, where bold keeps them: ProseMirror
+  deletes an inline node a block can't hold (`clearIncompatible`), and only a patch reaches it.
+  Rare, and Undo brings them back (owner, 2026-11-01: not worth a patch). If it's ever wanted:
+  keep all the text, and warn that the span's look and settings go. A span's words aren't always
+  words (an icon's are its name).
+- **Text selected from code into a line holding bold or a span.** Delete leaves the rest of the
+  line a line of its own, where plain text joins the code; typing over it puts the first letter in
+  the code and the next in the line. ProseMirror's fitting won't put formatting or a span in code.
+- **Backspace after a quote** (TipTap's own, since 3.32) puts the cursor at the end of the line
+  joined to the quote's last line, not where they meet. With code last in the quote, a span in the
+  line splits it there: the words before it join the code, the rest stay a line in the quote.
 
 ## Popovers and browsers
 

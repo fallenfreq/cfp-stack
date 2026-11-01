@@ -159,9 +159,12 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
       copied as a block); another app is given a plain line's text for part of a line; text over a
       block selected whole gives a plain line, as typing does; lines dragged into code are text,
       as pasted.
-10. **A span's text survives a change of kind.** Code Block, a code fence typed, and Backspace or
-    Delete into a code block delete a span with its text; bold and links keep their text.
-    ProseMirror clears what a code block can't hold (`clearIncompatible`).
+10. **Dropped: a span's text in a change of kind** (owner, 2026-11-01). Making a line a code block,
+    or joining it to one with Backspace or Delete, deletes a span in it with its words; bold and
+    links keep theirs. ProseMirror deletes an inline node a block can't hold (`clearIncompatible`),
+    and only a patch reaches that rule. A span is the author's own element, so the editor can't
+    tell whether its words are words: the demo page's are icons, their words the icons' names. Rare,
+    and Undo brings them back (`sf-system-todo.md`, "Editor").
 11. **The code view writes the page as the page does.** It had a writer of its own
     (`htmlBlueprint.ts`), a partial copy of the page's blocks: with coloured text or a font it
     wouldn't open, and it wrote a video's start where the page doesn't read it, so an edit there
@@ -528,4 +531,16 @@ Later, the owner's call:
   Logged (`sf-system-todo.md`): a picture dragged by itself, and an item's second line. Unit tests
   pass (4 + 34); all 712 runs of the Playwright checks pass.
 
-Next: step 10, in a session of its own.
+- **Step 10 dropped** (2026-11-01), from probes in Chrome; no code changed. Code Block, Change
+  Type, the slash menu, its keys, a code fence typed, and Backspace or Delete into code all go
+  through ProseMirror's `clearIncompatible`, the same in its latest release (1.12.4); no hook
+  reaches it. Planned as a patch giving the span's words to the code, then weighed with the owner:
+  the span stays a block, not a mark, the element authors make their own things in a line from
+  with classes, as the plain box is for blocks; so no rule for its words is right for every span
+  (the demo page's 33 are icons). Keeping them, or refusing the change, needs the patch, or a
+  warning on top, for a rare case that Undo puts right.
+  Found on the way (`sf-system-todo.md`, "Editor"): text selected from code into a line holding
+  bold or a span, deleted or typed over; TipTap's own Backspace after a quote.
+
+Next: none. Every step is done or dropped; the plan is deleted once its "Later" list has a home
+(the owner's call).
