@@ -300,6 +300,13 @@ settings for every selected block.
   view refuses for now (owner, 2026-10-27).
 - **Tick boxes and column widths in a copy to another app.** A copy has neither, as a block's HTML
   holds each setting once and its view draws them (owner, 2026-10-29: later).
+- **The validator's warnings underlined in the code view** as you type (owner, 2026-11-01: later;
+  they show on the blocks once you leave it). Tried: Lezer's HTML parser (`@lezer/html`, 5 KB)
+  finds each start tag a browser would also start (`<` and a letter); a numbered attribute goes in
+  each, in a copy, read with `cantKeep.ts`'s reading, which ties each block to its element.
+  ProseMirror's `findPositions` won't do (it misses a picture at a paragraph's start, and is slow
+  with many spots); Prettier's reader refuses half-typed code. A check takes about 10 ms at 544
+  lines, 44 at 2,173, mostly readings leaving already does; one read could serve them all.
 
 ## For the docs
 
