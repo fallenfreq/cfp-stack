@@ -46,7 +46,10 @@ const prettifySelectedCode = async (editor: Editor) => {
 	const textNode = editor.state.doc.nodeAt(startPosition)
 	const selectedContent = textNode?.textContent || ''
 
-	if (!selectedContent) return editor.chain().focus().setTextSelection(anchor).run()
+	if (!selectedContent) {
+		editor.chain().focus().setTextSelection(anchor).run()
+		return
+	}
 
 	editor.commands.selectParentNode()
 	const parentNode = editor.state.doc.nodeAt(editor.state.selection.from)

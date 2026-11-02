@@ -58,7 +58,8 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    the API's today, so what they're made from moves to `shared/`, as the slug rule did, and both
    read it. `shared/` becomes TypeScript first, used as is as `validator/` is (tried with the
    slug rule, 2026-11-02: the API's and the client's checks, builds and tests, and Cloudflare's
-   bundle, all pass), with a type check of its own and the API's
+   bundle, all pass), with a type check of its own (extending `tsconfig.base.json`, as
+   `validator/`'s does) and the API's
    `rewriteRelativeImportExtensions`, without which the API's check refuses one of its files
    importing another (`./slug.ts`).
 4. **The other rules for a page:** a picture with no size of its own (the sizes that count are

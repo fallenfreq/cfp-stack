@@ -11,10 +11,10 @@ read it. It takes nothing from the client or the API; it walks the elements with
 - `core.ts`: what a rule and a result are, and running the rules.
 - `rules/`: a file for each rule.
 - Checks:
-    - `tsconfig.json` (`pnpm typecheck`): the strictest settings, and syntax Node can't strip or
-      an import without its ending refused; `test/types.ts` holds what the types must refuse. An
-      import ending in `.js` for a `.ts` file passes it, and Node refuses it once a test imports
-      the file.
+    - `tsconfig.json` (`pnpm typecheck`): the repo's shared strict settings, and syntax Node
+      can't strip or an import without its ending refused; `test/types.ts` holds what the types
+      must refuse. An import ending in `.js` for a `.ts` file passes it, and Node refuses it once
+      a test imports the file.
     - ESLint: no casts, `any` or `!` (`eslint.config.js`).
     - `test/`, in Node's runner (`pnpm test`): each page written as HTML (`test/checkHtml.mjs`).
       The root's `test/validatorRules.test.mjs` checks each rule's name is its entry in the spec.

@@ -1,5 +1,5 @@
 {
-	"extends": "@vue/tsconfig/tsconfig.dom.json",
+	"extends": ["@vue/tsconfig/tsconfig.dom.json", "../tsconfig.base.json"],
 	"include": [
 		"cssVariables.d.ts",
 		"tailwind.config.js",
@@ -15,14 +15,6 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"composite": true,
-
-		// These already exist in the base config
-		// "strict": true,
-		// "verbatimModuleSyntax": true,
-		"noUncheckedIndexedAccess": true,
-		"exactOptionalPropertyTypes": true,
-		"isolatedModules": true,
-
 		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 		"paths": {
 			"@/*": ["./src/*"]

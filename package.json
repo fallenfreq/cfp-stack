@@ -55,6 +55,7 @@
 		"@eslint/markdown": "^6.4.0",
 		"@stylistic/eslint-plugin": "^4.4.0",
 		"@tsconfig/node20": "^20.1.5",
+		"@tsconfig/strictest": "^2.0.8",
 		"@types/lodash": "^4.17.17",
 		"@types/node": "^20.17.57",
 		"concurrently": "^8.2.2",

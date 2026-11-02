@@ -1557,12 +1557,13 @@ const linePosition = (page: Page, id: string, offset: number) =>
 			let found = -1
 			doc.descendants((node, pos) => {
 				if (found >= 0) return false
-				if (node.attrs.id !== id) return
+				if (node.attrs.id !== id) return true
 				if (node.isTextblock) found = pos + 1 + offset
 				else
 					node.descendants((line, at) => {
 						if (found < 0 && line.isTextblock) found = pos + 1 + at + 1 + offset
 					})
+				return true
 			})
 			return found
 		},

@@ -59,6 +59,8 @@ the API with the client as last built. After a change to `shared/package.json`, 
 
 ## Checks
 
+Each package's type check extends the root's `tsconfig.base.json`, the strict settings they all
+share.
 Checks run at two points. On commit, the hook lints and formats the staged files and
 type-checks the packages they touch. On every push to `main` and every pull request, GitHub
 Actions (`.github/workflows/checks.yml`) lints and checks formatting across the repo, then

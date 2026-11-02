@@ -1,5 +1,5 @@
 {
-	"extends": "@tsconfig/node20/tsconfig.json",
+	"extends": ["@tsconfig/node20/tsconfig.json", "../../tsconfig.base.json"],
 	"include": ["./**/*", "../playwright.config.ts"],
 	"compilerOptions": {
 		"composite": true,
@@ -10,10 +10,6 @@
 		"lib": ["ES2023", "DOM", "DOM.Iterable"],
 		"types": ["node"],
 		"module": "ESNext",
-		"moduleResolution": "Bundler",
-		"verbatimModuleSyntax": true,
-		"noUncheckedIndexedAccess": true,
-		"exactOptionalPropertyTypes": true,
-		"isolatedModules": true
+		"moduleResolution": "Bundler"
 	}
 }

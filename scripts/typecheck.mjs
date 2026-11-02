@@ -14,9 +14,15 @@ function touched() {
 		encoding: 'utf8',
 	})
 		.split('\n')
-		.filter((f) => /\.(ts|mts|vue|js|mjs)$/.test(f) || f.endsWith('tsconfig.json'))
+		.filter(
+			(f) =>
+				/\.(ts|mts|vue|js|mjs)$/.test(f) || /(^|\/)(tsconfig[^/]*|package)\.json$/.test(f),
+		)
 	const out = new Set()
 	for (const f of files) {
+		// The root's shared settings and its TypeScript decide every package's check.
+		if (f === 'tsconfig.base.json' || f === 'package.json')
+			for (const name of Object.keys(PACKAGES)) out.add(name)
 		if (f.startsWith('api/')) out.add('api')
 		if (f.startsWith('client/')) out.add('client')
 		if (f.startsWith('validator/')) out.add('validator')

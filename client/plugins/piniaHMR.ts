@@ -114,6 +114,7 @@ export function piniaHMRPlugin(): Plugin {
 								return false
 							}
 							this.traverse(path)
+							return undefined
 						},
 					})
 				}

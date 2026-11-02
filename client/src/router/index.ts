@@ -100,7 +100,7 @@ const router = createRouter({
 // didn't answer): home, saying so. Decided on every visit, not when a page's code first loads (the
 // router keeps that until a reload).
 router.beforeEach(async (to) => {
-	if (!to.meta.signIn) return
+	if (!to.meta.signIn) return true
 	if (!(await whenSignInKnown())) {
 		notify({
 			message: "Signing in isn't working right now. Please try again later.",
@@ -113,6 +113,7 @@ router.beforeEach(async (to) => {
 		return false
 	}
 	if (to.meta.role && !hasRole(to.meta.role)) return { name: 'no-access' }
+	return true
 })
 
 export default router

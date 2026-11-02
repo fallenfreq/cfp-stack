@@ -41,7 +41,7 @@ const selectItem = (index: number) => {
 }
 
 const onKeyDown = (event: KeyboardEvent) => {
-	if (props.items.length === 0) return
+	if (props.items.length === 0) return false
 
 	if (event.key === 'ArrowDown') {
 		selectedIndex.value = (selectedIndex.value + 1) % props.items.length
@@ -53,6 +53,7 @@ const onKeyDown = (event: KeyboardEvent) => {
 		selectItem(selectedIndex.value)
 		return true
 	}
+	return false
 }
 
 defineExpose({ onKeyDown })

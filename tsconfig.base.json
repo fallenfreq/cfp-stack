@@ -1,0 +1,13 @@
+{
+	// The strictness every package's type check shares. Each package's own config adds only what's
+	// its own: its JavaScript version, its globals, and how it resolves and builds. Besides its
+	// strict flags, @tsconfig/strictest brings esModuleInterop, isolatedModules and skipLibCheck,
+	// which some libraries' own types need (drizzle-orm's don't pass a check).
+	"extends": "@tsconfig/strictest/tsconfig.json",
+	"compilerOptions": {
+		// Off until the code reads keys an index signature allows with brackets. While it's off, a
+		// misspelt named key on a type that also has an index signature (`to.meta.sigIn`) compiles.
+		"noPropertyAccessFromIndexSignature": false,
+		"verbatimModuleSyntax": true
+	}
+}
