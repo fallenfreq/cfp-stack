@@ -112,11 +112,11 @@ watch(
 		await nextTick()
 		if (!mapStore.map || !googleAutocomplete.value || !addMarkerSwitch.value) return
 
-		const autocompleteEl = googleAutocomplete.value.root
+		const autocompleteEl = googleAutocomplete.value['root']
 		autocompleteEl.classList.add(...mapControlClasses)
 		mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT]?.push(autocompleteEl)
 
-		const addMarkerSwitchEl = addMarkerSwitch.value.root
+		const addMarkerSwitchEl = addMarkerSwitch.value['root']
 		addMarkerSwitchEl.classList.add(...mapControlClasses)
 		mapStore.map.controls[google.maps.ControlPosition.TOP_LEFT]?.push(addMarkerSwitchEl)
 

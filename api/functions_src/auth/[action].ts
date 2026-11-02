@@ -33,7 +33,7 @@ const actions: Record<string, (call: AuthCall) => Promise<Response>> = {
 }
 
 export const onRequest: PagesFunction<{ DB: D1Database }> = async (context) => {
-	const action = actions[`${context.request.method} ${context.params.action}`]
+	const action = actions[`${context.request.method} ${context.params['action']}`]
 	if (!action) return text(404, 'Not found')
 	try {
 		return await action({

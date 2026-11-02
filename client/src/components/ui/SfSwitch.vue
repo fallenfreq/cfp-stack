@@ -1,6 +1,6 @@
 <template>
 	<!-- With label text the whole row is the label; without it, pass aria-label. -->
-	<component :is="$slots.default ? 'label' : 'span'" class="sl-cluster sf-gap-xs">
+	<component :is="$slots['default'] ? 'label' : 'span'" class="sl-cluster sf-gap-xs">
 		<button
 			v-bind="$attrs"
 			type="button"
@@ -12,14 +12,14 @@
 			@click="on = !on"
 		>
 			<span
-				v-if="$slots.off"
+				v-if="$slots['off']"
 				class="switch-mark switch-mark-off sf-icon sf-loudness-1"
 				aria-hidden="true"
 			>
 				<slot name="off" />
 			</span>
 			<span
-				v-if="$slots.on"
+				v-if="$slots['on']"
 				class="switch-mark switch-mark-on sf-icon sf-loudness-1"
 				aria-hidden="true"
 			>

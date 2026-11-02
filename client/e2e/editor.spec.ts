@@ -32,7 +32,7 @@ const savedClass = (page: Page, id: string) =>
 		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		let saved: string | undefined
 		editor.state.doc.descendants((node) => {
-			if (node.attrs?.id === id) saved = node.attrs.class
+			if (node.attrs?.['id'] === id) saved = node.attrs['class']
 		})
 		return saved
 	}, id)
@@ -127,7 +127,7 @@ test('the toolbar moves and deletes blocks selected together, and the selection 
 		page.evaluate((n) => {
 			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 			const ids: unknown[] = []
-			editor.state.doc.forEach((node) => ids.push(node.attrs.id))
+			editor.state.doc.forEach((node) => ids.push(node.attrs['id']))
 			return ids.slice(-n)
 		}, n)
 	const press = (name: string) =>
@@ -167,7 +167,7 @@ test('blocks selected together move once each, a block inside another with it', 
 			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 			const found: string[] = []
 			editor.state.doc.descendants((node) => {
-				const name = node.attrs.id ?? node.textContent
+				const name = node.attrs['id'] ?? node.textContent
 				if (node.isBlock && name && (found.length || name.startsWith('mo-')))
 					found.push(name)
 			})
@@ -250,7 +250,7 @@ test('blocks selected together move once each, a block inside another with it', 
 	await page.evaluate(() => {
 		const { setDragImage } = DataTransfer.prototype
 		DataTransfer.prototype.setDragImage = function (image, x, y) {
-			document.body.dataset.dragImage = [...image.querySelectorAll('.tiptap > *')]
+			document.body.dataset['dragImage'] = [...image.querySelectorAll('.tiptap > *')]
 				.map((block) => block.id)
 				.join(' ')
 			setDragImage.call(this, image, x, y)
@@ -316,7 +316,7 @@ test('a selected Card moves by its drag handle', async ({ page }) => {
 	const order = await page.evaluate(() => {
 		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		const ids: string[] = []
-		editor.state.doc.forEach((node) => ids.push(node.attrs.id))
+		editor.state.doc.forEach((node) => ids.push(node.attrs['id']))
 		return ids.slice(-4)
 	})
 	expect(order).toEqual(['move-above', 'move-below', 'move-card', 'move-end'])
@@ -414,7 +414,7 @@ test('a block dragged by its handle lands where it is let go, and the page stays
 	const selected = await page.evaluate(() => {
 		const { selection } =
 			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
-		return 'node' in selection ? (selection as NodeSelection).node.attrs.id : null
+		return 'node' in selection ? (selection as NodeSelection).node.attrs['id'] : null
 	})
 	expect(selected).toBe('stay-c')
 })
@@ -438,15 +438,15 @@ const shapeFrom = (page: Page, id: string) =>
 		const shape = (node: ProseMirrorNode): string => {
 			const own =
 				(short[node.type.name] ?? node.type.name)
-				+ (node.attrs.id ? `#${node.attrs.id}` : '')
-			if (node.isTextblock) return node.attrs.id ? own : `${own}"${node.textContent}"`
+				+ (node.attrs['id'] ? `#${node.attrs['id']}` : '')
+			if (node.isTextblock) return node.attrs['id'] ? own : `${own}"${node.textContent}"`
 			const held: string[] = []
 			node.forEach((child) => held.push(shape(child)))
 			return held.length ? `${own}[${held.join(' ')}]` : own
 		}
 		const shapes: string[] = []
 		editor.state.doc.forEach((node) => {
-			if (shapes.length || node.attrs.id === id) shapes.push(shape(node))
+			if (shapes.length || node.attrs['id'] === id) shapes.push(shape(node))
 		})
 		return shapes.join(' ')
 	}, id)
@@ -455,7 +455,9 @@ const selectedId = (page: Page) =>
 	page.evaluate(() => {
 		const { selection } =
 			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
-		return 'node' in selection ? ((selection as NodeSelection).node.attrs.id as string) : null
+		return 'node' in selection
+			? ((selection as NodeSelection).node.attrs['id'] as string)
+			: null
 	})
 
 // The page decides what a block may hold. A block let go where it isn't allowed was forced in:
@@ -522,7 +524,7 @@ test('a block let go where it is not allowed goes beside the nearest block that 
 		document.addEventListener(
 			'drop',
 			() => {
-				document.body.dataset.dropped = ''
+				document.body.dataset['dropped'] = ''
 			},
 			{ capture: true, once: true },
 		),
@@ -722,7 +724,7 @@ test('clicking between the blocks in an inset Card selects the card', async ({ p
 	const selected = await page.evaluate(() => {
 		const { selection } =
 			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
-		return 'node' in selection ? (selection as NodeSelection).node.attrs.id : null
+		return 'node' in selection ? (selection as NodeSelection).node.attrs['id'] : null
 	})
 	expect(selected).toBe('card-inset')
 	expect(warnings).toEqual([])
@@ -1114,7 +1116,7 @@ const cursorAt = (page: Page, id: string, offset: number, to?: [id: string, offs
 			]) => {
 				let found = -1
 				editor.state.doc.descendants((node, pos) => {
-					if (node.attrs?.id === id) found = pos + 1 + offset
+					if (node.attrs?.['id'] === id) found = pos + 1 + offset
 				})
 				return found
 			}
@@ -1143,10 +1145,10 @@ const madeAt = (page: Page, index: number, listSplit = false) =>
 						node.type.name
 					] ?? 'li'
 				const what = [
-					node.attrs.id && 'id',
-					/(^|\s)lead(\s|$)/.test(node.attrs.class ?? '') && 'class',
-					node.attrs.style && 'style',
-					node.attrs.checked && 'ticked',
+					node.attrs['id'] && 'id',
+					/(^|\s)lead(\s|$)/.test(node.attrs['class'] ?? '') && 'class',
+					node.attrs['style'] && 'style',
+					node.attrs['checked'] && 'ticked',
 				].filter(Boolean)
 				return what.length ? `${name}: ${what.join(' ')}` : name
 			}
@@ -1356,7 +1358,7 @@ const withId = (page: Page, id: string) =>
 		document
 			.querySelector<TiptapEditorHTMLElement>('.tiptap')!
 			.editor!.state.doc.descendants((node, at) => {
-				if (node.attrs.id === id)
+				if (node.attrs['id'] === id)
 					found.push({ at, type: node.type.name, text: node.textContent })
 			})
 		return found
@@ -1369,7 +1371,7 @@ const copiesOf = (page: Page, id: string) =>
 		const { doc } = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
 		let copied: ProseMirrorNode | undefined
 		doc.descendants((node) => {
-			if (node.attrs.id === id) copied ??= node
+			if (node.attrs['id'] === id) copied ??= node
 		})
 		let count = 0
 		doc.descendants((node) => {
@@ -1557,7 +1559,7 @@ const linePosition = (page: Page, id: string, offset: number) =>
 			let found = -1
 			doc.descendants((node, pos) => {
 				if (found >= 0) return false
-				if (node.attrs.id !== id) return true
+				if (node.attrs['id'] !== id) return true
 				if (node.isTextblock) found = pos + 1 + offset
 				else
 					node.descendants((line, at) => {
@@ -1611,9 +1613,9 @@ const pastedShape = (page: Page) =>
 		const shapes: string[] = []
 		let between = false
 		doc.forEach((node) => {
-			if (node.attrs.id === 'dash-2') between = false
+			if (node.attrs['id'] === 'dash-2') between = false
 			if (between) shapes.push(shape(node))
-			if (node.attrs.id === 'dash-1') between = true
+			if (node.attrs['id'] === 'dash-1') between = true
 		})
 		return shapes.join(' ')
 	})
@@ -2395,7 +2397,7 @@ const cursorOnEmptyLine = (page: Page, id: string) =>
 				at < 0
 				&& node.isTextblock
 				&& !node.content.size
-				&& editor.state.doc.resolve(pos).node().attrs.id === id
+				&& editor.state.doc.resolve(pos).node().attrs['id'] === id
 			)
 				at = pos + 1
 		})
@@ -2511,10 +2513,10 @@ test('changes that write a block anew leave its id where it was', async ({ page 
 		const { doc } = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
 		const found = { cells: 0, ids: [] as string[] }
 		doc.descendants((node) => {
-			if (node.attrs.id !== 'grow-table') return
+			if (node.attrs['id'] !== 'grow-table') return
 			node.descendants((inner) => {
 				if (inner.type.name === 'tableCell') found.cells++
-				if (inner.attrs.id) found.ids.push(inner.attrs.id)
+				if (inner.attrs['id']) found.ids.push(inner.attrs['id'])
 			})
 			return false
 		})
@@ -2556,10 +2558,11 @@ const typesWithSettings = (page: Page, ids: readonly string[]) =>
 			parent.forEach((node) => {
 				const { id } = node.attrs
 				if (ids.includes(id)) {
-					const kept = node.attrs.class === `c-${id}` && node.attrs.style === 'color: red'
+					const kept =
+						node.attrs['class'] === `c-${id}` && node.attrs['style'] === 'color: red'
 					const seen =
-						`${node.type.name} in ${parent.attrs.id ?? parent.type.name}`
-						+ (node.attrs.checked ? ', ticked' : '')
+						`${node.type.name} in ${parent.attrs['id'] ?? parent.type.name}`
+						+ (node.attrs['checked'] ? ', ticked' : '')
 						+ (kept ? '' : ', its class or style gone')
 					found[id] = found[id] === undefined ? seen : `${found[id]}, and ${seen}`
 				}
@@ -2573,10 +2576,10 @@ const selectedPlace = (page: Page) =>
 	page.evaluate(() => {
 		const { selection } =
 			document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state
-		if ('node' in selection) return `#${(selection as NodeSelection).node.attrs.id} selected`
+		if ('node' in selection) return `#${(selection as NodeSelection).node.attrs['id']} selected`
 		const { $anchor, $head, empty } = selection
 		const at = ($pos: typeof $head) =>
-			`${$pos.parent.attrs.id ?? `"${$pos.parent.textContent}"`} at ${$pos.parentOffset}`
+			`${$pos.parent.attrs['id'] ?? `"${$pos.parent.textContent}"`} at ${$pos.parentOffset}`
 		return empty ? at($head) : `${at($anchor)} to ${at($head)}`
 	})
 /** Points the toolbar at the block this deep around the selection, by its node-path crumb. */
@@ -3025,8 +3028,8 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		let [list, under] = [-1, -1]
 		editor.state.doc.forEach((node, pos) => {
-			if (node.attrs.id === 'kt-copied') list = pos
-			if (node.attrs.id === 'kt-copy-under') under = pos + node.nodeSize
+			if (node.attrs['id'] === 'kt-copied') list = pos
+			if (node.attrs['id'] === 'kt-copy-under') under = pos + node.nodeSize
 		})
 		const copied = editor.state.doc.nodeAt(list)!
 		editor.view.dispatch(editor.state.tr.insert(under, copied))
@@ -3363,16 +3366,16 @@ const looks = (page: Page, id: string) =>
 		const { doc } = editor.state
 		let looked: ProseMirrorNode | undefined
 		doc.descendants((node) => {
-			if (node.attrs.id === id) looked ??= node
+			if (node.attrs['id'] === id) looked ??= node
 		})
 		const found: string[] = []
 		const read = document.createElement('i')
 		doc.descendants((node, at) => {
 			if (node.type !== looked!.type || node.textContent !== looked!.textContent) return
 			const drawn = editor.view.nodeDOM(at) as HTMLElement
-			read.setAttribute('style', node.attrs.style ?? '')
+			read.setAttribute('style', node.attrs['style'] ?? '')
 			found.push(
-				`saved "${node.attrs.class}" "${read.style.cssText}", `
+				`saved "${node.attrs['class']}" "${read.style.cssText}", `
 					+ `drawn "${drawn.className}" "${drawn.style.cssText}"`,
 			)
 		})
@@ -3862,7 +3865,7 @@ test("the toolbar's Language picker sets a code block's language", async ({ page
 		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		let language: string | undefined
 		editor.state.doc.descendants((node) => {
-			if (node.attrs?.id === 'line-code-bleed') language = node.attrs.language
+			if (node.attrs?.['id'] === 'line-code-bleed') language = node.attrs['language']
 		})
 		return language
 	})

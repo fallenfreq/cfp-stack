@@ -64,7 +64,7 @@ const idOnOneBlock = (
 	for (const [from, to] of writtenRanges(transactions)) {
 		if (from >= to) continue
 		newState.doc.nodesBetween(from, to, (node, pos) => {
-			if (pos >= from && node.attrs.id) putIn.set(pos, node.attrs.id)
+			if (pos >= from && node.attrs['id']) putIn.set(pos, node.attrs['id'])
 		})
 	}
 	// Typing puts in no block, and most blocks put in have no id: the page's ids are counted only
@@ -102,14 +102,14 @@ const AllowAttributesExtension = Extension.create({
 						// The values returned from parseHTML will be passed to renderHTML
 						parseHTML: (element) => element.getAttribute('style'),
 						renderHTML: (attributes) => {
-							return attributes.style ? { style: attributes.style } : null
+							return attributes['style'] ? { style: attributes['style'] } : null
 						},
 					},
 					class: {
 						default: '',
 						parseHTML: (element) => element.classList.value,
 						renderHTML: (attributes) => {
-							return attributes.class ? { class: attributes.class } : null
+							return attributes['class'] ? { class: attributes['class'] } : null
 						},
 					},
 					id: {
@@ -118,7 +118,7 @@ const AllowAttributesExtension = Extension.create({
 						keepOnSplit: false,
 						parseHTML: (element) => element.getAttribute('id'),
 						renderHTML: (attributes) => {
-							return attributes.id ? { id: attributes.id } : null
+							return attributes['id'] ? { id: attributes['id'] } : null
 						},
 					},
 				},

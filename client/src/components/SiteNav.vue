@@ -20,7 +20,7 @@
 			</li>
 		</ul>
 
-		<div v-if="$slots.end"><slot name="end" /></div>
+		<div v-if="$slots['end']"><slot name="end" /></div>
 
 		<div v-if="inlineItems.length" class="sl-show-below-sm">
 			<SfPopover class="sf-size-xs" align="end" close-on-click>
@@ -88,7 +88,7 @@ const groupCount = computed(
 	() =>
 		(inlineItems.value.length ? 1 : 0)
 		+ (alwaysShownItems.value.length ? 1 : 0)
-		+ (slots.end ? 1 : 0),
+		+ (slots['end'] ? 1 : 0),
 )
 </script>
 

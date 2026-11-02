@@ -62,7 +62,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 		const stylesheet = join(outDir, 'sf-system.css')
 		writeFileSync(stylesheet, await emitStylesheet(db))
 		// Workers start after this and inherit the environment.
-		process.env.SF_TEST_STYLESHEET = stylesheet
+		process.env['SF_TEST_STYLESHEET'] = stylesheet
 
 		await noteLocalDifference(config, seeded)
 	} finally {

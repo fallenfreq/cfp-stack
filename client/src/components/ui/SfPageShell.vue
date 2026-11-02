@@ -2,7 +2,7 @@
 	<div class="page-shell sl-inset sf-gap-lg">
 		<!-- None for a stored page: its content brings its own title. -->
 		<div
-			v-if="title || $slots.header || $slots.actions"
+			v-if="title || $slots['header'] || $slots['actions']"
 			class="page-header sl-cluster sf-gap-sm"
 		>
 			<!-- `header` replaces the plain title when a page needs more (e.g. an avatar). -->

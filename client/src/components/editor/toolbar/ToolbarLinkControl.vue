@@ -18,7 +18,7 @@ import ToolbarRevealInput from './ToolbarRevealInput.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const linkHref = computed(() => (props.editor.getAttributes('link').href as string) ?? '')
+const linkHref = computed(() => (props.editor.getAttributes('link')['href'] as string) ?? '')
 const isLinkActive = computed(() => props.editor.isActive('link'))
 
 const applyLink = (url: string) => {

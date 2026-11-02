@@ -212,7 +212,7 @@ const getInsertIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePicker
 // A code block's language: Auto (worked out from the code) or one the highlighter knows.
 const getLanguageItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem[] => {
 	const lowlight = getExtensionOptions(editor, 'codeBlock')?.lowlight as Lowlight | undefined
-	const current: string | null = ctx.activeNode.attrs.language ?? null
+	const current: string | null = ctx.activeNode.attrs['language'] ?? null
 	const item = (label: string, language: string | null): NodePickerItem => ({
 		label,
 		active: current === language,
@@ -294,7 +294,7 @@ export const blockItems = [
 		label: icon('format_h1'),
 		show: isParagraphOrHeading,
 		active: (_editor, ctx) =>
-			ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 1,
+			ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs['level'] === 1,
 		action: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
 	}),
 	toolbarButtonItem({
@@ -303,7 +303,7 @@ export const blockItems = [
 		label: icon('format_h2'),
 		show: isParagraphOrHeading,
 		active: (_editor, ctx) =>
-			ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 2,
+			ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs['level'] === 2,
 		action: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
 	}),
 	toolbarButtonItem({
@@ -312,7 +312,7 @@ export const blockItems = [
 		label: icon('format_h3'),
 		show: isParagraphOrHeading,
 		active: (_editor, ctx) =>
-			ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs.level === 3,
+			ctx.activeNode.type.name === 'heading' && ctx.activeNode.attrs['level'] === 3,
 		action: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
 	}),
 	toolbarButtonItem({

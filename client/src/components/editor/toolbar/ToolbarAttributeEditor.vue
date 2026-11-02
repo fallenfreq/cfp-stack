@@ -135,7 +135,7 @@ const { specs: nodeClassTokens } = useNodeClassTokens()
 const classTokenSpecs = computed(() => nodeClassTokens.value[capturedNode.value.type.name] ?? [])
 
 const currentClass = computed(() =>
-	typeof capturedNode.value.attrs.class === 'string' ? capturedNode.value.attrs.class : '',
+	typeof capturedNode.value.attrs['class'] === 'string' ? capturedNode.value.attrs['class'] : '',
 )
 
 const classTokenRows = computed(() =>

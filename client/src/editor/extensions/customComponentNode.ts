@@ -161,7 +161,7 @@ export function createVueNode({
 									...props.node.attrs,
 									'data-node-view-wrapper': '',
 									class: [
-										props.node.attrs.class,
+										props.node.attrs['class'],
 										...props.decorations.map((d) => d.type.attrs.class),
 										{ 'ProseMirror-selectednode': props.selected },
 									],

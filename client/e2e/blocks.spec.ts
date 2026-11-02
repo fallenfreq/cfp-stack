@@ -84,7 +84,7 @@ test('a scroll frame works around a block that scrolls, as around a plain box', 
 })
 
 test('a Card that scrolls sideways keeps each item on one line', async ({ page }) => {
-	await setShellWidth(page, breakpoints().sm! - 40)
+	await setShellWidth(page, breakpoints()['sm']! - 40)
 	const card = page.locator('#scroll-card')
 	const items = card.locator(':scope > [data-node-view-content] > p')
 	await expect(items).toHaveCount(3)
@@ -182,7 +182,7 @@ test('a block pinned inside a Card stays at the top of the scroll area around th
 })
 
 test('below md a hidden Card or video leaves one gap, not two', async ({ page }) => {
-	await setShellWidth(page, breakpoints().md! - 40)
+	await setShellWidth(page, breakpoints()['md']! - 40)
 	for (const [hidden, prefix] of [
 		['hide-card', 'hide'],
 		['video-hide', 'video-hide'],
@@ -395,7 +395,7 @@ test('in a row, a Card set to hide or show below a width does, as on the page', 
 }) => {
 	const shown = (id: string) => page.locator(`#${id}`).evaluate((el) => el.checkVisibility())
 	expect([await shown('row-hide'), await shown('row-show')], 'wide').toEqual([true, false])
-	await setShellWidth(page, breakpoints().md! - 40)
+	await setShellWidth(page, breakpoints()['md']! - 40)
 	expect([await shown('row-hide'), await shown('row-show')], 'below md').toEqual([false, true])
 })
 

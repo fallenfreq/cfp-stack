@@ -44,14 +44,14 @@ const classToVar = (cls: string, sfPrefix: string, cssVarPrefix: string): string
 
 const nodeClass = computed(() => {
 	if (mode.value !== 'node') return null
-	const c = props.context.activeNode.attrs.class
+	const c = props.context.activeNode.attrs['class']
 	return typeof c === 'string' ? c : null
 })
 
 const currentFontFamily = computed<string | null>(() =>
 	mode.value === 'mark'
-		? typeof markAttrs.value.fontFamily === 'string'
-			? markAttrs.value.fontFamily
+		? typeof markAttrs.value['fontFamily'] === 'string'
+			? markAttrs.value['fontFamily']
 			: null
 		: nodeClass.value
 			? classToVar(nodeClass.value, 'sf-font-', '--sf-font-')
@@ -60,8 +60,8 @@ const currentFontFamily = computed<string | null>(() =>
 
 const currentFontSize = computed<string | null>(() =>
 	mode.value === 'mark'
-		? typeof markAttrs.value.fontSize === 'string'
-			? markAttrs.value.fontSize
+		? typeof markAttrs.value['fontSize'] === 'string'
+			? markAttrs.value['fontSize']
 			: null
 		: nodeClass.value
 			? classToVar(nodeClass.value, 'sf-text-', '--sf-text-')
@@ -70,8 +70,8 @@ const currentFontSize = computed<string | null>(() =>
 
 const currentLineHeight = computed<string | null>(() =>
 	mode.value === 'mark'
-		? typeof markAttrs.value.lineHeight === 'string'
-			? markAttrs.value.lineHeight
+		? typeof markAttrs.value['lineHeight'] === 'string'
+			? markAttrs.value['lineHeight']
 			: null
 		: nodeClass.value
 			? classToVar(nodeClass.value, 'sf-leading-', '--sf-leading-')
@@ -80,8 +80,8 @@ const currentLineHeight = computed<string | null>(() =>
 
 const currentLetterSpacing = computed<string | null>(() =>
 	mode.value === 'mark'
-		? typeof markAttrs.value.letterSpacing === 'string'
-			? markAttrs.value.letterSpacing
+		? typeof markAttrs.value['letterSpacing'] === 'string'
+			? markAttrs.value['letterSpacing']
 			: null
 		: nodeClass.value
 			? classToVar(nodeClass.value, 'sf-tracking-', '--sf-tracking-')
@@ -100,8 +100,8 @@ const onCommit = ({ fontFamily, fontSize, lineHeight, letterSpacing }: FontStyle
 	}
 	if (capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	let cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
-	let s = typeof node.attrs.style === 'string' ? node.attrs.style : ''
+	let cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
+	let s = typeof node.attrs['style'] === 'string' ? node.attrs['style'] : ''
 
 	cls = setClassToken(
 		cls,

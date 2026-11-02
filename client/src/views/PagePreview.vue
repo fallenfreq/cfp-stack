@@ -5,7 +5,7 @@
 		<RouterLink
 			v-if="isAdmin"
 			class="preview-edit sf sf-depth-2 sf-is-overlay sf-size-xs sf-on-hover"
-			:to="{ name: 'editor-page', params: { slug: route.params.slug } }"
+			:to="{ name: 'editor-page', params: { slug: route.params['slug'] } }"
 		>
 			Edit
 		</RouterLink>
@@ -23,7 +23,7 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const isAdmin = useIsAdmin()
-const { page, notFound } = usePage(() => paramString(route.params.slug))
+const { page, notFound } = usePage(() => paramString(route.params['slug']))
 </script>
 
 <style scoped>

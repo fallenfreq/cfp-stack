@@ -26,11 +26,11 @@ onBeforeUnmount(() => closed.abort())
 // address opens in a new editor, as arriving does: undo and Save can't reach the page before.
 // Only what the address opens counts (what whatOpens reads), not its hash.
 const opens = (at: RouteLocationNormalized) =>
-	JSON.stringify([paramString(at.params.slug), at.query.seed, at.query.autoTag])
+	JSON.stringify([paramString(at.params['slug']), at.query['seed'], at.query['autoTag']])
 const isEditor = (at: RouteLocationNormalized) => at.name === 'editor' || at.name === 'editor-page'
 // Saving a new page gives it an address; that's the page already open, so it stays.
 const isOpenPage = (at: RouteLocationNormalized) => {
-	const slug = paramString(at.params.slug)
+	const slug = paramString(at.params['slug'])
 	return slug !== '' && slug === store.currentSlug
 }
 const opened = ref(0)
@@ -161,7 +161,7 @@ async function whatOpens(): Promise<Opening | string> {
 	}
 	const raw = Number(autoTag)
 	const tag = Number.isInteger(raw) && raw > 0 ? raw : null
-	const slug = paramString(route.params.slug)
+	const slug = paramString(route.params['slug'])
 	if (!slug) return { content: '', page: null, autoTag: tag }
 	const page = await store.fetchPage(slug)
 	if (!page) return "There's no page at this address."

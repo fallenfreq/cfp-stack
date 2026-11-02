@@ -28,7 +28,7 @@
 		<CollectionGrid
 			:items="gridItems"
 			:placeholder-title="pagesPending ? 'Loading...' : 'Coming Soon!'"
-			@open="(item) => open(item.slug as string)"
+			@open="(item) => open(item['slug'] as string)"
 		/>
 		<StackableSheet
 			:open="openSlug !== null"
@@ -57,7 +57,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const collectionSlug = computed(() => paramString(route.params.collectionSlug))
+const collectionSlug = computed(() => paramString(route.params['collectionSlug']))
 const isAdmin = useIsAdmin()
 
 const { data: tag, isPending: tagPending } = useQuery({

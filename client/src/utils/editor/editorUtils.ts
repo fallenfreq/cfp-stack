@@ -53,7 +53,7 @@ const prettifySelectedCode = async (editor: Editor) => {
 
 	editor.commands.selectParentNode()
 	const parentNode = editor.state.doc.nodeAt(editor.state.selection.from)
-	const setLanguage = parentNode?.attrs.language
+	const setLanguage = parentNode?.attrs['language']
 	const language = detectLanguage(selectedContent, editor, setLanguage)
 	let message = ''
 	if (language === null) {

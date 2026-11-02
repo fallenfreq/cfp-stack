@@ -72,7 +72,7 @@ const selectedObject = ref<string | null>(null)
 watch(open, (isOpen) => {
 	if (!isOpen || capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	const cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
 	selectedAspect.value = getClassToken(cls, 'sl-aspect-')
 	selectedObject.value = getClassToken(cls, 'sl-object-')
 })
@@ -92,7 +92,7 @@ const selectAspect = (value: string) => {
 	const next = selectedAspect.value === value ? null : value
 	selectedAspect.value = next
 	const node = nodeAt(props.editor.state.doc, capturedPos.value!)
-	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	const cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
 	commit(setClassToken(cls, 'sl-aspect-', next))
 }
 
@@ -100,7 +100,7 @@ const selectObject = (value: string) => {
 	const next = selectedObject.value === value ? null : value
 	selectedObject.value = next
 	const node = nodeAt(props.editor.state.doc, capturedPos.value!)
-	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	const cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
 	commit(setClassToken(cls, 'sl-object-', next))
 }
 </script>

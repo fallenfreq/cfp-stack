@@ -19,7 +19,7 @@ let cssText: string | undefined
  * to check another (an old copy, or a change) without touching the database.
  */
 function stylesheet(): string {
-	const file = process.env.SF_SYSTEM_CSS ?? process.env.SF_TEST_STYLESHEET
+	const file = process.env['SF_SYSTEM_CSS'] ?? process.env['SF_TEST_STYLESHEET']
 	if (!file) throw new Error('No stylesheet: globalSetup.ts sets SF_TEST_STYLESHEET')
 	return (cssText ??= readFileSync(file, 'utf8'))
 }
@@ -287,7 +287,7 @@ export const nodePosition = (page: Page, id: string): Promise<number> =>
 		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
 		let at = -1
 		editor.state.doc.descendants((node, pos) => {
-			if (node.attrs?.id === id) at = pos
+			if (node.attrs?.['id'] === id) at = pos
 		})
 		return at
 	}, id)

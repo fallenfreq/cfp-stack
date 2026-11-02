@@ -19,9 +19,9 @@ export const YoutubeExtension = Youtube.extend({
 		if (!Array.isArray(spec) || !Array.isArray(spec[2]))
 			throw new Error("TipTap's video is no longer a box holding an iframe")
 		const iframe: Record<string, unknown> = { ...spec[2][1] }
-		delete iframe.width
-		delete iframe.height
-		delete iframe.start
+		delete iframe['width']
+		delete iframe['height']
+		delete iframe['start']
 		return ['iframe', { ...iframe, 'data-youtube-video': '' }]
 	},
 	// Nor is TipTap's fixed size a setting of the video's.

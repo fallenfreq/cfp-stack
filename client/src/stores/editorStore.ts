@@ -159,7 +159,7 @@ export const useEditorStore = defineStore('editor', () => {
 	const showAddress = async () => {
 		const slug = currentSlug.value
 		const shown = router.currentRoute.value
-		if (!slug || shown.params.slug === slug) return
+		if (!slug || shown.params['slug'] === slug) return
 		if (router.options.history.location !== shown.fullPath) return
 		await router.replace({ name: 'editor-page', params: { slug } })
 	}

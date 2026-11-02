@@ -101,8 +101,8 @@ const readColor = (cls: string, style: string): string => {
 watch(open, (isOpen) => {
 	if (!isOpen || capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
-	const style = typeof node.attrs.style === 'string' ? node.attrs.style : ''
+	const cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
+	const style = typeof node.attrs['style'] === 'string' ? node.attrs['style'] : ''
 
 	const shape = readShape(cls)
 	if (shape !== null && shadowOptions.value.includes(shape)) {
@@ -127,8 +127,8 @@ const onColorCommit = (color: string) => {
 const commit = () => {
 	if (capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const cls0 = typeof node.attrs.class === 'string' ? node.attrs.class : ''
-	const style0 = typeof node.attrs.style === 'string' ? node.attrs.style : ''
+	const cls0 = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
+	const style0 = typeof node.attrs['style'] === 'string' ? node.attrs['style'] : ''
 
 	// Strip every sf-shadow-* class and any inline --sf-shadow-color; caller re-adds selection.
 	let cls = cls0

@@ -63,7 +63,7 @@ export function oidcProvider(settings: OidcSettings, adapter: OidcAdapter): Iden
 						...currentUser(userInfo),
 						subject: idToken.sub,
 						authTime: idToken.auth_time ? new Date(idToken.auth_time * 1000) : null,
-						providerSessionId: text(idToken.sid),
+						providerSessionId: text(idToken['sid']),
 					},
 					tokens: providerTokens(tokens),
 				}
@@ -111,7 +111,11 @@ export function oidcProvider(settings: OidcSettings, adapter: OidcAdapter): Iden
 	}
 
 	function currentUser(claims: Readonly<Record<string, unknown>>) {
-		return { name: text(claims.name), email: text(claims.email), roles: adapter.roles(claims) }
+		return {
+			name: text(claims['name']),
+			email: text(claims['email']),
+			roles: adapter.roles(claims),
+		}
 	}
 }
 

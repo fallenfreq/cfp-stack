@@ -61,7 +61,7 @@ const TextColor = Mark.create({
 	renderHTML({ mark }) {
 		const { parseStoredValue } = useColorPalette()
 		const { snapToStep } = useAlphaPalette()
-		const parsed = parseStoredValue(mark.attrs.color)
+		const parsed = parseStoredValue(mark.attrs['color'])
 		if (parsed?.kind === 'token') {
 			const colorClass = `sf-color-${parsed.cssVar.slice('--sf-'.length)}`
 			const classes = [colorClass]
@@ -74,7 +74,7 @@ const TextColor = Mark.create({
 		// Arbitrary colour: inline style
 		return [
 			'span',
-			mergeAttributes(mark.attrs.color ? { style: `color: ${mark.attrs.color}` } : {}),
+			mergeAttributes(mark.attrs['color'] ? { style: `color: ${mark.attrs['color']}` } : {}),
 			0,
 		]
 	},

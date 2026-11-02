@@ -141,8 +141,8 @@ const customCorners = ref({ tl: 0, tr: 0, br: 0, bl: 0 })
 watch(open, (isOpen) => {
 	if (!isOpen || capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
-	const style = typeof node.attrs.style === 'string' ? node.attrs.style : ''
+	const cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
+	const style = typeof node.attrs['style'] === 'string' ? node.attrs['style'] : ''
 
 	const token = getClassToken(cls, 'sf-radius-')
 	if (token !== null) {
@@ -209,8 +209,8 @@ const onIndividualizeToggle = () => {
 const commit = () => {
 	if (capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
-	let s = typeof node.attrs.style === 'string' ? node.attrs.style : ''
+	const cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
+	let s = typeof node.attrs['style'] === 'string' ? node.attrs['style'] : ''
 
 	let newClass = cls
 	if (selectedToken.value === null) {

@@ -32,7 +32,7 @@ const { parseStoredValue } = useColorPalette()
 
 // Read background colour from sf-bg-* class tokens, falling back to inline style.
 const readNodeBg = (node: { attrs: Record<string, unknown> }): string | null => {
-	const cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
+	const cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
 	const bgToken =
 		cls
 			.split(/\s+/)
@@ -45,13 +45,13 @@ const readNodeBg = (node: { attrs: Record<string, unknown> }): string | null => 
 			: null
 		return cssVarColor(`--sf-${bgToken}`, alphaStep?.value ?? 1)
 	}
-	const style = typeof node.attrs.style === 'string' ? node.attrs.style : ''
+	const style = typeof node.attrs['style'] === 'string' ? node.attrs['style'] : ''
 	return getStyleProp(style, 'background-color') || null
 }
 
 const currentColor = computed<string | null>(() => {
 	if (mode.value === 'mark') {
-		const color = props.editor.getAttributes('textColor').color
+		const color = props.editor.getAttributes('textColor')['color']
 		return typeof color === 'string' ? color : null
 	}
 	return readNodeBg(props.context.activeNode)
@@ -73,8 +73,8 @@ const applyColor = (value: string | null) => {
 	}
 	if (capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	let cls = typeof node.attrs.class === 'string' ? node.attrs.class : ''
-	let s = typeof node.attrs.style === 'string' ? node.attrs.style : ''
+	let cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
+	let s = typeof node.attrs['style'] === 'string' ? node.attrs['style'] : ''
 
 	// Clear all existing bg colour and alpha classes, and inline background-color.
 	cls = cls

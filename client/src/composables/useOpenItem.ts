@@ -8,7 +8,7 @@ export const useOpenItem = () => {
 	const router = useRouter()
 
 	const openSlug = computed(() => {
-		const value = route.query.open
+		const value = route.query['open']
 		return typeof value === 'string' && value ? value : null
 	})
 
@@ -43,7 +43,7 @@ export const useOpenItem = () => {
 			return
 		}
 		const query = { ...route.query }
-		delete query.open
+		delete query['open']
 		router.replace({ query })
 	}
 

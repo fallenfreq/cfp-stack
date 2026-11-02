@@ -41,9 +41,9 @@ export const SfHeading = Heading.extend({
 	// Its level's `sf-heading-*`, unless it has one of its own: a heading's prominence can differ
 	// from its level (sf-system.md, "Headings").
 	ownLook(node) {
-		const own = String(node.attrs.class ?? '').split(/\s+/)
+		const own = String(node.attrs['class'] ?? '').split(/\s+/)
 		if (own.some((name) => SF_HEADING_CLASS_RE.test(name))) return null
-		return { class: `sf-heading-${node.attrs.level}` }
+		return { class: `sf-heading-${node.attrs['level']}` }
 	},
 }).configure({ levels: [1, 2, 3] })
 
@@ -130,10 +130,10 @@ export function getContentExtensions({
 				const spec = this.parent?.({ node, HTMLAttributes })
 				if (!Array.isArray(spec) || spec[0] !== 'table')
 					throw new Error("TipTap's table is no longer written as a table")
-				return ['table', { ...spec[1], style: HTMLAttributes.style }, ['tbody', 0]]
+				return ['table', { ...spec[1], style: HTMLAttributes['style'] }, ['tbody', 0]]
 			},
 			ownLook(node) {
-				if (node.attrs.style) return null
+				if (node.attrs['style']) return null
 				const { tableWidth, tableMinWidth } = createColGroup(
 					node,
 					this.options.cellMinWidth,

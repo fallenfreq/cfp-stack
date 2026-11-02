@@ -16,7 +16,7 @@ import ToolbarRevealInput from './ToolbarRevealInput.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const initialUrl = computed(() => (props.context.activeNode.attrs.src as string) ?? '')
+const initialUrl = computed(() => (props.context.activeNode.attrs['src'] as string) ?? '')
 
 const applyUrl = (url: string) =>
 	props.editor.chain().focus().updateAttributes('image', { src: url }).run()
