@@ -856,6 +856,20 @@ sl-grid       auto-responsive — fills with as many columns as fit at a minimum
 sl-aspect     aspect-ratio container — ratio configured via --sl-aspect
 ```
 
+**One arrangement per box.** A box takes one of the classes that arrange what's inside it:
+`sl-stack`, `sl-cluster`, `sl-columns`, `sl-split`, `sl-grid`, `sl-inset`, `sl-cover` or
+`sl-row` (below), the layouts the fixed CSS lists (`GAP_LAYOUTS` in `slLayout.ts`), or
+`sl-scroll-frame`, which wraps one scroll area (Scroll areas and pinned elements) and spaces
+nothing with a gap, so it's off that list. Two on one box clash where they set the same thing,
+so the box gets parts of each: Columns that are also a frame are one column. For two, put one
+box in the other. `sl-center` and `sl-aspect-*` don't arrange what's inside: one makes the box a
+centred column, the other gives it a shape, so either goes with an arrangement. The Centre block
+is `sl-center sl-stack`, a centred column whose blocks are spaced as a stack's (a centred stack
+is padded only at its sides). A component block counts its component's own: a Stack and a Centre
+stack their blocks, and Columns, Split and Cover arrange theirs, so none takes another, `sl-row`
+and `sl-inset` included. A Card has none of its own, so for a row or a band use a Card or a
+plain block.
+
 Alignment modifiers compose with any layout. On every layout x is sideways and y is up and
 down. `sl-cover` centres by default.
 
@@ -995,15 +1009,14 @@ TipTap's `EditorContent` directly adds it itself. The document pads itself to th
 pulls out of that padding to the width of TipTap's box around the document, which is
 measured. A block that is both `sl-center` and `sl-bleed`, a Centre block set to bleed
 included, goes edge to edge instead of staying centred. That combination isn't supported
-(Validator and linter, Content).
+(Validator and linter, "no-bleeding-center").
 
 **Rules**
 
 - **Nothing is assumed.** A plain inset only reads the margin; only boxes that set their
   own padding publish one. Outside an `sl-inset`, `sl-bleed` does nothing.
-- **One arrangement per box.** `sl-inset` arranges its children, so it doesn't share an
-  element with `sl-stack`, `sl-cluster`, `sl-columns`, `sl-split` or `sl-grid`. Add a
-  wrapper if needed.
+- `sl-inset` arranges its children, so it takes no other arrangement (Layout primitives, "One
+  arrangement per box").
 - **Direct children only.** Bleed reaches the nearest inset. A document's own blocks count
   as its children.
 - **The page margin and page width are lengths**, not percentages — tracks and padding
@@ -1133,7 +1146,9 @@ around it. A width container takes no width from its content, so only these boxe
 would be 0 wide. These spots are table cells, a cluster's items, a cover's items, anything in
 a layout aligned sideways (`sl-align-x-*`), and the first column of a split with no column
 widths set. Nothing in them becomes a width container; what they hold measures the next box
-out. App screens leave this out because their popovers and menus sit inside rows, so a
+out. Only these spots are known: one made by a block's own style or a component's CSS (a flex
+row, `fit-content`) isn't, so a layout in it that holds a collapsing block is 0 wide. App
+screens leave this out because their popovers and menus sit inside rows, so a
 component there keeps collapsing content out of such spots.
 
 **A popover is laid out on its own.** What's inside one doesn't make the layouts around it
@@ -1329,67 +1344,109 @@ component, so these keep the system's layout working around and inside it:
 
 ## Validator and linter (not built)
 
-Rules the system relies on that nothing checks yet:
+Rules the system relies on that nothing checks yet. Each has a name and warns in plain terms;
+its reason is in the section it names, so it's written once.
 
-- The validator would check a theme when it is saved, and a page's content when it is saved.
-- The class panel would flag a content rule as the classes are typed.
-- The linter would check component code.
+**The shape.** One core holds the rules that read elements and CSS: those in, results out. It
+knows nothing of where they came from, so each place that checks reads what it has into them
+and shows the results its own way. A component's code rules read Vue's script, so they're the
+IDE linter's own.
 
-Each rule's reason is in the section named.
+- **An element** is what the element rules read: its tag, classes, id, attributes and children,
+  and its place, which the core hands back untouched. A component block's element also wears
+  the `sl-` classes its component's root always wears (the Centre's `sl-center sl-stack`).
+- **CSS** is what the CSS rules read, with each part's place: a block's own style, a theme's
+  rules and a component's styles reach them alike.
+- **A result** is one rule broken: the rule's name, its kind (a warning, or a gentle one that
+  only points out the usual way: ESLint's "problem" and "suggestion"), its message, the places
+  of what's involved, and the section that gives the reason.
 
-**Themes**
+It takes ESLint's shape, not ESLint: ESLint reads only text, so the editor's blocks would go
+through code and back, and the editor would carry ESLint. No HTML linter fits as the core
+either: html-validate also reads only text.
 
-- No rule sets layout on an `sl-` class: themes set looks only (sl- layout subsystem).
-- Selectors come from a closed set of shapes, since they are free text today. That includes
-  rejecting the shapes that can't reach through component blocks (Component blocks).
-- No container units (`cqw`, `cqi`) in values: what they measure depends on where the system
-  puts width containers (Container-responsive collapse).
-- `var(--sf-gap)` and `var(--sf-padding)` are read with a fallback, unless unset means none.
-- Warn on a rule that picks a block right after a particular one (`h2 + p`): a block hidden
-  between them still counts, and a theme author can't know where pages hide blocks. "After any
-  block" (`* + *`) counts only shown blocks (Component blocks).
+**Where a rule shows:** wherever its problem can happen.
 
-**Content** (classes and ids on a page's blocks, from the panels or code view)
+- **The editor** runs every rule that can break on a page, on its blocks and their own style.
+  It shows the warnings on the blocks, and the class row flags a rule as the classes are typed.
+  Warnings are for the person editing, so nothing checks a page on the server when it's saved.
+- **An IDE linter** (later) checks pages, screens and components written in files, with every
+  rule that can break there. It's a thin ESLint plugin: its element and CSS rules call the core,
+  ESLint's Vue and HTML parsers read the code, and ESLint shows the results and holds the
+  settings. The component store runs it when a component is added. It checks code, so nothing
+  checks the page as drawn.
+- **A theme's save** (later, once there's a theme editor) checks its rules with the rules that
+  read CSS, and refuses a selector outside the closed set (`valid-selector-shape`).
 
-- Warn on two blocks with one id ("two blocks share the id …"): a link to it goes to the first.
-- One arrangement per box: `sl-inset` doesn't share a block with `sl-stack`, `sl-cluster`,
-  `sl-columns`, `sl-split` or `sl-grid` (Side margins and full-bleed).
-- That counts the layout a block's component gives it: a Stack and a Centre stack their
-  blocks, and Columns, Split and Cover arrange theirs, so none takes another layout, `sl-row`
-  and `sl-inset` included. For a row or a band, use a Card or a plain block. The validator
-  needs each component's own layout to see it.
-- `sl-center` doesn't share a block with `sl-bleed`, a Centre block included. A centred
+**Rules that read elements** (a page's blocks; pages, screens and components in files)
+
+- **`no-duplicate-id`**: two elements with one id ("two blocks share the id …"): a link to it
+  goes to the first.
+- **`one-arrangement-per-box`**: a box with two arrangements, a component block's own included
+  (Layout primitives, "One arrangement per box").
+- **`no-bleeding-center`**: `sl-center` with `sl-bleed`, a Centre block included. A centred
   reading column that also spans edge to edge has no clear meaning. For a band holding a
   centred column, set a Card or a Stack to bleed and put a Centre in it (Side margins and
   full-bleed).
-- Warn on a collapsing layout straight in a side of a split: it measures the whole split, so
-  it stacks only when the split is narrow. To stack by the side's width, put it in a Stack in
-  that side (Container-responsive collapse).
-- Optionally, a gentle warning for `sl-center` on a video: a Centre holding the video (its
-  style `max-width: none`) lays out the same. Both work; it only points out the usual way.
-- A gentle warning on a long run of side-by-side blocks that each hide or show by width, say
-  100 in a row: put the blocks that hide together in one box and hide the box
+- **`no-collapse-straight-in-split`**: a collapsing layout straight in a side of a split: it
+  measures the whole split, so it stacks only when the split is narrow. To stack by the side's
+  width, put it in a Stack in that side (Container-responsive collapse).
+- **`require-picture-size`**: a picture with no size of its own (Layout primitives, "A
+  picture's space before it loads").
+- **`valid-heading-class`**: an `sf-heading-*` class on a block that isn't a heading, as the
+  line Enter makes after a heading with one of its own gets, or two on one heading: body text
+  takes its weight from a utility, not a heading's bundle, and a heading has one prominence
+  (Vocabulary governance).
+- **`prefer-center-around-video`** (gentle): `sl-center` on a video. A Centre holding the video
+  (its style `max-width: none`) lays out the same; both work, it only points out the usual way.
+- **`max-hide-show-run`** (gentle): a long run of side-by-side blocks that each hide or show by
+  width, say 100 in a row: put the blocks that hide together in one box and hide the box
   (Container-responsive collapse).
-- Warn on a picture with no size of its own (Layout primitives, "A picture's space before it
-  loads").
-- Warn on an `sf-heading-*` class on a block that isn't a heading, as the line Enter makes after
-  a heading with one of its own gets, and on two on one heading: body text takes its weight from
-  a utility, not a heading's bundle, and a heading has one prominence (Vocabulary governance).
+- **`no-hide-show-without-layout`**: `sl-hide-below-*` or `sl-show-below-*` on an app screen
+  with no layout around it: it never hides, and the rules for shown blocks can't tell, so a
+  divide line after it is lost. In a page they measure the page wherever the block sits, so this
+  is for screens only (Container-responsive collapse).
 
-**Components** (Component blocks, "Writing a component block")
+**Rules that read CSS**, each naming whose: a theme's rules, a component's styles or a block's
+own style.
 
-- One root element, with Vue's default attribute handling (no `inheritAttrs: false`); the
-  root wears the node's classes.
-- `<slot />` is a direct child of the root.
-- Warn on a width container in the component's CSS, and on an `@container` query without a
-  name.
-- Warn when the component's own CSS sizes the slot by its content.
-- Warn on `overflow: hidden` around the slot.
-- No `click`, `pointerdown`, `mousedown`, `copy`, `cut` or `paste` in `emits`.
-- The component's CSS is in a cascade layer.
-- Warn on `sl-hide-below-*` or `sl-show-below-*` on an app screen with no layout around it:
-  it never hides, and the rules for shown blocks can't tell, so a divide line after it is lost
-  (Container-responsive collapse).
+- **`no-layout-on-sl-classes`** (a theme's rules): a rule that sets layout on an `sl-` class.
+  Themes set looks only (sl- layout subsystem).
+- **`valid-selector-shape`** (a theme's rules): a selector outside a closed set of shapes, as
+  selectors are free text today. The shapes that can't reach through component blocks are
+  outside it (Component blocks).
+- **`no-after-particular-block`** (a theme's rules): a rule that picks a block right after a
+  particular one (`h2 + p`): a block hidden between them still counts, and a theme author can't
+  know where pages hide blocks. "After any block" (`* + *`) counts only shown blocks (Component
+  blocks).
+- **`no-container-units`** (any CSS): container units (`cqw`, `cqi`) in a value: what they
+  measure depends on where the system puts width containers (Container-responsive collapse).
+- **`require-channel-fallback`** (any CSS): `var(--sf-gap)` or `var(--sf-padding)` read with no
+  fallback, unless unset means none (Layout channels).
+- **`no-width-container`** (any CSS): a width container (`container-type`, or the `container`
+  shorthand). It takes no width
+  from its content, so it's 0 wide wherever its width comes from its content, such as in a
+  cluster (Component blocks, "Writing a component block").
+- **`no-overflow-hidden`** (any CSS, on a box that can hold blocks: a theme's rules, a
+  component's box around its slot, a block's own style): `overflow: hidden` makes the box a
+  scroll area, so a pinned block inside stops sticking; `overflow: clip` clips without that
+  (Component blocks, "Writing a component block").
+- **`no-content-sized-box`** (any CSS, on a box that can hold blocks: a theme's rules, a
+  component's box around its slot, a block's own style): a box that sizes what's inside by its
+  content (a flex row, `fit-content`). The system doesn't know the spot, so a layout in it that
+  holds a collapsing block is 0 wide (Container-responsive collapse).
+- **`require-container-name`** (a component's styles): an `@container` query without a name
+  (Component blocks, "Writing a component block").
+- **`require-cascade-layer`** (a component's styles): CSS outside a cascade layer (Component
+  blocks, "Writing a component block").
+
+**Rules that read a component's code** (Component blocks, "Writing a component block")
+
+- **`one-root-element`**: more than one root element, or `inheritAttrs: false`, so the root
+  doesn't wear the node's classes.
+- **`require-slot-in-root`**: `<slot />` that isn't a direct child of the root.
+- **`no-editor-events-in-emits`**: `click`, `pointerdown`, `mousedown`, `copy`, `cut` or
+  `paste` in `emits`.
 
 ---
 

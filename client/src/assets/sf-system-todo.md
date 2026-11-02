@@ -5,13 +5,16 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Nothing is in progress on this track. The bigger next steps are the validator and linter, and
-settings for every selected block.
+In progress: the validator's warnings for page builders, `docs/plans/validator.md` (its
+"Progress" says where it's at). The bigger next step after it: settings for every selected
+block.
 
 ## Bigger work
 
-- **The validator and linter** (not built). Its rules are in `sf-system.md`, "Validator and
-  linter"; new candidates go there.
+- **The validator and linter.** Its rules, and where each shows, are in `sf-system.md`,
+  "Validator and linter"; new candidates go there. The editor's part is `docs/plans/validator.md`.
+  Left for later: the IDE linter, and a theme's check when it's saved, once there's a theme
+  editor.
 - **Settings for every selected block** (proposed, not designed). With blocks selected, the
   toolbar's settings would change all of them, as in Notion, Google Docs or Figma; today it shows
   none. To decide: which settings show (only those every selected block has), how differing
@@ -105,6 +108,11 @@ settings for every selected block.
       is gone. Taking the attribute out changes focus in every component block, so it waits for
       a check.
     - Atom components can't be selected by clicking.
+- **"Don't give the root a height of its own" is out of date** (`sf-system.md`, "Writing a
+  component block"). It says `height: 100%` stops the block stretching in a row. Measured on a
+  plain grid row (Chrome, 2026-11-01), it fills the row either way; what it does is ignore the
+  row's alignment (aligned to the top, it still fills). The line dates from the two-box design.
+  Fix the line, then decide whether it gets a validator rule.
 
 ## Editor
 
