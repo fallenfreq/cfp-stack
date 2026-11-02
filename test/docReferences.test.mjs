@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, posix } from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
+import { sectionNames } from './docs.mjs'
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
 const TEXT = /\.(md|ts|vue|mjs|cjs|js|css|html|sql|toml|example|json|ya?ml)$/
@@ -22,25 +23,6 @@ function citations(text) {
 		path,
 		names: [...quoted.matchAll(/"([^"]+)"/g)].map(([, name]) => name),
 	}))
-}
-
-// What a doc's sections are named by: its headings and the bold leads of its paragraphs and list
-// items, as they read (no code marks or links), each also without a closing parenthetical.
-function sectionNames(markdown) {
-	const names = new Set()
-	let fenced = false
-	for (const line of markdown.split('\n')) {
-		if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
-		if (fenced) continue
-		const match =
-			line.match(/^#{1,6}\s+(.+?)[\s#]*$/)
-			?? line.match(/^\s*(?:(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?)?\*\*([^*]+?)[.:]?\*\*/)
-		if (!match) continue
-		const name = match[1].replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*]/g, '')
-		names.add(name)
-		names.add(name.replace(/\s*\([^)]*\)$/, ''))
-	}
-	return names
 }
 
 test('every doc cited is there, and so is each section it names', () => {

@@ -1,0 +1,20 @@
+# @somefreq-app/validator
+
+The rules the theme system relies on that nothing else checks: elements in, as hast, and results
+out. What each place that checks gives it, where each rule shows and why:
+`client/src/assets/sf-system.md`, "Validator and linter".
+
+TypeScript used as it is, with no build: Node strips the types, and Vite and Cloudflare's bundler
+read it. It takes nothing from the client or the API; it walks the elements with unified's
+`unist-util-visit`.
+
+- `core.ts`: what a rule and a result are, and running the rules.
+- `rules/`: a file for each rule.
+- Checks:
+    - `tsconfig.json` (`pnpm typecheck`): the strictest settings, and syntax Node can't strip or
+      an import without its ending refused; `test/types.ts` holds what the types must refuse. An
+      import ending in `.js` for a `.ts` file passes it, and Node refuses it once a test imports
+      the file.
+    - ESLint: no casts, `any` or `!` (`eslint.config.js`).
+    - `test/`, in Node's runner (`pnpm test`): each page written as HTML (`test/checkHtml.mjs`).
+      The root's `test/validatorRules.test.mjs` checks each rule's name is its entry in the spec.

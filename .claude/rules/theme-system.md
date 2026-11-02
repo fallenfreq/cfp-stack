@@ -2,6 +2,7 @@
 paths:
     - client/**
     - shared/**
+    - validator/**
     - api/src/domain/**
     - api/src/routes/themes/**
     - api/functions_src/styles/**

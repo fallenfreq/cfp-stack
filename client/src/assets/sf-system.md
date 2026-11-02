@@ -1352,18 +1352,23 @@ knows nothing of where they came from, so each place that checks reads what it h
 and shows the results its own way. A component's code rules read Vue's script, so they're the
 IDE linter's own.
 
-- **An element** is what the element rules read: its tag, classes, id, attributes and children,
-  and its place, which the core hands back untouched. A component block's element also wears
-  the `sl-` classes its component's root always wears (the Centre's `sl-center sl-stack`).
+- **Elements** are hast, HTML's syntax tree as unified's tools (rehype, MDX) have it: its tags,
+  classes, ids, attributes and children. A component block's element also wears the `sl-`
+  classes its component's root always wears (the Centre's `sl-center sl-stack`).
 - **CSS** is what the CSS rules read, with each part's place: a block's own style, a theme's
   rules and a component's styles reach them alike.
-- **A result** is one rule broken: the rule's name, its kind (a warning, or a gentle one that
-  only points out the usual way: ESLint's "problem" and "suggestion"), its message, the places
-  of what's involved, and the section that gives the reason.
+- **A result** is one rule broken: the rule's name, its type (ESLint's: a problem, or a
+  suggestion that only points out the usual way), its message and what's involved. The name is
+  the rule's entry below, which names the section that gives the reason, as ESLint plugins make
+  a rule's docs link from its name. For a rule that reads elements, what's involved is the
+  elements themselves, the same objects the rule was given, so each place that checks finds them
+  its own way: a block's position in the editor, a line in a file.
 
 It takes ESLint's shape, not ESLint: ESLint reads only text, so the editor's blocks would go
 through code and back, and the editor would carry ESLint. No HTML linter fits as the core
-either: html-validate also reads only text.
+either: html-validate also reads only text. The elements are a standard tree, not one of our
+own, as ESLint's own languages each read their language's (Markdown's, CSS's): its readers,
+walkers and types come with it.
 
 **Where a rule shows:** wherever its problem can happen.
 
@@ -1397,10 +1402,11 @@ either: html-validate also reads only text.
   line Enter makes after a heading with one of its own gets, or two on one heading: body text
   takes its weight from a utility, not a heading's bundle, and a heading has one prominence
   (Vocabulary governance).
-- **`prefer-center-around-video`** (gentle): `sl-center` on a video. A Centre holding the video
-  (its style `max-width: none`) lays out the same; both work, it only points out the usual way.
-- **`max-hide-show-run`** (gentle): a long run of side-by-side blocks that each hide or show by
-  width, say 100 in a row: put the blocks that hide together in one box and hide the box
+- **`prefer-center-around-video`** (a suggestion): `sl-center` on a video. A Centre holding the
+  video (its style `max-width: none`) lays out the same; both work, it only points out the usual
+  way.
+- **`max-hide-show-run`** (a suggestion): a long run of side-by-side blocks that each hide or
+  show by width, say 100 in a row: put the blocks that hide together in one box and hide the box
   (Container-responsive collapse).
 - **`no-hide-show-without-layout`**: `sl-hide-below-*` or `sl-show-below-*` on an app screen
   with no layout around it: it never hides, and the rules for shown blocks can't tell, so a

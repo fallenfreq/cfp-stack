@@ -8,6 +8,8 @@ styled by themes kept in the database. It runs on Cloudflare Pages, and began as
 - **`api/`**: the API, signing in and the themes' stylesheet, as Cloudflare Pages Functions, with
   tRPC, Drizzle and D1 (`api/README.md`).
 - **`shared/`**: code both use as it is (`shared/README.md`).
+- **`validator/`**: the theme system's rules as checks, for the editor and later an IDE linter
+  (`validator/README.md`).
 - **`docs/`**: how things work, and where to find the rest (`docs/README.md`).
 
 ## Setting it up
@@ -44,7 +46,7 @@ the API with the client as last built. After a change to `shared/package.json`, 
 | `pnpm dev:vite:client`        | Vite at 5173, with hot reload, passing API calls to 8788                |
 | `pnpm build`                  | Build client + API side by side, no type check. Cloudflare's build      |
 | `pnpm typecheck`              | Type-check staged packages (`--all`: every package). Pre-commit runs it |
-| `pnpm test`                   | Tests (`test`, `api/test`, which builds the API first; Node's runner)   |
+| `pnpm test`                   | Tests: `test`, `validator/test`, `api/test` (builds the API first)      |
 | `pnpm test:ui`                | Layout checks in Chrome and WebKit (`client/e2e`, Playwright)           |
 | `pnpm preview:components`     | Build the component preview (`--serve`: at http://localhost:4173)       |
 | `pnpm migrate:api`            | Generate Drizzle migration files                                        |

@@ -1,0 +1,18 @@
+{
+	// Type-check only (pnpm typecheck). Node strips the types of these files as they are, so syntax
+	// it can't strip and an import without its ending are refused. Its built-ins are the client's
+	// (ES2022), the narrowest of the places that read it, and it has no DOM or Node types.
+	"extends": "@tsconfig/strictest/tsconfig.json",
+	"compilerOptions": {
+		"lib": ["ES2022"],
+		"types": [],
+		"target": "ES2022",
+		"module": "NodeNext",
+		"verbatimModuleSyntax": true,
+		"erasableSyntaxOnly": true,
+		"allowImportingTsExtensions": true,
+		"noUncheckedSideEffectImports": true,
+		"noEmit": true
+	},
+	"include": ["**/*.ts"]
+}

@@ -13,7 +13,7 @@ joined:
 | Piece                    | Takes             | Gives                                           |
 | ------------------------ | ----------------- | ----------------------------------------------- |
 | The core                 | elements and CSS  | results                                         |
-| The page reader          | the page's blocks | elements, each with its block's place and style |
+| The page reader          | the page's blocks | hast elements, each tied to its block and style |
 | The block view's display | results           | marks on the blocks                             |
 
 - **Elements, CSS and results** are defined in `client/src/assets/sf-system.md`, "Validator and
@@ -56,27 +56,39 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    collapsing block measures (`COLLAPSE_HOST_SELECTOR`,
    which has `sl-center` but not `sl-row` or `sl-cover`), not the arrangements. Those lists are
    the API's today, so what they're made from moves to `shared/`, as the slug rule did, and both
-   read it.
+   read it. `shared/` becomes TypeScript first, used as is as `validator/` is (tried with the
+   slug rule, 2026-11-02: the API's and the client's checks, builds and tests, and Cloudflare's
+   bundle, all pass), with a type check of its own and the API's
+   `rewriteRelativeImportExtensions`, without which the API's check refuses one of its files
+   importing another (`./slug.ts`).
 4. **The other rules for a page:** a picture with no size of its own (the sizes that count are
    in "A picture's space before it loads"), `sf-heading-*` on a block that isn't a heading or
-   twice on one, and the gentle ones: `sl-center` on a video, and a long run of side-by-side
+   twice on one, and the suggestions: `sl-center` on a video, and a long run of side-by-side
    blocks that each hide or show (how long is settled in the step). Then the rules that read CSS
    and can break in a block's own style: `no-container-units`, `require-channel-fallback`,
    `no-width-container`, `no-overflow-hidden` and `no-content-sized-box` (what sizes by content,
    a flex row or `fit-content`, is settled in the step). A theme's rules and a component's styles
    will run them too, so they read CSS, not the editor's style; how a block's style is read is
-   settled in the step.
-5. **The page reader.** The page's blocks as elements, each with its position, walking the page
-   (ProseMirror's `descendants`). The page is the content tree the rules are written for, so
-   there are no content boxes to step through: those are only on screen. A component block's
+   settled in the step. Their results name CSS parts, so `ValidatorResult`, which names elements
+   today, takes what's involved as a type.
+5. **The page reader.** The page's blocks as hast elements, walking the page (ProseMirror's
+   `descendants`), each tied to its block's position, as a result names the elements themselves.
+   The page is the content tree the rules are written for, so there are no content boxes to step
+   through: those are only on screen. A component block's
    element carries its component's own `sl-` classes (the Centre's `sl-center sl-stack`: its
    arrangement, and the centred column the bleed rule reads), which the component states once.
    Today only each component's root says them (`sl-stack` in `LayoutStack.vue`), and the list of
-   components (`editorComponents.ts`) doesn't; how is settled in the step.
+   components (`editorComponents.ts`) doesn't; how is settled in the step. Elements are built
+   through hastscript's `h()` (7.3 KB gzipped) or a typed builder, as hast built by hand with
+   HTML's names (`class`) type-checks but no rule finds its classes; its test runs a class rule
+   on what it builds. How the client gets hast's types (its own `@types/hast`, or the validator
+   passing them on) is settled in the step.
 6. **The block view's display.** Designed with the owner first, from what the editor has (the
    node path, the class row, the Save button, toasts): where a warning shows, when the rules run
    (as the page changes, or on save), and the class row flagging a rule as the classes are typed
-   (the spec's "Validator and linter"). Joins the page reader and the core.
+   (the spec's "Validator and linter"). Joins the page reader and the core; `pnpm typecheck`
+   then checks the client when `validator/` changes too (`scripts/typecheck.mjs`), as it does
+   for `shared/`.
 7. **The cursor across the code view.** Found while planning; not part of the validator. Today
    the code view opens on line 1 wherever the cursor was, and leaving it after any edit puts the
    cursor at the very end of the page (measured). One marker character carries the cursor
@@ -141,4 +153,22 @@ the text (the core reads CSS too, a theme's save refuses a bad selector, the alp
 `container` shorthand, one home for the shape, a citation), 2 settled with the owner (a frame on a
 layout, which the spec already ruled out but nothing caught; a box sized by its content).
 
-Next: step 2, the core.
+**Step 2** (2026-11-02). The core is a package of its own, `validator/`: TypeScript used as is,
+taking nothing from the client or the API, as a theme's save may check on the server and the
+platform may be split from the site. `shared/` was weighed and left: plain JS with types written
+by hand, and meant to stay free of dependencies. Elements are hast, the standard HTML tree, not
+a format of our own (1.5 KB gzipped with unified's walker; hast's selector tool, 17.5 KB, left
+out). Rules report as ESLint's, stylelint's and unified's do; a result names the elements
+themselves and its type is ESLint's. A rule's reason isn't in the code: its name is its spec
+entry, which names the section. Held by the type check (`@tsconfig/strictest`, the client's
+ES2022, `test/types.ts`), ESLint (no casts, `any` or `!`; a rule's `check` a function) and tests
+written as HTML. Settled with the owner: the package, hast, the names, the type names, dropping
+`reason`. Checked: `pnpm test` (each fault a test guards against shown failing),
+`pnpm typecheck --all`, ESLint, Prettier. Two agents' reviews, 8 findings each, all confirmed
+and fixed; the second checked the design against ESLint, stylelint and unified-lint-rule and
+found it fits every rule in the spec's list. Noted for later: the client's type check on a
+change to `validator/` (step 6), results naming CSS parts (step 4), building hast in the page
+reader (step 5). Left: an import ending in `.js` for a `.ts` file passes the type check, and
+Node refuses it once a test imports the file.
+
+Next: step 3, the layout rules.

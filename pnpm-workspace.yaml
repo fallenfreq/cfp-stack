@@ -2,6 +2,7 @@ packages:
     - client
     - api
     - shared
+    - validator
 
 onlyBuiltDependencies:
     - core-js

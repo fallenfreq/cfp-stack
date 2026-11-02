@@ -1,0 +1,17 @@
+{
+	"name": "@somefreq-app/validator",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"test": "node --test 'test/*.test.mjs'"
+	},
+	"dependencies": {
+		"@types/hast": "^3.0.5",
+		"unist-util-visit": "^5.2.0"
+	},
+	"devDependencies": {
+		"@tsconfig/strictest": "^2.0.8",
+		"hast-util-from-html": "^2.0.3"
+	}
+}
