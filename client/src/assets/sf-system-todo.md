@@ -49,9 +49,10 @@ block.
 - **Columns placed straight in an inset stack late.** An inset holding a collapsing layout as
   its own item is the box that layout measures, but the inset's margins are grid tracks, so the
   layout measures wider than the line by both margins. It happens in every inset (the page
-  shell, a card, a band). There's no one-line fix: no box is as wide as the line. Fine for now
-  (decided with the user); until then, put the columns in a stack (example under "For the
-  docs"). `line.spec.ts` has no case for it yet. Collapse by a layout's own width (under
+  shell, a card, a band), to the Columns block too. There's no one-line fix: no box is as wide
+  as the line. Fine for now (decided with the user); until then, put the columns in a stack
+  (example under "For the docs"). The validator's `no-collapse-straight-in-columns` leaves it
+  out. `line.spec.ts` has no case for it yet. Collapse by a layout's own width (under
   "Ideas") would fix it too.
 - **The Split's default alignment.** A plain `sl-split` aligns its sides to the top; the Split
   block stretches them (its align setting's default). One default at the class (dropping
@@ -329,9 +330,9 @@ Examples worth keeping for page builders and component makers:
 
 - **Columns placed straight in an inset stack late** ("Layout" above). They measure the whole
   inset, margins included: with the page at 640px (sm) they stay side by side, and stack only
-  once the inset itself is 640px or less. Put them in a stack, which is as wide as the line, or
-  use the editor's Columns block (to check: since a component block is one box, it measures the
-  layout around it too):
+  once the inset itself is 640px or less. The editor's Columns block does the same, as a
+  component block is one box (measured 2026-11-03). Put them in a stack, which is as wide as the
+  line:
 
     ```html
     <!-- Stacks late -->
@@ -350,9 +351,6 @@ Examples worth keeping for page builders and component makers:
     			<p>Two</p>
     		</div>
     	</div>
-    </div>
-    <div class="sl-bleed sl-inset">
-    	<layout-columns columns="2" class="sl-collapse-sm">…</layout-columns>
     </div>
     ```
 

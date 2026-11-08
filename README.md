@@ -7,7 +7,7 @@ styled by themes kept in the database. It runs on Cloudflare Pages, and began as
 - **`client/`**: the site and its editor, in Vue 3 and Vite (`client/README.md`).
 - **`api/`**: the API, signing in and the themes' stylesheet, as Cloudflare Pages Functions, with
   tRPC, Drizzle and D1 (`api/README.md`).
-- **`shared/`**: code both use as it is (`shared/README.md`).
+- **`shared/`**: code the API, the client and the validator use as it is (`shared/README.md`).
 - **`validator/`**: the theme system's rules as checks, for the editor and later an IDE linter
   (`validator/README.md`).
 - **`docs/`**: how things work, and where to find the rest (`docs/README.md`).

@@ -6,6 +6,7 @@ import { existsSync } from 'node:fs'
 const PACKAGES = {
 	api: { dir: 'api', cmd: ['tsc', '-p', 'tsconfig.check.json'] },
 	client: { dir: 'client', cmd: ['vue-tsc', '--build'] },
+	shared: { dir: 'shared', cmd: ['tsc', '-p', 'tsconfig.json'] },
 	validator: { dir: 'validator', cmd: ['tsc', '-p', 'tsconfig.json'] },
 }
 
@@ -27,11 +28,13 @@ function touched() {
 		if (f.startsWith('client/')) out.add('client')
 		if (f.startsWith('validator/')) out.add('validator')
 		// The client's types come from api source (AppRouter, the schemas), so an api change
-		// can break the client; shared/ is used by both.
+		// can break the client; shared/ is used by the api, the client and the validator.
 		if (f.startsWith('api/src/')) out.add('client')
 		if (f.startsWith('shared/')) {
+			out.add('shared')
 			out.add('api')
 			out.add('client')
+			out.add('validator')
 		}
 	}
 	return out

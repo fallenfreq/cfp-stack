@@ -5,8 +5,9 @@ out. What each place that checks gives it, where each rule shows and why:
 `client/src/assets/sf-system.md`, "Validator and linter".
 
 TypeScript used as it is, with no build: Node strips the types, and Vite and Cloudflare's bundler
-read it. It takes nothing from the client or the API; it walks the elements with unified's
-`unist-util-visit`.
+read it. It takes nothing from the client or the API: the lists of layouts are `shared/`'s
+(`layouts.ts`), which the fixed CSS reads too. It walks the elements with unified's
+`unist-util-visit` and `unist-util-visit-parents`.
 
 - `core.ts`: what a rule and a result are, and running the rules.
 - `rules/`: a file for each rule.

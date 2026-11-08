@@ -120,7 +120,7 @@ How the API talks to D1. The code that follows it is the example for anything ne
   Live was brought in line by adding the missing tables and marking `0000` applied, so the
   older tables kept their shapes. A future rebuild of either table puts it right.
 - **Slugs in any alphabet** (2026-10-07). A slug holds letters and numbers in any alphabet,
-  each with its accents and other marks, and hyphens (`shared/slug.js`, which the API and the
+  each with its accents and other marks, and hyphens (`shared/slug.ts`, which the API and the
   client both check with). Making one from a name drops what shows nothing (an emoji's
   selector, joiners) and marks on nothing, then gives it a slug's case (`slugCase`: lowercased,
   without the dot `İ` leaves on its i, composed as NFC), which a slug sent in gets too, so

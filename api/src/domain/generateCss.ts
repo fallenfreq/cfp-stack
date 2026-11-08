@@ -1,3 +1,4 @@
+import { COLLAPSING_LAYOUTS, COLUMN_LAYOUTS } from '@somefreq-app/shared/layouts'
 import { count, max } from 'drizzle-orm'
 import type { Db } from '../db.js'
 import { collapseThresholds } from '../schemas/layout.js'
@@ -529,8 +530,12 @@ const section = (title: string): string =>
 //     instead. A block that bleeds is a width container when it holds a collapsing element,
 //     so what's inside measures it, not the narrower document; it's never sized by its content.
 
-const COLLAPSE_GRID = ['.sl-columns', '.sl-split', '.sl-grid']
-const COLLAPSE_FLEX = ['.sl-cluster']
+const COLLAPSE_GRID = COLUMN_LAYOUTS.map((name) => `.${name}`)
+// The other layouts that collapse are rows that wrap (a cluster).
+const columnLayouts = new Set<string>(COLUMN_LAYOUTS)
+const COLLAPSE_FLEX = COLLAPSING_LAYOUTS.filter((name) => !columnLayouts.has(name)).map(
+	(name) => `.${name}`,
+)
 const DOCUMENT = '.tiptap.ProseMirror'
 const OUTSIDE_DOCUMENTS = `:where(:not(${DOCUMENT} *))`
 

@@ -172,4 +172,24 @@ change to `validator/` (step 6), results naming CSS parts (step 4), building has
 reader (step 5). Left: an import ending in `.js` for a `.ts` file passes the type check, and
 Node refuses it once a test imports the file.
 
-Next: step 3, the layout rules.
+**Step 3** (2026-11-08). The layout rules, each tested as HTML: `one-arrangement-per-box`,
+`no-bleeding-center` and `no-collapse-straight-in-columns`, widened from splits with the owner.
+Measured in Chrome, collapsing at 640px: Columns straight in a 295px split side, a 442px Columns
+column and a 289px grid cell all stay side by side, and stack with a Stack around them. An inset
+is left out: a layout straight in one stacks late only by its two margins (48px), the Columns
+block too, as a component block is one box (the to-do's example corrected). The lists are
+`shared/layouts.ts`'s, which the stylesheet's code reads too: `GAP_LAYOUTS`, `COLLAPSE_HOSTS`,
+`COLLAPSE_PREFIX`, `COLUMN_LAYOUTS` and `COLLAPSING_LAYOUTS`, beside `ARRANGEMENTS` (the gap
+layouts and the scroll frame). `shared/` is TypeScript used as is, with its own type check and
+the strict ESLint block; `rewriteRelativeImportExtensions` waits until one of its files imports
+another (its README says so). Settled with the owner: the wider rule and its name, the list
+names, the setting left out. Checked: the stylesheet byte for byte; clean builds of the last
+commit and this one (the client's identical, the API's apart from the two files changed);
+Cloudflare's functions bundle; `pnpm test`, `pnpm typecheck --all`, ESLint, Prettier; each
+fault a test guards against shown failing. An agent's review found 7, all confirmed: a message
+false in a band (now the rule and its fix), a test passing a page with the problem, the setting,
+a warning on a collapse class that does nothing (now `COLLAPSING_LAYOUTS`), doc text, a missing
+Cluster case, and, for step 6, messages that name classes (`sl-columns`), not blocks. Not
+followed by the collapse rule: a layout in a spot sized by its content, and a popover between.
+
+Next: step 4, the other rules for a page.

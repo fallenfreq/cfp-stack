@@ -12,7 +12,7 @@ const slug = /^(?!.*\p{Default_Ignorable_Code_Point})(?:[\p{L}\p{N}]\p{M}*|-)+$/
 
 // The characters a slug may hold, each mark on a letter or number and nothing invisible. Its
 // case is slugCase's, which whatever takes a slug in applies first.
-export function isSlug(text) {
+export function isSlug(text: string) {
 	return slug.test(text)
 }
 
@@ -24,7 +24,7 @@ export const notASlug = 'Slug may only contain letters, numbers, and hyphens'
 // composed form (NFC) so a name typed either way makes the same slug. The marks are put in their
 // standard order (NFD) first, so the dot is found wherever it sits among the i's marks, and the
 // same text always comes out.
-export function slugCase(text) {
+export function slugCase(text: string) {
 	return text
 		.toLowerCase()
 		.normalize('NFD')
@@ -36,7 +36,7 @@ export function slugCase(text) {
 // letter or a number made one hyphen, none at either end; then slugCase. Its case comes after the
 // hyphens, as an address's does, so both agree on a Greek final sigma. Empty when the name has no
 // letter or number.
-export function slugify(name) {
+export function slugify(name: string) {
 	return slugCase(
 		name
 			.normalize('NFC')

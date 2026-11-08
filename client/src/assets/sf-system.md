@@ -858,12 +858,13 @@ sl-aspect     aspect-ratio container — ratio configured via --sl-aspect
 
 **One arrangement per box.** A box takes one of the classes that arrange what's inside it:
 `sl-stack`, `sl-cluster`, `sl-columns`, `sl-split`, `sl-grid`, `sl-inset`, `sl-cover` or
-`sl-row` (below), the layouts the fixed CSS lists (`GAP_LAYOUTS` in `slLayout.ts`), or
+`sl-row` (below), the layouts the fixed CSS lists (`GAP_LAYOUTS` in `shared/layouts.ts`), or
 `sl-scroll-frame`, which wraps one scroll area (Scroll areas and pinned elements) and spaces
-nothing with a gap, so it's off that list. Two on one box clash where they set the same thing,
-so the box gets parts of each: Columns that are also a frame are one column. For two, put one
-box in the other. `sl-center` and `sl-aspect-*` don't arrange what's inside: one makes the box a
-centred column, the other gives it a shape, so either goes with an arrangement. The Centre block
+nothing with a gap, so it's off that list (`ARRANGEMENTS` there has both). Two on one box
+clash where they set the same thing, so the box gets parts of each: Columns that are also a
+frame are one column. For two, put one box in the other. `sl-center` and `sl-aspect-*` don't
+arrange what's inside: one makes the box a centred column, the other gives it a shape, so either
+goes with an arrangement. The Centre block
 is `sl-center sl-stack`, a centred column whose blocks are spaced as a stack's (a centred stack
 is padded only at its sides). A component block counts its component's own: a Stack and a Centre
 stack their blocks, and Columns, Split and Cover arrange theirs, so none takes another, `sl-row`
@@ -1133,9 +1134,11 @@ around it. A width container takes no width from its content, so only these boxe
 
 - **A layout around it**: a layout holding a collapsing element becomes a width container.
   So a block that collapses measures the nearest layout around it, whether it's a layout
-  block (Columns) or classes typed on an element. Columns straight in the narrow side of a
-  split stack only when the whole split is narrow; to stack by the side's width, make the side
-  a layout (a Stack) and put the Columns in it.
+  block (Columns) or classes typed on an element. A layout straight in a column of a split,
+  Columns or a grid measures the whole layout around it: Columns in a split's narrow side stack
+  only when the whole split is narrow. To stack by the column's width, put it in a Stack in that
+  column. Straight in an inset, a layout measures the inset's margins too, so it stacks late by
+  their width.
 - **The document** (the editor and published pages) is always a width container, so a layout
   at the top of a page measures the page.
 - **A layout that bleeds out of a document** (a top-level block set to bleed in an inset) is
@@ -1176,8 +1179,9 @@ its content would be 0 wide. A component with width rules of its own follows the
 rules (Editor integration).
 
 The CSS is generated from the theme's breakpoints (the collapse layer in `generateCss.ts`);
-the lists it reads are in `slLayout.ts` (`COLLAPSE_HOST_SELECTOR`,
-`SIZED_BY_CONTENT_SELECTOR`, `widthBands`).
+the lists it reads are in `shared/layouts.ts` (`COLLAPSE_HOSTS`, `COLLAPSE_PREFIX`,
+`COLLAPSING_LAYOUTS`, `COLUMN_LAYOUTS`) and `slLayout.ts` (`SIZED_BY_CONTENT_SELECTOR`,
+`widthBands`).
 
 ---
 
@@ -1249,7 +1253,7 @@ in the page shell (`SfPageShell`), so a page is edited as it sits there. A colle
 (`StackableSheet`) is an inset whose margin is its padding, so a page there sits on the
 sheet's line and bleeds to its edges. How a document's blocks sit is fixed CSS served
 with the theme (`api/src/domain/css/`), so it can read the one list of layouts that space
-their items with a gap (`GAP_LAYOUTS` in `slLayout.ts`):
+their items with a gap (`GAP_LAYOUTS` in `shared/layouts.ts`, which the validator reads too):
 
 - **Elements** opt into the theme by wearing `sf`, set by the node: `blockquote.sf`,
   `code.sf`, `ul.sf`, `ol.sf`. The theme draws them; the reset leaves the rest bare. A block's
@@ -1393,9 +1397,11 @@ walkers and types come with it.
   reading column that also spans edge to edge has no clear meaning. For a band holding a
   centred column, set a Card or a Stack to bleed and put a Centre in it (Side margins and
   full-bleed).
-- **`no-collapse-straight-in-split`**: a collapsing layout straight in a side of a split: it
-  measures the whole split, so it stacks only when the split is narrow. To stack by the side's
-  width, put it in a Stack in that side (Container-responsive collapse).
+- **`no-collapse-straight-in-columns`**: a collapsing layout straight in a column of a split,
+  Columns or a grid: it measures the whole layout, so it stacks only when that is narrow. To
+  stack by the column's width, put it in a Stack in that column (Container-responsive
+  collapse). An inset is left out: a layout straight in one stacks late only by the inset's two
+  margins (48px with a 24px page margin), and bands holding Columns are common.
 - **`require-picture-size`**: a picture with no size of its own (Layout primitives, "A
   picture's space before it loads").
 - **`valid-heading-class`**: an `sf-heading-*` class on a block that isn't a heading, as the

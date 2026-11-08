@@ -4,9 +4,7 @@
 	"version": "0.0.0",
 	"type": "module",
 	"exports": {
-		"./slug": {
-			"types": "./slug.d.ts",
-			"default": "./slug.js"
-		}
+		"./layouts": "./layouts.ts",
+		"./slug": "./slug.ts"
 	}
 }

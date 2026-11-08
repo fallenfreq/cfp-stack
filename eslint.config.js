@@ -76,9 +76,9 @@ export default defineConfig([
 		},
 	},
 	{
-		// No casts, `any` or `!`, so the types hold everywhere in it. A rule's `check` is written as
+		// No casts, `any` or `!`, so the types hold everywhere in them. A rule's `check` is written as
 		// a function, not a method, as TypeScript lets a method narrow what it's given.
-		files: ['validator/**/*.{ts,mjs}'],
+		files: ['shared/**/*.ts', 'validator/**/*.{ts,mjs}'],
 		rules: {
 			'@typescript-eslint/no-explicit-any': 'error',
 			'@typescript-eslint/no-non-null-assertion': 'error',

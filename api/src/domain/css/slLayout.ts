@@ -1,3 +1,4 @@
+import { COLLAPSE_HOSTS, COLLAPSE_PREFIX, GAP_LAYOUTS } from '@somefreq-app/shared/layouts'
 import type { CollapseThreshold } from '../collapseThresholds.js'
 import { throughNodeViews } from './nodeViewSelectors.js'
 
@@ -66,21 +67,7 @@ import { throughNodeViews } from './nodeViewSelectors.js'
 //     the same element; top/bottom padding stays. Pinned edges win: the
 //     sl-scroll-*:has(.sl-pin-*) rules in slCombined.ts (0-2-0) beat this (0-1-0).
 
-// Layouts that space what's inside them with a gap (sl-row takes its parent grid's). The one
-// list other fixed CSS reads to tell a layout from a box of running text: block spacing
-// leaves a layout's items to its gap (blockSpacing.ts), and a layout's content box steps
-// aside so the blocks inside are its own items (nodeViews.ts). A new layout that spaces its
-// items belongs here.
-export const GAP_LAYOUTS = [
-	'sl-stack',
-	'sl-cluster',
-	'sl-columns',
-	'sl-row',
-	'sl-split',
-	'sl-grid',
-	'sl-inset',
-	'sl-cover',
-] as const
+// The lists of layouts are shared/'s (layouts.ts), as the validator reads them too.
 export const GAP_LAYOUT_SELECTOR = GAP_LAYOUTS.map((name) => `.${name}`).join(', ')
 
 // Fixed CSS with a child or sibling step goes through forBlocks, so it also reaches the blocks in
@@ -104,7 +91,7 @@ export const INSET_DOCUMENT = `${INSET_DOCUMENT_MOUNT} > .tiptap.ProseMirror`
 
 // Anything that collapses by its container's width, and anything that swaps (hides or shows)
 // by it.
-export const COLLAPSE_CLASS_SELECTOR = '[class*="sl-collapse-"]'
+export const COLLAPSE_CLASS_SELECTOR = `[class*="${COLLAPSE_PREFIX}"]`
 export const SWAP_CLASS_SELECTOR = '[class*="sl-hide-below-"], [class*="sl-show-below-"]'
 
 // The width container every document is (the collapse layer): hiding in a document measures it,
@@ -188,19 +175,7 @@ export const SIZED_BY_CONTENT_SELECTOR = [
 	`.tiptap.ProseMirror ${AUTO_SPLIT_COLUMN} *`,
 ].join(', ')
 
-// Layouts that become a width container when they hold a collapsing element, or (outside
-// documents) a swapping one (the collapse layer).
-export const COLLAPSE_HOST_SELECTOR = [
-	'sl-stack',
-	'sl-cluster',
-	'sl-columns',
-	'sl-split',
-	'sl-center',
-	'sl-inset',
-	'sl-grid',
-]
-	.map((name) => `.${name}`)
-	.join(', ')
+export const COLLAPSE_HOST_SELECTOR = COLLAPSE_HOSTS.map((name) => `.${name}`).join(', ')
 
 export const SL_LAYOUT = `@layer sl-layout {
 	.sl-aspect-1-1 { aspect-ratio: 1; }
