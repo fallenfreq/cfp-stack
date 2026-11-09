@@ -896,10 +896,14 @@ content's width, as the other items do.
 **A picture's space before it loads.** Until its file arrives a picture has no height, and
 the page grows when it does, unless it has a size of its own: its width and height in the
 HTML (the file's), a shape with a fill (`sl-aspect-*` with `sl-object-cover`, `-contain` or
-`-fill`), or a frame with a shape that it covers. A shape alone isn't enough: the width still
-comes from the file. A size in the picture's own style doesn't count, so there's one way to
-give a picture its size (owner, 2026-11-09). The shapes and those fills are listed once in
-`shared/layouts.ts` (`SHAPES`, `FILLS`), which the fixed CSS and the validator read.
+`-fill`), or a frame with a shape and a fill that it's the only block of. A shape alone isn't
+enough: the width still comes from the file. A size in the picture's own style doesn't count,
+so there's one way to give a picture its size (owner, 2026-11-09). A frame is a plain box or
+a block with a layout: a Card with none keeps its blocks in a box of its own (only a layout's
+content box steps aside, Component blocks), which the fill doesn't reach, so a Card that frames
+a picture takes a layout too, such as Stack, as it always has (owner, 2026-11-09). The shapes
+and those fills are listed once in `shared/layouts.ts` (`SHAPES`, `FILLS`), which the fixed
+CSS and the validator read.
 
 **Rows that share columns** — `sl-row` on a child of a grid layout (`sl-split`,
 `sl-columns`, `sl-grid`) makes it span every column and put its own children on the

@@ -26,12 +26,34 @@ test('a picture with no size of its own is a result', () => {
 	)
 })
 
+test('a component block with no layout framing a picture is a result saying why', () => {
+	const page = `<layout-card class="sl-aspect-16-9 sl-object-cover">
+	<img src="a.png" />
+</layout-card>
+<layout-card class="sl-aspect-16-9 sl-object-cover"><img src="a.png" /><p>Beside it</p></layout-card>`
+	assert.deepEqual(checkHtml(requirePictureSize, page), [
+		{
+			message:
+				"This block's shape and fill don't reach its picture: give the block a layout such as Stack, or put the shape and fill on the picture",
+			lines: [2],
+		},
+		{ message: jumps, lines: [4] },
+	])
+})
+
+// Each measured in the editor (Chrome): the box kept its shape with a square picture in it.
 test('its width and height, a shape with a fill, or a frame it covers is a size', () => {
 	const page = `<img src="a.png" width="800" height="600" />
 <img src="a.png" class="sl-aspect-4-3 sl-object-contain" />
+<div class="sl-aspect-16-9 sl-object-cover"><img src="a.png" /></div>
 <div class="sl-stack sl-aspect-16-9 sl-object-cover">
 	<img src="a.png" />
-</div>`
+</div>
+<blockquote class="sl-aspect-16-9 sl-object-cover"><img src="a.png" /></blockquote>
+<layout-card class="sl-stack sl-aspect-16-9 sl-object-cover"><img src="a.png" /></layout-card>
+<layout-card class="sl-cluster sl-aspect-16-9 sl-object-cover"><img src="a.png" /></layout-card>
+<layout-stack class="sl-stack sl-aspect-16-9 sl-object-cover"><img src="a.png" /></layout-stack>
+<layout-center class="sl-center sl-stack sl-aspect-16-9 sl-object-cover"><img src="a.png" /></layout-center>`
 	assert.deepEqual(checkHtml(requirePictureSize, page), [])
 })
 

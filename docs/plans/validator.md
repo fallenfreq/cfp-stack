@@ -84,7 +84,8 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    HTML's names (`class`) type-checks but no rule finds its classes; its test runs a class rule
    on what it builds. How the client gets hast's types (its own `@types/hast`, or the validator
    passing them on) is settled in the step. A video's element keeps its mark
-   (`data-youtube-video`) and a picture its width and height, which the rules read. Each block's
+   (`data-youtube-video`), a picture its width and height, and a component block its name as the
+   page writes it (`layout-card`, named with a hyphen), which the rules read. Each block's
    own style goes through the core's `readStyle` to the CSS rules; `no-overflow-hidden` and
    `no-content-sized-box` run only on a block that can hold blocks (which ones is settled in the
    step).
@@ -216,7 +217,10 @@ flagged boxes with a width of their own and read each property alone (now the bo
 read in order, shorthands included); the channels were written twice (now `CHANNELS`); a
 channel as a fallback's whole value was flagged; three messages (container units, the video's
 own style, a layout that holds a collapsing block). Settled with the owner: a picture sized by
-its own style is still warned, so there's one way to give a size. Logged in the to-do: a Card with no layout doesn't let a picture cover it, and
-the IDE linter would flag `sf-heading-2` on the prompt's label (`PromptModal.vue`).
+its own style is still warned, so there's one way to give a size; a Card that frames a picture
+takes a layout, as it always has (`a1d0f82`), so a Card with none is warned (measured in the
+editor: of a plain box, a Card, a Card with a layout, the layout blocks and a quote, only the
+Card with none lost its shape), and a Card that needs none is an idea in the to-do. Logged in
+the to-do: the IDE linter would flag `sf-heading-2` on the prompt's label (`PromptModal.vue`).
 
 Next: step 5, the page reader.

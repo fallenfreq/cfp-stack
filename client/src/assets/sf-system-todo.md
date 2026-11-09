@@ -66,11 +66,6 @@ block.
   still count a block hidden at this width. The drag preview of several blocks (`multiSelect.ts`)
   loses the space after a shown hide/show block (it's brief).
 - **Pictures and shapes.**
-    - A picture set to cover a shaped Card with no layout of its own doesn't cover it: the
-      Card's content box is a plain box, so the picture's `height: 100%` has nothing to fill, and
-      the Card grows to the picture once it loads (measured 2026-11-08, Chrome: 720px, then
-      1241px with a square picture; with `sl-stack` it stays 720px). The spec's "a frame with a
-      shape that it covers" doesn't hold there, and `require-picture-size` passes it.
     - In Chrome, a picture with a shape in a row that stretches stretches to the row's height;
       WebKit keeps the shape.
     - In WebKit, an image set to cover fills a shaped box's whole height, padding included, so a
@@ -289,6 +284,10 @@ block.
 
 ## Ideas, not decided
 
+- **A Card with no layout framing a picture** (a feature, owner 2026-11-09). Today a Card that
+  frames a picture takes a layout, such as Stack, and the validator says so
+  (`require-picture-size`): its blocks are in a box of its own, which the fill doesn't reach
+  (measured in Chrome: 720px, then 1241px with a square picture).
 - **Collapse by a layout's own width.** Layouts that work out their columns from their own width
   (`sf-references.md`, "Layouts that switch by their own width") would stack without a container
   query. Plain blocks and component blocks would stack alike, bleeding or not, and most of the
