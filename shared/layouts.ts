@@ -43,3 +43,29 @@ export const COLUMN_LAYOUTS = ['sl-columns', 'sl-split', 'sl-grid'] as const
 // Every layout a collapse class stacks: those, and a cluster, whose row becomes a column. On
 // anything else the class does nothing.
 export const COLLAPSING_LAYOUTS = [...COLUMN_LAYOUTS, 'sl-cluster'] as const
+
+// The layout channels: spacing a class sets on the element that wears it, and its layout reads
+// (client/src/assets/sf-system.md, "Layout channels").
+export const CHANNELS = ['--sf-gap', '--sf-padding'] as const
+
+// What each class that hides or shows an element by its container's width starts with
+// (sl-hide-below-md, sl-show-below-md), followed by a width's name.
+export const HIDE_PREFIX = 'sl-hide-below-'
+export const SHOW_PREFIX = 'sl-show-below-'
+
+// The shapes, each with its ratio: a height of the box's own.
+export const SHAPES = {
+	'sl-aspect-1-1': '1',
+	'sl-aspect-16-9': '16/9',
+	'sl-aspect-4-3': '4/3',
+	'sl-aspect-9-16': '9/16',
+} as const
+
+// The fills that make a picture as wide as its box, each with the fit it gives, so with a shape a
+// picture has its size before its file loads (client/src/assets/sf-system.md, "A picture's space
+// before it loads"). sl-object-none keeps the file's own width, so it isn't one.
+export const FILLS = {
+	'sl-object-cover': 'cover',
+	'sl-object-contain': 'contain',
+	'sl-object-fill': 'fill',
+} as const

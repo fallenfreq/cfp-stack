@@ -83,13 +83,18 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    through hastscript's `h()` (7.3 KB gzipped) or a typed builder, as hast built by hand with
    HTML's names (`class`) type-checks but no rule finds its classes; its test runs a class rule
    on what it builds. How the client gets hast's types (its own `@types/hast`, or the validator
-   passing them on) is settled in the step.
+   passing them on) is settled in the step. A video's element keeps its mark
+   (`data-youtube-video`) and a picture its width and height, which the rules read. Each block's
+   own style goes through the core's `readStyle` to the CSS rules; `no-overflow-hidden` and
+   `no-content-sized-box` run only on a block that can hold blocks (which ones is settled in the
+   step).
 6. **The block view's display.** Designed with the owner first, from what the editor has (the
    node path, the class row, the Save button, toasts): where a warning shows, when the rules run
    (as the page changes, or on save), and the class row flagging a rule as the classes are typed
    (the spec's "Validator and linter"). Joins the page reader and the core; `pnpm typecheck`
    then checks the client when `validator/` changes too (`scripts/typecheck.mjs`), as it does
-   for `shared/`.
+   for `shared/`. The core is 57 KB gzipped with CSSTree: whether the editor loads it with
+   itself or when first needed is settled here.
 7. **The cursor across the code view.** Found while planning; not part of the validator. Today
    the code view opens on line 1 wherever the cursor was, and leaving it after any edit puts the
    cursor at the very end of the page (measured). One marker character carries the cursor
@@ -192,4 +197,26 @@ a warning on a collapse class that does nothing (now `COLLAPSING_LAYOUTS`), doc 
 Cluster case, and, for step 6, messages that name classes (`sl-columns`), not blocks. Not
 followed by the collapse rule: a layout in a spot sized by its content, and a popover between.
 
-Next: step 4, the other rules for a page.
+**Step 4** (2026-11-08). Four rules on elements, `require-picture-size`, `valid-heading-class`,
+`prefer-center-around-video` and `max-hide-show-run`, and five on CSS, `no-container-units`,
+`require-channel-fallback`, `no-width-container`, `no-overflow-hidden` and
+`no-content-sized-box`, each tested. CSS is CSSTree's tree (`@eslint/css-tree`, 57 KB gzipped),
+read from a block's style by the core's `readStyle`; one rule type for both, a result naming
+`nodes`, one `check()`. The lists the rules read are `shared/`'s, and the stylesheet's code reads
+them too: `SHAPES`, `FILLS`, `HIDE_PREFIX`, `SHOW_PREFIX`, `CHANNELS`, and `HEADING_CLASS`
+(`shared/headings.ts`, read by the heading block). Settled with the owner: the CSS reader, the
+names, the channel rule for a larger value only, `contain` as a width container, what sizes by
+content, 100 blocks. Measured in Chrome: each case `no-content-sized-box` names or passes (a box
+holding a Stack that holds a collapsing layout); a hide/show run crossing a width, 2 ms at 100
+blocks, 7 at 200, 23 at 400. Checked: the stylesheet byte for byte; Cloudflare's functions
+bundle; the heading block in the editor; `pnpm test`, `pnpm typecheck --all`, ESLint, Prettier;
+each fault a test guards against shown failing; the seeded pages (6 pictures with no size, 4 of
+them the test page's own). An agent's review found 8, all confirmed: `no-content-sized-box`
+flagged boxes with a width of their own and read each property alone (now the box's style is
+read in order, shorthands included); the channels were written twice (now `CHANNELS`); a
+channel as a fallback's whole value was flagged; three messages (container units, the video's
+own style, a layout that holds a collapsing block). Settled with the owner: a picture sized by
+its own style is still warned, so there's one way to give a size. Logged in the to-do: a Card with no layout doesn't let a picture cover it, and
+the IDE linter would flag `sf-heading-2` on the prompt's label (`PromptModal.vue`).
+
+Next: step 5, the page reader.

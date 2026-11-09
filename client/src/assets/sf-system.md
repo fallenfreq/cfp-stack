@@ -222,9 +222,9 @@ layer and is the escape hatch for freeform shadow colours.
 
 Cross the `sf-` / `sl-` subsystem boundary. `sf-gap-md` sets `--sf-gap`; `sl-stack` on the
 same element reads it. Both channels are registered as not inherited (`@property … inherits:
-false`, in the fixed reset), so a spacing class applies to the element that wears it and
-nothing inside takes it on: a stack inside a stack keeps its own gap, and a button inside a
-spaced row keeps its own.
+false`, in the fixed reset, from the list in `shared/layouts.ts`, `CHANNELS`), so a spacing
+class applies to the element that wears it and nothing inside takes it on: a stack inside a
+stack keeps its own gap, and a button inside a spaced row keeps its own.
 
 Every reader gives its own default — `gap: var(--sf-gap, var(--sf-spacing-md))` on the
 layouts, `var(--sf-padding, var(--sf-spacing-2xs))` on the compact units — or none where an
@@ -897,7 +897,9 @@ content's width, as the other items do.
 the page grows when it does, unless it has a size of its own: its width and height in the
 HTML (the file's), a shape with a fill (`sl-aspect-*` with `sl-object-cover`, `-contain` or
 `-fill`), or a frame with a shape that it covers. A shape alone isn't enough: the width still
-comes from the file.
+comes from the file. A size in the picture's own style doesn't count, so there's one way to
+give a picture its size (owner, 2026-11-09). The shapes and those fills are listed once in
+`shared/layouts.ts` (`SHAPES`, `FILLS`), which the fixed CSS and the validator read.
 
 **Rows that share columns** — `sl-row` on a child of a grid layout (`sl-split`,
 `sl-columns`, `sl-grid`) makes it span every column and put its own children on the
@@ -1180,7 +1182,7 @@ rules (Editor integration).
 
 The CSS is generated from the theme's breakpoints (the collapse layer in `generateCss.ts`);
 the lists it reads are in `shared/layouts.ts` (`COLLAPSE_HOSTS`, `COLLAPSE_PREFIX`,
-`COLLAPSING_LAYOUTS`, `COLUMN_LAYOUTS`) and `slLayout.ts` (`SIZED_BY_CONTENT_SELECTOR`,
+`COLLAPSING_LAYOUTS`, `COLUMN_LAYOUTS`, `HIDE_PREFIX`, `SHOW_PREFIX`) and `slLayout.ts` (`SIZED_BY_CONTENT_SELECTOR`,
 `widthBands`).
 
 ---
@@ -1359,20 +1361,22 @@ IDE linter's own.
 - **Elements** are hast, HTML's syntax tree as unified's tools (rehype, MDX) have it: its tags,
   classes, ids, attributes and children. A component block's element also wears the `sl-`
   classes its component's root always wears (the Centre's `sl-center sl-stack`).
-- **CSS** is what the CSS rules read, with each part's place: a block's own style, a theme's
-  rules and a component's styles reach them alike.
+- **CSS** is CSSTree's tree, which ESLint's CSS language reads: declarations, values and
+  selectors, each with its place in the text. A block's own style, a theme's rules and a
+  component's styles reach them alike; the core reads a block's style itself (`readStyle`), so
+  every place reads it one way.
 - **A result** is one rule broken: the rule's name, its type (ESLint's: a problem, or a
   suggestion that only points out the usual way), its message and what's involved. The name is
   the rule's entry below, which names the section that gives the reason, as ESLint plugins make
-  a rule's docs link from its name. For a rule that reads elements, what's involved is the
-  elements themselves, the same objects the rule was given, so each place that checks finds them
-  its own way: a block's position in the editor, a line in a file.
+  a rule's docs link from its name. What's involved is the nodes themselves, the same objects
+  the rule was given (elements, or CSS's declarations and values), so each place that checks
+  finds them its own way: a block's position in the editor, a line in a file.
 
 It takes ESLint's shape, not ESLint: ESLint reads only text, so the editor's blocks would go
 through code and back, and the editor would carry ESLint. No HTML linter fits as the core
-either: html-validate also reads only text. The elements are a standard tree, not one of our
-own, as ESLint's own languages each read their language's (Markdown's, CSS's): its readers,
-walkers and types come with it.
+either: html-validate also reads only text. The elements and the CSS are standard trees, not
+ones of our own, as ESLint's own languages each read their language's (Markdown's, CSS's): their
+readers, walkers and types come with them.
 
 **Where a rule shows:** wherever its problem can happen.
 
@@ -1409,10 +1413,10 @@ walkers and types come with it.
   takes its weight from a utility, not a heading's bundle, and a heading has one prominence
   (Vocabulary governance).
 - **`prefer-center-around-video`** (a suggestion): `sl-center` on a video. A Centre holding the
-  video (its style `max-width: none`) lays out the same; both work, it only points out the usual
+  video (the video's own style `max-width: none`) lays out the same; both work, it only points out the usual
   way.
-- **`max-hide-show-run`** (a suggestion): a long run of side-by-side blocks that each hide or
-  show by width, say 100 in a row: put the blocks that hide together in one box and hide the box
+- **`max-hide-show-run`** (a suggestion): 100 or more side-by-side blocks in a row that each
+  hide or show by width: put the blocks that hide together in one box and hide the box
   (Container-responsive collapse).
 - **`no-hide-show-without-layout`**: `sl-hide-below-*` or `sl-show-below-*` on an app screen
   with no layout around it: it never hides, and the rules for shown blocks can't tell, so a
@@ -1433,20 +1437,26 @@ own style.
   blocks).
 - **`no-container-units`** (any CSS): container units (`cqw`, `cqi`) in a value: what they
   measure depends on where the system puts width containers (Container-responsive collapse).
-- **`require-channel-fallback`** (any CSS): `var(--sf-gap)` or `var(--sf-padding)` read with no
-  fallback, unless unset means none (Layout channels).
+- **`require-channel-fallback`** (any CSS): `var(--sf-gap)` or `var(--sf-padding)` with no
+  fallback in a larger value (`calc(var(--sf-padding) + 1rem)`, `var(--sf-gap) 1rem`): unset,
+  the whole value is dropped, not just its part. As the whole value, unset means none, which is
+  what a reader with no default means (Layout channels).
 - **`no-width-container`** (any CSS): a width container (`container-type`, or the `container`
-  shorthand). It takes no width
-  from its content, so it's 0 wide wherever its width comes from its content, such as in a
-  cluster (Component blocks, "Writing a component block").
+  shorthand), or the size containment one has (`contain: size`, `inline-size` or `strict`). It
+  takes no width from its content, so it's 0 wide wherever its width comes from its content,
+  such as in a cluster (Component blocks, "Writing a component block").
 - **`no-overflow-hidden`** (any CSS, on a box that can hold blocks: a theme's rules, a
   component's box around its slot, a block's own style): `overflow: hidden` makes the box a
   scroll area, so a pinned block inside stops sticking; `overflow: clip` clips without that
   (Component blocks, "Writing a component block").
 - **`no-content-sized-box`** (any CSS, on a box that can hold blocks: a theme's rules, a
   component's box around its slot, a block's own style): a box that sizes what's inside by its
-  content (a flex row, `fit-content`). The system doesn't know the spot, so a layout in it that
-  holds a collapsing block is 0 wide (Container-responsive collapse).
+  content: a flex row; a box that takes its content's width (an inline or table display, a
+  float, or `position: absolute` or `fixed`, with no width of its own; a width of
+  `fit-content`, `max-content` or `min-content`); items aligned instead of stretched; or grid
+  columns sized by their content.
+  The system doesn't know the spot, so a layout in it that holds a collapsing block is 0 wide
+  (Container-responsive collapse).
 - **`require-container-name`** (a component's styles): an `@container` query without a name
   (Component blocks, "Writing a component block").
 - **`require-cascade-layer`** (a component's styles): CSS outside a cascade layer (Component

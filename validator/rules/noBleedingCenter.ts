@@ -10,7 +10,7 @@ export const noBleedingCenter: ElementRule = {
 			if (classes.includes('sl-center') && classes.includes('sl-bleed'))
 				report({
 					message: "A centred column can't also bleed: set a block around it to bleed",
-					elements: [element],
+					nodes: [element],
 				})
 		})
 	},

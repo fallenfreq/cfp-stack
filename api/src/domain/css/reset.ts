@@ -2,18 +2,19 @@
 // element defaults cleared, so the theme's rules decide how things look. Fixed CSS, the
 // same under every theme, never stored in the DB. Lowest cascade priority (reset is the
 // first layer declared).
+import { CHANNELS } from '@somefreq-app/shared/layouts'
+
+const CHANNEL_PROPERTIES = CHANNELS.map(
+	(name) => `@property ${name} {
+	syntax: '*';
+	inherits: false;
+}`,
+).join('\n')
 
 export const RESET = `/* Spacing classes (sf-gap-*, sf-padding-*, sf-size-*, chrome's own padding) apply to the
    element that wears them: nothing inside takes them on. Every reader gives its own default,
    or none where an unset value already means "no spacing". */
-@property --sf-gap {
-	syntax: '*';
-	inherits: false;
-}
-@property --sf-padding {
-	syntax: '*';
-	inherits: false;
-}
+${CHANNEL_PROPERTIES}
 
 @layer reset {
 	/* Width includes padding and border. A border shows by giving it a width. */

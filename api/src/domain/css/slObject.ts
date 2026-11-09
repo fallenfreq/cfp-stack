@@ -1,3 +1,4 @@
+import { FILLS } from '@somefreq-app/shared/layouts'
 import { forBlocks } from './slLayout.js'
 
 // sl-object-* is vocabulary-only in the DB — the rules need child element
@@ -15,13 +16,16 @@ import { forBlocks } from './slLayout.js'
 // outweigh the hide and show classes (sl-hide-below-*, sl-show-below-*), so a picture would show
 // at widths it's hidden at.
 
+// The fills that make a picture as wide as its box (FILLS); sl-object-none keeps the file's width.
+const FILL_RULES = Object.entries(FILLS)
+	.map(
+		([name, fit]) => `img.${name} { object-fit: ${fit}; width: 100%; }
+	${forBlocks(`.${name} > img:only-child`)} { object-fit: ${fit}; width: 100%; height: 100%; }`,
+	)
+	.join('\n\t')
+
 export const SL_OBJECT = `@layer sl-layout {
-	img.sl-object-cover { object-fit: cover; width: 100%; }
-	${forBlocks('.sl-object-cover > img:only-child')} { object-fit: cover; width: 100%; height: 100%; }
-	img.sl-object-contain { object-fit: contain; width: 100%; }
-	${forBlocks('.sl-object-contain > img:only-child')} { object-fit: contain; width: 100%; height: 100%; }
-	img.sl-object-fill { object-fit: fill; width: 100%; }
-	${forBlocks('.sl-object-fill > img:only-child')} { object-fit: fill; width: 100%; height: 100%; }
+	${FILL_RULES}
 	img.sl-object-none { object-fit: none; }
 	${forBlocks('.sl-object-none > img:only-child')} { object-fit: none; }
 }

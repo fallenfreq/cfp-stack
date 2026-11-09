@@ -18,6 +18,9 @@ export const noDuplicateId: ElementRule = {
 		})
 		for (const [id, elements] of elementsById)
 			if (elements.length > 1)
-				report({ message: `${elements.length} blocks share the id "${id}"`, elements })
+				report({
+					message: `${elements.length} blocks share the id "${id}"`,
+					nodes: elements,
+				})
 	},
 }

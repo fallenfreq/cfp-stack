@@ -1,4 +1,11 @@
-import { COLLAPSE_HOSTS, COLLAPSE_PREFIX, GAP_LAYOUTS } from '@somefreq-app/shared/layouts'
+import {
+	COLLAPSE_HOSTS,
+	COLLAPSE_PREFIX,
+	GAP_LAYOUTS,
+	HIDE_PREFIX,
+	SHAPES,
+	SHOW_PREFIX,
+} from '@somefreq-app/shared/layouts'
 import type { CollapseThreshold } from '../collapseThresholds.js'
 import { throughNodeViews } from './nodeViewSelectors.js'
 
@@ -41,9 +48,9 @@ import { throughNodeViews } from './nodeViewSelectors.js'
 //   sl-cover — fills at least 100dvh with content centred both axes, spaced by its gap like
 //     the other layouts that hold blocks. --sl-cover-min sets another floor: compact (20rem),
 //     viewport (100vh), or fill-parent (100% — needs a parent chain with defined heights).
-//   sl-aspect-* — presets; bare sl-aspect has no rule (the author sets --sl-aspect inline). A
-//     shape is a height of the box's own, so a row that stretches leaves it its shape instead
-//     of stretching it (and widening it to keep the shape). A zero-weight default in the
+//   sl-aspect-* — the shapes (SHAPES); bare sl-aspect has no rule (the author sets --sl-aspect
+//     inline). A shape is a height of the box's own, so a row that stretches leaves it its shape
+//     instead of stretching it (and widening it to keep the shape). A zero-weight default in the
 //     lowest layer: a set height wins, and a picture keeps the reset's sizing.
 //   sl-center — a reading column, as wide as its measure allows and centred. Its automatic
 //     side margins alone would shrink it to its text in a row or stack, so it fills sideways
@@ -92,7 +99,7 @@ export const INSET_DOCUMENT = `${INSET_DOCUMENT_MOUNT} > .tiptap.ProseMirror`
 // Anything that collapses by its container's width, and anything that swaps (hides or shows)
 // by it.
 export const COLLAPSE_CLASS_SELECTOR = `[class*="${COLLAPSE_PREFIX}"]`
-export const SWAP_CLASS_SELECTOR = '[class*="sl-hide-below-"], [class*="sl-show-below-"]'
+export const SWAP_CLASS_SELECTOR = `[class*="${HIDE_PREFIX}"], [class*="${SHOW_PREFIX}"]`
 
 // The width container every document is (the collapse layer): hiding in a document measures it,
 // past any nearer container.
@@ -129,10 +136,10 @@ export function widthBands(
 		const hidden = [
 			...sorted
 				.filter((w) => upper && w.size >= upper.size)
-				.map((w) => `.sl-hide-below-${w.name}`),
+				.map((w) => `.${HIDE_PREFIX}${w.name}`),
 			...sorted
 				.filter((w) => lower && w.size <= lower.size)
-				.map((w) => `.sl-show-below-${w.name}`),
+				.map((w) => `.${SHOW_PREFIX}${w.name}`),
 		]
 		bands.push({ condition: `(${range.filter((part) => part).join(' ')})`, hidden })
 	}
@@ -177,11 +184,15 @@ export const SIZED_BY_CONTENT_SELECTOR = [
 
 export const COLLAPSE_HOST_SELECTOR = COLLAPSE_HOSTS.map((name) => `.${name}`).join(', ')
 
+const SHAPE_SELECTOR = Object.keys(SHAPES)
+	.map((name) => `.${name}`)
+	.join(', ')
+const SHAPE_RULES = Object.entries(SHAPES)
+	.map(([name, ratio]) => `.${name} { aspect-ratio: ${ratio}; }`)
+	.join('\n\t')
+
 export const SL_LAYOUT = `@layer sl-layout {
-	.sl-aspect-1-1 { aspect-ratio: 1; }
-	.sl-aspect-16-9 { aspect-ratio: 16/9; }
-	.sl-aspect-4-3 { aspect-ratio: 4/3; }
-	.sl-aspect-9-16 { aspect-ratio: 9/16; }
+	${SHAPE_RULES}
 	.sl-center { max-width: var(--sl-measure, 65ch); margin-inline: auto; padding-inline: var(--sf-padding); }
 	.sl-cluster { display: flex; flex-wrap: wrap; gap: var(--sf-gap, var(--sf-spacing-md)); align-items: center; }
 	.sl-columns { display: grid; grid-template-columns: var(--sl-cols, repeat(auto-fit, minmax(0, 1fr))); gap: var(--sf-gap, var(--sf-spacing-md)); }
@@ -229,7 +240,7 @@ export const SL_LAYOUT = `@layer sl-layout {
 }
 @layer reset {
 	.sl-stack:not(.sl-center) { padding: var(--sf-padding); }
-	:where(.sl-aspect-1-1, .sl-aspect-16-9, .sl-aspect-4-3, .sl-aspect-9-16) { height: min-content; }
+	:where(${SHAPE_SELECTOR}) { height: min-content; }
 	.sl-center:not(img, svg, video, canvas, audio, iframe, embed, object) { width: -webkit-fill-available; width: stretch; }
 	${forBlocks(':is(.sl-align-x-start, .sl-align-x-center, .sl-align-x-end) > .sl-center')} { width: auto; }
 }

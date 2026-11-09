@@ -14,7 +14,9 @@ block.
 - **The validator and linter.** Its rules, and where each shows, are in `sf-system.md`,
   "Validator and linter"; new candidates go there. The editor's part is `docs/plans/validator.md`.
   Left for later: the IDE linter, and a theme's check when it's saved, once there's a theme
-  editor.
+  editor. The IDE linter's `valid-heading-class` would flag the prompt's label, which wears
+  `sf-heading-2` on purpose (`PromptModal.vue`): the rule becomes pages only, or the label
+  changes.
 - **Settings for every selected block** (proposed, not designed). With blocks selected, the
   toolbar's settings would change all of them, as in Notion, Google Docs or Figma; today it shows
   none. To decide: which settings show (only those every selected block has), how differing
@@ -64,6 +66,11 @@ block.
   still count a block hidden at this width. The drag preview of several blocks (`multiSelect.ts`)
   loses the space after a shown hide/show block (it's brief).
 - **Pictures and shapes.**
+    - A picture set to cover a shaped Card with no layout of its own doesn't cover it: the
+      Card's content box is a plain box, so the picture's `height: 100%` has nothing to fill, and
+      the Card grows to the picture once it loads (measured 2026-11-08, Chrome: 720px, then
+      1241px with a square picture; with `sl-stack` it stays 720px). The spec's "a frame with a
+      shape that it covers" doesn't hold there, and `require-picture-size` passes it.
     - In Chrome, a picture with a shape in a row that stretches stretches to the row's height;
       WebKit keeps the shape.
     - In WebKit, an image set to cover fills a shaped box's whole height, padding included, so a

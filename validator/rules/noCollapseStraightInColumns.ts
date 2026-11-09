@@ -35,7 +35,7 @@ export const noCollapseStraightInColumns: ElementRule = {
 			if (layout)
 				report({
 					message: `Stacks by the width of the whole ${layout} around it, not its column's`,
-					elements: [element],
+					nodes: [element],
 				})
 		})
 	},

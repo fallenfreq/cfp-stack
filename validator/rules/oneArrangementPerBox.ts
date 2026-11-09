@@ -17,7 +17,7 @@ export const oneArrangementPerBox: ElementRule = {
 			if (worn.size > 1)
 				report({
 					message: `One block has ${worn.size} arrangements: ${list.format(worn)}`,
-					elements: [element],
+					nodes: [element],
 				})
 		})
 	},

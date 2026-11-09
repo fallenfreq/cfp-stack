@@ -2,7 +2,7 @@
 import { fromHtml } from 'hast-util-from-html'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { checkElements } from '../core.ts'
+import { check } from '../core.ts'
 import { noDuplicateId } from '../rules/noDuplicateId.ts'
 
 const page = () => fromHtml('<p id="intro">One</p><p id="intro">Two</p>', { fragment: true })
@@ -12,28 +12,28 @@ const reporting = (name, ...messages) => ({
 	name,
 	type: 'suggestion',
 	check: (tree, report) => {
-		for (const message of messages) report({ message, elements: [tree.children[0]] })
+		for (const message of messages) report({ message, nodes: [tree.children[0]] })
 	},
 })
 
-test('a result is the rule, its type and the elements it was given', () => {
+test('a result is the rule, its type and the nodes it was given', () => {
 	const tree = page()
 	const [first, second] = tree.children
-	const results = checkElements(tree, [noDuplicateId])
+	const results = check(tree, [noDuplicateId])
 	assert.deepEqual(results, [
 		{
 			rule: 'no-duplicate-id',
 			type: 'problem',
 			message: '2 blocks share the id "intro"',
-			elements: [first, second],
+			nodes: [first, second],
 		},
 	])
-	assert.equal(results[0].elements[0], first)
-	assert.equal(results[0].elements[1], second)
+	assert.equal(results[0].nodes[0], first)
+	assert.equal(results[0].nodes[1], second)
 })
 
 test('results come rule by rule, each in the order it reports them', () => {
-	const results = checkElements(page(), [reporting('b', 'b1', 'b2'), reporting('a', 'a1')])
+	const results = check(page(), [reporting('b', 'b1', 'b2'), reporting('a', 'a1')])
 	assert.deepEqual(
 		results.map(({ rule, message }) => `${rule}: ${message}`),
 		['b: b1', 'b: b2', 'a: a1'],
@@ -41,5 +41,5 @@ test('results come rule by rule, each in the order it reports them', () => {
 })
 
 test('no rules are no result', () => {
-	assert.deepEqual(checkElements(page(), []), [])
+	assert.deepEqual(check(page(), []), [])
 })

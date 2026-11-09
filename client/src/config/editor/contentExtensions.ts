@@ -7,6 +7,7 @@ import FontStyle from '@/editor/extensions/fontStyleMark'
 import { OwnLook } from '@/editor/extensions/ownLook'
 import Span from '@/editor/extensions/spanExtension'
 import TextColor from '@/editor/extensions/textColorMark'
+import { HEADING_CLASS } from '@somefreq-app/shared/headings'
 import { Blockquote } from '@tiptap/extension-blockquote'
 import Heading, { type Level } from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
@@ -24,8 +25,6 @@ interface ContentExtensionOptions {
 	tableNodeSelection?: boolean
 }
 
-const SF_HEADING_CLASS_RE = /^sf-heading-\d+$/
-
 export const SfHeading = Heading.extend({
 	addOptions() {
 		return { HTMLAttributes: {}, levels: [1, 2, 3] as Level[] }
@@ -42,7 +41,7 @@ export const SfHeading = Heading.extend({
 	// from its level (sf-system.md, "Headings").
 	ownLook(node) {
 		const own = String(node.attrs['class'] ?? '').split(/\s+/)
-		if (own.some((name) => SF_HEADING_CLASS_RE.test(name))) return null
+		if (own.some((name) => HEADING_CLASS.test(name))) return null
 		return { class: `sf-heading-${node.attrs['level']}` }
 	},
 }).configure({ levels: [1, 2, 3] })
