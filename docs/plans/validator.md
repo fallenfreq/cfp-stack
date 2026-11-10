@@ -72,30 +72,57 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
    will run them too, so they read CSS, not the editor's style; how a block's style is read is
    settled in the step. Their results name CSS parts, so `ValidatorResult`, which names elements
    today, takes what's involved as a type.
-5. **The page reader.** The page's blocks as hast elements, walking the page (ProseMirror's
-   `descendants`), each tied to its block's position, as a result names the elements themselves.
-   The page is the content tree the rules are written for, so there are no content boxes to step
-   through: those are only on screen. A component block's
-   element carries its component's own `sl-` classes (the Centre's `sl-center sl-stack`: its
-   arrangement, and the centred column the bleed rule reads), which the component states once.
-   Today only each component's root says them (`sl-stack` in `LayoutStack.vue`), and the list of
-   components (`editorComponents.ts`) doesn't; how is settled in the step. Elements are built
-   through hastscript's `h()` (7.3 KB gzipped) or a typed builder, as hast built by hand with
-   HTML's names (`class`) type-checks but no rule finds its classes; its test runs a class rule
-   on what it builds. How the client gets hast's types (its own `@types/hast`, or the validator
-   passing them on) is settled in the step. A video's element keeps its mark
-   (`data-youtube-video`), a picture its width and height, and a component block its name as the
-   page writes it (`layout-card`, named with a hyphen), which the rules read. Each block's
-   own style goes through the core's `readStyle` to the CSS rules; `no-overflow-hidden` and
-   `no-content-sized-box` run only on a block that can hold blocks (which ones is settled in the
-   step).
+5. **The page reader.** The page's blocks as hast elements, each tied to its block's position,
+   as a result names the elements themselves. The page is the content tree the rules are written
+   for, so there are no content boxes to step through: those are only on screen. Each block is
+   read from the HTML the page writes for it, every setting included (the code view leaves out
+   those at their defaults), through hastscript's `h()` (7.3 KB gzipped): a new block reads with
+   no code of its own, and classes come out as the rules read them (hast built by hand with
+   HTML's names, `class`, type-checks but no rule finds its classes). So a video keeps its mark
+   (`data-youtube-video`), a picture its width and height, and a component block its name
+   (`layout-card`), which the rules read. Text and its styles (bold, a link, a colour) aren't
+   read: no rule reads them.
+    - **The classes a block always wears.** An element also wears them, though the page doesn't
+      save them, and never what the editor draws only while you work (the selection;
+      `sf-on-selected`, a system class, on blocks chosen together). A built-in block's are its
+      own look (`ownLook`: a to-do item is `sl-split sf-gap-md`). A component's are read from
+      its drawn box (Decisions, 2026-11-10): the box puts them together with what it's given,
+      the page builder's classes and the editor's, so it alone can tell them apart, and works
+      them out each time it's asked (`componentBoxes.ts`). Nothing is kept, so nothing goes
+      stale. They're asked of the page the editor shows, once drawn. Measured on the test page
+      (2026-11-10): exact for all 90 component blocks, a setting's class included (the Stack's
+      `sl-align-x-center`), with blocks selected and chosen together, and up to date in the same
+      moment as a change, a new block included.
+    - **Separate pieces.** The reader is given the classes each block always wears, so it knows
+      nothing of drawing, and is tested in Node on the editor's own blocks: the client's first
+      quick tests, run by `pnpm test` as the others are, with a small loader for the editor's
+      `@/` paths and its components' `.vue` files. There, each component's drawn classes are
+      given in place of its box, found by its block's position. A component's own classes were
+      measured in the browser; a layout check follows in step 6. Its test runs a class rule on
+      what it builds.
+    - **Styles.** Each block's own style goes through the core's `readStyle` to the CSS rules;
+      `no-overflow-hidden` and `no-content-sized-box` run only on a block that holds blocks,
+      not text (a plain box, a quote, a component block, a list and its items, a table, its
+      rows and its cells).
+    - **Packages.** The client gets hast's types of its own, as each unified package has, and
+      the validator, for `readStyle`; `pnpm typecheck` then checks the client when `validator/`
+      changes (`scripts/typecheck.mjs`), as it does for `shared/`.
+    - **A to-do item is a Split** by its own look, so `no-collapse-straight-in-columns` warns of
+      a collapsing layout straight in one, which stacks late by the tick box (29px, measured).
+      Kept with the owner, 2026-11-10: it's true, a Stack around the layout fixes it, and leaving
+      it out would take code for to-do items alone. An inset is left out by not being one of
+      the rule's column layouts.
 6. **The block view's display.** Designed with the owner first, from what the editor has (the
    node path, the class row, the Save button, toasts): where a warning shows, when the rules run
    (as the page changes, or on save), and the class row flagging a rule as the classes are typed
-   (the spec's "Validator and linter"). Joins the page reader and the core; `pnpm typecheck`
-   then checks the client when `validator/` changes too (`scripts/typecheck.mjs`), as it does
-   for `shared/`. The core is 57 KB gzipped with CSSTree: whether the editor loads it with
-   itself or when first needed is settled here.
+   (the spec's "Validator and linter"). Joins the page reader and the core, the reader asking
+   `blockWears` with `componentClassesIn(view)` about the page the view shows. A component's
+   drawn box is up to date in the same moment as a change (measured, step 5), so the rules can
+   run straight after one; reading the 525-block test page takes about 2 ms once warm. A layout
+   check covers a component's classes reaching the rules (a Stack given `sl-inset`, selected
+   too). A message names a block, not its classes (step 3's finding): a to-do item is warned of
+   as a Split it doesn't show. The core is 57 KB gzipped with CSSTree: whether the editor loads
+   it with itself or when first needed is settled here.
 7. **The cursor across the code view.** Found while planning; not part of the validator. Today
    the code view opens on line 1 wherever the cursor was, and leaving it after any edit puts the
    cursor at the very end of the page (measured). One marker character carries the cursor
@@ -119,8 +146,9 @@ Owner, 2026-11-01:
   component is added; the check when a theme is saved, once there's a theme editor; and
   underlines in the code view ("Ideas, not decided"), since the warnings show on the blocks once
   you leave it.
-- **Not built:** checking the page as drawn (the IDE linter covers code in files), and a check on
-  the server when a page is saved (warnings are for the person editing).
+- **Not built:** checking the page as drawn (the IDE linter covers code in files; one exception,
+  2026-11-10, below), and a check on the server when a page is saved (warnings are for the
+  person editing).
 - **ESLint's shape, not ESLint.** ESLint reads only text, so the blocks would go through code and
   back, and the editor would carry ESLint. The IDE linter will be a thin ESLint plugin: each of
   its rules calls the core, ESLint's Vue and HTML parsers read the code, and ESLint shows the
@@ -142,6 +170,20 @@ Owner, 2026-11-02:
   blocks, the editor running it on a block's own style. Measured in the editor: a Stack holding
   collapsing Columns is 0 wide in a box styled `display: flex`, and 67px in a cluster, a spot the
   system knows.
+
+Owner, 2026-11-10:
+
+- **A component's own classes are read from its drawn box,** the one thing the editor reads from
+  the page as drawn. The page saves only what the page builder chose (`<layout-stack
+class="sl-inset">`), and the built component holds its own classes (`sl-stack`) only as
+  drawing code. Each place reads them where it can see them: the editor from the drawn box, the
+  IDE linter from the component's file. A list of each component's classes would repeat the
+  component; reading its file when the app is built wouldn't reach a component from the store,
+  and reads a setting's class only as "might be set".
+- **A component is checked inside once, when it's made or added** (the IDE linter), so a page
+  needs only its outer box. A collapsing layout in a component with no layout of the
+  component's own around it would measure the page around the block, so it gets a rule of its
+  own for the IDE linter, `no-collapse-measuring-outside`.
 
 Checked while planning: no HTML linter fits as the core. html-validate, which runs in a browser,
 also reads only text (`validateString`, `validateSource`).
@@ -223,4 +265,35 @@ editor: of a plain box, a Card, a Card with a layout, the layout blocks and a qu
 Card with none lost its shape), and a Card that needs none is an idea in the to-do. Logged in
 the to-do: the IDE linter would flag `sf-heading-2` on the prompt's label (`PromptModal.vue`).
 
-Next: step 5, the page reader.
+**Step 5** (2026-11-10). The page reader, `client/src/editor/readPage.ts`: each block read from
+the HTML the page writes for it through hastscript's `h()`, each element tied to its block, and
+each block's own style read as CSS, marked where the box rules run; text and its styles left
+out. Each element also wears the classes its block always wears (`blockWears`, `ownLook.ts`): a
+built-in block's own look, or a component's, which its drawn box works out when asked
+(`componentBoxes.ts`), never the editor's while you work. Settled with the owner: a component's
+classes read from its drawn box, the one thing read from the page as drawn, over a list of them
+(which would repeat the component) or its file read when the app is built (which a component
+from the store wouldn't reach); hastscript; the client's own hast types; the client's first quick
+tests, in Node with a loader for the editor's code; the blocks that hold blocks; the IDE linter's
+`no-collapse-measuring-outside`; a to-do item still warned of as a Split. Measured in Chrome: the
+reader matched the editor's own HTML element for element on the test page (528) and the demo page
+(302), apart from styles the browser tidies (`color: red;`); each of 90 component blocks' classes
+exact, with blocks selected and chosen together, and in the same moment as a change; about 2 ms
+to read the test page once warm; Columns in a box with no layout in a Split side stack when the
+whole Split is 640px (their side 312px), and in a to-do item 29px late. Checked: `pnpm test`,
+`pnpm typecheck --all`, ESLint, Prettier; each fault a test guards against shown failing (13).
+`pnpm test:ui`: 692 passed and 20 failed with the machine busy; on reruns they came and went,
+and the same 34 checks gave the same 2 failures (a WebKit popover check, `anchorFallback.spec.ts`)
+with and without this step's two editor files, so they aren't this step's. An agent's review found
+9, all confirmed: a wrong position given to `blockWears` went uncaught, as the tests' helper
+wrote its join again (now one `blockWears`, given what's drawn at each position, and the tests'
+stand-in finds the block by it); the to-do item's decision unwritten; a component's classes
+measured, not checked (a layout check in step 6); the stand-in silent for a component it lacks
+(now it throws); registering a box again after a redraw served no lookup (now once); the boxes'
+answers in a file of their own under the strict lint; a `.` in a store component's name (logged);
+doc text (a save, not the code view; table rows; the rule's name; classes); a page builder's
+classes split only at spaces (now at any). Logged in the to-do: the IDE linter reads a
+component's file; the editor's list of components repeats their settings; `document` in the
+blocks that take a style does nothing; a `.` or `#` in an alias.
+
+Next: step 6, the block view's display.

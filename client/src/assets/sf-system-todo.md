@@ -16,7 +16,10 @@ block.
   Left for later: the IDE linter, and a theme's check when it's saved, once there's a theme
   editor. The IDE linter's `valid-heading-class` would flag the prompt's label, which wears
   `sf-heading-2` on purpose (`PromptModal.vue`): the rule becomes pages only, or the label
-  changes.
+  changes. Its reader takes a component's classes from the component's file, as the editor
+  takes them from its drawn root: those written on its root, and one set by a setting
+  (`:class`) only as one that may be set. Whether a component's layout classes must be written,
+  not set by a setting, is settled with it.
 - **Settings for every selected block** (proposed, not designed). With blocks selected, the
   toolbar's settings would change all of them, as in Notion, Google Docs or Figma; today it shows
   none. To decide: which settings show (only those every selected block has), how differing
@@ -39,7 +42,9 @@ block.
   the store: a `name` on each component (the store's planned field) beside the site's alias, and
   where each shows (two components can share an author's name; the alias is unique on the site).
   The picker's rows are told apart by their label (`ToolbarNodePicker.vue`), which two components
-  named alike would break: key them by type.
+  named alike would break: key them by type. A site's alias (the tag the page writes) can't hold
+  a `.` or `#`: the validator's page reader reads `my-card.v2` as `my-card` wearing `v2`, as
+  hastscript reads a tag as a selector.
 
 ## Layout
 
@@ -281,6 +286,12 @@ block.
   `sl-align-x-end`.
 - `LayoutColumns.vue` and `LayoutSplit.vue` write their `align` (up and down) as an inline style,
   not a class.
+- `allowAttributesExtension.ts` lists `document` among the blocks that take a style, class and
+  id, but the page's block is `doc`, so the entry does nothing.
+- The editor's list of components (`editorComponents.ts`) writes each component's settings and
+  their defaults again (a Stack's `align`, `'stretch'`, is in `LayoutStack.vue` too). A built
+  component keeps its settings and their defaults as data (compiled, 2026-11-10), so the list
+  could take them from the component; the choices a setting offers are only in its type.
 
 ## Ideas, not decided
 

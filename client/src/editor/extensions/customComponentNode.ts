@@ -1,4 +1,5 @@
 import { type ComponentData } from '@/config/editor/editorComponents'
+import { answerForBox } from '@/editor/componentBoxes'
 import {
 	Node,
 	NodeViewContent,
@@ -6,7 +7,7 @@ import {
 	mergeAttributes,
 	nodeViewProps,
 } from '@tiptap/vue-3'
-import { defineComponent, h, onMounted, onUnmounted, ref } from 'vue'
+import { defineComponent, h, normalizeClass, onMounted, onUnmounted, ref } from 'vue'
 
 // Utility function to create a Tiptap node for Vue components
 export function createVueNode({
@@ -128,6 +129,26 @@ export function createVueNode({
 						// touch that moves selects or scrolls without a click, so a tap may wobble.
 						let pressedAt: { x: number; y: number; touch: boolean } | null = null
 
+						// What the box wears besides what its component draws: the page builder's classes,
+						// the editor's on the block (its decorations) and the selection outline, which
+						// ProseMirror and TipTap add by hand and a redraw removes.
+						const given = () => [
+							props.node.attrs['class'],
+							...props.decorations.map((d) => d.type.attrs.class),
+							{ 'ProseMirror-selectednode': props.selected },
+						]
+						// The classes its component drew on the box: what the box wears, less what it's given.
+						const drawnByComponent = () => {
+							const others = new Set(normalizeClass(given()).split(/\s+/))
+							const box = boxRef.value?.$el
+							return box ? [...box.classList].filter((name) => !others.has(name)) : []
+						}
+						// The box ProseMirror keeps for the block is the one drawn first (`nodeDOM`).
+						onMounted(() => {
+							const box = boxRef.value?.$el
+							if (box) answerForBox(box, drawnByComponent)
+						})
+
 						let observer: MutationObserver | undefined
 						onMounted(() => {
 							markOwnParts()
@@ -152,19 +173,14 @@ export function createVueNode({
 						})
 
 						// The component's own box is the block's box, as a plain block is one box. It wears
-						// TipTap's marker, and draws the editor's classes on the block (its decorations) and
-						// the selection outline, which ProseMirror and TipTap add by hand and a redraw removes.
+						// TipTap's marker, and what it's given beside its component's classes.
 						return () =>
 							h(
 								component,
 								{
 									...props.node.attrs,
 									'data-node-view-wrapper': '',
-									class: [
-										props.node.attrs['class'],
-										...props.decorations.map((d) => d.type.attrs.class),
-										{ 'ProseMirror-selectednode': props.selected },
-									],
+									class: given(),
 									// Focusable, so a press on the block's own parts puts focus on its locked box,
 									// where typing does nothing.
 									tabindex: '-1',

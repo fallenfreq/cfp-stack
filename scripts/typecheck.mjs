@@ -27,9 +27,10 @@ function touched() {
 		if (f.startsWith('api/')) out.add('api')
 		if (f.startsWith('client/')) out.add('client')
 		if (f.startsWith('validator/')) out.add('validator')
-		// The client's types come from api source (AppRouter, the schemas), so an api change
-		// can break the client; shared/ is used by the api, the client and the validator.
-		if (f.startsWith('api/src/')) out.add('client')
+		// The client's types come from api source (AppRouter, the schemas) and the validator, so a
+		// change to either can break the client; shared/ is used by the api, the client and the
+		// validator.
+		if (f.startsWith('api/src/') || f.startsWith('validator/')) out.add('client')
 		if (f.startsWith('shared/')) {
 			out.add('shared')
 			out.add('api')

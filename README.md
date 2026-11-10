@@ -46,7 +46,7 @@ the API with the client as last built. After a change to `shared/package.json`, 
 | `pnpm dev:vite:client`        | Vite at 5173, with hot reload, passing API calls to 8788                |
 | `pnpm build`                  | Build client + API side by side, no type check. Cloudflare's build      |
 | `pnpm typecheck`              | Type-check staged packages (`--all`: every package). Pre-commit runs it |
-| `pnpm test`                   | Tests: `test`, `validator/test`, `api/test` (builds the API first)      |
+| `pnpm test`                   | Tests: `test`, `validator/`, `client/`, `api/` (builds the API first)   |
 | `pnpm test:ui`                | Layout checks in Chrome and WebKit (`client/e2e`, Playwright)           |
 | `pnpm preview:components`     | Build the component preview (`--serve`: at http://localhost:4173)       |
 | `pnpm migrate:api`            | Generate Drizzle migration files                                        |

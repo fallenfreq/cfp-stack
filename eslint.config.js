@@ -6,6 +6,15 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
+// No casts, `any` or `!`, so the types hold everywhere in the files given them. A rule's `check` is
+// written as a function, not a method, as TypeScript lets a method narrow what it's given.
+export const strictTypes = {
+	'@typescript-eslint/no-explicit-any': 'error',
+	'@typescript-eslint/no-non-null-assertion': 'error',
+	'@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
+	'@typescript-eslint/method-signature-style': ['error', 'property'],
+}
+
 export default defineConfig([
 	globalIgnores(
 		[
@@ -75,15 +84,5 @@ export default defineConfig([
 			],
 		},
 	},
-	{
-		// No casts, `any` or `!`, so the types hold everywhere in them. A rule's `check` is written as
-		// a function, not a method, as TypeScript lets a method narrow what it's given.
-		files: ['shared/**/*.ts', 'validator/**/*.{ts,mjs}'],
-		rules: {
-			'@typescript-eslint/no-explicit-any': 'error',
-			'@typescript-eslint/no-non-null-assertion': 'error',
-			'@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
-			'@typescript-eslint/method-signature-style': ['error', 'property'],
-		},
-	},
+	{ files: ['shared/**/*.ts', 'validator/**/*.{ts,mjs}'], rules: strictTypes },
 ])

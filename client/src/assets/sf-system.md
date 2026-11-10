@@ -1349,6 +1349,12 @@ component, so these keep the system's layout working around and inside it:
   their content-sized spots.
 - **Prefer `overflow: clip` to `overflow: hidden`.** `hidden` makes the box a scroll area,
   so a pinned block inside stops sticking.
+- **Put a layout of your own around a collapsing layout in your component** (a Stack will do),
+  or give your root one. A collapsing layout measures the nearest layout around it (Stack,
+  Cluster, Columns, Split, Centre, inset or grid); with none of yours, it measures the page
+  around your block, so where the block is placed changes when it stacks. Measured, 2026-11-10:
+  Columns in a box with no layout, in one side of a Split, stacked when the whole Split was
+  640px (their side 312px); with a Stack around them, when their side was.
 
 ---
 
@@ -1363,8 +1369,12 @@ and shows the results its own way. A component's code rules read Vue's script, s
 IDE linter's own.
 
 - **Elements** are hast, HTML's syntax tree as unified's tools (rehype, MDX) have it: its tags,
-  classes, ids, attributes and children. A component block's element also wears the `sl-`
-  classes its component's root always wears (the Centre's `sl-center sl-stack`).
+  classes, ids, attributes and children. A block's element also wears the classes the block
+  always wears, which the page doesn't save: a built-in block's own look (a to-do item's
+  `sl-split`), or the classes a component draws on its root (the Centre's `sl-center sl-stack`).
+  Never what the editor shows only while you work (the selection, `sf-on-selected`). The editor reads a
+  component's from its drawn root, the one thing it reads from the page as drawn; the IDE linter
+  from its file, where a class set by a setting is only one that may be set.
 - **CSS** is CSSTree's tree, which ESLint's CSS language reads: declarations, values and
   selectors, each with its place in the text. A block's own style, a theme's rules and a
   component's styles reach them alike; the core reads a block's style itself (`readStyle`), so
@@ -1473,6 +1483,9 @@ own style.
 - **`require-slot-in-root`**: `<slot />` that isn't a direct child of the root.
 - **`no-editor-events-in-emits`**: `click`, `pointerdown`, `mousedown`, `copy`, `cut` or
   `paste` in `emits`.
+- **`no-collapse-measuring-outside`**: a collapsing layout in a component with no layout of
+  the component's own around it, so it measures the page around the block. A component is
+  checked inside once, when it's made or added; a page reads only its root.
 
 ---
 

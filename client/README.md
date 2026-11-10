@@ -17,11 +17,14 @@ as themes are emitted in `@scope`: no compat code below it.
   (`src/config/queryClient.ts`); so does an error a component's code didn't catch, or a promise
   of ours that failed with nothing waiting on it (`src/main.ts`).
 - `src/assets/`: the base styles, and the theme system's spec, references and open work.
-- `e2e/`: the layout checks. `preview/`: the component preview.
+- `e2e/`: the layout checks. `test/`: the quick tests. `preview/`: the component preview.
 
 ## Checks
 
 - Types: `vue-tsc --build`.
+- Quick tests: `test/`, in Node's runner (`pnpm test`), on the editor's own blocks with nothing
+  drawn. `test/editorModules.mjs` lets Node load the editor's code: its `@/` paths, its files
+  named without their ending, and its components as empty ones.
 - Layout: `e2e/`, in the installed Chrome and in Playwright's WebKit (Safari's engine), against the
   dev server at 8788 (started if needed), with a stylesheet built from the seed in memory. In each
   browser, every check runs under the root theme and again under a deliberately different test

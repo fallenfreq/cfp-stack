@@ -4,7 +4,7 @@ import { defineConfig } from 'eslint/config'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 import vueParser from 'vue-eslint-parser'
-import base from '../eslint.config.js'
+import base, { strictTypes } from '../eslint.config.js'
 
 export default defineConfig([
 	...base,
@@ -82,5 +82,15 @@ export default defineConfig([
 				},
 			],
 		},
+	},
+	{
+		// What the validator reads from the page, held as strictly as the validator.
+		files: [
+			'src/editor/readPage.ts',
+			'src/editor/componentBoxes.ts',
+			'src/editor/extensions/ownLook.ts',
+			'test/**/*.mjs',
+		],
+		rules: strictTypes,
 	},
 ])

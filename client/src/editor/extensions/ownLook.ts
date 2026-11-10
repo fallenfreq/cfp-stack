@@ -5,6 +5,7 @@ import {
 	Extension,
 	getExtensionField,
 	Node,
+	type Extensions,
 	type NodeConfig,
 	type ParentConfig,
 } from '@tiptap/vue-3'
@@ -30,22 +31,50 @@ declare module '@tiptap/core' {
 	}
 }
 
+// Each kind of block's `ownLook`, by its name.
+const looksOf = (extensions: Extensions) => {
+	const looks = new Map<string, (node: PMNode) => DecorationAttrs | null>()
+	for (const extension of extensions) {
+		if (!(extension instanceof Node)) continue
+		const { name, options, storage } = extension
+		const look = getExtensionField<NodeConfig<unknown, unknown>['ownLook']>(
+			extension,
+			'ownLook',
+			{ name, options, storage },
+		)
+		if (look) looks.set(name, look)
+	}
+	return looks
+}
+
+/** The classes a block wears for its kind's own look (a to-do item's `sl-split sf-gap-md`). */
+export const ownLookClasses = (extensions: Extensions) => {
+	const looks = looksOf(extensions)
+	return (node: PMNode): readonly string[] | undefined =>
+		looks.get(node.type.name)?.(node)?.class?.split(/\s+/).filter(Boolean)
+}
+
+/**
+ * The classes a block always wears on the page, which the page doesn't save: its kind's own look,
+ * or those its component drew on its box at that position (in the editor,
+ * `componentClassesIn(view)`, for the page the view shows, once drawn). Never what the editor
+ * draws only while you work.
+ */
+export const blockWears = (
+	extensions: Extensions,
+	componentClassesAt: (pos: number) => readonly string[] | undefined,
+) => {
+	const own = ownLookClasses(extensions)
+	return (node: PMNode, pos: number): readonly string[] =>
+		own(node) ?? componentClassesAt(pos) ?? []
+}
+
 // Draws each block's `ownLook`, again whenever the page changes.
 export const OwnLook = Extension.create({
 	name: 'ownLook',
 
 	addProseMirrorPlugins() {
-		const looks = new Map<string, (node: PMNode) => DecorationAttrs | null>()
-		for (const extension of this.editor.extensionManager.extensions) {
-			if (!(extension instanceof Node)) continue
-			const { name, options, storage } = extension
-			const look = getExtensionField<NodeConfig<unknown, unknown>['ownLook']>(
-				extension,
-				'ownLook',
-				{ name, options, storage },
-			)
-			if (look) looks.set(name, look)
-		}
+		const looks = looksOf(this.editor.extensionManager.extensions)
 		const draw = (doc: PMNode) => {
 			const decorations: Decoration[] = []
 			doc.descendants((node, pos) => {
