@@ -15,6 +15,21 @@
 			@keyup.escape="cancelRename"
 		/>
 		<NodePath :editor="editor" />
+		<!-- The page's warnings (pageWarnings.ts): each press selects the next block with one. -->
+		<SfTooltip v-if="warningCount && !isCodeView" text="Next warning">
+			<SfButton
+				size="2xs"
+				:loudness="1"
+				variant="warning"
+				class="sf-is-contained sf-single-line"
+				:aria-label="`${warningCount} ${warningCount === 1 ? 'warning' : 'warnings'}: go to the next`"
+				@mousedown.prevent
+				@click="goToNextWarning"
+			>
+				<span class="material-symbols-rounded sf-icon">warning</span>
+				{{ warningCount }}
+			</SfButton>
+		</SfTooltip>
 		<SfIconButton
 			icon="three-dot"
 			tooltip="Editor actions"
@@ -57,13 +72,15 @@
 </template>
 
 <script setup lang="ts">
+import { nextWarned, pageWarnings } from '@/editor/extensions/pageWarnings'
+import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore'
 import type { Editor } from '@tiptap/vue-3'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import NodePath from './NodePath.vue'
 
-defineProps<{ editor: Editor }>()
+const props = defineProps<{ editor: Editor }>()
 
 // The bar's height while it's shown: the page frame leaves room past the end of the page for
 // the last line to sit under it, and a cursor put back comes back under it (RememberCursor). It's
@@ -82,12 +99,34 @@ onBeforeUnmount(() => {
 })
 
 const store = useEditorStore()
-const { saveStatus, currentName } = storeToRefs(store)
+const { saveStatus, currentName, isCodeView } = storeToRefs(store)
 const actionsOpen = ref(false)
 // Save marks how the last save went: success once saved, danger if it failed.
 const saveVariant = computed(() =>
 	saveStatus.value === 'saved' ? 'success' : saveStatus.value === 'error' ? 'danger' : undefined,
 )
+
+const warningCount = computed(() => pageWarnings(props.editor.state).length)
+const dragHandleStore = useDragHandleStore()
+// Selected as a whole, in the middle of the screen, or, taller than that leaves room for, with its
+// top under the bar and the block's toolbar. The toolbar works on the block at the active depth,
+// so that's the block's.
+const goToNextWarning = () => {
+	const { editor } = props
+	const pos = nextWarned(editor.state)
+	if (pos === undefined) return
+	dragHandleStore.setActiveDepth(editor.state.doc.resolve(pos).depth + 1)
+	editor.chain().setNodeSelection(pos).focus(null, { scrollIntoView: false }).run()
+	const box = editor.view.nodeDOM(pos)
+	if (!(box instanceof Element) || !bar.value) return
+	const { top, height } = box.getBoundingClientRect()
+	const toolbar =
+		parseFloat(getComputedStyle(bar.value).getPropertyValue('--toolbar-height')) || 0
+	// The bar's height, not where it is: on the page's first screen it's under the site's header.
+	const clear = bar.value.getBoundingClientRect().height + toolbar + 16
+	scrollBy({ top: top - Math.max(clear, (innerHeight - height) / 2) })
+}
+
 const renamingName = ref(false)
 const nameInputValue = ref(currentName.value ?? 'Untitled')
 const nameInput = ref<HTMLInputElement | null>(null)

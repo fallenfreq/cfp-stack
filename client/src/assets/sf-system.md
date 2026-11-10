@@ -1358,10 +1358,11 @@ component, so these keep the system's layout working around and inside it:
 
 ---
 
-## Validator and linter (not built)
+## Validator and linter
 
-Rules the system relies on that nothing checks yet. Each has a name and warns in plain terms;
-its reason is in the section it names, so it's written once.
+Rules the system relies on that nothing else checks: the editor runs those that can break on a
+page; the IDE linter and a theme's save, the rest (later). Each has a name and warns in plain
+terms; its reason is in the section it names, so it's written once.
 
 **The shape.** One core holds the rules that read elements and CSS: those in, results out. It
 knows nothing of where they came from, so each place that checks reads what it has into them
@@ -1394,9 +1395,14 @@ readers, walkers and types come with them.
 
 **Where a rule shows:** wherever its problem can happen.
 
-- **The editor** runs every rule that can break on a page, on its blocks and their own style.
-  It shows the warnings on the blocks, and the class row flags a rule as the classes are typed.
-  Warnings are for the person editing, so nothing checks a page on the server when it's saved.
+- **The editor** runs every rule that can break on a page, on its blocks and their own style,
+  after each change. A block a rule names wears an outline in the warning colour, dashed for a
+  problem and dotted for a suggestion, which moves nothing on the page. Its Attributes panel
+  lists why, above the rows where most are fixed, with the classes the block wears by itself,
+  which no row shows, so a warning appears or goes as the class row's change applies. The node
+  path shows the blocks around the cursor that have one, and the top bar's count goes to the
+  next. Warnings are for the person editing: a save never waits for them or stops on them, and
+  nothing checks a page on the server when it's saved.
 - **An IDE linter** (later) checks pages, screens and components written in files, with every
   rule that can break there. It's a thin ESLint plugin: its element and CSS rules call the core,
   ESLint's Vue and HTML parsers read the code, and ESLint shows the results and holds the

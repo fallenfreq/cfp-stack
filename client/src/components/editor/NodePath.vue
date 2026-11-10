@@ -12,6 +12,7 @@
 				size="xs"
 				:current="segment.depth === effectiveActiveDepth"
 				:disabled="segment.depth === 0"
+				:variant="segment.warned ? 'warning' : undefined"
 				@mousedown.prevent
 				@click="handleDepthClick(segment)"
 			>
@@ -23,6 +24,7 @@
 
 <script setup lang="ts">
 import { useScrollOverflow } from '@/composables/useScrollOverflow'
+import { warningsOn } from '@/editor/extensions/pageWarnings'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
@@ -42,6 +44,7 @@ interface PathSegment {
 	name: string
 	depth: number
 	start: number // $pos.start(depth); -1 for leaf nodes
+	warned: boolean // it has a warning (pageWarnings.ts)
 }
 
 const path = computed((): PathSegment[] => {
@@ -67,6 +70,7 @@ const path = computed((): PathSegment[] => {
 			name: getNodeAlias($pos.node(depth).type.name),
 			depth,
 			start: $pos.start(depth),
+			warned: depth > 0 && warningsOn(state, $pos.before(depth)).length > 0,
 		})
 	}
 
@@ -77,6 +81,7 @@ const path = computed((): PathSegment[] => {
 			name: getNodeAlias(selection.node.type.name),
 			depth: $pos.depth + 1,
 			start: -1,
+			warned: warningsOn(state, selection.from).length > 0,
 		})
 	}
 

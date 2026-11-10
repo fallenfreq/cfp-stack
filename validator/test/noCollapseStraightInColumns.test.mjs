@@ -4,8 +4,8 @@ import { test } from 'node:test'
 import { noCollapseStraightInColumns } from '../rules/noCollapseStraightInColumns.ts'
 import { checkHtml } from './checkHtml.mjs'
 
-const stacksBy = (layout) =>
-	`Stacks by the width of the whole ${layout} around it, not its column's`
+const stacks =
+	"Stacks by the width of the whole layout around it, not its column's: put it in a Stack in the column"
 
 test('a collapsing layout straight in a column of a split, Columns or a grid is a result', () => {
 	const page = `<div class="sl-split">
@@ -25,9 +25,9 @@ test('a collapsing layout straight in a column of a split, Columns or a grid is 
 	</div>
 </div>`
 	assert.deepEqual(checkHtml(noCollapseStraightInColumns, page), [
-		{ message: stacksBy('sl-split'), lines: [2] },
-		{ message: stacksBy('sl-columns'), lines: [7] },
-		{ message: stacksBy('sl-grid'), lines: [13] },
+		{ message: stacks, lines: [2] },
+		{ message: stacks, lines: [7] },
+		{ message: stacks, lines: [13] },
 	])
 })
 
@@ -45,7 +45,7 @@ test('only the nearest layout that measures counts', () => {
 	<div class="sl-cluster"><div class="sl-columns sl-collapse-sm"><p>Four</p></div></div>
 </div>`
 	assert.deepEqual(checkHtml(noCollapseStraightInColumns, page), [
-		{ message: stacksBy('sl-split'), lines: [7] },
+		{ message: stacks, lines: [7] },
 	])
 })
 

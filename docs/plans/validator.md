@@ -112,17 +112,30 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
       Kept with the owner, 2026-11-10: it's true, a Stack around the layout fixes it, and leaving
       it out would take code for to-do items alone. An inset is left out by not being one of
       the rule's column layouts.
-6. **The block view's display.** Designed with the owner first, from what the editor has (the
-   node path, the class row, the Save button, toasts): where a warning shows, when the rules run
-   (as the page changes, or on save), and the class row flagging a rule as the classes are typed
-   (the spec's "Validator and linter"). Joins the page reader and the core, the reader asking
-   `blockWears` with `componentClassesIn(view)` about the page the view shows. A component's
-   drawn box is up to date in the same moment as a change (measured, step 5), so the rules can
-   run straight after one; reading the 525-block test page takes about 2 ms once warm. A layout
-   check covers a component's classes reaching the rules (a Stack given `sl-inset`, selected
-   too). A message names a block, not its classes (step 3's finding): a to-do item is warned of
-   as a Split it doesn't show. The core is 57 KB gzipped with CSSTree: whether the editor loads
-   it with itself or when first needed is settled here.
+6. **The block view's display.** Joins the page reader and the core
+   (`client/src/editor/extensions/pageWarnings.ts`): after each change to the page, straight
+   after it's drawn, the rules run on the page the view shows, a component's classes read from
+   its drawn box (`blockWears` with `componentClassesIn(view)`). What a page builder sees:
+    - **A mark on each block a rule names:** an outline in the theme's warning colour, dashed
+      for a problem and dotted for a suggestion, which moves nothing on the page; a selected
+      block shows its selection instead. It's the editor's own (`has-problem`,
+      `has-suggestion`), never saved, and the rules don't read it.
+    - **Why, in the block's Attributes panel,** above the rows where most are fixed, its button
+      in the warning colour: each warning's message and rule, and the classes the block wears by
+      itself, which no row shows ("Comes with this block: sl-stack"). So a warning appears or
+      goes as a change typed in the class row applies. An inline piece's warning (a span's
+      style) shows on the piece and on its line, as the toolbar is mostly on the line.
+    - **The node path** shows the blocks around the cursor that have one, and **the top bar's
+      count** selects the next block with one, in the middle of the screen (a block taller than
+      that leaves room for, its top under the bar and its toolbar).
+    - **Save** is as it was: it never waits for warnings or stops on them, and nothing toasts (a
+      toast says something happened; a warning stays until it's fixed).
+    - **Loading:** the rules, the reader and CSSTree are a file of their own
+      (`client/src/editor/pageRules.ts`, 68 KB gzipped), loaded just after the editor opens; the
+      editor's own is 647 KB. ESLint refuses anything but their types elsewhere in the client.
+    - **Messages** name what the page builder can see. `no-collapse-straight-in-columns` names no
+      class, as the layout around may be a block's own (a to-do item is a split); the classes
+      a block wears by itself are in its panel.
 7. **The cursor across the code view.** Found while planning; not part of the validator. Today
    the code view opens on line 1 wherever the cursor was, and leaving it after any edit puts the
    cursor at the very end of the page (measured). One marker character carries the cursor
@@ -184,6 +197,10 @@ class="sl-inset">`), and the built component holds its own classes (`sl-stack`) 
   needs only its outer box. A collapsing layout in a component with no layout of the
   component's own around it would measure the page around the block, so it gets a rule of its
   own for the IDE linter, `no-collapse-measuring-outside`.
+- **A message names no block** (step 6). Naming a block's own class by the block would take
+  every rule asking the editor about each class it names. The panel already knows its block,
+  so it lists the classes the block wears by itself instead, and the one message that named
+  the class of a block around (`no-collapse-straight-in-columns`) names none.
 
 Checked while planning: no HTML linter fits as the core. html-validate, which runs in a browser,
 also reads only text (`validateString`, `validateSource`).
@@ -296,4 +313,25 @@ classes split only at spaces (now at any). Logged in the to-do: the IDE linter r
 component's file; the editor's list of components repeats their settings; `document` in the
 blocks that take a style does nothing; a `.` or `#` in an alias.
 
-Next: step 6, the block view's display.
+**Step 6** (2026-11-10). The block view's display: after each change the rules run on the page
+as drawn (`pageWarnings.ts`) and each block they name is marked; its Attributes panel lists why,
+with the classes it wears by itself; the node path and the top bar's count find them. The rules,
+the reader and CSSTree are a file of their own (`pageRules.ts`), loaded once the editor is open.
+Settled with the owner: the marks, the panel, the path, the count, Save as it was with no toasts,
+the separate file, `has-problem` and `has-suggestion`, and messages that name no block.
+Measured in Chrome: reading the test page and running all 13 rules, 2 ms; a typed letter, about
+5 ms in all; 9 blocks marked on the test page; a mark goes with a class change and comes back on
+undo; the rules' file 68 KB gzipped, the editor's grown 1.2 KB; the marks move nothing (the demo
+page's snapshot is unchanged once it leaves out the mark, as it leaves out ProseMirror's
+classes). Checked: `pnpm test`, `pnpm typecheck --all`, ESLint, Prettier, `pnpm test:ui` (728);
+each fault a test guards against shown failing (15). An agent's review found 6, all confirmed:
+a span's warning shown on the span around it and not on itself (now on the piece and its line);
+two identical warnings sharing a list key (now keyed by place); nothing keeping the rules out of
+the editor's file (now ESLint); no quick tests of where warnings show (now four); a figure and a
+comment off; a tall block's top scrolled off the screen (now under the bar and its toolbar) and
+an untyped hand-over of the results (now typed). Logged, not fixed: if the rules' file can't
+load (measured), the editor works without warnings, and the page builder is told "Something went
+wrong", and, with the other session's new-version work, "This page couldn't load. Refresh to try
+again.": that handler takes every file that won't load for a page. A refresh is the retry.
+
+Next: step 7, the cursor across the code view.

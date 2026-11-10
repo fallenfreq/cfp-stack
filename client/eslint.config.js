@@ -84,11 +84,35 @@ export default defineConfig([
 		},
 	},
 	{
+		// The rules, the page reader and CSSTree are a file of their own, loaded once the editor is
+		// open (pageWarnings.ts): elsewhere only their types are imported, or the editor's own file
+		// would carry them.
+		files: ['src/**/*.{ts,vue}'],
+		ignores: ['src/editor/pageRules.ts', 'src/editor/readPage.ts'],
+		rules: {
+			'@typescript-eslint/no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							group: ['**/pageRules', '**/readPage', '@somefreq-app/validator/*'],
+							allowTypeImports: true,
+							message:
+								'Loaded on its own once the editor is open: import its types only.',
+						},
+					],
+				},
+			],
+		},
+	},
+	{
 		// What the validator reads from the page, held as strictly as the validator.
 		files: [
 			'src/editor/readPage.ts',
 			'src/editor/componentBoxes.ts',
+			'src/editor/pageRules.ts',
 			'src/editor/extensions/ownLook.ts',
+			'src/editor/extensions/pageWarnings.ts',
 			'test/**/*.mjs',
 		],
 		rules: strictTypes,

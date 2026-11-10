@@ -33,6 +33,7 @@ import {
 	MultiSelectExtension,
 	multiSelectPluginKey,
 } from '@/editor/extensions/multiSelect'
+import { PageWarnings } from '@/editor/extensions/pageWarnings'
 import { RememberCursor } from '@/editor/extensions/rememberCursor'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore.js'
@@ -86,6 +87,7 @@ const editor = useEditor({
 		Commands.extend({ name: 'slashCommands' }).configure({ suggestion }),
 		// The cursor is kept for a stored page (a new one once Save names it), and puts it in.
 		RememberCursor.configure({ key: () => useEditorStore().currentSlug }),
+		PageWarnings,
 	],
 	content: '',
 	parseOptions: {},
@@ -161,6 +163,15 @@ onBeforeUnmount(() => {
    this class internally on NodeSelection; we can't rename it without a TipTap plugin. */
 .ProseMirror-selectednode {
 	outline: var(--sf-stroke-3) solid rgba(var(--sf-primary) / var(--sf-alpha-2));
+}
+
+/* A block with a warning (pageWarnings.ts). An outline moves nothing on the page; a selected
+   block shows its selection instead. */
+.tiptap :is(.has-problem, .has-suggestion):not(.ProseMirror-selectednode, .sf-on-selected) {
+	outline: var(--sf-stroke-3) dashed rgb(var(--sf-warning));
+}
+.tiptap .has-suggestion:not(.ProseMirror-selectednode, .sf-on-selected) {
+	outline-style: dotted;
 }
 
 .tiptap:focus {

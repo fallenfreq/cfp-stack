@@ -15,7 +15,7 @@ gzipped, as its main entry, the only one typed, loads CSS's syntax data too.
 - `rules/`: a file for each rule.
 - Read by the client through its exports: `@somefreq-app/validator/core` (the editor's page
   reader, `client/src/editor/readPage.ts`) and `@somefreq-app/validator/rules/<file>` (the
-  client's tests).
+  rules the editor runs, `client/src/editor/pageRules.ts`, and the client's tests).
 - Checks:
     - `tsconfig.json` (`pnpm typecheck`): the repo's shared strict settings, and syntax Node
       can't strip or an import without its ending refused; `test/types.ts` holds what the types

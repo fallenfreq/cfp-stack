@@ -9,7 +9,7 @@
 		<template #trigger="trigger">
 			<!-- A custom trigger spreads the slot props onto its own button. -->
 			<slot name="trigger" v-bind="trigger">
-				<ToolbarButton v-bind="trigger" :tooltip="tooltip">
+				<ToolbarButton v-bind="trigger" :tooltip="tooltip" :variant="variant">
 					<ToolbarIcon>{{ icon }}</ToolbarIcon>
 				</ToolbarButton>
 			</slot>
@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ButtonVariant } from '@/components/ui/SfButton.vue'
 import { useVirtualKeyboard } from '@/composables/useVirtualKeyboard'
 import { onUnmounted, ref, watch } from 'vue'
 
@@ -31,6 +32,8 @@ defineProps<{
 	icon?: string
 	tooltip: string
 	align: 'start' | 'end'
+	// The button's colour role, as SfButton's (a block's warnings: `warning`).
+	variant?: ButtonVariant | undefined
 }>()
 const open = defineModel<boolean>('open', { required: true })
 

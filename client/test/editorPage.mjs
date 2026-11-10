@@ -39,9 +39,11 @@ const componentClassesOn = (doc) => (pos) => {
 	return alias && drawn[alias]
 }
 
-/** The page as the rules take it, each block wearing its own look or its component's classes. */
-export const read = (doc) =>
-	readPage(doc, blockWears(resolveExtensions(extensions), componentClassesOn(doc)))
+/** What each block of the page always wears: its own look, or its component's classes. */
+export const wearsOn = (doc) => blockWears(resolveExtensions(extensions), componentClassesOn(doc))
+
+/** The page as the rules take it. */
+export const read = (doc) => readPage(doc, wearsOn(doc))
 
 // Without each node's place in the HTML it was read from, or the spaces between its tags.
 const bare = (node) => {

@@ -31,10 +31,12 @@ export const noCollapseStraightInColumns: ElementRule = {
 				.filter((ancestor) => ancestor.type === 'element')
 				.reverse()
 				.find((ancestor) => classesOf(ancestor).some((name) => hosts.has(name)))
-			const layout = measured && classesOf(measured).find((name) => columnLayouts.has(name))
-			if (layout)
+			// The message names no class: the layout around may be a block's own, which the page
+			// builder never typed (a to-do item is a split).
+			if (measured && classesOf(measured).some((name) => columnLayouts.has(name)))
 				report({
-					message: `Stacks by the width of the whole ${layout} around it, not its column's`,
+					message:
+						"Stacks by the width of the whole layout around it, not its column's: put it in a Stack in the column",
 					nodes: [element],
 				})
 		})

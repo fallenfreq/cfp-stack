@@ -1,12 +1,33 @@
 <template>
 	<ToolbarPanelItem
 		icon="tune"
-		:tooltip="tooltip"
+		:tooltip="buttonName"
+		:variant="warnings.length ? 'warning' : undefined"
 		:open="open"
 		align="end"
 		@update:open="setOpen"
 	>
 		<div class="attr-content sl-stack sf-gap-2xs">
+			<!-- The block's warnings, above the rows where most are fixed. -->
+			<template v-if="warnings.length">
+				<!-- Two can read the same (a unit used twice in a style): only text, keyed by place. -->
+				<p
+					v-for="(warning, i) in warnings"
+					:key="i"
+					class="attr-note sf-text-xs sf-size-2xs"
+				>
+					<span class="material-symbols-rounded sf-icon">{{
+						warning.type === 'problem' ? 'warning' : 'lightbulb'
+					}}</span>
+					{{ warning.message }}
+					<span class="sf-loudness-1">({{ warning.rule }})</span>
+				</p>
+				<!-- A warning may name a class the block wears by itself, which no row shows. -->
+				<p v-if="ownClasses.length" class="attr-note sf-loudness-1 sf-text-xs sf-size-2xs">
+					Comes with this block: {{ ownClasses.join(' ') }}
+				</p>
+				<hr class="sf" />
+			</template>
 			<!-- Rows share one name column and one field column; when narrow, names go above. -->
 			<div v-if="allRowCount" class="sl-split sl-collapse-xs sf-gap-xs">
 				<ToolbarAttrRow
@@ -77,6 +98,7 @@
 import { useNodeClassTokens } from '@/config/editor/nodeClassTokens'
 import type { EnumExtensionAttribute } from '@/editor/enumAttr'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
+import { blockWearsIn, warningsOn } from '@/editor/extensions/pageWarnings'
 import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
 import { filterNonDefaultAttrs, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
@@ -94,6 +116,20 @@ const justAddedKey = ref<string | null>(null)
 const capturedNode = computed(() => {
 	if (capturedPos.value === null) return props.context.activeNode
 	return nodeAt(props.editor.state.doc, capturedPos.value)
+})
+
+// The block the panel is for: the one it opened on, or, while it's closed, the toolbar's.
+const blockPos = computed(() => capturedPos.value ?? props.context.nodePos)
+const warnings = computed(() =>
+	blockPos.value === null ? [] : warningsOn(props.editor.state, blockPos.value),
+)
+const ownClasses = computed(() =>
+	blockPos.value === null ? [] : blockWearsIn(props.editor)(capturedNode.value, blockPos.value),
+)
+const buttonName = computed(() => {
+	const count = warnings.value.length
+	if (!count) return props.tooltip
+	return `${props.tooltip}: ${count} ${count === 1 ? 'warning' : 'warnings'}`
 })
 
 const specAttrs = computed(
@@ -264,6 +300,11 @@ watch(
 	.attr-empty {
 		padding: var(--sf-padding);
 		text-align: center;
+	}
+
+	/* On the rows' line: the same padding as theirs. */
+	.attr-note {
+		padding-inline: var(--sf-padding);
 	}
 }
 </style>
