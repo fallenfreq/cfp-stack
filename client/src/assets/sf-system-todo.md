@@ -109,9 +109,6 @@ Next: settings for every selected block.
       editable in a read-only editor, and slots keep the editability they were drawn with when an
       open editor is switched to read-only. Published pages are read-only from the start, and the
       app never switches an open editor.
-    - The slot's `tabindex` comment (`customComponentNode.ts`) speaks of the focus toggle, which
-      is gone. Taking the attribute out changes focus in every component block, so it waits for
-      a check.
     - Atom components can't be selected by clicking.
 - **"Don't give the root a height of its own" is out of date** (`sf-system.md`, "Writing a
   component block"). It says `height: 100%` stops the block stretching in a row. Measured on a

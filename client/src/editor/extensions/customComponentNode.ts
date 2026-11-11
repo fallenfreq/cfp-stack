@@ -265,8 +265,6 @@ export function createVueNode({
 											contenteditable: props.editor.isEditable
 												? contenteditable
 												: false,
-											// makes sure the onfocus target is the content if clicked when contenteditable is already true
-											tabindex: '-1',
 										}),
 								},
 							)
