@@ -10,8 +10,9 @@ import type { DefaultTreeAdapterTypes, Token } from 'parse5'
 // The cursor across the code view. Each way, a marker goes where the cursor is, the page converts
 // as it always does (writes itself as code, or reads the code), and the cursor goes where the marker
 // lands: the code is the page's own, read as the page reads it. Where each tag and text is in the
-// code, which the page's reading doesn't keep, is parse5's, which reads HTML as the browser does; it
-// loads as the code view opens (43 KB gzipped), so it's there by the time it closes.
+// code, which the page's reading doesn't keep, is parse5's, which reads HTML as the browser does:
+// Prettier's reader refuses code the page reads, and a count of `<` would take one typed in text
+// for a tag. It loads as the code view opens (43 KB gzipped), so it's there by the time it closes.
 
 /** The code view's selection, as places in its code. */
 export interface CodeCursor {
@@ -211,9 +212,9 @@ export const cursorFromCode = (code: string, cursor: CodeCursor, doc: PMNode): S
 	const anchor = outsideTags(tags, code, cursor.anchor)
 	const head = outsideTags(tags, code, cursor.head)
 	const [anchorMark, headMark] = markersFor(code)
-	// In text, a character, which joins the text, as going in; between tags, a comment, which the
-	// browser keeps where it's written (in a table too, where it moves text out) and the page
-	// leaves out.
+	// In text, a character, which joins the text, as going in (a comment splits it, and the page
+	// drops a line break left on its own); between tags, a comment, which the browser keeps where
+	// it's written (in a table too, where it moves text out) and the page leaves out.
 	const inText = (at: number) => texts.some(({ from, to }) => from <= at && at <= to)
 	const ends: [at: number, marker: string][] = [
 		[anchor.at, anchorMark],

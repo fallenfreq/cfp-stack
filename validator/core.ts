@@ -42,6 +42,7 @@ export type CssRule = Rule<CssNode, CssNode>
 export interface ValidatorResult<Node> {
 	rule: Rule<unknown, Node>['name']
 	type: Rule<unknown, Node>['type']
+	/** Names classes, never a block: which classes come with a block is the editor's to show. */
 	message: string
 	/** At least one, so every display has something to mark. */
 	nodes: readonly [Node, ...Node[]]

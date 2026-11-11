@@ -5,21 +5,18 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-In progress: the validator's warnings for page builders, `docs/plans/validator.md` (its
-"Progress" says where it's at). The bigger next step after it: settings for every selected
-block.
+Next: settings for every selected block.
 
 ## Bigger work
 
 - **The validator and linter.** Its rules, and where each shows, are in `sf-system.md`,
-  "Validator and linter"; new candidates go there. The editor's part is `docs/plans/validator.md`.
-  Left for later: the IDE linter, and a theme's check when it's saved, once there's a theme
-  editor. The IDE linter's `valid-heading-class` would flag the prompt's label, which wears
-  `sf-heading-2` on purpose (`PromptModal.vue`): the rule becomes pages only, or the label
-  changes. Its reader takes a component's classes from the component's file, as the editor
-  takes them from its drawn root: those written on its root, and one set by a setting
-  (`:class`) only as one that may be set. Whether a component's layout classes must be written,
-  not set by a setting, is settled with it.
+  "Validator and linter"; new candidates go there. Left for later: the IDE linter, and a theme's
+  check when it's saved, once there's a theme editor. The IDE linter's `valid-heading-class`
+  would flag the prompt's label, which wears `sf-heading-2` on purpose (`PromptModal.vue`): the
+  rule becomes pages only, or the label changes. Its reader takes a component's classes from the
+  component's file, as the editor takes them from its drawn root: those written on its root, and
+  one set by a setting (`:class`) only as one that may be set. Whether a component's layout
+  classes must be written, not set by a setting, is settled with it.
 - **Settings for every selected block** (proposed, not designed). With blocks selected, the
   toolbar's settings would change all of them, as in Notion, Google Docs or Figma; today it shows
   none. To decide: which settings show (only those every selected block has), how differing
