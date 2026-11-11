@@ -110,11 +110,6 @@ Next: settings for every selected block.
       open editor is switched to read-only. Published pages are read-only from the start, and the
       app never switches an open editor.
     - Atom components can't be selected by clicking.
-- **"Don't give the root a height of its own" is out of date** (`sf-system.md`, "Writing a
-  component block"). It says `height: 100%` stops the block stretching in a row. Measured on a
-  plain grid row (Chrome, 2026-11-01), it fills the row either way; what it does is ignore the
-  row's alignment (aligned to the top, it still fills). The line dates from the two-box design.
-  Fix the line, then decide whether it gets a validator rule.
 
 ## Editor
 

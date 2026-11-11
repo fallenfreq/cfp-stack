@@ -1338,7 +1338,8 @@ component, so these keep the system's layout working around and inside it:
 - **Put `<slot />` directly in the root** when the blocks should be your layout's items.
   Anything in between makes them that box's items instead.
 - **Don't give the root a height of its own to fill a row** (`height: 100%`). In a row it
-  stretches already; a height of your own stops it.
+  stretches already; a height of your own fills the row even when the page builder aligns the
+  row's blocks to the top or middle (measured in Chrome and WebKit, 2026-11-11).
 - **Avoid width containers of your own.** A width container takes no width from its content,
   so your block is 0 wide wherever its width comes from its content (a cluster, a table
   cell). If you need one, name it and query it by name
@@ -1479,6 +1480,9 @@ own style.
   (Container-responsive collapse).
 - **`require-container-name`** (a component's styles): an `@container` query without a name
   (Component blocks, "Writing a component block").
+- **`no-root-height`** (a component's styles): a height on the component's root (`height`,
+  `block-size`): it fills a row however the page builder aligns the row's blocks (Component
+  blocks, "Writing a component block").
 - **`require-cascade-layer`** (a component's styles): CSS outside a cascade layer (Component
   blocks, "Writing a component block").
 
