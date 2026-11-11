@@ -91,6 +91,31 @@ test('typing goes into the slot when the editor puts the cursor there', async ({
 	expect(await cursor(page)).toBe(`W${SLOT_TEXT}`)
 })
 
+// A second click on the cursor's own spot leaves focus on the block, not the editor: the browser
+// hands it back only as the cursor moves, and the editor then follows the cursor, as on the page.
+test('after a second click on the same spot in the slot, the arrows and typing go there', async ({
+	page,
+}) => {
+	const offset = () =>
+		page.evaluate(
+			() =>
+				document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!.state.selection
+					.$from.parentOffset,
+		)
+	await slotText(page).click()
+	await settle(page)
+	const at = await offset()
+	await slotText(page).click()
+	await settle(page)
+	expect(
+		await page.evaluate(() => document.activeElement === document.querySelector('.tiptap')),
+		'focus is off the editor',
+	).toBe(false)
+	await page.keyboard.press('ArrowLeft')
+	await page.keyboard.type('Q')
+	expect(await cursor(page)).toBe(`${SLOT_TEXT.slice(0, at - 1)}Q${SLOT_TEXT.slice(at - 1)}`)
+})
+
 // Focus lands on the block's locked box, where keys do nothing; with the editor focused instead,
 // typing would replace the selected block.
 test("a click on the block's own text selects the block, and typing changes nothing", async ({

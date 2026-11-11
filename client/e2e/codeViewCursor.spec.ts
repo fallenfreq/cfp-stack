@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Page, Request } from '@playwright/test'
 import type { TiptapEditorHTMLElement } from '@tiptap/vue-3'
 import { expect, test } from './fixtures'
 import { openTests, selectBlock, settle } from './helpers'
@@ -14,11 +14,23 @@ test.beforeEach(async ({ page, themeClass }) => {
 const codeViewButton = (page: Page) => page.getByRole('button', { name: 'Code view' })
 // The editor on screen: in the code view, the page's is hidden.
 const shownEditor = (page: Page) => page.locator('.tiptap:visible')
+// Opening, the code view loads what reads the code on the way back (parse5, the first time): the
+// way back waits for none of it, and a person takes longer than its loading to come back.
 const switchView = async (page: Page, toCode: boolean) => {
+	const loading: Promise<unknown>[] = []
+	const onRequest = (request: Request) => {
+		if (request.resourceType() === 'script')
+			loading.push(request.response().then((response) => response?.finished()))
+	}
+	page.on('request', onRequest)
 	await codeViewButton(page).click()
 	await expect(codeViewButton(page)).toHaveAttribute('aria-pressed', String(toCode))
 	await expect(shownEditor(page)).toBeFocused()
 	await expect(page.locator('.tiptap')).toHaveCount(toCode ? 2 : 1)
+	page.off('request', onRequest)
+	await Promise.all(loading)
+	// Run, once arrived.
+	await settle(page)
 }
 
 /** What's selected in the view on screen, or the text either side of its cursor, and its line's height. */
@@ -242,15 +254,21 @@ test('select all in the code view selects the whole page', async ({ page }) => {
 	expect(selected).toBe(whole)
 })
 
-test('bold turned on at the cursor is kept through a look at the code', async ({ page }) => {
-	await putOnPage(page, 'warned-line', 3)
-	await settle(page)
-	await page.keyboard.press('ControlOrMeta+b')
-	await switchView(page, true)
-	await switchView(page, false)
-	await page.keyboard.type('q')
-	await expect(page.locator('#warned-line strong')).toHaveText('q')
-})
+for (const [where, id] of [
+	['a line', 'warned-line'],
+	["a component block's text", 'warned-stack-text'],
+] as const)
+	test(`bold turned on at the cursor is kept through a look at the code, in ${where}`, async ({
+		page,
+	}) => {
+		await putOnPage(page, id, 3)
+		await settle(page)
+		await page.keyboard.press('ControlOrMeta+b')
+		await switchView(page, true)
+		await switchView(page, false)
+		await page.keyboard.type('q')
+		await expect(page.locator(`#${id} strong`)).toHaveText('q')
+	})
 
 test("an icon font's character in the page stays, and the cursor goes where it was", async ({
 	page,
