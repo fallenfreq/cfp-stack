@@ -1,8 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
-import extractCssVars from './plugins/extractCssVars'
 import { piniaHMRPlugin } from './plugins/piniaHMR'
 import touchFileAfterBuild from './plugins/touchFileAfterBuild'
-import createTrackChangesPlugin from './plugins/trackChangesPlugin'
 
 import vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
@@ -41,15 +39,6 @@ export default defineConfig({
 	},
 	plugins: [
 		piniaHMRPlugin(),
-		createTrackChangesPlugin([
-			{
-				file: './src/assets/base.css',
-				onChange: () => {
-					console.log('Extracting CSS variables from base.css')
-					extractCssVars('./src/assets/base.css', './cssVariables')
-				},
-			},
-		]),
 		// wrangler pages dev doesn't reload when the built client changes, only when a function
 		// does: touching one after each build makes it pick the new client up.
 		touchFileAfterBuild('../api/functions/trpc/[[trpc]].js'),

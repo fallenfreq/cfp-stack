@@ -278,24 +278,14 @@ Next: settings for every selected block.
 
 ## Small clean-ups
 
-- `extractCssVars` (`client/plugins/`, run from `vite.config.ts`) still writes
-  `client/cssVariables.js`, which nothing reads.
-- `FloatingEditorMenu.vue` isn't used anywhere (only registered for auto-import).
-- Four declared TipTap packages aren't imported: table-header, table-row, task-list and
-  dropcursor (`client/package.json`).
 - `PromptModal.vue` and `StackableSheet.vue` say `sl-align-x-*` is grid-only; they could now use
   `sl-align-x-end`.
 - `LayoutColumns.vue` and `LayoutSplit.vue` write their `align` (up and down) as an inline style,
   not a class.
-- `allowAttributesExtension.ts` lists `document` among the blocks that take a style, class and
-  id, but the page's block is `doc`, so the entry does nothing.
 - The editor's list of components (`editorComponents.ts`) writes each component's settings and
   their defaults again (a Stack's `align`, `'stretch'`, is in `LayoutStack.vue` too). A built
   component keeps its settings and their defaults as data (compiled, 2026-11-10), so the list
   could take them from the component; the choices a setting offers are only in its type.
-- The tests read HTML with `hast-util-from-html` 2.0.3, which brings parse5 7; the code view's
-  cursor reads it with parse5 8 (`codeViewCursor.ts`), as that package's latest does. Updating it
-  leaves one parse5.
 
 ## Ideas, not decided
 

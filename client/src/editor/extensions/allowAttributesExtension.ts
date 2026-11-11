@@ -9,7 +9,6 @@ const nodesWithStyle = [
 	'blockquote',
 	'bulletList',
 	'codeBlock',
-	'document',
 	'hardBreak',
 	'heading',
 	'horizontalRule',

@@ -1,7 +1,4 @@
 /*
-If this file is changed, the dev server picks it up and re-runs
-./plugins/extractCssVars.ts to refresh cssVariables.js.
-
 DESIGN SYSTEM TOKENS LIVE IN D1, served at runtime by /styles/sf-system.
 What remains here is app-level vars: timing, toolbar height, z-index layers.
 */

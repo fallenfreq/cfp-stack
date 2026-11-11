@@ -26,7 +26,6 @@ declare module 'vue' {
     EditorTopBar: typeof import('./src/components/editor/EditorTopBar.vue')['default']
     EmailChangeCard: typeof import('./src/components/account/EmailChangeCard.vue')['default']
     FloatingDragHandle: typeof import('./src/components/editor/FloatingDragHandle.vue')['default']
-    FloatingEditorMenu: typeof import('./src/components/editor/FloatingEditorMenu.vue')['default']
     FloatingToolbar: typeof import('./src/components/editor/FloatingToolbar.vue')['default']
     FontPicker: typeof import('./src/components/editor/toolbar/FontPicker.vue')['default']
     GoogleAutocomplete: typeof import('./src/components/demos/map/GoogleAutocomplete.vue')['default']
