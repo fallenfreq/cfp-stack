@@ -85,8 +85,8 @@ export default defineConfig([
 	},
 	{
 		// The rules, the page reader and CSSTree are a file of their own, loaded once the editor is
-		// open (pageWarnings.ts): elsewhere only their types are imported, or the editor's own file
-		// would carry them.
+		// open (pageWarnings.ts), and parse5 one loaded with the code view (codeViewCursor.ts):
+		// elsewhere only their types are imported, or the editor's own file would carry them.
 		files: ['src/**/*.{ts,vue}'],
 		ignores: ['src/editor/pageRules.ts', 'src/editor/readPage.ts'],
 		rules: {
@@ -100,17 +100,24 @@ export default defineConfig([
 							message:
 								'Loaded on its own once the editor is open: import its types only.',
 						},
+						{
+							group: ['parse5'],
+							allowTypeImports: true,
+							message:
+								'Loaded with the code view (codeViewCursor.ts): import its types only.',
+						},
 					],
 				},
 			],
 		},
 	},
 	{
-		// What the validator reads from the page, held as strictly as the validator.
+		// Held as strictly as the validator: what it reads from the page, and the code view's cursor.
 		files: [
 			'src/editor/readPage.ts',
 			'src/editor/componentBoxes.ts',
 			'src/editor/pageRules.ts',
+			'src/editor/codeViewCursor.ts',
 			'src/editor/extensions/ownLook.ts',
 			'src/editor/extensions/pageWarnings.ts',
 			'test/**/*.mjs',

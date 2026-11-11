@@ -136,18 +136,32 @@ Each step runs as `.claude/skills/ship-step/SKILL.md` says.
     - **Messages** name what the page builder can see. `no-collapse-straight-in-columns` names no
       class, as the layout around may be a block's own (a to-do item is a split); the classes
       a block wears by itself are in its panel.
-7. **The cursor across the code view.** Found while planning; not part of the validator. Today
-   the code view opens on line 1 wherever the cursor was, and leaving it after any edit puts the
-   cursor at the very end of the page (measured). One marker character carries the cursor
-   through the page's own conversions. Going in, it's put in a copy of the page at the cursor,
-   the page writes the copy as code (`codeViewHtml`, then Prettier, which never wraps by width
-   here, so the character moves nothing else), and the code view's cursor goes where it is.
-   Coming out, it's put in the code at the cursor, the page reads the code its own way, and the
-   page's cursor goes where it lands. Tried on the test page in Chrome (2026-11-01): 400 of 400
-   places came back exact both ways, and the code written was the code view's own. The cases are
-   settled with the owner first: a cursor in a tag, between blocks, on a selected block (a
-   picture), a selection, leaving without an edit (the page keeps its old cursor today), and
-   code the page can't read.
+7. **The cursor across the code view.** Found while planning; not part of the validator
+   (`client/src/editor/codeViewCursor.ts`). It was: the code view opened on line 1 wherever the
+   cursor was, and leaving it after any edit put the cursor at the very end of the page. Now the
+   cursor goes to the same place in the other view, or the nearest the other has, its line at
+   the same height on the screen (just under the top bar if it was off the screen):
+    - **Going in:** a cursor or selection in text, at the same place in the code; a selected
+      block, as its whole code selected; another selection (table cells, the whole page), as the
+      text nearest its ends.
+    - **Coming back:** a place in text, at the same place on the page. In a tag, just outside it:
+      before an opening tag (that block: the start of its text, or a picture or video selected),
+      after a closing one (the end of the block it closes). Elsewhere, toward the tag next to it
+      on its line: the end of the block that tag ends (a closing tag just before or after it, a
+      picture's just before it), else the start of the next. A selection of exactly one block's
+      code selects that block, with its toolbar; one of exactly a run of text, that text. Select
+      all selects the whole page. Code the page can't read keeps the code view open, its cursor
+      where it was; a place in a character code (`&amp;`), which no marker can go in without
+      changing it, leaves the page's cursor where it was.
+    - **How:** each way a marker goes where the cursor is, and the page converts as it always
+      does. Going in, characters in the text of a copy of the page, or for a selected block one in
+      its id. Coming back, a character in text, as going in, and a comment between tags, which the
+      browser keeps where it's written (in a table too, where it moves text out) and the page
+      leaves out. The characters are ones the code doesn't hold, from Unicode's private use (where
+      an icon font's glyphs are, which a page can hold). Where each tag and text is in the code,
+      which the page's own reading doesn't keep, is parse5's, which reads HTML as the browser does
+      (43 KB gzipped, loaded as the code view opens). An unchanged selection isn't set again, as
+      that would drop the marks set for what's typed next (bold turned on at the cursor).
 
 ### Decisions
 
@@ -201,6 +215,22 @@ class="sl-inset">`), and the built component holds its own classes (`sl-stack`) 
   every rule asking the editor about each class it names. The panel already knows its block,
   so it lists the classes the block wears by itself instead, and the one message that named
   the class of a block around (`no-collapse-straight-in-columns`) names none.
+- **The cursor across the code view goes by one rule** (step 7): a marker carried through the
+  page's own conversions, the cursor going where it lands; where a place outside text goes
+  follows from it, with one rule for which way to look (toward the tag next to it on its line).
+  No code for each kind of place. Coming back, the marker takes the form that doesn't change how
+  the code reads where it goes: a character in text (a comment there split it, and TipTap's
+  reader then dropped a line break left on its own, at the end of a code block's last line), a
+  comment between tags (a character there was moved out of a table by the browser).
+- **A selected block goes in as its whole code,** and a selection of exactly that code comes back
+  as the block, so a block goes there and back as itself. The cursor at its tag would come back
+  as its text.
+- **parse5 says where the tags are,** not code of our own, nor Prettier's reader. A count of tags
+  holds only while nothing but a tag has a `<`, which code typed in the code view needn't keep
+  to; Prettier refuses code the page reads (156 of 446 random edits of the test page, measured).
+  parse5 reads HTML as the browser does and never refuses. The browser alone could tell a place
+  in a tag on the way back (reading the code up to it drops an unfinished tag), but not a
+  block's code going in.
 
 Checked while planning: no HTML linter fits as the core. html-validate, which runs in a browser,
 also reads only text (`validateString`, `validateSource`).
@@ -334,4 +364,30 @@ load (measured), the editor works without warnings, and the page builder is told
 wrong", and, with the other session's new-version work, "This page couldn't load. Refresh to try
 again.": that handler takes every file that won't load for a page. A refresh is the retry.
 
-Next: step 7, the cursor across the code view.
+**Step 7** (2026-11-11). The cursor across the code view (`codeViewCursor.ts`): each way a marker
+goes where the cursor is and the page converts as it always does, and the cursor's line stays at
+its height on the screen. Settled with the owner: one rule, no code for each kind of place; a
+selected block going in as its whole code and back as the block; parse5 (8.1.1, its own file,
+loaded as the code view opens) for where tags are, over a count of our own or Prettier's reader;
+the marker's two forms coming back. Measured in Chrome: it was line 1 going in, and the end of the
+page coming back after an edit; now 400 of 400 text cursors and selections come back exact, the
+code always the code view's own; all 532 of the test page's blocks go in as their whole code and
+522 come back as the block (10 table rows and cells, which the page makes cell selections, go as
+the text nearest them); every one of the 26,427 places in its code lands on the page; going in
+about 45 ms the first time, coming back about 5 ms more; the editor's own file 1.7 KB larger, and
+parse5's 43.9 KB gzipped. Checked: `pnpm test`, `pnpm typecheck --all`, ESLint, Prettier,
+`pnpm test:ui` (776); each fault a check guards against shown failing (16). An agent's review
+found 6, all confirmed and all this step's: a private-use character in the page (an icon font's)
+taken for a marker (now characters the code doesn't hold); a run of text selected exactly taken
+for a block; select-all handing over places outside the code; bold set for what's typed next
+dropped by setting an unchanged selection again; a comment marker splitting text, so TipTap's
+reader dropped a line break left on its own (the end of a code block's last line; now a character
+in text); the look-back rule missing a closing tag after the cursor on its line (`</td>` at a
+line's start). Also fixed: parse5 not tried again after a failed load. On the review's richer page
+after: 409 of 409 places there and back, and the 39 left in place all in character codes
+(`&amp;`), as planned. Logged in the to-do: bold lost in a component block's text after the code
+view (`useNodeViewInteractions.ts`, the same before this step, measured on the old code); a second
+parse5, from the tests' `hast-util-from-html`.
+
+Next: every step is done. What lasts goes where it belongs, and the plan is deleted, with the
+owner.

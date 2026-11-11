@@ -3304,8 +3304,11 @@ test('changed code goes into the page as one change, which Undo takes back', asy
 test('keys pressed after switching go to the code, not the hidden page', async ({ page }) => {
 	const opened = await pageContent(page)
 	await switchView(page, true)
+	const code = await shownCode(page)
 	await page.keyboard.type('abc')
-	expect(await shownCode(page)).toMatch(/^abc/)
+	const typed = await shownCode(page)
+	expect(typed).toContain('abc')
+	expect(typed.replace('abc', ''), 'typed in the code, where its cursor is').toBe(code)
 	expect(await pageContent(page)).toBe(opened)
 })
 

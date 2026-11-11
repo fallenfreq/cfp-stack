@@ -171,6 +171,10 @@ block.
   edited. With two elements the page doesn't know, the message names the last. A value a setting
   can't take is named, not where it is. Tab could indent (TipTap's `enableTabIndentation`), but
   then Tab wouldn't leave the code view.
+- **Bold turned on at the cursor is lost in a component block's text** when the page takes the
+  keys back after the code view: `useNodeViewInteractions.ts` sets the cursor again on the
+  browser's selection change in a component's text, even where it already is, which drops the
+  marks set for what's typed next. In other text they're kept (measured, 2026-11-11).
 - **A sheet's embedded video** stops as the sheet slides away and loads again in the closing
   copy of the page.
 - **A table cell's alignment** is also its own `align` attribute: taking `text-align` out of the
@@ -292,6 +296,9 @@ block.
   their defaults again (a Stack's `align`, `'stretch'`, is in `LayoutStack.vue` too). A built
   component keeps its settings and their defaults as data (compiled, 2026-11-10), so the list
   could take them from the component; the choices a setting offers are only in its type.
+- The tests read HTML with `hast-util-from-html` 2.0.3, which brings parse5 7; the code view's
+  cursor reads it with parse5 8 (`codeViewCursor.ts`), as that package's latest does. Updating it
+  leaves one parse5.
 
 ## Ideas, not decided
 

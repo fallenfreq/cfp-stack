@@ -38,8 +38,8 @@ export const RememberCursor = Extension.create<{ key: () => string | null }, { r
 	},
 })
 
-// The editor's top bar's height, which it gives the page (EditorTopBar), and a little room.
-const underTheBar = () =>
+/** The editor's top bar's height, which it gives the page (EditorTopBar), and a little room. */
+export const underTheBar = () =>
 	(parseFloat(
 		getComputedStyle(document.documentElement).getPropertyValue('--editor-top-bar-height'),
 	) || 0) + 8

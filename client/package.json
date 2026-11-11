@@ -51,6 +51,7 @@
 		"@trpc/client": "11.0.0-rc.402",
 		"hastscript": "^9.0.3",
 		"lowlight": "^3.3.0",
+		"parse5": "^8.1.1",
 		"pinia": "^3.0.4",
 		"postcss-safe-parser": "^7.0.1",
 		"typescript": "6.0.3",

@@ -1,18 +1,26 @@
 import { queryClient } from '@/config/queryClient'
+import {
+	codeWithCursor,
+	cursorFromCode,
+	lineOnScreen,
+	scrollLineTo,
+	type CodeCursor,
+} from '@/editor/codeViewCursor'
+import { underTheBar } from '@/editor/extensions/rememberCursor'
 import router from '@/router'
 import { notifyError } from '@/services/errors'
 import { showPrompt } from '@/services/promptModal'
 import { hasRole } from '@/services/session'
 import { notify } from '@/services/toast'
+import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { trpc } from '@/trpc'
-import { prettifyCode } from '@/utils/codeFormatting'
 import { cantKeep } from '@/utils/editor/cantKeep'
-import { codeViewHtml } from '@/utils/editor/codeViewHtml'
 import { useMutation } from '@tanstack/vue-query'
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
+import { NodeSelection, Selection } from '@tiptap/pm/state'
 import { createDocument, type Editor } from '@tiptap/vue-3'
 import { defineStore } from 'pinia'
-import { ref, shallowRef, watch, type ShallowRef } from 'vue'
+import { nextTick, ref, shallowRef, watch, type ShallowRef } from 'vue'
 
 type NewPage = Parameters<typeof trpc.adminPages.create.mutate>[0]
 type PageChanges = Parameters<typeof trpc.adminPages.update.mutate>[0]
@@ -93,28 +101,77 @@ export const useEditorStore = defineStore('editor', () => {
 	}
 	const codeProblem = (message: string) => notify({ variant: 'danger', message })
 
+	// The code view's own editor while it shows, and where its cursor opens: its place in the code,
+	// and its line's height on the screen. In that editor the code starts after its code block's
+	// opening, at 1.
+	type CodeEditor = Pick<Editor, 'commands' | 'state' | 'view'>
+	let codeEditor: CodeEditor | null = null
+	let codeOpens: { cursor: CodeCursor | null; top: number } = { cursor: null, top: 0 }
+	const CODE_START = 1
+
+	/** The code view's editor, made (CodeView): its cursor goes where the page's was. */
+	const codeViewOpened = (opened: CodeEditor) => {
+		codeEditor = opened
+		const { cursor, top } = codeOpens
+		if (cursor)
+			opened.commands.setTextSelection({
+				from: cursor.anchor + CODE_START,
+				to: cursor.head + CODE_START,
+			})
+		opened.commands.focus(null, { scrollIntoView: false })
+		scrollLineTo(opened.view, opened.state.selection.from, top)
+	}
+
 	// The page is written as code for the code view, which shows instead of it. Leaving puts what
 	// changed into the page, and the keys back on it; code the page can't read keeps the code view
-	// open.
+	// open. The cursor goes across both ways, its line at the same height on the screen
+	// (codeViewCursor.ts).
 	const toggleCodeView = async () => {
 		const from = editor.value
 		if (!from) return
 		if (isCodeView.value) {
+			const was = from.state.selection
 			const problem = applyCode()
 			if (problem) {
 				codeProblem(problem)
 				return
 			}
+			const at = codeEditor?.state.selection
+			const top = codeEditor && at ? lineOnScreen(codeEditor.view, at.from) : underTheBar()
+			const written = code.value
+			// Its select-all also takes in the code block around the code.
+			const inCode = (pos: number) => Math.min(Math.max(pos - CODE_START, 0), written.length)
+			const cursor = at && { anchor: inCode(at.anchor), head: inCode(at.head) }
+			codeEditor = null
 			isCodeView.value = false
-			from.commands.focus()
+			// The page shows again, to be measured.
+			await nextTick()
+			if (editor.value !== from) return
+			const { doc } = from.state
+			// Where the code puts it, or else where it was.
+			const selection =
+				(cursor && cursorFromCode(written, cursor, doc))
+				?? Selection.near(doc.resolve(Math.min(was.from, doc.content.size)))
+			// The toolbar works on a block selected, not one around it, as on one the warnings'
+			// count goes to (EditorTopBar).
+			if (selection instanceof NodeSelection)
+				useDragHandleStore().setActiveDepth(doc.resolve(selection.from).depth + 1)
+			// The same selection is left as it is, with the marks set for what's typed next (bold
+			// turned on at the cursor), which setting it again would drop.
+			if (!selection.eq(from.state.selection))
+				from.view.dispatch(from.state.tr.setSelection(selection))
+			from.commands.focus(null, { scrollIntoView: false })
+			scrollLineTo(from.view, selection.from, top)
 			return
 		}
 		try {
-			const written = await prettifyCode(codeViewHtml(from.state.doc), 'html')
+			const top = lineOnScreen(from.view, from.state.selection.from)
+			const { code: written, cursor } = await codeWithCursor(from.state)
 			// Another page opened meanwhile.
 			if (editor.value !== from) return
 			code.value = written
 			pageCode.value = written
+			codeOpens = { cursor, top }
 			isCodeView.value = true
 		} catch (err) {
 			notify({
@@ -287,6 +344,7 @@ export const useEditorStore = defineStore('editor', () => {
 		setEditor,
 		isCodeView,
 		toggleCodeView,
+		codeViewOpened,
 		code,
 		saveStatus,
 		currentPageId,

@@ -13,7 +13,8 @@ import { UndoRedo } from '@tiptap/extensions'
 import { EditorContent } from '@tiptap/vue-3'
 
 // The page as code, in an editor of its own, so Undo here undoes only the code and the page
-// keeps its own. It opens with the store's `code`, taking the keys, and keeps `code` up to date.
+// keeps its own. It opens with the store's `code` and the cursor where the page's was
+// (`codeViewOpened`), taking the keys, and keeps `code` up to date.
 const editorStore = useEditorStore()
 
 const editor = useEditor({
@@ -37,7 +38,7 @@ const editor = useEditor({
 			},
 		],
 	},
-	autofocus: 'start',
+	onCreate: ({ editor }) => editorStore.codeViewOpened(editor),
 	onUpdate: ({ editor }) => {
 		editorStore.code = editor.getText()
 	},
