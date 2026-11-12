@@ -4,18 +4,18 @@
 //   pnpm preview:components --serve    build, then serve out/ at http://localhost:4173
 //
 // 1. sf-system.css: runs the real seed + CSS generator against an in-memory database.
-// 2. app.css: client/src/assets/main.css with its imports resolved.
+// 2. app.css: client/src/assets/main.css as Vite serves it, plus the files it names.
 // 3. components.css: the <style> blocks of every component the stories rendered.
 // 4. One static HTML page per story (client/preview/stories.ts), rendered with Vue SSR.
 //
 // Pages carry a small script that switches themes and emulates useScrollOverflow
 // (toggles sf-is-overflow-* on sl-scroll-x / sl-scroll-y) so overflow treatments show.
 import vue from '@vitejs/plugin-vue'
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Components from 'unplugin-vue-components/vite'
-import { createServer, preprocessCSS } from 'vite'
+import { createServer } from 'vite'
 import { compileStyle, parse } from 'vue/compiler-sfc'
 import { memoryDatabase } from '../e2e/d1Memory.mjs'
 
@@ -71,7 +71,6 @@ async function main() {
 	try {
 		rmSync(outDir, { recursive: true, force: true })
 		mkdirSync(outDir, { recursive: true })
-		cpSync(join(clientDir, 'public'), outDir, { recursive: true })
 
 		// 1. sf-system.css
 		const db = await memoryDatabase(apiDir)
@@ -81,16 +80,25 @@ async function main() {
 		writeFileSync(join(outDir, 'sf-system.css'), await emitStylesheet(db))
 		log('sf-system.css generated from seed.ts')
 
-		// 2. app.css
-		process.chdir(clientDir)
-		const mainCssPath = join(clientDir, 'src/assets/main.css')
-		const app = await preprocessCSS(
-			readFileSync(mainCssPath, 'utf8'),
-			mainCssPath,
-			server.config,
-		)
-		writeFileSync(join(outDir, 'app.css'), app.code.replaceAll('url(/', 'url(./'))
-		log('app.css built from main.css')
+		// 2. app.css. Vite's `?inline` gives the stylesheet as its dev server sends it: imports
+		// inlined, each address the path its file is served at (public/ first, then the client
+		// folder). Each named file is copied into out/ at that path and its address made
+		// relative, so the pages work opened as files too.
+		const { default: appCss } = await load(join(clientDir, 'src/assets/main.css?inline'))
+		const named = new Set()
+		const app = appCss.replace(/url\((['"]?)\/(?!\/)([^'")?#]*)/g, (_, quote, path) => {
+			named.add(decodeURIComponent(path))
+			return `url(${quote}./${path}`
+		})
+		for (const path of named) {
+			const file = [join(server.config.publicDir, path), join(clientDir, path)].find(
+				existsSync,
+			)
+			if (!file) throw new Error(`app.css names /${path}, which isn't in public/ or client/`)
+			cpSync(file, join(outDir, path))
+		}
+		writeFileSync(join(outDir, 'app.css'), app)
+		log(`app.css built from main.css; files it names copied: ${named.size}`)
 
 		// 4. stories (before 3, so we know which components rendered)
 		const { stories, renderStory } = await load(join(previewDir, 'render.ts'))

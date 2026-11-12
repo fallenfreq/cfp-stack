@@ -167,8 +167,6 @@ Next: settings for every selected block.
   letter, the biggest single item; not looked into). Why an arrow press is two changes isn't
   looked into either. TipTap tells everything that reads the editor about each change twice; it's
   TipTap's design.
-- **The preloaded icon font.** Chrome warns that it isn't used within a few seconds of the editor
-  opening. Not looked into.
 - **Rule errors read like developer text.** They reach the user with their message, but some
   read like developer text (the class-name check prints its pattern). Rewording them is open.
 - **Leaving after the sign-in check.** A Leave that the router-wide sign-in check sends elsewhere

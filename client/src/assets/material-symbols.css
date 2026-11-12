@@ -5,7 +5,8 @@
 	font-style: normal;
 	font-weight: 100 700; /* the font's weight range, so font-weight picks a real weight */
 	font-display: block; /* Prevents FOUC by blocking until font loads */
-	src: url(/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].woff2) format('woff2');
+	/* Built by Vite, as index.html's preload is, so both name the same file and it's fetched once. */
+	src: url(./MaterialSymbolsRounded.woff2) format('woff2');
 }
 
 /* The icon font's own setup, as the weakest rule (:where, lowest layer) so [hidden],
