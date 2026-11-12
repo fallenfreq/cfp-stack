@@ -795,8 +795,8 @@ test("the layout blocks' Attributes panels offer their pickers", async ({ page }
 	await expect(page.locator('#divide-card')).toHaveClass(/(^|\s)sf-padding-\S+/)
 })
 
-// A custom block goes by its alias (the tag the code view shows), never its ID; a built-in one by
-// its label, never its type's name.
+// A block goes by the name the node path shows: a custom block by its alias (the tag the code view
+// shows), never its ID; a built-in one by its type's name.
 test('the block pickers name every block they offer', async ({ page }) => {
 	const picker = async (iconName: string) => {
 		const button = page.locator(
@@ -806,13 +806,31 @@ test('the block pickers name every block they offer', async ({ page }) => {
 		const rows = page.locator(`#${await button.getAttribute('popovertarget')} .picker-item`)
 		await expect(rows.first()).toBeVisible()
 		const names = await rows.locator('span:last-child').allTextContents()
-		await page.keyboard.press('Escape')
+		// Closed by its button: Escape leaves it open (sf-system-todo.md, "Escape leaves a toolbar
+		// panel open").
+		await button.click()
+		await expect(rows).toHaveCount(0)
 		return names
 	}
 	await selectBlock(page, 'c1-card')
 	const wrapIn = await picker('frame_source')
 	expect(wrapIn).toContain('layout-stack')
 	expect(wrapIn.filter((name) => /^[0-9a-f]{8}-/.test(name))).toEqual([])
+
+	// Words selected in a line, in view: what can wrap them there.
+	await page.evaluate(
+		(at) => {
+			document.getElementById('inset-first')!.scrollIntoView({ block: 'center' })
+			const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+			editor
+				.chain()
+				.focus()
+				.setTextSelection({ from: at + 1, to: at + 7 })
+				.run()
+		},
+		await nodePosition(page, 'inset-first'),
+	)
+	expect(await picker('frame_source')).toEqual(['span'])
 
 	// The to-do list, as its node-path crumb selects it, in view.
 	await page.evaluate(
@@ -823,7 +841,7 @@ test('the block pickers name every block they offer', async ({ page }) => {
 		},
 		await nodePosition(page, 'task-plain'),
 	)
-	expect(await picker('add')).toEqual(['Task Item'])
+	expect(await picker('add')).toEqual(['taskItem'])
 })
 
 /** The cursor at the end of a paragraph straight on the page, so the toolbar acts on it. */
@@ -2438,13 +2456,13 @@ test('an item taken out of a list, quote or Card leaves the id on the top half',
 	await settle(page)
 	expect.soft(await textsWithId(page, 'out-tab'), 'a list, Shift-Tab').toEqual(['Above'])
 
-	// The line's own Bullet List button: the list's turns the whole list into lines.
+	// The line's own bulletList button: the list's turns the whole list into lines.
 	await cursorInView(page, 'out-button-item', 1)
 	await pickInPath(page, 3)
-	await page.locator('.floating-toolbar').getByRole('button', { name: 'Bullet List' }).click()
+	await page.locator('.floating-toolbar').getByRole('button', { name: 'bulletList' }).click()
 	await settle(page)
 	expect
-		.soft(await textsWithId(page, 'out-button'), "a list, the line's Bullet List button")
+		.soft(await textsWithId(page, 'out-button'), "a list, the line's bulletList button")
 		.toEqual(['Above'])
 
 	for (const [kind, id, key] of [
@@ -2530,7 +2548,7 @@ test('changes that write a block anew leave its id where it was', async ({ page 
 	const changed = async () =>
 		(await withId(page, 'change-p')).map(({ type, text }) => `${type} "${text}"`)
 	await cursorInView(page, 'change-p', 1)
-	await toolbar.getByRole('button', { name: 'Blockquote' }).click()
+	await toolbar.getByRole('button', { name: 'blockquote' }).click()
 	await settle(page)
 	expect.soft(await changed(), 'wrapped in a quote').toEqual(['paragraph "Change me"'])
 	// Wrapped, the toolbar is on the quote.
@@ -2538,7 +2556,7 @@ test('changes that write a block anew leave its id where it was', async ({ page 
 	await settle(page)
 	expect.soft(await changed(), 'unwrapped').toEqual(['paragraph "Change me"'])
 	await cursorInView(page, 'change-p', 1)
-	await (await openMenu(page, 'change_circle')).getByText('Heading 2', { exact: true }).click()
+	await (await openMenu(page, 'change_circle')).getByText('heading 2', { exact: true }).click()
 	await settle(page)
 	expect.soft(await changed(), 'changed with Change Type').toEqual(['heading "Change me"'])
 })
@@ -2651,13 +2669,13 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 		undone?: Record<string, string>
 	}[] = [
 		{
-			kind: "the list's Numbered List button, the cursor in an item",
+			kind: "the list's orderedList button, the cursor in an item",
 			html: list('kt-v'),
 			ids: listIds('kt-v'),
 			change: async () => {
 				await cursorInView(page, 'kt-v-1p', 1)
 				await pickInPath(page, onThePage)
-				await button('Numbered List').click()
+				await button('orderedList').click()
 			},
 			made: listAs('kt-v', 'orderedList', 'listItem'),
 			selected: 'kt-v-1p at 1',
@@ -2674,22 +2692,22 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 			made: listAs('kt-k', 'taskList', 'taskItem'),
 		},
 		{
-			kind: 'Heading 2 on text across two lines',
+			kind: 'heading 2 on text across two lines',
 			html: `<p ${ownSettings('kt-e-a')}>Alpha</p><p ${ownSettings('kt-e-b')}>Beta</p>`,
 			ids: ['kt-e-a', 'kt-e-b'],
 			change: async () => {
 				await cursorAt(page, 'kt-e-a', 1, ['kt-e-b', 2])
-				await button('Heading 2').click()
+				await button('heading 2').click()
 			},
 			made: { 'kt-e-a': 'heading in doc', 'kt-e-b': 'heading in doc' },
 		},
 		{
-			kind: 'Bullet List on a heading',
+			kind: 'bulletList on a heading',
 			html: `<h2 ${ownSettings('kt-f')}>Head</h2>`,
 			ids: ['kt-f'],
 			change: async () => {
 				await cursorInView(page, 'kt-f', 1)
-				await button('Bullet List').click()
+				await button('bulletList').click()
 			},
 			made: { 'kt-f': 'paragraph in listItem' },
 		},
@@ -2732,61 +2750,61 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 		},
 		// The target is the list: its own type makes every item a line.
 		{
-			kind: "the list's Bullet List button on a bullet list, the cursor in it",
+			kind: "the list's bulletList button on a bullet list, the cursor in it",
 			html: list('kt-o'),
 			ids: listIds('kt-o'),
 			change: async () => {
 				await cursorInView(page, 'kt-o-2p', 1)
 				await pickInPath(page, onThePage)
-				await button('Bullet List').click()
+				await button('bulletList').click()
 			},
 			made: { 'kt-o-1p': 'paragraph in doc', 'kt-o-2p': 'paragraph in doc' },
 			selected: 'kt-o-2p at 1',
 		},
 		// A new list joins the list above it, not the one below, whose settings would go.
 		{
-			kind: "the line's Bullet List button on a line just above a bullet list",
+			kind: "the line's bulletList button on a line just above a bullet list",
 			html: `<p ${ownSettings('kt-a')}>Above</p>${list('kt-b')}`,
 			ids: ['kt-a', ...listIds('kt-b')],
 			change: async () => {
 				await cursorInView(page, 'kt-a', 1)
 				await pickInPath(page, onThePage)
-				await button('Bullet List').click()
+				await button('bulletList').click()
 			},
 			made: { 'kt-a': 'paragraph in listItem', ...listAs('kt-b', 'bulletList', 'listItem') },
 		},
 		{
-			kind: "the list's Task List button, the cursor in a nested item, the node path on the outer list",
+			kind: "the list's taskList button, the cursor in a nested item, the node path on the outer list",
 			html: nested('kt-no'),
 			ids: nestedIds('kt-no'),
 			change: async () => {
 				await cursorInView(page, 'kt-no-3p', 1)
 				await pickInPath(page, onThePage)
-				await button('Task List').click()
+				await button('taskList').click()
 			},
 			made: nestedAs('kt-no', ['taskList', 'taskItem'], bullets),
 			selected: 'kt-no-3p at 1',
 		},
 		{
-			kind: "the list's Numbered List button, the cursor in a nested item, the node path on it",
+			kind: "the list's orderedList button, the cursor in a nested item, the node path on it",
 			html: nested('kt-np'),
 			ids: nestedIds('kt-np'),
 			change: async () => {
 				await cursorInView(page, 'kt-np-3p', 1)
 				await pickInPath(page, inAnItem)
-				await button('Numbered List').click()
+				await button('orderedList').click()
 			},
 			made: nestedAs('kt-np', bullets, ['orderedList', 'listItem']),
 			selected: 'kt-np-3p at 1',
 		},
 		{
-			kind: 'Change Type to Task List, the cursor in a nested item, the node path on the outer list',
+			kind: 'Change Type to taskList, the cursor in a nested item, the node path on the outer list',
 			html: nested('kt-nc'),
 			ids: nestedIds('kt-nc'),
 			change: async () => {
 				await cursorInView(page, 'kt-nc-3p', 1)
 				await pickInPath(page, onThePage)
-				await changeTypeTo('Task List')
+				await changeTypeTo('taskList')
 			},
 			made: nestedAs('kt-nc', ['taskList', 'taskItem'], bullets),
 			selected: 'kt-nc-3p at 1',
@@ -2802,24 +2820,24 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 			made: nestedAs('kt-nk', bullets, ['taskList', 'taskItem']),
 		},
 		{
-			kind: "the list's Task List button, the list selected as a whole",
+			kind: "the list's taskList button, the list selected as a whole",
 			html: list('kt-s'),
 			ids: listIds('kt-s'),
 			change: async () => {
 				await selectBlock(page, 'kt-s')
-				await button('Task List').click()
+				await button('taskList').click()
 			},
 			made: listAs('kt-s', 'taskList', 'taskItem'),
 			selected: '#kt-s selected',
 			undone: listAs('kt-s', 'bulletList', 'listItem'),
 		},
 		{
-			kind: "the list's Bullet List button on a bullet list selected as a whole",
+			kind: "the list's bulletList button on a bullet list selected as a whole",
 			html: list('kt-w'),
 			ids: listIds('kt-w'),
 			change: async () => {
 				await selectBlock(page, 'kt-w')
-				await button('Bullet List').click()
+				await button('bulletList').click()
 			},
 			made: { 'kt-w-1p': 'paragraph in doc', 'kt-w-2p': 'paragraph in doc' },
 			selected: 'kt-w-1p at 0 to kt-w-2p at 3',
@@ -2836,34 +2854,34 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 			selected: '#kt-7 selected',
 		},
 		{
-			kind: 'Change Type to Bullet List, a to-do list selected as a whole',
+			kind: 'Change Type to bulletList, a to-do list selected as a whole',
 			html: tasks('kt-t'),
 			ids: listIds('kt-t'),
 			change: async () => {
 				await selectBlock(page, 'kt-t')
-				await changeTypeTo('Bullet List')
+				await changeTypeTo('bulletList')
 			},
 			made: listAs('kt-t', 'bulletList', 'listItem'),
 		},
 		{
-			kind: "the list's Numbered List button, a nested list selected as a whole",
+			kind: "the list's orderedList button, a nested list selected as a whole",
 			html: nested('kt-n'),
 			ids: nestedIds('kt-n'),
 			change: async () => {
 				await selectBlock(page, 'kt-n-in')
-				await button('Numbered List').click()
+				await button('orderedList').click()
 			},
 			made: nestedAs('kt-n', bullets, ['orderedList', 'listItem']),
 		},
 		// Two lists stay two: joined, one's settings would go.
 		{
-			kind: "the list's Numbered List button on a bullet list just under a numbered list",
+			kind: "the list's orderedList button on a bullet list just under a numbered list",
 			html: list('kt-jo', 'ol') + list('kt-ju'),
 			ids: [...listIds('kt-jo'), ...listIds('kt-ju')],
 			change: async () => {
 				await cursorInView(page, 'kt-ju-1p', 1)
 				await pickInPath(page, onThePage)
-				await button('Numbered List').click()
+				await button('orderedList').click()
 			},
 			made: {
 				...listAs('kt-jo', 'orderedList', 'listItem'),
@@ -2871,12 +2889,12 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 			},
 		},
 		{
-			kind: "the list's Task List button on a bullet list just under a to-do list",
+			kind: "the list's taskList button on a bullet list just under a to-do list",
 			html: tasks('kt-jt') + list('kt-jb'),
 			ids: [...listIds('kt-jt'), ...listIds('kt-jb')],
 			change: async () => {
 				await selectBlock(page, 'kt-jb')
-				await button('Task List').click()
+				await button('taskList').click()
 			},
 			made: {
 				...listAs('kt-jt', 'taskList', 'taskItem'),
@@ -2887,57 +2905,57 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 		// On the page, a block selected as a whole took the page's settings, which are none: in a
 		// Card, it took the Card's.
 		{
-			kind: 'the Heading 2 button, a line in a Card selected as a whole',
+			kind: 'the heading 2 button, a line in a Card selected as a whole',
 			html: card('kt-h'),
 			ids: ['kt-h-p'],
 			change: async () => {
 				await selectBlock(page, 'kt-h-p')
-				await button('Heading 2').click()
+				await button('heading 2').click()
 			},
 			made: { 'kt-h-p': 'heading in kt-h' },
 		},
 		{
-			kind: 'Change Type to Heading 1, a line in a Card selected as a whole',
+			kind: 'Change Type to heading 1, a line in a Card selected as a whole',
 			html: card('kt-m'),
 			ids: ['kt-m-p'],
 			change: async () => {
 				await selectBlock(page, 'kt-m-p')
-				await changeTypeTo('Heading 1')
+				await changeTypeTo('heading 1')
 			},
 			made: { 'kt-m-p': 'heading in kt-m' },
 		},
 		{
-			kind: "the list's Numbered List button, the cursor in a nested item, the node path on the outer list",
+			kind: "the list's orderedList button, the cursor in a nested item, the node path on the outer list",
 			html: nested('kt-nb'),
 			ids: nestedIds('kt-nb'),
 			change: async () => {
 				await cursorInView(page, 'kt-nb-3p', 1)
 				await pickInPath(page, onThePage)
-				await button('Numbered List').click()
+				await button('orderedList').click()
 			},
 			made: nestedAs('kt-nb', ['orderedList', 'listItem'], bullets),
 			selected: 'kt-nb-3p at 1',
 		},
 		{
-			kind: "the list's Task List button, text selected across its items",
+			kind: "the list's taskList button, text selected across its items",
 			html: list('kt-ts'),
 			ids: listIds('kt-ts'),
 			change: async () => {
 				await cursorAt(page, 'kt-ts-1p', 1, ['kt-ts-2p', 2])
 				await pickInPath(page, onThePage)
-				await button('Task List').click()
+				await button('taskList').click()
 			},
 			made: listAs('kt-ts', 'taskList', 'taskItem'),
 			selected: 'kt-ts-1p at 1 to kt-ts-2p at 2',
 		},
 		{
-			kind: "the list's Numbered List button on a bullet list just above a numbered list",
+			kind: "the list's orderedList button on a bullet list just above a numbered list",
 			html: list('kt-ja') + list('kt-jn', 'ol'),
 			ids: [...listIds('kt-ja'), ...listIds('kt-jn')],
 			change: async () => {
 				await cursorInView(page, 'kt-ja-1p', 1)
 				await pickInPath(page, onThePage)
-				await button('Numbered List').click()
+				await button('orderedList').click()
 			},
 			made: {
 				...listAs('kt-ja', 'orderedList', 'listItem'),
@@ -2946,7 +2964,7 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 		},
 		// The lists inside stay as they are, ticks and all.
 		{
-			kind: "the list's Bullet List button on a to-do list holding a to-do list",
+			kind: "the list's bulletList button on a to-do list holding a to-do list",
 			html:
 				`<ul data-type="taskList" ${ownSettings('kt-tt')}><li data-type="taskItem" data-checked="false" ${ownSettings('kt-tt-1')}>`
 				+ `<p ${ownSettings('kt-tt-1p')}>One</p><ul data-type="taskList" ${ownSettings('kt-tt-in')}>`
@@ -2954,7 +2972,7 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 			ids: nestedIds('kt-tt'),
 			change: async () => {
 				await selectBlock(page, 'kt-tt')
-				await button('Bullet List').click()
+				await button('bulletList').click()
 			},
 			made: {
 				...nestedAs('kt-tt', bullets, ['taskList', 'taskItem']),
@@ -2962,26 +2980,26 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 			},
 		},
 		{
-			kind: "the slash menu's Ordered List, the cursor in a bullet item",
+			kind: "the slash menu's orderedList, the cursor in a bullet item",
 			html: list('kt-sl'),
 			ids: listIds('kt-sl'),
 			change: async () => {
 				await cursorInView(page, 'kt-sl-1p', 'One'.length)
 				await page.keyboard.type(' /Ordered')
-				await page.locator('.dropdown-menu .menu-item', { hasText: 'Ordered List' }).click()
+				await page.locator('.dropdown-menu .menu-item', { hasText: 'orderedList' }).click()
 			},
 			made: listAs('kt-sl', 'orderedList', 'listItem'),
 		},
 		// The line's own button takes one item out, as for a bullet line. Last, as the button is
 		// new: the rows before it then run without it too.
 		{
-			kind: "the line's Task List button in a to-do item",
+			kind: "the line's taskList button in a to-do item",
 			html: tasks('kt-l'),
 			ids: listIds('kt-l'),
 			change: async () => {
 				await cursorInView(page, 'kt-l-2p', 1)
 				await pickInPath(page, inAnItem)
-				await button('Task List').click()
+				await button('taskList').click()
 			},
 			made: {
 				'kt-l': 'taskList in doc',
@@ -3039,7 +3057,7 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 		return editor.state.doc.resolve(at).index(0)
 	})
 	await pickInPath(page, onThePage)
-	await button('Task List').click()
+	await button('taskList').click()
 	await settle(page)
 	expect
 		.soft(
@@ -3049,7 +3067,7 @@ test('a block whose type changes keeps its own id, class and style', async ({ pa
 				const { $head } = selection
 				return `${doc.child($head.index(0)).type.name} ${$head.index(0)}, "${$head.parent.textContent}" at ${$head.parentOffset}`
 			}),
-			'a copied list: the cursor after Task List',
+			'a copied list: the cursor after taskList',
 		)
 		.toBe(`taskList ${copyAt}, "Two" at 1`)
 })
@@ -3106,8 +3124,8 @@ test('ids the author gives are kept, even two the same', async ({ page }) => {
 		.toBeGreaterThan((await withId(page, 'move-under'))[0]!.at)
 	await cursorInView(page, 'written', 1)
 	await page.keyboard.type('x')
-	await (await openMenu(page, 'change_circle')).getByText('Heading 2', { exact: true }).click()
-	await page.locator('.floating-toolbar').getByRole('button', { name: 'Blockquote' }).click()
+	await (await openMenu(page, 'change_circle')).getByText('heading 2', { exact: true }).click()
+	await page.locator('.floating-toolbar').getByRole('button', { name: 'blockquote' }).click()
 	await settle(page)
 	expect
 		.soft(

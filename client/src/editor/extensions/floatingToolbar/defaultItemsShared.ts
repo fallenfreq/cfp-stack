@@ -1,5 +1,5 @@
 import ToolbarIcon from '@/components/editor/toolbar/ToolbarIcon.vue'
-import { getNodeAlias } from '@/utils/editor/nodeRegistry'
+import { getHeadingName, getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
 import { h } from 'vue'
@@ -29,24 +29,23 @@ export const isListNode = (_e: Editor, ctx: ToolbarItemContext) =>
 // (tableRow, listItem, etc.) are filtered automatically by isLeaf and canReplaceWith/validContent.
 export const EXCLUDED_NODE_TYPES = new Set(['doc', 'text'])
 
-// Display metadata for known types. Others fall back to { label: getNodeAlias(typeName), iconName:
-// 'widgets' }: a custom block's type name is its ID, and its alias is the name it goes by.
-export const NODE_META: Record<string, { label: string; iconName: string }> = {
-	paragraph: { label: 'Paragraph', iconName: 'notes' },
-	heading: { label: 'Heading', iconName: 'title' },
-	codeBlock: { label: 'Code Block', iconName: 'data_object' },
-	blockquote: { label: 'Blockquote', iconName: 'format_quote' },
-	div: { label: 'Div', iconName: 'frame_source' },
-	span: { label: 'Span', iconName: 'short_text' },
-	bulletList: { label: 'Bullet List', iconName: 'format_list_bulleted' },
-	orderedList: { label: 'Numbered List', iconName: 'format_list_numbered' },
-	taskList: { label: 'Task List', iconName: 'checklist' },
-	listItem: { label: 'List Item', iconName: 'list' },
-	taskItem: { label: 'Task Item', iconName: 'check_box' },
-	table: { label: 'Table', iconName: 'table' },
-	tableRow: { label: 'Table Row', iconName: 'table_rows' },
-	tableCell: { label: 'Table Cell', iconName: 'crop_square' },
-	tableHeader: { label: 'Table Header', iconName: 'table_chart' },
+// Each block's icon in the pickers (a heading's is its level's); one not listed (a component block)
+// shows 'widgets'. Its name is the one the node path shows (getNodeAlias).
+export const NODE_ICONS: Record<string, string> = {
+	paragraph: 'notes',
+	codeBlock: 'data_object',
+	blockquote: 'format_quote',
+	div: 'frame_source',
+	span: 'short_text',
+	bulletList: 'format_list_bulleted',
+	orderedList: 'format_list_numbered',
+	taskList: 'checklist',
+	listItem: 'list',
+	taskItem: 'check_box',
+	table: 'table',
+	tableRow: 'table_rows',
+	tableCell: 'crop_square',
+	tableHeader: 'table_chart',
 }
 
 // Mirrors FloatingToolbar's resolveActive() position logic — shared by all helpers below.
@@ -142,7 +141,7 @@ export const replaceNodeType = (
 	editor.view.dispatch(tr)
 }
 
-// Enumerates all non-excluded, non-leaf schema nodes with display metadata.
+// Enumerates all non-excluded, non-leaf schema nodes with their name and icon.
 // 'heading' is expanded to three level-specific entries so callers don't need to special-case it.
 export function blockNodeEntries(editor: Editor) {
 	const result: {
@@ -154,18 +153,23 @@ export function blockNodeEntries(editor: Editor) {
 	}[] = []
 	for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
 		if (EXCLUDED_NODE_TYPES.has(typeName) || type.isLeaf) continue
-		const meta = NODE_META[typeName] ?? { label: getNodeAlias(typeName), iconName: 'widgets' }
 		if (typeName === 'heading') {
 			for (let level = 1; level <= 3; level++)
 				result.push({
 					typeName,
 					type,
 					attrs: { level },
-					label: `Heading ${level}`,
+					label: getHeadingName(level),
 					iconName: `format_h${level}`,
 				})
 		} else {
-			result.push({ typeName, type, attrs: {}, ...meta })
+			result.push({
+				typeName,
+				type,
+				attrs: {},
+				label: getNodeAlias(typeName),
+				iconName: NODE_ICONS[typeName] ?? 'widgets',
+			})
 		}
 	}
 	return result

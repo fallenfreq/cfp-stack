@@ -1,5 +1,6 @@
 import SlashCommands from '@/components/editor/SlashCommands.vue'
 import { editorComponents } from '@/config/editor/editorComponents'
+import { getHeadingName, getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { type SuggestionOptions } from '@tiptap/suggestion'
 import { VueRenderer, type Editor, type Range } from '@tiptap/vue-3'
 
@@ -9,8 +10,10 @@ interface Item {
 	command: Command
 }
 
+// The menu names each block as the node path does (getNodeAlias); bold, italic and a link, which
+// aren't blocks, go by what they do.
 const editorComponentItems: Item[] = Object.values(editorComponents).map((value) => ({
-	title: value.alias,
+	title: getNodeAlias(value.uuid),
 	command: ({ editor, range }) => {
 		if (value.content.startsWith('inline')) {
 			editor.chain().focus().deleteRange(range).setNode(value.uuid).run()
@@ -48,7 +51,7 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 			const items: Item[] = []
 			for (let i = 1; i <= 3; i++) {
 				items.push({
-					title: `Heading ${i}`,
+					title: getHeadingName(i),
 					command: ({ editor, range }) =>
 						editor
 							.chain()
@@ -63,13 +66,13 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 
 		const items: Item[] = [
 			{
-				title: 'Paragraph',
+				title: getNodeAlias('paragraph'),
 				command: ({ editor, range }) =>
 					editor.chain().focus().deleteRange(range).setNode('paragraph').run(),
 			},
 			...generateHeadingItems(),
 			{
-				title: 'Table',
+				title: getNodeAlias('table'),
 				command: ({ editor, range }) => {
 					promptForTableSpec((rows, cols) => {
 						editor
@@ -82,7 +85,7 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 				},
 			},
 			{
-				title: 'YouTube Video',
+				title: getNodeAlias('youtube'),
 				command: ({ editor, range }) => {
 					promptForYoutubeURL((url) => {
 						editor
@@ -97,7 +100,7 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 				},
 			},
 			{
-				title: 'Image',
+				title: getNodeAlias('image'),
 				command: ({ editor, range }) => {
 					promptForImageURL((url) => {
 						editor.chain().focus().deleteRange(range).setImage({ src: url }).run()
@@ -105,27 +108,27 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 				},
 			},
 			{
-				title: 'Bullet List',
+				title: getNodeAlias('bulletList'),
 				command: ({ editor, range }) =>
 					editor.chain().focus().deleteRange(range).toggleBulletList().run(),
 			},
 			{
-				title: 'Ordered List',
+				title: getNodeAlias('orderedList'),
 				command: ({ editor, range }) =>
 					editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
 			},
 			{
-				title: 'Task List',
+				title: getNodeAlias('taskList'),
 				command: ({ editor, range }) =>
 					editor.chain().focus().deleteRange(range).toggleTaskList().run(),
 			},
 			{
-				title: 'Blockquote',
+				title: getNodeAlias('blockquote'),
 				command: ({ editor, range }) =>
 					editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
 			},
 			{
-				title: 'Horizontal Rule',
+				title: getNodeAlias('horizontalRule'),
 				command: ({ editor, range }) =>
 					editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
 			},
@@ -144,7 +147,7 @@ const suggestionOptions: Omit<SuggestionOptions, 'editor'> = {
 				},
 			},
 			{
-				title: 'Code block',
+				title: getNodeAlias('codeBlock'),
 				command: ({ editor, range }) =>
 					editor.chain().focus().deleteRange(range).setNode('codeBlock').run(),
 			},

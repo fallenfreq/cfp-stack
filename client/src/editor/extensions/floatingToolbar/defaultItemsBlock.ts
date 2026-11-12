@@ -3,7 +3,7 @@ import ToolbarNodePicker, {
 } from '@/components/editor/toolbar/ToolbarNodePicker.vue'
 import { languages } from '@/config/editor/lowlight'
 import { getExtensionOptions, prettifySelectedCode } from '@/utils/editor/editorUtils'
-import { getNodeAlias } from '@/utils/editor/nodeRegistry'
+import { getHeadingName, getNodeAlias } from '@/utils/editor/nodeRegistry'
 import type { BulletListOptions, OrderedListOptions, TaskListOptions } from '@tiptap/extension-list'
 import { Fragment, type ResolvedPos } from '@tiptap/pm/model'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
@@ -18,7 +18,7 @@ import {
 	isListNode,
 	isParagraphOrHeading,
 	isTextblock,
-	NODE_META,
+	NODE_ICONS,
 	replaceNodeType,
 	resolveActivePos,
 } from './defaultItemsShared'
@@ -146,13 +146,9 @@ const getWrapInItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem
 		const items: NodePickerItem[] = []
 		for (const [typeName, type] of Object.entries(editor.schema.nodes)) {
 			if (EXCLUDED_NODE_TYPES.has(typeName) || !type.isInline || type.isLeaf) continue
-			const meta = NODE_META[typeName] ?? {
-				label: getNodeAlias(typeName),
-				iconName: 'widgets',
-			}
 			items.push({
-				label: meta.label,
-				iconName: meta.iconName,
+				label: getNodeAlias(typeName),
+				iconName: NODE_ICONS[typeName] ?? 'widgets',
 				active: editor.isActive(typeName),
 				action: () => {
 					const { from, to } = editor.state.selection
@@ -279,7 +275,7 @@ export const blockItems = [
 	// --- Block conversions (paragraph or heading) ---
 	toolbarButtonItem({
 		id: 'code-block',
-		tooltip: 'Code Block',
+		tooltip: getNodeAlias('codeBlock'),
 		label: icon('data_object'),
 		show: isTextblock,
 		active: (editor) => editor.isActive('codeBlock'),
@@ -287,7 +283,7 @@ export const blockItems = [
 	}),
 	toolbarButtonItem({
 		id: 'heading-1',
-		tooltip: 'Heading 1',
+		tooltip: getHeadingName(1),
 		label: icon('format_h1'),
 		show: isParagraphOrHeading,
 		active: (_editor, ctx) =>
@@ -296,7 +292,7 @@ export const blockItems = [
 	}),
 	toolbarButtonItem({
 		id: 'heading-2',
-		tooltip: 'Heading 2',
+		tooltip: getHeadingName(2),
 		label: icon('format_h2'),
 		show: isParagraphOrHeading,
 		active: (_editor, ctx) =>
@@ -305,7 +301,7 @@ export const blockItems = [
 	}),
 	toolbarButtonItem({
 		id: 'heading-3',
-		tooltip: 'Heading 3',
+		tooltip: getHeadingName(3),
 		label: icon('format_h3'),
 		show: isParagraphOrHeading,
 		active: (_editor, ctx) =>
@@ -314,7 +310,7 @@ export const blockItems = [
 	}),
 	toolbarButtonItem({
 		id: 'blockquote',
-		tooltip: 'Blockquote',
+		tooltip: getNodeAlias('blockquote'),
 		label: icon('format_quote'),
 		show: isParagraphOrHeading,
 		active: (editor, ctx) => {
@@ -325,7 +321,7 @@ export const blockItems = [
 	}),
 	toolbarButtonItem({
 		id: 'bullet-list',
-		tooltip: 'Bullet List',
+		tooltip: getNodeAlias('bulletList'),
 		label: icon('format_list_bulleted'),
 		show: isParagraphOrHeading,
 		active: (editor, ctx) => {
@@ -340,7 +336,7 @@ export const blockItems = [
 	}),
 	toolbarButtonItem({
 		id: 'ordered-list',
-		tooltip: 'Numbered List',
+		tooltip: getNodeAlias('orderedList'),
 		label: icon('format_list_numbered'),
 		show: isParagraphOrHeading,
 		active: (editor, ctx) => {
@@ -354,7 +350,7 @@ export const blockItems = [
 	}),
 	toolbarButtonItem({
 		id: 'task-list',
-		tooltip: 'Task List',
+		tooltip: getNodeAlias('taskList'),
 		label: icon('checklist'),
 		show: isParagraphOrHeading,
 		active: (editor, ctx) => {
@@ -450,7 +446,7 @@ export const blockItems = [
 	// --- List switching (when active node is a list wrapper) ---
 	toolbarButtonItem({
 		id: 'list-bullet',
-		tooltip: 'Bullet List',
+		tooltip: getNodeAlias('bulletList'),
 		label: icon('format_list_bulleted'),
 		show: isListNode,
 		active: (_editor, ctx) => ctx.activeNode.type.name === 'bulletList',
@@ -458,7 +454,7 @@ export const blockItems = [
 	}),
 	toolbarButtonItem({
 		id: 'list-ordered',
-		tooltip: 'Numbered List',
+		tooltip: getNodeAlias('orderedList'),
 		label: icon('format_list_numbered'),
 		show: isListNode,
 		active: (_editor, ctx) => ctx.activeNode.type.name === 'orderedList',
@@ -466,7 +462,7 @@ export const blockItems = [
 	}),
 	toolbarButtonItem({
 		id: 'list-task',
-		tooltip: 'Task List',
+		tooltip: getNodeAlias('taskList'),
 		label: icon('checklist'),
 		show: isListNode,
 		active: (_editor, ctx) => ctx.activeNode.type.name === 'taskList',

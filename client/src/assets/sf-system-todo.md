@@ -34,10 +34,10 @@ Next: settings for every selected block.
       was tried and taken out: typing after Shift+Tab back to the page replaced the block. Worth
       designing with the component store, when blocks with controls of their own are common.
 - **Names when the component store comes** (decided, not designed). Saved pages keep only a
-  block's ID; its name is looked up only where it's shown, in one place (`nodeRegistry.ts`).
-  Today the node path, the slash menu and the pickers each find it their own way. To decide with
-  the store: a `name` on each component (the store's planned field) beside the site's alias, and
-  where each shows (two components can share an author's name; the alias is unique on the site).
+  block's ID; its name is looked up only where it's shown, in one place (`nodeRegistry.ts`), and
+  every place that names a block shows that name. To decide with the store: a `name` on each
+  component (the store's planned field) beside the site's alias, and where each shows (two
+  components can share an author's name; the alias is unique on the site).
   The picker's rows are told apart by their label (`ToolbarNodePicker.vue`), which two components
   named alike would break: key them by type. A site's alias (the tag the page writes) can't hold
   a `.` or `#`: the validator's page reader reads `my-card.v2` as `my-card` wearing `v2`, as
@@ -113,8 +113,6 @@ Next: settings for every selected block.
 
 ## Editor
 
-- **The node path names built-in blocks by their type** ("bulletList", "tableRow") where the
-  pickers say "Bullet List".
 - **The style tools' selection checks never apply.** Colour, Font, Aspect, Corners and Shadow
   check how many blocks are selected (`defaultItemsStyle.ts`), but the toolbar hides them whenever
   any is.
@@ -171,6 +169,11 @@ Next: settings for every selected block.
   TipTap's design.
 - **The preloaded icon font.** Chrome warns that it isn't used within a few seconds of the editor
   opening. Not looked into.
+- **The demo page's help is out of date** (`initialContent.html`). It names toolbar items as they
+  were: Turn Into (now Change Type), Image URL and YouTube URL (now Image address and Video
+  address), Toggle bullet list (now `bulletList`). It offers `/hr`, which matches nothing, and says
+  code blocks are coloured in six languages with Auto, where since 2026-11-12 there are 20 and none
+  is guessed. Its layout checks (`demo.spec.ts`) record its blocks' sizes, so they change with it.
 - **Rule errors read like developer text.** They reach the user with their message, but some
   read like developer text (the class-name check prints its pattern). Rewording them is open.
 - **Leaving after the sign-in check.** A Leave that the router-wide sign-in check sends elsewhere
@@ -234,6 +237,10 @@ Next: settings for every selected block.
 
 ## Popovers and browsers
 
+- **Escape leaves a toolbar panel open.** A panel opened by clicking its button (Wrap In, on a
+  selected Card) stays open when Escape is pressed, in Chrome and WebKit; clicking the button
+  again closes it. Its button keeps the keys on the page (`ToolbarPanelItem.vue`); why Escape
+  doesn't close it isn't looked into.
 - **A panel that fits nowhere, in WebKit.** Where a panel fits nowhere (a short screen, its
   button mid-screen), WebKit lets it run off the top of the screen where Chrome slides it down,
   as the spec says. It's WebKit's, with or without a fixed bar. `align-self: safe start` stops it
