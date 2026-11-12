@@ -169,11 +169,6 @@ Next: settings for every selected block.
   TipTap's design.
 - **The preloaded icon font.** Chrome warns that it isn't used within a few seconds of the editor
   opening. Not looked into.
-- **The demo page's help is out of date** (`initialContent.html`). It names toolbar items as they
-  were: Turn Into (now Change Type), Image URL and YouTube URL (now Image address and Video
-  address), Toggle bullet list (now `bulletList`). It offers `/hr`, which matches nothing, and says
-  code blocks are coloured in six languages with Auto, where since 2026-11-12 there are 20 and none
-  is guessed. Its layout checks (`demo.spec.ts`) record its blocks' sizes, so they change with it.
 - **Rule errors read like developer text.** They reach the user with their message, but some
   read like developer text (the class-name check prints its pattern). Rewording them is open.
 - **Leaving after the sign-in check.** A Leave that the router-wide sign-in check sends elsewhere

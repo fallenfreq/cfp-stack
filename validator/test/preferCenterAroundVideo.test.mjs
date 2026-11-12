@@ -10,7 +10,7 @@ test('a centred video is a suggestion', () => {
 	assert.deepEqual(results, [
 		{
 			message:
-				"A video is usually centred by a Centre around it, with max-width: none in the video's own style",
+				"A video is usually centred by an sl-center around it, with max-width: none in the video's own style",
 			lines: [1],
 		},
 	])

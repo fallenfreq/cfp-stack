@@ -5,7 +5,7 @@ import { noCollapseStraightInColumns } from '../rules/noCollapseStraightInColumn
 import { checkHtml } from './checkHtml.mjs'
 
 const stacks =
-	"Stacks by the width of the whole layout around it, not its column's: put it in a Stack in the column"
+	"Stacks by the width of the whole layout around it, not its column's: put it in an sl-stack in the column"
 
 test('a collapsing layout straight in a column of a split, Columns or a grid is a result', () => {
 	const page = `<div class="sl-split">

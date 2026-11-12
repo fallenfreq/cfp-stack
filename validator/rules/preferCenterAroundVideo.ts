@@ -14,7 +14,7 @@ export const preferCenterAroundVideo: ElementRule = {
 			)
 				report({
 					message:
-						"A video is usually centred by a Centre around it, with max-width: none in the video's own style",
+						"A video is usually centred by an sl-center around it, with max-width: none in the video's own style",
 					nodes: [element],
 				})
 		})

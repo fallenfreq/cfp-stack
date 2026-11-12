@@ -1142,9 +1142,9 @@ around it. A width container takes no width from its content, so only these boxe
   So a block that collapses measures the nearest layout around it, whether it's a layout
   block (Columns) or classes typed on an element. A layout straight in a column of a split,
   Columns or a grid measures the whole layout around it: Columns in a split's narrow side stack
-  only when the whole split is narrow. To stack by the column's width, put it in a Stack in that
-  column. Straight in an inset, a layout measures the inset's margins too, so it stacks late by
-  their width.
+  only when the whole split is narrow. To stack by the column's width, put it in an `sl-stack` in
+  that column. Straight in an inset, a layout measures the inset's margins too, so it stacks late
+  by their width.
 - **The document** (the editor and published pages) is always a width container, so a layout
   at the top of a page measures the page.
 - **A layout that bleeds out of a document** (a top-level block set to bleed in an inset) is
@@ -1424,7 +1424,7 @@ readers, walkers and types come with them.
   full-bleed).
 - **`no-collapse-straight-in-columns`**: a collapsing layout straight in a column of a split,
   Columns or a grid: it measures the whole layout, so it stacks only when that is narrow. To
-  stack by the column's width, put it in a Stack in that column (Container-responsive
+  stack by the column's width, put it in an `sl-stack` in that column (Container-responsive
   collapse). An inset is left out: a layout straight in one stacks late only by the inset's two
   margins (48px with a 24px page margin), and bands holding Columns are common.
 - **`require-picture-size`**: a picture with no size of its own (Layout primitives, "A

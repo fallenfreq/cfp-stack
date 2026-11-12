@@ -34,7 +34,7 @@ test('a component block with no layout framing a picture is a result saying why'
 	assert.deepEqual(checkHtml(requirePictureSize, page), [
 		{
 			message:
-				"This block's shape and fill don't reach its picture: give the block a layout such as Stack, or put the shape and fill on the picture",
+				"This block's shape and fill don't reach its picture: give the block a layout such as sl-stack, or put the shape and fill on the picture",
 			lines: [2],
 		},
 		{ message: jumps, lines: [4] },

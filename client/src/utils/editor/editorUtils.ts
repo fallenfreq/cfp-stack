@@ -1,6 +1,7 @@
 import { languages } from '@/config/editor/lowlight'
 import { notify } from '@/services/toast'
 import { isPrettierLanguage, prettifyCode } from '@/utils/codeFormatting'
+import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { type Node as ProseMirrorNode, type ResolvedPos } from '@tiptap/pm/model'
 import { NodeSelection } from '@tiptap/pm/state'
 import { type EditorView } from '@tiptap/pm/view'
@@ -48,9 +49,9 @@ const prettifySelectedCode = async (editor: Editor) => {
 	const language: string | null | undefined = parentNode?.attrs['language']
 	let message = ''
 	if (language === undefined) {
-		message = 'Formatting is only available for code blocks.'
+		message = `Formatting is only available in a ${getNodeAlias('codeBlock')}.`
 	} else if (language === null) {
-		message = "Set the code block's language to format it."
+		message = `Set this ${getNodeAlias('codeBlock')}'s language to format it.`
 	} else if (!isPrettierLanguage(language)) {
 		message = `Formatting is not available for ${languageName(language)}.`
 	}

@@ -50,29 +50,29 @@
 	</div>
 
 	<layout-card class="sf-size-md">
-		<h3>LayoutStack</h3>
+		<h3><code>layout-stack</code></h3>
 		<p>
-			A <strong>flex-column container</strong> with configurable <em>gap</em>,
-			<em>padding</em>, and <em>align</em> props. Use it to group blocks with consistent
-			spacing. The three paragraphs below are inside a LayoutStack with
-			<code>gap="sm"</code> and <code>align="start"</code>.
+			A <strong>column of blocks</strong> with a gap between them (an
+			<code>sf-gap-*</code> class) and an <em>align</em> setting. Use it to group blocks with
+			consistent spacing. The three paragraphs below are inside a
+			<code>layout-stack</code> with <code>sf-gap-sm</code> and <code>align="start"</code>.
 		</p>
 		<layout-stack class="sf-gap-sm" align="start">
-			<p>First item in the LayoutStack.</p>
-			<p>Second item — the gap between these is controlled by the <code>gap</code> prop.</p>
+			<p>First item in the <code>layout-stack</code>.</p>
+			<p>Second item — the gap between these is set by the <code>sf-gap-sm</code> class.</p>
 			<p>
-				Third item. The <code>align</code> prop controls cross-axis alignment (start /
+				Third item. The <code>align</code> setting lines the blocks up across (start /
 				center / end / stretch).
 			</p>
 		</layout-stack>
 	</layout-card>
 
 	<div data-container="">
-		<h3>LayoutSplit</h3>
+		<h3><code>layout-split</code></h3>
 		<p>
-			Creates a <strong>two-column asymmetric grid</strong>. The <code>split</code> prop sets
-			the ratio: 1/4, 1/3, 2/5, 1/2, 3/5, 2/3, or 3/4. The two cards below are the two direct
-			children of this LayoutSplit — each becomes one grid cell. The
+			Creates a <strong>two-column asymmetric grid</strong>. The <code>split</code> setting
+			sets the ratio: 1/4, 1/3, 2/5, 1/2, 3/5, 2/3, or 3/4. The two cards below are the two
+			direct children of this <code>layout-split</code> — each becomes one grid cell. The
 			<code>sl-collapse-sm</code> class sets the container-query breakpoint at which it stacks
 			to a single column.
 		</p>
@@ -81,21 +81,23 @@
 		<layout-card class="sf-variant-alt-1 sf-size-md">
 			<h3>Left column</h3>
 			<p>
-				Any block content can go inside — paragraphs, lists, nested layout components,
-				images, code blocks. This is a <code>split="1/2"</code> (equal width) layout.
+				Any blocks can go inside, such as a <code>paragraph</code>, a list, a nested layout,
+				an <code>image</code> or a <code>codeBlock</code>. This is a
+				<code>split="1/2"</code>
+				(equal width) layout.
 			</p>
 		</layout-card>
 		<layout-card class="sf-variant-alt-1 sf-size-md">
 			<h3>Right column</h3>
 			<p>
 				The <code>sf-gap-*</code> class sets the gutter. Try the attribute editor on the
-				LayoutSplit wrapper to change the split ratio or gap live.
+				<code>layout-split</code> to change the split ratio or gap live.
 			</p>
 		</layout-card>
 	</layout-split>
 
 	<div data-container="">
-		<h3>LayoutColumns</h3>
+		<h3><code>layout-columns</code></h3>
 		<p>
 			An <strong>N-column equal grid</strong> — 2, 3, or 4 columns. Each direct child becomes
 			one cell. The three cards below are in a <code>columns="3"</code> grid.
@@ -108,7 +110,7 @@
 		</layout-card>
 		<layout-card class="sf-size-md">
 			<h3>Column 2</h3>
-			<p>The <code>gap</code> prop controls the gutter between columns.</p>
+			<p>The <code>sf-gap-*</code> class sets the gutter between columns.</p>
 		</layout-card>
 		<layout-card class="sf-size-md">
 			<h3>Column 3</h3>
@@ -121,7 +123,7 @@
 
 	<layout-split split="2/3" class="sf-gap-md sl-collapse-sm">
 		<layout-card class="sf-size-md">
-			<h3>LayoutCard</h3>
+			<h3><code>layout-card</code></h3>
 			<p>
 				A <code>sf-depth-1</code> surface container. Add <code>sf-loudness-3</code> for a
 				prominent card, <code>sf-loudness-1</code> for a quiet de-emphasised card,
@@ -133,12 +135,12 @@
 			</p>
 		</layout-card>
 		<layout-card class="sf-size-md">
-			<h3>LayoutCenter</h3>
+			<h3><code>layout-center</code></h3>
 			<p>
 				Constrains children to a max-width and centres them horizontally. Options: xs
 				(20rem) through 3xl (48rem) or full. This page uses it as the top-level reading
 				column — full-bleed blocks like the hero image and the code sample below sit
-				<em>outside</em> a LayoutCenter at the document root.
+				<em>outside</em> a <code>layout-center</code> at the document root.
 			</p>
 		</layout-card>
 	</layout-split>
@@ -159,18 +161,19 @@
 	</div>
 	<blockquote>
 		<p>
-			Blockquotes are available from the slash command, the <strong>Turn Into</strong> picker,
-			or <strong>Wrap In</strong> to wrap any existing block. Start a line with
-			<code>&gt;</code> as a markdown shortcut.
+			A <code>blockquote</code> is available from the slash command, the
+			<strong>Change Type</strong> picker, or <strong>Wrap In</strong> to wrap any existing
+			block. Start a line with <code>&gt;</code> as a markdown shortcut.
 		</p>
 	</blockquote>
 
 	<div data-container="">
 		<h2>Block Types</h2>
 		<p>
-			Every block type is available from the <code>/</code> command palette. Headings, lists,
-			and blockquotes also have markdown shortcuts that fire as you type. Horizontal rules are
-			available via <code>/hr</code> or by typing <code>---</code> on a blank line.
+			Every block type is available from the <code>/</code> command palette, by its name. A
+			<code>heading</code>, a list or a <code>blockquote</code> also has a markdown shortcut
+			that fires as you type. A <code>horizontalRule</code> comes from
+			<code>/horizontalRule</code> or typing <code>---</code> on a blank line.
 		</p>
 	</div>
 
@@ -179,27 +182,31 @@
 			<h3>Lists</h3>
 			<ul>
 				<li>
-					<p>Bullet — type <code>-</code> to start</p>
+					<p><code>bulletList</code> — type <code>-</code> to start</p>
 				</li>
 				<li><p>Another item</p></li>
 			</ul>
 			<ol>
 				<li>
-					<p>Ordered — type <code>1.</code> to start</p>
+					<p><code>orderedList</code> — type <code>1.</code> to start</p>
 				</li>
 				<li><p>Another item</p></li>
 			</ol>
 			<ul data-type="taskList">
-				<li data-checked data-type="taskItem"><p>Task item (checked)</p></li>
-				<li data-type="taskItem"><p>Task item (unchecked)</p></li>
+				<li data-checked data-type="taskItem">
+					<p><code>taskItem</code> (checked)</p>
+				</li>
+				<li data-type="taskItem">
+					<p><code>taskItem</code> (unchecked)</p>
+				</li>
 			</ul>
 		</layout-stack>
 
 		<layout-stack class="sf-gap-sm">
 			<h3>Images</h3>
 			<p>
-				Insert via <code>/image</code>. Select to reveal the
-				<span class="material-symbols-rounded sf-icon">edit</span> URL editor.
+				Insert via <code>/image</code>. Select it for the
+				<span class="material-symbols-rounded sf-icon">edit</span> image address button.
 			</p>
 			<img src="https://placehold.co/400x300/png" style="width: 100%" />
 		</layout-stack>
@@ -271,12 +278,14 @@
 	<div data-container="">
 		<h2>Code Blocks</h2>
 		<p>
-			Syntax highlighting for JavaScript, TypeScript, Python, JSON, CSS, and HTML. Select
-			<em>auto</em> for automatic detection. When a code block is focused the toolbar shows a
+			A <code>codeBlock</code> is coloured in the language set with the
+			<span class="material-symbols-rounded sf-icon">code</span>
+			<strong>Language</strong> button, one of 20; with none set it's plain text. When a
+			<code>codeBlock</code> is selected the toolbar also shows a
 			<span class="material-symbols-rounded sf-icon">auto_fix_high</span>
-			<strong>Format</strong> button — for JavaScript and HTML it runs a full code formatter
-			in place. The block below is a sibling of this LayoutCenter at the document root, so it
-			stretches edge-to-edge.
+			<strong>Format Code</strong> button — for JavaScript and HTML it runs a full code
+			formatter in place. The block below is a sibling of this <code>layout-center</code> at
+			the document root, so it stretches edge-to-edge.
 		</p>
 	</div>
 </layout-center>
@@ -315,8 +324,9 @@ const editor = useEditor({
 				<li>
 					<p>
 						<span class="material-symbols-rounded sf-icon">change_circle</span>
-						<strong>Turn Into</strong> — convert to heading, paragraph, blockquote,
-						list, or code block
+						<strong>Change Type</strong> — make it another block, such as a
+						<code>heading</code>, <code>paragraph</code>, <code>blockquote</code>, list
+						or <code>codeBlock</code>
 					</p>
 				</li>
 				<li>
@@ -433,19 +443,19 @@ const editor = useEditor({
 				<li>
 					<p>
 						<span class="material-symbols-rounded sf-icon">format_list_bulleted</span>
-						Toggle bullet list
+						<code>bulletList</code>
 					</p>
 				</li>
 				<li>
 					<p>
 						<span class="material-symbols-rounded sf-icon">format_list_numbered</span>
-						Toggle ordered list
+						<code>orderedList</code>
 					</p>
 				</li>
 				<li>
 					<p>
 						<span class="material-symbols-rounded sf-icon">checklist</span>
-						Toggle task list
+						<code>taskList</code>
 					</p>
 				</li>
 				<li>
@@ -460,22 +470,22 @@ const editor = useEditor({
 				<li>
 					<p>
 						<span class="material-symbols-rounded sf-icon">edit</span>
-						<strong>Image URL</strong> — shown when an image is selected; reveals a URL
-						input to update the <code>src</code>
+						<strong>image address</strong> — shown when an <code>image</code> is
+						selected; change its address (<code>src</code>)
 					</p>
 				</li>
 				<li>
 					<p>
 						<span class="material-symbols-rounded sf-icon">edit</span>
-						<strong>YouTube URL</strong> — shown when a video is selected; update the
-						embed URL
+						<strong>youtube address</strong> — shown when a <code>youtube</code> video
+						is selected; change its address
 					</p>
 				</li>
 				<li>
 					<p>
 						<span class="material-symbols-rounded sf-icon">auto_fix_high</span>
-						<strong>Format code</strong> — shown for code blocks; runs the formatter for
-						JS and HTML
+						<strong>Format Code</strong> — shown for a <code>codeBlock</code>; formats
+						JavaScript and HTML
 					</p>
 				</li>
 			</ul>
@@ -500,8 +510,8 @@ const editor = useEditor({
 			<h3>The Node Path Breadcrumb</h3>
 			<p>
 				At the top of the editor a breadcrumb shows the full ancestor path of the cursor —
-				for example: <code>doc › LayoutCard › p</code>. Clicking any segment sets the
-				<strong>active depth</strong> to that level, which controls two things
+				for example: <code>doc › layout-card › paragraph</code>. Clicking any segment sets
+				the <strong>active depth</strong> to that level, which controls two things
 				simultaneously:
 			</p>
 			<ul>
@@ -658,9 +668,10 @@ const editor = useEditor({
 
 <layout-center maxWidth="3xl" class="sf-gap-md">
 	<p>
-		A video fills its width up to 36rem — select it and open
+		A <code>youtube</code> video fills its width up to 36rem — select it and open
 		<span class="material-symbols-rounded sf-icon">tune</span> the attribute editor to give it a
-		<code>max-width</code> of its own in its style, or swap the video URL.
+		<code>max-width</code> of its own in its style, or change its address with the youtube
+		address button.
 	</p>
 
 	<hr />
@@ -672,7 +683,11 @@ const editor = useEditor({
 				<p>Floating toolbar with context-aware items and tooltips</p>
 			</li>
 			<li data-checked data-type="taskItem">
-				<p>Five layout container components (Stack, Split, Columns, Card, Center)</p>
+				<p>
+					Six layout blocks: <code>layout-stack</code>, <code>layout-split</code>,
+					<code>layout-columns</code>, <code>layout-card</code>,
+					<code>layout-center</code> and <code>layout-cover</code>
+				</p>
 			</li>
 			<li data-checked data-type="taskItem">
 				<p>Interactive Vue component nodes with editable slots</p>
@@ -685,11 +700,16 @@ const editor = useEditor({
 				<p>Node path breadcrumb with dual depth control (toolbar target + drag handles)</p>
 			</li>
 			<li data-checked data-type="taskItem">
-				<p>Syntax-highlighted code blocks with JS/HTML formatter</p>
+				<p>
+					<code>codeBlock</code> coloured in 20 languages, with a JavaScript and HTML
+					formatter
+				</p>
 			</li>
-			<li data-checked data-type="taskItem"><p>Tables, images, YouTube embeds</p></li>
 			<li data-checked data-type="taskItem">
-				<p>Task lists, bullet lists, ordered lists</p>
+				<p><code>table</code>, <code>image</code> and <code>youtube</code></p>
+			</li>
+			<li data-checked data-type="taskItem">
+				<p><code>taskList</code>, <code>bulletList</code> and <code>orderedList</code></p>
 			</li>
 			<li data-checked data-type="taskItem"><p>Slash command palette</p></li>
 			<li data-checked data-type="taskItem"><p>HTML source (code view) toggle</p></li>

@@ -38,7 +38,7 @@ export const requirePictureSize: ElementRule = {
 			if (framed && !keepsItsOwnBox(frame)) return
 			report({
 				message: framed
-					? "This block's shape and fill don't reach its picture: give the block a layout such as Stack, or put the shape and fill on the picture"
+					? "This block's shape and fill don't reach its picture: give the block a layout such as sl-stack, or put the shape and fill on the picture"
 					: 'The page jumps when this picture loads: give it its width and height, or a shape with a fill',
 				nodes: [element],
 			})

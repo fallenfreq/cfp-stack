@@ -1,6 +1,7 @@
 import ToolbarImageUrlControl from '@/components/editor/toolbar/ToolbarImageUrlControl.vue'
 import ToolbarLinkControl from '@/components/editor/toolbar/ToolbarLinkControl.vue'
 import ToolbarYouTubeUrlControl from '@/components/editor/toolbar/ToolbarYouTubeUrlControl.vue'
+import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { toolbarCustomItem } from './toolbarItemFactory'
 
 export const mediaItems = [
@@ -9,13 +10,13 @@ export const mediaItems = [
 		'image-url',
 		(_e, ctx) => ctx.activeNode.type.name === 'image',
 		ToolbarImageUrlControl,
-		{ tooltip: 'Image address' },
+		{ tooltip: `${getNodeAlias('image')} address` },
 	),
 	toolbarCustomItem(
 		'youtube-url',
 		(_e, ctx) => ctx.activeNode.type.name === 'youtube',
 		ToolbarYouTubeUrlControl,
-		{ tooltip: 'Video address' },
+		{ tooltip: `${getNodeAlias('youtube')} address` },
 	),
 
 	// --- Link controls ---

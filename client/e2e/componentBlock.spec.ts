@@ -307,7 +307,7 @@ test('in a read-only editor the slot and the block stay as they are', async ({ p
 
 // Every component block (layouts too): the click that ends a drag doesn't select the block.
 test("a drag in a Card that ends in the Card's padding keeps the highlight", async ({ page }) => {
-	const text = page.locator('.tiptap p', { hasText: 'Any block content can go inside' })
+	const text = page.locator('.tiptap p', { hasText: 'Any blocks can go inside' })
 	await text.scrollIntoViewIfNeeded()
 	const card = (await text.evaluate((p) => {
 		const { right, top } = p.closest('.layout-card')!.getBoundingClientRect()
@@ -324,7 +324,7 @@ test("a drag in a Card that ends in the Card's padding keeps the highlight", asy
 })
 
 const leftCard = (page: Page) =>
-	page.locator('.tiptap .layout-card', { hasText: 'Any block content can go inside' })
+	page.locator('.tiptap .layout-card', { hasText: 'Any blocks can go inside' })
 const cardCount = (page: Page) => page.locator('.tiptap .layout-card').count()
 
 test('a layout block, which draws nothing of its own, stays as it was', async ({ page }) => {

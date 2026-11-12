@@ -24,12 +24,12 @@ const editorComponentItems: Item[] = Object.values(editorComponents).map((value)
 }))
 
 const promptForYoutubeURL = (callback: (url: string) => void) => {
-	const url = prompt('Enter YouTube video URL:')
+	const url = prompt(`Enter the ${getNodeAlias('youtube')} address:`)
 	if (url) callback(url)
 }
 
 const promptForImageURL = (callback: (url: string) => void) => {
-	const url = prompt('Enter Image URL:')
+	const url = prompt(`Enter the ${getNodeAlias('image')} address:`)
 	if (url) callback(url)
 }
 
@@ -41,7 +41,7 @@ const promptForTableSpec = (callback: (rows: number, cols: number) => void) => {
 }
 
 const promptForLinkURL = (callback: (url: string) => void) => {
-	const url = prompt('Enter link URL:')
+	const url = prompt('Enter the link address:')
 	if (url) callback(url)
 }
 
