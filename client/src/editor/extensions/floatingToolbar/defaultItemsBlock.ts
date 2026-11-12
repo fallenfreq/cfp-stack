@@ -1,8 +1,8 @@
 import ToolbarNodePicker, {
 	type NodePickerItem,
 } from '@/components/editor/toolbar/ToolbarNodePicker.vue'
-import { type Lowlight } from '@/config/editor/lowlight'
-import { getExtensionOptions, languageName, prettifySelectedCode } from '@/utils/editor/editorUtils'
+import { languages } from '@/config/editor/lowlight'
+import { getExtensionOptions, prettifySelectedCode } from '@/utils/editor/editorUtils'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import type { BulletListOptions, OrderedListOptions, TaskListOptions } from '@tiptap/extension-list'
 import { Fragment, type ResolvedPos } from '@tiptap/pm/model'
@@ -209,9 +209,8 @@ const getInsertIntoItems = (editor: Editor, ctx: ToolbarItemContext): NodePicker
 		}))
 }
 
-// A code block's language: Auto (worked out from the code) or one the highlighter knows.
+// A code block's language: plain text (none), or one the code blocks are coloured in.
 const getLanguageItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerItem[] => {
-	const lowlight = getExtensionOptions(editor, 'codeBlock')?.lowlight as Lowlight | undefined
 	const current: string | null = ctx.activeNode.attrs['language'] ?? null
 	const item = (label: string, language: string | null): NodePickerItem => ({
 		label,
@@ -219,10 +218,8 @@ const getLanguageItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerIt
 		action: () => editor.chain().focus().updateAttributes('codeBlock', { language }).run(),
 	})
 	return [
-		item('Auto', null),
-		...(lowlight?.listLanguages() ?? []).map((language) =>
-			item(languageName(language), language),
-		),
+		item('Plain text', null),
+		...Object.entries(languages).map(([language, { name }]) => item(name, language)),
 	]
 }
 

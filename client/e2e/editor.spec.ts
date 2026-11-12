@@ -3612,11 +3612,6 @@ test("code the page can't keep keeps the code view open, saying what", async ({ 
 			'<layout-columns columns="7"><p>C</p></layout-columns>',
 			`The page can't read this code: Expected one of 2, 3, 4, got "7".`,
 		],
-		// Anything else the page can't take says why: its code blocks have no bash.
-		[
-			'<pre><code class="language-bash">ls</code></pre>',
-			"The page can't read this code: Unknown language: `bash` is not registered.",
-		],
 	]
 	for (const [code, message] of refused) {
 		await writeCode(page, code)
@@ -3638,6 +3633,8 @@ test('code the page rewrites itself goes into the page', async ({ page }) => {
 		'<ol start="1"><li><p>One</p></li></ol>',
 		'<layout-columns columns="2"><p>C</p></layout-columns>',
 		'<pre><code class="language-js">x</code></pre>',
+		// A language the code blocks aren't coloured in, kept and shown plain.
+		'<pre><code class="language-haskell">main = pure ()</code></pre>',
 		'<ul data-type="taskList"><li data-type="taskItem" data-checked><p>Done</p></li></ul>',
 		// Read and written the page's own way: a cell's alignment as text-align; an empty id.
 		'<table><tr><td align="center" style="text-align: center">Cell</td></tr></table>',
@@ -3861,7 +3858,31 @@ test("the toolbar's Language picker sets a code block's language", async ({ page
 	await code.click()
 	await settle(page)
 	const menu = await openMenu(page, 'code')
-	await expect(menu.locator('.picker-item.sf-on-current')).toHaveText('Auto')
+	await expect(menu.locator('.picker-item.sf-on-current')).toHaveText('Plain text')
+	// Each by the name people know it by.
+	await expect(menu.locator('.picker-item')).toHaveText([
+		'Plain text',
+		'HTML',
+		'CSS',
+		'JavaScript',
+		'TypeScript',
+		'JSON',
+		'Python',
+		'Bash',
+		'SQL',
+		'YAML',
+		'Markdown',
+		'C',
+		'C++',
+		'C#',
+		'Java',
+		'Go',
+		'Rust',
+		'PHP',
+		'Ruby',
+		'Swift',
+		'Kotlin',
+	])
 	await menu.locator('.picker-item', { hasText: 'Python' }).click()
 	await expect(code).toHaveClass(/(^|\s)language-python(\s|$)/)
 	const saved = await page.evaluate(() => {
@@ -3873,4 +3894,27 @@ test("the toolbar's Language picker sets a code block's language", async ({ page
 		return language
 	})
 	expect(saved).toBe('python')
+})
+
+// Coloured only in the language it's set to, never a guess, which can be the wrong one.
+test('a code block is coloured in its language, and plain with none or one not in the list', async ({
+	page,
+}) => {
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		const block = (id: string, language: string) =>
+			`<pre id="${id}"><code${language && ` class="language-${language}"`}>const a = 1 // note</code></pre>`
+		editor.commands.setContent(
+			block('none', '')
+				+ block('set', 'javascript')
+				+ block('short', 'js')
+				+ block('other', 'haskell'),
+		)
+	})
+	await settle(page)
+	const coloured = (id: string) => page.locator(`#${id} [class^="hljs-"]`).count()
+	expect(await coloured('none'), 'no language').toBe(0)
+	expect(await coloured('set'), 'JavaScript').toBeGreaterThan(0)
+	expect(await coloured('short'), 'its short name').toBeGreaterThan(0)
+	expect(await coloured('other'), 'a language not in the list').toBe(0)
 })

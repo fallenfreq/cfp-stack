@@ -152,8 +152,6 @@ Next: settings for every selected block.
 - **A table whose first row has fewer cells than the next** gets the missing cell first, not
   last: its text moves a column right (prosemirror-tables' `fixTables`; a shorter later row gets it
   last; measured).
-- **The code block's highlighter has no bash or cpp**, which highlight.js has: a code block in one,
-  written in the code view, is refused ("Unknown language: `bash` is not registered").
 - **The code view, minor.** It sits flush under the top bar. A line break before bare text at the
   top becomes a space when switching back. Keys typed on the page in the moment the code is being
   written (about 0.1s) aren't in the code, and are replaced (undoably) only if the code is then

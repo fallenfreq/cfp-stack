@@ -66,7 +66,9 @@ export default defineConfig([
 	},
 	{
 		// TipTap's useEditor empties the editor's box as it closes: a sheet sliding away showed
-		// nothing. Ours leaves the page there until the box goes.
+		// nothing. Ours leaves the page there until the box goes. highlight.js with its languages
+		// tells TipTap's code block it knows them all, and it then asks ours to colour one it
+		// can't, which refuses the code.
 		files: ['**/*.{ts,vue}'],
 		rules: {
 			'no-restricted-imports': [
@@ -78,6 +80,11 @@ export default defineConfig([
 							importNames: ['useEditor'],
 							message: "Use useEditor from '@/composables/editor/useEditor'.",
 						},
+						...['highlight.js', 'highlight.js/lib/common'].map((name) => ({
+							name,
+							message:
+								"Each language's rules are imported in lowlight.ts (highlight.js/lib/languages/…).",
+						})),
 					],
 				},
 			],

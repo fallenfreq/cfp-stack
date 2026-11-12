@@ -1,11 +1,10 @@
-import { type Lowlight } from '@/config/editor/lowlight'
+import { languages } from '@/config/editor/lowlight'
 import { notify } from '@/services/toast'
 import { isPrettierLanguage, prettifyCode } from '@/utils/codeFormatting'
 import { type Node as ProseMirrorNode, type ResolvedPos } from '@tiptap/pm/model'
 import { NodeSelection } from '@tiptap/pm/state'
 import { type EditorView } from '@tiptap/pm/view'
 import { type Editor } from '@tiptap/vue-3'
-import highlight from 'highlight.js'
 
 // A position that is the "before" offset of an existing node in the document. Made by a cast
 // where the position comes from such a node: a node selection, `$pos.before()`, the node
@@ -20,17 +19,9 @@ function nodeAt(doc: ProseMirrorNode, pos: number): ProseMirrorNode | null {
 	return doc.nodeAt(pos)
 }
 
-const detectLanguage = (code: string, editor: Editor, setLanguage: string | null) => {
-	if (setLanguage === null) {
-		const lowlight = getExtensionOptions(editor, 'codeBlock')?.lowlight as Lowlight | undefined
-		return lowlight?.highlightAuto(code).data?.language || null
-	}
-	return setLanguage
-}
-
-// A code language's name as people know it (highlight.js calls `html` "HTML, XML").
-const languageName = (language: string): string =>
-	highlight.getLanguage(language)?.name?.split(',')[0] ?? language
+// A code language's name as people know it (`cpp` is C++); one the code blocks aren't coloured in,
+// as written.
+const languageName = (language: string): string => languages[language]?.name ?? language
 
 function getExtensionOptions<T = any>(editor: Editor, name: string): T | undefined {
 	return editor.extensionManager.extensions.find((ext) => ext.name === name)?.options as
@@ -53,15 +44,15 @@ const prettifySelectedCode = async (editor: Editor) => {
 
 	editor.commands.selectParentNode()
 	const parentNode = editor.state.doc.nodeAt(editor.state.selection.from)
-	const setLanguage = parentNode?.attrs['language']
-	const language = detectLanguage(selectedContent, editor, setLanguage)
+	// The language it's set to: none is plain text, and nothing is guessed.
+	const language: string | null | undefined = parentNode?.attrs['language']
 	let message = ''
-	if (language === null) {
-		message = 'Auto detect failed to detect language.'
-	} else if (language === undefined) {
+	if (language === undefined) {
 		message = 'Formatting is only available for code blocks.'
+	} else if (language === null) {
+		message = "Set the code block's language to format it."
 	} else if (!isPrettierLanguage(language)) {
-		message = `Formatting is not supported for the detected language: ${languageName(language)}`
+		message = `Formatting is not available for ${languageName(language)}.`
 	}
 
 	if (!language || !isPrettierLanguage(language)) {
@@ -193,7 +184,6 @@ export {
 	getChildBlockPositions,
 	getExtensionOptions,
 	getSiblingPositions,
-	languageName,
 	nodeAt,
 	nodeSelectionPos,
 	prettifySelectedCode,
