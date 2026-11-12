@@ -47,9 +47,25 @@ export function errorMessage(error: unknown): string {
 	return error.message
 }
 
-// Errors already shown: a failed write passed on by its caller (the editor's Save) isn't shown
-// again.
+// Errors already shown: a failed write passed on by its caller (the editor's Save), or code that
+// couldn't load passed on by the router, isn't shown again.
 const shown = new WeakSet<object>()
+
+// Code the site needs that couldn't load (Vite's event, main.ts): after a deploy, or the network.
+// A refresh loads the newest version; it's never done by itself, so the editor asks first about
+// unsaved edits (client/README.md, "New versions"). Shown once: a new page made from the list
+// that then can't open mustn't also say "Something went wrong. Please try again.", which would
+// make it twice.
+export function notifyNotLoaded(error: unknown): void {
+	if (typeof error === 'object' && error !== null) shown.add(error)
+	console.error(error)
+	notify({
+		message: "This page couldn't load. Refresh to try again.",
+		variant: 'warning',
+		duration: 0,
+		action: { label: 'Refresh', onClick: () => location.reload() },
+	})
+}
 
 // An error in a toast, and in full in the console: a read or a write that failed
 // (config/queryClient.ts), what a component's code didn't catch and a promise of ours that failed

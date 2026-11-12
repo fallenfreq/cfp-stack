@@ -19,6 +19,16 @@ as themes are emitted in `@scope`: no compat code below it.
 - `src/assets/`: the base styles, and the theme system's spec, references and open work.
 - `e2e/`: the layout checks. `test/`: the quick tests. `preview/`: the component preview.
 
+## New versions
+
+A tab runs the version it opened. Each page's code is a file of its own, loaded when the page is
+first opened, and its name changes with each version; a deploy replaces every file. So in a tab
+open from before a deploy, a page it hasn't opened yet can't load: live answers the missing file
+with the site's page itself. Vite's documented fix (`vite:preloadError`, in `src/main.ts`) shows
+"This page couldn't load. Refresh to try again." with a Refresh button, which loads the new
+version (`src/services/errors.ts`). It never reloads by itself, so the editor asks before unsaved
+edits go.
+
 ## Checks
 
 - Types: `vue-tsc --build`.
@@ -44,9 +54,9 @@ Running it and its checks, from the root: `README.md`, "Developing" and "Command
 - `vite.config.ts` pins `cssTarget` below the browsers that read range syntax (Safari 14, Chrome 87,
   Edge 88, Firefox 78; 2026-06-19), so the minifier keeps media queries they read. The floor has
   since been raised to Safari 17.4 (2026-10-01), which doesn't need it.
-- A tab open from before a deploy can't load code it hasn't loaded yet, as its files are gone
-  (2026-10-08, shown in the browser). A link to such a page (Edit, Preview) does nothing; only the
-  console says why. A new page made from the list of pages is saved but doesn't open, and says
-  "Something went wrong. Please try again.", so trying again makes a second one. tRPC's own
-  refusals, such as a route renamed since, show as tRPC words them. The fix is Vite's documented
-  one: reload when a page's code fails to load (`vite:preloadError`).
+- A tab open from before a deploy calls the server as its version did, so a call that has changed
+  since is refused, as tRPC words it ("New versions"). The editor's Save too: its edits stay on
+  screen but can't be saved (read in the code), and a refresh asks before losing them. Fine while
+  the one person editing is the one deploying (2026-11-12). Once others edit: a change to a
+  call keeps its old form working for a while, and the editor could keep unsaved edits in the
+  browser for a refresh to bring back.

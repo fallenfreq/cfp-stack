@@ -11,6 +11,8 @@ export interface Toast {
 	variant: ToastVariant | undefined
 	// How many times it has been shown while on screen.
 	count: number
+	// A button that does what the message offers.
+	action?: { label: string; onClick: () => void } | undefined
 }
 
 export const toasts = shallowReactive<Toast[]>([])
@@ -40,10 +42,12 @@ export function notify({
 	message,
 	variant,
 	duration = variant === 'danger' ? 10000 : 5000,
+	action,
 }: {
 	message: string
 	variant?: ToastVariant | undefined
 	duration?: number
+	action?: Toast['action']
 }): void {
 	const index = toasts.findIndex(
 		(toast) => toast.message === message && toast.variant === variant,
@@ -52,7 +56,7 @@ export function notify({
 	const id = shown ? shown.id : nextId++
 	// Replaced, not changed in place: the list only notices what's put in it.
 	if (shown) toasts.splice(index, 1, { ...shown, count: shown.count + 1 })
-	else toasts.push({ id, message, variant, count: 1 })
+	else toasts.push({ id, message, variant, count: 1, action })
 	clearTimeout(timers.get(id)?.timeout)
 	timers.delete(id)
 	if (!duration) return

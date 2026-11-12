@@ -247,7 +247,7 @@ Next: settings for every selected block.
 - **Not tried yet:** component blocks on a real phone, in real Safari and in Firefox; the
   toolbar's panels and tooltips in real Safari 26 (an iPhone or iPad on iOS 26 would do); whether
   Safari on an iPhone asks before a tab with unsaved edits closes (believed not); whether a reload
-  from script (the new-version toast's Refresh) asks in a tab behind another.
+  from script ("This page couldn't load"'s Refresh) asks in a tab behind another.
 
 ## Theme and classes
 
@@ -294,6 +294,13 @@ Next: settings for every selected block.
   by hand). Only when the seed version changes, and not once themes are edited live: a seed
   replaces the whole design.
 - **A code block's language outside the editor** (the user's words): later, not now.
+- **Pages readable offline** (owner, 2026-11-12: later). A service worker, as `vite-plugin-pwa`
+  sets one up, keeping the site's code and the server's answers for public pages (the network
+  first, the last copy offline), never signed-in data. A first version, keeping only the code,
+  with a new-version toast, was built (2026-10-09) and parked: the plugin's prompt mode, as its
+  auto-update mode deletes the old version's files under open tabs; as the plugin does, its
+  Refresh reloads every open tab, losing unsaved edits in them. Installing as an app needs only a
+  manifest and icons (192 and 512 px), no service worker.
 - **Room past the end on every page** while a panel is open, if a panel at a page's very end
   needs it. Closing it after scrolling into the room would jump the page back.
 - **Keeping HTML comments written in the code view,** which refuses them for now (owner,

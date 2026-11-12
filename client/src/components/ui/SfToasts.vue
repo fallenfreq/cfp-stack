@@ -26,13 +26,22 @@
 						>×{{ toast.count }}</span
 					>
 				</p>
-				<SfIconButton
-					icon="x"
-					tooltip="Dismiss"
-					class="sf-is-contained"
-					:loudness="1"
-					@click="dismiss(toast.id)"
-				/>
+				<div class="sl-cluster sf-gap-xs">
+					<SfButton
+						v-if="toast.action"
+						class="sf-single-line"
+						@click="toast.action.onClick()"
+					>
+						{{ toast.action.label }}
+					</SfButton>
+					<SfIconButton
+						icon="x"
+						tooltip="Dismiss"
+						class="sf-is-contained"
+						:loudness="1"
+						@click="dismiss(toast.id)"
+					/>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -85,7 +94,7 @@ const onFocusOut = (event: FocusEvent) => {
 		inline-size: min(24rem, 100% - 2 * var(--sf-spacing_page));
 	}
 
-	/* Message takes the width, the close button keeps its own. */
+	/* Message takes the width, the buttons keep their own. */
 	.toast {
 		--sl-template: 1fr auto;
 	}

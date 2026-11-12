@@ -1,6 +1,6 @@
 import './assets/main.css'
 
-import { notifyError } from '@/services/errors'
+import { notifyError, notifyNotLoaded } from '@/services/errors'
 import { whenSignInKnown } from '@/services/session'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
@@ -38,6 +38,9 @@ window.addEventListener('unhandledrejection', (event) => {
 	event.preventDefault()
 	notifyError(reason)
 })
+// Code a page needs that couldn't load, as after a deploy, says so with a Refresh button: Vite's
+// documented fix (client/README.md, "New versions").
+window.addEventListener('vite:preloadError', (event) => notifyNotLoaded(event.payload))
 app.use(globalKeyPlugin)
 app.use(createPinia())
 app.use(VueQueryPlugin, { queryClient })
