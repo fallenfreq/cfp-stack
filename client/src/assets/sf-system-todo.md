@@ -5,7 +5,7 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: settings for every selected block.
+Next: not picked yet.
 
 ## Bigger work
 
@@ -17,11 +17,6 @@ Next: settings for every selected block.
   component's file, as the editor takes them from its drawn root: those written on its root, and
   one set by a setting (`:class`) only as one that may be set. Whether a component's layout
   classes must be written, not set by a setting, is settled with it.
-- **Settings for every selected block** (proposed, not designed). With blocks selected, the
-  toolbar's settings would change all of them, as in Notion, Google Docs or Figma; today it shows
-  none. To decide: which settings show (only those every selected block has), how differing
-  values show ("mixed"), and how the class row works when the classes differ. Each block already
-  changes in place (`multiSelect.ts`).
 - **The toolbar's context should carry its block's place** (not designed). `ToolbarItemContext`
   holds the block and its depth, but not its position or parent, so the block tools find them
   again with `resolveActivePos` (14 calls in `defaultItemsBlock.ts` and `defaultItemsShared.ts`).
@@ -268,11 +263,7 @@ Next: settings for every selected block.
   their defaults again (a Stack's `align`, `'stretch'`, is in `LayoutStack.vue` too). A built
   component keeps its settings and their defaults as data (compiled, 2026-11-10), so the list
   could take them from the component; the choices a setting offers are only in its type.
-- Three of the component preview's stories show an error: the account page and the email-change
-  card (their forms need the app's query client, which the preview doesn't set up) and the node
-  path (its stand-in editor, `fakeEditor` in `stories.ts`, has no `$pos.before`). Nothing runs
-  the preview and a story's error doesn't fail it, so it went unbuilt from 2026-10-06 to
-  2026-11-12 unnoticed: `pnpm test` could build it and fail on a story's error.
+- The component preview is kept for now, likely to be dropped; three of its stories show errors.
 
 ## Ideas, not decided
 
@@ -297,6 +288,11 @@ Next: settings for every selected block.
   by hand). Only when the seed version changes, and not once themes are edited live: a seed
   replaces the whole design.
 - **A code block's language outside the editor** (the user's words): later, not now.
+- **Settings for every selected block** (owner, 2026-11-12: after the MVP). With blocks selected,
+  the toolbar's settings would change all of them, as in Notion, Google Docs or Figma; today it
+  shows none. To decide: which settings show (only those every selected block has), how
+  differing values show ("mixed"), and how the class row works when the classes differ. Each
+  block already changes in place (`multiSelect.ts`).
 - **Pages readable offline** (owner, 2026-11-12: later). A service worker, as `vite-plugin-pwa`
   sets one up, keeping the site's code and the server's answers for public pages (the network
   first, the last copy offline), never signed-in data. A first version, keeping only the code,
