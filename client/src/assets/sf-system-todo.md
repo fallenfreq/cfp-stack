@@ -237,10 +237,6 @@ Next: settings for every selected block.
 
 ## Popovers and browsers
 
-- **Escape leaves a toolbar panel open.** A panel opened by clicking its button (Wrap In, on a
-  selected Card) stays open when Escape is pressed, in Chrome and WebKit; clicking the button
-  again closes it. Its button keeps the keys on the page (`ToolbarPanelItem.vue`); why Escape
-  doesn't close it isn't looked into.
 - **A panel that fits nowhere, in WebKit.** Where a panel fits nowhere (a short screen, its
   button mid-screen), WebKit lets it run off the top of the screen where Chrome slides it down,
   as the spec says. It's WebKit's, with or without a fixed bar. `align-self: safe start` stops it

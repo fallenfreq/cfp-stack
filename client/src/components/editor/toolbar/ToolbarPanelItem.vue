@@ -40,12 +40,23 @@ const open = defineModel<boolean>('open', { required: true })
 const { dismiss: dismissKeyboard, restore: restoreKeyboard } = useVirtualKeyboard()
 const waitingForKeyboard = ref(false)
 
+// With the keys on the page the editor takes Escape for itself (ProseMirror cancels it), so the
+// browser doesn't close the panel: it closes here. Keys in a panel are the browser's, and its
+// controls'.
+const closeOnEscape = (event: KeyboardEvent) => {
+	if (event.key !== 'Escape') return
+	if (event.target instanceof Element && event.target.closest('[popover]')) return
+	open.value = false
+}
+
 watch(open, async (isOpen) => {
 	if (!isOpen) {
+		document.removeEventListener('keydown', closeOnEscape)
 		waitingForKeyboard.value = false
 		restoreKeyboard()
 		return
 	}
+	document.addEventListener('keydown', closeOnEscape)
 	waitingForKeyboard.value = true
 	await dismissKeyboard()
 	// Closed (and maybe reopened) meanwhile: that open does its own wait.
@@ -54,7 +65,10 @@ watch(open, async (isOpen) => {
 })
 
 // Removing an open panel hides it without a close event, so hand the keyboard back here.
-onUnmounted(restoreKeyboard)
+onUnmounted(() => {
+	restoreKeyboard()
+	document.removeEventListener('keydown', closeOnEscape)
+})
 </script>
 
 <style>

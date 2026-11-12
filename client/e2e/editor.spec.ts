@@ -806,9 +806,7 @@ test('the block pickers name every block they offer', async ({ page }) => {
 		const rows = page.locator(`#${await button.getAttribute('popovertarget')} .picker-item`)
 		await expect(rows.first()).toBeVisible()
 		const names = await rows.locator('span:last-child').allTextContents()
-		// Closed by its button: Escape leaves it open (sf-system-todo.md, "Escape leaves a toolbar
-		// panel open").
-		await button.click()
+		await page.keyboard.press('Escape')
 		await expect(rows).toHaveCount(0)
 		return names
 	}
@@ -842,6 +840,16 @@ test('the block pickers name every block they offer', async ({ page }) => {
 		await nodePosition(page, 'task-plain'),
 	)
 	expect(await picker('add')).toEqual(['taskItem'])
+})
+
+// Its button leaves the keys on the page, where the editor takes Escape for itself.
+test('Escape closes a toolbar panel opened from its button', async ({ page }) => {
+	await selectBlock(page, 'c1-card')
+	const panel = await openMenu(page, 'frame_source')
+	await expect(panel).toBeVisible()
+	await expect(page.locator('.tiptap')).toBeFocused()
+	await page.keyboard.press('Escape')
+	await expect(panel).toBeHidden()
 })
 
 /** The cursor at the end of a paragraph straight on the page, so the toolbar acts on it. */
