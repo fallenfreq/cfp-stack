@@ -197,7 +197,8 @@ cookie, `code`, the verifier, or request bodies.
 - tRPC uses a relative `/trpc`; Vite proxies `/trpc` and `/auth/` to 8788 with
   `changeOrigin: false` (the shorthand rewrites Host, which breaks the origin check and the
   callback address on 5173).
-- The component preview has a stand-in for `services/session.ts`.
+- The component preview has stand-ins for `services/session.ts` and the router, so the router
+  check never runs there.
 
 ## Zitadel (the current provider)
 

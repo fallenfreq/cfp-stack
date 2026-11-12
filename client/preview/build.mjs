@@ -43,6 +43,8 @@ const server = await createServer({
 				find: /^@\/services\/session$/,
 				replacement: join(previewDir, 'stubs/session.ts'),
 			},
+			// The app's router needs a browser; the editor store loads it.
+			{ find: /^@\/router$/, replacement: join(previewDir, 'stubs/router.ts') },
 			// The attribute row's style editor needs a browser; the preview never shows it.
 			{
 				find: /^\.\/StyleAttrEditor\.vue$/,

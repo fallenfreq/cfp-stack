@@ -270,6 +270,11 @@ Next: settings for every selected block.
   their defaults again (a Stack's `align`, `'stretch'`, is in `LayoutStack.vue` too). A built
   component keeps its settings and their defaults as data (compiled, 2026-11-10), so the list
   could take them from the component; the choices a setting offers are only in its type.
+- Three of the component preview's stories show an error: the account page and the email-change
+  card (their forms need the app's query client, which the preview doesn't set up) and the node
+  path (its stand-in editor, `fakeEditor` in `stories.ts`, has no `$pos.before`). Nothing runs
+  the preview and a story's error doesn't fail it, so it went unbuilt from 2026-10-06 to
+  2026-11-12 unnoticed: `pnpm test` could build it and fail on a story's error.
 
 ## Ideas, not decided
 
