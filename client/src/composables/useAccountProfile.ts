@@ -11,6 +11,5 @@ export function useAccountProfile() {
 	return useQuery({
 		queryKey: accountProfileKey,
 		queryFn: () => trpc.account.profile.query(),
-		retry: false,
 	})
 }

@@ -20,9 +20,15 @@ const fieldNames: Record<string, string> = {
 }
 
 // A call the server didn't answer: no answer from tRPC at all, or one from before it
-// (api/functions_src/trpc/[[trpc]].ts). Asking again straight away would meet the same.
+// (api/functions_src/trpc/[[trpc]].ts).
 export function noAnswer(error: unknown): boolean {
 	return error instanceof TRPCClientError && !error.data
+}
+
+// A call whose connection dropped, which fetch reports as a TypeError: one kind of noAnswer, the
+// time limit (trpc.ts) another.
+export function connectionDropped(error: unknown): boolean {
+	return error instanceof TRPCClientError && error.cause instanceof TypeError
 }
 
 // What an error says on the page: the one place a failed call to the server, or an error nothing

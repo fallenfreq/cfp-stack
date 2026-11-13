@@ -16,8 +16,9 @@ let known: Promise<boolean> | undefined
 
 /**
  * Settles once the server has said whether you're signed in: one question, asked at startup
- * (main.ts). Never rejects; false if there was no answer, which isn't the same as signed out (a
- * page that needs sign-in mustn't send you round to sign in again and again).
+ * (main.ts), and again by the next page that needs it if that one failed. Never rejects;
+ * false if there was no answer, which isn't the same as signed out (a page that needs sign-in
+ * mustn't send you round to sign in again and again).
  */
 export function whenSignInKnown(): Promise<boolean> {
 	known ??= trpc.session.get.query().then(
@@ -27,6 +28,7 @@ export function whenSignInKnown(): Promise<boolean> {
 		},
 		(error) => {
 			console.warn("Couldn't tell whether you're signed in:", error)
+			known = undefined
 			return false
 		},
 	)

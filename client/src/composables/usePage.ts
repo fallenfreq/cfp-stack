@@ -13,7 +13,7 @@ export const usePage = (slug: MaybeRefOrGetter<string | null>) => {
 				? trpc.adminPages.getBySlug.query(input)
 				: trpc.publicPages.getBySlug.query(input)
 		},
-		{ enabled: computed(() => !!toValue(slug)), retry: false },
+		{ enabled: computed(() => !!toValue(slug)) },
 	)
 
 	return {

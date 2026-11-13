@@ -118,24 +118,60 @@ test('while writing, the page scrolls on until its last line sits under the bar,
 	expect(Math.abs(at.footer.top - at.content - at.margin), 'no room added').toBeLessThanOrEqual(1)
 })
 
+type Json = string | number | boolean | null | Json[] | { [key: string]: Json }
+
+/** The server refusing a call, as tRPC writes it (api/src/config/trpc.ts). */
+class Refusal {
+	constructor(
+		readonly code: string,
+		readonly message: string,
+		readonly zodError: Json = null,
+	) {}
+	get answer(): Json {
+		const { code, message, zodError } = this
+		return { error: { json: { message, code: -32000, data: { code, zodError } } } }
+	}
+}
+
+/** A faked call's answer: its data, a refusal, or either worked out from the request's address. */
+type Reply = Json | Refusal | ((address: string) => Json | Refusal)
+
 /**
- * Answer these API calls (by the end of their name) with the data given, whatever the database
- * holds; other calls go through.
+ * Answer these API calls (by the end of their name) as given, whatever the database holds; other
+ * calls go through.
  */
-async function fakeReplies(page: Page, replies: Record<string, unknown>): Promise<void> {
+async function fakeReplies(page: Page, replies: Record<string, Reply>): Promise<void> {
 	await page.route('**/trpc/**', async (route) => {
-		const calls = new URL(route.request().url()).pathname.replace('/trpc/', '').split(',')
+		const address = route.request().url()
+		const calls = new URL(address).pathname.replace('/trpc/', '').split(',')
 		const faked = calls.map((call) => Object.keys(replies).find((name) => call.endsWith(name)))
 		if (!faked.some(Boolean)) return route.fallback()
 		// A batch with real calls in it goes to the API for their answers; one of faked calls only
 		// never reaches it.
-		const answers = faked.every(Boolean) ? [] : await (await route.fetch()).json()
+		const answers: Json[] = faked.every(Boolean) ? [] : await (await route.fetch()).json()
 		faked.forEach((name, at) => {
-			if (name) answers[at] = { result: { data: { json: replies[name] } } }
+			if (!name) return
+			const given = replies[name] ?? null
+			const reply = typeof given === 'function' ? given(address) : given
+			answers[at] =
+				reply instanceof Refusal ? reply.answer : { result: { data: { json: reply } } }
 		})
 		return route.fulfill({ json: answers })
 	})
 }
+
+/** API calls whose address holds `text` are never answered. */
+const never = (page: Page, text: string) =>
+	page.route(
+		(url) => url.href.includes(text),
+		() => {
+			// Never answered.
+		},
+	)
+
+/** Finishes once a call whose address holds `text` is sent. */
+const sent = (page: Page, text: string) =>
+	page.waitForRequest((request) => request.url().includes(text))
 
 /** A stored page with this content, as the API returns it. */
 const storedPage = (slug: string, name: string, content: unknown[]) => ({
@@ -412,7 +448,7 @@ test('a collection opened once the theme has loaded logs no errors', async ({ pa
 })
 
 // The editor opens a stored page as signed in as an admin, the page faked like the ones above.
-async function openStored(page: Page, themeClass: string | null, stored: unknown) {
+async function openStored(page: Page, themeClass: string | null, stored: Json) {
 	await steadyRequests(page)
 	await fakeReplies(page, {
 		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
@@ -459,7 +495,7 @@ test("a stored page that can't open says so, with no editor to save", async ({
 	themeClass,
 }) => {
 	const unopenable = "This page can't be opened."
-	const cases: [string, unknown, string][] = [
+	const cases: [string, Json, string][] = [
 		[
 			'not valid',
 			{ pageId: 1, ...storedPage('stored', 'Stored', [{ type: 'noSuchBlock' }]) },
@@ -733,17 +769,7 @@ test('an admin whose sign-in has ended is still asked before leaving', async ({
 		(route) =>
 			route.fulfill({
 				status: 401,
-				json: [
-					{
-						error: {
-							json: {
-								message: 'Not signed in',
-								code: -32001,
-								data: { code: 'UNAUTHORIZED', httpStatus: 401 },
-							},
-						},
-					},
-				],
+				json: [new Refusal('UNAUTHORIZED', 'Not signed in').answer],
 			}),
 	)
 	await typeAtEnd(page, ' Typed.')
@@ -1291,22 +1317,14 @@ test('a call the server never answers fails after 30 seconds', async ({ page, th
 	const noAnswer = page
 		.getByRole('alert')
 		.filter({ hasText: "Couldn't get an answer from the server. Please try again." })
-	// The clock moves on only once the call is sent.
-	const never = (call: string) =>
-		page.route(
-			(url) => url.pathname.includes(call),
-			() => {
-				// Never answered.
-			},
-		)
-	const sent = (call: string) => page.waitForRequest((request) => request.url().includes(call))
 	await page.clock.install()
 
-	// Save says so and keeps the edits, and the move away that waited for it asks.
+	// Save says so and keeps the edits, and the move away that waited for it asks. The clock moves
+	// on only once the call is sent.
 	await openStored(page, themeClass, oneParagraph)
 	await expect(text).toHaveText('A paragraph.')
-	await never('adminPages.update')
-	const saving = sent('adminPages.update')
+	await never(page, 'adminPages.update')
+	const saving = sent(page, 'adminPages.update')
 	await typeAtEnd(page, ' Typed.')
 	await pressSave(page)
 	await saving
@@ -1323,12 +1341,109 @@ test('a call the server never answers fails after 30 seconds', async ({ page, th
 	await expect(page).toHaveURL(/\/contact$/)
 
 	// A page that never arrives can't be loaded.
-	await never('adminPages.getBySlug')
-	const fetching = sent('adminPages.getBySlug')
+	await never(page, 'adminPages.getBySlug')
+	const fetching = sent(page, 'adminPages.getBySlug')
 	await moveTo(page, '/editor/stored')
 	await fetching
 	await page.clock.fastForward(31_000)
 	await expect(page.getByText("This page couldn't be loaded.")).toBeVisible()
+})
+
+// Reads were asked again three more times whatever went wrong: a collection whose read got no
+// answer said so after about two and a quarter minutes. Only a dropped connection is asked again.
+test('a read is asked again once if its connection dropped, and otherwise says so at once', async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	await fakeReplies(page, {
+		'session.get': null,
+		'Tags.getBySlug': (address) =>
+			address.includes('failing')
+				? new Refusal('INTERNAL_SERVER_ERROR', 'Internal Server Error')
+				: { tagId: 1, name: 'Branding', slug: 'branding', published: true },
+		'Pages.listByCollection': [],
+	})
+	// The first read of the collection "dropped" loses its connection.
+	let dropped = false
+	await page.route(
+		(url) => url.href.includes('Tags.getBySlug') && url.href.includes('dropped'),
+		(route) => {
+			if (dropped) return route.fallback()
+			dropped = true
+			return route.abort()
+		},
+	)
+	await never(page, 'silent')
+	const reads: string[] = []
+	page.on('request', (request) => {
+		if (request.url().includes('Tags.getBySlug')) reads.push(request.url())
+	})
+	const asked = (slug: string) => reads.filter((address) => address.includes(slug)).length
+	const alert = (text: string) => page.getByRole('alert').filter({ hasText: text }).first()
+	const noAnswer = alert("Couldn't get an answer from the server.")
+	await page.clock.install()
+
+	// A dropped connection: asked again, and the collection shows.
+	await page.goto('/c/dropped')
+	await useTheme(page, themeClass)
+	await expect(page.getByRole('heading', { name: 'Branding' })).toBeVisible()
+	expect(asked('dropped')).toBe(2)
+	await expect(noAnswer).toHaveCount(0)
+
+	// A server error says so at once, asked once.
+	await moveTo(page, '/c/failing')
+	await expect(alert('Something went wrong on our side.')).toBeVisible()
+	expect(asked('failing')).toBe(1)
+
+	// No answer says so after 30 seconds, asked once.
+	const silent = sent(page, 'silent')
+	await moveTo(page, '/c/silent')
+	await silent
+	await page.clock.fastForward(31_000)
+	await expect(noAnswer).toBeVisible()
+	expect(asked('silent')).toBe(1)
+})
+
+// A sign-in check that failed was kept until a reload: every page that needs sign-in went home
+// saying signing in isn't working, even once the server answered again.
+test('a sign-in check that fails is asked again by the next page that needs it', async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	let answers = false
+	await fakeReplies(page, {
+		'Pages.getBySlug': oneParagraph,
+		'session.get': () =>
+			answers
+				? { name: 'Admin', email: 'admin@example.test', roles: ['admin'] }
+				: new Refusal(
+						'TIMEOUT',
+						"Your sign-in couldn't be checked just now. Please try again.",
+					),
+	})
+	let checks = 0
+	page.on('request', (request) => {
+		if (request.url().includes('session.get')) checks++
+	})
+	const notWorking = page
+		.getByRole('alert')
+		.filter({ hasText: "Signing in isn't working right now." })
+
+	await page.goto('/')
+	await useTheme(page, themeClass)
+	await expect.poll(() => checks, 'at startup').toBe(1)
+	// The next page that needs it asks again; a failure still sends it home, saying so.
+	await moveTo(page, '/editor/stored')
+	await expect(notWorking).toBeVisible()
+	expect(checks).toBe(2)
+	await expect(page).toHaveURL(/\/$/)
+	// Once the server answers, the page opens.
+	answers = true
+	await moveTo(page, '/editor/stored')
+	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
+	expect(checks).toBe(3)
 })
 
 // A change the server refuses on the admin pages says why, in the words errors.ts gives each kind,
@@ -1343,14 +1458,10 @@ test('a change the server refuses on the admin pages says why, and the list relo
 		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
 		'adminTags.list': [{ tagId: 1, name: 'News', slug: 'news', published: true, pageCount: 0 }],
 	})
-	// A refusal as the server sends it (api/src/config/trpc.ts).
 	const refusal =
-		(status: number, code: string, message: string, zodError: unknown = null) =>
+		(status: number, code: string, message: string, zodError: Json = null) =>
 		(route: Route) =>
-			route.fulfill({
-				status,
-				json: [{ error: { json: { message, code: -32000, data: { code, zodError } } } }],
-			})
+			route.fulfill({ status, json: [new Refusal(code, message, zodError).answer] })
 	let answer = (_route: Route): Promise<void> => Promise.resolve()
 	await page.route(
 		(url) => url.pathname.includes('adminTags.update'),
@@ -1445,15 +1556,7 @@ test('a name the server refuses in the editor goes back to the one it has', asyn
 			const calls = new URL(route.request().url()).pathname.split(',')
 			await route.fulfill({
 				status: 404,
-				json: calls.map(() => ({
-					error: {
-						json: {
-							message: 'Page not found',
-							code: -32004,
-							data: { code: 'NOT_FOUND' },
-						},
-					},
-				})),
+				json: calls.map(() => new Refusal('NOT_FOUND', 'Page not found').answer),
 			})
 		},
 	)
@@ -1500,17 +1603,7 @@ test('a new page made from a collection is saved into it in one write', async ({
 				})
 			return route.fulfill({
 				status: 500,
-				json: [
-					{
-						error: {
-							json: {
-								message: 'Internal Server Error',
-								code: -32603,
-								data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: 500 },
-							},
-						},
-					},
-				],
+				json: [new Refusal('INTERNAL_SERVER_ERROR', 'Internal Server Error').answer],
 			})
 		},
 	)

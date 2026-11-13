@@ -17,9 +17,9 @@ const signedOutLink: TRPCLink<AppRouter> =
 			}),
 		)
 
-// A call the server hasn't answered within this time fails as one whose connection dropped does,
-// so every page handles and words it the same way (services/errors.ts). A page takes a second or
-// two to send from a slow phone connection.
+// A call the server hasn't answered within this time fails as a call with no answer does: worded
+// the same (services/errors.ts), and not asked again (config/queryClient.ts). A page takes a
+// second or two to send from a slow phone connection.
 const answerWithin = 30_000
 
 const trpc: TRPCClient<AppRouter> = createTRPCClient<AppRouter>({

@@ -259,6 +259,10 @@ Next: saves that can't make a second page or replace other work (below).
 
 ## Small clean-ups
 
+- **A read that fails reads as missing.** A collection page whose read fails says "This collection
+  does not exist." (`CollectionView.vue`), and a page opened from it "Page not found." (`usePage`
+  counts a failure as not found), beside the toast saying it couldn't load. A visitor whose
+  connection drops is told the collection isn't there.
 - `PromptModal.vue` and `StackableSheet.vue` say `sl-align-x-*` is grid-only; they could now use
   `sl-align-x-end`.
 - `LayoutColumns.vue` and `LayoutSplit.vue` write their `align` (up and down) as an inline style,

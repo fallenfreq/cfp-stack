@@ -11,15 +11,13 @@ import { computed, ref, type Ref } from 'vue'
 export const usePageQuery = <T>(
 	key: () => (string | null)[],
 	read: (admin: boolean) => Promise<T>,
-	options: { enabled?: Ref<boolean>; retry?: false } = {},
+	{ enabled = ref(true) }: { enabled?: Ref<boolean> } = {},
 ) => {
 	const isAdmin = useIsAdmin()
-	const { enabled = ref(true), ...rest } = options
 	// Each copy is read only while it's the one wanted, but keeps up with what's stored: the public
 	// copy can be stored just after sign-in lands.
 	const copy = (admin: boolean) =>
 		useQuery({
-			...rest,
 			queryKey: computed(() => [...key(), admin]),
 			queryFn: () => read(admin),
 			enabled: computed(() => enabled.value && isAdmin.value === admin),
