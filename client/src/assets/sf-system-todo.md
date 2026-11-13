@@ -5,9 +5,16 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: not picked yet.
+Next: saves that can't make a second page or replace other work (below).
 
 ## Bigger work
+
+- **Saves that can't make a second page or replace other work** (agreed 2026-11-13, not
+  designed). A new page's first save whose answer is lost is stored but looks failed, and Save
+  again makes a second page (`my-page-2`). Two tabs or devices saving one page: the last replaces
+  the other's work, unasked. The fix: each save carries a key (a repeat is "already done") and
+  the version it started from (an older one is refused, not saved over). To decide: what a
+  refused save shows.
 
 - **The validator and linter.** Its rules, and where each shows, are in `sf-system.md`,
   "Validator and linter"; new candidates go there. Left for later: the IDE linter, and a theme's
@@ -113,9 +120,6 @@ Next: not picked yet.
   any is.
 - **Picking before the theme's tokens arrive.** They load in the background; picking padding
   before they arrive leaves an empty row and sets no class, even once they come.
-- **No timeout.** A fetch that never answers leaves "Loading editor…" up: tRPC has no timeout.
-  A save that never finishes keeps a move away waiting with no sign (agreed: leaving waits for
-  the save).
 - **A video whose address isn't YouTube's** shows nothing: TipTap writes its iframe without the
   address, so a copy has none, and nor does the code view's code, so an edit there loses it. A
   paste or the code view brings one in: the code view's check counts the address as kept, as the

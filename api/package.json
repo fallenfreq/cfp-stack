@@ -29,7 +29,7 @@
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20240821.1",
 		"@somefreq-app/shared": "workspace:*",
-		"@trpc/server": "11.0.0-rc.402",
+		"@trpc/server": "11.28.0",
 		"@types/node": "^20.1.4",
 		"drizzle-orm": "1.0.0-rc.4",
 		"openid-client": "^6.8.8",

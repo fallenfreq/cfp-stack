@@ -101,8 +101,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@trpc/server':
-        specifier: 11.0.0-rc.402
-        version: 11.0.0-rc.402
+        specifier: 11.28.0
+        version: 11.28.0(typescript@6.0.3)
       '@types/node':
         specifier: ^20.1.4
         version: 20.19.13
@@ -213,8 +213,8 @@ importers:
         specifier: ^3.32.0
         version: 3.32.0(@floating-ui/dom@1.7.4)(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)(vue@3.5.43(typescript@6.0.3))
       '@trpc/client':
-        specifier: 11.0.0-rc.402
-        version: 11.0.0-rc.402(@trpc/server@11.0.0-rc.402)
+        specifier: 11.28.0
+        version: 11.28.0(@trpc/server@11.28.0(typescript@6.0.3))(typescript@6.0.3)
       hastscript:
         specifier: ^9.0.3
         version: 9.0.3
@@ -244,8 +244,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       '@trpc/server':
-        specifier: 11.0.0-rc.402
-        version: 11.0.0-rc.402
+        specifier: 11.28.0
+        version: 11.28.0(typescript@6.0.3)
       '@types/google.maps':
         specifier: ^3.64.1
         version: 3.64.1
@@ -1416,13 +1416,32 @@ packages:
       '@tiptap/pm': 3.32.0
       vue: ^3.0.0
 
-  '@trpc/client@11.0.0-rc.402':
-    resolution: {integrity: sha512-bcI5007X6pH3IoZFvYHnJ4I4kHROaOrWJcV/Vq2h7qsKYGK/NzZ0a2lpIU4o5QX2zBQr6Xy1IvU9SpNiu5tqog==}
+  '@trpc/client@11.28.0':
+    resolution: {integrity: sha512-uaj/19rUZKcUkQHAw8mBpjHeR5N/SJyCEy1HPPOC0fpgfV7Zz3cXbz/L9Tqhy+0YMlHwb0PuFGEo2krNjV+Sng==}
     peerDependencies:
-      '@trpc/server': 11.0.0-rc.402+f5eb0631e
+      '@trpc/server': 11.28.0
+      typescript: '>=5.7.2'
 
-  '@trpc/server@11.0.0-rc.402':
-    resolution: {integrity: sha512-bXKR0pVEx5LXMhp5lLr2sMXbD4hH7PqwtfWHyrYfQ4czZdFz+V888kGa59sEX5/9JOsCaqSkchnGnyAZBvCyqg==}
+  '@trpc/server@11.28.0':
+    resolution: {integrity: sha512-jj/JplNMKCyNZChmOxYRVnN4vNsS1zvLEnFfPkuvoYmrouKMuFNi4zaIMn1lDx6yyuuru/e5+rjcrBrIGc3p4g==}
+    peerDependencies:
+      '@types/aws-lambda': '*'
+      '@types/express': '*'
+      '@types/ws': '*'
+      fastify: '*'
+      next: '*'
+      typescript: '>=5.7.2'
+    peerDependenciesMeta:
+      '@types/aws-lambda':
+        optional: true
+      '@types/express':
+        optional: true
+      '@types/ws':
+        optional: true
+      fastify:
+        optional: true
+      next:
+        optional: true
 
   '@tsconfig/node20@20.1.6':
     resolution: {integrity: sha512-sz+Hqx9zwZDpZIV871WSbUzSqNIsXzghZydypnfgzPKLltVJfkINfUeTct31n/tTSa9ZE1ZOfKdRre1uHHquYQ==}
@@ -4450,11 +4469,14 @@ snapshots:
       '@tiptap/extension-bubble-menu': 3.32.0(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
       '@tiptap/extension-floating-menu': 3.32.0(@floating-ui/dom@1.7.4)(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))(@tiptap/pm@3.32.0)
 
-  '@trpc/client@11.0.0-rc.402(@trpc/server@11.0.0-rc.402)':
+  '@trpc/client@11.28.0(@trpc/server@11.28.0(typescript@6.0.3))(typescript@6.0.3)':
     dependencies:
-      '@trpc/server': 11.0.0-rc.402
+      '@trpc/server': 11.28.0(typescript@6.0.3)
+      typescript: 6.0.3
 
-  '@trpc/server@11.0.0-rc.402': {}
+  '@trpc/server@11.28.0(typescript@6.0.3)':
+    dependencies:
+      typescript: 6.0.3
 
   '@tsconfig/node20@20.1.6': {}
 

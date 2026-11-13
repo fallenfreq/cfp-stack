@@ -44,7 +44,7 @@
 		"@tiptap/starter-kit": "^3.32.0",
 		"@tiptap/suggestion": "^3.32.0",
 		"@tiptap/vue-3": "^3.32.0",
-		"@trpc/client": "11.0.0-rc.402",
+		"@trpc/client": "11.28.0",
 		"hastscript": "^9.0.3",
 		"lowlight": "^3.3.0",
 		"parse5": "^8.1.1",
@@ -56,7 +56,7 @@
 	"devDependencies": {
 		"@playwright/test": "^1.63.0",
 		"@somefreq-app/api": "workspace:*",
-		"@trpc/server": "11.0.0-rc.402",
+		"@trpc/server": "11.28.0",
 		"@types/google.maps": "^3.64.1",
 		"@types/hast": "^3.0.5",
 		"@vitejs/plugin-vue": "^6.0.5",

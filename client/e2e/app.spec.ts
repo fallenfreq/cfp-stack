@@ -1283,6 +1283,54 @@ test('leaving while a save is under way waits for it', async ({ page, themeClass
 	await expect(page, 'its address').toHaveURL(/\/editor\/linked-page$/)
 })
 
+// A call the server never answered never ended: Save stayed under way, a move away waited for it,
+// and "Loading editor…" stayed up. After 30 seconds it fails as a call with no answer does.
+test('a call the server never answers fails after 30 seconds', async ({ page, themeClass }) => {
+	const text = page.locator('.tiptap p').first()
+	const question = leaveQuestion(page)
+	const noAnswer = page
+		.getByRole('alert')
+		.filter({ hasText: "Couldn't get an answer from the server. Please try again." })
+	// The clock moves on only once the call is sent.
+	const never = (call: string) =>
+		page.route(
+			(url) => url.pathname.includes(call),
+			() => {
+				// Never answered.
+			},
+		)
+	const sent = (call: string) => page.waitForRequest((request) => request.url().includes(call))
+	await page.clock.install()
+
+	// Save says so and keeps the edits, and the move away that waited for it asks.
+	await openStored(page, themeClass, oneParagraph)
+	await expect(text).toHaveText('A paragraph.')
+	await never('adminPages.update')
+	const saving = sent('adminPages.update')
+	await typeAtEnd(page, ' Typed.')
+	await pressSave(page)
+	await saving
+	await page.getByRole('link', { name: 'Contact' }).first().click()
+	await page.clock.fastForward(29_000)
+	await settle(page)
+	await expect(noAnswer, 'within 30 seconds').toHaveCount(0)
+	await expect(question, 'within 30 seconds').toHaveCount(0)
+	await page.clock.fastForward(2_000)
+	await expect(noAnswer).toBeVisible()
+	await expect(text).toHaveText('A paragraph. Typed.')
+	await expect(question).toBeVisible()
+	await question.getByRole('button', { name: 'Leave' }).click()
+	await expect(page).toHaveURL(/\/contact$/)
+
+	// A page that never arrives can't be loaded.
+	await never('adminPages.getBySlug')
+	const fetching = sent('adminPages.getBySlug')
+	await moveTo(page, '/editor/stored')
+	await fetching
+	await page.clock.fastForward(31_000)
+	await expect(page.getByText("This page couldn't be loaded.")).toBeVisible()
+})
+
 // A change the server refuses on the admin pages says why, in the words errors.ts gives each kind,
 // and the list reloads to show what the server has (a row deleted elsewhere goes). With no answer
 // it doesn't: a reload would get none either, and say so again.
