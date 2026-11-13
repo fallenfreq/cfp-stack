@@ -66,6 +66,9 @@ How the API talks to D1. The code that follows it is the example for anything ne
   into the table, which SQLite can only add or drop by rebuilding it; an index comes and goes on
   its own. A row that may be there already is inserted with `onConflictDoNothing()` and then
   read, never looked for first: between the look and the insert, another request can add it.
+  One that's written over when it's there is inserted with `onConflictDoUpdate()`, any rule for
+  writing over it in its `setWhere` (a new page's first save sent again, the pages router's
+  `create`).
   A slug that's taken is another row's: one made from a name moves aside to the first free `-2`,
   `-3`…, within the column's length (`insertWithUniqueSlug`), and one the admin chose answers
   409 (`conflictIfSlugTaken`). Looking first is safe there, as it only picks which slug to try:

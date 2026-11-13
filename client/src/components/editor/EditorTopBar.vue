@@ -30,6 +30,8 @@
 				{{ warningCount }}
 			</SfButton>
 		</SfTooltip>
+		<!-- Seen at a glance, as Save is in the actions. -->
+		<span v-if="store.hasUnsavedChanges" class="sf-loudness-1 sf-single-line">Unsaved</span>
 		<SfIconButton
 			icon="three-dot"
 			tooltip="Editor actions"
@@ -99,7 +101,9 @@ onBeforeUnmount(() => {
 })
 
 const store = useEditorStore()
-const { saveStatus, currentName, isCodeView } = storeToRefs(store)
+const { page: open, isCodeView } = storeToRefs(store)
+const currentName = computed(() => open.value?.name ?? null)
+const saveStatus = computed(() => open.value?.saveStatus ?? 'idle')
 const actionsOpen = ref(false)
 // Save marks how the last save went: success once saved, danger if it failed.
 const saveVariant = computed(() =>
@@ -128,7 +132,8 @@ const goToNextWarning = () => {
 }
 
 const renamingName = ref(false)
-const nameInputValue = ref(currentName.value ?? 'Untitled')
+// What the name box shows: the name, kept up to date by the watch below from the start.
+const nameInputValue = ref('')
 const nameInput = ref<HTMLInputElement | null>(null)
 
 watch(

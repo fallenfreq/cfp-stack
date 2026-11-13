@@ -9,6 +9,10 @@ can't make a second page or replace other work"). Deleted when done, as every pl
 2. **Work replaced.** The same page open in two tabs or on two devices: whichever saves last
    replaces the other's work, and nobody is told.
 
+**Progress.** All of it is done, with its checks: the table, its migration (applied locally
+only), the server, the editor, **Unsaved** in its top bar and the pages list's New page. Next: one review of the whole plan
+by a separate agent, then the migration on live and the push, with the owner's go-ahead.
+
 ## What the author sees
 
 | Case                                                                         | Today                                  | After                                                       |
@@ -24,7 +28,8 @@ can't make a second page or replace other work"). Deleted when done, as every pl
 with **Save over it** (marked as danger) and **Cancel**. Cancel leaves a message until it's
 closed, "Not saved. Your edits are still here.", whose button, **Open the other version**,
 opens the page's Preview in a new tab: read-only, so the page isn't edited in a third place.
-Save again asks again. Either way the edits stay on screen and unsaved. Both are the dialog and
+The page's next save, or leaving it, closes the message, which is then untrue (review,
+2026-11-13); **Unsaved** says what lasts. Save again asks again. Either way the edits stay on screen and unsaved. Both are the dialog and
 message the app has, as they are.
 
 **The pages list's New page** (owner, 2026-11-13). Today it asks the name and makes an empty
@@ -32,6 +37,13 @@ page at once; a lost answer there makes a second page too. It opens the editor o
 as a collection's New page does (`/editor?autoTag=…`, without the collection), and the page is
 made at its first Save, which asks the name. One way to make a page, and a page left without
 saving isn't made. New: the name is asked at Save, not before the editor opens.
+
+**Unsaved** (owner, 2026-11-13). Once a refused save is cancelled and its message closed, nothing
+said the page wasn't saved. The editor's top bar says **Unsaved**, quietly, before Editor actions
+(Save is inside them, so out of sight), while the page has edits Save would keep: exactly when
+leaving asks first (`hasUnsavedChanges`). Gone once saved; what's typed while a save is under way
+keeps it; never for a visitor on the demo, who can't save. A word, not a mark on Save: seen at a
+glance and read out, as editors that save by hand say it.
 
 ## How it works
 
@@ -62,7 +74,12 @@ each save's, because a save sent again after more typing is a new save and must 
 **A new page's first save** sends the key, and makes version 1 (2, 3… for each try after). If a
 page with that key is there already, a first try landed, and this one is a save of that page,
 taken by the key rule alone (it has no version it was made from). It writes the content and the
-name in the title now; the collections stay as the first try made them.
+name in the title now; the new page's collection, if the first try paired it, isn't paired again.
+
+**A key belongs to the page its editor saves.** A save takes its key off any other page, in the
+same write. Another page has it only when a new page's try, held up, made a second page after
+the first was saved from elsewhere (accepted, "Not in this plan"); without this, that editor's
+every save of its own page then failed on the key's index (review, 2026-11-13).
 
 Only the content is guarded. The name, address, published and collections are each one value,
 and a change to one doesn't refuse a content save made from an older version (otherwise renaming
@@ -76,36 +93,44 @@ the same one at once: the last stays, as today.
   per key, a `uniqueIndex`, which allows any number of NULLs). Both added columns: the migration
   is read to make sure no table is rebuilt. Names approved (owner, 2026-11-13): `version`,
   `saved_from`, and the route `save`.
-- **The server** (`api/src/routes/pages/router.ts`). One function for the rule, used by `save`
-  and by `create`'s repeat: one write that sets the content, the version the save makes,
-  `saved_from` and `updatedAt`, where the page is that one and the rule above holds (the
-  conditions in Drizzle's `eq`, `or`, `and`, `lt`; no `sql` template), with `.returning()`. The
-  rule is in the write, so nothing can save in between. No row back: a read tells a page that's
-  gone (404, as now) from one that moved on (409, "This page was saved somewhere else after you
-  opened it").
+- **The server** (`api/src/routes/pages/router.ts`). The rule is in each write, so nothing can
+  save in between (the conditions in Drizzle's `eq`, `or`, `and`, `lt`; no `sql` template), with
+  `.returning()`. No row back from `save`: a read tells a page that's gone (404, as now) from
+  one that moved on (409, "This page was saved somewhere else after you opened it").
     - `save` takes `{ pageId, contentJson, version, newVersion, savedFrom }`, all required: the
       versions whole numbers from 1, the new one above the other (so a save can't lower the
       version), the key a UUID, picked from the table's columns as the other inputs are, without
-      the column's NULL (`.unwrap()`): a save or create without a key would never match it. It
-      answers `{ version }`.
-    - `create` takes the key and the version it makes. It inserts as now. An insert refused
-      because a page has that key is the repeat: the index decides, as for slugs, and
-      `insertWithUniqueSlug` passes that refusal on, as it only catches its own column's. (Not
-      `onConflictDoNothing()` then a read, as the database doc says for a row that may be there:
-      `newestId` pairs the collections with the newest row, so the insert must always add one.)
-      The repeat goes through the rule's function, matching by key, with the name too. If no
-      page has the key by then (deleted, or saved from another tab meanwhile), the insert is
-      tried once more. It answers `{ pageId, slug, version }`.
+      the column's NULL (`.unwrap()`): a save or create without a key would never match it. One
+      write in a batch with the key taken off any other page. It answers `{ version }`.
+    - `create` takes the key and the version it makes, in one upsert: an insert that, when a page
+      has the key, saves that page instead (`onConflictDoUpdate` on `saved_from`, the version
+      rule in its `setWhere`; `docs/database.md`). No row back is a try older than one taken
+      (409). The collections are paired with the key's page, with `onConflictDoNothing()`. (Was
+      an insert, a caught refusal, a read and a second insert, with the collections on the
+      newest row; the review's upsert is the database doc's own way, 2026-11-13.) It answers
+      `{ pageId, slug, version }`.
     - `update` no longer takes `contentJson`, and refuses any field it doesn't take
       (`.strict()`): an editor open from before the deploy that sends content to `update` is
       refused, not answered "Saved" with nothing written (zod drops a field an input doesn't
       name). It doesn't change the version.
     - The public `getBySlug` leaves out the two columns. The admin reads send them.
 - **The editor** (`client/src/stores/editorStore.ts`):
-    - `setEditor` makes a new key, and clears the versions with the page's id.
-    - Keeps the version from `setPage` and from each save's answer, and the last version it
-      sent. A save takes the key and versions when it starts; its answer changes the editor only
-      if the same page is still open, as now.
+    - The page open is one object (`OpenPage`, the store's `page`), made as its editor opens and
+      replaced by the next: its id, address, name, a new page's collection, the page as last
+      saved, Save's status, the save under way, the "Not saved" message's closing, and the key
+      and versions. The editor
+      component says its editor has opened, or closed; the view, which knows what it opened,
+      calls `openPage` or `closePage`. A save keeps the page it started on and writes its answer
+      there, so one opened meanwhile is left alone; only showing the new address checks the
+      page is still on screen. Why (owner, 2026-11-13): one place for the page's state, not
+      loose values each reset and guarded by hand. Shallow (a `shallowRef` of a
+      `shallowReactive`): its values show as they change, its editor and documents stay TipTap's.
+      All of it is returned from the store, as Pinia asks of a setup store.
+    - Keeps the version the page opened with and each save's answer, and the last version it
+      sent.
+    - The page as it is, kept by the open page as it changes, so whether it has edits Save would
+      keep (`hasUnsavedChanges`) is a computed value: the top bar's **Unsaved** and the leave
+      question both read it.
     - A new page keeps the name asked when its first save gets no answer (`noAnswer`), so Save
       again doesn't ask again; a name the server refused is asked again.
     - Its save shows its own error (`meta: { showsOwnError: true }`, `config/queryClient.ts`), so
@@ -120,13 +145,15 @@ the same one at once: the last stays, as today.
 
 - **The server**, with the real routes on a database in memory (`api/test/`, as
   `pagesAndCollections.test.mjs`):
-    - A first save sent twice with one key makes one page, with the second's content and name.
+    - A first save sent twice with one key makes one page, with the second's content and name;
+      sent twice into a collection, it's paired once.
     - A first save arriving after its own retry is refused, and makes no second page.
     - A retry after the page made by the first try was deleted makes one page.
     - A save from an older version is refused (409), and the page keeps the newer content.
     - A save sent again after its first try landed (same key, same version made from, new
       content) is taken; the first try arriving after it is refused, and the newer content stays.
     - Another key's save in between: the first editor's next save is refused.
+    - A second page made by a late first try leaves its editor saving its own page.
     - A rename, address, published or collections change leaves the version as it was.
     - `update` with `contentJson` is refused.
     - A save of a page that's gone answers 404.
@@ -137,8 +164,13 @@ the same one at once: the last stays, as today.
     - A first save whose answer is lost, then Save again: the name isn't asked, and the second
       create sends the same key and a higher version.
     - A refused save shows the question and no other message; Cancel leaves the edits unsaved;
-      Save over it reads the version and saves from it; a page gone says so.
+      Save over it reads the version and saves from it, and the "Not saved" message goes; a page
+      gone says so.
     - New page in the pages list opens the editor, and the first Save asks the name.
+    - A new page made from a collection is made in one write: the check watches every kind of
+      write (`create`, `update`, `save`).
+    - **Unsaved** is checked at each step of the checks of what leaving asks about: shown when
+      leaving would ask, and not otherwise.
 
 ## Deploying
 

@@ -2,6 +2,7 @@
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { drizzle } from 'drizzle-orm/d1'
 import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import superjson from 'superjson'
@@ -15,7 +16,9 @@ const context = {
 }
 const admin = appRouter.createCaller(context)
 const contentJson = JSON.stringify({ type: 'doc', content: [] })
-const addPage = (name) => admin.adminPages.create({ name, contentJson })
+// A new page's first save, from an editor of its own.
+const firstSave = () => ({ savedFrom: randomUUID(), newVersion: 1 })
+const addPage = (name) => admin.adminPages.create({ name, contentJson, ...firstSave() })
 const taken = { code: 'CONFLICT', message: 'That slug is already in use' }
 
 test('a slug the admin chooses that another row has answers 409', async () => {
@@ -110,19 +113,26 @@ test('a new page goes into its collections as it is made', async () => {
 		name: 'Collected',
 		contentJson,
 		tagIds: [first.tagId],
+		...firstSave(),
 	})
 	// The same name, so moved aside to -2: each page gets its own collections.
 	const b = await admin.adminPages.create({
 		name: 'Collected',
 		contentJson,
 		tagIds: [first.tagId, second.tagId],
+		...firstSave(),
 	})
 	assert.equal(b.slug, 'collected-2')
 	assert.deepEqual((await listed(first)).sort(), [a.pageId, b.pageId].sort())
 	assert.deepEqual(await listed(second), [b.pageId])
 	// A collection that isn't there (deleted meanwhile) is left out; the page is still made.
 	await admin.adminTags.delete({ tagId: second.tagId })
-	const c = await admin.adminPages.create({ name: 'Lone', contentJson, tagIds: [second.tagId] })
+	const c = await admin.adminPages.create({
+		name: 'Lone',
+		contentJson,
+		tagIds: [second.tagId],
+		...firstSave(),
+	})
 	assert.equal((await admin.adminPages.getWithTags({ pageId: c.pageId }))?.tags.length, 0)
 })
 

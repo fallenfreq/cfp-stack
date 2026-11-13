@@ -151,7 +151,6 @@ import AdminListItem from '@/components/admin/AdminListItem.vue'
 import { useListItemActions } from '@/composables/useListItemActions'
 import { noAnswer } from '@/services/errors'
 import { useAllPages } from '@/services/pages'
-import { showPrompt } from '@/services/promptModal'
 import { useAllTags } from '@/services/tags'
 import { trpc } from '@/trpc'
 import { useMutation, useQuery } from '@tanstack/vue-query'
@@ -239,20 +238,8 @@ const onTagsChange = (pageId: number, event: Event) => {
 	tagSaves.set(pageId, tail)
 }
 
-// A new page opens in the editor.
-const createPage = useMutation({
-	mutationFn: (name: string) =>
-		trpc.adminPages.create.mutate({
-			name,
-			contentJson: JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }] }),
-		}),
-	onSuccess: (page) => router.push({ name: 'editor-page', params: { slug: page.slug } }),
-})
-
-const onNewPage = async () => {
-	const name = await showPrompt('Page name')
-	if (name) createPage.mutate(name)
-}
+// A new page opens in the editor, and is made at its first Save, which asks its name.
+const onNewPage = () => router.push({ name: 'editor' })
 </script>
 
 <style scoped>

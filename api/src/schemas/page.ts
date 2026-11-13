@@ -13,8 +13,15 @@ export const sitePages = sqliteTable(
 			.default('{"type":"doc","content":[{"type":"paragraph"}]}'),
 		createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 		updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+		// Its content's version, which only goes up, and the editor that saved it last (a key each
+		// editor makes as it opens a page): what a save is taken by (the pages router's `save`).
+		version: integer('version').notNull().default(1),
+		savedFrom: text('saved_from', { length: 36 }),
 	},
-	(t) => [uniqueIndex('site_pages_slug_unique').on(t.slug)],
+	(t) => [
+		uniqueIndex('site_pages_slug_unique').on(t.slug),
+		uniqueIndex('site_pages_saved_from_unique').on(t.savedFrom),
+	],
 )
 
 export type SitePage = typeof sitePages.$inferSelect

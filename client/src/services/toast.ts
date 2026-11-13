@@ -37,6 +37,7 @@ function run(id: number, timer: Timer) {
 /**
  * Show a message for duration ms (0 keeps it until closed): by default an error 10 s, else 5 s.
  * The same message again, while it's on screen, counts on that toast and starts its time again.
+ * Returns what closes it, for a message that stops being true.
  */
 export function notify({
 	message,
@@ -48,7 +49,7 @@ export function notify({
 	variant?: ToastVariant | undefined
 	duration?: number
 	action?: Toast['action']
-}): void {
+}): () => void {
 	const index = toasts.findIndex(
 		(toast) => toast.message === message && toast.variant === variant,
 	)
@@ -59,10 +60,12 @@ export function notify({
 	else toasts.push({ id, message, variant, count: 1, action })
 	clearTimeout(timers.get(id)?.timeout)
 	timers.delete(id)
-	if (!duration) return
+	const close = () => dismiss(id)
+	if (!duration) return close
 	const timer: Timer = { remaining: duration, started: 0 }
 	timers.set(id, timer)
 	if (!held()) run(id, timer)
+	return close
 }
 
 export function dismiss(id: number): void {

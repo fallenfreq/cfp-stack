@@ -458,9 +458,10 @@ async function openStored(page: Page, themeClass: string | null, stored: Json) {
 	await useTheme(page, themeClass)
 }
 
-/** A stored page holding one paragraph. */
+/** A stored page holding one paragraph, as the editor's read sends it. */
 const oneParagraph = {
 	pageId: 1,
+	version: 1,
 	...storedPage('stored', 'Stored', [
 		{ type: 'paragraph', content: [{ type: 'text', text: 'A paragraph.' }] },
 	]),
@@ -532,10 +533,10 @@ test('Save in the code view saves the page, with the changes made to its code', 
 	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
 	let saved: JSONContent | null = null
 	await page.route(
-		(url) => url.pathname.includes('adminPages.update'),
+		(url) => url.pathname.includes('adminPages.save'),
 		(route) => {
 			saved = JSON.parse(route.request().postDataJSON()[0].json.contentJson)
-			return route.fulfill({ json: [{ result: { data: { json: null } } }] })
+			return route.fulfill({ json: [{ result: { data: { json: { version: 2 } } } }] })
 		},
 	)
 	const codeView = page.getByRole('button', { name: 'Code view' })
@@ -578,6 +579,8 @@ async function typeAtEnd(page: Page, text: string) {
 
 const leaveQuestion = (page: Page) =>
 	page.getByRole('dialog', { name: 'Leave without saving your changes?' })
+/** The editor's top bar saying the page has edits Save would keep, as leaving asks about. */
+const saysUnsaved = (page: Page) => page.getByText('Unsaved', { exact: true })
 
 /** Press Save, opening the editor's actions first if they're closed. */
 async function pressSave(page: Page) {
@@ -670,6 +673,7 @@ test('leaving with code not yet put into the page asks first', async ({ page, th
 	await page.locator('.tiptap:visible').click()
 	await page.keyboard.press('ControlOrMeta+a')
 	await page.keyboard.type('<p>From the code.</p>')
+	await expect(saysUnsaved(page)).toBeVisible()
 	await page.getByRole('link', { name: 'Contact' }).first().click()
 	await expect(leaveQuestion(page)).toBeVisible()
 })
@@ -679,6 +683,7 @@ test('leaving with code not yet put into the page asks first', async ({ page, th
 test('leaving asks only about edits Save would keep', async ({ page, themeClass }) => {
 	const contact = page.getByRole('link', { name: 'Contact' }).first()
 	const leavesFreely = async (why: string) => {
+		await expect(saysUnsaved(page), why).toHaveCount(0)
 		await contact.click()
 		await expect(page, why).toHaveURL(/\/contact$/)
 		await expect(leaveQuestion(page), why).toHaveCount(0)
@@ -692,6 +697,7 @@ test('leaving asks only about edits Save would keep', async ({ page, themeClass 
 	await expect(text).toHaveText('A paragraph.')
 	await typeAtEnd(page, 'x')
 	await expect(text).toHaveText('A paragraph.x')
+	await expect(saysUnsaved(page), 'typed').toBeVisible()
 	await page.keyboard.press('ControlOrMeta+z')
 	await expect(text).toHaveText('A paragraph.')
 	await leavesFreely('undone back')
@@ -699,11 +705,12 @@ test('leaving asks only about edits Save would keep', async ({ page, themeClass 
 	await moveTo(page, '/editor/stored')
 	await expect(text).toHaveText('A paragraph.')
 	await page.route(
-		(url) => url.pathname.includes('adminPages.update'),
-		(route) => route.fulfill({ json: [{ result: { data: { json: null } } }] }),
+		(url) => url.pathname.includes('adminPages.save'),
+		(route) => route.fulfill({ json: [{ result: { data: { json: { version: 2 } } } }] }),
 	)
 	await typeAtEnd(page, ' Typed.')
 	await expect(text).toHaveText('A paragraph. Typed.')
+	await expect(saysUnsaved(page), 'typed again').toBeVisible()
 	await pressSave(page)
 	await expect(page.getByText('Saved', { exact: true })).toBeVisible()
 	await leavesFreely('saved')
@@ -717,7 +724,7 @@ test('leaving asks only about edits Save would keep', async ({ page, themeClass 
 		async (route) => {
 			await saveHeld
 			await route.fulfill({
-				json: [{ result: { data: { json: { pageId: 2, slug: 'new-page' } } } }],
+				json: [{ result: { data: { json: { pageId: 2, slug: 'new-page', version: 1 } } } }],
 			})
 		},
 	)
@@ -736,6 +743,7 @@ test('leaving asks only about edits Save would keep', async ({ page, themeClass 
 	await expect(page).toHaveURL(/\/editor\/new-page$/)
 	await expect(leaveQuestion(page), 'given its address').toHaveCount(0)
 	await expect(text).toHaveText('A new page. More.')
+	await expect(saysUnsaved(page), 'typed while it saved').toBeVisible()
 	await contact.click()
 	await expect(leaveQuestion(page), 'typed while it saved').toBeVisible()
 	await leaveQuestion(page).getByRole('button', { name: 'Leave' }).click()
@@ -765,7 +773,7 @@ test('an admin whose sign-in has ended is still asked before leaving', async ({
 	const text = page.locator('.tiptap p').first()
 	await expect(text).toHaveText('A paragraph.')
 	await page.route(
-		(url) => url.pathname.includes('adminPages.update'),
+		(url) => url.pathname.includes('adminPages.save'),
 		(route) =>
 			route.fulfill({
 				status: 401,
@@ -840,7 +848,7 @@ test('Back and Forward while leaving asks keep the address on the page shown', a
 	await onThePage('Back twice, then Cancel')
 
 	// While a save is under way, with more typed meanwhile: asked once it has saved.
-	const finishSave = await holdReplies(page, 'adminPages.update', null)
+	const finishSave = await holdReplies(page, 'adminPages.save', { version: 2 })
 	await pressSave(page)
 	await typeAtEnd(page, ' More.')
 	const more = 'A paragraph. Typed. More.'
@@ -1067,7 +1075,9 @@ test('opening a page in a sheet, and Save naming a new page, keep the place', as
 	await page.route(
 		(url) => url.pathname.includes('adminPages.create'),
 		(route) =>
-			route.fulfill({ json: [{ result: { data: { json: { pageId: 2, slug: 'named' } } } }] }),
+			route.fulfill({
+				json: [{ result: { data: { json: { pageId: 2, slug: 'named', version: 1 } } } }],
+			}),
 	)
 	await moveTo(page, '/editor')
 	await typeAtEnd(page, 'A new page.')
@@ -1217,7 +1227,7 @@ test('leaving while a save is under way waits for it', async ({ page, themeClass
 	// is asked, though more was typed while it saved.
 	await openStored(page, themeClass, oneParagraph)
 	await expect(text).toHaveText('A paragraph.')
-	let finishSave = await hold('adminPages.update', null)
+	let finishSave = await hold('adminPages.save', { version: 2 })
 	await typeAtEnd(page, ' Typed.')
 	await expect(text).toHaveText('A paragraph. Typed.')
 	await pressSave(page)
@@ -1239,7 +1249,7 @@ test('leaving while a save is under way waits for it', async ({ page, themeClass
 	await expect(text).toHaveText('A paragraph. Typed. More.')
 
 	// Nothing is asked while it saves, nor once it has.
-	finishSave = await hold('adminPages.update', null)
+	finishSave = await hold('adminPages.save', { version: 2 })
 	await pressSave(page)
 	await contact.click()
 	await settle(page)
@@ -1252,7 +1262,7 @@ test('leaving while a save is under way waits for it', async ({ page, themeClass
 	// A new page with nothing typed, Back while its name is asked for: the save alone holds the
 	// move, so that question stays, on the page, and once the page is named and saved it leaves
 	// without another.
-	finishSave = await hold('adminPages.create', { pageId: 2, slug: 'new-page' })
+	finishSave = await hold('adminPages.create', { pageId: 2, slug: 'new-page', version: 1 })
 	await moveTo(page, '/editor')
 	await pressSave(page)
 	await expect(name).toBeVisible()
@@ -1271,7 +1281,7 @@ test('leaving while a save is under way waits for it', async ({ page, themeClass
 
 	// A new page, a link while its first save is under way, more typed meanwhile: asked once it
 	// has saved, its address shown by then.
-	finishSave = await hold('adminPages.create', { pageId: 3, slug: 'another-page' })
+	finishSave = await hold('adminPages.create', { pageId: 3, slug: 'another-page', version: 1 })
 	await moveTo(page, '/editor')
 	await typeAtEnd(page, 'Another page.')
 	await expect(text).toHaveText('Another page.')
@@ -1297,7 +1307,7 @@ test('leaving while a save is under way waits for it', async ({ page, themeClass
 
 	// A link while a new page's first save is under way, nothing more to ask about: it leaves once
 	// the page's address shows (leaving cancelled showing it), so Back finds the page.
-	finishSave = await hold('adminPages.create', { pageId: 4, slug: 'linked-page' })
+	finishSave = await hold('adminPages.create', { pageId: 4, slug: 'linked-page', version: 1 })
 	await moveTo(page, '/editor')
 	await pressSave(page)
 	await name.fill('Linked page')
@@ -1323,8 +1333,8 @@ test('a call the server never answers fails after 30 seconds', async ({ page, th
 	// on only once the call is sent.
 	await openStored(page, themeClass, oneParagraph)
 	await expect(text).toHaveText('A paragraph.')
-	await never(page, 'adminPages.update')
-	const saving = sent(page, 'adminPages.update')
+	await never(page, 'adminPages.save')
+	const saving = sent(page, 'adminPages.save')
 	await typeAtEnd(page, ' Typed.')
 	await pressSave(page)
 	await saving
@@ -1623,7 +1633,7 @@ test('a new page made from a collection is saved into it in one write', async ({
 	const writes: [string, string, unknown][] = []
 	let refuse = true
 	await page.route(
-		(url) => /adminPages\.(create|update)/.test(url.pathname),
+		(url) => /adminPages\.(create|update|save)/.test(url.pathname),
 		(route) => {
 			const { json } = route.request().postDataJSON()[0]
 			writes.push([
@@ -1633,7 +1643,13 @@ test('a new page made from a collection is saved into it in one write', async ({
 			])
 			if (!refuse)
 				return route.fulfill({
-					json: [{ result: { data: { json: { pageId: 2, slug: 'collected' } } } }],
+					json: [
+						{
+							result: {
+								data: { json: { pageId: 2, slug: 'collected', version: 1 } },
+							},
+						},
+					],
 				})
 			return route.fulfill({
 				status: 500,
@@ -1658,6 +1674,175 @@ test('a new page made from a collection is saved into it in one write', async ({
 		['create', 'Collected', [7]],
 		['create', 'Collected', [7]],
 	])
+})
+
+// A new page whose first save landed but got no answer was made again by Save, as `-2`, and its
+// name asked again. Save again sends the same key and a higher version, which saves that page.
+test('a new page whose first save got no answer is saved again as the same page, its name kept', async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+	})
+	const creates: [string, number, string][] = []
+	let answer = false
+	await page.route(
+		(url) => url.pathname.includes('adminPages.create'),
+		(route) => {
+			const { json } = route.request().postDataJSON()[0]
+			creates.push([json.name, json.newVersion, json.savedFrom])
+			if (!answer) return route.abort()
+			return route.fulfill({
+				json: [{ result: { data: { json: { pageId: 2, slug: 'named', version: 2 } } } }],
+			})
+		},
+	)
+	await page.goto('/editor')
+	await useTheme(page, themeClass)
+	const name = page.getByRole('textbox', { name: 'Page name' })
+	await typeAtEnd(page, 'A new page.')
+	await pressSave(page)
+	await name.fill('Named')
+	await page.getByRole('button', { name: 'Submit' }).click()
+	await expect(
+		page.getByRole('alert').filter({ hasText: "Couldn't get an answer from the server." }),
+	).toBeVisible()
+	await expect(page.locator('.editor-top-bar input'), 'the name kept').toHaveValue('Named')
+	answer = true
+	await pressSave(page)
+	await expect(page).toHaveURL(/\/editor\/named$/)
+	await expect(name, 'not asked again').toHaveCount(0)
+	expect(creates.map(([named, version]) => [named, version])).toEqual([
+		['Named', 1],
+		['Named', 2],
+	])
+	expect(creates[1]?.[2], 'the same key').toBe(creates[0]?.[2])
+})
+
+// Whichever tab or device saved a page last replaced the other's work, unasked. A save refused as
+// the page was saved elsewhere asks instead, and nothing else is said.
+test('a save refused as the page was saved elsewhere asks whether to save over it', async ({
+	page,
+	themeClass,
+}) => {
+	await openStored(page, themeClass, oneParagraph)
+	const text = page.locator('.tiptap p').first()
+	await expect(text).toHaveText('A paragraph.')
+	// Each save's version and the one it makes; refused while `refuse`, else taken.
+	const saves: [number, number][] = []
+	let refuse = true
+	await page.route(
+		(url) => url.pathname.includes('adminPages.save'),
+		(route) => {
+			const { json } = route.request().postDataJSON()[0]
+			saves.push([json.version, json.newVersion])
+			if (!refuse)
+				return route.fulfill({
+					json: [{ result: { data: { json: { version: json.newVersion } } } }],
+				})
+			return route.fulfill({
+				status: 409,
+				json: [
+					new Refusal(
+						'CONFLICT',
+						'This page was saved somewhere else after you opened it',
+					).answer,
+				],
+			})
+		},
+	)
+	// The page as Save over it reads it now; null once it's deleted.
+	let now: Json = { ...oneParagraph, version: 5, tags: [] }
+	await fakeReplies(page, { 'adminPages.getWithTags': () => now })
+	const question = page.getByRole('dialog', {
+		name: 'This page was saved somewhere else after you opened it. Save over that version with yours?',
+	})
+	const saveOver = question.getByRole('button', { name: 'Save over it' })
+	const alerts = page.getByRole('alert')
+
+	await typeAtEnd(page, ' Typed.')
+	await expect(text).toHaveText('A paragraph. Typed.')
+	await pressSave(page)
+	await expect(question).toBeVisible()
+	await expect(alerts, 'nothing else said').toHaveCount(0)
+	// Cancel: not saved, the edits stay, and the other version opens read-only in a new tab.
+	await question.getByRole('button', { name: 'Cancel' }).click()
+	await expect(page.getByText('Not saved. Your edits are still here.')).toBeVisible()
+	await expect(text).toHaveText('A paragraph. Typed.')
+	await expect(saysUnsaved(page)).toBeVisible()
+	const opened = page.waitForEvent('popup')
+	await page.getByRole('button', { name: 'Open the other version' }).click()
+	const other = await opened
+	await expect(other).toHaveURL(/\/preview\/stored$/)
+	await other.close()
+	// Save again asks again.
+	await pressSave(page)
+	await expect(question, 'asked again').toBeVisible()
+	// Save over it saves from the version the page has now; saved again in between, it asks again.
+	await saveOver.click()
+	await expect(question, 'saved in between').toBeVisible()
+	now = { ...oneParagraph, version: 7, tags: [] }
+	refuse = false
+	await saveOver.click()
+	await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+	await expect(
+		page.getByText('Not saved. Your edits are still here.'),
+		'untrue once saved',
+	).toHaveCount(0)
+	expect(saves).toEqual([
+		[1, 2],
+		[1, 3],
+		[5, 6],
+		[7, 8],
+	])
+	// Deleted meanwhile: it says so, and the edits stay.
+	refuse = true
+	now = null
+	await typeAtEnd(page, ' More.')
+	await pressSave(page)
+	await saveOver.click()
+	await expect(alerts.filter({ hasText: 'This page has been deleted' })).toBeVisible()
+	await expect(text).toHaveText('A paragraph. Typed. More.')
+	expect(saves.at(-1), 'from the version saved last').toEqual([8, 9])
+	await expect(saysUnsaved(page)).toBeVisible()
+})
+
+// New page in the pages list asked the name and made an empty page at once: an answer lost there
+// made a second page too. It opens the editor; the page is made at its first Save.
+test("the pages list's New page opens the editor, and the first Save asks the name", async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+		'adminPages.list': [],
+		'adminTags.list': [],
+		'adminPages.listTagAssignments': [],
+	})
+	const creates: string[] = []
+	await page.route(
+		(url) => url.pathname.includes('adminPages.create'),
+		(route) => {
+			creates.push(route.request().postDataJSON()[0].json.name)
+			return route.fulfill({
+				json: [{ result: { data: { json: { pageId: 2, slug: 'listed', version: 1 } } } }],
+			})
+		},
+	)
+	await page.goto('/admin/pages')
+	await useTheme(page, themeClass)
+	await page.getByRole('button', { name: 'New page' }).click()
+	await expect(page).toHaveURL(/\/editor$/)
+	await typeAtEnd(page, 'A new page.')
+	expect(creates, 'not made by opening').toEqual([])
+	await pressSave(page)
+	await page.getByRole('textbox', { name: 'Page name' }).fill('Listed')
+	await page.getByRole('button', { name: 'Submit' }).click()
+	await expect(page).toHaveURL(/\/editor\/listed$/)
+	expect(creates).toEqual(['Listed'])
 })
 
 // A tag box ticked for a save that fails is unticked again: the list reloads as it was, which

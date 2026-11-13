@@ -39,7 +39,7 @@ import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore.js'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import Placeholder from '@tiptap/extension-placeholder'
-import { EditorContent, type Content } from '@tiptap/vue-3'
+import { EditorContent, type Content, type Editor } from '@tiptap/vue-3'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import CodeView from './CodeView.vue'
 import CodeViewToggle from './CodeViewToggle.vue'
@@ -51,6 +51,9 @@ import ToolbarScrollHint from './ToolbarScrollHint.vue'
 // What the editor opens: a stored page, our own HTML (the demo, the layout test cases), or nothing
 // (a new page). Read once: each page opens in a new editor.
 const props = defineProps<{ content: Content }>()
+// Once it has taken its content the editor has opened, for the view to open its page with; it
+// closes as it leaves the screen.
+const emit = defineEmits<{ opened: [editor: Editor]; closed: [editor: Editor] }>()
 const invalid = ref(false)
 
 const toolbarItems: ToolbarItem[] = defaultToolbarItems
@@ -86,7 +89,7 @@ const editor = useEditor({
 		// TipTap has a core extension called commands, and two extensions can't share a name.
 		Commands.extend({ name: 'slashCommands' }).configure({ suggestion }),
 		// The cursor is kept for a stored page (a new one once Save names it), and puts it in.
-		RememberCursor.configure({ key: () => useEditorStore().currentSlug }),
+		RememberCursor.configure({ key: () => useEditorStore().page?.slug ?? null }),
 		PageWarnings,
 	],
 	content: '',
@@ -111,17 +114,16 @@ watch(editor, (newEditor) => {
 		invalid.value = true
 		return
 	}
-	editorStore.setEditor(newEditor)
+	emit('opened', newEditor)
 	newEditor.on('transaction', () => {
 		const state = multiSelectPluginKey.getState(newEditor.state)
 		multiSelectStore.sync(state?.positions ?? [])
 	})
 })
-// The store points at the editor on screen. Leaving the page closes it, so clear it too: the
-// next editor starts with no page (Save can't write over this one), and a save still on its way
-// for this one leaves the next alone (`save`).
+// Leaving the page closes it, so the next editor starts with no page: Save can't write over this
+// one.
 onBeforeUnmount(() => {
-	if (editorStore.editor === editor.value) editorStore.setEditor(null)
+	if (editor.value) emit('closed', editor.value)
 })
 </script>
 

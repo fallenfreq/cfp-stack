@@ -3,7 +3,7 @@ import initialContent from '@/config/editor/initialContent.html?raw'
 import { cancelModal, showConfirm } from '@/services/promptModal'
 import { useEditorStore } from '@/stores/editorStore'
 import { paramString } from '@/utils/router'
-import type { Content } from '@tiptap/vue-3'
+import type { Content, Editor } from '@tiptap/vue-3'
 import { onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import {
 	onBeforeRouteLeave,
@@ -31,7 +31,7 @@ const isEditor = (at: RouteLocationNormalized) => at.name === 'editor' || at.nam
 // Saving a new page gives it an address; that's the page already open, so it stays.
 const isOpenPage = (at: RouteLocationNormalized) => {
 	const slug = paramString(at.params['slug'])
-	return slug !== '' && slug === store.currentSlug
+	return slug !== '' && slug === store.page?.slug
 }
 const opened = ref(0)
 watch(
@@ -41,8 +41,8 @@ watch(
 	},
 )
 
-// Leaving the page on screen with edits Save could keep asks first.
-const mayLoseEdits = () => store.couldSave && store.hasUnsavedChanges()
+// Leaving the page on screen with edits Save would keep asks first.
+const mayLoseEdits = () => store.hasUnsavedChanges
 
 // A move away that must wait for a save or ask is refused at once, so the address stays on the
 // page shown (vue-router takes a Back or Forward back), and held: only the newest, which Leave
@@ -177,20 +177,21 @@ async function whatOpens(): Promise<Opening | string> {
 	return { content: content as Content, page, autoTag: tag }
 }
 
-// The page's details reach the store with its editor. An editor that refuses its content never
-// gets there, so Save can't reach that page.
-watch(
-	() => store.editor,
-	(editor) => {
-		if (!editor || !opening.value) return
-		if (opening.value.page) store.setPage(opening.value.page)
-		if (opening.value.autoTag) store.pendingAutoTag = opening.value.autoTag
-	},
-)
+// The page opens in the store with its editor, once that has taken its content. An editor that
+// refuses its content never gets there, so Save can't reach that page.
+const pageOpened = (editor: Editor) => {
+	if (opening.value) store.openPage(editor, opening.value.page, opening.value.autoTag)
+}
 </script>
 
 <template>
 	<SfStatusDisplay v-if="problem" state="error" :message="problem" />
-	<TiptapEditor v-else-if="opening" :key="opened" :content="opening.content" />
+	<TiptapEditor
+		v-else-if="opening"
+		:key="opened"
+		:content="opening.content"
+		@opened="pageOpened"
+		@closed="store.closePage"
+	/>
 	<SfStatusDisplay v-else state="loading" message="Loading editor…" />
 </template>

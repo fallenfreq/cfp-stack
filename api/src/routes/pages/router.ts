@@ -1,9 +1,10 @@
-import { and, desc, eq, inArray, type SQLWrapper } from 'drizzle-orm'
+import { and, desc, eq, inArray, lt, ne, or, type SQLWrapper } from 'drizzle-orm'
 import type { BatchItem } from 'drizzle-orm/batch'
 import { createSelectSchema } from 'drizzle-orm/zod'
 import { z } from 'zod'
 import { adminProcedure, publicProcedure, router } from '../../config/trpc.js'
-import { type Db, newestId, writeTogether } from '../../db.js'
+import { type Db, writeTogether } from '../../db.js'
+import { ConflictError } from '../../domain/errors.js'
 import {
 	conflictIfSlugTaken,
 	definedFields,
@@ -41,7 +42,18 @@ const pageInput = createSelectSchema(sitePages, {
 				abort: true,
 			})
 			.refine(isJson, { error: 'Must be valid JSON' }),
+	version: (column) => column.min(1),
+	savedFrom: (column) => column.pipe(z.uuid()),
 })
+
+// What a content save sends besides the content: the editor's key, which a save needs (one
+// without would never match the column's NULL), and the version the save makes.
+const saveInput = {
+	savedFrom: pageInput.shape.savedFrom.unwrap(),
+	newVersion: pageInput.shape.version,
+}
+
+const movedOn = 'This page was saved somewhere else after you opened it'
 
 // A page's collections: at most 50. They're bound to one query, and D1 takes at most 100 values.
 const collectionIds = z.array(siteTagInput.shape.tagId).max(50)
@@ -69,10 +81,11 @@ const listColumns = {
 
 export const publicPagesRouter = router({
 	// A lookup that finds nothing returns null: TanStack Query treats undefined data as an error.
+	// Without the version and the editor's key, which only the editor uses.
 	getBySlug: publicProcedure.input(pageInput.pick({ slug: true })).query(
 		async ({ input, ctx }) =>
 			(await ctx.db
-				.select()
+				.select({ ...listColumns, contentJson: sitePages.contentJson })
 				.from(sitePages)
 				.where(and(eq(sitePages.slug, input.slug), eq(sitePages.published, true)))
 				.get()) ?? null,
@@ -164,47 +177,129 @@ export const adminPagesRouter = router({
 			pageInput
 				.pick({ name: true, imageUrl: true, contentJson: true })
 				.partial({ imageUrl: true })
-				.extend({ tagIds: collectionIds.optional() }),
+				.extend({ tagIds: collectionIds.optional(), ...saveInput }),
 		)
-		.mutation(({ input, ctx }) => {
-			const values = {
-				name: input.name,
-				contentJson: input.contentJson,
-				...(input.imageUrl != null ? { imageUrl: input.imageUrl } : {}),
-			}
+		.mutation(async ({ input, ctx }) => {
+			const { name, contentJson, savedFrom, newVersion } = input
 			const tagIds = input.tagIds ?? []
-			return insertWithUniqueSlug(
+			// A page with this editor's key is an earlier try's, which landed and lost its answer: this
+			// is a save of that page, with the name, taken if the page is below the version this makes
+			// (a try older than one taken is refused). The key's own page is paired with the
+			// collections, so a repeat adds none it has. If no page has the key any more (deleted, or
+			// saved from another editor since, which gives it that editor's key), a new page is made: a
+			// try that lands after that makes a second page with what it sent. Nothing typed is lost,
+			// and it needs that timing; a key that never changes would close it, for a third column
+			// (accepted, 2026-11-13).
+			const saved = await insertWithUniqueSlug(
 				ctx.db,
 				async (slug) => {
-					const [[made]] = await ctx.db.batch([
+					const [[page]] = await ctx.db.batch([
 						ctx.db
 							.insert(sitePages)
-							.values({ ...values, slug })
-							.returning({ pageId: sitePages.pageId, slug: sitePages.slug }),
+							.values({
+								name,
+								contentJson,
+								savedFrom,
+								version: newVersion,
+								slug,
+								...(input.imageUrl != null ? { imageUrl: input.imageUrl } : {}),
+							})
+							.onConflictDoUpdate({
+								target: sitePages.savedFrom,
+								set: {
+									contentJson,
+									name,
+									version: newVersion,
+									updatedAt: new Date(),
+								},
+								setWhere: lt(sitePages.version, newVersion),
+							})
+							.returning({
+								pageId: sitePages.pageId,
+								slug: sitePages.slug,
+								version: sitePages.version,
+							}),
 						...(tagIds.length > 0
-							? [insertPageTags(ctx.db, newestId(ctx.db, sitePages.pageId), tagIds)]
+							? [
+									insertPageTags(
+										ctx.db,
+										ctx.db
+											.select({ pageId: sitePages.pageId })
+											.from(sitePages)
+											.where(eq(sitePages.savedFrom, savedFrom)),
+										tagIds,
+									).onConflictDoNothing(),
+								]
 							: []),
 					])
-					if (!made) throw new Error('Failed to insert the page')
-					return made
+					return page ?? null
 				},
-				input.name,
+				name,
 				sitePages.slug,
 			)
+			if (!saved) throw new ConflictError(movedOn)
+			return saved
+		}),
+
+	save: adminProcedure
+		.input(
+			pageInput
+				.pick({ pageId: true, contentJson: true, version: true })
+				.extend(saveInput)
+				.refine((save) => save.newVersion > save.version, {
+					error: 'Must be above the version the save was made from',
+					path: ['newVersion'],
+				}),
+		)
+		.mutation(async ({ input, ctx }) => {
+			const { pageId, contentJson, version, newVersion, savedFrom } = input
+			// Taken if the page is still at the version the save was made from (nobody saved since),
+			// or if this editor saved it last and the page is below the version this save makes: every
+			// version since is this editor's own (saves whose answer was lost), and this one is newer.
+			// The version alone would refuse a save sent again after a lost answer, as its first try
+			// moved the page on; the key alone can't tell whether someone else saved since. An
+			// editor's own older save arriving late is refused, as it makes a lower version than the
+			// page has. The rule is in the write, so nothing can save in between.
+			const [, [saved]] = await ctx.db.batch([
+				// The key goes with the save, as one page has it: another page has it only if a new
+				// page's try made that page after this one moved on (create), and this editor makes no
+				// more pages.
+				ctx.db
+					.update(sitePages)
+					.set({ savedFrom: null })
+					.where(and(eq(sitePages.savedFrom, savedFrom), ne(sitePages.pageId, pageId))),
+				ctx.db
+					.update(sitePages)
+					.set({ contentJson, version: newVersion, savedFrom, updatedAt: new Date() })
+					.where(
+						and(
+							eq(sitePages.pageId, pageId),
+							or(
+								eq(sitePages.version, version),
+								and(
+									eq(sitePages.savedFrom, savedFrom),
+									lt(sitePages.version, newVersion),
+								),
+							),
+						),
+					)
+					.returning({ version: sitePages.version }),
+			])
+			if (saved) return saved
+			await mustExist(ctx.db, sitePages.pageId, pageId, 'Page not found')
+			throw new ConflictError(movedOn)
 		}),
 
 	update: adminProcedure
 		.input(
+			// Not the content, which `save` writes. Strict, so an editor from before `save` that sends
+			// its content here is refused rather than told it saved: zod drops a field an input
+			// doesn't name.
 			pageInput
-				.pick({
-					contentJson: true,
-					name: true,
-					slug: true,
-					imageUrl: true,
-					published: true,
-				})
+				.pick({ name: true, slug: true, imageUrl: true, published: true })
 				.partial()
-				.extend({ pageId: pageInput.shape.pageId, tagIds: collectionIds.optional() }),
+				.extend({ pageId: pageInput.shape.pageId, tagIds: collectionIds.optional() })
+				.strict(),
 		)
 		.mutation(async ({ input, ctx }) => {
 			const { pageId, tagIds, ...values } = input

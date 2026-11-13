@@ -59,9 +59,9 @@ const shown = new WeakSet<object>()
 
 // Code the site needs that couldn't load (Vite's event, main.ts): after a deploy, or the network.
 // A refresh loads the newest version; it's never done by itself, so the editor asks first about
-// unsaved edits (client/README.md, "New versions"). Shown once: a new page made from the list
-// that then can't open mustn't also say "Something went wrong. Please try again.", which would
-// make it twice.
+// unsaved edits (client/README.md, "New versions"). Shown once: a page a button goes to that
+// then can't open (the list's New page) mustn't also say "Something went wrong. Please try
+// again.", which would make it twice.
 export function notifyNotLoaded(error: unknown): void {
 	if (typeof error === 'object' && error !== null) shown.add(error)
 	console.error(error)
