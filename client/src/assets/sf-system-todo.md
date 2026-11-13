@@ -5,20 +5,12 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: saves that can't make a second page or replace other work (below).
+Next: saves that can't make a second page or replace other work, planned and reviewed in
+`docs/plans/saves.md`; its code starts with the table, the migration and the server.
 
 ## Bigger work
 
-- **Saves that can't make a second page or replace other work** (agreed 2026-11-13, not
-  designed). A new page's first save whose answer is lost is stored but looks failed, and Save
-  again makes a second page (`my-page-2`). Two tabs or devices saving one page: the last replaces
-  the other's work, unasked. The fix: each save carries a key (a repeat is "already done") and
-  the version it started from (an older one is refused, not saved over); both are needed, as a
-  retry after a lost answer would otherwise be refused by its own first try. The editor keeps a
-  new page's key, with the name typed, until its first save lands (a retry asks the name again
-  today). Needs a migration. To decide: what a refused save shows (proposed: the edits stay, a
-  link opens the newer version in a new tab, and a choice saves over it). Plan it in
-  `docs/plans/`, with a review before code.
+- **Saves that can't make a second page or replace other work**: `docs/plans/saves.md`.
 
 - **The validator and linter.** Its rules, and where each shows, are in `sf-system.md`,
   "Validator and linter"; new candidates go there. Left for later: the IDE linter, and a theme's
