@@ -296,6 +296,12 @@ Next: saves that can't make a second page or replace other work (below).
   by hand). Only when the seed version changes, and not once themes are edited live: a seed
   replaces the whole design.
 - **A code block's language outside the editor** (the user's words): later, not now.
+- **Showing that a page is on its way.** A move to a page that waits (for sign-in to be known, or
+  a page's code to load) shows nothing until it lands: up to 30 seconds when the server doesn't
+  answer. Sites often show a thin bar along the top meanwhile.
+- **Asking who's signed in again on returning to the tab,** so a check that failed at startup
+  isn't left showing the signed-out site until a page that needs sign-in opens (as NextAuth
+  does). Parked 2026-11-13.
 - **Settings for every selected block** (owner, 2026-11-12: after the MVP). With blocks selected,
   the toolbar's settings would change all of them, as in Notion, Google Docs or Figma; today it
   shows none. To decide: which settings show (only those every selected block has), how

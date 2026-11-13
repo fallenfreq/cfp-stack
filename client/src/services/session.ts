@@ -1,3 +1,4 @@
+import { connectionDropped } from '@/services/errors'
 import { trpc } from '@/trpc'
 import type { AppRouter } from '@somefreq-app/api/appRouter'
 import type { inferRouterOutputs } from '@trpc/server'
@@ -14,6 +15,15 @@ export const hasRole = (role: string) => current.value?.roles.includes(role) ?? 
 
 let known: Promise<boolean> | undefined
 
+// Who's signed in, asked once more a second later if the connection dropped, as reads are
+// (config/queryClient.ts).
+const ask = () =>
+	trpc.session.get.query().catch(async (error: unknown) => {
+		if (!connectionDropped(error)) throw error
+		await new Promise((wait) => setTimeout(wait, 1000))
+		return trpc.session.get.query()
+	})
+
 /**
  * Settles once the server has said whether you're signed in: one question, asked at startup
  * (main.ts), and again by the next page that needs it if that one failed. Never rejects;
@@ -21,7 +31,7 @@ let known: Promise<boolean> | undefined
  * mustn't send you round to sign in again and again).
  */
 export function whenSignInKnown(): Promise<boolean> {
-	known ??= trpc.session.get.query().then(
+	known ??= ask().then(
 		(answer) => {
 			current.value = answer
 			return true

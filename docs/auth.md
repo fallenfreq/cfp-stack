@@ -187,11 +187,11 @@ cookie, `code`, the verifier, or request bodies.
 ## Client
 
 - `services/session.ts`, a plain module like `services/toast.ts`:
-  `whenSignInKnown()` (one `session.get`, asked again by the next page that needs it after one that
-  failed; it never rejects, and says whether the server answered: pages that need sign-in go home
-  with a message rather than to sign in when it didn't), reactive `signedIn`, `hasRole()`,
-  `signIn(returnTo)` (a full page load to `/auth/login`), `signOut()` (a form POST). A tRPC
-  `UNAUTHORIZED` marks you signed out.
+  `whenSignInKnown()` (one `session.get`, asked once more a second later if its connection dropped,
+  and again by the next page that needs it after one that failed; it never rejects, and says
+  whether the server answered: pages that need sign-in go home with a message rather than to sign
+  in when it didn't), reactive `signedIn`, `hasRole()`, `signIn(returnTo)` (a full page load to
+  `/auth/login`), `signOut()` (a form POST). A tRPC `UNAUTHORIZED` marks you signed out.
 - The router check: pages with `meta.signIn` wait for `whenSignInKnown()`, then send you to
   sign in, or to `/no-access` without `meta.role`.
 - Account composables call `account.*`. No tokens, axios or provider URLs in the client.

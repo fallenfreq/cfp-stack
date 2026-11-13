@@ -1446,6 +1446,40 @@ test('a sign-in check that fails is asked again by the next page that needs it',
 	expect(checks).toBe(3)
 })
 
+// A sign-in check whose connection dropped at startup was a failure: a signed-in admin saw the
+// signed-out site until a page that needs sign-in was opened, or a reload.
+test('a sign-in check whose connection dropped is asked again a second later', async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+		'Pages.getBySlug': oneParagraph,
+	})
+	let dropped = false
+	await page.route(
+		(url) => url.href.includes('session.get'),
+		(route) => {
+			if (dropped) return route.fallback()
+			dropped = true
+			return route.abort()
+		},
+	)
+	let checks = 0
+	page.on('request', (request) => {
+		if (request.url().includes('session.get')) checks++
+	})
+
+	await page.goto('/editor/stored')
+	await useTheme(page, themeClass)
+	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
+	expect(checks).toBe(2)
+	await expect(
+		page.getByRole('alert').filter({ hasText: "Signing in isn't working" }),
+	).toHaveCount(0)
+})
+
 // A change the server refuses on the admin pages says why, in the words errors.ts gives each kind,
 // and the list reloads to show what the server has (a row deleted elsewhere goes). With no answer
 // it doesn't: a reload would get none either, and say so again.
