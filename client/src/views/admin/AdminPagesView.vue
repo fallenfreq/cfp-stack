@@ -34,7 +34,10 @@
 				@update:published="(v) => crud.onPublish(page.pageId, v)"
 			>
 				<template #meta>
-					<SfPopover class="sf-size-xs">
+					<span v-if="!tagsLoaded" class="sf-text-xs sf-loudness-1">
+						{{ tagsLoadFailed ? "Couldn't be loaded" : 'Loading…' }}
+					</span>
+					<SfPopover v-else class="sf-size-xs">
 						<template #trigger="trigger">
 							<SfButton
 								v-bind="trigger"
@@ -164,11 +167,15 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const { data: pages, isPending, isLoadingError } = useAllPages()
-const { data: allTags } = useAllTags()
-const { data: tagAssignments } = useQuery({
+const { data: allTags, isLoadingError: allTagsLoadFailed } = useAllTags()
+const { data: tagAssignments, isLoadingError: assignmentsLoadFailed } = useQuery({
 	queryKey: ['pages', 'tag-assignments'],
 	queryFn: () => trpc.adminPages.listTagAssignments.query(),
 })
+// A page's tags show, and can be changed, once both lists have loaded: before, a page would read
+// as having none.
+const tagsLoaded = computed(() => allTags.value !== undefined && tagAssignments.value !== undefined)
+const tagsLoadFailed = computed(() => allTagsLoadFailed.value || assignmentsLoadFailed.value)
 const search = ref('')
 
 const filteredPages = computed(() => {
@@ -201,36 +208,38 @@ const tagsLabel = (page: { pageId: number; name: string; slug: string }) => {
 	return `Tags for ${page.name || page.slug}: ${names || 'none'}`
 }
 
-// Each save sends the boxes as ticked right now, not the last list from the server,
-// so quick ticks don't undo each other. Saves for one page run one after another; a
-// failed save says why, and the boxes go back to what the server has.
-const saveTags = useMutation({
-	mutationFn: (input: { pageId: number; tagIds: number[] }) =>
-		trpc.adminPages.update.mutate(input),
+// Each tick saves only its own box, so it can't change the page's other tags (docs/database.md,
+// "A write sends only what changed"). Saves for one page run one after another, in the order
+// ticked. A failed save says why, and its box goes back to what the server has: what the box's
+// last save left, or else what was loaded. Unless the box was ticked again meanwhile: that save
+// decides it.
+const setTag = useMutation({
+	mutationFn: (input: { pageId: number; tagId: number; tagged: boolean }) =>
+		trpc.adminPages.setTag.mutate(input),
 })
 const tagSaves = new Map<number, Promise<unknown>>()
+const lastTicks = new Map<string, object>()
+const savedTicks = new Map<string, boolean>()
 const onTagsChange = (pageId: number, event: Event) => {
-	const group = event.currentTarget as HTMLElement
-	const tagIds = [...group.querySelectorAll<HTMLInputElement>('input:checked')].map((input) =>
-		Number(input.value),
-	)
-	const save = (tagSaves.get(pageId) ?? Promise.resolve()).then(() =>
-		saveTags.mutateAsync({ pageId, tagIds }),
-	)
+	const box = event.target as HTMLInputElement
+	const tick = { pageId, tagId: Number(box.value), tagged: box.checked }
+	const boxKey = `${pageId}:${tick.tagId}`
+	const thisTick = {}
+	lastTicks.set(boxKey, thisTick)
+	const save = (tagSaves.get(pageId) ?? Promise.resolve()).then(() => setTag.mutateAsync(tick))
 	// Reload only once no newer save is waiting — a reload in between would put back
 	// ticks the user has since changed.
 	const tail: Promise<unknown> = save
 		.then(
 			async () => {
+				savedTicks.set(boxKey, tick.tagged)
 				if (tagSaves.get(pageId) === tail) await crud.invalidate()
 			},
 			async (error: unknown) => {
-				// The boxes go back to what was last loaded, at once: Vue won't, as its data
-				// hasn't changed. A newer save waiting decides them instead.
-				if (tagSaves.get(pageId) === tail) {
-					const loaded = pageTags.value.get(pageId) ?? []
-					for (const input of group.querySelectorAll<HTMLInputElement>('input'))
-						input.checked = loaded.some((a) => a.tagId === Number(input.value))
+				// At once: Vue won't, as its data hasn't changed.
+				if (lastTicks.get(boxKey) === thisTick) {
+					const loaded = pageTags.value.get(pageId)?.some((a) => a.tagId === tick.tagId)
+					box.checked = savedTicks.get(boxKey) ?? loaded ?? false
 				}
 				// Then the list reloads, to show what the server has, if it answered: with no
 				// answer, a reload would get none either.

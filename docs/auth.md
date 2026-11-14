@@ -253,6 +253,10 @@ the email change works: one method on `AccountProvider`, Zitadel's implementatio
 - Sensitive changes (email, password, authenticators) require a recent sign-in.
 - With Zitadel, its v2 user API, except where v1 does what v2 can't (the profile: v2 can't clear
   a field).
+- A change sends only the fields changed (`docs/database.md`, "A write sends only what changed"):
+  a form open from before mustn't put back what was changed elsewhere since. v1 takes the whole
+  profile, so the server sends the rest as stored now, a language with any extensions it has. Two
+  saves at the same moment can still undo each other: v1 checks no version.
 - Passkeys and security keys are tied to the domain you sign in on, which is Zitadel's. Registered
   from our site they wouldn't work at Zitadel's login, so they stay on Zitadel's page (unless
   Zitadel ever runs on our domain).

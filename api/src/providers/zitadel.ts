@@ -103,13 +103,16 @@ function zitadelAccount(issuer: string, { subject, accessToken }: AccountHolder)
 		throw new Error(`Zitadel's user API answered ${status}: ${message}`)
 	}
 
-	async function readProfile(): Promise<AccountProfile> {
+	async function readUser() {
 		const response = await call('GET', user)
 		if (!response.ok)
 			throw new Error(
 				`Zitadel's user API answered ${response.status}: ${await messageOf(response)}`,
 			)
-		const { username, human } = userSchema.parse(await response.json()).user
+		return userSchema.parse(await response.json()).user
+	}
+
+	function profileOf({ username, human }: z.infer<typeof userSchema>['user']): AccountProfile {
 		const { profile, email } = human
 		return {
 			userId: subject,
@@ -127,21 +130,18 @@ function zitadelAccount(issuer: string, { subject, accessToken }: AccountHolder)
 	}
 
 	return {
-		profile: readProfile,
+		profile: async () => profileOf(await readUser()),
 
-		// Zitadel refuses to save a profile unchanged, so that's checked first: saved already.
+		// v1 takes the whole profile: the fields changed, the rest as stored now, a language with
+		// any extensions it has (docs/auth.md, "Adding account features"). Zitadel refuses to save
+		// a profile unchanged, so that's checked first: saved already.
 		async updateProfile(changes: ProfileChanges) {
-			const saved = await readProfile()
-			const fields = Object.keys(changes) as (keyof ProfileChanges)[]
-			if (fields.every((field) => changes[field] === saved[field])) return 'done'
-			return change('PUT', '/auth/v1/users/me/profile', {
-				firstName: changes.firstName,
-				lastName: changes.lastName,
-				nickName: changes.nickname,
-				displayName: changes.displayName,
-				preferredLanguage: changes.language,
-				gender: changes.gender ? genders[changes.gender] : 'GENDER_UNSPECIFIED',
-			})
+			const stored = await readUser()
+			const saved = { ...profileOf(stored), language: stored.human.profile.preferredLanguage }
+			const before = v1Profile(saved)
+			const after = v1Profile({ ...saved, ...changes })
+			if (JSON.stringify(after) === JSON.stringify(before)) return 'done'
+			return change('PUT', '/auth/v1/users/me/profile', after)
 		},
 
 		changeEmail: (email) => change('POST', `${user}/email`, { email, sendCode: {} }),
@@ -149,6 +149,16 @@ function zitadelAccount(issuer: string, { subject, accessToken }: AccountHolder)
 		verifyEmail: (code) => change('POST', `${user}/email/verify`, { verificationCode: code }),
 	}
 }
+
+// A profile as v1's `users/me/profile` takes it.
+const v1Profile = (profile: Required<ProfileChanges>) => ({
+	firstName: profile.firstName,
+	lastName: profile.lastName,
+	nickName: profile.nickname,
+	displayName: profile.displayName,
+	preferredLanguage: profile.language,
+	gender: profile.gender ? genders[profile.gender] : 'GENDER_UNSPECIFIED',
+})
 
 function genderOf(zitadelGender: string): Gender | null {
 	const entry = Object.entries(genders).find(([, value]) => value === zitadelGender)

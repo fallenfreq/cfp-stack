@@ -1958,7 +1958,7 @@ test('a tag box whose save fails is unticked again', async ({ page, themeClass }
 		'adminPages.listTagAssignments': [],
 	})
 	await page.route(
-		(url) => url.pathname.includes('adminPages.update'),
+		(url) => url.pathname.includes('adminPages.setTag'),
 		(route) => route.abort(),
 	)
 	await page.goto('/admin/pages')
@@ -1970,6 +1970,186 @@ test('a tag box whose save fails is unticked again', async ({ page, themeClass }
 		page.getByRole('alert').filter({ hasText: "Couldn't get an answer from the server." }),
 	).toBeVisible()
 	await expect(box).not.toBeChecked()
+})
+
+// A failed tick went back only if it was the page's last: with another box ticked meanwhile, it
+// stayed ticked though never saved.
+test('a tag box whose save fails is unticked again, whatever was ticked after it', async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	// What the server holds: the page is in Shop.
+	const tagged = new Set([3])
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+		'adminPages.list': [
+			{ pageId: 1, slug: 'stored', name: 'Stored', imageUrl: null, published: true },
+		],
+		'adminTags.list': [
+			{ tagId: 1, name: 'News', slug: 'news', published: true, pageCount: 0 },
+			{ tagId: 2, name: 'Events', slug: 'events', published: true, pageCount: 0 },
+			{ tagId: 3, name: 'Shop', slug: 'shop', published: true, pageCount: 1 },
+		],
+		'adminPages.listTagAssignments': () =>
+			[...tagged].map((tagId) => ({
+				pageId: 1,
+				tagId,
+				name: String(tagId),
+				slug: String(tagId),
+			})),
+	})
+	// News's save is held until Events is ticked, then gets no answer; Events's is saved.
+	let release!: () => void
+	const held = new Promise<void>((done) => (release = done))
+	await page.route(
+		(url) => url.pathname.includes('adminPages.setTag'),
+		async (route) => {
+			const { tagId, tagged: on } = route.request().postDataJSON()[0].json
+			if (tagId === 1) {
+				await held
+				return route.abort()
+			}
+			if (on) tagged.add(tagId)
+			else tagged.delete(tagId)
+			return route.fulfill({ json: [{ result: { data: { json: { pageId: 1 } } } }] })
+		},
+	)
+	await page.goto('/admin/pages')
+	await useTheme(page, themeClass)
+	await page.getByRole('button', { name: /^Tags for Stored/ }).click()
+	const news = page.getByRole('checkbox', { name: 'News' })
+	const events = page.getByRole('checkbox', { name: 'Events' })
+	await news.click()
+	await events.click()
+	release()
+	await expect(
+		page.getByRole('alert').filter({ hasText: "Couldn't get an answer from the server." }),
+	).toBeVisible()
+	await expect.poll(() => [...tagged].sort()).toEqual([2, 3])
+	await settle(page)
+	await expect(news).not.toBeChecked()
+	await expect(events).toBeChecked()
+	await expect(page.getByRole('checkbox', { name: 'Shop' })).toBeChecked()
+})
+
+// A tick sent the page's whole set of tags, as the boxes showed it: with the page's tags not loaded,
+// every box was unticked, and one tick took the page out of every other tag.
+test("a tick changes only its own tag, and tags that didn't load can't be changed", async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	const failed = () => new Refusal('INTERNAL_SERVER_ERROR', 'Internal Server Error')
+	let assignmentsFail = false
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+		'adminPages.list': [
+			{ pageId: 1, slug: 'stored', name: 'Stored', imageUrl: null, published: true },
+		],
+		'adminTags.list': [
+			{ tagId: 1, name: 'News', slug: 'news', published: true, pageCount: 1 },
+			{ tagId: 2, name: 'Events', slug: 'events', published: true, pageCount: 1 },
+			{ tagId: 3, name: 'Shop', slug: 'shop', published: true, pageCount: 0 },
+		],
+		'adminPages.listTagAssignments': () =>
+			assignmentsFail
+				? failed()
+				: [
+						{ pageId: 1, tagId: 1, name: 'News', slug: 'news' },
+						{ pageId: 1, tagId: 2, name: 'Events', slug: 'events' },
+					],
+	})
+	const sent: Json[] = []
+	await page.route(
+		(url) => url.pathname.includes('adminPages.'),
+		(route) => {
+			if (!/adminPages\.(update|setTag)/.test(route.request().url())) return route.fallback()
+			sent.push(route.request().postDataJSON()[0].json)
+			return route.fulfill({ json: [{ result: { data: { json: { pageId: 1 } } } }] })
+		},
+	)
+	await page.goto('/admin/pages')
+	await useTheme(page, themeClass)
+	await page.getByRole('button', { name: 'Tags for Stored: News, Events' }).click()
+	await page.getByRole('checkbox', { name: 'Shop' }).click()
+	await expect.poll(() => sent).toEqual([{ pageId: 1, tagId: 3, tagged: true }])
+
+	assignmentsFail = true
+	await page.goto('/admin/pages')
+	await expect(
+		page.getByRole('row', { name: /Stored/ }).getByText("Couldn't be loaded"),
+	).toBeVisible()
+	await expect(page.getByRole('button', { name: /^Tags for Stored/ })).toHaveCount(0)
+})
+
+// Save sent every field as the form had loaded it: a field changed elsewhere since went back, and a
+// language the form doesn't offer was cleared.
+test('saving the account sends only the fields changed', async ({ page, themeClass }) => {
+	await steadyRequests(page)
+	await fakeReplies(page, {
+		'session.get': { name: 'Ada', email: 'ada@example.test', roles: [] },
+		'account.profile': {
+			userId: 'ada',
+			username: 'ada',
+			firstName: 'Ada',
+			lastName: 'Lovelace',
+			displayName: 'Ada L',
+			nickname: '',
+			language: 'xx',
+			gender: null,
+			email: 'ada@example.test',
+			emailVerified: true,
+		},
+	})
+	const sent: Json[] = []
+	await page.route(
+		(url) => url.pathname.includes('account.updateProfile'),
+		(route) => {
+			sent.push(route.request().postDataJSON()[0].json)
+			return route.fulfill({ json: [{ result: { data: { json: null } } }] })
+		},
+	)
+	await page.goto('/account')
+	await useTheme(page, themeClass)
+	await page.getByLabel('Nickname').fill('Countess')
+	await page.getByRole('button', { name: 'Save' }).click()
+	await expect.poll(() => sent).toEqual([{ nickname: 'Countess' }])
+})
+
+// A reload of the profile (on coming back to the tab, or after a save) put every field back as
+// loaded, wiping what was being typed.
+test('a profile reload keeps what is being typed, and shows the rest as saved', async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	let displayName = 'Ada L'
+	await fakeReplies(page, {
+		'session.get': { name: 'Ada', email: 'ada@example.test', roles: [] },
+		'account.profile': () => ({
+			userId: 'ada',
+			username: 'ada',
+			firstName: 'Ada',
+			lastName: 'Lovelace',
+			displayName,
+			nickname: '',
+			language: '',
+			gender: null,
+			email: 'ada@example.test',
+			emailVerified: true,
+		}),
+	})
+	await page.goto('/account')
+	await useTheme(page, themeClass)
+	await page.getByLabel('Nickname').fill('Countess')
+	// Changed elsewhere, then the tab is come back to.
+	displayName = 'Countess Lovelace'
+	const reloaded = page.waitForResponse((response) => response.url().includes('account.profile'))
+	await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange')))
+	await reloaded
+	await expect(page.getByLabel('Display name')).toHaveValue('Countess Lovelace')
+	await expect(page.getByLabel('Nickname')).toHaveValue('Countess')
 })
 
 // A promise of ours that fails with nothing waiting on it says so, as an error nothing caught

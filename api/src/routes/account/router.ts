@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type { AccountChange } from '../../auth/provider.js'
 import { signedInRecently } from '../../auth/sessions.js'
 import { accountProcedure, router } from '../../config/trpc.js'
+import { definedFields } from '../../lib/index.js'
 
 // Your account at the provider, changed through our server (docs/auth.md, "Adding account
 // features"). Your user comes from the session, never from input.
@@ -26,10 +27,10 @@ const accountRouter = router({
 	profile: accountProcedure.query(({ ctx }) => ctx.account.profile()),
 
 	updateProfile: accountProcedure
-		.input(profileChanges)
+		.input(profileChanges.partial())
 		.mutation(async ({ ctx, input }) =>
 			done(
-				await ctx.account.updateProfile(input),
+				await ctx.account.updateProfile(definedFields(input)),
 				"Your profile wasn't saved: check its fields.",
 			),
 		),

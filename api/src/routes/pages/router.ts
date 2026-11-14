@@ -300,11 +300,11 @@ export const adminPagesRouter = router({
 			pageInput
 				.pick({ name: true, slug: true, imageUrl: true, published: true })
 				.partial()
-				.extend({ pageId: pageInput.shape.pageId, tagIds: collectionIds.optional() })
+				.extend({ pageId: pageInput.shape.pageId })
 				.strict(),
 		)
 		.mutation(async ({ input, ctx }) => {
-			const { pageId, tagIds, ...values } = input
+			const { pageId, ...values } = input
 			await mustExist(ctx.db, sitePages.pageId, pageId, 'Page not found')
 			const setValues = definedFields(values)
 			const writes: BatchItem<'sqlite'>[] = []
@@ -316,11 +316,31 @@ export const adminPagesRouter = router({
 						.where(eq(sitePages.pageId, pageId)),
 				)
 			}
-			if (tagIds !== undefined) {
-				writes.push(ctx.db.delete(sitePageTags).where(eq(sitePageTags.pageId, pageId)))
-				if (tagIds.length > 0) writes.push(insertPageTags(ctx.db, pageId, tagIds))
-			}
 			await conflictIfSlugTaken(writeTogether(ctx.db, writes), sitePages.slug)
+			return { pageId }
+		}),
+
+	// One collection added to a page or taken off it, the others left as they are
+	// (docs/database.md, "A write sends only what changed"). A page or collection that isn't there
+	// answers 404 either way, so a list out of date says so and reloads; one already as asked (sent
+	// again after a lost answer) is done.
+	setTag: adminProcedure
+		.input(
+			z.object({
+				pageId: pageInput.shape.pageId,
+				tagId: siteTagInput.shape.tagId,
+				tagged: z.boolean(),
+			}),
+		)
+		.mutation(async ({ input, ctx }) => {
+			const { pageId, tagId, tagged } = input
+			await mustExist(ctx.db, sitePages.pageId, pageId, 'Page not found')
+			await mustExist(ctx.db, siteTags.tagId, tagId, 'Collection not found')
+			if (tagged) await insertPageTags(ctx.db, pageId, [tagId]).onConflictDoNothing()
+			else
+				await ctx.db
+					.delete(sitePageTags)
+					.where(and(eq(sitePageTags.pageId, pageId), eq(sitePageTags.tagId, tagId)))
 			return { pageId }
 		}),
 

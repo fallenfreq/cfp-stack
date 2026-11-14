@@ -136,6 +136,46 @@ test('a new page goes into its collections as it is made', async () => {
 	assert.equal((await admin.adminPages.getWithTags({ pageId: c.pageId }))?.tags.length, 0)
 })
 
+// A page's collections were sent whole, from the list on screen: one ticked while the list hadn't
+// loaded took the page out of the rest.
+test("a page's collections change one at a time, the others left as they are", async () => {
+	const news = await admin.adminTags.create({ name: 'Tick news' })
+	const events = await admin.adminTags.create({ name: 'Tick events' })
+	const shop = await admin.adminTags.create({ name: 'Tick shop' })
+	const { pageId } = await admin.adminPages.create({
+		name: 'Ticked',
+		contentJson,
+		tagIds: [news.tagId, events.tagId],
+		...firstSave(),
+	})
+	const tags = async () =>
+		(await admin.adminPages.getWithTags({ pageId }))?.tags.map((t) => t.tagId).sort()
+	await admin.adminPages.setTag({ pageId, tagId: shop.tagId, tagged: true })
+	assert.deepEqual(await tags(), [news.tagId, events.tagId, shop.tagId].sort())
+	// Sent again, as after a lost answer: no change, no error.
+	await admin.adminPages.setTag({ pageId, tagId: shop.tagId, tagged: true })
+	await admin.adminPages.setTag({ pageId, tagId: news.tagId, tagged: false })
+	await admin.adminPages.setTag({ pageId, tagId: news.tagId, tagged: false })
+	assert.deepEqual(await tags(), [events.tagId, shop.tagId].sort())
+
+	// A collection or page deleted meanwhile answers 404, added or taken off.
+	await admin.adminTags.delete({ tagId: shop.tagId })
+	for (const tagged of [true, false]) {
+		await assert.rejects(admin.adminPages.setTag({ pageId, tagId: shop.tagId, tagged }), {
+			code: 'NOT_FOUND',
+		})
+		await assert.rejects(
+			admin.adminPages.setTag({ pageId: 999_999, tagId: events.tagId, tagged }),
+			{
+				code: 'NOT_FOUND',
+			},
+		)
+	}
+	// The whole set isn't taken any more.
+	await assert.rejects(admin.adminPages.update({ pageId, tagIds: [] }), { code: 'BAD_REQUEST' })
+	assert.deepEqual(await tags(), [events.tagId])
+})
+
 test('names are trimmed, and a name of spaces is refused', async () => {
 	const page = await addPage('  Trimmed  ')
 	assert.equal((await admin.adminPages.getBySlug({ slug: page.slug }))?.name, 'Trimmed')

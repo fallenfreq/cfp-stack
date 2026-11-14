@@ -162,7 +162,7 @@ test('a rename, address, published or collections change leaves the version', as
 	await admin.adminPages.update({ pageId, name: 'Settings renamed' })
 	await admin.adminPages.update({ pageId, slug: 'settings-moved' })
 	await admin.adminPages.update({ pageId, published: true })
-	await admin.adminPages.update({ pageId, tagIds: [tag.tagId] })
+	await admin.adminPages.setTag({ pageId, tagId: tag.tagId, tagged: true })
 	assert.equal((await stored(pageId)).version, 2)
 	// So the editor that opened the page before them still saves from the version it has.
 	editor.version = 2

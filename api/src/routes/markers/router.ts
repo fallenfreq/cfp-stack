@@ -37,10 +37,13 @@ const insertMarkerValidator = markerInput
 	.pick({ title: true, lat: true, lng: true })
 	.extend({ tags: tagNames })
 
+// Not the tags, which are added and taken off one at a time (docs/database.md, "A write sends only
+// what changed"). Strict, so tags sent here are refused, not dropped unsaved.
 const updateMarkerValidator = markerInput
 	.pick({ title: true, lat: true, lng: true })
 	.partial()
-	.extend({ markerId: markerInput.shape.mapMarkersId, tags: tagNames.optional() })
+	.extend({ markerId: markerInput.shape.mapMarkersId })
+	.strict()
 
 // The tags whose names are new. The names must be normalized already (tagNames), and there must
 // be at least one. A name is unique, so of two requests adding the same tag, one adds it.
@@ -194,21 +197,11 @@ export const markersRouter = router({
 	update: secureProcedure
 		.input(updateMarkerValidator)
 		.mutation(async ({ input, ctx: { db } }) => {
-			const { markerId, tags, ...markerData } = input
+			const { markerId, ...markerData } = input
 			await mustExist(db, mapMarkersSchema.mapMarkersId, markerId, 'Marker not found')
 
 			const updates = definedFields(markerData)
 			const writes: BatchItem<'sqlite'>[] = []
-
-			// Tags, when given, replace the marker's tags.
-			if (tags) {
-				writes.push(
-					db.delete(markerTagsSchema).where(eq(markerTagsSchema.markerId, markerId)),
-				)
-				if (tags.length > 0) {
-					writes.push(insertTags(db, tags), insertMarkerTags(db, markerId, tags))
-				}
-			}
 
 			if (Object.keys(updates).length > 0) {
 				writes.push(
@@ -223,10 +216,7 @@ export const markersRouter = router({
 
 			return {
 				success: true,
-				updatedFields: {
-					...markerData,
-					tags: tags ?? [],
-				},
+				updatedFields: markerData,
 			}
 		}),
 	delete: secureProcedure

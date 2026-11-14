@@ -81,9 +81,12 @@ export interface AccountProfile {
 	emailVerified: boolean
 }
 
-export type ProfileChanges = Pick<
-	AccountProfile,
-	'firstName' | 'lastName' | 'displayName' | 'nickname' | 'language' | 'gender'
+/** The profile's fields that changed; the others stay as they're saved. */
+export type ProfileChanges = Partial<
+	Pick<
+		AccountProfile,
+		'firstName' | 'lastName' | 'displayName' | 'nickname' | 'language' | 'gender'
+	>
 >
 
 /** How the provider answered a change: done, or refused (it didn't accept the input). */
