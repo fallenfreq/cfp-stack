@@ -7,7 +7,7 @@
 			Published tags are browseable as collections at <code>/c/:slug</code>. Unpublished tags
 			work as internal labels only.
 		</p>
-		<AdminList :loading="isPending" :empty="!tags?.length">
+		<AdminList :loading="isPending" :load-failed="isLoadingError" :empty="!tags?.length">
 			<template #header>
 				<th>Name</th>
 				<th>Slug</th>
@@ -81,7 +81,7 @@ import { useAllTags } from '@/services/tags'
 import { trpc } from '@/trpc'
 import { useMutation } from '@tanstack/vue-query'
 
-const { data: tags, isPending } = useAllTags()
+const { data: tags, isPending, isLoadingError } = useAllTags()
 
 const crud = useListItemActions({
 	queryKey: ['tags'],

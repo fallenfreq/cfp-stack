@@ -16,8 +16,11 @@ export const usePage = (slug: MaybeRefOrGetter<string | null>) => {
 		{ enabled: computed(() => !!toValue(slug)) },
 	)
 
+	// Not found is the server's answer; a read that failed is the toast's to explain
+	// (services/errors.ts), and the caller's to name.
 	return {
 		page: computed(() => query.data.value ?? null),
-		notFound: computed(() => query.isError.value || query.data.value === null),
+		notFound: computed(() => query.data.value === null),
+		loadFailed: query.isLoadingError,
 	}
 }

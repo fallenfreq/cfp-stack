@@ -40,11 +40,6 @@ Next: not picked yet.
 
 ## Layout
 
-- **A table wider than its column makes the whole page scroll sideways.** A table's column widths
-  are kept (pasted with it, `<col width>`, or a cell's own `colwidth`), and it's drawn as wide as
-  they add up to: two of 900 make it 1800px, and the page scrolls sideways at any width
-  (measured, 1440 and 390 wide). Owner, 2026-10-27: the widths stay; fitting the table is the
-  layout's to fix, in a session of its own.
 - **Columns placed straight in an inset stack late.** An inset holding a collapsing layout as
   its own item is the box that layout measures, but the inset's margins are grid tracks, so the
   layout measures wider than the line by both margins. It happens in every inset (the page
@@ -252,10 +247,8 @@ Next: not picked yet.
 
 ## Small clean-ups
 
-- **A read that fails reads as missing.** A collection page whose read fails says "This collection
-  does not exist." (`CollectionView.vue`), and a page opened from it "Page not found." (`usePage`
-  counts a failure as not found), beside the toast saying it couldn't load. A visitor whose
-  connection drops is told the collection isn't there.
+- `AdminList.vue` draws its own loading, failed and empty messages rather than using
+  `SfStatusDisplay`, so the same display is written twice.
 - `PromptModal.vue` and `StackableSheet.vue` say `sl-align-x-*` is grid-only; they could now use
   `sl-align-x-end`.
 - `LayoutColumns.vue` and `LayoutSplit.vue` write their `align` (up and down) as an inline style,
@@ -362,6 +355,21 @@ Examples worth keeping for page builders and component makers:
     			<p>One</p>
     			<p>Two</p>
     		</div>
+    	</div>
+    </div>
+    ```
+
+- **A table wider than its column** makes the whole page scroll sideways: a table is as wide as
+  its column widths add up to (two of 900px make it 1800px), and the widths are kept (owner,
+  2026-11-14: not a bug, as there are other ways). Leave a table that big out, or put it in a
+  scroll area, as the spec's "Scrolling table" does (not yet tried with a table in the editor):
+
+    ```html
+    <div class="sl-bleed">
+    	<div class="sl-scroll-x sl-inset-line">
+    		<table>
+    			…
+    		</table>
     	</div>
     </div>
     ```

@@ -1,12 +1,19 @@
 <template>
-	<!-- On phones the table reaches the edges of the page's sl-inset; loading and empty
+	<!-- On phones the table reaches the edges of the page's sl-inset; loading, failed and empty
 	     messages stay on the page line. -->
-	<div :class="{ 'sl-bleed': isBelowThreshold && !loading && !empty }">
+	<div :class="{ 'sl-bleed': isBelowThreshold && !loading && !loadFailed && !empty }">
 		<!-- sl-cover with a compact override so the state message reserves a proper
 		     empty-state region without filling the viewport (default 100dvh would
 		     push the page header off-screen). -->
 		<div v-if="loading" class="sl-cover sf-text-sm sf-loudness-1" style="--sl-cover-min: 20rem">
 			Loading…
+		</div>
+		<div
+			v-else-if="loadFailed"
+			class="sl-cover sf-text-sm sf-loudness-1 sf-variant-danger"
+			style="--sl-cover-min: 20rem"
+		>
+			This list couldn't be loaded.
 		</div>
 		<div
 			v-else-if="empty"
@@ -55,7 +62,8 @@ import { useCollapseBreakpoint } from '@/composables/useCollapseBreakpoint'
 import { useScrollOverflow } from '@/composables/useScrollOverflow'
 import { ref } from 'vue'
 
-defineProps<{ loading?: boolean; empty?: boolean }>()
+// loadFailed: the list's read failed with nothing to show (TanStack's isLoadingError).
+defineProps<{ loading?: boolean; loadFailed?: boolean; empty?: boolean }>()
 const { isBelowThreshold } = useCollapseBreakpoint('sm')
 
 const tableWrap = ref<HTMLElement | null>(null)

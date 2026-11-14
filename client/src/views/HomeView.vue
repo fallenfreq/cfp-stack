@@ -14,6 +14,7 @@
 			</RouterLink>
 		</div>
 	</div>
+	<SfStatusDisplay v-else-if="loadFailed" state="error" message="This page couldn't be loaded." />
 	<SfStatusDisplay v-else state="loading" />
 </template>
 
@@ -22,6 +23,6 @@ import { useIsAdmin } from '@/composables/useIsAdmin'
 import { usePage } from '@/composables/usePage'
 
 // The home page is the page with the slug "home" — edit it in the editor like any other.
-const { page, notFound } = usePage('home')
+const { page, notFound, loadFailed } = usePage('home')
 const isAdmin = useIsAdmin()
 </script>

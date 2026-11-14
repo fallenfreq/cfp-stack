@@ -1,5 +1,6 @@
 <template>
 	<SfStatusDisplay v-if="notFound" state="error" message="Page not found." />
+	<SfStatusDisplay v-else-if="loadFailed" state="error" message="This page couldn't be loaded." />
 	<SfStatusDisplay v-else-if="!page" state="loading" />
 	<template v-else>
 		<RouterLink
@@ -23,7 +24,7 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const isAdmin = useIsAdmin()
-const { page, notFound } = usePage(() => paramString(route.params['slug']))
+const { page, notFound, loadFailed } = usePage(() => paramString(route.params['slug']))
 </script>
 
 <style scoped>

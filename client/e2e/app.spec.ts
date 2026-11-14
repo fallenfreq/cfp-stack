@@ -1415,6 +1415,98 @@ test('a read is asked again once if its connection dropped, and otherwise says s
 	expect(asked('silent')).toBe(1)
 })
 
+// A read that failed read as missing: a collection said it didn't exist, a page that it wasn't
+// found, an admin list that it was empty, and the home page offered an admin a page named Home
+// to make. A page that had loaded said it wasn't found when read again and that failed.
+test("a read that fails says what couldn't be loaded, never that it isn't there", async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	let failing = true
+	const failed = () => new Refusal('INTERNAL_SERVER_ERROR', 'Internal Server Error')
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+		'Pages.getBySlug': () => (failing ? failed() : oneParagraph),
+		'Tags.getBySlug': (address) =>
+			address.includes('failing')
+				? failed()
+				: { tagId: 1, name: 'A collection', slug: 'test', published: true },
+		'Pages.listByCollection': failed,
+		'adminPages.list': failed,
+		'adminTags.list': failed,
+		listTagAssignments: [],
+	})
+	const pageFailed = page.getByText("This page couldn't be loaded.")
+
+	await page.goto('/')
+	await useTheme(page, themeClass)
+	await expect(pageFailed).toBeVisible()
+	await expect(page.getByText('Nothing here yet.')).toHaveCount(0)
+	await expect(page.getByText('Create a page named')).toHaveCount(0)
+
+	await moveTo(page, '/preview/stored')
+	await expect(pageFailed).toBeVisible()
+	await expect(page.getByText('Page not found.')).toHaveCount(0)
+
+	await moveTo(page, '/c/failing')
+	await expect(page.getByText("This collection couldn't be loaded.")).toBeVisible()
+	await expect(page.getByText('This collection does not exist.')).toHaveCount(0)
+
+	await moveTo(page, '/c/test?open=stored')
+	await expect(page.locator('.sheet').getByText("This page couldn't be loaded.")).toBeVisible()
+	await expect(page.getByText("Couldn't be loaded", { exact: true }).first()).toBeVisible()
+	await expect(page.getByText('Coming Soon!')).toHaveCount(0)
+	await expect(page.getByText('Page not found.')).toHaveCount(0)
+
+	for (const [path, empty] of [
+		['/admin/pages', 'No pages found.'],
+		['/admin/collections', 'No tags yet.'],
+	] as const) {
+		await moveTo(page, path)
+		await expect(page.getByText("This list couldn't be loaded.")).toBeVisible()
+		await expect(page.getByText(empty)).toHaveCount(0)
+	}
+
+	// A page that loaded stays when read again and that fails, the toast saying why.
+	const wentWrong = page
+		.getByRole('alert')
+		.filter({ hasText: 'Something went wrong on our side.' })
+	const failsAgain = async (action: () => Promise<unknown>) => {
+		const before = await wentWrong.allTextContents()
+		await action()
+		await expect
+			.poll(() => wentWrong.allTextContents(), 'the toast says why')
+			.not.toEqual(before)
+		await settle(page)
+	}
+	failing = false
+	await moveTo(page, '/preview/stored')
+	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
+	await moveTo(page, '/admin/pages')
+	await expect(page.getByText("This list couldn't be loaded.")).toBeVisible()
+	failing = true
+	await failsAgain(() => moveTo(page, '/preview/stored'))
+	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
+	await expect(pageFailed).toHaveCount(0)
+	await expect(page.getByText('Page not found.')).toHaveCount(0)
+
+	// The public copy, shown as sign-in lands, stays when the admin's read fails.
+	await fakeReplies(page, {
+		'session.get': { name: 'Admin', email: 'admin@example.test', roles: ['admin'] },
+		'publicPages.getBySlug': storedPage('home', 'Home', [
+			{ type: 'paragraph', content: [{ type: 'text', text: 'The public home.' }] },
+		]),
+		'adminPages.getBySlug': failed,
+	})
+	await failsAgain(async () => {
+		await page.goto('/')
+		await useTheme(page, themeClass)
+	})
+	await expect(page.locator('main .tiptap p')).toHaveText('The public home.')
+	await expect(pageFailed).toHaveCount(0)
+})
+
 // A sign-in check that failed was kept until a reload: every page that needs sign-in went home
 // saying signing in isn't working, even once the server answered again.
 test('a sign-in check that fails is asked again by the next page that needs it', async ({

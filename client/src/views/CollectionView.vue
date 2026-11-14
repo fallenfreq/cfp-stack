@@ -1,6 +1,11 @@
 <template>
 	<SfStatusDisplay v-if="tagPending" state="loading" />
 	<SfStatusDisplay
+		v-else-if="tagLoadFailed"
+		state="error"
+		message="This collection couldn't be loaded."
+	/>
+	<SfStatusDisplay
 		v-else-if="!tag || (!tag.published && !isAdmin)"
 		state="error"
 		message="This collection does not exist."
@@ -27,7 +32,13 @@
 		</p>
 		<CollectionGrid
 			:items="gridItems"
-			:placeholder-title="pagesPending ? 'Loading...' : 'Coming Soon!'"
+			:placeholder-title="
+				pagesPending
+					? 'Loading...'
+					: pagesLoadFailed
+						? 'Couldn\'t be loaded'
+						: 'Coming Soon!'
+			"
 			@open="(item) => open(item['slug'] as string)"
 		/>
 		<StackableSheet
@@ -38,6 +49,11 @@
 			@close="close"
 		>
 			<SfStatusDisplay v-if="openNotFound" state="error" message="Page not found." />
+			<SfStatusDisplay
+				v-else-if="openLoadFailed"
+				state="error"
+				message="This page couldn't be loaded."
+			/>
 			<SfStatusDisplay v-else-if="!openPage" state="loading" />
 			<PageContent v-else :page="openPage" />
 		</StackableSheet>
@@ -60,12 +76,20 @@ const route = useRoute()
 const collectionSlug = computed(() => paramString(route.params['collectionSlug']))
 const isAdmin = useIsAdmin()
 
-const { data: tag, isPending: tagPending } = useQuery({
+const {
+	data: tag,
+	isPending: tagPending,
+	isLoadingError: tagLoadFailed,
+} = useQuery({
 	queryKey: computed(() => ['tags', 'slug', collectionSlug.value]),
 	queryFn: () => trpc.publicTags.getBySlug.query({ slug: collectionSlug.value }),
 })
 
-const { data: pages, isPending: pagesPending } = usePagesByCollection(collectionSlug)
+const {
+	data: pages,
+	isPending: pagesPending,
+	isLoadingError: pagesLoadFailed,
+} = usePagesByCollection(collectionSlug)
 
 const gridItems = computed<GridItem[]>(() =>
 	(pages.value ?? []).map((p) => ({
@@ -87,7 +111,7 @@ watch(
 	},
 	{ immediate: true },
 )
-const { page: openPage, notFound: openNotFound } = usePage(shownSlug)
+const { page: openPage, notFound: openNotFound, loadFailed: openLoadFailed } = usePage(shownSlug)
 
 const autoTagQuery = computed(() => (tag.value ? { autoTag: tag.value.tagId } : {}))
 </script>

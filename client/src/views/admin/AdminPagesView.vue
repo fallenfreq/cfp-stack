@@ -12,7 +12,11 @@
 			aria-label="Search pages"
 		/>
 
-		<AdminList :loading="isPending" :empty="!filteredPages.length">
+		<AdminList
+			:loading="isPending"
+			:load-failed="isLoadingError"
+			:empty="!filteredPages.length"
+		>
 			<template #header>
 				<th>Name</th>
 				<th>Slug</th>
@@ -159,7 +163,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const { data: pages, isPending } = useAllPages()
+const { data: pages, isPending, isLoadingError } = useAllPages()
 const { data: allTags } = useAllTags()
 const { data: tagAssignments } = useQuery({
 	queryKey: ['pages', 'tag-assignments'],

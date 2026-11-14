@@ -26,16 +26,19 @@ export const usePageQuery = <T>(
 	const adminCopy = copy(true)
 	const wanted = computed(() => (isAdmin.value ? adminCopy : publicCopy))
 
-	// A public copy that found nothing doesn't stand in: not published isn't not there.
+	// A public copy that found nothing doesn't stand in: not published isn't not there. One that
+	// did stays if the admin's read fails.
 	const data = computed(() => {
 		const standIn = publicCopy.data.value
-		return isAdmin.value && adminCopy.isPending.value && standIn !== null
+		return isAdmin.value && adminCopy.data.value === undefined && standIn !== null
 			? standIn
 			: wanted.value.data.value
 	})
+	// As TanStack's own isLoadingError, for the copy shown: a read that failed with nothing to show.
+	// A copy shown stays when a read again fails.
 	return {
 		data,
 		isPending: computed(() => data.value === undefined && wanted.value.isPending.value),
-		isError: computed(() => wanted.value.isError.value),
+		isLoadingError: computed(() => data.value === undefined && wanted.value.isError.value),
 	}
 }
