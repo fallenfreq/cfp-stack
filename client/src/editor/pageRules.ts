@@ -14,6 +14,7 @@ import { noWidthContainer } from '@somefreq-app/validator/rules/noWidthContainer
 import { oneArrangementPerBox } from '@somefreq-app/validator/rules/oneArrangementPerBox'
 import { preferCenterAroundVideo } from '@somefreq-app/validator/rules/preferCenterAroundVideo'
 import { preferThemeColor } from '@somefreq-app/validator/rules/preferThemeColor'
+import { preferThemeRadius } from '@somefreq-app/validator/rules/preferThemeRadius'
 import { requireChannelFallback } from '@somefreq-app/validator/rules/requireChannelFallback'
 import { requirePictureSize } from '@somefreq-app/validator/rules/requirePictureSize'
 import { validHeadingClass } from '@somefreq-app/validator/rules/validHeadingClass'
@@ -35,6 +36,7 @@ const styleRules: readonly CssRule[] = [
 	requireChannelFallback,
 	noWidthContainer,
 	preferThemeColor,
+	preferThemeRadius,
 ]
 
 /** A rule broken on the page: as the core gives it, with the blocks it names in place of nodes. */

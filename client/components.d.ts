@@ -80,6 +80,7 @@ declare module 'vue' {
     ToolbarRevealInput: typeof import('./src/components/editor/toolbar/ToolbarRevealInput.vue')['default']
     ToolbarScrollHint: typeof import('./src/components/editor/ToolbarScrollHint.vue')['default']
     ToolbarShadowControl: typeof import('./src/components/editor/toolbar/ToolbarShadowControl.vue')['default']
+    ToolbarSizeChips: typeof import('./src/components/editor/toolbar/ToolbarSizeChips.vue')['default']
     ToolbarYouTubeUrlControl: typeof import('./src/components/editor/toolbar/ToolbarYouTubeUrlControl.vue')['default']
   }
 }

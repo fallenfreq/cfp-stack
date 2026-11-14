@@ -4,6 +4,7 @@
 	"version": "0.0.0",
 	"type": "module",
 	"exports": {
+		"./corners": "./corners.ts",
 		"./headings": "./headings.ts",
 		"./layouts": "./layouts.ts",
 		"./slug": "./slug.ts"

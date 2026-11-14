@@ -7,29 +7,12 @@
 		@update:open="setOpen"
 	>
 		<div class="sp-picker sf-divide-y" @mousedown.stop>
-			<div class="sp-section">
-				<span class="sp-label sf-loudness-1">Shadow</span>
-				<div class="sp-row">
-					<SfChip
-						size="xs"
-						:selected="selectedToken === null"
-						@mousedown.prevent
-						@click="selectToken(null)"
-					>
-						none
-					</SfChip>
-					<SfChip
-						v-for="t in shadowOptions"
-						:key="t"
-						size="xs"
-						:selected="selectedToken === t"
-						@mousedown.prevent
-						@click="selectToken(t)"
-					>
-						{{ t }}
-					</SfChip>
-				</div>
-			</div>
+			<ToolbarSizeChips
+				label="Shadow"
+				:options="shadowOptions"
+				:value="selectedToken"
+				@pick="selectToken"
+			/>
 
 			<ColorPicker
 				v-if="selectedToken !== null"
@@ -44,7 +27,6 @@
 </template>
 
 <script setup lang="ts">
-import SfChip from '@/components/SfChip.vue'
 import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeControl'
 import { useLayoutTokens } from '@/config/editor/layoutTokens'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
@@ -55,6 +37,7 @@ import type { Editor } from '@tiptap/vue-3'
 import { ref, watch } from 'vue'
 import ColorPicker from './ColorPicker.vue'
 import ToolbarPanelItem from './ToolbarPanelItem.vue'
+import ToolbarSizeChips from './ToolbarSizeChips.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
@@ -138,19 +121,6 @@ const commit = () => {
 		display: flex;
 		flex-direction: column;
 		gap: var(--sf-gap, var(--sf-spacing-xs));
-	}
-
-	.sp-section {
-		display: flex;
-		flex-direction: column;
-		gap: var(--sf-gap, var(--sf-spacing-2xs));
-	}
-
-	.sp-row {
-		display: flex;
-		align-items: center;
-		gap: var(--sf-gap, var(--sf-spacing-2xs));
-		flex-wrap: wrap;
 	}
 }
 </style>

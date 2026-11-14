@@ -5,10 +5,8 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: Corners takes the theme's sizes only, as the colour tools do (owner, 2026-11-14): its
-custom pixels and corners one by one go, "none" takes the setting off, a block's own corner size
-shows "Not a theme size", and `prefer-theme-radius` points one out. Classes for single corners
-wait until someone needs them (adding them later changes nothing stored).
+Next: the owner's pick. A candidate: "A pick in a block's panel unselects the block" (Editor),
+which every panel that changes a block shares.
 
 ## Bigger work
 
@@ -131,10 +129,14 @@ wait until someone needs them (adding them later changes nothing stored).
   `youtu.be/…` or `/shorts/…` address is saved as `watch?v=…`: the same video for visitors. A start
   set on a `youtu.be/…` or `/embed/…` address is lost there, as TipTap writes none in those (nor
   did visitors see it).
-- **A change in the Shadow panel pushes it out of view.** Picking a size or a colour adds
-  toolbar buttons (its row grows by 340px), which can push Shadow out of a narrow toolbar's view,
-  and its open panel goes with it (measured under the test theme at 1440px, 2026-11-14;
-  `colors.spec.ts` starts with a shadow, and opens the panel again after a pick).
+- **A pick in a block's panel unselects the block.** With a block selected whole, a pick in
+  Corners or Shadow leaves a cursor at the start of its text instead (measured, 2026-11-14): the
+  panels change the block with `setNodeMarkup`, which the selection doesn't survive. The toolbar
+  then shows the text's tools as well (Bold to Link, and Remove class: its row grows by 340px),
+  which can push the panel's button out of a narrow toolbar's view, the open panel with it
+  (measured under the test theme at 1440px). The other panels that change a block likely do the
+  same; one place for their writes could keep the block selected. `colors.spec.ts` and
+  `corners.spec.ts` open the panel again after a pick.
 - **`!important` in a style is lost without a word.** The browser drops it when the page reads
   a style (`color: red !important` is saved as `color: red`), and the code view's check goes by
   property names, so it doesn't say (measured by an agent, 2026-11-14).
@@ -272,6 +274,15 @@ wait until someone needs them (adding them later changes nothing stored).
   component keeps its settings and their defaults as data (compiled, 2026-11-10), so the list
   could take them from the component; the choices a setting offers are only in its type.
 - The component preview is kept for now, likely to be dropped; three of its stories show errors.
+- Font's and Aspect's panels write the same "none + choices" row that `ToolbarSizeChips.vue`
+  holds for Shadow and Corners; their chips carry a title or a font, so the row would take them.
+- Shadow lights "none" for a shadow class the theme has no size for, where Corners says "Not a
+  theme size" (`ToolbarShadowControl.vue`, `readShape`).
+- The panels each read a block's `class` and `style` as text their own way: a `text` helper in
+  Corners, Shadow and Colour (Colour's gives null for empty), and the check written out in
+  Aspect, Font and Attributes. One helper would serve them all.
+- A chip's "chosen" shows only in its look (`SfChip`'s `selected`): a screen reader can't hear
+  which size or font is chosen, nor can a check ask for it by role.
 
 ## Ideas, not decided
 

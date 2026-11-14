@@ -381,6 +381,26 @@ The tools keep a theme colour as its names, the colour's and its see-through ste
 and read back: a class the theme makes no colour for (`sf-color-primary`) is written back as it
 came, and a see-through step needs no theme tokens to be kept.
 
+### Corners
+
+**The Corners tool offers the theme's sizes only** (owner, 2026-11-14), as the colour tools offer
+its colours: a size in pixels doesn't change with the theme. Its row is "none", then the theme's
+sizes (`sf-radius-0` … `sf-radius-full`):
+
+- **none** takes the setting off, so the block's corners are the theme's for it: a Card's are
+  rounded (8px in the default theme), a paragraph's square. A theme change reaches them.
+- **0** is square whatever the theme does for the block: a Card set to 0 stays square.
+
+A block's own corner size (in its style, from a paste or the code view) shows over its class.
+It's kept, as written, and the tool says "Not a theme size", as it does for a size class the theme
+doesn't have; picking a size or none replaces it. `prefer-theme-radius` points it out. The tool
+doesn't read the size's value, so any way of writing one (a single corner, logical corners, oval
+corners) is kept whole, and `0` or a theme size written in the style says "Not a theme size" too
+(owner, 2026-11-14), as the colour tools say of a colour in a block's style. Which properties set a corner is one list, `shared/corners.ts`, read by the
+tool and the rule.
+
+A class for one corner waits until someone needs one: adding it later changes nothing stored.
+
 ### When a token belongs
 
 Three rules:
@@ -1256,12 +1276,13 @@ Picker choices land in storage by a uniform pattern:
   same shape for `sf-color-*`, `sf-border-*`, `sf-shadow-color-*`); text's colour is a mark
   written as the same classes. Stays in the cascade layer system; state classes and compound
   rules can still intercept. Kept as the colour's names (Colours and alpha).
-- **Freeform value** (custom px corners) → inline `node.attrs.style`. Inline beats every
-  layer, so this is the escape hatch — sacrifices cascade participation for arbitrary-value
-  flexibility. The colour tools have none (Colours and alpha).
 - **Shape/scale token pick** (`sf-shadow-md`, `sf-radius-2`, `sf-text-xl`) → single class
   on `node.attrs.class`; the utility rule composes with any accompanying runtime state
   vars.
+
+No tool writes a value of its own into a block's style (`node.attrs.style`): one comes from a
+paste or the code view, and is kept. It beats every layer, so state classes can't change it, nor
+a theme. A tool's pick replaces the value it would override (Colours and alpha, Corners).
 
 Content renders through TipTap both in the editor and on published pages (a read-only
 editor), so the same rules apply to both. The editor, the home page and the preview show it
@@ -1494,6 +1515,10 @@ own style.
   holding no variable, or a named colour, as CSS's grammar for the property reads it (not
   `transparent` or `currentColor`). It doesn't change with the theme (Colours and alpha). A
   value holding a variable can't be matched, so it's left out.
+- **`prefer-theme-radius`** (a suggestion; where `prefer-theme-color` looks): a corner size other
+  than 0 on any corner property, in a value holding no variable. It doesn't change with the theme
+  (Corners). Square is square in every theme, so 0 is left out; a value holding a variable may be
+  the theme's size.
 - **`require-container-name`** (a component's styles): an `@container` query without a name
   (Component blocks, "Writing a component block").
 - **`no-root-height`** (a component's styles): a height on the component's root (`height`,
