@@ -1,5 +1,6 @@
 // The page as the rules read it (client/src/assets/sf-system.md, "Validator and linter", "The
-// shape"): its blocks as hast elements, each tied to its block, and each block's own style as CSS.
+// shape"): its blocks as hast elements, each tied to its block, and each block's own style as CSS,
+// with the styles its text is written with.
 import { readStyle } from '@somefreq-app/validator/core'
 import type { Node as PMNode } from '@tiptap/pm/model'
 import type { Element, ElementContent, Root } from 'hast'
@@ -8,7 +9,7 @@ import { h } from 'hastscript'
 /** The classes a block always wears, which the page doesn't save (`blockWears`, ownLook.ts). */
 export type Wears = (node: PMNode, pos: number) => readonly string[]
 
-/** A block's own style, as the rules that read CSS take it. */
+/** A block's own style, or one its text is written with, as the rules that read CSS take it. */
 export interface BlockStyle {
 	/** The block's position on the page. */
 	block: number
@@ -26,11 +27,17 @@ export interface PageForRules {
 	/**
 	 * Its blocks as elements, each as the page writes its HTML, every setting included (the code
 	 * view leaves out those at their defaults), and wearing the classes its block always wears.
-	 * Text and its styles (bold, a link) aren't read.
+	 * Text and its marks (bold, a link) aren't elements; the styles they're written with are read
+	 * under `styles`.
 	 */
 	elements: Root
 	/** Each element's block, by its position on the page, so a result lands on its block. */
 	blockOf: ReadonlyMap<Element, number>
+	/**
+	 * Each block's own style, and each style its text is written with (a colour not from the
+	 * theme), once for each written alike: a run of text isn't a block, so the block it's in is
+	 * named.
+	 */
 	styles: readonly BlockStyle[]
 }
 
@@ -53,6 +60,7 @@ const propertiesOf = (attributes: object, wears: readonly string[]) => {
 export function readPage(doc: PMNode, wears: Wears): PageForRules {
 	const blockOf = new Map<Element, number>()
 	const styles: BlockStyle[] = []
+	const textStyles = new Set<string>()
 
 	// One part of a block's HTML as ProseMirror describes it (its `toDOM`): a tag, its attributes
 	// and what's in it, the hole (0) where the block's own blocks go.
@@ -87,9 +95,24 @@ export function readPage(doc: PMNode, wears: Wears): PageForRules {
 	const blocksIn = (parent: PMNode, start: number) => {
 		const elements: Element[] = []
 		parent.forEach((node, offset) => {
+			readMarkStyles(node, start - 1)
 			if (!node.isText) elements.push(block(node, start + offset))
 		})
 		return elements
+	}
+
+	// The styles text, or an inline block, is written with: each of its marks' own (`toDOM`), on
+	// the block it's in.
+	const readMarkStyles = (inline: PMNode, pos: number) => {
+		for (const mark of inline.marks) {
+			const part = mark.type.spec.toDOM?.(mark, true)
+			const [, attributes] = Array.isArray(part) ? part : []
+			const style: unknown =
+				isAttributes(attributes) && 'style' in attributes && attributes.style
+			if (typeof style !== 'string' || !style || textStyles.has(`${pos} ${style}`)) continue
+			textStyles.add(`${pos} ${style}`)
+			styles.push({ block: pos, css: readStyle(style), holdsBlocks: false })
+		}
 	}
 
 	const block = (node: PMNode, pos: number) => {

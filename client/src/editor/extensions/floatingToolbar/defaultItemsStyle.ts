@@ -23,7 +23,7 @@ export const styleItems = [
 			return ctx.activeDepth > 0 && !ctx.activeNode.type.isLeaf
 		},
 		ToolbarColorControl,
-		{ tooltip: 'Color' },
+		{ tooltip: 'Colour' },
 	),
 
 	// --- Font family / size (mark or node style) ---

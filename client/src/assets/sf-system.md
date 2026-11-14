@@ -180,7 +180,7 @@ different roles. The prefix rule:
 | Kind             | Example                                     | Set by                                                     | Read by                          |
 | ---------------- | ------------------------------------------- | ---------------------------------------------------------- | -------------------------------- |
 | Theme token      | `--sf-primary-5`, `--sf-fg_primary`         | Theme class (`.theme-x { --sf-X: ... }`)                   | Rules across every layer         |
-| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); inline as escape hatch         | Carrier class in the same family |
+| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); a page's own style beats it    | Carrier class in the same family |
 | Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*` / `sf-size-*`; never inherited | The element that wears the class |
 | Bridge           | `--sfx-surface-color`, `--sfx-inset-margin` | Bundle rule (or layout rule, for `--sfx-inset-margin`)     | Higher-layer rule / descendants  |
 
@@ -215,8 +215,8 @@ Same-family pairs: `sf-bg-*` + `sf-bg-alpha-*`, `sf-color-*` + `sf-color-alpha-*
 The shadow family is a two-hop: `sf-shadow-<size>` reads `--sf-shadow-color`;
 `sf-shadow-color-*` writes `--sf-shadow-color` as an expression that itself reads
 `--sf-shadow-alpha`; `sf-shadow-alpha-*` fills that inner slot. Because `--sf-shadow-color`
-is a composition slot (not a bridge), inline `style="--sf-shadow-color: ..."` beats every
-layer and is the escape hatch for freeform shadow colours.
+is a composition slot (not a bridge), a page's own `style="--sf-shadow-color: ..."` beats
+every layer.
 
 ### Layout channels
 
@@ -367,8 +367,19 @@ This pattern applies uniformly to every picker-driven colour surface: `sf-{bg|co
 palette utilities and their `sf-{bg|color|border|shadow}-alpha-*` siblings. Component
 authors don't reach for it — they pick the colour token whose value already encodes the
 opacity they want, or compose at the use site. Bundles paint solid and don't participate.
-Freeform values (arbitrary hex, custom lengths) use inline `style` as the escape hatch
-when no palette token fits.
+
+**The colour tools offer the theme's colours only** (owner, 2026-11-14). A free colour is
+fixed: a theme change doesn't reach it, and as inline style it outranks the state classes. A
+colour not from the theme that a page already has (pasted, or written in the code view) is kept,
+as the browser reads it, and `prefer-theme-color` points it out; picking a theme colour replaces
+it. Text can wear a theme colour and a fixed one together, the fixed one showing: the warning
+points that out too, rather than the page dropping either. If free colours are ever wanted,
+they're a tool of their own, not part of the theme's colour tools.
+
+The tools keep a theme colour as its names, the colour's and its see-through step's (`primary-5`,
+`3`), from the class they read to the class they write, so nothing is turned into a colour value
+and read back: a class the theme makes no colour for (`sf-color-primary`) is written back as it
+came, and a see-through step needs no theme tokens to be kept.
 
 ### When a token belongs
 
@@ -563,7 +574,7 @@ sf-toast         a short message that pops up over the page and goes by itself �
                  bold text, since a toast is glanced at
 sf-drag-handle   drag affordance — dim at rest, accents to primary on hover
                  and while dragging
-sf-swatch        small colour-surface tile — palette chip, native colour input.
+sf-swatch        small colour-surface tile — palette chip, preview.
                  Theme decides border/radius/padding; consumers set width/height
 sf-field         editable form-control chrome shared by input/select/textarea —
                  border, radius, font, padding-bridge, focus contract
@@ -773,11 +784,9 @@ spacing into the layout system without compromising layout's structural fixity. 
 apply to the element that wears them only (see Layout channels).
 
 `sf-shadow-*` uses `rgb(var(--sf-shadow) / var(--sf-shadow-opacity))` as its default
-colour composition, both theme-controlled. Colour picks follow the same class-pair +
-freeform-hex-escape-hatch pattern as bg/text/border: palette picks emit
-`sf-shadow-color-*` + `sf-shadow-alpha-*` (in `sf-utility`); arbitrary hex picks emit
-inline `style="--sf-shadow-color: ..."`. Same var name for both paths — inline still
-beats layered classes so the escape hatch works cleanly on top of a palette pick.
+colour composition, both theme-controlled. Colour picks follow the same class-pair pattern as
+bg/text/border: `sf-shadow-color-*` + `sf-shadow-alpha-*` (in `sf-utility`). A page's own
+`style="--sf-shadow-color: ..."` sets the same var and beats the layered classes.
 
 ### States — `sf-state`
 
@@ -1244,11 +1253,12 @@ outside the editor.
 Picker choices land in storage by a uniform pattern:
 
 - **Palette pick** → class pair on `node.attrs.class` (`sf-bg-primary-5` + `sf-bg-alpha-3`,
-  same shape for `sf-color-*`, `sf-border-*`, `sf-shadow-color-*`). Stays in the cascade
-  layer system; state classes and compound rules can still intercept.
-- **Freeform value** (arbitrary hex, custom px, etc.) → inline `node.attrs.style`. Inline
-  beats every layer, so this is the escape hatch — sacrifices cascade participation for
-  arbitrary-value flexibility.
+  same shape for `sf-color-*`, `sf-border-*`, `sf-shadow-color-*`); text's colour is a mark
+  written as the same classes. Stays in the cascade layer system; state classes and compound
+  rules can still intercept. Kept as the colour's names (Colours and alpha).
+- **Freeform value** (custom px corners) → inline `node.attrs.style`. Inline beats every
+  layer, so this is the escape hatch — sacrifices cascade participation for arbitrary-value
+  flexibility. The colour tools have none (Colours and alpha).
 - **Shape/scale token pick** (`sf-shadow-md`, `sf-radius-2`, `sf-text-xl`) → single class
   on `node.attrs.class`; the utility rule composes with any accompanying runtime state
   vars.
@@ -1396,14 +1406,15 @@ readers, walkers and types come with them.
 
 **Where a rule shows:** wherever its problem can happen.
 
-- **The editor** runs every rule that can break on a page, on its blocks and their own style,
-  after each change. A block a rule names wears an outline in the warning colour, dashed for a
-  problem and dotted for a suggestion, which moves nothing on the page. Its Attributes panel
-  lists why, above the rows where most are fixed, with the classes the block wears by itself,
-  which no row shows, so a warning appears or goes as the class row's change applies. The node
-  path shows the blocks around the cursor that have one, and the top bar's count goes to the
-  next. Warnings are for the person editing: a save never waits for them or stops on them, and
-  nothing checks a page on the server when it's saved.
+- **The editor** runs every rule that can break on a page, on its blocks, their own style and
+  the styles their text and inline blocks are written with, after each change. A block a rule
+  names wears an outline in the warning colour, dashed for a problem and dotted for a
+  suggestion, which moves nothing on the page. Its Attributes panel lists why, above the rows
+  where most are fixed, with the classes the block wears by itself, which no row shows, so a
+  warning appears or goes as the class row's change applies. The node path shows the blocks
+  around the cursor that have one, and the top bar's count goes to the next. Warnings are for
+  the person editing: a save never waits for them or stops on them, and nothing checks a page
+  on the server when it's saved.
 - **An IDE linter** (later) checks pages, screens and components written in files, with every
   rule that can break there. It's a thin ESLint plugin: its element and CSS rules call the core,
   ESLint's Vue and HTML parsers read the code, and ESLint shows the results and holds the
@@ -1478,6 +1489,11 @@ own style.
   columns sized by their content.
   The system doesn't know the spot, so a layout in it that holds a collapsing block is 0 wide
   (Container-responsive collapse).
+- **`prefer-theme-color`** (a suggestion; a block's own style, and the styles its text and
+  inline blocks are written with): a fixed colour, in any property: a hex, a colour function
+  holding no variable, or a named colour, as CSS's grammar for the property reads it (not
+  `transparent` or `currentColor`). It doesn't change with the theme (Colours and alpha). A
+  value holding a variable can't be matched, so it's left out.
 - **`require-container-name`** (a component's styles): an `@container` query without a name
   (Component blocks, "Writing a component block").
 - **`no-root-height`** (a component's styles): a height on the component's root (`height`,

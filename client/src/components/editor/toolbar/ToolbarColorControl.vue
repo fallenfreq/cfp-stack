@@ -5,17 +5,24 @@
 				<span class="color-swatch sf-swatch sf-size-2xs" :style="swatchStyle" />
 			</ToolbarButton>
 		</template>
-		<ColorPicker :value="currentColor" @commit="onCommit" @remove="onRemove" />
+		<ColorPicker
+			:value="current.theme"
+			:fixed="current.fixed !== null"
+			@commit="applyColor"
+			@remove="applyColor(null)"
+		/>
 	</ToolbarPanelItem>
 </template>
 
 <script setup lang="ts">
 import { useToolbarMarkControl } from '@/composables/editor/useToolbarMarkControl'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
-import { cssVarColor } from '@/utils/cssVarColor'
-import { useAlphaPalette } from '@/utils/editor/alphaPalette'
-import { getClassToken } from '@/utils/editor/classTokens'
-import { useColorPalette } from '@/utils/editor/colorPalette'
+import {
+	readThemeColor,
+	swatchColor,
+	type ThemeColor,
+	themeColorClasses,
+} from '@/utils/editor/colorPalette'
 import { nodeAt } from '@/utils/editor/editorUtils'
 import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
@@ -27,89 +34,60 @@ import ToolbarPanelItem from './ToolbarPanelItem.vue'
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
 const { open, capturedPos, mode, setOpen, commitMark } = useToolbarMarkControl(props)
-const { steps: alphaSteps, snapToStep } = useAlphaPalette()
-const { parseStoredValue } = useColorPalette()
 
-// Read background colour from sf-bg-* class tokens, falling back to inline style.
-const readNodeBg = (node: { attrs: Record<string, unknown> }): string | null => {
-	const cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
-	const bgToken =
-		cls
-			.split(/\s+/)
-			.find((c) => c.startsWith('sf-bg-') && !c.startsWith('sf-bg-alpha-'))
-			?.slice('sf-bg-'.length) ?? null
-	if (bgToken) {
-		const alphaName = getClassToken(cls, 'sf-bg-alpha-')
-		const alphaStep = alphaName
-			? alphaSteps.value.find((s) => s.cssVar === `--sf-alpha-${alphaName}`)
-			: null
-		return cssVarColor(`--sf-${bgToken}`, alphaStep?.value ?? 1)
-	}
-	const style = typeof node.attrs['style'] === 'string' ? node.attrs['style'] : ''
-	return getStyleProp(style, 'background-color') || null
-}
+const text = (value: unknown) => (typeof value === 'string' && value ? value : null)
 
-const currentColor = computed<string | null>(() => {
+// The colour applied: text's (its textColor mark), or a block's background (its sf-bg-* classes,
+// or a background-color in its own style).
+const current = computed<{ theme: ThemeColor | null; fixed: string | null }>(() => {
 	if (mode.value === 'mark') {
-		const color = props.editor.getAttributes('textColor')['color']
-		return typeof color === 'string' ? color : null
+		const attrs = props.editor.getAttributes('textColor')
+		const color = text(attrs['color'])
+		return {
+			theme: color ? { color, alpha: text(attrs['alpha']) } : null,
+			fixed: text(attrs['fixed']),
+		}
 	}
-	return readNodeBg(props.context.activeNode)
+	const { attrs } = props.context.activeNode
+	return {
+		theme: readThemeColor(text(attrs['class']) ?? '', 'sf-bg-', 'sf-bg-alpha-'),
+		fixed: getStyleProp(text(attrs['style']) ?? '', 'background-color') || null,
+	}
 })
 
 const NO_COLOR_STRIPE =
 	'linear-gradient(45deg, transparent 45%, rgba(var(--sf-danger) / var(--sf-alpha-6)) 45%, rgba(var(--sf-danger) / var(--sf-alpha-6)) 55%, transparent 55%)'
 
-const swatchStyle = computed<CSSProperties>(() =>
-	currentColor.value
-		? { backgroundColor: currentColor.value }
-		: { backgroundImage: NO_COLOR_STRIPE },
-)
+const swatchStyle = computed<CSSProperties>(() => {
+	// A fixed colour shows over a theme one, on the page as here.
+	const { theme, fixed } = current.value
+	if (fixed) return { backgroundColor: fixed }
+	if (theme) return { backgroundColor: swatchColor(theme) }
+	return { backgroundImage: NO_COLOR_STRIPE }
+})
 
-const applyColor = (value: string | null) => {
+// A theme colour picked replaces whatever colour was there, a fixed one included; null removes it.
+const applyColor = (value: ThemeColor | null) => {
 	if (mode.value === 'mark') {
-		commitMark('textColor', value ? { color: value } : null)
+		commitMark('textColor', value ? { ...value } : null)
 		return
 	}
 	if (capturedPos.value === null) return
 	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	let cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
-	let s = typeof node.attrs['style'] === 'string' ? node.attrs['style'] : ''
-
-	// Clear all existing bg colour and alpha classes, and inline background-color.
-	cls = cls
+	const classes = (text(node.attrs['class']) ?? '')
 		.split(/\s+/)
-		.filter((c) => !c.startsWith('sf-bg-'))
-		.join(' ')
-	s = setStyleProp(s, 'background-color', null)
-
-	if (value !== null) {
-		const parsed = parseStoredValue(value)
-		if (parsed?.kind === 'token') {
-			cls = (cls + ` sf-bg-${parsed.cssVar.slice('--sf-'.length)}`).trim()
-			if (parsed.alpha < 1) {
-				const step = snapToStep(parsed.alpha)
-				if (step) {
-					cls = (cls + ` sf-bg-alpha-${step.cssVar.slice('--sf-alpha-'.length)}`).trim()
-				}
-			}
-		} else {
-			// Arbitrary colour: store as inline style
-			s = setStyleProp(s, 'background-color', value)
-		}
-	}
+		.filter((c) => c && !c.startsWith('sf-bg-'))
+	if (value) classes.push(...themeColorClasses(value, 'sf-bg-', 'sf-bg-alpha-'))
+	const style = setStyleProp(text(node.attrs['style']) ?? '', 'background-color', null)
 
 	props.editor.view.dispatch(
 		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
 			...node.attrs,
-			class: cls || null,
-			style: s || null,
+			class: classes.join(' ') || null,
+			style: style || null,
 		}),
 	)
 }
-
-const onCommit = (value: string) => applyColor(value)
-const onRemove = () => applyColor(null)
 </script>
 
 <style scoped>

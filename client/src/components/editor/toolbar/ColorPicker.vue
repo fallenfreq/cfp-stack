@@ -6,9 +6,8 @@
 
 		<div class="cp-row cp-families">
 			<button
-				v-if="showRemove"
 				class="cp-chip cp-chip-clear sf-swatch sf-size-2xs sf-on-hover"
-				title="No color"
+				:title="noneLabel"
 				@mousedown.prevent
 				@click="$emit('remove')"
 			/>
@@ -16,7 +15,7 @@
 				v-for="family in families"
 				:key="family.key"
 				class="cp-chip sf-swatch sf-size-2xs sf-on-hover"
-				:class="{ 'sf-on-selected': mode === 'palette' && familyKey === family.key }"
+				:class="{ 'sf-on-selected': picked && familyKey === family.key }"
 				:style="chipStyle(family)"
 				:title="family.key"
 				@mousedown.prevent
@@ -29,71 +28,72 @@
 				v-for="(shade, idx) in activeFamily.shades"
 				:key="shade.key"
 				class="cp-chip sf-swatch sf-size-2xs sf-on-hover"
-				:class="{ 'sf-on-selected': mode === 'palette' && shadeIndex === idx }"
-				:style="{ background: cssVarColor(shade.cssVar) }"
+				:class="{ 'sf-on-selected': picked && shadeIndex === idx }"
+				:style="{ background: swatchColor({ color: shade.name, alpha: null }) }"
 				:title="shade.key"
 				@mousedown.prevent
 				@click="pickShade(idx)"
 			/>
 		</div>
 
-		<div v-if="allowAlpha" class="cp-row cp-alpha">
+		<div v-if="allowAlpha && picked" class="cp-row cp-alpha">
 			<span class="cp-label sf-loudness-1">α</span>
 			<input
 				type="range"
 				class="cp-range sf"
 				min="0"
-				:max="alphaSteps.length - 1"
+				:max="alphaSteps.length"
 				step="1"
 				:value="alphaIndex"
 				@input="onAlphaInput"
 			/>
-			<span class="cp-alpha-val sf-loudness-1">{{ Math.round(alpha * 100) }}%</span>
-		</div>
-
-		<div class="cp-row cp-freeform">
-			<input
-				type="color"
-				class="cp-color-input sf-swatch sf-size-2xs sf-on-hover"
-				:value="freeformHex"
-				@input="onFreeformInput"
-			/>
+			<span class="cp-alpha-val sf-loudness-1">{{ alphaLabel }}</span>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { cssVarColor } from '@/utils/cssVarColor'
-import { useAlphaPalette } from '@/utils/editor/alphaPalette'
-import { formatRgba, useColorPalette, type PaletteFamily } from '@/utils/editor/colorPalette'
+import {
+	swatchColor,
+	useColorPalette,
+	type PaletteFamily,
+	type ThemeColor,
+} from '@/utils/editor/colorPalette'
 import { computed, ref, watch } from 'vue'
 
-const { families, findShade, parseStoredValue } = useColorPalette()
-const { steps: alphaSteps, snapToStep } = useAlphaPalette()
+const { families, alphaSteps, findShade } = useColorPalette()
 
 const props = withDefaults(
 	defineProps<{
-		value: string | null
+		/** The theme colour applied, or null for none. */
+		value: ThemeColor | null
+		/** A colour not from the theme is applied: it shows over a theme colour, as on the page. */
+		fixed?: boolean
+		/** What no colour picked means here. */
+		noneLabel?: string
 		allowAlpha?: boolean
-		showRemove?: boolean
 	}>(),
-	{ allowAlpha: true, showRemove: true },
+	{ fixed: false, noneLabel: 'No colour', allowAlpha: true },
 )
 
-const emit = defineEmits<{ commit: [value: string]; remove: [] }>()
+const emit = defineEmits<{ commit: [value: ThemeColor]; remove: [] }>()
 
-const mode = ref<'palette' | 'freeform' | 'none'>('none')
+// Whether a theme colour is picked; the slider shows once one is.
+const picked = ref(false)
 const familyKey = ref<string>('')
 const shadeIndex = ref(0)
-const alpha = ref(1)
-const freeformHex = ref('#000000')
+// The see-through step's name, or null for solid.
+const alpha = ref<string | null>(null)
 
+// The slider's positions are the steps, most see-through first, then solid.
 const alphaIndex = computed(() => {
-	const idx = alphaSteps.value.findIndex((s) => s.value === alpha.value)
-	if (idx >= 0) return idx
-	const snapped = snapToStep(alpha.value)
-	return snapped ? alphaSteps.value.indexOf(snapped) : -1
+	const idx = alphaSteps.value.findIndex((s) => s.name === alpha.value)
+	return idx >= 0 ? idx : alphaSteps.value.length
 })
+
+const alphaLabel = computed(
+	() => alphaSteps.value.find((s) => s.name === alpha.value)?.label ?? '100%',
+)
 
 const activeFamily = computed<PaletteFamily | undefined>(() =>
 	families.value.find((f) => f.key === familyKey.value),
@@ -102,8 +102,9 @@ const activeFamily = computed<PaletteFamily | undefined>(() =>
 const activeShade = computed(() => activeFamily.value?.shades[shadeIndex.value] ?? null)
 
 const headerLabel = computed(() => {
-	if (mode.value === 'none') return 'No color'
-	if (mode.value === 'freeform') return `Custom ${freeformHex.value}`
+	// A class the theme makes no colour for (`sf-color-primary`) isn't one of its colours either.
+	if (props.fixed || (props.value && !picked.value)) return 'Not a theme colour'
+	if (!picked.value) return props.noneLabel
 	if (!activeShade.value) return ''
 	const family = activeFamily.value!
 	if (family.shades.length > 1) return `${family.key}-${activeShade.value.key}`
@@ -112,45 +113,26 @@ const headerLabel = computed(() => {
 
 // Pick a representative chip color: middle shade for multi-shade, the only shade otherwise.
 const chipStyle = (family: PaletteFamily) => {
-	const mid = Math.floor(family.shades.length / 2)
-	const cssVar = family.shades[mid]?.cssVar
-	return cssVar ? { background: cssVarColor(cssVar) } : {}
+	const mid = family.shades[Math.floor(family.shades.length / 2)]
+	return mid ? { background: swatchColor({ color: mid.name, alpha: null }) } : {}
 }
 
 // Seed state from incoming value so the picker reflects what's already applied.
 watch(
 	() => props.value,
 	(value) => {
-		const parsed = parseStoredValue(value)
-		if (!parsed) {
-			mode.value = 'none'
-			familyKey.value = ''
-			alpha.value = 1
-			return
-		}
-		if (parsed.kind === 'token') {
-			const found = findShade(parsed.cssVar)
-			if (found) {
-				familyKey.value = found.family.key
-				shadeIndex.value = found.shadeIndex
-				const snapped = snapToStep(parsed.alpha)
-				if (snapped) alpha.value = snapped.value
-				mode.value = 'palette'
-			}
-		} else {
-			const hex = (n: number) => n.toString(16).padStart(2, '0')
-			freeformHex.value = `#${hex(parsed.r)}${hex(parsed.g)}${hex(parsed.b)}`
-			const snapped = snapToStep(parsed.a)
-			if (snapped) alpha.value = snapped.value
-			mode.value = 'freeform'
-		}
+		const found = value ? findShade(value.color) : null
+		picked.value = !!found
+		familyKey.value = found?.family.key ?? ''
+		shadeIndex.value = found?.shadeIndex ?? 0
+		alpha.value = value?.alpha ?? null
 	},
 	{ immediate: true },
 )
 
 const pickFamily = (key: string) => {
 	familyKey.value = key
-	mode.value = 'palette'
+	picked.value = true
 	const family = families.value.find((f) => f.key === key)
 	if (family && shadeIndex.value >= family.shades.length) shadeIndex.value = 0
 	commit()
@@ -163,30 +145,12 @@ const pickShade = (idx: number) => {
 
 const onAlphaInput = (e: Event) => {
 	const idx = Number((e.target as HTMLInputElement).value)
-	alpha.value = alphaSteps.value[idx]?.value ?? alpha.value
-	if (mode.value !== 'none') commit()
-}
-
-const onFreeformInput = (e: Event) => {
-	freeformHex.value = (e.target as HTMLInputElement).value
-	mode.value = 'freeform'
+	alpha.value = alphaSteps.value[idx]?.name ?? null
 	commit()
 }
 
-const formatValue = (): string => {
-	if (mode.value === 'freeform') {
-		const r = parseInt(freeformHex.value.slice(1, 3), 16)
-		const g = parseInt(freeformHex.value.slice(3, 5), 16)
-		const b = parseInt(freeformHex.value.slice(5, 7), 16)
-		return formatRgba(r, g, b, alpha.value)
-	}
-	if (!activeShade.value) return ''
-	return cssVarColor(activeShade.value.cssVar, alpha.value)
-}
-
 const commit = () => {
-	const out = formatValue()
-	if (out) emit('commit', out)
+	if (activeShade.value) emit('commit', { color: activeShade.value.name, alpha: alpha.value })
 }
 </script>
 
@@ -238,12 +202,6 @@ const commit = () => {
 	.cp-alpha-val {
 		min-width: 24px;
 		text-align: center;
-	}
-
-	.cp-color-input {
-		width: 22px;
-		height: 22px;
-		cursor: pointer;
 	}
 }
 </style>

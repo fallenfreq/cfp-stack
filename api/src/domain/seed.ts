@@ -372,7 +372,7 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sf-swatch',
 		kind: 'element',
 		description:
-			'Content is a small colour-surface tile — palette chip, native colour input, preview. Theme decides border, radius, padding; consumers set width/height.',
+			'Content is a small colour-surface tile — palette chip, preview. Theme decides border, radius, padding; consumers set width/height.',
 	},
 	{
 		name: 'sf-tag',

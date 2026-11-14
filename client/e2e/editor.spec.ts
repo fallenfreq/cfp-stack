@@ -3539,6 +3539,11 @@ test("code the page can't keep keeps the code view open, saying what", async ({ 
 		['<p>Kept</p><!-- a note -->', "The page can't keep comments: <!-- a note -->."],
 		// Inline code is written with a class of its own.
 		['<p><code class="mine">c</code></p>', "The page can't keep the class mine on <code>."],
+		// A see-through step with no name isn't one.
+		[
+			'<p><span class="sf-color-danger sf-color-alpha-">C</span></p>',
+			"The page can't keep the class sf-color-alpha- on <span>.",
+		],
 		[
 			'<p><span style="color: red; font-size: 2em">Big</span></p>',
 			"The page can't keep font-size in the style of <span>.",
@@ -3670,8 +3675,7 @@ test('code the page rewrites itself goes into the page', async ({ page }) => {
 		'<table><colgroup><col width="100"><col width="200"></colgroup><tr><td>A</td></tr><tr><td>1</td><td>2</td></tr></table>',
 		'<table><colgroup><col><col width="200"></colgroup><tr><td>A</td><td>B</td></tr></table>',
 		'<div data-youtube-video><iframe src="https://www.youtube.com/embed/3lTUAWOgoHs"></iframe></div>',
-		// A colour's classes, read by the colour, written as its style: a see-through step means
-		// something only beside its colour.
+		// A colour's classes, written back as they came, one the theme makes no colour for too.
 		'<p><span class="sf-color-primary sf-color-alpha-3">Colour</span></p>',
 	]
 	for (const code of kept) {
@@ -3757,6 +3761,12 @@ test('the code view writes each block as the page does, and reads it back the sa
 		[
 			'<p><span style="color: red;">Red</span> and <span class="sf-font-2 sf-text-lg">big</span></p>',
 			'<p><span style="color: red;">Red</span> and <span class="sf-font-2 sf-text-lg">big</span></p>',
+		],
+		// A theme colour as its names, one the theme has no class for too, a see-through step, and
+		// one with a colour not from the theme beside it.
+		[
+			'<p><span class="sf-color-primary">A</span> <span class="sf-color-primary-5 sf-color-alpha-3">B</span> <span class="sf-color-danger" style="color: red;">C</span></p>',
+			'<p><span class="sf-color-primary">A</span> <span class="sf-color-primary-5 sf-color-alpha-3">B</span> <span class="sf-color-danger" style="color: red;">C</span></p>',
 		],
 		[
 			'<iframe data-youtube-video src="https://www.youtube.com/embed/3lTUAWOgoHs?start=30"></iframe>',

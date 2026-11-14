@@ -1,31 +1,12 @@
-import { cssVarColor } from '@/utils/cssVarColor'
-import { useAlphaPalette } from '@/utils/editor/alphaPalette'
-import { useColorPalette } from '@/utils/editor/colorPalette'
+import { readThemeColor } from '@/utils/editor/colorPalette'
 import { Mark, mergeAttributes } from '@tiptap/vue-3'
 
-// Extract sf-color-{token} (not sf-color-alpha-*) from a class list.
-const readColorToken = (classList: string): string | null => {
-	for (const c of classList.split(/\s+/)) {
-		if (c.startsWith('sf-color-') && !c.startsWith('sf-color-alpha-')) {
-			return c.slice('sf-color-'.length)
-		}
-	}
-	return null
-}
-
-// Reconstruct the stored colour value from sf-color-* classes.
-const classesToColor = (classList: string): string | null => {
-	const token = readColorToken(classList)
-	if (!token) return null
-	const cssVar = `--sf-${token}`
-	const alphaClass = classList.split(/\s+/).find((c) => c.startsWith('sf-color-alpha-'))
-	const alphaName = alphaClass?.slice('sf-color-alpha-'.length) ?? null
-	const { steps } = useAlphaPalette()
-	const alphaStep = alphaName
-		? steps.value.find((s) => s.cssVar === `--sf-alpha-${alphaName}`)
-		: null
-	return cssVarColor(cssVar, alphaStep?.value ?? 1)
-}
+// Text's colour: a theme colour as its names (colorPalette.ts, `ThemeColor`), written as its
+// classes; or a colour not from the theme (a paste, the code view), kept apart, as the browser
+// reads it (`#ff0000` as `rgb(255, 0, 0)`). Both can be on one piece of text: the fixed one
+// shows, and prefer-theme-color points it out.
+const themeColorOf = (el: HTMLElement) =>
+	readThemeColor(el.className, 'sf-color-', 'sf-color-alpha-')
 
 const TextColor = Mark.create({
 	name: 'textColor',
@@ -34,11 +15,23 @@ const TextColor = Mark.create({
 		return {
 			color: {
 				default: null as string | null,
-				parseHTML: (el) => {
-					const fromClass = classesToColor(el.className)
-					return fromClass ?? ((el as HTMLElement).style.color || null)
-				},
-				renderHTML: () => ({}),
+				parseHTML: (el) => themeColorOf(el)?.color ?? null,
+				renderHTML: (attrs) =>
+					attrs['color'] ? { class: `sf-color-${attrs['color']}` } : {},
+			},
+			alpha: {
+				default: null as string | null,
+				parseHTML: (el) => themeColorOf(el)?.alpha ?? null,
+				renderHTML: (attrs) =>
+					attrs['color'] && attrs['alpha']
+						? { class: `sf-color-alpha-${attrs['alpha']}` }
+						: {},
+			},
+			fixed: {
+				default: null as string | null,
+				parseHTML: (el) => el.style.color || null,
+				renderHTML: (attrs) =>
+					attrs['fixed'] ? { style: `color: ${attrs['fixed']}` } : {},
 			},
 		}
 	},
@@ -47,36 +40,13 @@ const TextColor = Mark.create({
 		return [
 			{
 				tag: 'span',
-				getAttrs: (el) => {
-					const e = el as HTMLElement
-					const fromClass = classesToColor(e.className)
-					if (fromClass) return { color: fromClass }
-					const inlineColor = e.style.color
-					return inlineColor ? { color: inlineColor } : false
-				},
+				getAttrs: (el) => (themeColorOf(el) || el.style.color ? {} : false),
 			},
 		]
 	},
 
-	renderHTML({ mark }) {
-		const { parseStoredValue } = useColorPalette()
-		const { snapToStep } = useAlphaPalette()
-		const parsed = parseStoredValue(mark.attrs['color'])
-		if (parsed?.kind === 'token') {
-			const colorClass = `sf-color-${parsed.cssVar.slice('--sf-'.length)}`
-			const classes = [colorClass]
-			if (parsed.alpha < 1) {
-				const step = snapToStep(parsed.alpha)
-				if (step) classes.push(`sf-color-alpha-${step.cssVar.slice('--sf-alpha-'.length)}`)
-			}
-			return ['span', mergeAttributes({ class: classes.join(' ') }), 0]
-		}
-		// Arbitrary colour: inline style
-		return [
-			'span',
-			mergeAttributes(mark.attrs['color'] ? { style: `color: ${mark.attrs['color']}` } : {}),
-			0,
-		]
+	renderHTML({ HTMLAttributes }) {
+		return ['span', mergeAttributes(HTMLAttributes), 0]
 	},
 })
 

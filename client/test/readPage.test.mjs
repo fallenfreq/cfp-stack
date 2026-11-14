@@ -4,6 +4,7 @@ import { noBleedingCenter } from '@somefreq-app/validator/rules/noBleedingCenter
 import { noOverflowHidden } from '@somefreq-app/validator/rules/noOverflowHidden'
 import { oneArrangementPerBox } from '@somefreq-app/validator/rules/oneArrangementPerBox'
 import { preferCenterAroundVideo } from '@somefreq-app/validator/rules/preferCenterAroundVideo'
+import { preferThemeColor } from '@somefreq-app/validator/rules/preferThemeColor'
 import { requirePictureSize } from '@somefreq-app/validator/rules/requirePictureSize'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
@@ -81,7 +82,7 @@ test('every kind of block in the editor reads', () => {
 	}
 })
 
-test("text and its styles aren't read; what's in a line of text that's a block of its own is", () => {
+test("text and its marks aren't elements; what's in a line of text that's a block of its own is", () => {
 	const { bold } = schema.marks
 	const doc = page(
 		block(
@@ -248,5 +249,33 @@ test("each block's own style is read as CSS, marked where the rules for a box th
 		['picture', false, 1],
 		['video', false, 1],
 		['span', false, 1],
+	])
+})
+
+test("the styles text and inline blocks are written with are read on the block they're in, once for each written alike", () => {
+	const { bold, textColor } = schema.marks
+	const fixed = textColor.create({ fixed: 'red' })
+	const doc = page(
+		block(
+			'paragraph',
+			{ id: 'line' },
+			schema.text('Red', [fixed]),
+			schema.text(' and bold', [bold.create(), fixed]),
+			schema.text(' themed', [textColor.create({ color: 'primary-5' })]),
+		),
+		block('paragraph', null, block('span', { id: 'span' }, schema.text('In a span', [fixed]))),
+		// The colour around an inline block, not its text: on the block it's in.
+		block('paragraph', { id: 'around' }, block('span', null, 'Plain').mark([fixed])),
+	)
+	const ids = idsOf(doc)
+	const styles = read(doc).styles.map(({ block, css, holdsBlocks }) => [
+		ids.get(block),
+		holdsBlocks,
+		check(css, [preferThemeColor]).length,
+	])
+	assert.deepEqual(styles, [
+		['line', false, 1],
+		['span', false, 1],
+		['around', false, 1],
 	])
 })

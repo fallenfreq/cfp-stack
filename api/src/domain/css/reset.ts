@@ -230,12 +230,6 @@ ${CHANNEL_PROPERTIES}
 		background-clip: padding-box;
 	}
 
-	/* Native colour input: strip UA inset chrome so swatch treatment can render. */
-	input[type="color"].sf-swatch {
-		padding: 0;
-		background: none;
-	}
-
 	/* Native <select>.sf-field: strip UA appearance so the custom chevron renders,
 	   align cursor across browsers (Firefox: pointer, Chrome: default). */
 	select.sf-field {

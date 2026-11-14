@@ -5,7 +5,10 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: not picked yet.
+Next: Corners takes the theme's sizes only, as the colour tools do (owner, 2026-11-14): its
+custom pixels and corners one by one go, "none" takes the setting off, a block's own corner size
+shows "Not a theme size", and `prefer-theme-radius` points one out. Classes for single corners
+wait until someone needs them (adding them later changes nothing stored).
 
 ## Bigger work
 
@@ -112,9 +115,12 @@ Next: not picked yet.
   address, so a copy has none, and nor does the code view's code, so an edit there loses it. A
   paste or the code view brings one in: the code view's check counts the address as kept, as the
   page reads it (measured).
-- **A span block with a colour in its style** (from its panel, or a saved page) reads back from
-  the code view as coloured text, its class and id gone, which the code view refuses: the colour's
-  rule takes any span with a colour, before the span block's.
+- **A span with a colour takes no other look or settings.** A span block with a colour in its
+  style or a theme colour class (from its panel, or a saved page) reads back from the code view as
+  coloured text, its other classes and id gone, which the code view refuses: the colour's rule
+  takes any span with a colour, before the span block's. A span with a colour and a font
+  (`class="sf-color-danger sf-font-2"`) loses the font the same way, pasted too, where nothing
+  says so (seen by an agent, 2026-11-14).
 - **The code view's check goes by names, not values.** An attribute the page writes with a value
   of its own (a video's `autoplay`, `loop`), or reads but can't take (`<ol start="x">`, written as
   `start="NaN"`; `<td align="justify">`; `<col width="50%">`, read as 50 pixels), isn't refused;
@@ -125,10 +131,18 @@ Next: not picked yet.
   `youtu.be/…` or `/shorts/…` address is saved as `watch?v=…`: the same video for visitors. A start
   set on a `youtu.be/…` or `/embed/…` address is lost there, as TipTap writes none in those (nor
   did visitors see it).
-- **A theme colour comes back from the code view as a style.** Text given `sf-color-primary`
-  (with or without a see-through step) is read as the colour's value, and written as
-  `style="color: rgba(…)"`, not as the class: the palette doesn't parse a theme's colour that holds
-  a `var()` fallback (`colorPalette.ts`; measured by an agent).
+- **A change in the Shadow panel pushes it out of view.** Picking a size or a colour adds
+  toolbar buttons (its row grows by 340px), which can push Shadow out of a narrow toolbar's view,
+  and its open panel goes with it (measured under the test theme at 1440px, 2026-11-14;
+  `colors.spec.ts` starts with a shadow, and opens the panel again after a pick).
+- **`!important` in a style is lost without a word.** The browser drops it when the page reads
+  a style (`color: red !important` is saved as `color: red`), and the code view's check goes by
+  property names, so it doesn't say (measured by an agent, 2026-11-14).
+- **A colour picked over a `background` shorthand doesn't show.** The Colour tool takes out a
+  block's own `background-color`, not a `background` holding a colour, which outranks the class
+  it adds.
+- **The same warning twice on a block.** A block whose own style and whose text both have
+  `color: red` lists the same `prefer-theme-color` warning twice.
 - **A pasted column list's widths can land on the wrong columns.** TipTap reads a cell's width
   from the `<col>` at the cell's place in its row, not its column, and from any `colgroup > col` in
   its table, an inner table's too (`parseColwidth`, extension-table): after a merged cell, in a

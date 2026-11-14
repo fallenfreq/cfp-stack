@@ -81,8 +81,7 @@ const watch = (elements: Element[], seen: (el: Element, name: string) => void) =
  * element in it is compared with what was written for it. An attribute, class name or style
  * property is kept if it was written for it; an attribute also if it was read, to be written the
  * page's own way (a cell's `align`, as `text-align`), by another element (a column's width, by
- * its cells) or left out as the default it is (`colspan="1"`); a class name also if its rule reads
- * it (a colour's, written as its style). Anything else is lost, as is an
+ * its cells) or left out as the default it is (`colspan="1"`). Anything else is lost, as is an
  * element nothing was written for (bold in a code block), and a comment. What the page adds or
  * rewrites itself (spaces, attribute order, `color: red;`) doesn't count.
  */
@@ -179,17 +178,6 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 				.slice(nth, nth + 1),
 		)
 	}
-	// Whether its rule reads a class name: what it makes of the element changes without it (a
-	// colour's `sf-color-primary`, or its see-through step beside it). A class is read whole, so
-	// each name is asked about on its own, on a copy of the element.
-	const readsClass = (rule: TagParseRule, el: Element, name: string) => {
-		if (!rule.getAttrs) return false
-		const withIt = el.cloneNode() as HTMLElement
-		const without = el.cloneNode() as HTMLElement
-		without.classList.remove(name)
-		return JSON.stringify(rule.getAttrs(withIt)) !== JSON.stringify(rule.getAttrs(without))
-	}
-
 	const lost = (el: Element): string[] => {
 		const rule = taken.get(el)
 		const kind = rule ? kindOf(rule) : new Set<string>()
@@ -218,11 +206,7 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 		return attributes.flatMap(({ name, value }): string[] => {
 			if (name === 'class')
 				return [...el.classList]
-					.filter(
-						(cls) =>
-							!writtenAs.some((w) => w.classList.contains(cls))
-							&& !(ownRule && readsClass(ownRule, el, cls)),
-					)
+					.filter((cls) => !writtenAs.some((w) => w.classList.contains(cls)))
 					.map((cls) => `the class ${cls} on ${label(el)}`)
 			if (name === 'style')
 				return styleProperties(value)
