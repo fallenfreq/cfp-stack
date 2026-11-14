@@ -292,7 +292,9 @@ export const adminPagesRouter = router({
 
 	update: adminProcedure
 		.input(
-			// Not the content, which `save` writes. Strict, so an editor from before `save` that sends
+			// Not the content, which `save` writes. Unguarded by the version: renaming a page in the
+			// list would otherwise refuse the save of the same page open in the editor; two changes to
+			// one field at once, the last stays. Strict, so an editor from before `save` that sends
 			// its content here is refused rather than told it saved: zod drops a field an input
 			// doesn't name.
 			pageInput

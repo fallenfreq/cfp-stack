@@ -5,12 +5,9 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: saves that can't make a second page or replace other work, planned and reviewed in
-`docs/plans/saves.md`; its code starts with the table, the migration and the server.
+Next: not picked yet.
 
 ## Bigger work
-
-- **Saves that can't make a second page or replace other work**: `docs/plans/saves.md`.
 
 - **The validator and linter.** Its rules, and where each shows, are in `sf-system.md`,
   "Validator and linter"; new candidates go there. Left for later: the IDE linter, and a theme's
@@ -271,6 +268,10 @@ Next: saves that can't make a second page or replace other work, planned and rev
 
 ## Ideas, not decided
 
+- **Saying a page is open somewhere else**, as WordPress's post lock does ("being edited by…",
+  with Take over), for when several people edit. It would sit on top of the version and key a
+  save is taken by, not replace them: a lock can be taken over or go stale, and a lost answer
+  still needs the key.
 - **A Card with no layout framing a picture** (a feature, owner 2026-11-09). Today a Card that
   frames a picture takes a layout, such as Stack, and the validator says so
   (`require-picture-size`): its blocks are in a box of its own, which the fill doesn't reach

@@ -53,6 +53,8 @@ export interface OpenPage {
 	closeNotSaved: (() => void) | null
 	// What a save is taken by (the pages router's `save`): a key made as the page opens, the
 	// version the server last confirmed (0 before a new page's first save), and the last one sent.
+	// The key is the editor's, not each save's: a save sent again after more typing is a new save
+	// and must still be taken.
 	savedFrom: string
 	version: number
 	sentVersion: number
