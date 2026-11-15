@@ -39,10 +39,8 @@ test('a block takes a theme size and none takes it off, with no sizes of its own
 
 	await chip(page, '2').click()
 	const block = page.locator('#block')
-	await expect(block).toHaveAttribute('class', 'sf-radius-2')
-	// A pick can push Corners out of a narrow toolbar's view, its panel with it: open it again.
-	await page.keyboard.press('Escape')
-	await toolbar(page).getByRole('button', { name: 'Corners', exact: true }).click()
+	await expect(block).toHaveAttribute('class', 'sf-radius-2 ProseMirror-selectednode')
+	// The block stays selected and the panel open: a second pick follows.
 	await chip(page, 'none').click()
 	await expect(block).not.toHaveAttribute('class', /sf-radius-/)
 	await expect(panel(page)).toContainText('Corners')
@@ -82,7 +80,11 @@ for (const [kind, start] of [
 			const block = page.locator('#block')
 			await expect(block).toHaveAttribute('style', 'padding: 4px;')
 			if (picked === 'none') await expect(block).not.toHaveAttribute('class', /sf-radius-/)
-			else await expect(block).toHaveAttribute('class', `sf-radius-${picked}`)
+			else
+				await expect(block).toHaveAttribute(
+					'class',
+					`sf-radius-${picked} ProseMirror-selectednode`,
+				)
 			await expect(panel(page)).toContainText('Corners')
 		})
 	}
@@ -93,7 +95,36 @@ test('a size class the theme has no size for is not a theme size', async ({ page
 	await openCorners(page, 'block')
 	await expect(panel(page)).toContainText('Not a theme size')
 	await chip(page, '1').click()
-	await expect(page.locator('#block')).toHaveAttribute('class', 'sf-radius-1')
+	await expect(page.locator('#block')).toHaveAttribute(
+		'class',
+		'sf-radius-1 ProseMirror-selectednode',
+	)
+})
+
+test('after Undo the panel shows what the block has', async ({ page }) => {
+	await setPage(page, '<p id="block" style="border-radius: 12px">A block</p>')
+	await openCorners(page, 'block')
+	await chip(page, '3').click()
+	await expect(panel(page)).toContainText('Corners')
+	await page.keyboard.press('ControlOrMeta+z')
+	await expect(page.locator('#block')).toHaveAttribute('style', 'border-radius: 12px;')
+	await expect(panel(page)).toContainText('Not a theme size')
+})
+
+test('the chosen size picked again changes nothing', async ({ page }) => {
+	// Opened as the editor opens a page, outside the undo history. The size class isn't last, as
+	// after another tool's pick: written again, it would be.
+	await page.evaluate(() => {
+		document
+			.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+			.editor!.chain()
+			.setMeta('addToHistory', false)
+			.setContent('<p id="block" class="sf-radius-2 sf-shadow-md">A block</p>')
+			.run()
+	})
+	await openCorners(page, 'block')
+	await chip(page, '2').click()
+	await expect(toolbar(page).getByRole('button', { name: 'Undo', exact: true })).toBeDisabled()
 })
 
 test("a block's own corner size is pointed out; square or a theme size is not", async ({

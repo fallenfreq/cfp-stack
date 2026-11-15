@@ -31,27 +31,17 @@ import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeContro
 import { useLayoutTokens } from '@/config/editor/layoutTokens'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { readThemeColor, type ThemeColor, themeColorClasses } from '@/utils/editor/colorPalette'
-import { nodeAt } from '@/utils/editor/editorUtils'
-import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
+import { getStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
-import { ref, watch } from 'vue'
+import { computed } from 'vue'
 import ColorPicker from './ColorPicker.vue'
 import ToolbarPanelItem from './ToolbarPanelItem.vue'
 import ToolbarSizeChips from './ToolbarSizeChips.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, capturedPos, setOpen } = useToolbarNodeControl(props)
+const { open, setOpen, blockClass, blockStyle, updateBlockLook } = useToolbarNodeControl(props)
 const { shadowOptions } = useLayoutTokens()
-
-// null = no shadow; string = token name from shadowOptions
-const selectedToken = ref<string | null>(null)
-// The theme colour picked, or null for none: the theme's own shadow colour.
-const shadowColor = ref<ThemeColor | null>(null)
-// A colour not from the theme in the block's own style (`--sf-shadow-color`), kept as written.
-const fixedColor = ref<string | null>(null)
-
-const text = (value: unknown) => (typeof value === 'string' ? value : '')
 
 // Shape lives on `sf-shadow-<size>`; exclude the color/alpha siblings.
 const readShape = (cls: string): string | null => {
@@ -63,56 +53,38 @@ const readShape = (cls: string): string | null => {
 	return null
 }
 
-watch(open, (isOpen) => {
-	if (!isOpen || capturedPos.value === null) return
-	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const cls = text(node.attrs['class'])
-	const shape = readShape(cls)
-	selectedToken.value = shape !== null && shadowOptions.value.includes(shape) ? shape : null
-	// Read apart, as a block can have both; only a colour picked, or none, replaces a fixed one.
-	shadowColor.value = readThemeColor(cls, 'sf-shadow-color-', 'sf-shadow-alpha-')
-	fixedColor.value = getStyleProp(text(node.attrs['style']), '--sf-shadow-color') || null
+// The theme size the block wears, or null for none.
+const selectedToken = computed(() => {
+	const shape = readShape(blockClass.value)
+	return shape !== null && shadowOptions.value.includes(shape) ? shape : null
 })
+// Read apart, as a block can have both; only a colour picked, or none, replaces a fixed one.
+// The theme colour, or null for the theme's own shadow colour.
+const shadowColor = computed(() =>
+	readThemeColor(blockClass.value, 'sf-shadow-color-', 'sf-shadow-alpha-'),
+)
+// A colour not from the theme in the block's own style (`--sf-shadow-color`), kept as written.
+const fixedColor = computed(() => getStyleProp(blockStyle.value, '--sf-shadow-color') || null)
 
-const selectToken = (token: string | null) => {
-	selectedToken.value = token
-	commit()
-}
-
+const selectToken = (token: string | null) => commit(token, shadowColor.value, fixedColor.value)
 // A theme colour picked, or none, replaces a fixed one.
-const onColorCommit = (color: ThemeColor | null) => {
-	shadowColor.value = color
-	fixedColor.value = null
-	commit()
-}
+const onColorCommit = (color: ThemeColor | null) => commit(selectedToken.value, color, null)
 
-const commit = () => {
-	if (capturedPos.value === null) return
-	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-
-	// Strip every sf-shadow-* class and any --sf-shadow-color; the selection is added back.
-	const classes = text(node.attrs['class'])
-		.split(/\s+/)
-		.filter((c) => c && !c.startsWith('sf-shadow-'))
-	let style = setStyleProp(text(node.attrs['style']), '--sf-shadow-color', null)
-
-	if (selectedToken.value !== null) {
-		classes.push(`sf-shadow-${selectedToken.value}`)
-		if (shadowColor.value)
-			classes.push(
-				...themeColorClasses(shadowColor.value, 'sf-shadow-color-', 'sf-shadow-alpha-'),
-			)
-		if (fixedColor.value) style = setStyleProp(style, '--sf-shadow-color', fixedColor.value)
-	}
-
-	props.editor.view.dispatch(
-		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
-			...node.attrs,
-			class: classes.join(' ') || null,
-			style: style || null,
-		}),
-	)
-}
+// Every sf-shadow-* class gives way to the picks; a fixed colour goes with the size.
+const commit = (token: string | null, color: ThemeColor | null, fixed: string | null) =>
+	updateBlockLook({
+		replacing: ['sf-shadow-'],
+		classes:
+			token === null
+				? []
+				: [
+						`sf-shadow-${token}`,
+						...(color
+							? themeColorClasses(color, 'sf-shadow-color-', 'sf-shadow-alpha-')
+							: []),
+					],
+		style: { '--sf-shadow-color': token === null ? null : fixed },
+	})
 </script>
 
 <style scoped>

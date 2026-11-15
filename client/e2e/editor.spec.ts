@@ -756,6 +756,28 @@ test("the Attributes panel's class row stacks in the narrow panel", async ({ pag
 	expect((await box(row)).width).toBeGreaterThan(200)
 })
 
+// A row added and left empty sets nothing, so it goes when the panel closes: here as another block
+// is selected.
+test("the Attributes panel's empty added row goes when the panel closes", async ({ page }) => {
+	const openPanel = async () => {
+		const tune = page.locator('.floating-toolbar button:has(span:text-is("tune"))')
+		await tune.click()
+		const panel = page.locator(`#${await tune.getAttribute('popovertarget')}`)
+		await expect(panel).toBeVisible()
+		return panel
+	}
+	await selectBlock(page, 'c1-card')
+	const panel = await openPanel()
+	await panel.getByRole('button', { name: 'add style', exact: true }).click()
+	await expect(panel.getByRole('button', { name: 'Remove style', exact: true })).toBeVisible()
+	await selectBlock(page, 'divide-card')
+	await expect(panel).toBeHidden()
+	await selectBlock(page, 'c1-card')
+	const again = await openPanel()
+	await expect(again.getByRole('button', { name: 'add style', exact: true })).toBeVisible()
+	await expect(again.getByRole('button', { name: 'Remove style', exact: true })).toHaveCount(0)
+})
+
 // A picker shows as a row once set, else as a button to add it.
 test("the layout blocks' Attributes panels offer their pickers", async ({ page }) => {
 	const pickers = {
@@ -913,16 +935,16 @@ test("typing doesn't fill the toolbar's closed menus", async ({ page }) => {
 test('a class given to a to-do item while editing shows at once', async ({ page }) => {
 	const item = page.locator('#task-plain')
 	const before = await taskItemLayout(item)
-	const at = await nodePosition(page, 'task-plain')
-	// As the Attributes panel writes it: new attributes on the item's node.
-	await page.evaluate((at) => {
-		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
-		const node = editor.state.doc.nodeAt(at)
-		if (!node) throw new Error(`No block at ${at}`)
-		editor.view.dispatch(
-			editor.state.tr.setNodeMarkup(at, null, { ...node.attrs, class: 'sf-depth-1' }),
-		)
-	}, at)
+	await selectBlock(page, 'task-plain')
+	await page
+		.locator('.floating-toolbar')
+		.getByRole('button', { name: /^Attributes/ })
+		.click()
+	const panel = page.locator('.toolbar-panel:popover-open')
+	await panel.getByRole('button', { name: 'add class' }).click()
+	const field = panel.getByLabel('class', { exact: true })
+	await field.fill('sf-depth-1')
+	await field.press('Enter')
 	await settle(page)
 	await expect(item).toHaveClass(/(^|\s)sf-depth-1(\s|$)/)
 	expect(await taskItemLayout(item)).toEqual(before)

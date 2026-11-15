@@ -23,8 +23,7 @@ import {
 	type ThemeColor,
 	themeColorClasses,
 } from '@/utils/editor/colorPalette'
-import { nodeAt } from '@/utils/editor/editorUtils'
-import { getStyleProp, setStyleProp } from '@/utils/editor/styleString'
+import { getStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, type CSSProperties } from 'vue'
 import ColorPicker from './ColorPicker.vue'
@@ -33,7 +32,8 @@ import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, capturedPos, mode, setOpen, commitMark } = useToolbarMarkControl(props)
+const { open, mode, setOpen, commitMark, blockClass, blockStyle, updateBlockLook } =
+	useToolbarMarkControl(props)
 
 const text = (value: unknown) => (typeof value === 'string' && value ? value : null)
 
@@ -48,10 +48,9 @@ const current = computed<{ theme: ThemeColor | null; fixed: string | null }>(() 
 			fixed: text(attrs['fixed']),
 		}
 	}
-	const { attrs } = props.context.activeNode
 	return {
-		theme: readThemeColor(text(attrs['class']) ?? '', 'sf-bg-', 'sf-bg-alpha-'),
-		fixed: getStyleProp(text(attrs['style']) ?? '', 'background-color') || null,
+		theme: readThemeColor(blockClass.value, 'sf-bg-', 'sf-bg-alpha-'),
+		fixed: getStyleProp(blockStyle.value, 'background-color') || null,
 	}
 })
 
@@ -72,21 +71,11 @@ const applyColor = (value: ThemeColor | null) => {
 		commitMark('textColor', value ? { ...value } : null)
 		return
 	}
-	if (capturedPos.value === null) return
-	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	const classes = (text(node.attrs['class']) ?? '')
-		.split(/\s+/)
-		.filter((c) => c && !c.startsWith('sf-bg-'))
-	if (value) classes.push(...themeColorClasses(value, 'sf-bg-', 'sf-bg-alpha-'))
-	const style = setStyleProp(text(node.attrs['style']) ?? '', 'background-color', null)
-
-	props.editor.view.dispatch(
-		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
-			...node.attrs,
-			class: classes.join(' ') || null,
-			style: style || null,
-		}),
-	)
+	updateBlockLook({
+		replacing: ['sf-bg-'],
+		classes: value ? themeColorClasses(value, 'sf-bg-', 'sf-bg-alpha-') : [],
+		style: { 'background-color': null },
+	})
 }
 </script>
 

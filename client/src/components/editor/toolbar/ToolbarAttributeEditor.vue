@@ -95,12 +95,13 @@
 </template>
 
 <script setup lang="ts">
+import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeControl'
 import { useNodeClassTokens } from '@/config/editor/nodeClassTokens'
 import type { EnumExtensionAttribute } from '@/editor/enumAttr'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { blockWearsIn, warningsOn } from '@/editor/extensions/pageWarnings'
-import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
-import { filterNonDefaultAttrs, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
+import { getClassToken } from '@/utils/editor/classTokens'
+import { filterNonDefaultAttrs } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
 import { computed, nextTick, ref, watch } from 'vue'
 import ToolbarAttrRow from './ToolbarAttrRow.vue'
@@ -108,23 +109,23 @@ import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const open = ref(false)
-const capturedPos = ref<NodePos | null>(null)
+const { open, setOpen, blockPos, block, blockClass, updateBlockAttributes, updateBlockLook } =
+	useToolbarNodeControl(props)
 const explicitlyAdded = ref(new Set<string>())
 const justAddedKey = ref<string | null>(null)
 
-const capturedNode = computed(() => {
-	if (capturedPos.value === null) return props.context.activeNode
-	return nodeAt(props.editor.state.doc, capturedPos.value)
+// Rows added but not filled in go whenever the panel closes, the toolbar moving on too.
+watch(open, (isOpen) => {
+	if (isOpen) return
+	explicitlyAdded.value = new Set()
+	justAddedKey.value = null
 })
 
-// The block the panel is for: the one it opened on, or, while it's closed, the toolbar's.
-const blockPos = computed(() => capturedPos.value ?? props.context.nodePos)
 const warnings = computed(() =>
 	blockPos.value === null ? [] : warningsOn(props.editor.state, blockPos.value),
 )
 const ownClasses = computed(() =>
-	blockPos.value === null ? [] : blockWearsIn(props.editor)(capturedNode.value, blockPos.value),
+	blockPos.value === null ? [] : blockWearsIn(props.editor)(block.value, blockPos.value),
 )
 const buttonName = computed(() => {
 	const count = warnings.value.length
@@ -133,11 +134,11 @@ const buttonName = computed(() => {
 })
 
 const specAttrs = computed(
-	() => capturedNode.value.type.spec.attrs as Record<string, { default?: unknown }>,
+	() => block.value.type.spec.attrs as Record<string, { default?: unknown }>,
 )
 
 const propOptions = computed(() => {
-	const nodeName = capturedNode.value.type.name
+	const nodeName = block.value.type.name
 	const attrs = props.editor.extensionManager.attributes as EnumExtensionAttribute[]
 	return Object.fromEntries(
 		attrs
@@ -146,9 +147,7 @@ const propOptions = computed(() => {
 	)
 })
 
-const nonDefaultAttrs = computed(() =>
-	filterNonDefaultAttrs(capturedNode.value.attrs, specAttrs.value),
-)
+const nonDefaultAttrs = computed(() => filterNonDefaultAttrs(block.value.attrs, specAttrs.value))
 
 const attrRows = computed(() =>
 	Object.keys(specAttrs.value)
@@ -156,7 +155,7 @@ const attrRows = computed(() =>
 		.sort()
 		.map((k) => {
 			const specDefault = specAttrs.value[k]?.default ?? null
-			const value = capturedNode.value.attrs[k] ?? specDefault
+			const value = block.value.attrs[k] ?? specDefault
 			return { key: k, value, isAtDefault: value === specDefault }
 		}),
 )
@@ -168,18 +167,14 @@ const addableKeys = computed(() =>
 )
 
 const { specs: nodeClassTokens } = useNodeClassTokens()
-const classTokenSpecs = computed(() => nodeClassTokens.value[capturedNode.value.type.name] ?? [])
-
-const currentClass = computed(() =>
-	typeof capturedNode.value.attrs['class'] === 'string' ? capturedNode.value.attrs['class'] : '',
-)
+const classTokenSpecs = computed(() => nodeClassTokens.value[block.value.type.name] ?? [])
 
 const classTokenRows = computed(() =>
 	classTokenSpecs.value
 		.map((spec) => ({
 			key: spec.key,
 			prefix: spec.prefix,
-			value: getClassToken(currentClass.value, spec.prefix),
+			value: getClassToken(blockClass.value, spec.prefix),
 			options: spec.options,
 		}))
 		.filter((r) => r.value !== null || explicitlyAdded.value.has(r.key)),
@@ -189,7 +184,7 @@ const classAddableKeys = computed(() =>
 	classTokenSpecs.value
 		.filter(
 			(spec) =>
-				getClassToken(currentClass.value, spec.prefix) === null
+				getClassToken(blockClass.value, spec.prefix) === null
 				&& !explicitlyAdded.value.has(spec.key),
 		)
 		.map((spec) => spec.key),
@@ -198,38 +193,26 @@ const classAddableKeys = computed(() =>
 const allRowCount = computed(() => attrRows.value.length + classTokenRows.value.length)
 const allAddableCount = computed(() => addableKeys.value.length + classAddableKeys.value.length)
 
-// A setting of the block that's there. Written anew (`setNodeMarkup`), a block given an id
-// another block has would look like a copy, and the editor would take the id off
-// (allowAttributesExtension.ts).
-const dispatch = (key: string, value: unknown) => {
-	if (capturedPos.value === null) return
-	props.editor.view.dispatch(
-		props.editor.state.tr.setNodeAttribute(capturedPos.value, key, value),
-	)
-}
-
-const dispatchClass = (newClass: string) => dispatch('class', newClass || null)
+const setClassRow = (prefix: string, value: string | null) =>
+	updateBlockLook({ replacing: [prefix], classes: value === null ? [] : [prefix + value] })
 
 const onUpdate = (key: string, value: unknown) => {
-	if (capturedPos.value === null) return
 	const spec = classTokenSpecs.value.find((s) => s.key === key)
 	if (spec) {
-		dispatchClass(setClassToken(currentClass.value, spec.prefix, value as string))
+		setClassRow(spec.prefix, value as string)
 		return
 	}
-	dispatch(key, value)
+	updateBlockAttributes({ [key]: value })
 }
 
 const onRemove = (key: string) => {
 	explicitlyAdded.value = new Set([...explicitlyAdded.value].filter((k) => k !== key))
-	if (capturedPos.value === null) return
 	const spec = classTokenSpecs.value.find((s) => s.key === key)
 	if (spec) {
-		dispatchClass(setClassToken(currentClass.value, spec.prefix, null))
+		setClassRow(spec.prefix, null)
 		return
 	}
-	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	dispatch(key, node.type.spec.attrs?.[key]?.default ?? null)
+	updateBlockAttributes({ [key]: block.value.type.spec.attrs?.[key]?.default ?? null })
 }
 
 const startAdd = (key: string) => {
@@ -238,43 +221,13 @@ const startAdd = (key: string) => {
 	const spec = classTokenSpecs.value.find((s) => s.key === key)
 	if (spec && spec.options.length > 0) {
 		// Commit the first option immediately so the select has a valid value.
-		dispatchClass(setClassToken(currentClass.value, spec.prefix, spec.options[0] as string))
+		setClassRow(spec.prefix, spec.options[0] as string)
 	}
 	// Regular attrs are already at their default in the node — no dispatch needed.
 	nextTick(() => {
 		justAddedKey.value = null
 	})
 }
-
-const resetPanelState = () => {
-	capturedPos.value = null
-	explicitlyAdded.value = new Set()
-	justAddedKey.value = null
-}
-
-// The panel reports opening and closing; opening remembers which node it's for.
-const setOpen = (value: boolean) => {
-	if (value === open.value) return
-	if (!value) {
-		onClose()
-		return
-	}
-	capturedPos.value = props.context.nodePos
-	open.value = true
-}
-
-const onClose = () => {
-	open.value = false
-	nextTick(() => resetPanelState())
-}
-
-watch(
-	() => props.context.nodePos,
-	(nodePos) => {
-		if (!open.value || capturedPos.value === null) return
-		if (nodePos !== capturedPos.value) onClose()
-	},
-)
 </script>
 
 <style scoped>

@@ -6,6 +6,20 @@ import tseslint from 'typescript-eslint'
 import vueParser from 'vue-eslint-parser'
 import base, { strictTypes } from '../eslint.config.js'
 
+// A later setting of a rule replaces an earlier one, so the toolbar's lists them all. A .vue file's
+// template is checked by vue/no-restricted-syntax, its script by no-restricted-syntax.
+const refuseWritingBlockAnew = (names) => {
+	const calls = names.map((name) => ({
+		selector: `CallExpression[callee.property.name='${name}']`,
+		message:
+			"Change a block's settings with updateAttributesAt: it keeps the block selected and the block's other settings.",
+	}))
+	return {
+		'no-restricted-syntax': ['error', ...calls],
+		'vue/no-restricted-syntax': ['error', ...calls],
+	}
+}
+
 export default defineConfig([
 	...base,
 	// The base config covers the script files; this adds .vue.
@@ -89,6 +103,25 @@ export default defineConfig([
 				},
 			],
 		},
+	},
+	{
+		// A block written anew (setNodeMarkup) loses its selection when selected whole; settings are
+		// changed in place. A block's kind is changed with setNode or replaceWith.
+		files: ['**/*.{ts,vue}'],
+		rules: refuseWritingBlockAnew(['setNodeMarkup']),
+	},
+	{
+		// The toolbar's tools; the slash menu still puts in a new video with setYoutubeVideo.
+		files: [
+			'src/components/editor/toolbar/**/*.{ts,vue}',
+			'src/editor/extensions/floatingToolbar/**/*.{ts,vue}',
+		],
+		rules: refuseWritingBlockAnew([
+			'setNodeMarkup',
+			'updateAttributes',
+			'resetAttributes',
+			'setYoutubeVideo',
+		]),
 	},
 	{
 		// The rules, the page reader and CSSTree are a file of their own, loaded once the editor is

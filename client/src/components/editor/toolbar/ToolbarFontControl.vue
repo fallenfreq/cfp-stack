@@ -19,10 +19,8 @@
 <script setup lang="ts">
 import { useToolbarMarkControl } from '@/composables/editor/useToolbarMarkControl'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
-import { getClassToken, setClassToken } from '@/utils/editor/classTokens'
-import { nodeAt } from '@/utils/editor/editorUtils'
+import { getClassToken } from '@/utils/editor/classTokens'
 import { parseFontVar, type FontStyleAttrs } from '@/utils/editor/fontPalette'
-import { setStyleProp } from '@/utils/editor/styleString'
 import type { Editor } from '@tiptap/vue-3'
 import { computed } from 'vue'
 import FontPicker from './FontPicker.vue'
@@ -30,7 +28,8 @@ import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, capturedPos, mode, setOpen, commitMark } = useToolbarMarkControl(props)
+const { open, mode, setOpen, commitMark, blockClass, updateBlockLook } =
+	useToolbarMarkControl(props)
 
 const markAttrs = computed(() =>
 	mode.value === 'mark' ? props.editor.getAttributes('fontStyle') : {},
@@ -42,11 +41,7 @@ const classToVar = (cls: string, sfPrefix: string, cssVarPrefix: string): string
 	return token ? `var(${cssVarPrefix}${token})` : null
 }
 
-const nodeClass = computed(() => {
-	if (mode.value !== 'node') return null
-	const c = props.context.activeNode.attrs['class']
-	return typeof c === 'string' ? c : null
-})
+const nodeClass = computed(() => (mode.value === 'node' ? blockClass.value : null))
 
 const currentFontFamily = computed<string | null>(() =>
 	mode.value === 'mark'
@@ -98,38 +93,26 @@ const onCommit = ({ fontFamily, fontSize, lineHeight, letterSpacing }: FontStyle
 		)
 		return
 	}
-	if (capturedPos.value === null) return
-	const node = nodeAt(props.editor.state.doc, capturedPos.value)
-	let cls = typeof node.attrs['class'] === 'string' ? node.attrs['class'] : ''
-	let s = typeof node.attrs['style'] === 'string' ? node.attrs['style'] : ''
-
-	cls = setClassToken(
-		cls,
-		'sf-font-',
-		parseFontVar(fontFamily)?.slice('--sf-font-'.length) ?? null,
-	)
-	cls = setClassToken(cls, 'sf-text-', parseFontVar(fontSize)?.slice('--sf-text-'.length) ?? null)
-	cls = setClassToken(
-		cls,
-		'sf-leading-',
-		parseFontVar(lineHeight)?.slice('--sf-leading-'.length) ?? null,
-	)
-	cls = setClassToken(
-		cls,
-		'sf-tracking-',
-		parseFontVar(letterSpacing)?.slice('--sf-tracking-'.length) ?? null,
-	)
-	s = setStyleProp(s, 'font-family', null)
-	s = setStyleProp(s, 'font-size', null)
-	s = setStyleProp(s, 'line-height', null)
-	s = setStyleProp(s, 'letter-spacing', null)
-
-	props.editor.view.dispatch(
-		props.editor.state.tr.setNodeMarkup(capturedPos.value, null, {
-			...node.attrs,
-			class: cls || null,
-			style: s || null,
-		}),
-	)
+	// A theme value becomes its class (`var(--sf-text-lg)` → `sf-text-lg`); the block's own font
+	// settings go.
+	const themeClass = (value: string | null, prefix: string) => {
+		const name = parseFontVar(value)
+		return name?.startsWith(`--${prefix}`) ? [name.slice(2)] : []
+	}
+	updateBlockLook({
+		replacing: ['sf-font-', 'sf-text-', 'sf-leading-', 'sf-tracking-'],
+		classes: [
+			...themeClass(fontFamily, 'sf-font-'),
+			...themeClass(fontSize, 'sf-text-'),
+			...themeClass(lineHeight, 'sf-leading-'),
+			...themeClass(letterSpacing, 'sf-tracking-'),
+		],
+		style: {
+			'font-family': null,
+			'font-size': null,
+			'line-height': null,
+			'letter-spacing': null,
+		},
+	})
 }
 </script>

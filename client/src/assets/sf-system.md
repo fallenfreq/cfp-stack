@@ -1284,6 +1284,10 @@ No tool writes a value of its own into a block's style (`node.attrs.style`): one
 paste or the code view, and is kept. It beats every layer, so state classes can't change it, nor
 a theme. A tool's pick replaces the value it would override (Colours and alpha, Corners).
 
+A tool changes a block's settings in place (`updateAttributesAt`), never by writing the block
+anew, so a block selected whole stays selected and keeps its other settings; only a change of the
+block's kind replaces it. A lint rule keeps it so (`client/eslint.config.js`).
+
 Content renders through TipTap both in the editor and on published pages (a read-only
 editor), so the same rules apply to both. The editor, the home page and the preview show it
 in the page shell (`SfPageShell`), so a page is edited as it sits there. A collection's sheet

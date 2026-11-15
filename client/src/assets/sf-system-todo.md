@@ -5,8 +5,7 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: the owner's pick. A candidate: "A pick in a block's panel unselects the block" (Editor),
-which every panel that changes a block shares.
+Next: "Undo turns a Card selected whole into a cursor" (Editor), a session of its own.
 
 ## Bigger work
 
@@ -129,14 +128,19 @@ which every panel that changes a block shares.
   `youtu.be/…` or `/shorts/…` address is saved as `watch?v=…`: the same video for visitors. A start
   set on a `youtu.be/…` or `/embed/…` address is lost there, as TipTap writes none in those (nor
   did visitors see it).
-- **A pick in a block's panel unselects the block.** With a block selected whole, a pick in
-  Corners or Shadow leaves a cursor at the start of its text instead (measured, 2026-11-14): the
-  panels change the block with `setNodeMarkup`, which the selection doesn't survive. The toolbar
-  then shows the text's tools as well (Bold to Link, and Remove class: its row grows by 340px),
-  which can push the panel's button out of a narrow toolbar's view, the open panel with it
-  (measured under the test theme at 1440px). The other panels that change a block likely do the
-  same; one place for their writes could keep the block selected. `colors.spec.ts` and
-  `corners.spec.ts` open the panel again after a pick.
+- **Undo turns a Card selected whole into a cursor.** Undo and Redo put back the selection saved
+  before a change, as a block selection only if the block is marked selectable (ProseMirror's
+  `NodeBookmark.resolve`); otherwise a cursor in the nearest text. Every component block and to-do
+  item is marked not selectable on purpose (`c23925d`: on phones a drag-select across one became a
+  block selection, the touch handles vanished, a tick box could get ticked), while the app selects
+  them whole itself (a frame click, a crumb, a drop), which ignores the mark. Measured in Chrome,
+  2026-11-14: a Card after a pick and Undo is a cursor; marked selectable, it's selected again; a
+  paragraph is selected again. A fix either marks them selectable and stops a phone drag-select
+  becoming a block selection another way, or has Undo put back a block selection the app made.
+  Owner, 2026-11-14: next, a session of its own.
+- **A ticked to-do item selected whole becomes a cursor.** TipTap's own tick writes the item anew
+  (`setNodeMarkup`), which the selection doesn't survive; the lint rule can't reach TipTap's own
+  writers.
 - **`!important` in a style is lost without a word.** The browser drops it when the page reads
   a style (`color: red !important` is saved as `color: red`), and the code view's check goes by
   property names, so it doesn't say (measured by an agent, 2026-11-14).
@@ -278,9 +282,6 @@ which every panel that changes a block shares.
   holds for Shadow and Corners; their chips carry a title or a font, so the row would take them.
 - Shadow lights "none" for a shadow class the theme has no size for, where Corners says "Not a
   theme size" (`ToolbarShadowControl.vue`, `readShape`).
-- The panels each read a block's `class` and `style` as text their own way: a `text` helper in
-  Corners, Shadow and Colour (Colour's gives null for empty), and the check written out in
-  Aspect, Font and Attributes. One helper would serve them all.
 - A chip's "chosen" shows only in its look (`SfChip`'s `selected`): a screen reader can't hear
   which size or font is chosen, nor can a check ask for it by role.
 

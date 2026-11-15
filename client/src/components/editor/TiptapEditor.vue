@@ -35,6 +35,7 @@ import {
 } from '@/editor/extensions/multiSelect'
 import { PageWarnings } from '@/editor/extensions/pageWarnings'
 import { RememberCursor } from '@/editor/extensions/rememberCursor'
+import { UpdateAttributesAt } from '@/editor/extensions/updateAttributesAt'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore.js'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
@@ -63,6 +64,7 @@ const multiSelectStore = useMultiSelectStore()
 const editor = useEditor({
 	extensions: [
 		MultiSelectExtension,
+		UpdateAttributesAt,
 		FloatingToolbarExtension.configure({ items: toolbarItems }),
 		DragHandle.configure({
 			shouldShowHandle: (node, depth) =>

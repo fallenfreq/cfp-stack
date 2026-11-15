@@ -19,5 +19,6 @@ const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip
 const initialUrl = computed(() => (props.context.activeNode.attrs['src'] as string) ?? '')
 
 const applyUrl = (url: string) =>
-	props.editor.chain().focus().updateAttributes('image', { src: url }).run()
+	props.context.nodePos !== null
+	&& props.editor.chain().focus().updateAttributesAt(props.context.nodePos, { src: url }).run()
 </script>

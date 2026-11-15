@@ -1,17 +1,16 @@
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
 import { TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useToolbarNodeControl } from './useToolbarNodeControl'
 
 export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarItemContext }) {
-	const { open, capturedPos, onClose: nodeClose } = useToolbarNodeControl(props)
-	// Note: we don't use nodeControl.setOpen — the mark variant also captures savedRange.
-	// The watcher inside nodeControl calls nodeClose (not our wrapped onClose), so
-	// savedRange is not cleared on a watcher-triggered close. This is harmless since
-	// commitMark is never called after the panel closes.
-
+	const node = useToolbarNodeControl(props)
+	// The text the marks go on, saved on opening; cleared whenever the panel closes.
 	const savedRange = ref<{ from: number; to: number } | null>(null)
+	watch(node.open, (isOpen) => {
+		if (!isOpen) savedRange.value = null
+	})
 
 	const mode = computed<'mark' | 'node'>(() => {
 		void props.context
@@ -27,20 +26,11 @@ export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarI
 	})
 
 	const setOpen = (value: boolean) => {
-		if (value === open.value) return
-		if (!value) {
-			onClose()
-			return
+		if (value && !node.open.value) {
+			const { from, to } = props.editor.state.selection
+			savedRange.value = { from, to }
 		}
-		const { from, to } = props.editor.state.selection
-		savedRange.value = { from, to }
-		capturedPos.value = props.context.nodePos
-		open.value = true
-	}
-
-	const onClose = () => {
-		nodeClose()
-		savedRange.value = null
+		node.setOpen(value)
 	}
 
 	const commitMark = (markName: string, attrs: Record<string, unknown> | null) => {
@@ -55,5 +45,5 @@ export function useToolbarMarkControl(props: { editor: Editor; context: ToolbarI
 		props.editor.view.dispatch(tr)
 	}
 
-	return { open, capturedPos, mode, setOpen, commitMark }
+	return { ...node, mode, setOpen, commitMark }
 }

@@ -154,15 +154,40 @@ test("a shadow with no colour picked has the theme's; any colour picked is kept,
 	const block = page.locator('#block')
 	await expect(block).toHaveAttribute(
 		'class',
-		'sf-shadow-md sf-shadow-color-shadow sf-shadow-alpha-2',
+		'sf-shadow-md sf-shadow-color-shadow sf-shadow-alpha-2 ProseMirror-selectednode',
 	)
 
-	// A pick can push Shadow out of a narrow toolbar's view, its panel with it: open it again.
-	await page.keyboard.press('Escape')
-	await toolbar(page).getByRole('button', { name: 'Shadow', exact: true }).click()
+	// The block stays selected and the panel open: a second pick follows.
 	await panel(page).getByRole('button', { name: 'Theme shadow', exact: true }).click()
-	await expect(block).toHaveAttribute('class', 'sf-shadow-md')
+	await expect(block).toHaveAttribute('class', 'sf-shadow-md ProseMirror-selectednode')
 	await expect(panel(page)).toContainText('Theme shadow')
+})
+
+test('after Undo Shadow shows what the block has: no size, so no colour', async ({ page }) => {
+	await setPage(page, '<p id="block">A block</p>')
+	await selectBlock(page, 'block')
+	await toolbar(page).getByRole('button', { name: 'Shadow', exact: true }).click()
+	await panel(page).getByRole('button', { name: 'md', exact: true }).click()
+	await expect(panel(page)).toContainText('Theme shadow')
+	await page.keyboard.press('ControlOrMeta+z')
+	await expect(page.locator('#block')).not.toHaveClass(/sf-shadow-/)
+	await expect(panel(page)).not.toContainText('Theme shadow')
+})
+
+test('no shadow picked on a block with none changes nothing', async ({ page }) => {
+	// Opened as the editor opens a page, outside the undo history.
+	await page.evaluate(() => {
+		document
+			.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+			.editor!.chain()
+			.setMeta('addToHistory', false)
+			.setContent('<p id="block">A block</p>')
+			.run()
+	})
+	await selectBlock(page, 'block')
+	await toolbar(page).getByRole('button', { name: 'Shadow', exact: true }).click()
+	await panel(page).getByRole('button', { name: 'none', exact: true }).click()
+	await expect(toolbar(page).getByRole('button', { name: 'Undo', exact: true })).toBeDisabled()
 })
 
 test('a colour class the theme makes no colour for is not one of its colours', async ({ page }) => {

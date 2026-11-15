@@ -211,7 +211,9 @@ const getLanguageItems = (editor: Editor, ctx: ToolbarItemContext): NodePickerIt
 	const item = (label: string, language: string | null): NodePickerItem => ({
 		label,
 		active: current === language,
-		action: () => editor.chain().focus().updateAttributes('codeBlock', { language }).run(),
+		action: () =>
+			ctx.nodePos !== null
+			&& editor.chain().focus().updateAttributesAt(ctx.nodePos, { language }).run(),
 	})
 	return [
 		item('Plain text', null),
