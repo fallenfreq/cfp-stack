@@ -267,8 +267,7 @@ export const cursorFromCode = (code: string, cursor: CodeCursor, doc: PMNode): S
 	const from = Math.min(anchorPos, headPos)
 	const to = Math.max(anchorPos, headPos)
 	if (to > doc.content.size) return null
-	// Any block, as the node path selects one: a component block is `selectable: false` only to
-	// clicks and drags (customComponentNode.ts). Not a run of text, which is text selected.
+	// Any block, as the node path selects one. Not a run of text, which is text selected.
 	const block = doc.resolve(from).nodeAfter
 	if (from < to && block && !block.isText && from + block.nodeSize === to)
 		return NodeSelection.create(doc, from)

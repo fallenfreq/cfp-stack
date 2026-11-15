@@ -2,13 +2,7 @@ import { TaskItem, type TaskItemOptions } from '@tiptap/extension-list'
 import type { Node as PMNode } from '@tiptap/pm/model'
 import { mergeAttributes } from '@tiptap/vue-3'
 
-// Mobile drag-select that crosses a selectable:true block converts to a
-// NodeSelection — native touch handles vanish and the synthetic click on the
-// checkbox toggles it.  dragHandle.ts spans the node with a TextSelection for
-// selectable:false nodes so the gutter handle still drags task items.
 export const CustomTaskItem = TaskItem.extend<TaskItemOptions>({
-	selectable: false,
-
 	// Checkbox beside the item's content: fixed side + flexible side.
 	ownLook: () => ({ class: 'sl-split sf-gap-md' }),
 

@@ -57,25 +57,37 @@ for (const [tool, pick, gives] of [
 	})
 }
 
-test('after Undo a block selected whole is selected again', async ({ page }) => {
-	// Opened as the editor opens a page, outside the undo history: changes within half a second
-	// are one Undo step, so Undo could take the page back too.
-	await page.evaluate(() => {
-		document
-			.querySelector<TiptapEditorHTMLElement>('.tiptap')!
-			.editor!.chain()
-			.setMeta('addToHistory', false)
-			.setContent('<p>Above</p><p id="block">A block</p>')
-			.run()
+for (const [kind, html] of [
+	['a paragraph', '<p id="block">A block</p>'],
+	['a Card', '<layout-card id="block"><p>In a Card</p></layout-card>'],
+	[
+		'a to-do item',
+		'<ul data-type="taskList"><li data-type="taskItem" id="block"><p>An item</p></li></ul>',
+	],
+] as const) {
+	test(`after Undo and Redo ${kind} selected whole is selected again`, async ({ page }) => {
+		// Opened as the editor opens a page, outside the undo history: changes within half a second
+		// are one Undo step, so Undo could take the page back too.
+		await page.evaluate((html) => {
+			document
+				.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+				.editor!.chain()
+				.setMeta('addToHistory', false)
+				.setContent(`<p>Above</p>${html}`)
+				.run()
+		}, html)
+		await selectBlock(page, 'block')
+		await toolbar(page).getByRole('button', { name: 'Corners', exact: true }).click()
+		await panel(page).getByRole('button', { name: '2', exact: true }).click()
+		const block = page.locator('#block')
+		await toolbar(page).getByRole('button', { name: 'Undo', exact: true }).click()
+		await expect(block).not.toHaveClass(named('sf-radius-2'))
+		await expect(block, 'after Undo').toHaveClass(selected)
+		await toolbar(page).getByRole('button', { name: 'Redo', exact: true }).click()
+		await expect(block).toHaveClass(named('sf-radius-2'))
+		await expect(block, 'after Redo').toHaveClass(selected)
 	})
-	await selectBlock(page, 'block')
-	await toolbar(page).getByRole('button', { name: 'Corners', exact: true }).click()
-	await panel(page).getByRole('button', { name: '2', exact: true }).click()
-	await toolbar(page).getByRole('button', { name: 'Undo', exact: true }).click()
-	const block = page.locator('#block')
-	await expect(block).not.toHaveClass(named('sf-radius-2'))
-	await expect(block).toHaveClass(selected)
-})
+}
 
 test('a language picked keeps a code block selected and colours its code, Undo and Redo too', async ({
 	page,

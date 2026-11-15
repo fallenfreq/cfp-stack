@@ -5,7 +5,7 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: "Undo turns a Card selected whole into a cursor" (Editor), a session of its own.
+Next: the owner's pick.
 
 ## Bigger work
 
@@ -128,16 +128,6 @@ Next: "Undo turns a Card selected whole into a cursor" (Editor), a session of it
   `youtu.be/…` or `/shorts/…` address is saved as `watch?v=…`: the same video for visitors. A start
   set on a `youtu.be/…` or `/embed/…` address is lost there, as TipTap writes none in those (nor
   did visitors see it).
-- **Undo turns a Card selected whole into a cursor.** Undo and Redo put back the selection saved
-  before a change, as a block selection only if the block is marked selectable (ProseMirror's
-  `NodeBookmark.resolve`); otherwise a cursor in the nearest text. Every component block and to-do
-  item is marked not selectable on purpose (`c23925d`: on phones a drag-select across one became a
-  block selection, the touch handles vanished, a tick box could get ticked), while the app selects
-  them whole itself (a frame click, a crumb, a drop), which ignores the mark. Measured in Chrome,
-  2026-11-14: a Card after a pick and Undo is a cursor; marked selectable, it's selected again; a
-  paragraph is selected again. A fix either marks them selectable and stops a phone drag-select
-  becoming a block selection another way, or has Undo put back a block selection the app made.
-  Owner, 2026-11-14: next, a session of its own.
 - **A ticked to-do item selected whole becomes a cursor.** TipTap's own tick writes the item anew
   (`setNodeMarkup`), which the selection doesn't survive; the lint rule can't reach TipTap's own
   writers.
@@ -186,7 +176,9 @@ Next: "Undo turns a Card selected whole into a cursor" (Editor), a session of it
 - **The drop line.** ProseMirror's (StarterKit's dropcursor) goes where the pointer is in the
   text, so it can show a different place from where a block lands (a paragraph let go on the top
   of another: the line below it, the block above), and nothing shows that a drop is refused. One
-  place for both would be the app's own line (a new class).
+  place for both would be the app's own line (a new class). A drop over an empty Card (its only
+  block deleted, or written so in the code view) lands beside it; where the line shows there isn't
+  measured.
 - **Paste and blocks that don't fit.** Paste fits what's pasted its own way, not checked against
   the drop's cases (`multiSelect.ts`, `whereBlocksGo`): a list item into an item's text, a
   heading at an item's start. Outside a list, a list item selected whole gets a new list around
@@ -249,7 +241,8 @@ Next: "Undo turns a Card selected whole into a cursor" (Editor), a session of it
   account.
 - **Scroll-frame arrows in documents.** The `sf-is-overflow-*` script runs only in admin lists
   and toolbars, so a scroll frame on a page shows no arrows.
-- **Not tried yet:** component blocks on a real phone, in real Safari and in Firefox; the
+- **Not tried yet:** component blocks on a real phone, in real Safari and in Firefox (on a phone:
+  a drag-select from the text above across a Card and a to-do list keeps its handles); the
   toolbar's panels and tooltips in real Safari 26 (an iPhone or iPad on iOS 26 would do); whether
   Safari on an iPhone asks before a tab with unsaved edits closes (believed not); whether a reload
   from script ("This page couldn't load"'s Refresh) asks in a tab behind another.

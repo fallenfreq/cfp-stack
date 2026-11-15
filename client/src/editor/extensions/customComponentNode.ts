@@ -24,7 +24,6 @@ export function createVueNode({
 		name: uuid,
 		group: 'block',
 		content,
-		selectable: false,
 		atom,
 
 		addAttributes() {
@@ -185,12 +184,9 @@ export function createVueNode({
 									// where typing does nothing.
 									tabindex: '-1',
 									ref: boxRef,
-									// Tap outside the editable content selects the whole node so the
-									// floating toolbar and drag handle position over it.  Works even
-									// with selectable:false — NodeSelection.create does not enforce
-									// the selectable flag (only Selection.near / drag-select paths do).
-									// The click's path, not its target: a button of the block's own may be gone
-									// from the page by now (redrawn by its own click).
+									// A click beside the editable content selects the whole block, so the toolbar
+									// and drag handle sit over it. The click's path, not its target: a button of the
+									// block's own may be gone from the page by now (redrawn by its own click).
 									onClick: (event: MouseEvent) => {
 										const box = boxRef.value?.$el
 										const content = box?.querySelector(
@@ -242,8 +238,7 @@ export function createVueNode({
 										if (onOwnParts && caret && !box.contains(caret))
 											selection.removeAllRanges()
 									},
-									// A press on the block's own parts stops at the block; the editor ignores it in
-									// any case (TipTap's stopEvent).
+									// A press on the block's own parts stops at the block, before the editor sees it.
 									onMousedown: (event: MouseEvent) => {
 										if (!ownParts) return
 										const target = event.target as Element

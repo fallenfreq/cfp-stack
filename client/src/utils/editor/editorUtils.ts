@@ -137,7 +137,7 @@ const allAreSiblings = (doc: ProseMirrorNode, positions: NodePos[]): boolean => 
 	return rest.every((pos) => siblingSet.has(pos))
 }
 
-// Resolves the nearest selectable block at the given mouse/drag event coordinates.
+// Resolves the nearest block at the given mouse/drag event coordinates.
 // Returns the node's position, the node itself, and whether to insert before or after it.
 // insertBefore is determined by: gap direction (nodeAfter → before, nodeBefore → after)
 // or vertical cursor position within the node's bounding box (top half → before).
@@ -152,19 +152,16 @@ const findBlockAtCoords = (
 	const $drop = doc.resolve(rawPos.pos)
 
 	// Cursor is in the gap between siblings — direction follows which side the cursor is on.
-	// selectable:false nodes (e.g. customComponentNode, customTaskItem) are valid insertion
-	// references even though they can't be NodeSelected — drop targeting is about position,
-	// not selectability.
 	const adjacent = $drop.nodeAfter ?? $drop.nodeBefore
 	if (adjacent && adjacent.isBlock) {
 		const pos = ($drop.nodeAfter ? $drop.pos : $drop.pos - adjacent.nodeSize) as NodePos
 		return { pos, node: adjacent, insertBefore: !!$drop.nodeAfter }
 	}
 
-	// Walk up to the nearest selectable block ancestor
+	// Walk up to the nearest block ancestor
 	for (let d = $drop.depth; d >= 1; d--) {
 		const node = $drop.node(d)
-		if (!node.isBlock || node.type.spec.selectable === false) continue
+		if (!node.isBlock) continue
 		const pos = resolvedNodePos($drop, d)
 		const nodeDOM = view.nodeDOM(pos) as HTMLElement | null
 		const rect = nodeDOM?.getBoundingClientRect()

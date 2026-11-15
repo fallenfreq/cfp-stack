@@ -1288,6 +1288,10 @@ A tool changes a block's settings in place (`updateAttributesAt`), never by writ
 anew, so a block selected whole stays selected and keeps its other settings; only a change of the
 block's kind replaces it. A lint rule keeps it so (`client/eslint.config.js`).
 
+Every kind of block can be selected whole, none is marked not selectable: Undo and Redo bring a
+block selected whole back as one only if its kind is selectable, and the app selects every kind
+whole (a frame click, a crumb, a drop).
+
 Content renders through TipTap both in the editor and on published pages (a read-only
 editor), so the same rules apply to both. The editor, the home page and the preview show it
 in the page shell (`SfPageShell`), so a page is edited as it sits there. A collection's sheet

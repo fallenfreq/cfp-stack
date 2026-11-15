@@ -1,6 +1,6 @@
 import { findBlockAtCoords, nodeAt, type NodePos } from '@/utils/editor/editorUtils'
 import { Fragment, type Node as PMNode } from '@tiptap/pm/model'
-import { NodeSelection, Plugin, PluginKey, TextSelection, type Transaction } from '@tiptap/pm/state'
+import { NodeSelection, Plugin, PluginKey, type Transaction } from '@tiptap/pm/state'
 import { ReplaceAroundStep, ReplaceStep, Transform, type Step } from '@tiptap/pm/transform'
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
 import { Extension, type CommandProps } from '@tiptap/vue-3'
@@ -179,9 +179,8 @@ export const moveBlocks = (tr: Transaction, blocks: NodePos[], place: BlockPlace
 }
 
 // A drop of blocks dragged by the handle, moved or (Alt) copied to where whereBlocksGo puts them
-// from beside the block under the pointer, with the first selected so the toolbar follows it (a
-// TextSelection across a selectable: false block, which a NodeSelection can't hold). Null when
-// nothing moves: let go on one of them or inside one, or where they can't go.
+// from beside the block under the pointer, with the first selected whole so the toolbar follows
+// it. Null when nothing moves: let go on one of them or inside one, or where they can't go.
 export const dropBlocks = (
 	view: EditorView,
 	event: MouseEvent,
@@ -198,13 +197,7 @@ export const dropBlocks = (
 	const tr = view.state.tr
 	const at = copy ? place.from : moveBlocks(tr, moving, place)
 	if (copy) tr.insert(at, place.content)
-	const first = tr.doc.nodeAt(at)
-	if (first)
-		tr.setSelection(
-			first.type.spec.selectable === false
-				? TextSelection.create(tr.doc, at, at + first.nodeSize)
-				: NodeSelection.create(tr.doc, at),
-		)
+	if (tr.doc.nodeAt(at)) tr.setSelection(NodeSelection.create(tr.doc, at))
 	return tr
 }
 
