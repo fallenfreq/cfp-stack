@@ -57,6 +57,22 @@ for (const [tool, pick, gives] of [
 	})
 }
 
+// A block inside a line changes in place too.
+test('a pick in Font sizes an icon selected whole, which stays selected', async ({ page }) => {
+	await setPage(
+		page,
+		'<p>Go <span id="icon" class="material-symbols-rounded sf-icon">home</span> now</p>',
+	)
+	await selectBlock(page, 'icon')
+	const icon = page.locator('#icon')
+	await expect(icon).toHaveClass(selected)
+	await toolbar(page).getByRole('button', { name: 'Font', exact: true }).click()
+	await panel(page).getByRole('button', { name: '2xl', exact: true }).click()
+	await expect(icon).toHaveClass(named('sf-text-2xl'))
+	await expect(icon).toHaveClass(named('sf-icon'))
+	await expect(icon).toHaveClass(selected)
+})
+
 for (const [kind, html] of [
 	['a paragraph', '<p id="block">A block</p>'],
 	['a Card', '<layout-card id="block"><p>In a Card</p></layout-card>'],

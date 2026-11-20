@@ -1286,7 +1286,8 @@ a theme. A tool's pick replaces the value it would override (Colours and alpha, 
 
 A tool changes a block's settings in place (`updateAttributesAt`), never by writing the block
 anew, so a block selected whole stays selected and keeps its other settings; only a change of the
-block's kind replaces it. A lint rule keeps it so (`client/eslint.config.js`).
+block's kind replaces it. A block inside a line (an icon, a span block) too. A lint rule keeps it
+so (`client/eslint.config.js`).
 
 Every kind of block can be selected whole, none is marked not selectable: Undo and Redo bring a
 block selected whole back as one only if its kind is selectable, and the app selects every kind

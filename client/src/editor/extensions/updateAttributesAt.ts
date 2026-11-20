@@ -26,7 +26,7 @@ export const UpdateAttributesAt = Extension.create({
 				(pos, attributes) =>
 				({ tr, dispatch }) => {
 					const node = tr.doc.nodeAt(pos)
-					if (!node || node.isInline) return false
+					if (!node || node.isText) return false
 					if (dispatch)
 						for (const [key, value] of Object.entries(attributes))
 							if (key in node.attrs && node.attrs[key] !== value)
