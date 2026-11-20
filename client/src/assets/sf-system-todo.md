@@ -5,8 +5,7 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ideas"), and a
-suggestion for a fixed font or size ("Editor").
+Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ideas").
 
 ## Bigger work
 
@@ -113,9 +112,9 @@ suggestion for a fixed font or size ("Editor").
   address, so a copy has none, and nor does the code view's code, so an edit there loses it. A
   paste or the code view brings one in: the code view's check counts the address as kept, as the
   page reads it (measured).
-- **A fixed font, size, line height or letter spacing on text** has no suggestion, as
-  `prefer-theme-color` has for a colour; pasted text keeps them now (`sf-system.md`, "Editor
-  integration"). Its rule's name is the owner's.
+- **The Font tool's chips are in the theme's token order**, not the slots' (`buildPalette`,
+  `fontPalette.ts`): with the test theme, sizes run 2xl … 9xl, base, lg, sm, xl, xs, and line
+  heights loose … tight. The slot lists in `shared/textLooks.ts` run smallest first.
 - **The cursor inside an icon.** A click just after an icon, or the arrow keys in Chrome, put the
   cursor inside it, at its end (measured). From there, in Chrome, Shift and an arrow move the
   browser's selection but not the editor's, so a copy is the browser's own (its computed styles,

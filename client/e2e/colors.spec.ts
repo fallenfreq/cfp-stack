@@ -262,6 +262,26 @@ test('a size picked for pasted text takes only the size out of its style', async
 	await expect(span).toHaveAttribute('style', 'color: red; font-family: Georgia;')
 })
 
+test('text with a size of its own is pointed out, until a theme size is picked', async ({
+	page,
+}) => {
+	await setPage(page, '<p id="words">Some <span style="font-size: 14px">small</span> words</p>')
+	const words = page.locator('#words')
+	await expect(words).toHaveClass(/\bhas-suggestion\b/)
+	await selectBlock(page, 'words')
+	const attributes = toolbar(page).getByRole('button', { name: /^Attributes/ })
+	await expect(attributes).toHaveAccessibleName('Attributes: 1 warning')
+	await attributes.click()
+	await expect(panel(page)).toContainText(
+		"A font size of its own isn't the theme's: use a theme font size",
+	)
+
+	await selectWords(page, 'words', 'small')
+	await toolbar(page).getByRole('button', { name: 'Font', exact: true }).click()
+	await panel(page).getByRole('button', { name: '2xl', exact: true }).click()
+	await expect(words).not.toHaveClass(/\bhas-(suggestion|problem)\b/)
+})
+
 test('a size picked across words in different fonts keeps each its font', async ({ page }) => {
 	await setPage(
 		page,

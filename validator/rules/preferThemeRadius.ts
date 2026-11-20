@@ -1,6 +1,7 @@
 import { type CssNode, property, walk } from '@eslint/css-tree'
 import { CORNER_PROPERTIES } from '@somefreq-app/shared/corners'
 import type { CssRule } from '../core.ts'
+import { isOwnValue } from '../ownValue.ts'
 
 const corners = new Set<string>(CORNER_PROPERTIES)
 
@@ -16,14 +17,12 @@ export const preferThemeRadius: CssRule = {
 			if (declaration.type !== 'Declaration') return
 			// By its name without a vendor's prefix, as the browser reads -webkit-border-radius.
 			if (!corners.has(property(declaration.property).basename)) return
-			// A value holding a variable may be the theme's own size, so it's left out.
-			let fixed = false
-			let variable = false
+			if (!isOwnValue(declaration.value)) return
+			let hasSize = false
 			walk(declaration.value, (node) => {
-				if (node.type === 'Function' && node.name.toLowerCase() === 'var') variable = true
-				else if (isSize(node)) fixed = true
+				if (isSize(node)) hasSize = true
 			})
-			if (fixed && !variable)
+			if (hasSize)
 				report({
 					message: "A fixed corner size doesn't change with the theme: use a theme size",
 					nodes: [declaration],

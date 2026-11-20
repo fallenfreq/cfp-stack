@@ -1328,6 +1328,11 @@ paste (`sf-system-todo.md`, "A converter for pasted HTML").
 - **A pick** sets only its own looks and keeps the others, taking the property each sets out of
   the style (`setTextLooks`): a theme colour picked over a pasted red shows, and a size picked
   keeps a pasted font.
+- **A look of its own** (in a style, pasted or written in the code view) is kept and shows over
+  the theme's, though it isn't one of them. `prefer-theme-text` points it out, as
+  `prefer-theme-color` does a colour; a pick replaces it. `font` (a font, size and line height in
+  one) isn't a property the looks set, so no pick takes it out: it's taken off in the code view
+  (owner, 2026-11-20).
 - **A copy's edges** (`copyAndPaste.ts`): a span block at an edge that the copy holds words of
   goes in whole, as part of bold text pastes bold; one it holds nothing of is left out. A click
   just after an icon puts the cursor inside it, at its end, and a copy from there held the icon
@@ -1567,11 +1572,15 @@ own style.
   inline blocks are written with): a fixed colour, in any property: a hex, a colour function
   holding no variable, or a named colour, as CSS's grammar for the property reads it (not
   `transparent` or `currentColor`). It doesn't change with the theme (Colours and alpha). A
-  value holding a variable can't be matched, so it's left out.
+  value holding a variable, or a word for every property (`inherit`), is left out, by every
+  `prefer-theme-*` rule alike (`validator/ownValue.ts`).
 - **`prefer-theme-radius`** (a suggestion; where `prefer-theme-color` looks): a corner size other
-  than 0 on any corner property, in a value holding no variable. It doesn't change with the theme
-  (Corners). Square is square in every theme, so 0 is left out; a value holding a variable may be
-  the theme's size.
+  than 0 on any corner property. It doesn't change with the theme (Corners). Square is square in
+  every theme, so 0 is left out; a value holding a variable may be the theme's size.
+- **`prefer-theme-text`** (a suggestion; where `prefer-theme-color` looks): a font, size, line
+  height or letter spacing of its own, or a `font`. It isn't one of the theme's (Editor
+  integration, "A look of its own"): a size in `em` grows with the theme's, but is pointed out
+  too. Its properties are the looks' (`shared/textLooks.ts`), so a new look is checked too.
 - **`require-container-name`** (a component's styles): an `@container` query without a name
   (Component blocks, "Writing a component block").
 - **`no-root-height`** (a component's styles): a height on the component's root (`height`,

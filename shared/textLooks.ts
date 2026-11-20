@@ -45,15 +45,27 @@ interface Look {
 	slots: readonly string[] | null
 	// The CSS property it sets, which a look picked takes out of a style; a step sets none.
 	property: string | null
+	// What it's called to the author: in the validator's messages and the Font tool's sections.
+	displayName: string
 }
 
 export const LOOKS = {
-	color: { prefix: 'sf-color-', slots: null, property: 'color' },
-	alpha: { prefix: 'sf-color-alpha-', slots: ALPHAS, property: null },
-	fontFamily: { prefix: 'sf-font-', slots: FONTS, property: 'font-family' },
-	fontSize: { prefix: 'sf-text-', slots: SIZES, property: 'font-size' },
-	lineHeight: { prefix: 'sf-leading-', slots: LEADINGS, property: 'line-height' },
-	letterSpacing: { prefix: 'sf-tracking-', slots: TRACKINGS, property: 'letter-spacing' },
+	color: { prefix: 'sf-color-', slots: null, property: 'color', displayName: 'colour' },
+	alpha: { prefix: 'sf-color-alpha-', slots: ALPHAS, property: null, displayName: 'colour step' },
+	fontFamily: { prefix: 'sf-font-', slots: FONTS, property: 'font-family', displayName: 'font' },
+	fontSize: { prefix: 'sf-text-', slots: SIZES, property: 'font-size', displayName: 'font size' },
+	lineHeight: {
+		prefix: 'sf-leading-',
+		slots: LEADINGS,
+		property: 'line-height',
+		displayName: 'line height',
+	},
+	letterSpacing: {
+		prefix: 'sf-tracking-',
+		slots: TRACKINGS,
+		property: 'letter-spacing',
+		displayName: 'letter spacing',
+	},
 } as const satisfies Record<LookSetting, Look>
 
 // The setting a class is a look for, and its slot's name, or null when it isn't a look.

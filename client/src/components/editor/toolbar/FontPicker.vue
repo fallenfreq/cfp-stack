@@ -1,11 +1,11 @@
 <template>
 	<div class="font-picker" @mousedown.stop>
 		<div class="fp-section">
-			<span class="fp-label sf-loudness-1">Family</span>
+			<span class="fp-label sf-loudness-1">{{ sectionName('fontFamily') }}</span>
 			<div class="fp-row">
 				<SfChip
 					size="xs"
-					title="Default family"
+					:title="`Default ${LOOKS.fontFamily.displayName}`"
 					:selected="!activeFamily"
 					@mousedown.prevent
 					@click="pickFamily(null)"
@@ -28,11 +28,11 @@
 		</div>
 
 		<div class="fp-section">
-			<span class="fp-label sf-loudness-1">Size</span>
+			<span class="fp-label sf-loudness-1">{{ sectionName('fontSize') }}</span>
 			<div class="fp-row">
 				<SfChip
 					size="xs"
-					title="Default size"
+					:title="`Default ${LOOKS.fontSize.displayName}`"
 					:selected="!activeSize"
 					@mousedown.prevent
 					@click="pickSize(null)"
@@ -54,11 +54,11 @@
 		</div>
 
 		<div class="fp-section">
-			<span class="fp-label sf-loudness-1">Leading</span>
+			<span class="fp-label sf-loudness-1">{{ sectionName('lineHeight') }}</span>
 			<div class="fp-row">
 				<SfChip
 					size="xs"
-					title="Default line height"
+					:title="`Default ${LOOKS.lineHeight.displayName}`"
 					:selected="!activeLeading"
 					@mousedown.prevent
 					@click="pickLeading(null)"
@@ -80,11 +80,11 @@
 		</div>
 
 		<div class="fp-section">
-			<span class="fp-label sf-loudness-1">Tracking</span>
+			<span class="fp-label sf-loudness-1">{{ sectionName('letterSpacing') }}</span>
 			<div class="fp-row">
 				<SfChip
 					size="xs"
-					title="Default letter spacing"
+					:title="`Default ${LOOKS.letterSpacing.displayName}`"
 					:selected="!activeTracking"
 					@mousedown.prevent
 					@click="pickTracking(null)"
@@ -110,10 +110,16 @@
 <script setup lang="ts">
 import SfChip from '@/components/SfChip.vue'
 import { SIZE_TO_LEADING, useFontPalette, type FontLooks } from '@/utils/editor/fontPalette'
-import { SIZES } from '@somefreq-app/shared/textLooks'
+import { LOOKS, SIZES, type LookSetting } from '@somefreq-app/shared/textLooks'
 import { ref, watch } from 'vue'
 
 const { families, sizes, leading, tracking } = useFontPalette()
+
+// Each section is named as the validator's messages name its look ("Line height").
+const sectionName = (setting: LookSetting) => {
+	const { displayName } = LOOKS[setting]
+	return displayName.charAt(0).toUpperCase() + displayName.slice(1)
+}
 
 // Each a slot's name ('2', 'lg'), or none.
 const props = defineProps<{

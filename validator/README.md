@@ -13,6 +13,7 @@ gzipped, as its main entry, the only one typed, loads CSS's syntax data too.
 
 - `core.ts`: what a rule and a result are, running the rules, and reading a block's own style.
 - `rules/`: a file for each rule.
+- `ownValue.ts`: whether a value is one of its own, for the rules that point one out.
 - Read by the client through its exports: `@somefreq-app/validator/core` (the editor's page
   reader, `client/src/editor/readPage.ts`) and `@somefreq-app/validator/rules/<file>` (the
   rules the editor runs, `client/src/editor/pageRules.ts`, and the client's tests).
