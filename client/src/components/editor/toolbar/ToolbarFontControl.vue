@@ -7,10 +7,10 @@
 		@update:open="setOpen"
 	>
 		<FontPicker
-			:font-family="currentFontFamily"
-			:font-size="currentFontSize"
-			:line-height="currentLineHeight"
-			:letter-spacing="currentLetterSpacing"
+			:font-family="current.fontFamily"
+			:font-size="current.fontSize"
+			:line-height="current.lineHeight"
+			:letter-spacing="current.letterSpacing"
 			@commit="onCommit"
 		/>
 	</ToolbarPanelItem>
@@ -19,8 +19,8 @@
 <script setup lang="ts">
 import { useToolbarMarkControl } from '@/composables/editor/useToolbarMarkControl'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
-import { getClassToken } from '@/utils/editor/classTokens'
-import { parseFontVar, type FontStyleAttrs } from '@/utils/editor/fontPalette'
+import { FONT_SETTINGS, type FontLooks, type FontSetting } from '@/utils/editor/fontPalette'
+import { LOOKS, lookClass, looksIn, readLook } from '@somefreq-app/shared/textLooks'
 import type { Editor } from '@tiptap/vue-3'
 import { computed } from 'vue'
 import FontPicker from './FontPicker.vue'
@@ -28,91 +28,48 @@ import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, mode, setOpen, commitMark, blockClass, updateBlockLook } =
+const { open, mode, setOpen, commitLooks, blockClass, updateBlockLook } =
 	useToolbarMarkControl(props)
 
-const markAttrs = computed(() =>
-	mode.value === 'mark' ? props.editor.getAttributes('fontStyle') : {},
-)
-
-// Read node class token and convert to CSS var value for FontPicker
-const classToVar = (cls: string, sfPrefix: string, cssVarPrefix: string): string | null => {
-	const token = getClassToken(cls, sfPrefix)
-	return token ? `var(${cssVarPrefix}${token})` : null
+const fontLooks = (look: (setting: FontSetting) => unknown): FontLooks => {
+	const name = (setting: FontSetting) => {
+		const value = look(setting)
+		return typeof value === 'string' && value ? value : null
+	}
+	return {
+		fontFamily: name('fontFamily'),
+		fontSize: name('fontSize'),
+		lineHeight: name('lineHeight'),
+		letterSpacing: name('letterSpacing'),
+	}
 }
 
-const nodeClass = computed(() => (mode.value === 'node' ? blockClass.value : null))
-
-const currentFontFamily = computed<string | null>(() =>
-	mode.value === 'mark'
-		? typeof markAttrs.value['fontFamily'] === 'string'
-			? markAttrs.value['fontFamily']
-			: null
-		: nodeClass.value
-			? classToVar(nodeClass.value, 'sf-font-', '--sf-font-')
-			: null,
-)
-
-const currentFontSize = computed<string | null>(() =>
-	mode.value === 'mark'
-		? typeof markAttrs.value['fontSize'] === 'string'
-			? markAttrs.value['fontSize']
-			: null
-		: nodeClass.value
-			? classToVar(nodeClass.value, 'sf-text-', '--sf-text-')
-			: null,
-)
-
-const currentLineHeight = computed<string | null>(() =>
-	mode.value === 'mark'
-		? typeof markAttrs.value['lineHeight'] === 'string'
-			? markAttrs.value['lineHeight']
-			: null
-		: nodeClass.value
-			? classToVar(nodeClass.value, 'sf-leading-', '--sf-leading-')
-			: null,
-)
-
-const currentLetterSpacing = computed<string | null>(() =>
-	mode.value === 'mark'
-		? typeof markAttrs.value['letterSpacing'] === 'string'
-			? markAttrs.value['letterSpacing']
-			: null
-		: nodeClass.value
-			? classToVar(nodeClass.value, 'sf-tracking-', '--sf-tracking-')
-			: null,
-)
-
-const onCommit = ({ fontFamily, fontSize, lineHeight, letterSpacing }: FontStyleAttrs) => {
+// The font looks applied: text's (its text style mark), or a block's classes.
+const current = computed<FontLooks>(() => {
 	if (mode.value === 'mark') {
-		commitMark(
-			'fontStyle',
-			fontFamily || fontSize || lineHeight || letterSpacing
-				? { fontFamily, fontSize, lineHeight, letterSpacing }
-				: null,
-		)
+		const attrs = props.editor.getAttributes('textStyle')
+		return fontLooks((setting) => attrs[setting])
+	}
+	const looks = looksIn(blockClass.value)
+	return fontLooks((setting) => looks[setting])
+})
+
+// A pick replaces its own looks and the properties they set in the style, the text's or the
+// block's own, keeping the others.
+const onCommit = (looks: Partial<FontLooks>) => {
+	if (mode.value === 'mark') {
+		commitLooks(looks)
 		return
 	}
-	// A theme value becomes its class (`var(--sf-text-lg)` → `sf-text-lg`); the block's own font
-	// settings go.
-	const themeClass = (value: string | null, prefix: string) => {
-		const name = parseFontVar(value)
-		return name?.startsWith(`--${prefix}`) ? [name.slice(2)] : []
-	}
+	const picked = FONT_SETTINGS.filter((setting) => setting in looks)
 	updateBlockLook({
-		replacing: ['sf-font-', 'sf-text-', 'sf-leading-', 'sf-tracking-'],
-		classes: [
-			...themeClass(fontFamily, 'sf-font-'),
-			...themeClass(fontSize, 'sf-text-'),
-			...themeClass(lineHeight, 'sf-leading-'),
-			...themeClass(letterSpacing, 'sf-tracking-'),
-		],
-		style: {
-			'font-family': null,
-			'font-size': null,
-			'line-height': null,
-			'letter-spacing': null,
-		},
+		replacing: (className) =>
+			picked.some((setting) => setting === readLook(className)?.setting),
+		classes: picked.flatMap((setting) => {
+			const name = looks[setting]
+			return name ? [lookClass(setting, name)] : []
+		}),
+		style: Object.fromEntries(picked.map((setting) => [LOOKS[setting].property, null])),
 	})
 }
 </script>

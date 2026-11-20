@@ -51,7 +51,7 @@ const themeSize = computed(
 // A size picked, or none, replaces the block's own corners too.
 const pick = (picked: string | null) =>
 	updateBlockLook({
-		replacing: ['sf-radius-'],
+		replacing: (name) => name.startsWith('sf-radius-'),
 		classes: picked === null ? [] : [`sf-radius-${picked}`],
 		style: Object.fromEntries(CORNER_PROPERTIES.map((property) => [property, null])),
 	})

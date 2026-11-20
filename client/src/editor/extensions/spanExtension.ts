@@ -1,3 +1,4 @@
+import { isLookSpan } from '@/editor/extensions/textStyleMark'
 import { Node } from '@tiptap/vue-3'
 
 const Span = Node.create({
@@ -14,9 +15,8 @@ const Span = Node.create({
 		return [
 			{
 				tag: 'span',
-				getAttrs: () => {
-					return {}
-				},
+				// Text's looks are formatting, the text style mark's.
+				getAttrs: (el) => (isLookSpan(el) ? false : {}),
 			},
 		]
 	},

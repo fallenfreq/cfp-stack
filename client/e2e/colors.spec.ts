@@ -229,3 +229,48 @@ test('text with a theme colour and a fixed one shows the fixed one, which is wha
 	await openColor(page)
 	await expect(panel(page)).toContainText('Not a theme colour')
 })
+
+// Text's looks are one mark (textStyleMark.ts): a pick sets its own, keeping the others.
+test('text given a colour and then a font keeps both, and without its colour keeps the font', async ({
+	page,
+}) => {
+	await setPage(page, '<p id="words">Some words</p>')
+	await selectWords(page, 'words', 'words')
+	await openColor(page)
+	await panel(page).getByRole('button', { name: 'danger', exact: true }).click()
+	await toolbar(page).getByRole('button', { name: 'Font', exact: true }).click()
+	await panel(page).getByTitle('2', { exact: true }).click()
+	const span = page.locator('#words span')
+	await expect(span).toHaveAttribute('class', 'sf-color-danger sf-font-2')
+
+	await openColor(page)
+	await panel(page).getByRole('button', { name: 'No colour', exact: true }).click()
+	await expect(span).toHaveAttribute('class', 'sf-font-2')
+	await expect(span).toHaveText('words')
+})
+
+test('a size picked for pasted text takes only the size out of its style', async ({ page }) => {
+	await setPage(
+		page,
+		'<p id="words">Some <span style="color: red; font-family: Georgia; font-size: 2em">big</span> words</p>',
+	)
+	await selectWords(page, 'words', 'big')
+	await toolbar(page).getByRole('button', { name: 'Font', exact: true }).click()
+	await panel(page).getByRole('button', { name: '2xl', exact: true }).click()
+	const span = page.locator('#words span')
+	await expect(span).toHaveAttribute('class', 'sf-text-2xl sf-leading-snug')
+	await expect(span).toHaveAttribute('style', 'color: red; font-family: Georgia;')
+})
+
+test('a size picked across words in different fonts keeps each its font', async ({ page }) => {
+	await setPage(
+		page,
+		'<p id="words"><span class="sf-font-1">One</span> <span class="sf-font-2">two</span></p>',
+	)
+	await selectWords(page, 'words', 'One two')
+	await toolbar(page).getByRole('button', { name: 'Font', exact: true }).click()
+	await panel(page).getByRole('button', { name: '2xl', exact: true }).click()
+	const spans = page.locator('#words span')
+	await expect(spans.nth(0)).toHaveAttribute('class', 'sf-font-1 sf-text-2xl sf-leading-snug')
+	await expect(spans.nth(2)).toHaveAttribute('class', 'sf-font-2 sf-text-2xl sf-leading-snug')
+})

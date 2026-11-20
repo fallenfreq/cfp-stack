@@ -57,17 +57,15 @@ export function useToolbarNodeControl(props: { editor: Editor; context: ToolbarI
 		})
 	}
 
-	// A panel's pick: the classes starting with each prefix in `replacing` give way to `classes`,
-	// and each style property is set (null takes it off). The style is written only when one of
-	// them changes, as writing it can reformat what the author wrote.
+	// A panel's pick: the classes `replacing` says yes to give way to `classes`, and each style
+	// property is set (null takes it off). The style is written only when one of them changes, as
+	// writing it can reformat what the author wrote.
 	const updateBlockLook = (look: {
-		replacing: string[]
+		replacing: (name: string) => boolean
 		classes: string[]
 		style?: Record<string, string | null>
 	}) => {
-		const kept = blockClass.value
-			.split(/\s+/)
-			.filter((c) => c && !look.replacing.some((prefix) => c.startsWith(prefix)))
+		const kept = blockClass.value.split(/\s+/).filter((c) => c && !look.replacing(c))
 		const changes = Object.entries(look.style ?? {}).filter(
 			([property, value]) => getStyleProp(blockStyle.value, property) !== (value ?? ''),
 		)

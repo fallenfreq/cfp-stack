@@ -70,7 +70,10 @@ const selectedObject = computed(() => getClassToken(blockClass.value, 'sl-object
 
 // The chosen chip picked again takes it off.
 const select = (prefix: string, chosen: string | null, value: string) =>
-	updateBlockLook({ replacing: [prefix], classes: chosen === value ? [] : [prefix + value] })
+	updateBlockLook({
+		replacing: (name) => name.startsWith(prefix),
+		classes: chosen === value ? [] : [prefix + value],
+	})
 const selectAspect = (value: string) => select('sl-aspect-', selectedAspect.value, value)
 const selectObject = (value: string) => select('sl-object-', selectedObject.value, value)
 </script>

@@ -194,6 +194,9 @@ importers:
       '@tiptap/extension-text':
         specifier: ^3.32.0
         version: 3.32.0(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))
+      '@tiptap/extension-text-style':
+        specifier: ^3.32.0
+        version: 3.32.0(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))
       '@tiptap/extension-youtube':
         specifier: ^3.32.0
         version: 3.32.0(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))
@@ -1373,6 +1376,11 @@ packages:
     peerDependencies:
       '@tiptap/core': 3.32.0
       '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-text-style@3.32.0':
+    resolution: {integrity: sha512-+U8FkrNAU45+fHgo4DYfndS/WuhhyttZ+zTyObF1W4VJ8wDiAYqXkl71nQcmMJyyK47yeNUY9CfjUomIaEHhpA==}
+    peerDependencies:
+      '@tiptap/core': 3.32.0
 
   '@tiptap/extension-text@3.32.0':
     resolution: {integrity: sha512-sF0jIK67IHdZMnzv2mz5vPTyK7R0ui6/YZgFg+/bLnFCNmweVAoYcHZLlC7ISRnwu0mqJr+epNtzJepY1ZDCjg==}
@@ -4392,6 +4400,10 @@ snapshots:
     dependencies:
       '@tiptap/core': 3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0)
       '@tiptap/pm': 3.32.0
+
+  '@tiptap/extension-text-style@3.32.0(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))':
+    dependencies:
+      '@tiptap/core': 3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0)
 
   '@tiptap/extension-text@3.32.0(@tiptap/core@3.32.0(patch_hash=06c58af8dd5b0eb82ea50372d46759cf2d734d0fba52000d832adcf9a59d952f)(@tiptap/pm@3.32.0))':
     dependencies:

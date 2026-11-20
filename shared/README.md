@@ -10,6 +10,9 @@ on another's build. Keep it free of dependencies.
   validator.
 - `corners.ts`: the CSS properties that set a box's corners, for the Corners tool and the
   validator.
+- `textLooks.ts`: the looks text can take (a colour, a font, a size…) as the theme's fixed slots,
+  whether a class is one, and whether a span is text's looks or a span block, for the text style
+  mark, the Font tool and the code view's check, and later the validator.
 - `tsconfig.json` (`pnpm typecheck`): the repo's shared strict settings, as `validator/`'s are.
   None of its files imports another yet; the first that does by its `.ts` ending needs
   `rewriteRelativeImportExtensions` in `api/tsconfig.base.json`, as the API's check refuses it

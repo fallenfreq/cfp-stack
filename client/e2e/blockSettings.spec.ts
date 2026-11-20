@@ -73,6 +73,28 @@ test('a pick in Font sizes an icon selected whole, which stays selected', async 
 	await expect(icon).toHaveClass(selected)
 })
 
+// Font goes by the theme's sizes, not by what a class starts with: sf-text-block isn't one.
+test("Font shows and replaces a block's size, keeping its other sf-text- classes and its font", async ({
+	page,
+}) => {
+	await setPage(
+		page,
+		'<p id="block" class="sf-text-block sf-text-lg" style="font-family: Georgia">A block</p>',
+	)
+	await selectBlock(page, 'block')
+	await toolbar(page).getByRole('button', { name: 'Font', exact: true }).click()
+	await expect(panel(page).getByRole('button', { name: 'lg', exact: true })).toHaveClass(
+		named('sf-on-selected'),
+	)
+	await panel(page).getByRole('button', { name: '2xl', exact: true }).click()
+	const block = page.locator('#block')
+	await expect(block).toHaveClass(named('sf-text-2xl'))
+	await expect(block).toHaveClass(named('sf-text-block'))
+	await expect(block).not.toHaveClass(named('sf-text-lg'))
+	// A size keeps the block's own font.
+	await expect(block).toHaveAttribute('style', 'font-family: Georgia;')
+})
+
 for (const [kind, html] of [
 	['a paragraph', '<p id="block">A block</p>'],
 	['a Card', '<layout-card id="block"><p>In a Card</p></layout-card>'],

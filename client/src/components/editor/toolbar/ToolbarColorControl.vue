@@ -32,20 +32,20 @@ import ToolbarPanelItem from './ToolbarPanelItem.vue'
 
 const props = defineProps<{ editor: Editor; context: ToolbarItemContext; tooltip: string }>()
 
-const { open, mode, setOpen, commitMark, blockClass, blockStyle, updateBlockLook } =
+const { open, mode, setOpen, commitLooks, blockClass, blockStyle, updateBlockLook } =
 	useToolbarMarkControl(props)
 
 const text = (value: unknown) => (typeof value === 'string' && value ? value : null)
 
-// The colour applied: text's (its textColor mark), or a block's background (its sf-bg-* classes,
+// The colour applied: text's (its text style mark), or a block's background (its sf-bg-* classes,
 // or a background-color in its own style).
 const current = computed<{ theme: ThemeColor | null; fixed: string | null }>(() => {
 	if (mode.value === 'mark') {
-		const attrs = props.editor.getAttributes('textColor')
+		const attrs = props.editor.getAttributes('textStyle')
 		const color = text(attrs['color'])
 		return {
 			theme: color ? { color, alpha: text(attrs['alpha']) } : null,
-			fixed: text(attrs['fixed']),
+			fixed: getStyleProp(text(attrs['style']), 'color') || null,
 		}
 	}
 	return {
@@ -68,11 +68,11 @@ const swatchStyle = computed<CSSProperties>(() => {
 // A theme colour picked replaces whatever colour was there, a fixed one included; null removes it.
 const applyColor = (value: ThemeColor | null) => {
 	if (mode.value === 'mark') {
-		commitMark('textColor', value ? { ...value } : null)
+		commitLooks({ color: value?.color ?? null, alpha: value?.alpha ?? null })
 		return
 	}
 	updateBlockLook({
-		replacing: ['sf-bg-'],
+		replacing: (name) => name.startsWith('sf-bg-'),
 		classes: value ? themeColorClasses(value, 'sf-bg-', 'sf-bg-alpha-') : [],
 		style: { 'background-color': null },
 	})

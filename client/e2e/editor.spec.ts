@@ -1533,6 +1533,111 @@ test('a copy goes without an id the page has', async ({ page }) => {
 	await expect.soft(page.locator('.tiptap p:not([id])', { hasText: /^First$/ })).toHaveCount(1)
 })
 
+// A size on an icon read it as sized text, losing the icon (textStyleMark.ts); its word copied
+// pasted as the word alone, ProseMirror putting in only the text of an inline block the copy is
+// open into (copyAndPaste.ts).
+test('an icon with a size, copied whole, by its word or from a page, pastes as the icon', async ({
+	page,
+}) => {
+	await insertAtEnd(
+		page,
+		'<p>Go <span id="icon" class="material-symbols-rounded sf-icon">home</span> now</p>'
+			+ '<p id="whole-into">Here</p><p id="word-into">Here</p><p id="page-into">Here</p>',
+	)
+	const pasted = (id: string) =>
+		page.locator(`#${id} span.material-symbols-rounded.sf-icon.sf-text-2xl`)
+	const pasteAt = async (id: string) => {
+		await cursorAt(page, id, 2)
+		await page.keyboard.press('ControlOrMeta+v')
+		await settle(page)
+	}
+
+	// Sized with Font, as an author does.
+	await selectBlock(page, 'icon')
+	await page
+		.locator('.floating-toolbar')
+		.getByRole('button', { name: 'Font', exact: true })
+		.click()
+	await page
+		.locator('.toolbar-panel:popover-open')
+		.getByRole('button', { name: '2xl', exact: true })
+		.click()
+	await expect(page.locator('#icon')).toHaveClass(/\bsf-text-2xl\b/)
+
+	await selectBlock(page, 'icon')
+	await page.keyboard.press('ControlOrMeta+c')
+	await pasteAt('whole-into')
+	await expect.soft(pasted('whole-into'), 'copied whole').toHaveText('home')
+
+	await page.evaluate(() => {
+		const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+		editor.state.doc.descendants((node, pos) => {
+			if (node.attrs['id'] === 'icon')
+				editor
+					.chain()
+					.focus()
+					.setTextSelection({ from: pos + 1, to: pos + node.nodeSize - 1 })
+					.run()
+		})
+	})
+	await page.keyboard.press('ControlOrMeta+c')
+	await pasteAt('word-into')
+	await expect.soft(pasted('word-into'), 'its word copied').toHaveText('home')
+
+	// From a published page, ending the copy: copied alone, the browser copies only its word.
+	await page.evaluate(() => {
+		const elsewhere = document.createElement('div')
+		elsewhere.id = 'elsewhere'
+		elsewhere.innerHTML =
+			'<p>Go <span class="material-symbols-rounded sf-icon sf-text-2xl">home</span></p>'
+		document.body.append(elsewhere)
+		getSelection()!.selectAllChildren(elsewhere)
+	})
+	await page.keyboard.press('ControlOrMeta+c')
+	await page.locator('#elsewhere').evaluate((el) => el.remove())
+	await pasteAt('page-into')
+	await expect.soft(pasted('page-into'), 'from a page').toHaveText('home')
+})
+
+// A click just after an icon puts the cursor inside it, at its end: a copy from there holds the icon
+// empty, which pasted an empty icon (copyAndPaste.ts, the copy's edges).
+test("a copy from just inside an icon's end pastes its words alone", async ({ page }) => {
+	await insertAtEnd(
+		page,
+		'<p>Go <span id="from-icon" class="material-symbols-rounded sf-icon">home</span> now</p>'
+			+ '<p id="from-icon-into">Target</p>'
+			+ '<p>Go <span class="mine"><span id="from-inner-icon" class="material-symbols-rounded sf-icon">home</span></span> now</p>'
+			+ '<p id="from-inner-icon-into">Target</p>',
+	)
+	// From the icon's end to the line's end; then with a span block around the icon, left empty too.
+	for (const [icon, into, around] of [
+		['from-icon', 'from-icon-into', 0],
+		['from-inner-icon', 'from-inner-icon-into', 1],
+	] as const) {
+		await page.evaluate(
+			([icon, around]) => {
+				const editor = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!.editor!
+				editor.state.doc.descendants((node, pos) => {
+					if (node.attrs['id'] !== icon) return
+					const end = pos + node.nodeSize - 1
+					editor
+						.chain()
+						.focus()
+						.setTextSelection({ from: end, to: end + 1 + around + ' now'.length })
+						.run()
+				})
+			},
+			[icon, around] as const,
+		)
+		await page.keyboard.press('ControlOrMeta+c')
+		await cursorAt(page, into, 2)
+		await page.keyboard.press('ControlOrMeta+v')
+		await settle(page)
+		await expect.soft(page.locator(`#${into}`), icon).toHaveText('Ta nowrget')
+		await expect.soft(page.locator(`#${into} span`), icon).toHaveCount(0)
+	}
+})
+
 // What's cut or moved isn't a copy: no block already there has its id.
 test('a block cut and pasted, or moved, keeps its id', async ({ page }) => {
 	await insertAtEnd(
@@ -3561,14 +3666,59 @@ test("code the page can't keep keeps the code view open, saying what", async ({ 
 		['<p>Kept</p><!-- a note -->', "The page can't keep comments: <!-- a note -->."],
 		// Inline code is written with a class of its own.
 		['<p><code class="mine">c</code></p>', "The page can't keep the class mine on <code>."],
-		// A see-through step with no name isn't one.
+		// A look on other formatting says where it goes (sf-system.md, "Editor integration").
 		[
-			'<p><span class="sf-color-danger sf-color-alpha-">C</span></p>',
-			"The page can't keep the class sf-color-alpha- on <span>.",
+			'<p><strong class="sf-color-danger">B</strong></p>',
+			"The page can't keep the class sf-color-danger on <strong>. Put it on a span around it.",
 		],
 		[
-			'<p><span style="color: red; font-size: 2em">Big</span></p>',
-			"The page can't keep font-size in the style of <span>.",
+			'<p><code class="sf-color-danger sf-font-2">c</code></p>',
+			"The page can't keep the class sf-color-danger on <code> (and 1 more): inline code takes no looks.",
+		],
+		// A look in bold's style goes on a span too; two looks of one kind are one too many.
+		[
+			'<p><strong style="color: red">B</strong></p>',
+			"The page can't keep color in the style of <strong>. Put it on a span around it.",
+		],
+		[
+			'<p><span class="sf-color-danger sf-color-primary">x</span></p>',
+			"The page can't keep the class sf-color-primary on <span>.",
+		],
+		// A code block's code isn't inline code.
+		[
+			'<pre><code class="sf-color-danger">x</code></pre>',
+			"The page can't keep the class sf-color-danger on <code>.",
+		],
+		// A mark inside that excludes one around it takes its words: looks inside looks, with bold
+		// between too, and inline code.
+		[
+			'<p><span class="sf-color-danger">red <span class="sf-font-2">and serif</span></span></p>',
+			`The page can't keep <span class="sf-font-2">and serif</span> inside <span>. Put the looks on one span.`,
+		],
+		[
+			'<p><span class="sf-text-2xl"><span class="sf-color-danger">red</span></span></p>',
+			`The page can't keep <span class="sf-color-danger">red</span> inside <span>. Put the looks on one span.`,
+		],
+		[
+			'<p><span class="sf-font-2">a <strong><span class="sf-color-danger">b</span></strong></span></p>',
+			`The page can't keep <span class="sf-color-danger">b</span> inside <span>. Put the looks on one span.`,
+		],
+		[
+			'<p><span style="color: red">a <span class="sf-color-primary">b</span></span></p>',
+			`The page can't keep <span class="sf-color-primary">b</span> inside <span>. Put the looks on one span.`,
+		],
+		[
+			'<p><span class="sf-color-danger">a <code>b</code></span></p>',
+			"The page can't keep <code>b</code> inside <span>: inline code takes no looks.",
+		],
+		// Other formatting around inline code, which takes none.
+		[
+			'<p><strong>a <code>b</code></strong></p>',
+			"The page can't keep <code>b</code> inside <strong>: inline code takes no other formatting.",
+		],
+		[
+			'<p><a href="https://example.test">a <code>b</code></a></p>',
+			"The page can't keep <code>b</code> inside <a>: inline code takes no other formatting.",
 		],
 		[
 			'<pre><code>a<strong>b</strong></code></pre>',
@@ -3576,7 +3726,7 @@ test("code the page can't keep keeps the code view open, saying what", async ({ 
 		],
 		[
 			'<p><strong><strong>x</strong></strong></p>',
-			"The page can't keep <strong><strong>x</strong></strong> inside <p>.",
+			"The page can't keep <strong>x</strong> inside <strong>.",
 		],
 		['<pre>a<br>b</pre>', "The page can't keep <br> inside <pre>."],
 		[
@@ -3638,13 +3788,13 @@ test("code the page can't keep keeps the code view open, saying what", async ({ 
 		],
 		// A comment in a style hides nothing after it.
 		[
-			'<p><span style="color: red; /* big */ font-size: 2em">B</span></p>',
-			"The page can't keep font-size in the style of <span>.",
+			'<p><strong style="/* big */ font-size: 2em">B</strong></p>',
+			"The page can't keep font-size in the style of <strong>. Put it on a span around it.",
 		],
 		// A style's properties as written, not their parts.
 		[
-			'<p><span style="color: red; margin: 0 auto">Centred</span></p>',
-			"The page can't keep margin in the style of <span>.",
+			'<p><strong style="margin: 0 auto">Centred</strong></p>',
+			"The page can't keep margin in the style of <strong>.",
 		],
 		// Each asked about on its own: the width, which the cells read, is kept.
 		[
@@ -3699,6 +3849,18 @@ test('code the page rewrites itself goes into the page', async ({ page }) => {
 		'<div data-youtube-video><iframe src="https://www.youtube.com/embed/3lTUAWOgoHs"></iframe></div>',
 		// A colour's classes, written back as they came, one the theme makes no colour for too.
 		'<p><span class="sf-color-primary sf-color-alpha-3">Colour</span></p>',
+		// Text's looks together, as classes or in its style (textStyleMark.ts).
+		'<p><span class="sf-color-danger sf-font-2 sf-text-lg">Looks</span></p>',
+		'<p><span style="color: red; font-size: 2em">Big</span></p>',
+		'<p><span style="font-size: 20px">Sized</span></p>',
+		// A span block keeps a look beside anything else: its own class or id, another style property;
+		// a step with no name isn't a look.
+		'<p><span id="note" class="sf-color-danger mine">Note</span></p>',
+		'<p><span style="color: red; margin: 0 auto">Centred</span></p>',
+		'<p><span class="sf-color-danger sf-color-alpha-">C</span></p>',
+		'<p><span class="material-symbols-rounded sf-icon sf-text-2xl">home</span></p>',
+		// Looks around a span block holding its own: ProseMirror puts the outer ones on the block.
+		'<p><span class="sf-font-2">a <span id="inside">b <span class="sf-color-danger">c</span></span></span></p>',
 	]
 	for (const code of kept) {
 		await switchView(page, true)

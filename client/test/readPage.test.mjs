@@ -253,15 +253,15 @@ test("each block's own style is read as CSS, marked where the rules for a box th
 })
 
 test("the styles text and inline blocks are written with are read on the block they're in, once for each written alike", () => {
-	const { bold, textColor } = schema.marks
-	const fixed = textColor.create({ fixed: 'red' })
+	const { bold, textStyle } = schema.marks
+	const fixed = textStyle.create({ style: 'color: red;' })
 	const doc = page(
 		block(
 			'paragraph',
 			{ id: 'line' },
 			schema.text('Red', [fixed]),
 			schema.text(' and bold', [bold.create(), fixed]),
-			schema.text(' themed', [textColor.create({ color: 'primary-5' })]),
+			schema.text(' themed', [textStyle.create({ color: 'primary-5' })]),
 		),
 		block('paragraph', null, block('span', { id: 'span' }, schema.text('In a span', [fixed]))),
 		// The colour around an inline block, not its text: on the block it's in.

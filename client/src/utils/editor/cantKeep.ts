@@ -1,3 +1,5 @@
+import { TextStyleMark } from '@/editor/extensions/textStyleMark'
+import { isLookProperty, readLook } from '@somefreq-app/shared/textLooks'
 import {
 	DOMParser,
 	DOMSerializer,
@@ -34,6 +36,13 @@ const styleProperties = (style: string) => {
 		.map((declaration) => property(declaration.split(':')[0]!.trim()))
 	return [...new Set(named)].filter((name) => name && tmp.style.getPropertyValue(name))
 }
+
+// What can't be kept, and where it goes instead.
+interface Problem {
+	what: string
+	advice: string
+}
+const problem = (what: string, advice = ''): Problem => ({ what, advice })
 
 const withFrom = (out: DOMOutputSpec, from: unknown): DOMOutputSpec => {
 	if (typeof from !== 'number' || typeof out === 'string') return out
@@ -83,14 +92,18 @@ const watch = (elements: Element[], seen: (el: Element, name: string) => void) =
  * page's own way (a cell's `align`, as `text-align`), by another element (a column's width, by
  * its cells) or left out as the default it is (`colspan="1"`). Anything else is lost, as is an
  * element nothing was written for (bold in a code block), and a comment. What the page adds or
- * rewrites itself (spaces, attribute order, `color: red;`) doesn't count.
+ * rewrites itself (spaces, attribute order, `color: red;`) doesn't count. A mark is lost too on
+ * words that don't come out inside what was written for it, a mark inside having replaced it
+ * (inline code in bold, looks inside looks); and a look the page can't keep where it is says where
+ * it goes.
  */
 export const cantKeep = (schema: Schema, code: string): string | null => {
 	const body = elementFromString(code)
 	const elements = [...body.querySelectorAll('*')]
 	const index = new Map(elements.map((el, i) => [el, i]))
-	// The rule that took each element.
+	// The rule that took each element, and for which block or mark.
 	const taken = new Map<Element, TagParseRule>()
+	const takenAs = new Map<Element, { mark: boolean; name: string }>()
 
 	// Which attributes the page read of each element: of the one its rule took (`own`), or of
 	// another (a cell, of its table's column list); not when a rule tries an element and passes it
@@ -104,7 +117,7 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 	let reading: [Element, string][] | null = null
 	watch(elements, (el, read) => reading?.push([el, read]))
 
-	const traced = (rule: TagParseRule): TagParseRule => ({
+	const traced = (rule: TagParseRule, as: { mark: boolean; name: string }): TagParseRule => ({
 		...rule,
 		getAttrs: (dom) => {
 			const seen: [Element, string][] = []
@@ -117,6 +130,7 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 			}
 			if (attrs === false) return false
 			taken.set(dom, rule)
+			takenAs.set(dom, as)
 			for (const [el, read] of seen) noted(el === dom ? reads.own : reads.other, el, read)
 			return { ...attrs, [FROM]: index.get(dom) ?? null }
 		},
@@ -131,7 +145,9 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 				: {
 						...spec,
 						attrs: { ...spec.attrs, [FROM]: { default: null } },
-						...(parseDOM && { parseDOM: parseDOM.map(traced) }),
+						...(parseDOM && {
+							parseDOM: parseDOM.map((rule) => traced(rule, { mark: false, name })),
+						}),
 						...(toDOM && { toDOM: (node) => withFrom(toDOM(node), node.attrs[FROM]) }),
 					}
 	})
@@ -143,7 +159,9 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 			attrs: { ...spec.attrs, [FROM]: { default: null } },
 			// A rule for a style (bold's `font-weight`) reads no element of its own.
 			...(parseDOM && {
-				parseDOM: parseDOM.map((rule) => (rule.tag === undefined ? rule : traced(rule))),
+				parseDOM: parseDOM.map((rule) =>
+					rule.tag === undefined ? rule : traced(rule, { mark: true, name }),
+				),
 			}),
 			...(toDOM && {
 				toDOM: (mark, inline) => withFrom(toDOM(mark, inline), mark.attrs[FROM]),
@@ -160,6 +178,48 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 		writtenFor.set(from, [...(writtenFor.get(from) ?? []), el])
 	}
 	const written = (el: Element) => writtenFor.get(index.get(el)!) ?? []
+	const looks = check.marks[TextStyleMark.name]
+	if (!looks) throw new Error("The page's schema has no text style mark")
+	// The mark whose rule took an element, and the one it was written as: a code block's `<code>`,
+	// taken by inline code's rule, is written as the block.
+	const markOf = (el: Element) => {
+		const as = takenAs.get(el)
+		return as?.mark ? check.marks[as.name] : undefined
+	}
+	const writtenMark = (el: Element) => (written(el).length ? markOf(el) : undefined)
+	// The words a part holds, compared spaces aside, as the page tidies them.
+	const words = (el: Element) => (el.textContent ?? '').replace(/\s+/g, '')
+	// The element of a mark inside this mark's element that took words from it: written outside
+	// what was written for it, its mark excluding this one (inline code in bold, looks inside
+	// looks), as ProseMirror reads it. Only when words didn't all come out inside.
+	const takenFrom = (el: Element): Element | undefined => {
+		const mark = markOf(el)
+		const as = written(el)
+		if (!mark || as.map(words).join('') === words(el)) return undefined
+		const inner = [...el.querySelectorAll('*')].filter(
+			(part) => markOf(part) && written(part).some((w) => !as.some((o) => o.contains(w))),
+		)
+		return inner.find((part) => markOf(part)?.excludes(mark))
+	}
+	// What to write instead: looks on one span, and inline code, the one mark that excludes
+	// others, on its own.
+	const insideAdvice = (outer: Element, inner: Element) => {
+		const [outerMark, innerMark] = [markOf(outer), markOf(inner)]
+		if (outerMark === looks && innerMark === looks) return '. Put the looks on one span'
+		if (!outerMark || !innerMark || innerMark === outerMark || !innerMark.excludes(outerMark))
+			return ''
+		return outerMark === looks
+			? ': inline code takes no looks'
+			: ': inline code takes no other formatting'
+	}
+	// Where a look goes, on other formatting, which can't keep it.
+	const lookAdvice = (el: Element, isLook: boolean) => {
+		const mark = writtenMark(el)
+		if (!isLook || !mark || mark === looks) return ''
+		return mark.excludes(looks)
+			? ': inline code takes no looks'
+			: '. Put it on a span around it'
+	}
 	// What the page writes at an element's place: what was written for it, or else what it writes
 	// there as part of the block around it (a code block's code, a table's body), the same one of
 	// that tag where it writes several.
@@ -178,11 +238,20 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 				.slice(nth, nth + 1),
 		)
 	}
-	const lost = (el: Element): string[] => {
+	const lost = (el: Element): Problem[] => {
 		const rule = taken.get(el)
 		const kind = rule ? kindOf(rule) : new Set<string>()
 		const attributes = [...el.attributes].filter(({ name }) => !kind.has(name))
 		const writtenAs = writtenAt(el)
+		const inner = takenFrom(el)
+		const inside = inner
+			? [
+					problem(
+						`${short(inner.outerHTML, 40)} inside ${label(el)}`,
+						insideAdvice(el, inner),
+					),
+				]
+			: []
 		// Its own block or mark, written: what its rule read of it, its settings keep.
 		const ownRule = rule && written(el).length ? rule : null
 		const read = (what: string) =>
@@ -195,45 +264,64 @@ export const cantKeep = (schema: Schema, code: string): string | null => {
 			|| (!!rule?.ignore
 				&& [...el.querySelectorAll('*')].some((part) => reads.other.has(part)))
 		if (!rule?.skip && !writtenAs.length && !readElsewhere) {
+			if (inside.length) return inside
 			// Spaces the page takes out at a line's start or end (a bold space) leave nothing to write.
 			if (!el.children.length && el.textContent && !el.textContent.trim()) return []
 			const around = el.parentElement
 			return [
-				short(el.outerHTML, 40)
-					+ (around && around !== body ? ` inside ${label(around)}` : ''),
+				problem(
+					short(el.outerHTML, 40)
+						+ (around && around !== body ? ` inside ${label(around)}` : ''),
+				),
 			]
 		}
-		return attributes.flatMap(({ name, value }): string[] => {
-			if (name === 'class')
-				return [...el.classList]
-					.filter((cls) => !writtenAs.some((w) => w.classList.contains(cls)))
-					.map((cls) => `the class ${cls} on ${label(el)}`)
-			if (name === 'style')
-				return styleProperties(value)
-					.filter(
-						(p) =>
-							!writtenAs.some(
-								(w) => w instanceof HTMLElement && w.style.getPropertyValue(p),
+		return [
+			...inside,
+			...attributes.flatMap(({ name, value }): Problem[] => {
+				if (name === 'class')
+					return [...el.classList]
+						.filter((cls) => !writtenAs.some((w) => w.classList.contains(cls)))
+						.map((cls) =>
+							problem(
+								`the class ${cls} on ${label(el)}`,
+								lookAdvice(el, !!readLook(cls)),
 							),
-					)
-					.map((p) => `${p} in the style of ${label(el)}`)
-			if (writtenAs.some((w) => w.hasAttribute(name)) || read(name)) return []
-			return [
-				`${value ? `${name}=${quoted(value)}` : name} on ${name === 'id' ? `<${el.localName}>` : label(el)}`,
-			]
-		})
+						)
+				if (name === 'style')
+					return styleProperties(value)
+						.filter(
+							(p) =>
+								!writtenAs.some(
+									(w) => w instanceof HTMLElement && w.style.getPropertyValue(p),
+								),
+						)
+						.map((p) =>
+							problem(
+								`${p} in the style of ${label(el)}`,
+								lookAdvice(el, isLookProperty(p)),
+							),
+						)
+				if (writtenAs.some((w) => w.hasAttribute(name)) || read(name)) return []
+				return [
+					problem(
+						`${value ? `${name}=${quoted(value)}` : name} on ${name === 'id' ? `<${el.localName}>` : label(el)}`,
+					),
+				]
+			}),
+		]
 	}
 
-	const problems: string[] = []
+	const problems: Problem[] = []
 	const walker = document.createTreeWalker(
 		body,
 		NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_COMMENT,
 	)
 	for (let at = walker.nextNode(); at; at = walker.nextNode()) {
-		if (at instanceof Comment) problems.push(`comments: <!--${short(at.data)}-->`)
+		if (at instanceof Comment) problems.push(problem(`comments: <!--${short(at.data)}-->`))
 		else if (at instanceof Element) problems.push(...lost(at))
 	}
-	if (!problems.length) return null
+	const [first] = problems
+	if (!first) return null
 	const more = problems.length - 1
-	return `The page can't keep ${problems[0]}${more ? ` (and ${more} more)` : ''}.`
+	return `The page can't keep ${first.what}${more ? ` (and ${more} more)` : ''}${first.advice}.`
 }

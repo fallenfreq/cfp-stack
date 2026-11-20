@@ -5,7 +5,8 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: the owner's pick.
+Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ideas"), and a
+suggestion for a fixed font or size ("Editor").
 
 ## Bigger work
 
@@ -112,18 +113,19 @@ Next: the owner's pick.
   address, so a copy has none, and nor does the code view's code, so an edit there loses it. A
   paste or the code view brings one in: the code view's check counts the address as kept, as the
   page reads it (measured).
-- **A span with a colour takes no other look or settings.** A span block with a colour in its
-  style or a theme colour class (from its panel, or a saved page) reads back from the code view as
-  coloured text, its other classes and id gone, which the code view refuses: the colour's rule
-  takes any span with a colour, before the span block's. A span with a colour and a font
-  (`class="sf-color-danger sf-font-2"`) loses the font the same way, pasted too, where nothing
-  says so (seen by an agent, 2026-11-14).
+- **A fixed font, size, line height or letter spacing on text** has no suggestion, as
+  `prefer-theme-color` has for a colour; pasted text keeps them now (`sf-system.md`, "Editor
+  integration"). Its rule's name is the owner's.
+- **The cursor inside an icon.** A click just after an icon, or the arrow keys in Chrome, put the
+  cursor inside it, at its end (measured). From there, in Chrome, Shift and an arrow move the
+  browser's selection but not the editor's, so a copy is the browser's own (its computed styles,
+  measured).
+- **Enter inside a span block does nothing** (measured).
 - **The code view's check goes by names, not values.** An attribute the page writes with a value
   of its own (a video's `autoplay`, `loop`), or reads but can't take (`<ol start="x">`, written as
   `start="NaN"`; `<td align="justify">`; `<col width="50%">`, read as 50 pixels), isn't refused;
   nor is an option typed into a video's address (`autoplay=1`), which the page writes again its
-  own way. Bold or a link on inline code goes, as inline code takes no other mark, while the
-  element keeps it on the rest of its text: the check goes by element.
+  own way.
 - **A video's address comes back in the page's form.** After an edit in the code view, a
   `youtu.be/…` or `/shorts/…` address is saved as `watch?v=…`: the same video for visitors. A start
   set on a `youtu.be/…` or `/embed/…` address is lost there, as TipTap writes none in those (nor
@@ -198,8 +200,9 @@ Next: the owner's pick.
   copied, and in a list they join it; going on into the next item, the item comes too, and they
   nest under the item pasted at (`copyAndPaste.ts`, `withSubItems`).
 - **Styles from another page.** Items copied from a web page in Chrome can bring the browser's own
-  inline styles (`style="box-sizing: border-box; …"`), saved on the blocks pasted (seen with a copy
-  made in the page, not yet with a real site).
+  inline styles (`style="box-sizing: border-box; …"`), saved on the blocks pasted, and each run of
+  its text is a span block holding the computed font, size, colour and background (seen with a
+  copy made in the page, not yet with a real site).
 - **Alt-copy by hand.** A real Option-drag in macOS Chrome and Safari is unchecked: the handle
   allows only a move (`effectAllowed`, `FloatingDragHandle.vue`), and Playwright's Alt may not
   show what a person gets.
@@ -275,6 +278,8 @@ Next: the owner's pick.
   holds for Shadow and Corners; their chips carry a title or a font, so the row would take them.
 - Shadow lights "none" for a shadow class the theme has no size for, where Corners says "Not a
   theme size" (`ToolbarShadowControl.vue`, `readShape`).
+- The theme seed's text tokens (`api/src/domain/seed.ts`) write the slots `shared/textLooks.ts`
+  lists again.
 - A chip's "chosen" shows only in its look (`SfChip`'s `selected`): a screen reader can't hear
   which size or font is chosen, nor can a check ask for it by role.
 
@@ -329,6 +334,16 @@ Next: the owner's pick.
   2026-10-18: not now).
 - **Pasting warns of what the page can't keep,** as leaving the code view does (owner,
   2026-10-27).
+- **Enter splits a span block in two** (owner, 2026-11-19: a feature for later): today Enter
+  inside one does nothing, which matters most for text pasted from another page or app, each run
+  of it a span block.
+- **A converter for pasted HTML** (owner, 2026-11-15: later, with or after the paste warnings):
+  other sources' forms into the page's own before the editor reads them (ProseMirror's
+  `transformPastedHTML`), so the reading rules see only the page's form. A Docs or Word run's
+  colour, font and size as looks, `font-weight: 700` as bold, nested styled spans flattened.
+  Narrow and measured from real copies, or a paste-cleaning library: flattening nested styles
+  copies CSS's cascade. Never in the code view, where the author's code is refused with what to
+  write instead, not rewritten.
 - **Keeping a style the page turns into a mark** (`font-weight: bold` on `<em>`), which the code
   view refuses for now (owner, 2026-10-27).
 - **Tick boxes and column widths in a copy to another app.** A copy has neither, as a block's HTML

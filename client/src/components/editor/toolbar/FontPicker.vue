@@ -6,7 +6,7 @@
 				<SfChip
 					size="xs"
 					title="Default family"
-					:selected="!activeFamilyVar"
+					:selected="!activeFamily"
 					@mousedown.prevent
 					@click="pickFamily(null)"
 				>
@@ -14,13 +14,13 @@
 				</SfChip>
 				<SfChip
 					v-for="f in families"
-					:key="f.cssVar"
+					:key="f.name"
 					size="xs"
-					:selected="activeFamilyVar === f.cssVar"
+					:selected="activeFamily === f.name"
 					:style="{ fontFamily: f.value }"
-					:title="f.label"
+					:title="f.name"
 					@mousedown.prevent
-					@click="pickFamily(f.cssVar)"
+					@click="pickFamily(f.name)"
 				>
 					Aa
 				</SfChip>
@@ -33,7 +33,7 @@
 				<SfChip
 					size="xs"
 					title="Default size"
-					:selected="!activeSizeVar"
+					:selected="!activeSize"
 					@mousedown.prevent
 					@click="pickSize(null)"
 				>
@@ -41,14 +41,14 @@
 				</SfChip>
 				<SfChip
 					v-for="s in sizes"
-					:key="s.cssVar"
+					:key="s.name"
 					size="xs"
-					:selected="activeSizeVar === s.cssVar"
+					:selected="activeSize === s.name"
 					:title="s.value"
 					@mousedown.prevent
-					@click="pickSize(s.cssVar)"
+					@click="pickSize(s.name)"
 				>
-					{{ s.label }}
+					{{ s.name }}
 				</SfChip>
 			</div>
 		</div>
@@ -59,7 +59,7 @@
 				<SfChip
 					size="xs"
 					title="Default line height"
-					:selected="!activeLeadingVar"
+					:selected="!activeLeading"
 					@mousedown.prevent
 					@click="pickLeading(null)"
 				>
@@ -67,14 +67,14 @@
 				</SfChip>
 				<SfChip
 					v-for="l in leading"
-					:key="l.cssVar"
+					:key="l.name"
 					size="xs"
-					:selected="activeLeadingVar === l.cssVar"
+					:selected="activeLeading === l.name"
 					:title="`line-height: ${l.value}`"
 					@mousedown.prevent
-					@click="pickLeading(l.cssVar)"
+					@click="pickLeading(l.name)"
 				>
-					{{ l.label }}
+					{{ l.name }}
 				</SfChip>
 			</div>
 		</div>
@@ -85,7 +85,7 @@
 				<SfChip
 					size="xs"
 					title="Default letter spacing"
-					:selected="!activeTrackingVar"
+					:selected="!activeTracking"
 					@mousedown.prevent
 					@click="pickTracking(null)"
 				>
@@ -93,14 +93,14 @@
 				</SfChip>
 				<SfChip
 					v-for="t in tracking"
-					:key="t.cssVar"
+					:key="t.name"
 					size="xs"
-					:selected="activeTrackingVar === t.cssVar"
+					:selected="activeTracking === t.name"
 					:title="`letter-spacing: ${t.value}`"
 					@mousedown.prevent
-					@click="pickTracking(t.cssVar)"
+					@click="pickTracking(t.name)"
 				>
-					{{ t.label }}
+					{{ t.name }}
 				</SfChip>
 			</div>
 		</div>
@@ -109,16 +109,13 @@
 
 <script setup lang="ts">
 import SfChip from '@/components/SfChip.vue'
-import {
-	SIZE_TO_LEADING,
-	parseFontVar,
-	useFontPalette,
-	type FontStyleAttrs,
-} from '@/utils/editor/fontPalette'
+import { SIZE_TO_LEADING, useFontPalette, type FontLooks } from '@/utils/editor/fontPalette'
+import { SIZES } from '@somefreq-app/shared/textLooks'
 import { ref, watch } from 'vue'
 
 const { families, sizes, leading, tracking } = useFontPalette()
 
+// Each a slot's name ('2', 'lg'), or none.
 const props = defineProps<{
 	fontFamily: string | null
 	fontSize: string | null
@@ -126,52 +123,46 @@ const props = defineProps<{
 	letterSpacing: string | null
 }>()
 
-const emit = defineEmits<{ commit: [attrs: FontStyleAttrs] }>()
+// A pick sends only what it changes: a size, with its paired line height.
+const emit = defineEmits<{ commit: [looks: Partial<FontLooks>] }>()
 
-const activeFamilyVar = ref<string | null>(null)
-const activeSizeVar = ref<string | null>(null)
-const activeLeadingVar = ref<string | null>(null)
-const activeTrackingVar = ref<string | null>(null)
+const activeFamily = ref<string | null>(null)
+const activeSize = ref<string | null>(null)
+const activeLeading = ref<string | null>(null)
+const activeTracking = ref<string | null>(null)
 
 watch(
 	() => [props.fontFamily, props.fontSize, props.lineHeight, props.letterSpacing] as const,
 	([fam, size, lead, track]) => {
-		activeFamilyVar.value = parseFontVar(fam)
-		activeSizeVar.value = parseFontVar(size)
-		activeLeadingVar.value = parseFontVar(lead)
-		activeTrackingVar.value = parseFontVar(track)
+		activeFamily.value = fam
+		activeSize.value = size
+		activeLeading.value = lead
+		activeTracking.value = track
 	},
 	{ immediate: true },
 )
 
-const commit = () =>
-	emit('commit', {
-		fontFamily: activeFamilyVar.value ? `var(${activeFamilyVar.value})` : null,
-		fontSize: activeSizeVar.value ? `var(${activeSizeVar.value})` : null,
-		lineHeight: activeLeadingVar.value ? `var(${activeLeadingVar.value})` : null,
-		letterSpacing: activeTrackingVar.value ? `var(${activeTrackingVar.value})` : null,
-	})
-
-const pickFamily = (cssVar: string | null) => {
-	activeFamilyVar.value = cssVar
-	commit()
+const pickFamily = (name: string | null) => {
+	activeFamily.value = name
+	emit('commit', { fontFamily: name })
 }
 
-const pickSize = (cssVar: string | null) => {
-	activeSizeVar.value = cssVar
+const pickSize = (name: string | null) => {
+	activeSize.value = name
 	// Auto-pair leading when a size is chosen; clear leading when size is cleared.
-	activeLeadingVar.value = cssVar ? (SIZE_TO_LEADING[cssVar] ?? null) : null
-	commit()
+	const size = SIZES.find((s) => s === name)
+	activeLeading.value = size ? SIZE_TO_LEADING[size] : null
+	emit('commit', { fontSize: name, lineHeight: activeLeading.value })
 }
 
-const pickLeading = (cssVar: string | null) => {
-	activeLeadingVar.value = cssVar
-	commit()
+const pickLeading = (name: string | null) => {
+	activeLeading.value = name
+	emit('commit', { lineHeight: name })
 }
 
-const pickTracking = (cssVar: string | null) => {
-	activeTrackingVar.value = cssVar
-	commit()
+const pickTracking = (name: string | null) => {
+	activeTracking.value = name
+	emit('commit', { letterSpacing: name })
 }
 </script>
 

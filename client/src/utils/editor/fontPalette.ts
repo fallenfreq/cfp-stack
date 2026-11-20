@@ -1,60 +1,65 @@
 import { useThemeTokensStore } from '@/stores/themeTokensStore'
+import {
+	FONTS,
+	LEADINGS,
+	SIZES,
+	TRACKINGS,
+	type Leading,
+	type LookSetting,
+	type Size,
+} from '@somefreq-app/shared/textLooks'
 import { computed } from 'vue'
 
 export interface FontOption {
-	cssVar: string // e.g. '--sf-font-1'
+	name: string // the slot's name, e.g. '1', 'lg'
 	value: string // resolved value (full font-family string or rem size)
-	label: string // display name, e.g. '1', 'lg'
 }
 
-export interface FontStyleAttrs {
-	fontFamily: string | null
-	fontSize: string | null
-	lineHeight: string | null
-	letterSpacing: string | null
-}
+// The Font tool's looks, each a slot's name or none.
+export const FONT_SETTINGS = [
+	'fontFamily',
+	'fontSize',
+	'lineHeight',
+	'letterSpacing',
+] as const satisfies readonly LookSetting[]
+export type FontSetting = (typeof FONT_SETTINGS)[number]
+export type FontLooks = Record<FontSetting, string | null>
 
 // Auto-pair: when a font size is picked, this leading is applied automatically.
 // User can override with the leading chips afterwards.
-export const SIZE_TO_LEADING: Record<string, string> = {
-	'--sf-text-xs': '--sf-leading-normal',
-	'--sf-text-sm': '--sf-leading-normal',
-	'--sf-text-base': '--sf-leading-normal',
-	'--sf-text-lg': '--sf-leading-relaxed',
-	'--sf-text-xl': '--sf-leading-relaxed',
-	'--sf-text-2xl': '--sf-leading-snug',
-	'--sf-text-3xl': '--sf-leading-snug',
-	'--sf-text-4xl': '--sf-leading-tight',
-	'--sf-text-5xl': '--sf-leading-tight',
-	'--sf-text-6xl': '--sf-leading-none',
-	'--sf-text-7xl': '--sf-leading-none',
-	'--sf-text-8xl': '--sf-leading-none',
-	'--sf-text-9xl': '--sf-leading-none',
-}
-
-// Parse a stored CSS value like 'var(--sf-font-1)' → '--sf-font-1', or null.
-export const parseFontVar = (value: string | null | undefined): string | null => {
-	const m = value?.trim().match(/^var\(\s*(--[\w-]+)\s*\)$/)
-	return m ? m[1]! : null
+export const SIZE_TO_LEADING: Record<Size, Leading> = {
+	xs: 'normal',
+	sm: 'normal',
+	base: 'normal',
+	lg: 'relaxed',
+	xl: 'relaxed',
+	'2xl': 'snug',
+	'3xl': 'snug',
+	'4xl': 'tight',
+	'5xl': 'tight',
+	'6xl': 'none',
+	'7xl': 'none',
+	'8xl': 'none',
+	'9xl': 'none',
 }
 
 export function useFontPalette() {
 	const store = useThemeTokensStore()
 
-	function buildPalette(prefix: string): FontOption[] {
-		return store.rootTokens
-			.filter((t) => t.name.startsWith(prefix))
-			.map((t) => ({
-				cssVar: t.name,
-				value: t.value,
-				label: t.name.slice(prefix.length),
-			}))
+	// The theme's values for the fixed slots it sets.
+	function buildPalette(prefix: string, slots: readonly string[]): FontOption[] {
+		return store.rootTokens.flatMap((t) => {
+			const name = t.name.slice(prefix.length)
+			return t.name.startsWith(prefix) && slots.includes(name)
+				? [{ name, value: t.value }]
+				: []
+		})
 	}
 
-	const families = computed(() => buildPalette('--sf-font-'))
-	const sizes = computed(() => buildPalette('--sf-text-'))
-	const leading = computed(() => buildPalette('--sf-leading-'))
-	const tracking = computed(() => buildPalette('--sf-tracking-'))
+	const families = computed(() => buildPalette('--sf-font-', FONTS))
+	const sizes = computed(() => buildPalette('--sf-text-', SIZES))
+	const leading = computed(() => buildPalette('--sf-leading-', LEADINGS))
+	const tracking = computed(() => buildPalette('--sf-tracking-', TRACKINGS))
 
 	return { families, sizes, leading, tracking }
 }

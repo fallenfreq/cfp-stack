@@ -3,10 +3,9 @@ import { AllowAttributesExtension } from '@/editor/extensions/allowAttributesExt
 import { CopyAndPaste } from '@/editor/extensions/copyAndPaste'
 import { CustomTaskItem } from '@/editor/extensions/customTaskItem'
 import Div from '@/editor/extensions/divExtension'
-import FontStyle from '@/editor/extensions/fontStyleMark'
 import { OwnLook } from '@/editor/extensions/ownLook'
 import Span from '@/editor/extensions/spanExtension'
-import TextColor from '@/editor/extensions/textColorMark'
+import { TextStyleMark } from '@/editor/extensions/textStyleMark'
 import { HEADING_CLASS } from '@somefreq-app/shared/headings'
 import { Blockquote } from '@tiptap/extension-blockquote'
 import Heading, { type Level } from '@tiptap/extension-heading'
@@ -148,8 +147,7 @@ export function getContentExtensions({
 		TableHeader,
 		TableRow,
 		Span,
-		TextColor,
-		FontStyle,
+		TextStyleMark,
 		Div,
 		...registerCustomNodes(),
 		AllowAttributesExtension,

@@ -1273,9 +1273,9 @@ outside the editor.
 Picker choices land in storage by a uniform pattern:
 
 - **Palette pick** → class pair on `node.attrs.class` (`sf-bg-primary-5` + `sf-bg-alpha-3`,
-  same shape for `sf-color-*`, `sf-border-*`, `sf-shadow-color-*`); text's colour is a mark
-  written as the same classes. Stays in the cascade layer system; state classes and compound
-  rules can still intercept. Kept as the colour's names (Colours and alpha).
+  same shape for `sf-color-*`, `sf-border-*`, `sf-shadow-color-*`); text's colour is one of its
+  looks, written as the same classes (Text's looks). Stays in the cascade layer system; state
+  classes and compound rules can still intercept. Kept as the colour's names (Colours and alpha).
 - **Shape/scale token pick** (`sf-shadow-md`, `sf-radius-2`, `sf-text-xl`) → single class
   on `node.attrs.class`; the utility rule composes with any accompanying runtime state
   vars.
@@ -1288,6 +1288,50 @@ A tool changes a block's settings in place (`updateAttributesAt`), never by writ
 anew, so a block selected whole stays selected and keeps its other settings; only a change of the
 block's kind replaces it. A block inside a line (an icon, a span block) too. A lint rule keeps it
 so (`client/eslint.config.js`).
+
+**Text's looks** (a colour and its step, a font, size, line height, letter spacing) are one mark,
+TipTap's text style (`textStyleMark.ts`): a setting for each look, holding its slot's name
+(`danger`, `2`), written as its class, and `style`, a look written as a value (`color: red`). With
+a mark per look, the first to read a span kept only its own looks: a colour and a font lost the
+font. The page writes one span of looks per piece of text: serif text with one red word is three
+spans side by side.
+
+Formatting and a span block are both written as `<span>`, so the page tells them apart as it
+reads one, by one rule (`isTextLooks`, `shared/textLooks.ts`; owner, 2026-11-15): **everything on
+the span is a look, with at least one: formatting. Anything else on it: a span block**, keeping
+all of it. A look is one of the theme's fixed slots as a class, not a prefix (`sf-text-block` isn't
+a size), or a property the looks set in its style (`color`, `font-family`, `font-size`,
+`line-height`, `letter-spacing`); a step only beside a colour class. An id, another class or any
+other style property makes a span block. Classes and style are treated alike, and no marker tells
+them apart: the page would carry it only for the editor, and a paste never would. Neither keeps
+other attributes (`title`, `data-*`); the code view refuses them. So a span block holding only
+looks reads back as formatted text, looking the same; to stay a block it needs a class or id of
+its own. Text pasted from another page or app always carries more than looks in its style, so
+each run is a span block (owner, 2026-11-19: accepted; Enter inside one does nothing, and bold in
+its style is taken off in the code view or the Attributes panel).
+
+The editor reads only the page's own form and converts nothing, as converting means copying the
+browser's reading of CSS (owner, 2026-11-15). Other sources' forms are for a converter at the
+paste (`sf-system-todo.md`, "A converter for pasted HTML").
+
+- **Looks inside looks** aren't read as one. ProseMirror's reading stands: a mark that excludes
+  another (looks inside looks, inline code) replaces it for its words, with bold or a link between
+  too. The code view's check doesn't predict this: it asks whether a mark's words all came out
+  inside what was written for it, and refuses one whose didn't, saying what to write: "… Put the
+  looks on one span.", "…: inline code takes no looks." or "…: inline code takes no other
+  formatting." A span block between keeps both: ProseMirror puts the outer looks on the block.
+  Read as one, they'd need CSS's order copied (an inner class beats an outer style).
+- **A look on other formatting** (bold, inline code) isn't read: the page keeps one form, and the
+  code view says where it goes: on a span around bold, and none on inline code (owner,
+  2026-11-15). Text's looks are written
+  outside bold (`<span class="sf-color-danger"><strong>`), TipTap's order.
+- **A pick** sets only its own looks and keeps the others, taking the property each sets out of
+  the style (`setTextLooks`): a theme colour picked over a pasted red shows, and a size picked
+  keeps a pasted font.
+- **A copy's edges** (`copyAndPaste.ts`): a span block at an edge that the copy holds words of
+  goes in whole, as part of bold text pastes bold; one it holds nothing of is left out. A click
+  just after an icon puts the cursor inside it, at its end, and a copy from there held the icon
+  empty.
 
 Every kind of block can be selected whole, none is marked not selectable: Undo and Redo bring a
 block selected whole back as one only if its kind is selectable, and the app selects every kind

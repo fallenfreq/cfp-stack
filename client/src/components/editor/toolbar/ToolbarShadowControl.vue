@@ -73,7 +73,7 @@ const onColorCommit = (color: ThemeColor | null) => commit(selectedToken.value, 
 // Every sf-shadow-* class gives way to the picks; a fixed colour goes with the size.
 const commit = (token: string | null, color: ThemeColor | null, fixed: string | null) =>
 	updateBlockLook({
-		replacing: ['sf-shadow-'],
+		replacing: (name) => name.startsWith('sf-shadow-'),
 		classes:
 			token === null
 				? []

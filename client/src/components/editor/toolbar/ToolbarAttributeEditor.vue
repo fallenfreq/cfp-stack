@@ -194,7 +194,10 @@ const allRowCount = computed(() => attrRows.value.length + classTokenRows.value.
 const allAddableCount = computed(() => addableKeys.value.length + classAddableKeys.value.length)
 
 const setClassRow = (prefix: string, value: string | null) =>
-	updateBlockLook({ replacing: [prefix], classes: value === null ? [] : [prefix + value] })
+	updateBlockLook({
+		replacing: (name) => name.startsWith(prefix),
+		classes: value === null ? [] : [prefix + value],
+	})
 
 const onUpdate = (key: string, value: unknown) => {
 	const spec = classTokenSpecs.value.find((s) => s.key === key)

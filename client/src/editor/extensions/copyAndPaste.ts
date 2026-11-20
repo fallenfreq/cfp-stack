@@ -45,6 +45,40 @@ const withoutLine = (content: Fragment, depth: number, side: -1 | 1): [Fragment,
 	return [content.replaceChild(index, node.copy(inner)), open + 1]
 }
 
+// The copy without an inline block at its start (side -1) or end (1) that it holds nothing of,
+// and how deep it's still open there: a selection from inside an icon's end, where a click just
+// after it puts the cursor, copies the icon empty and open into it.
+const withoutEmptyEdge = (content: Fragment, open: number, side: -1 | 1): [Fragment, number] => {
+	const index = side < 0 ? 0 : content.childCount - 1
+	const node = open ? content.maybeChild(index) : null
+	if (!node) return [content, 0]
+	if (node.isText) return [content, open]
+	// Inside first: a span block holding only an empty icon is left empty too.
+	const [inner, innerOpen] = withoutEmptyEdge(node.content, open - 1, side)
+	if (node.isInline && !inner.size)
+		return [
+			side < 0 ? content.cut(node.nodeSize) : content.cut(0, content.size - node.nodeSize),
+			0,
+		]
+	return [content.replaceChild(index, node.copy(inner)), innerOpen + 1]
+}
+
+// The copy closed where it's open into an inline block (a span block): ProseMirror puts in only
+// the text of one cut at either end, so the block's words would paste without it.
+const closedAtInlineBlocks = (slice: Slice) => {
+	const open = (side: -1 | 1) => {
+		let content = slice.content
+		const depth = side < 0 ? slice.openStart : slice.openEnd
+		for (let at = 0; at < depth; at++) {
+			const node = side < 0 ? content.firstChild : content.lastChild
+			if (!node || node.isInline) return at
+			content = node.content
+		}
+		return depth
+	}
+	return new Slice(slice.content, open(-1), open(1))
+}
+
 // Blocks copied whole: selected as a block, not by their text.
 const copiedWhole = (slice: Slice) =>
 	slice.openStart === 0 && slice.openEnd === 0 && !!slice.content.firstChild?.isBlock
@@ -144,7 +178,9 @@ const withoutAround = (slice: Slice) => {
 // ProseMirror marks it as its own copy (`data-pm-slice`), and reads it back as written, spaces and
 // all, where it would read bare text as another app's.
 const copiedText = (copied: Slice) => {
-	const slice = withoutAround(copied)
+	const [start, openStart] = withoutEmptyEdge(copied.content, copied.openStart, -1)
+	const [content, openEnd] = withoutEmptyEdge(start, copied.openEnd, 1)
+	const slice = withoutAround(new Slice(content, openStart, openEnd))
 	const line = oneLine(slice)
 	// A code block's text across its lines is its lines.
 	if (!line || line.textContent.includes('\n')) return slice
@@ -455,6 +491,7 @@ export const CopyAndPaste = Extension.create({
 			new Plugin({
 				props: {
 					transformCopied: copiedText,
+					transformPasted: closedAtInlineBlocks,
 					handlePaste(view, _event, slice) {
 						const { $from, $to } = view.state.selection
 						const how = howToPut($from, $to, slice)
