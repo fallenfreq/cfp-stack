@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 import {
+	faArrowLeft,
 	faCheck,
 	faChevronDown,
 	faEllipsis,
@@ -23,6 +24,7 @@ defineOptions({ inheritAttrs: false })
 
 const icons = {
 	plus: faPlus,
+	'arrow-left': faArrowLeft,
 	'three-dot': faEllipsis,
 	'drag-handle': faGripVertical,
 	check: faCheck,

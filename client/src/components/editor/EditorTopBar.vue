@@ -1,16 +1,19 @@
 <template>
 	<!-- The editor's bars: the page's, then the node path. One sticky box, whose height the page is
-	     given. Side padding puts the controls on the page line (sl-inset-line). -->
-	<div
-		ref="bar"
-		class="editor-top-bar sf-depth-1 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right sl-inset-line"
-	>
-		<div class="top-bar__page">
+	     given. Only the path's row meets the page, whose Cards (depth 1) scroll under it, so it's a
+	     layer above them (depth 2); the page's row meets only the path's, so it's depth 1, and the two
+	     rows look apart. Side padding puts the controls on the page line (sl-inset-line). -->
+	<div ref="bar" class="editor-top-bar">
+		<!-- Where the row is narrow (xs), the warnings and Code view go into "⋯", which then wears the
+		     warning count. The menu's items measure this row too: nothing between is a layout. -->
+		<div
+			class="top-bar__page sl-cluster sf-gap-2xs sl-inset-line sf-depth-1 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right"
+		>
 			<EditorExitButton />
 			<input
 				ref="nameInput"
 				v-model="nameInputValue"
-				class="top-bar__name sf sf-is-contained sf-loudness-1 sf-on-hover sf-size-xs"
+				class="top-bar__name sf sf-field sf-single-line sf-is-contained sf-loudness-1 sf-on-hover sf-size-xs"
 				:title="currentName ?? 'Untitled'"
 				@focus="startRename"
 				@blur="commitRename"
@@ -18,13 +21,13 @@
 				@keyup.escape="cancelRename"
 			/>
 			<!-- The page's warnings (pageWarnings.ts): each press selects the next block with one. -->
-			<SfTooltip v-if="warningCount && !isCodeView" text="Next warning">
+			<SfTooltip v-if="shownWarnings" text="Next warning" class="sl-hide-below-xs">
 				<SfButton
 					size="xs"
 					:loudness="1"
 					variant="warning"
 					class="sf-is-contained sf-single-line"
-					:aria-label="`${warningCount} ${warningCount === 1 ? 'warning' : 'warnings'}: go to the next`"
+					:aria-label="warningsName"
 					@mousedown.prevent
 					@click="goToNextWarning"
 				>
@@ -43,17 +46,55 @@
 			>
 				{{ saveWords }}
 			</SfButton>
-			<CodeViewToggle />
-			<SfOverflowMenu tooltip="Editor actions">
-				<li><DarkModeSwitch>Dark mode</DarkModeSwitch></li>
-				<li>
-					<SfButton size="xs" :loudness="1" class="sf-is-contained" disabled
-						>Settings</SfButton
-					>
-				</li>
-			</SfOverflowMenu>
+			<!-- Its own box, as the toggle's classes go to its button, not its tooltip's box. -->
+			<div class="sl-cluster sl-hide-below-xs"><CodeViewToggle /></div>
+			<SfBadge
+				:count="shownWarnings"
+				variant="warning"
+				:loudness="3"
+				class="sl-show-below-xs"
+			>
+				<SfOverflowMenu tooltip="Editor actions">
+					<li v-if="shownWarnings" class="sl-show-below-xs">
+						<SfButton
+							size="xs"
+							:loudness="1"
+							variant="warning"
+							class="sf-is-contained sf-single-line"
+							:aria-label="warningsName"
+							@click="goToNextWarning"
+						>
+							<span class="material-symbols-rounded sf-icon" aria-hidden="true"
+								>warning</span
+							>
+							{{ warningsWords }}
+						</SfButton>
+					</li>
+					<li class="sl-show-below-xs">
+						<SfButton
+							size="xs"
+							:loudness="1"
+							class="sf-is-contained"
+							:pressed="isCodeView"
+							@click="store.toggleCodeView"
+							>Code view</SfButton
+						>
+					</li>
+					<li><DarkModeSwitch>Dark mode</DarkModeSwitch></li>
+					<li>
+						<SfButton size="xs" :loudness="1" class="sf-is-contained" disabled
+							>Settings</SfButton
+						>
+					</li>
+				</SfOverflowMenu>
+			</SfBadge>
 		</div>
-		<NodePath :editor="editor" />
+		<!-- The box, apart from the path's scroll area. -->
+		<div
+			class="sl-inset-line sf-depth-2 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right"
+		>
+			<NodePath :editor="editor" />
+		</div>
 	</div>
 </template>
 
@@ -106,6 +147,12 @@ const saveWords = computed(() =>
 )
 
 const warningCount = computed(() => pageWarnings(props.editor.state).length)
+// The code view hides the page, and with it the warnings.
+const shownWarnings = computed(() => (isCodeView.value ? 0 : warningCount.value))
+const warningsWords = computed(
+	() => `${warningCount.value} ${warningCount.value === 1 ? 'warning' : 'warnings'}`,
+)
+const warningsName = computed(() => `${warningsWords.value}: go to the next`)
 const dragHandleStore = useDragHandleStore()
 // Selected as a whole, in the middle of the screen, or, taller than that leaves room for, with its
 // top under the bar and the block's toolbar. The toolbar works on the block at the active depth,
@@ -162,25 +209,18 @@ const cancelRename = () => {
 
 <style>
 @layer ui {
-	/* Layout only: the two rows, top/bottom room from sf-depth-1 × sf-size-2xs. */
+	/* Layout only: the two rows, each padded by its depth × sf-size-2xs. */
 	.editor-top-bar {
 		position: sticky;
 		top: 0;
 		z-index: var(--z-nodepath);
 		display: flex;
 		flex-direction: column;
-		gap: var(--sf-gap, var(--sf-spacing-2xs));
 	}
 
-	.top-bar__page {
-		display: flex;
-		align-items: center;
-		gap: var(--sf-gap, var(--sf-spacing-2xs));
-	}
-
-	/* Name input — chrome comes from sf-is-contained + sf-loudness-1 + sf-on-hover + sf-size-xs
-	   (plus bare input:focus-visible for the editing look). It takes the row's free room, cut
-	   short with an ellipsis. */
+	/* Name input — chrome comes from its classes (a field of one line, in a contained bar), plus
+	   bare input:focus-visible for the editing look. It takes the row's free room, cut short
+	   with an ellipsis. */
 	.top-bar__name {
 		flex: 1;
 		min-width: 0;

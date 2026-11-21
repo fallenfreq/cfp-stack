@@ -223,6 +223,15 @@ ${CHANNEL_PROPERTIES}
 		display: inline-block;
 	}
 
+	/* A badge, or a count over another element, sits on that element out of the flow, whatever the
+	   theme: where the theme puts it moves nothing else, and it never takes a press meant for the
+	   element under it. */
+	.sf-badge,
+	.sf-counter.sf-is-overlay {
+		position: absolute;
+		pointer-events: none;
+	}
+
 	/* sf-swatch structural — display enables width/height on the marker;
 	   background-clip guards padded-frame themes so bg doesn't bleed into the border. */
 	.sf-swatch {

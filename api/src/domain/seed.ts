@@ -393,6 +393,12 @@ const VOCABULARY: VocabSpec[] = [
 			'A short label holding a count (3 unread, +2 more). Read-only; wear with sf-single-line, a size, and a loudness and variant for its colour.',
 	},
 	{
+		name: 'sf-badge',
+		kind: 'element',
+		description:
+			'A mark on another element saying there is something there to look at, with nothing in it (for a count, sf-counter sf-is-overlay). The theme decides its shape (a dot by default) and where on the element it sits; a loudness and variant give its colour.',
+	},
+	{
 		name: 'sf-avatar',
 		kind: 'element',
 		description:
@@ -2871,6 +2877,42 @@ const ROOT_RULES: RuleSpec[] = [
 			value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color) / var(--sf-alpha-3))',
 		},
 	]),
+
+	// ─── sf-badge, and a counter over another element ──────────────────────────
+	// A mark on another element, with nothing in it (sf-badge), or a count over one
+	// (sf-counter sf-is-overlay). The reset takes both out of the flow, so where they sit moves
+	// nothing else: here, on the top end corner, half over the edge; the mark a dot, the count a
+	// small round number. Colour comes from loudness × variant, as on any box.
+	...(
+		[
+			['inset-block-start', '0'],
+			['inset-inline-end', '0'],
+			['translate', '25% -25%'],
+			['border-radius', 'var(--sf-radius-full)'],
+		] as const
+	).flatMap(([cssProperty, value]): RuleSpec[] => [
+		{ classNames: ['sf-badge'], cssProperty, value },
+		{ classNames: ['sf-counter', 'sf-is-overlay'], cssProperty, value },
+	]),
+	{ classNames: ['sf-badge'], cssProperty: 'inline-size', value: '0.5rem' },
+	{ classNames: ['sf-badge'], cssProperty: 'block-size', value: '0.5rem' },
+	{
+		classNames: ['sf-counter', 'sf-is-overlay'],
+		cssProperty: 'font-size',
+		value: 'var(--sf-text-xs)',
+	},
+	{
+		classNames: ['sf-counter', 'sf-is-overlay'],
+		cssProperty: 'padding',
+		value: '0.125rem var(--sf-spacing-2xs)',
+	},
+	// As wide as it is tall at least, so one digit is a circle.
+	{
+		classNames: ['sf-counter', 'sf-is-overlay'],
+		cssProperty: 'min-inline-size',
+		value: 'calc(1em + 0.25rem)',
+	},
+	{ classNames: ['sf-counter', 'sf-is-overlay'], cssProperty: 'text-align', value: 'center' },
 
 	// ─── sf-swatch ────────────────────────────────────────────────────────────
 	// Colour-surface tile — chrome only. Consumers set width/height (component metric).

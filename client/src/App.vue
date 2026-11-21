@@ -124,9 +124,10 @@ const navItems = computed<NavItem[]>(() => {
 			100dvh - var(--sf-spacing_page) - var(--editor-top-bar-height, 0px) - 1lh
 		);
 		/* A WebKit workaround (Safari 27): its scroll anchoring, which keeps the line being written
-		   still as pictures above it load, works only with a size container outside the editor.
-		   The site's nav is one, and the editor hides it. Remove once WebKit is fixed
-		   (sf-system-todo.md, "Safari's scroll anchoring in the editor"). */
+		   still as pictures above it load, works only with a size container somewhere not around
+		   the editor (one around it, such as main or html, doesn't do). The site's nav was one, and
+		   the editor hides it. This box is beside the page and empty, so no query finds it. Remove
+		   once WebKit is fixed (sf-system-todo.md, "Safari's scroll anchoring in the editor"). */
 		container-type: inline-size;
 	}
 }

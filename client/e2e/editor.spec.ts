@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
 import type { NodeSelection } from '@tiptap/pm/state'
 import type { TiptapEditorHTMLElement } from '@tiptap/vue-3'
@@ -4177,6 +4177,45 @@ test("the bars' controls are big enough to hit, and the path has a row of its ow
 			1,
 		)
 	}
+})
+
+// Where the page's row is narrow, the warnings and Code view go into "⋯", which wears the warning
+// count; where it's wide they're in the row and "⋯" has no mark.
+test('a narrow row moves the warnings and Code view into "⋯", which shows the count', async ({
+	page,
+}) => {
+	await page.locator('.tiptap p').first().click()
+	const bars = page.locator('.editor-top-bar')
+	const menu = bars.getByRole('button', { name: 'Editor actions' })
+	const warnings = (where: Locator) => where.getByRole('button', { name: /go to the next/ })
+	const codeView = (where: Locator) => where.getByRole('button', { name: 'Code view' })
+	const items = page.locator('.overflow-menu')
+
+	await page.setViewportSize({ width: 1440, height: 844 })
+	await settle(page)
+	const count = /^(\d+) warnings?:/.exec((await warnings(bars).getAttribute('aria-label'))!)![1]!
+	// The count as a mark on its own, not the warnings button's words.
+	const mark = bars.getByText(count, { exact: true })
+	await expect(codeView(bars), 'Code view in the wide row').toBeVisible()
+	await expect(mark, 'no mark where the warnings show').toBeHidden()
+	await menu.click()
+	await expect(warnings(items), 'the warnings not in the wide menu').toBeHidden()
+	await expect(codeView(items), 'Code view not in the wide menu').toBeHidden()
+	await page.keyboard.press('Escape')
+
+	await page.setViewportSize({ width: 390, height: 844 })
+	await settle(page)
+	await expect(warnings(bars).first(), 'the warnings out of the narrow row').toBeHidden()
+	await expect(codeView(bars).first(), 'Code view out of the narrow row').toBeHidden()
+	await expect(mark, "the count on '⋯'").toBeVisible()
+	await menu.click()
+	await expect(codeView(items), 'Code view in the menu').toBeVisible()
+	await warnings(items).click()
+	await expect(
+		page.locator('.ProseMirror-selectednode'),
+		'a block with a warning picked',
+	).toHaveCount(1)
+	await expect(items, 'the menu closed').toBeHidden()
 })
 
 // On a narrow screen a path can be longer than its row, which scrolls: the crumb worked on stays

@@ -1,5 +1,13 @@
 <template>
-	<SfButton size="xs" :loudness="1" class="sf-is-contained" @click="exit">Exit</SfButton>
+	<!-- An arrow back, not ✕: it goes to the page before and asks first, where ✕ reads as
+	     closing and throwing away. Its tooltip is its name. -->
+	<SfIconButton
+		icon="arrow-left"
+		tooltip="Exit"
+		:loudness="1"
+		class="sf-is-contained"
+		@click="exit"
+	/>
 </template>
 
 <script setup lang="ts">

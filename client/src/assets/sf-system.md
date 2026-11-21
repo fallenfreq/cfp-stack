@@ -577,6 +577,12 @@ sf-counter       short read-only label holding a count (3 unread, +2 more).
                  The four compact units are separate element types: the root
                  theme draws them alike, a theme may tell them apart. Worn with
                  sf-single-line; colour comes from loudness × variant
+sf-badge         a mark on another element saying there's something there to
+                 look at, with nothing in it. A count there is a counter over
+                 the element (sf-counter sf-is-overlay), so counts are styled in
+                 one place. Both are out of the flow (the reset), so the theme
+                 decides their shape (a dot by default) and where on the element
+                 they sit, moving nothing else. Colour from loudness × variant
 sf-icon          content is a single icon (font icon or SVG). line-height:1
                  removes leading so padding drives vertical spacing
 sf-single-line   content is a single line of text. line-height:1 removes the
@@ -1278,6 +1284,16 @@ has the second row to itself, as wide as the screen. Exit opens the page the edi
 from, as a link does, so the Leave question always applies; with none, home. Save says how the
 page stands in words ("Save", "Saving…", "Saved") and shows only to whoever could save. The
 editors scroll the line being written clear of the bar (`scrollClearOfEditorTopBar.ts`).
+
+The path's row is depth 2: it's the row the page's Cards (depth 1) scroll under, so it's a layer
+above them. The page's row meets only the path's, so it's depth 1, and the two rows look apart
+(owner, 2026-11-21).
+
+Exit is an arrow back, not ✕, which reads as closing and throwing away (owner, 2026-11-21). Where
+the page's row is narrow (`xs`, a phone), the warnings and Code view go into "⋯", as the site's
+nav puts its links in a menu, so the name keeps its room in any theme; "⋯" then wears the
+warning count (`SfBadge`). The badge is the mark's own component, not the menu's, so anything can
+wear one (owner, 2026-11-21).
 
 Picker choices land in storage by a uniform pattern:
 

@@ -248,11 +248,15 @@ Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ide
   at the very end of a page on a short screen, its top could stay cut off (not tried). Marked
   expected to fail in WebKit (`anchorFallback.spec.ts`).
 - **Safari's scroll anchoring in the editor.** Safari 27's anchoring keeps the line being written
-  still as late pictures above it load only with a size container outside the editor; the
-  editor hides the site's nav, which was one, so the page's end is one instead (`App.vue`, a
-  workaround). To report to WebKit, with a small page that shows it (a bare page didn't), and
-  the workaround removed once fixed. Safari before 27 has no anchoring: there such a picture
-  pushes the line down. Pictures with a known size wouldn't push it in any browser.
+  still as late pictures above it load only with a size container somewhere not around the
+  editor (any box: the page's end, the top bar, an empty box; one around it, such as `main` or
+  `html`, doesn't do). The editor hides the site's nav, which was one, so the page's end is one
+  instead (`App.vue`, a workaround; `app.spec.ts`, "the editor opens a stored page where its
+  cursor was left", fails without it). Measured in Playwright's WebKit, 2026-11-21, not real
+  Safari 27. To report to WebKit: the app with no container beside the app with an empty one
+  beside the page (a bare page didn't show it), and the workaround removed once fixed. Safari
+  before 27 has no anchoring: there such a picture pushes the line down. Pictures with a known
+  size wouldn't push it in any browser.
 - **Report the Safari 26 bug to WebKit:** a box anchored to an unpositioned element in a fixed
   bar is placed as though the bar scrolled with the page (`SfPopover.vue`). It needs the user's
   account.
@@ -268,12 +272,16 @@ Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ide
 
 - **`sf-on-*` state rules.** Every state has its bare rule; `sf-on-hover` has no border channel
   yet.
-- **Controls in one bar aren't one height.** At the same size, a button's height follows what it
-  holds: words take the theme's line height (the editor's Exit, 44px), words with
-  `sf-single-line` one text line (Save, 34px), icons their own size (34–36px); a text field has
-  no padding (the page's name, 26px). Matching them by adding `sf-single-line` would be a class
-  used for its look. Open: whether a bar's controls need a word of their own, or a size should
-  set the height (measured 2026-11-21, `EditorTopBar.vue`).
+- **Controls in one bar aren't quite one height.** A control's height is what it holds plus its
+  size's padding, so words are one line (`sf-single-line`) and icons 1em. Left in the editor's
+  page row (measured 2026-11-21): the page's name is 38px to the buttons' 34, as a browser keeps a
+  text field's line at the font's own height (about 20px) whatever `line-height` says; the theme
+  could give fields less padding at each size. Code view is 36px, as `ToolbarIcon` wears
+  `sf-text-lg`. Every `SfButton` could wear `sf-single-line`, as its words never wrap, but for
+  the block picker's and the Attributes panel's rows, which wrap.
+- **"⋯"'s badge is for sight only.** Where the row is narrow, the warnings are in "⋯" and its
+  badge shows how many, but its name stays "Editor actions": a name can't follow the row's width.
+  A screen reader finds the warnings by opening the menu.
 - **Icons:** decide whether in-text icons want `1.1em` (`material-symbols.css`): rounded glyphs
   look smaller.
 - **Raw tokens in component CSS.** A few components still read colour tokens directly
