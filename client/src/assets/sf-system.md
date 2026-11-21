@@ -709,9 +709,10 @@ with that depth, since depth sits in the higher layer.
 
 ### Context — `sf-context`
 
-Runtime conditions applied as classes — either by JavaScript measuring the DOM or by the
-author declaring a known context. They reflect facts about the current state of the
-environment, not authored intent.
+The element's own situation, as classes: where it sits, or what state it's in. Code adds
+them while they're true (measuring the page, or from the app's own state: loading, an
+error), or the author writes them where they're a plain fact. Not what a person is doing
+with it, which is a state (`sf-on-*`, below).
 
 ```text
 sf-is-edge-top         element is flush with the top viewport edge
@@ -729,6 +730,8 @@ sf-is-sticky           a sticky element is currently in its pinned position
                        (sl-pin-* makes it sticky; this is the stuck state)
 sf-is-error            element or field is in a validation / error state
 sf-is-warning          element or field needs a look but is not in error
+sf-is-disabled         looks disabled because the author says so, and stays
+                       interactive (a control the browser disables wears sf-on-disabled)
 sf-is-contained        element sits inside a container that already provides
                        visual boundary
 sf-is-nested           group sits inside another group of the same kind (a nav
@@ -763,13 +766,23 @@ setting a pill radius is the theme's opinion that floating action buttons read a
 chip-shaped tokens. Component authors declare intent (`sf-is-overlay`); shape,
 colour, elevation are the theme's calls.
 
-`sf-is-*` classes differ from `sf-on-*` in source and meaning:
+**`sf-on-*` or `sf-is-*`** is chosen by what the class is about, not by who sets it:
 
-|         | `sf-on-*`                              | `sf-is-*`                                                                 |
-| ------- | -------------------------------------- | ------------------------------------------------------------------------- |
-| Set by  | Author intent                          | JavaScript measurement, or the author where the structure makes it a fact |
-| Meaning | "this element should respond to hover" | "this condition is currently true"                                        |
-| Example | `sf-on-hover`                          | `sf-is-overflow-right`                                                    |
+|          | `sf-on-*` (States)                                                                                                                                                                          | `sf-is-*` (Context)                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| About    | what a person is doing with the element                                                                                                                                                     | the element's own situation                                 |
+| Examples | hovered, focused, pressed, picked, current, being dragged                                                                                                                                   | at an edge, floating, loading, in error, needs a look       |
+| Set by   | the browser, where it has the state (`:hover`, `:focus-visible`, `:active`, `:disabled`): the class is worn always and the browser says when; otherwise code or the author, while it's true | code while it's true, or the author where it's a plain fact |
+| Layer    | `sf-state`, above `sf-context`: what a person does shows over a fact                                                                                                                        | `sf-context`                                                |
+
+Who sets a class can change (an author writes `sf-is-nested`, code adds `sf-on-selected`);
+what it's about doesn't, and the layers follow it. So a fact that must stay visible while a
+person acts needs a compound: `sf-on-focus sf-is-error` keeps a field's error border while
+it has focus.
+
+`sf-on-disabled` and `sf-is-disabled` show the difference. The first is a control the
+browser has disabled (`:disabled`): it can't be used. The second only looks disabled because
+the author says so, and can still be used.
 
 Multiple `sf-is-*` classes may be present simultaneously and can be compounded in rules
 — a rule requiring both `sf-is-overflow-left` and `sf-is-overflow-right` handles the
@@ -817,18 +830,23 @@ bg/text/border: `sf-shadow-color-*` + `sf-shadow-alpha-*` (in `sf-utility`). A p
 
 ### States — `sf-state`
 
-Interaction modifiers. A bare rule applies everywhere the class appears; a compound
+What a person is doing with the element (Context has how these differ from `sf-is-*`).
+A bare rule applies everywhere the class appears; a compound
 selector overrides it at higher specificity. Write one bare fallback, then only the
 combinations that need a different treatment — the full depth × variant matrix does
 not need to be specified explicitly.
 
 ```text
-sf-on-hover
-sf-on-focus
-sf-on-active
-sf-on-selected
-sf-on-disabled
-sf-on-dragging   element is actively being dragged (JS-toggled, no CSS pseudo)
+sf-on-hover      hovered (:hover)
+sf-on-focus      keyboard focus (:focus-visible)
+sf-on-active     pressed (:active)
+sf-on-disabled   a control the browser has disabled (:disabled)
+sf-on-selected   picked — a colour swatch, a chip that's on (code-set)
+sf-on-current    the one on now, which Enter would use — the mark applied, the page
+                 in a nav, the node path's last crumb (code-set)
+sf-on-ancestor   on the path to sf-on-current but not it — a nav parent, an earlier
+                 crumb (code-set)
+sf-on-dragging   being dragged (code-set)
 ```
 
 ```css

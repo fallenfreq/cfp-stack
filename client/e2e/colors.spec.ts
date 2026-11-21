@@ -129,7 +129,7 @@ test('a colour not from the theme, on a block or on its words, is pointed out; a
 	)
 	await expect(page.locator('#background')).toHaveClass(/\bsf-is-warning\b/)
 	await expect(page.locator('#words')).toHaveClass(/\bsf-is-warning\b/)
-	await expect(page.locator('#themed')).not.toHaveClass(/\bhas-(suggestion|problem)\b/)
+	await expect(page.locator('#themed')).not.toHaveClass(/\bsf-is-(warning|error)\b/)
 
 	await selectBlock(page, 'words')
 	const attributes = toolbar(page).getByRole('button', { name: /^Attributes/ })
@@ -282,7 +282,7 @@ test('text with a size of its own is pointed out, until a theme size is picked',
 	await selectWords(page, 'words', 'small')
 	await toolbar(page).getByRole('button', { name: 'Font', exact: true }).click()
 	await panel(page).getByRole('button', { name: '2xl', exact: true }).click()
-	await expect(words).not.toHaveClass(/\bhas-(suggestion|problem)\b/)
+	await expect(words).not.toHaveClass(/\bsf-is-(warning|error)\b/)
 })
 
 test('a size picked across words in different fonts keeps each its font', async ({ page }) => {

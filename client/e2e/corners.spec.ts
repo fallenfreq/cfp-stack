@@ -140,8 +140,8 @@ test("a block's own corner size is pointed out; square or a theme size is not", 
 			+ '<p id="themed" class="sf-radius-2">A block</p>',
 	)
 	await expect(page.locator('#own')).toHaveClass(/\bsf-is-warning\b/)
-	await expect(page.locator('#square')).not.toHaveClass(/\bhas-(suggestion|problem)\b/)
-	await expect(page.locator('#themed')).not.toHaveClass(/\bhas-(suggestion|problem)\b/)
+	await expect(page.locator('#square')).not.toHaveClass(/\bsf-is-(warning|error)\b/)
+	await expect(page.locator('#themed')).not.toHaveClass(/\bsf-is-(warning|error)\b/)
 
 	await selectBlock(page, 'own')
 	const attributes = toolbar(page).getByRole('button', { name: /^Attributes/ })
