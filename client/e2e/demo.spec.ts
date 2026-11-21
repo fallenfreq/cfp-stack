@@ -24,12 +24,13 @@ for (const widthName of ['wide', 'just below sm', 'just below xs'])
 			return [...doc.querySelectorAll('*')].map((el) => {
 				const r = el.getBoundingClientRect()
 				const style = getComputedStyle(el)
-				// Not the editor's own, never saved: ProseMirror's, and a warning's mark.
+				// Not the editor's own, never saved: ProseMirror's, the selection and a warning's mark.
 				const classes = [...el.classList].filter(
 					(c) =>
 						!c.startsWith('ProseMirror')
-						&& c !== 'has-problem'
-						&& c !== 'has-suggestion',
+						&& c !== 'sf-on-selected'
+						&& c !== 'sf-is-error'
+						&& c !== 'sf-is-warning',
 				)
 				const name = el.tagName.toLowerCase() + classes.map((c) => `.${c}`).join('')
 				const at = [r.left - origin.left, r.top - origin.top, r.width, r.height].map(

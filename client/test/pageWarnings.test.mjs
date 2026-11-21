@@ -45,7 +45,7 @@ test("an inline piece's warning shows on it and on its line, not on a piece betw
 		[0, 3, 4].map((pos) => warningsOn(state, pos).length),
 		[1, 0, 1],
 	)
-	assert.deepEqual(marksOf(state), [[4, 'has-problem']])
+	assert.deepEqual(marksOf(state), [[4, 'sf-is-error']])
 	assert.equal(nextWarned(state), 0)
 })
 
@@ -68,8 +68,8 @@ test('a block a problem names is marked as one, else as a suggestion', () => {
 	const video = (classes) => block('youtube', { src: 'https://youtu.be/x', class: classes })
 	const state = checked(page(video('sl-center'), video('sl-center sl-bleed')))
 	assert.deepEqual(marksOf(state), [
-		[0, 'has-suggestion'],
-		[1, 'has-problem'],
+		[0, 'sf-is-warning'],
+		[1, 'sf-is-error'],
 	])
 })
 
@@ -79,7 +79,7 @@ test('the warnings and marks follow the page until the rules run again', () => {
 	const moved = state.apply(state.tr.insert(0, schema.nodes.paragraph.create()))
 	assert.deepEqual(pageWarnings(moved)[0].blocks, [2, 4])
 	assert.deepEqual(marksOf(moved), [
-		[2, 'has-problem'],
-		[4, 'has-problem'],
+		[2, 'sf-is-error'],
+		[4, 'sf-is-error'],
 	])
 })

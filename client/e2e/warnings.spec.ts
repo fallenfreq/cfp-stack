@@ -24,7 +24,7 @@ const selectedId = (page: Page) =>
 	})
 
 test("a component's own classes reach the rules, also while it's selected", async ({ page }) => {
-	await expect(stack(page)).toHaveClass(/\bhas-problem\b/)
+	await expect(stack(page)).toHaveClass(/\bsf-is-error\b/)
 	await selectBlock(page, 'warned-stack')
 	await expect(attributes(page)).toHaveAccessibleName('Attributes: 1 warning')
 	await attributes(page).click()
@@ -39,13 +39,13 @@ test("a component's own classes reach the rules, also while it's selected", asyn
 	await classRow.fill('sl-inset sf-gap-sm')
 	await classRow.press('Enter')
 	await expect(stack(page)).toHaveClass(/\bsf-gap-sm\b/)
-	await expect(stack(page)).toHaveClass(/\bProseMirror-selectednode\b/)
-	await expect(stack(page)).toHaveClass(/\bhas-problem\b/)
+	await expect(stack(page)).toHaveClass(/\bsf-on-selected\b/)
+	await expect(stack(page)).toHaveClass(/\bsf-is-error\b/)
 
 	// Typed away in the class row, the warning goes.
 	await classRow.fill('sf-gap-sm')
 	await classRow.press('Enter')
-	await expect(stack(page)).not.toHaveClass(/\bhas-problem\b/)
+	await expect(stack(page)).not.toHaveClass(/\bsf-is-error\b/)
 	await expect(attributes(page)).toHaveAccessibleName('Attributes')
 	await expect(panel(page)).not.toContainText('arrangements')
 })
@@ -54,15 +54,15 @@ test('the node path shows a block with a warning around the cursor', async ({ pa
 	await page.locator('#warned-stack-text').click()
 	await settle(page)
 	const crumbs = page.locator('.node-path button')
-	await expect(crumbs.filter({ hasText: 'layout-stack' })).toHaveClass(/\bsf-variant-warning\b/)
-	await expect(crumbs.last()).not.toHaveClass(/\bsf-variant-warning\b/)
+	await expect(crumbs.filter({ hasText: 'layout-stack' })).toHaveClass(/\bsf-variant-danger\b/)
+	await expect(crumbs.last()).not.toHaveClass(/\bsf-variant-/)
 })
 
 test("an inline piece's warning shows on its line, and on the piece when the toolbar's on it", async ({
 	page,
 }) => {
 	const piece = page.locator('#warned-line span')
-	await expect(piece).toHaveClass(/\bhas-problem\b/)
+	await expect(piece).toHaveClass(/\bsf-is-error\b/)
 	await selectBlock(page, 'warned-line')
 	await expect(attributes(page)).toHaveAccessibleName('Attributes: 1 warning')
 	await attributes(page).click()
@@ -72,7 +72,7 @@ test("an inline piece's warning shows on its line, and on the piece when the too
 	await piece.click()
 	await settle(page)
 	const crumb = page.locator('.node-path button', { hasText: /^span$/ })
-	await expect(crumb).toHaveClass(/\bsf-variant-warning\b/)
+	await expect(crumb).toHaveClass(/\bsf-variant-danger\b/)
 	await crumb.click()
 	await settle(page)
 	await expect(attributes(page)).toHaveAccessibleName('Attributes: 1 warning')
@@ -95,6 +95,8 @@ test('the count selects the next block with a warning, then the first', async ({
 				.from,
 	)
 	expect(first).toBeLessThan(await nodePosition(page, 'warned-stack'))
-	await expect(page.locator('.tiptap .ProseMirror-selectednode')).toHaveClass(/\bhas-/)
+	await expect(page.locator('.tiptap .ProseMirror-selectednode')).toHaveClass(
+		/\bsf-is-(error|warning)\b/,
+	)
 	await expect(attributes(page)).toHaveAccessibleName(/^Attributes: \d+ warnings?$/)
 })

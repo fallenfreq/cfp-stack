@@ -8,8 +8,9 @@ import { type Editor, Extension } from '@tiptap/vue-3'
 import { blockWears } from './ownLook'
 
 // Warnings on the blocks (client/src/assets/sf-system.md, "Validator and linter", "Where a rule
-// shows"). After each change to the page the rules run, and each block they name is marked,
-// `has-problem` or `has-suggestion` (TiptapEditor.vue). The editor's own, a mark is never saved,
+// shows"). After each change to the page the rules run, and each block they name wears the
+// theme's `sf-is-error` for a problem or `sf-is-warning` for a suggestion, so the theme draws it,
+// selected too (`sf-on-selected`). The editor's own, a mark is never saved,
 // and the rules don't read it: a component's box is read less its decorations
 // (customComponentNode.ts), a built-in block from its HTML. The rules load on their own once the
 // editor is open (pageRules.ts).
@@ -74,8 +75,8 @@ const marksFor = (doc: PMNode, warnings: readonly PageWarning[]) => {
 	const marked = new Map<number, string>()
 	for (const { type, blocks } of warnings)
 		for (const block of blocks)
-			if (marked.get(block) !== 'has-problem')
-				marked.set(block, type === 'problem' ? 'has-problem' : 'has-suggestion')
+			if (marked.get(block) !== 'sf-is-error')
+				marked.set(block, type === 'problem' ? 'sf-is-error' : 'sf-is-warning')
 	return DecorationSet.create(
 		doc,
 		[...marked].flatMap(([pos, name]) => {

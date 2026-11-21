@@ -127,8 +127,8 @@ test('a colour not from the theme, on a block or on its words, is pointed out; a
 			+ '<p id="words">Some <span style="color: red">red</span> words</p>'
 			+ '<p id="themed" class="sf-bg-danger">Some <span class="sf-color-primary-5">themed</span> words</p>',
 	)
-	await expect(page.locator('#background')).toHaveClass(/\bhas-suggestion\b/)
-	await expect(page.locator('#words')).toHaveClass(/\bhas-suggestion\b/)
+	await expect(page.locator('#background')).toHaveClass(/\bsf-is-warning\b/)
+	await expect(page.locator('#words')).toHaveClass(/\bsf-is-warning\b/)
 	await expect(page.locator('#themed')).not.toHaveClass(/\bhas-(suggestion|problem)\b/)
 
 	await selectBlock(page, 'words')
@@ -154,12 +154,15 @@ test("a shadow with no colour picked has the theme's; any colour picked is kept,
 	const block = page.locator('#block')
 	await expect(block).toHaveAttribute(
 		'class',
-		'sf-shadow-md sf-shadow-color-shadow sf-shadow-alpha-2 ProseMirror-selectednode',
+		'sf-shadow-md sf-shadow-color-shadow sf-shadow-alpha-2 sf-on-selected ProseMirror-selectednode',
 	)
 
 	// The block stays selected and the panel open: a second pick follows.
 	await panel(page).getByRole('button', { name: 'Theme shadow', exact: true }).click()
-	await expect(block).toHaveAttribute('class', 'sf-shadow-md ProseMirror-selectednode')
+	await expect(block).toHaveAttribute(
+		'class',
+		'sf-shadow-md sf-on-selected ProseMirror-selectednode',
+	)
 	await expect(panel(page)).toContainText('Theme shadow')
 })
 
@@ -267,7 +270,7 @@ test('text with a size of its own is pointed out, until a theme size is picked',
 }) => {
 	await setPage(page, '<p id="words">Some <span style="font-size: 14px">small</span> words</p>')
 	const words = page.locator('#words')
-	await expect(words).toHaveClass(/\bhas-suggestion\b/)
+	await expect(words).toHaveClass(/\bsf-is-warning\b/)
 	await selectBlock(page, 'words')
 	const attributes = toolbar(page).getByRole('button', { name: /^Attributes/ })
 	await expect(attributes).toHaveAccessibleName('Attributes: 1 warning')

@@ -160,22 +160,6 @@ onBeforeUnmount(() => {
 	pointer-events: none;
 }
 
-/* ProseMirror / drag-handle selection states — mirrors sf-on-selected's bare rule
-   (block/card-scale outline). Kept as a scoped bridge because ProseMirror applies
-   this class internally on NodeSelection; we can't rename it without a TipTap plugin. */
-.ProseMirror-selectednode {
-	outline: var(--sf-stroke-3) solid rgba(var(--sf-primary) / var(--sf-alpha-2));
-}
-
-/* A block with a warning (pageWarnings.ts). An outline moves nothing on the page; a selected
-   block shows its selection instead. */
-.tiptap :is(.has-problem, .has-suggestion):not(.ProseMirror-selectednode, .sf-on-selected) {
-	outline: var(--sf-stroke-3) dashed rgb(var(--sf-warning));
-}
-.tiptap .has-suggestion:not(.ProseMirror-selectednode, .sf-on-selected) {
-	outline-style: dotted;
-}
-
 .tiptap:focus {
 	outline: none;
 }

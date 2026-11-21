@@ -15,7 +15,7 @@
 				size="xs"
 				:current="segment.depth === effectiveActiveDepth"
 				:disabled="segment.depth === 0"
-				:variant="segment.warned ? 'warning' : undefined"
+				:variant="segment.warningVariant"
 				@mousedown.prevent
 				@click="handleDepthClick(segment)"
 			>
@@ -28,6 +28,7 @@
 <script setup lang="ts">
 import { useScrollOverflow } from '@/composables/useScrollOverflow'
 import { warningsOn } from '@/editor/extensions/pageWarnings'
+import type { PageWarning } from '@/editor/pageRules'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
@@ -47,7 +48,13 @@ interface PathSegment {
 	name: string
 	depth: number
 	start: number // $pos.start(depth); -1 for leaf nodes
-	warned: boolean // it has a warning (pageWarnings.ts)
+	warningVariant: 'danger' | 'warning' | undefined // its warnings' colour, as its block's line
+}
+
+// A problem shows as the theme's error, suggestions alone as its warning (pageWarnings.ts).
+const warningVariantOf = (warnings: readonly PageWarning[]) => {
+	if (warnings.some(({ type }) => type === 'problem')) return 'danger'
+	return warnings.length ? 'warning' : undefined
 }
 
 const path = computed((): PathSegment[] => {
@@ -71,7 +78,8 @@ const path = computed((): PathSegment[] => {
 			name: getNodeAlias($pos.node(depth).type.name),
 			depth,
 			start: $pos.start(depth),
-			warned: depth > 0 && warningsOn(state, $pos.before(depth)).length > 0,
+			warningVariant:
+				depth > 0 ? warningVariantOf(warningsOn(state, $pos.before(depth))) : undefined,
 		})
 	}
 
@@ -82,7 +90,7 @@ const path = computed((): PathSegment[] => {
 			name: getNodeAlias(selection.node.type.name),
 			depth: $pos.depth + 1,
 			start: -1,
-			warned: warningsOn(state, selection.from).length > 0,
+			warningVariant: warningVariantOf(warningsOn(state, selection.from)),
 		})
 	}
 

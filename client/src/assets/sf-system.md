@@ -728,6 +728,7 @@ sf-is-loading          element is in a loading / pending state; a busy button st
 sf-is-sticky           a sticky element is currently in its pinned position
                        (sl-pin-* makes it sticky; this is the stuck state)
 sf-is-error            element or field is in a validation / error state
+sf-is-warning          element or field needs a look but is not in error
 sf-is-contained        element sits inside a container that already provides
                        visual boundary
 sf-is-nested           group sits inside another group of the same kind (a nav
@@ -1512,8 +1513,11 @@ readers, walkers and types come with them.
 
 - **The editor** runs every rule that can break on a page, on its blocks, their own style and
   the styles their text and inline blocks are written with, after each change. A block a rule
-  names wears an outline in the warning colour, dashed for a problem and dotted for a
-  suggestion, which moves nothing on the page. Its Attributes panel lists why, above the rows
+  names wears `sf-is-error` for a problem or `sf-is-warning` for a suggestion, and a selected
+  block wears `sf-on-selected`, so the theme draws both and how they meet (the root theme: a
+  line round the block in the error or warning colour, which moves nothing on the page, and
+  the selection's line in that colour while selected). The editor draws no look of its own:
+  every theme can make its warnings fit. Its Attributes panel lists why, above the rows
   where most are fixed, with the classes the block wears by itself, which no row shows, so a
   warning appears or goes as the class row's change applies. The node path shows the blocks
   around the cursor that have one, and the top bar's count goes to the next. Warnings are for

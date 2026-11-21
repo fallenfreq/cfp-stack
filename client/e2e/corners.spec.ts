@@ -39,7 +39,10 @@ test('a block takes a theme size and none takes it off, with no sizes of its own
 
 	await chip(page, '2').click()
 	const block = page.locator('#block')
-	await expect(block).toHaveAttribute('class', 'sf-radius-2 ProseMirror-selectednode')
+	await expect(block).toHaveAttribute(
+		'class',
+		'sf-radius-2 sf-on-selected ProseMirror-selectednode',
+	)
 	// The block stays selected and the panel open: a second pick follows.
 	await chip(page, 'none').click()
 	await expect(block).not.toHaveAttribute('class', /sf-radius-/)
@@ -83,7 +86,7 @@ for (const [kind, start] of [
 			else
 				await expect(block).toHaveAttribute(
 					'class',
-					`sf-radius-${picked} ProseMirror-selectednode`,
+					`sf-radius-${picked} sf-on-selected ProseMirror-selectednode`,
 				)
 			await expect(panel(page)).toContainText('Corners')
 		})
@@ -97,7 +100,7 @@ test('a size class the theme has no size for is not a theme size', async ({ page
 	await chip(page, '1').click()
 	await expect(page.locator('#block')).toHaveAttribute(
 		'class',
-		'sf-radius-1 ProseMirror-selectednode',
+		'sf-radius-1 sf-on-selected ProseMirror-selectednode',
 	)
 })
 
@@ -136,7 +139,7 @@ test("a block's own corner size is pointed out; square or a theme size is not", 
 			+ '<p id="square" style="border-radius: 0">A block</p>'
 			+ '<p id="themed" class="sf-radius-2">A block</p>',
 	)
-	await expect(page.locator('#own')).toHaveClass(/\bhas-suggestion\b/)
+	await expect(page.locator('#own')).toHaveClass(/\bsf-is-warning\b/)
 	await expect(page.locator('#square')).not.toHaveClass(/\bhas-(suggestion|problem)\b/)
 	await expect(page.locator('#themed')).not.toHaveClass(/\bhas-(suggestion|problem)\b/)
 

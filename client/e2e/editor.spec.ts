@@ -107,8 +107,11 @@ test('a block chosen with others is highlighted exactly while it is chosen', asy
 	await highlighted('chosen, new classes', true)
 	await page.locator('.floating-toolbar').getByRole('button', { name: 'Clear selection' }).click()
 	await highlighted('no longer chosen', false)
+	// Selected on its own it's highlighted too, but selecting it doesn't choose it.
 	await selectBlock(page, 'c1-card')
-	await highlighted('no longer chosen, selected', false)
+	await highlighted('selected', true)
+	await cursorInParagraph(page)
+	await highlighted('selected, then the cursor elsewhere', false)
 })
 
 // The toolbar's tools for blocks selected together change the page and empty the selection in
@@ -140,7 +143,8 @@ test('the toolbar moves and deletes blocks selected together, and the selection 
 	await selectBlockAt(page, await nodePosition(page, 'ms-c'))
 	await press('Move after target')
 	expect(await last(3)).toEqual(['ms-c', 'ms-a', 'ms-b'])
-	await expect(chosen).toHaveCount(0)
+	// Only the target is highlighted, still selected on its own.
+	await expect(chosen).toHaveText(['C'])
 
 	await toggleSelection(page, await nodePosition(page, 'ms-a'))
 	await press('Delete selected')
@@ -1060,6 +1064,8 @@ test('selected blocks stay selected when they change in place', async ({ page })
 	)
 	await page.keyboard.press('Backspace')
 	await expect(page.locator('.tiptap hr')).toHaveCount(dividers - 1)
+	// The next one is selected on its own then, so highlighted until the cursor moves on.
+	await cursorInParagraph(page)
 	await expect(selectedDivider, 'a divider deleted: the next one stays unselected').toHaveCount(0)
 	await expect(selected, 'a divider deleted').toHaveText(texts)
 })

@@ -250,15 +250,20 @@ const MultiSelectExtension = Extension.create({
 				},
 
 				props: {
+					// Selected blocks wear the theme's sf-on-selected: those selected together, and one
+					// selected on its own, which ProseMirror marks only with its own class.
 					decorations(state) {
-						const pluginState = multiSelectPluginKey.getState(state)
-						if (!pluginState?.positions.length) return DecorationSet.empty
-						const decorations = pluginState.positions.map((pos) => {
-							const node = nodeAt(state.doc, pos)
-							return Decoration.node(pos, pos + node.nodeSize, {
-								class: 'sf-on-selected',
-							})
-						})
+						const selected = { class: 'sf-on-selected' }
+						const decorations = (
+							multiSelectPluginKey.getState(state)?.positions ?? []
+						).map((pos) =>
+							Decoration.node(pos, pos + nodeAt(state.doc, pos).nodeSize, selected),
+						)
+						const { selection } = state
+						if (selection instanceof NodeSelection)
+							decorations.push(
+								Decoration.node(selection.from, selection.to, selected),
+							)
 						return DecorationSet.create(state.doc, decorations)
 					},
 				},

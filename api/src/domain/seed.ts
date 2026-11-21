@@ -598,7 +598,13 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sf-is-error',
 		kind: 'context',
 		description:
-			'Element or field is in a validation / error state. Theme decides the look (default: danger-coloured border). Pair with aria-invalid on fields.',
+			'Element or field is in a validation / error state. Theme decides the look (default: danger-coloured border and outline). Pair with aria-invalid on fields.',
+	},
+	{
+		name: 'sf-is-warning',
+		kind: 'context',
+		description:
+			'Element or field needs a look but is not in error — e.g. a weak password, or a block the editor suggests changing. Theme decides the look (default: warning-coloured border and outline).',
 	},
 	{
 		name: 'sf-is-disabled',
@@ -1605,7 +1611,22 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
 	// A busy button stays focusable (so it isn't disabled); it dims like a disabled one.
 	{ classNames: ['sf-is-loading'], cssProperty: 'opacity', value: '0.4' },
+	// An error or warning colours a box's border, and draws a line round it that moves nothing;
+	// a field's border is enough (below).
 	{ classNames: ['sf-is-error'], cssProperty: 'border-color', value: 'rgb(var(--sf-danger))' },
+	{
+		classNames: ['sf-is-error'],
+		cssProperty: 'outline',
+		value: 'var(--sf-stroke-2) solid rgb(var(--sf-danger))',
+	},
+	{ classNames: ['sf-is-warning'], cssProperty: 'border-color', value: 'rgb(var(--sf-warning))' },
+	{
+		classNames: ['sf-is-warning'],
+		cssProperty: 'outline',
+		value: 'var(--sf-stroke-2) solid rgb(var(--sf-warning))',
+	},
+	{ classNames: ['sf-field', 'sf-is-error'], cssProperty: 'outline', value: 'none' },
+	{ classNames: ['sf-field', 'sf-is-warning'], cssProperty: 'outline', value: 'none' },
 	// sf-is-contained × sf-is-overlay — contained takes priority over overlay's tinted
 	// surface background. Both are single-class context rules; the compound wins by specificity.
 	// Without this, the generator's alphabetical emission order lets sf-is-overlay overwrite
@@ -2089,11 +2110,27 @@ const ROOT_RULES: RuleSpec[] = [
 	// A control that is busy and also natively disabled (hand-written markup; SfButton never
 	// disables while busy) keeps the busy cursor rather than "not allowed".
 	{ classNames: ['sf-on-disabled', 'sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
-	// An error stays visible while the field has focus.
+	// An error or warning stays visible while the field has focus.
 	{
 		classNames: ['sf-on-focus', 'sf-is-error'],
 		cssProperty: 'border-color',
 		value: 'rgb(var(--sf-danger))',
+	},
+	{
+		classNames: ['sf-on-focus', 'sf-is-warning'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-warning))',
+	},
+	// And while the box is selected: the selection's line, in its colour.
+	{
+		classNames: ['sf-on-selected', 'sf-is-error'],
+		cssProperty: 'outline',
+		value: 'var(--sf-stroke-3) solid rgb(var(--sf-danger) / var(--sf-alpha-2))',
+	},
+	{
+		classNames: ['sf-on-selected', 'sf-is-warning'],
+		cssProperty: 'outline',
+		value: 'var(--sf-stroke-3) solid rgb(var(--sf-warning) / var(--sf-alpha-2))',
 	},
 
 	// Hover × loudness-2 — one step past the resting tint, so the hover still shows.
