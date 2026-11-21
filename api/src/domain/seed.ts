@@ -498,7 +498,14 @@ const VOCABULARY: VocabSpec[] = [
 	{
 		name: 'sf-on-selected',
 		kind: 'state',
-		description: 'Persistent chosen/selected state (author/JS-toggled, no pseudo)',
+		description:
+			'The chosen option of a set: it sets a value — a colour swatch, a font size, a tab. Not things gathered to act on (sf-on-targeted). Author/JS-toggled, no pseudo.',
+	},
+	{
+		name: 'sf-on-targeted',
+		kind: 'state',
+		description:
+			"Picked out as a whole to be acted on: the next action applies to it — ticked rows, files, shapes, the editor's selected blocks. Not a cursor or highlighted text inside it. Author/JS-toggled, no pseudo.",
 	},
 	{
 		name: 'sf-on-current',
@@ -847,6 +854,22 @@ const VOCABULARY: VocabSpec[] = [
 
 type RuleSpec = ClassOnlyRuleInput | ElementRuleInput
 
+// The line round an element (sf-system.md, "Line parts"): each class that means something about it
+// passes its part, and each draws the same line from all the parts there, so whichever rule wins
+// draws them all. Parts left unset give a thin, half see-through, solid line in the brand colour.
+const LINE_WIDTH = 'var(--sfx-line-width, var(--sf-stroke-2))'
+const LINE_GAP = 'var(--sfx-line-gap, 0px)'
+const drawsLine = (classNames: [string, ...string[]]): RuleSpec[] => [
+	{
+		classNames,
+		cssProperty: 'outline',
+		value: `${LINE_WIDTH} var(--sfx-line-style, solid) rgb(var(--sfx-line-color, var(--sf-primary)) / var(--sfx-line-alpha, var(--sf-alpha-5)))`,
+	},
+	{ classNames, cssProperty: 'outline-offset', value: LINE_GAP },
+	// How far it reaches out, so something drawn outside it (the focus ring) starts beyond it.
+	{ classNames, cssProperty: '--sfx-line-reach', value: `calc(${LINE_GAP} + ${LINE_WIDTH})` },
+]
+
 // Layout primitives become query containers only when something inside them collapses.
 // A container ignores its own content when sizing its width, so an unconditional
 const ROOT_RULES: RuleSpec[] = [
@@ -1027,6 +1050,9 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-size-md'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-md)' },
 	{ classNames: ['sf-size-lg'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-lg)' },
 	{ classNames: ['sf-size-xl'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xl)' },
+	// Small things keep a line a little apart from their edge; size changes nothing else about it.
+	{ classNames: ['sf-size-2xs'], cssProperty: '--sfx-line-gap', value: 'var(--sf-stroke-1)' },
+	{ classNames: ['sf-size-xs'], cssProperty: '--sfx-line-gap', value: 'var(--sf-stroke-1)' },
 
 	// Heading — font-size + line-height
 	{ classNames: ['sf-heading-1'], cssProperty: 'font-size', value: 'var(--sf-text-4xl)' },
@@ -1611,20 +1637,16 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
 	// A busy button stays focusable (so it isn't disabled); it dims like a disabled one.
 	{ classNames: ['sf-is-loading'], cssProperty: 'opacity', value: '0.4' },
-	// An error or warning colours a box's border, and draws a line round it that moves nothing;
-	// a field's border is enough (below).
+	// An error or warning colours a box's border, and its line: dashed for an error, dotted for a
+	// warning, so it doesn't rest on colour alone. A field's border is enough (below).
 	{ classNames: ['sf-is-error'], cssProperty: 'border-color', value: 'rgb(var(--sf-danger))' },
-	{
-		classNames: ['sf-is-error'],
-		cssProperty: 'outline',
-		value: 'var(--sf-stroke-2) solid rgb(var(--sf-danger))',
-	},
+	{ classNames: ['sf-is-error'], cssProperty: '--sfx-line-color', value: 'var(--sf-danger)' },
+	{ classNames: ['sf-is-error'], cssProperty: '--sfx-line-style', value: 'dashed' },
+	...drawsLine(['sf-is-error']),
 	{ classNames: ['sf-is-warning'], cssProperty: 'border-color', value: 'rgb(var(--sf-warning))' },
-	{
-		classNames: ['sf-is-warning'],
-		cssProperty: 'outline',
-		value: 'var(--sf-stroke-2) solid rgb(var(--sf-warning))',
-	},
+	{ classNames: ['sf-is-warning'], cssProperty: '--sfx-line-color', value: 'var(--sf-warning)' },
+	{ classNames: ['sf-is-warning'], cssProperty: '--sfx-line-style', value: 'dotted' },
+	...drawsLine(['sf-is-warning']),
 	{ classNames: ['sf-field', 'sf-is-error'], cssProperty: 'outline', value: 'none' },
 	{ classNames: ['sf-field', 'sf-is-warning'], cssProperty: 'outline', value: 'none' },
 	// sf-is-contained × sf-is-overlay — contained takes priority over overlay's tinted
@@ -2121,17 +2143,6 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-color',
 		value: 'rgb(var(--sf-warning))',
 	},
-	// And while the box is selected: the selection's line, in its colour.
-	{
-		classNames: ['sf-on-selected', 'sf-is-error'],
-		cssProperty: 'outline',
-		value: 'var(--sf-stroke-3) solid rgb(var(--sf-danger) / var(--sf-alpha-2))',
-	},
-	{
-		classNames: ['sf-on-selected', 'sf-is-warning'],
-		cssProperty: 'outline',
-		value: 'var(--sf-stroke-3) solid rgb(var(--sf-warning) / var(--sf-alpha-2))',
-	},
 
 	// Hover × loudness-2 — one step past the resting tint, so the hover still shows.
 	{
@@ -2383,35 +2394,16 @@ const ROOT_RULES: RuleSpec[] = [
 	// interactive (no cursor change). Use for muted-but-clickable elements at any loudness tier.
 	{ classNames: ['sf-is-disabled'], cssProperty: 'opacity', value: '0.4' },
 
-	// Selected state — bare rule gives the card/block-scale default: a thicker, softer
-	// outline suitable for large content surfaces (editor node selection, section outlines).
-	// Compounds with sf-size-2xs / sf-size-xs give the chip-scale chip pattern (thinner, saturated,
-	// offset) — palette swatches, picker chips. No pseudo: persistent stateful class.
+	// Picked makes the line solid; targeted makes it thick. Each says one thing, so every
+	// combination with the others (an error, a small size) shows.
+	{ classNames: ['sf-on-selected'], cssProperty: '--sfx-line-alpha', value: '1' },
+	...drawsLine(['sf-on-selected']),
 	{
-		classNames: ['sf-on-selected'],
-		cssProperty: 'outline',
-		value: 'var(--sf-stroke-3) solid rgba(var(--sf-primary) / var(--sf-alpha-2))',
+		classNames: ['sf-on-targeted'],
+		cssProperty: '--sfx-line-width',
+		value: 'var(--sf-stroke-3)',
 	},
-	{
-		classNames: ['sf-size-2xs', 'sf-on-selected'],
-		cssProperty: 'outline',
-		value: 'var(--sf-stroke-2) solid rgb(var(--sf-primary))',
-	},
-	{
-		classNames: ['sf-size-2xs', 'sf-on-selected'],
-		cssProperty: 'outline-offset',
-		value: 'var(--sf-stroke-1)',
-	},
-	{
-		classNames: ['sf-size-xs', 'sf-on-selected'],
-		cssProperty: 'outline',
-		value: 'var(--sf-stroke-2) solid rgb(var(--sf-primary))',
-	},
-	{
-		classNames: ['sf-size-xs', 'sf-on-selected'],
-		cssProperty: 'outline-offset',
-		value: 'var(--sf-stroke-1)',
-	},
+	...drawsLine(['sf-on-targeted']),
 
 	// Current state — tinted fill (toolbar toggles, breadcrumb leaf, keyboard-highlighted menu item).
 	// Reads as "this option is on right now" — distinct from sf-on-selected's outline chip.
@@ -2962,18 +2954,9 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-swatch'], cssProperty: 'border-radius', value: 'var(--sf-radius-1)' },
 
-	// Swatch hover — outline ring keeps the swatch's own colour intact (bare sf-on-hover
-	// bg tint would be masked by the inline background-color anyway; ring gives real feedback).
-	{
-		classNames: ['sf-swatch', 'sf-on-hover'],
-		cssProperty: 'outline',
-		value: 'var(--sf-stroke-2) solid rgb(var(--sf-primary) / var(--sf-alpha-4))',
-	},
-	{
-		classNames: ['sf-swatch', 'sf-on-hover'],
-		cssProperty: 'outline-offset',
-		value: 'var(--sf-stroke-1)',
-	},
+	// Swatch hover — the line keeps the swatch's own colour intact (bare sf-on-hover bg tint
+	// would be masked by the inline background-color anyway; the line gives real feedback).
+	...drawsLine(['sf-swatch', 'sf-on-hover']),
 
 	// ─── sf-avatar ────────────────────────────────────────────────────────────
 	// User / entity identity indicator. Solid-fill compact element for initials,

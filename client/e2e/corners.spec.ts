@@ -41,7 +41,7 @@ test('a block takes a theme size and none takes it off, with no sizes of its own
 	const block = page.locator('#block')
 	await expect(block).toHaveAttribute(
 		'class',
-		'sf-radius-2 sf-on-selected ProseMirror-selectednode',
+		'sf-radius-2 sf-on-targeted ProseMirror-selectednode',
 	)
 	// The block stays selected and the panel open: a second pick follows.
 	await chip(page, 'none').click()
@@ -86,7 +86,7 @@ for (const [kind, start] of [
 			else
 				await expect(block).toHaveAttribute(
 					'class',
-					`sf-radius-${picked} sf-on-selected ProseMirror-selectednode`,
+					`sf-radius-${picked} sf-on-targeted ProseMirror-selectednode`,
 				)
 			await expect(panel(page)).toContainText('Corners')
 		})
@@ -100,7 +100,7 @@ test('a size class the theme has no size for is not a theme size', async ({ page
 	await chip(page, '1').click()
 	await expect(page.locator('#block')).toHaveAttribute(
 		'class',
-		'sf-radius-1 sf-on-selected ProseMirror-selectednode',
+		'sf-radius-1 sf-on-targeted ProseMirror-selectednode',
 	)
 })
 

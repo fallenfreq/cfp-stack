@@ -5,9 +5,17 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ideas").
+Next: keyboard focus's own ring (below). Waiting: pasting warns of what the page can't keep
+("Ideas").
 
 ## Bigger work
+
+- **Keyboard focus's own ring** (designed and signed off, 2026-11-21; plan in review). Today focus
+  is the element default outline, which any line replaces (`sf-system.md`, "Line parts"): a picked
+  swatch with focus looks only picked. The ring: 2px clear then 2px in the text colour, beyond
+  `--sfx-line-reach`, as a box shadow in the state layer (an element's own shadow gives way while
+  focused); inside where outside is cut off (the floating toolbar); a plain outline in forced
+  colours; none on fields' and the writing area's focus.
 
 - **The validator and linter.** Its rules, and where each shows, are in `sf-system.md`,
   "Validator and linter"; new candidates go there. Left for later: the IDE linter, and a theme's

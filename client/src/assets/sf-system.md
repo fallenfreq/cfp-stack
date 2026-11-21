@@ -171,7 +171,7 @@ per-property by specificity and don't need to live in a layer.
 
 ## Custom property conventions
 
-Four kinds of CSS custom properties appear across the system. They look alike but play
+Five kinds of CSS custom properties appear across the system. They look alike but play
 different roles. The prefix rule:
 
 > `--sf-*` — a value an author could reasonably write inline.
@@ -183,6 +183,7 @@ different roles. The prefix rule:
 | Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); a page's own style beats it    | Carrier class in the same family |
 | Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*` / `sf-size-*`; never inherited | The element that wears the class |
 | Bridge           | `--sfx-surface-color`, `--sfx-inset-margin` | Bundle rule (or layout rule, for `--sfx-inset-margin`)     | Higher-layer rule / descendants  |
+| Line part        | `--sfx-line-width`, `--sfx-line-color`      | The class whose meaning it carries; never inherited        | Each class that draws the line   |
 
 ### Theme tokens
 
@@ -276,6 +277,34 @@ per-bundle compound rules — couples the consumer to the current theme's choice
 breaks under any theme that expresses the bundle differently. (The inset compounds are
 per-bundle only in naming which classes own padding; the value comes from the padding
 contract, not a hard-coded token.)
+
+### Line parts
+
+The line round an element (an outline, so it moves nothing) says several things at once, each
+with one part of it, so no combination hides another (owner, 2026-11-21):
+
+| Part      | Says                                                          | Passed by                      |
+| --------- | ------------------------------------------------------------- | ------------------------------ |
+| Colour    | red an error, amber a warning, else the brand colour          | `sf-is-error`, `sf-is-warning` |
+| Dashes    | dashed an error, dotted a warning, else solid                 | `sf-is-error`, `sf-is-warning` |
+| Thickness | thick (`--sf-stroke-3`) targeted, else thin (`--sf-stroke-2`) | `sf-on-targeted`               |
+| Strength  | solid picked, else half see-through                           | `sf-on-selected`               |
+| Gap       | a small gap round small things, else none                     | `sf-size-xs`, `sf-size-2xs`    |
+
+Each class passes its part (`--sfx-line-color`, `--sfx-line-style`, `--sfx-line-width`,
+`--sfx-line-alpha`, `--sfx-line-gap`), and each class that means something about the line also
+draws it, from all the parts there, with the defaults above. Every one draws the same line, so it
+doesn't matter which rule wins, and no combination needs its own rule. A size passes only the gap:
+a size rule that drew the whole line won ties on its order number and hid an error's colour. The
+dashes repeat the colour on purpose, so a warning doesn't rest on colour alone. Each also passes
+`--sfx-line-reach`, how far the line reaches out, for something drawn outside it.
+
+The parts are registered as not inherited (`@property`, in the fixed reset), like the layout
+channels: a targeted box doesn't thicken the lines inside it. A field shows an error or warning on
+its own border instead (`sf-field sf-is-error`: no line).
+
+Keyboard focus is not a part yet: it is the element default outline, which a line replaces, so a
+picked or targeted element with keyboard focus doesn't show it (sf-system-todo.md).
 
 ---
 
@@ -841,13 +870,21 @@ sf-on-hover      hovered (:hover)
 sf-on-focus      keyboard focus (:focus-visible)
 sf-on-active     pressed (:active)
 sf-on-disabled   a control the browser has disabled (:disabled)
-sf-on-selected   picked — a colour swatch, a chip that's on (code-set)
+sf-on-selected   picked: the chosen option of a set, which sets a value — a colour
+                 swatch, a font size, a tab (code-set)
+sf-on-targeted   picked out as a whole to be acted on: the next action applies to it —
+                 ticked rows, files, shapes, the editor's selected blocks; not a cursor
+                 or highlighted text inside it (code-set)
 sf-on-current    the one on now, which Enter would use — the mark applied, the page
                  in a nav, the node path's last crumb (code-set)
 sf-on-ancestor   on the path to sf-on-current but not it — a nav parent, an earlier
                  crumb (code-set)
 sf-on-dragging   being dragged (code-set)
 ```
+
+`sf-on-selected` or `sf-on-targeted`: is this choosing a setting, or gathering things to act
+on? Both can be one or several. Each draws its own part of the line (Line parts), so an element
+can be both.
 
 ```css
 @layer sf-state {
@@ -1431,7 +1468,8 @@ component root                the block's box: wears the node's classes
 
 The component's root is the block's box, as a plain block is one box: its parent places it,
 and it wears TipTap's `data-node-view-wrapper` marker and the classes the editor adds while
-you work (the selection outline, the highlight of blocks chosen together).
+you work (`sf-on-targeted` when it's selected or chosen with others, `sf-is-error` or
+`sf-is-warning` for a warning).
 
 **Rules are written for the content tree.** Theme rules and fixed `sl-` CSS are written as if
 a block's child blocks were its children (`.sf-divide-y > * + *`, `.sl-inset > .sl-bleed`).
@@ -1507,7 +1545,8 @@ IDE linter's own.
   classes, ids, attributes and children. A block's element also wears the classes the block
   always wears, which the page doesn't save: a built-in block's own look (a to-do item's
   `sl-split`), or the classes a component draws on its root (the Centre's `sl-center sl-stack`).
-  Never what the editor shows only while you work (the selection, `sf-on-selected`). The editor reads a
+  Never what the editor shows only while you work (`sf-on-targeted`, `sf-is-error`,
+  `sf-is-warning`). The editor reads a
   component's from its drawn root, the one thing it reads from the page as drawn; the IDE linter
   from its file, where a class set by a setting is only one that may be set.
 - **CSS** is CSSTree's tree, which ESLint's CSS language reads: declarations, values and
@@ -1532,9 +1571,9 @@ readers, walkers and types come with them.
 - **The editor** runs every rule that can break on a page, on its blocks, their own style and
   the styles their text and inline blocks are written with, after each change. A block a rule
   names wears `sf-is-error` for a problem or `sf-is-warning` for a suggestion, and a selected
-  block wears `sf-on-selected`, so the theme draws both and how they meet (the root theme: a
-  line round the block in the error or warning colour, which moves nothing on the page, and
-  the selection's line in that colour while selected). The editor draws no look of its own:
+  block wears `sf-on-targeted`, so the theme draws both (the root theme: the block's line in
+  the error or warning colour, dashed or dotted, thick while targeted; Line parts). The editor
+  draws no look of its own:
   every theme can make its warnings fit. Its Attributes panel lists why, above the rows
   where most are fixed, with the classes the block wears by itself, which no row shows, so a
   warning appears or goes as the class row's change applies. The node path shows the blocks

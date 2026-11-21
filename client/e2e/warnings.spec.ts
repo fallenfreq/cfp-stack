@@ -39,7 +39,7 @@ test("a component's own classes reach the rules, also while it's selected", asyn
 	await classRow.fill('sl-inset sf-gap-sm')
 	await classRow.press('Enter')
 	await expect(stack(page)).toHaveClass(/\bsf-gap-sm\b/)
-	await expect(stack(page)).toHaveClass(/\bsf-on-selected\b/)
+	await expect(stack(page)).toHaveClass(/\bsf-on-targeted\b/)
 	await expect(stack(page)).toHaveClass(/\bsf-is-error\b/)
 
 	// Typed away in the class row, the warning goes.
@@ -99,4 +99,40 @@ test('the count selects the next block with a warning, then the first', async ({
 		/\bsf-is-(error|warning)\b/,
 	)
 	await expect(attributes(page)).toHaveAccessibleName(/^Attributes: \d+ warnings?$/)
+})
+
+// Each part of a block's line says one thing (sf-system.md, "Line parts"), so a targeted block keeps
+// what else is true of it: a small block's problem keeps its colour and dashes, a picked block's
+// line stays solid.
+test('a targeted line keeps what else is true of the block', async ({ page }) => {
+	await page.evaluate(() => {
+		document
+			.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+			.editor!.commands.setContent(
+				'<p id="small" class="sl-stack sl-inset sf-size-xs">Two arrangements</p>'
+					+ '<p id="picked" class="sf-on-selected">Picked</p>',
+			)
+	})
+	const lineOf = (id: string) =>
+		page.locator(`#${id}`).evaluate((el) => {
+			const own = getComputedStyle(el)
+			const rgb = (name: string) => own.getPropertyValue(name).trim().split(/\s+/).join(', ')
+			return {
+				style: own.outlineStyle,
+				thick: own.outlineWidth === own.getPropertyValue('--sf-stroke-3').trim(),
+				danger: own.outlineColor.startsWith(`rgba(${rgb('--sf-danger')},`),
+				solidPrimary: own.outlineColor === `rgb(${rgb('--sf-primary')})`,
+			}
+		})
+
+	await selectBlock(page, 'small')
+	await expect(page.locator('#small')).toHaveClass(/\bsf-is-error\b/)
+	expect(await lineOf('small')).toMatchObject({ style: 'dashed', thick: true, danger: true })
+
+	await selectBlock(page, 'picked')
+	expect(await lineOf('picked')).toMatchObject({
+		style: 'solid',
+		thick: true,
+		solidPrimary: true,
+	})
 })

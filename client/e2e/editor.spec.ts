@@ -93,7 +93,7 @@ test('a block chosen with others is highlighted exactly while it is chosen', asy
 	const at = await nodePosition(page, 'c1-card')
 	const highlighted = async (step: string, want: boolean) => {
 		const check = expect(card, step)
-		await (want ? check : check.not).toHaveClass(/(^|\s)sf-on-selected(\s|$)/)
+		await (want ? check : check.not).toHaveClass(/(^|\s)sf-on-targeted(\s|$)/)
 	}
 	await toggleSelection(page, at)
 	await highlighted('chosen', true)
@@ -135,7 +135,7 @@ test('the toolbar moves and deletes blocks selected together, and the selection 
 		}, n)
 	const press = (name: string) =>
 		page.locator('.floating-toolbar').getByRole('button', { name }).click()
-	const chosen = page.locator('.tiptap .sf-on-selected')
+	const chosen = page.locator('.tiptap .sf-on-targeted')
 
 	await toggleSelection(page, await nodePosition(page, 'ms-a'))
 	await toggleSelection(page, await nodePosition(page, 'ms-b'))
@@ -178,7 +178,7 @@ test('blocks selected together move once each, a block inside another with it', 
 			return found
 		})
 	const tool = (name: string) => page.locator('.floating-toolbar').getByRole('button', { name })
-	const chosen = page.locator('.tiptap .sf-on-selected')
+	const chosen = page.locator('.tiptap .sf-on-targeted')
 	const at = (id: string) => nodePosition(page, id)
 	// The block's drag handle, dragged to the top or bottom edge of another.
 	const drag = async (id: string, to: string, edge: 'top' | 'bottom') => {
@@ -479,7 +479,7 @@ test('a block let go where it is not allowed goes beside the nearest block that 
 			+ '<h2 id="fit-h">Heading</h2><p id="fit-end">End</p>',
 	)
 	const tasks = 'tasks#fit-tl[task#fit-t1[p#fit-t1p]]'
-	const chosen = page.locator('.tiptap .sf-on-selected')
+	const chosen = page.locator('.tiptap .sf-on-targeted')
 	// The block's handle, let go on the top or bottom edge of another. Returns where the page's first
 	// block was on the screen as the drag began.
 	const dragOnto = async (id: string, onto: string, edge: 'top' | 'bottom') => {
@@ -677,7 +677,7 @@ test('Wrap selection keeps the blocks between the chosen ones', async ({ page })
 			.run()
 	})
 	const card = '1e4d245a-16ac-4e60-96e9-1cf4ff6e2b93'
-	const chosen = page.locator('.tiptap .sf-on-selected')
+	const chosen = page.locator('.tiptap .sf-on-targeted')
 	// Chooses the blocks, puts the selection somewhere, and wraps them in a Card.
 	const wrapInCard = async (ids: string[], select: () => Promise<unknown>) => {
 		for (const id of ids) await toggleSelection(page, await nodePosition(page, id))
@@ -1017,9 +1017,9 @@ test('selected blocks stay selected when they change in place', async ({ page })
 	await cursorInParagraph(page)
 	// A to-do item's text is after its tick box, which has a name of its own for screen readers.
 	const selected = page.locator(
-		'.tiptap .sf-on-selected:not(hr, li), .tiptap li.sf-on-selected > label + div',
+		'.tiptap .sf-on-targeted:not(hr, li), .tiptap li.sf-on-targeted > label + div',
 	)
-	const selectedDivider = page.locator('.tiptap hr.sf-on-selected')
+	const selectedDivider = page.locator('.tiptap hr.sf-on-targeted')
 	const texts = ['Column 1', 'Column 2', 'Plain item', 'Item with a class of its own']
 	await expect(selected).toHaveText(texts)
 	await expect(selectedDivider).toHaveCount(1)
@@ -1081,7 +1081,7 @@ test('a picture pasted over a chosen one stays chosen', async ({ page }) => {
 	await settle(page)
 	await expect(page.locator('.tiptap #center-picture')).toHaveCount(0)
 	// The copy goes without the id the page has, so it's found by its class.
-	const chosenPicture = page.locator('.tiptap img.sf-on-selected')
+	const chosenPicture = page.locator('.tiptap img.sf-on-targeted')
 	await expect(chosenPicture).toHaveCount(1)
 	await expect(chosenPicture).toHaveClass(/(^|\s)sl-aspect-16-9(\s|$)/)
 })

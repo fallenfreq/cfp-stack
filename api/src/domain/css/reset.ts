@@ -4,17 +4,35 @@
 // first layer declared).
 import { CHANNELS } from '@somefreq-app/shared/layouts'
 
-const CHANNEL_PROPERTIES = CHANNELS.map(
-	(name) => `@property ${name} {
+// The parts of the line round an element, each passed by the class it means (sf-system.md, "Line
+// parts"). Rules only, so they live here rather than with the layout channels.
+const LINE_PARTS = [
+	'--sfx-line-width',
+	'--sfx-line-color',
+	'--sfx-line-alpha',
+	'--sfx-line-style',
+	'--sfx-line-gap',
+	'--sfx-line-reach',
+]
+
+// Typeless and with no starting value, so a reader's own default still applies when it's unset.
+const notInherited = (names: readonly string[]) =>
+	names
+		.map(
+			(name) => `@property ${name} {
 	syntax: '*';
 	inherits: false;
 }`,
-).join('\n')
+		)
+		.join('\n')
 
 export const RESET = `/* Spacing classes (sf-gap-*, sf-padding-*, sf-size-*, chrome's own padding) apply to the
    element that wears them: nothing inside takes them on. Every reader gives its own default,
    or none where an unset value already means "no spacing". */
-${CHANNEL_PROPERTIES}
+${notInherited(CHANNELS)}
+
+/* The line's parts likewise: a targeted or picked box doesn't change the lines inside it. */
+${notInherited(LINE_PARTS)}
 
 @layer reset {
 	/* Width includes padding and border. A border shows by giving it a width. */

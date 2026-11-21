@@ -250,10 +250,10 @@ const MultiSelectExtension = Extension.create({
 				},
 
 				props: {
-					// Selected blocks wear the theme's sf-on-selected: those selected together, and one
-					// selected on its own, which ProseMirror marks only with its own class.
+					// What the toolbar acts on wears the theme's sf-on-targeted: blocks selected together,
+					// and one selected on its own, which ProseMirror marks only with its own class.
 					decorations(state) {
-						const selected = { class: 'sf-on-selected' }
+						const selected = { class: 'sf-on-targeted' }
 						const decorations = (
 							multiSelectPluginKey.getState(state)?.positions ?? []
 						).map((pos) =>

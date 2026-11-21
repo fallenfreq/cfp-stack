@@ -10,7 +10,7 @@ import { blockWears } from './ownLook'
 // Warnings on the blocks (client/src/assets/sf-system.md, "Validator and linter", "Where a rule
 // shows"). After each change to the page the rules run, and each block they name wears the
 // theme's `sf-is-error` for a problem or `sf-is-warning` for a suggestion, so the theme draws it,
-// selected too (`sf-on-selected`). The editor's own, a mark is never saved,
+// targeted too (`sf-on-targeted`). The editor's own, a mark is never saved,
 // and the rules don't read it: a component's box is read less its decorations
 // (customComponentNode.ts), a built-in block from its HTML. The rules load on their own once the
 // editor is open (pageRules.ts).

@@ -28,7 +28,7 @@ for (const widthName of ['wide', 'just below sm', 'just below xs'])
 				const classes = [...el.classList].filter(
 					(c) =>
 						!c.startsWith('ProseMirror')
-						&& c !== 'sf-on-selected'
+						&& c !== 'sf-on-targeted'
 						&& c !== 'sf-is-error'
 						&& c !== 'sf-is-warning',
 				)

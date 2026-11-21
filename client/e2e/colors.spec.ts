@@ -154,14 +154,14 @@ test("a shadow with no colour picked has the theme's; any colour picked is kept,
 	const block = page.locator('#block')
 	await expect(block).toHaveAttribute(
 		'class',
-		'sf-shadow-md sf-shadow-color-shadow sf-shadow-alpha-2 sf-on-selected ProseMirror-selectednode',
+		'sf-shadow-md sf-shadow-color-shadow sf-shadow-alpha-2 sf-on-targeted ProseMirror-selectednode',
 	)
 
 	// The block stays selected and the panel open: a second pick follows.
 	await panel(page).getByRole('button', { name: 'Theme shadow', exact: true }).click()
 	await expect(block).toHaveAttribute(
 		'class',
-		'sf-shadow-md sf-on-selected ProseMirror-selectednode',
+		'sf-shadow-md sf-on-targeted ProseMirror-selectednode',
 	)
 	await expect(panel(page)).toContainText('Theme shadow')
 })
