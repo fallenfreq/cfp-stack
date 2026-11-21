@@ -1,7 +1,7 @@
 <template>
 	<SfPopover
 		v-model:open="open"
-		class="toolbar-panel sf-size-2xs"
+		class="toolbar-panel sf-size-xs"
 		:class="{ 'is-waiting': waitingForKeyboard }"
 		:align="align"
 		@mousedown.stop
