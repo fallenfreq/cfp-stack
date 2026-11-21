@@ -177,13 +177,13 @@ different roles. The prefix rule:
 > `--sf-*` — a value an author could reasonably write inline.
 > `--sfx-*` — only rules write this; internal rule-to-rule contract.
 
-| Kind             | Example                                     | Set by                                                     | Read by                          |
-| ---------------- | ------------------------------------------- | ---------------------------------------------------------- | -------------------------------- |
-| Theme token      | `--sf-primary-5`, `--sf-fg_primary`         | Theme class (`.theme-x { --sf-X: ... }`)                   | Rules across every layer         |
-| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); a page's own style beats it    | Carrier class in the same family |
-| Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*` / `sf-size-*`; never inherited | The element that wears the class |
-| Bridge           | `--sfx-surface-color`, `--sfx-inset-margin` | Bundle rule (or layout rule, for `--sfx-inset-margin`)     | Higher-layer rule / descendants  |
-| Line part        | `--sfx-line-width`, `--sfx-line-color`      | The class whose meaning it carries; never inherited        | Each class that draws the line   |
+| Kind             | Example                                     | Set by                                                                          | Read by                          |
+| ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------- |
+| Theme token      | `--sf-primary-5`, `--sf-fg_primary`         | Theme class (`.theme-x { --sf-X: ... }`)                                        | Rules across every layer         |
+| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); a page's own style beats it                         | Carrier class in the same family |
+| Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*` / `sf-size-*`; never inherited                      | The element that wears the class |
+| Bridge           | `--sfx-surface-color`, `--sfx-inset-margin` | Bundle rule (or layout rule, for `--sfx-inset-margin`)                          | Higher-layer rule / descendants  |
+| Line part        | `--sfx-line-width`, `--sfx-line-color`      | The class whose meaning it carries (reach: each that draws it); never inherited | Each class that draws the line   |
 
 ### Theme tokens
 
@@ -293,7 +293,8 @@ with one part of it, so no combination hides another (owner, 2026-11-21):
 
 Each class passes its part (`--sfx-line-color`, `--sfx-line-style`, `--sfx-line-width`,
 `--sfx-line-alpha`, `--sfx-line-gap`), and each class that means something about the line also
-draws it, from all the parts there, with the defaults above. Every one draws the same line, so it
+draws it, from all the parts there, with the defaults above (and a colour swatch draws it while
+hovered). Every one draws the same line, so it
 doesn't matter which rule wins, and no combination needs its own rule. A size passes only the gap:
 a size rule that drew the whole line won ties on its order number and hid an error's colour. The
 dashes repeat the colour on purpose, so a warning doesn't rest on colour alone. Each also passes
