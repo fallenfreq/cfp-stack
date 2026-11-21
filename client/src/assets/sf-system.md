@@ -177,13 +177,13 @@ different roles. The prefix rule:
 > `--sf-*` — a value an author could reasonably write inline.
 > `--sfx-*` — only rules write this; internal rule-to-rule contract.
 
-| Kind             | Example                                     | Set by                                                                          | Read by                          |
-| ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------- |
-| Theme token      | `--sf-primary-5`, `--sf-fg_primary`         | Theme class (`.theme-x { --sf-X: ... }`)                                        | Rules across every layer         |
-| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); a page's own style beats it                         | Carrier class in the same family |
-| Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*` / `sf-size-*`; never inherited                      | The element that wears the class |
-| Bridge           | `--sfx-surface-color`, `--sfx-inset-margin` | Bundle rule (or layout rule, for `--sfx-inset-margin`)                          | Higher-layer rule / descendants  |
-| Line part        | `--sfx-line-width`, `--sfx-line-color`      | The class whose meaning it carries (reach: each that draws it); never inherited | Each class that draws the line   |
+| Kind             | Example                                     | Set by                                                     | Read by                          |
+| ---------------- | ------------------------------------------- | ---------------------------------------------------------- | -------------------------------- |
+| Theme token      | `--sf-primary-5`, `--sf-fg_primary`         | Theme class (`.theme-x { --sf-X: ... }`)                   | Rules across every layer         |
+| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); a page's own style beats it    | Carrier class in the same family |
+| Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*` / `sf-size-*`; never inherited | The element that wears the class |
+| Bridge           | `--sfx-surface-color`, `--sfx-inset-margin` | Bundle rule (or layout rule, for `--sfx-inset-margin`)     | Higher-layer rule / descendants  |
+| Line part        | `--sfx-line-width`, `--sfx-line-color`      | The class whose meaning it carries; never inherited        | Each class that draws the line   |
 
 ### Theme tokens
 
@@ -297,15 +297,23 @@ draws it, from all the parts there, with the defaults above (and a colour swatch
 hovered). Every one draws the same line, so it
 doesn't matter which rule wins, and no combination needs its own rule. A size passes only the gap:
 a size rule that drew the whole line won ties on its order number and hid an error's colour. The
-dashes repeat the colour on purpose, so a warning doesn't rest on colour alone. Each also passes
-`--sfx-line-reach`, how far the line reaches out, for something drawn outside it.
+dashes repeat the colour on purpose, so a warning doesn't rest on colour alone.
 
 The parts are registered as not inherited (`@property`, in the fixed reset), like the layout
 channels: a targeted box doesn't thicken the lines inside it. A field shows an error or warning on
 its own border instead (`sf-field sf-is-error`: no line).
 
-Keyboard focus is not a part yet: it is the element default outline, which a line replaces, so a
-picked or targeted element with keyboard focus doesn't show it (sf-system-todo.md).
+**Keyboard focus** is a 2px ring in the text colour against the element (owner, 2026-11-21; the
+brand colour falls short of 3:1 on white). With no line it is the element default outline. A line
+would replace that, so each class that draws the line also draws the ring with focus, as a shadow
+against the element, and steps the line out by the ring's width to go round it: focus and every
+part of the line show together. The element's own shadow gives way while it's focused. Focus on an
+element whose only line is an error or warning is drawn in the context layer, so a higher-ranked
+shadow there (an `sf-shadow-*` utility, `sf-is-overlay` compounds) shows instead of the ring; its
+line still steps out. A field has no line and no ring from one: its focus is its own (the border
+and a tint), and an error's border stays red while focused. In forced colours (Windows high
+contrast) shadows aren't drawn, so focus on an element with a line shows only as the line stepping
+out.
 
 ---
 

@@ -9,7 +9,9 @@ export const SF_ELEMENT_DEFAULTS = `@layer sf-element {
 		font-size: var(--sf-text-base);
 		line-height: var(--sf-leading-relaxed);
 	}
+	/* Keyboard focus: a ring in the text colour, against the element. An element with a line
+	   shows it with the line's own rules (sf-system.md, "Line parts"). */
 	*:focus-visible {
-		outline: var(--sf-stroke-2) solid rgb(var(--sf-primary));
+		outline: var(--sf-stroke-2) solid rgb(var(--sf-fg_primary));
 	}
 }`

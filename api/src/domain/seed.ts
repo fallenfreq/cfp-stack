@@ -857,6 +857,8 @@ type RuleSpec = ClassOnlyRuleInput | ElementRuleInput
 // The line round an element (sf-system.md, "Line parts"): each class that means something about it
 // passes its part, and each draws the same line from all the parts there, so whichever rule wins
 // draws them all. Parts left unset give a thin, half see-through, solid line in the brand colour.
+// With keyboard focus the line takes the place of the focus ring, so it draws the ring itself,
+// against the element, and steps out round it.
 const LINE_WIDTH = 'var(--sfx-line-width, var(--sf-stroke-2))'
 const LINE_GAP = 'var(--sfx-line-gap, 0px)'
 const drawsLine = (classNames: [string, ...string[]]): RuleSpec[] => [
@@ -866,8 +868,18 @@ const drawsLine = (classNames: [string, ...string[]]): RuleSpec[] => [
 		value: `${LINE_WIDTH} var(--sfx-line-style, solid) rgb(var(--sfx-line-color, var(--sf-primary)) / var(--sfx-line-alpha, var(--sf-alpha-5)))`,
 	},
 	{ classNames, cssProperty: 'outline-offset', value: LINE_GAP },
-	// How far it reaches out, so something drawn outside it (the focus ring) starts beyond it.
-	{ classNames, cssProperty: '--sfx-line-reach', value: `calc(${LINE_GAP} + ${LINE_WIDTH})` },
+	{
+		classNames,
+		pseudo: ':focus-visible',
+		cssProperty: 'box-shadow',
+		value: '0 0 0 var(--sf-stroke-2) rgb(var(--sf-fg_primary))',
+	},
+	{
+		classNames,
+		pseudo: ':focus-visible',
+		cssProperty: 'outline-offset',
+		value: `calc(${LINE_GAP} + var(--sf-stroke-2))`,
+	},
 ]
 
 // Layout primitives become query containers only when something inside them collapses.
@@ -1647,8 +1659,21 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-is-warning'], cssProperty: '--sfx-line-color', value: 'var(--sf-warning)' },
 	{ classNames: ['sf-is-warning'], cssProperty: '--sfx-line-style', value: 'dotted' },
 	...drawsLine(['sf-is-warning']),
+	// A field has no line, so no focus ring from one either.
 	{ classNames: ['sf-field', 'sf-is-error'], cssProperty: 'outline', value: 'none' },
 	{ classNames: ['sf-field', 'sf-is-warning'], cssProperty: 'outline', value: 'none' },
+	{
+		classNames: ['sf-field', 'sf-is-error'],
+		pseudo: ':focus-visible',
+		cssProperty: 'box-shadow',
+		value: 'none',
+	},
+	{
+		classNames: ['sf-field', 'sf-is-warning'],
+		pseudo: ':focus-visible',
+		cssProperty: 'box-shadow',
+		value: 'none',
+	},
 	// sf-is-contained × sf-is-overlay — contained takes priority over overlay's tinted
 	// surface background. Both are single-class context rules; the compound wins by specificity.
 	// Without this, the generator's alphabetical emission order lets sf-is-overlay overwrite

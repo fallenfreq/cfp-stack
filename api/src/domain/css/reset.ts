@@ -12,7 +12,6 @@ const LINE_PARTS = [
 	'--sfx-line-alpha',
 	'--sfx-line-style',
 	'--sfx-line-gap',
-	'--sfx-line-reach',
 ]
 
 // Typeless and with no starting value, so a reader's own default still applies when it's unset.
