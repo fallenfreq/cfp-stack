@@ -1,4 +1,3 @@
-import type { RouteLocationNormalized } from 'vue-router'
 import {
 	SCROLL_RESTORATION_CAPTURE_DEFAULT,
 	SCROLL_RESTORATION_RESTORE_DEFAULT,
@@ -15,7 +14,6 @@ import {
 // Any later, and the reader would have started on the page before it moved.
 const WAIT = 1000
 
-const isEditor = (at: RouteLocationNormalized) => at.name === 'editor' || at.name === 'editor-page'
 const picturesLoading = () => [...document.images].some((picture) => !picture.complete)
 
 let shown: string | null = null
@@ -26,7 +24,7 @@ const restore: ScrollRestorationPluginOptions['restore'] = (entry, to) => {
 	const before = shown
 	shown = to.path + to.hash
 	// The same page with another query (a page opened in a collection's sheet) stays put.
-	if (shown === before || isEditor(to)) return
+	if (shown === before || to.meta.editor) return
 	const place = entry?.default?.top ?? 0
 	const hash = entry?.default ? '' : to.hash.slice(1)
 	scrollTo(0, 0)

@@ -103,6 +103,15 @@ Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ide
 
 ## Editor
 
+- **Exit's limits.** It opens the entry before the editor's in the tab's history, so after an
+  in-page jump (`#…`) it goes back to the editor itself, and arriving through sign-in (a new
+  history) it goes home. Exit to a page's Preview shows its last copy until it's read again. A
+  direct load of `/demo/editor` shows the site's header until the editor's code arrives: the
+  router reads no meta through a redirect (owner, 2026-11-20: accepted).
+- **The crumb worked on can stop under the path's fade.** The row scrolls it just into view, at
+  its edge, where `sf-is-overflow-*` fades the first 60px. Room as wide as the fade
+  (`scroll-padding`) needs the fade's width as a theme value; toolbar rows share it (owner,
+  2026-11-21: left for now).
 - **The style tools' selection checks never apply.** Colour, Font, Aspect, Corners and Shadow
   check how many blocks are selected (`defaultItemsStyle.ts`), but the toolbar hides them whenever
   any is.
@@ -238,6 +247,12 @@ Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ide
   scroll, so it's out. In the editor the room past the end brings the panel into view; elsewhere,
   at the very end of a page on a short screen, its top could stay cut off (not tried). Marked
   expected to fail in WebKit (`anchorFallback.spec.ts`).
+- **Safari's scroll anchoring in the editor.** Safari 27's anchoring keeps the line being written
+  still as late pictures above it load only with a size container outside the editor; the
+  editor hides the site's nav, which was one, so the page's end is one instead (`App.vue`, a
+  workaround). To report to WebKit, with a small page that shows it (a bare page didn't), and
+  the workaround removed once fixed. Safari before 27 has no anchoring: there such a picture
+  pushes the line down. Pictures with a known size wouldn't push it in any browser.
 - **Report the Safari 26 bug to WebKit:** a box anchored to an unpositioned element in a fixed
   bar is placed as though the bar scrolled with the page (`SfPopover.vue`). It needs the user's
   account.
@@ -253,6 +268,12 @@ Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ide
 
 - **`sf-on-*` state rules.** Every state has its bare rule; `sf-on-hover` has no border channel
   yet.
+- **Controls in one bar aren't one height.** At the same size, a button's height follows what it
+  holds: words take the theme's line height (the editor's Exit, 44px), words with
+  `sf-single-line` one text line (Save, 34px), icons their own size (34–36px); a text field has
+  no padding (the page's name, 26px). Matching them by adding `sf-single-line` would be a class
+  used for its look. Open: whether a bar's controls need a word of their own, or a size should
+  set the height (measured 2026-11-21, `EditorTopBar.vue`).
 - **Icons:** decide whether in-text icons want `1.1em` (`material-symbols.css`): rounded glyphs
   look smaller.
 - **Raw tokens in component CSS.** A few components still read colour tokens directly
@@ -284,6 +305,9 @@ Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ide
 
 ## Ideas, not decided
 
+- **Bigger controls on a touch screen.** The editor's controls are the toolbar's size, `xs`
+  (34–44px in the bar): above WCAG's 24px least, below the 44–48px Apple and Google give a touch
+  (owner, 2026-11-20: a question of its own).
 - **Saying a page is open somewhere else**, as WordPress's post lock does ("being edited by…",
   with Take over), for when several people edit. It would sit on top of the version and key a
   save is taken by, not replace them: a lock can be taken over or go stale, and a lost answer

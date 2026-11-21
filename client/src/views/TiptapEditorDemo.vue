@@ -22,12 +22,11 @@ const store = useEditorStore()
 const closed = new AbortController()
 onBeforeUnmount(() => closed.abort())
 
-// The view stays while its address changes (the Demo link from a page, back to the page), so each
-// address opens in a new editor, as arriving does: undo and Save can't reach the page before.
+// The view stays while its address changes (Back or Forward to another page in the editor), so
+// each address opens in a new editor, as arriving does: undo and Save can't reach the page before.
 // Only what the address opens counts (what whatOpens reads), not its hash.
 const opens = (at: RouteLocationNormalized) =>
 	JSON.stringify([paramString(at.params['slug']), at.query['seed'], at.query['autoTag']])
-const isEditor = (at: RouteLocationNormalized) => at.name === 'editor' || at.name === 'editor-page'
 // Saving a new page gives it an address; that's the page already open, so it stays.
 const isOpenPage = (at: RouteLocationNormalized) => {
 	const slug = paramString(at.params['slug'])
@@ -37,7 +36,7 @@ const opened = ref(0)
 watch(
 	() => opens(route),
 	() => {
-		if (isEditor(route) && !isOpenPage(route)) opened.value++
+		if (route.meta.editor && !isOpenPage(route)) opened.value++
 	},
 )
 
@@ -58,12 +57,12 @@ function mayLeave(to: RouteLocationNormalized, from: RouteLocationNormalized) {
 	const again = to.fullPath === goingAgain
 	goingAgain = null
 	// A place on the page shown is newer than a held move, which it drops: the page stays.
-	if (isEditor(to) && opens(to) === opens(from)) {
+	if (to.meta.editor && opens(to) === opens(from)) {
 		held = null
 		if (asking) cancelModal()
 		return true
 	}
-	if (again || (isEditor(to) && isOpenPage(to))) return true
+	if (again || (to.meta.editor && isOpenPage(to))) return true
 	if (!store.saveUnderWay() && !mayLoseEdits()) return true
 	const deciding = held !== null
 	// Back and Forward have moved the history to `to` already; a link hasn't.
@@ -131,6 +130,8 @@ interface Opening {
 // demo, the layout test cases, a stored page, or a new page (autoTag: saved into that collection).
 const opening = shallowRef<Opening | null>(null)
 const problem = ref<string | null>(null)
+// Content that isn't a document, or that the editor refuses.
+const cantOpen = "This page can't be opened."
 
 watch(opened, () => open(opened.value), { immediate: true })
 
@@ -171,9 +172,9 @@ async function whatOpens(): Promise<Opening | string> {
 	try {
 		content = JSON.parse(page.contentJson)
 	} catch {
-		return "This page can't be opened."
+		return cantOpen
 	}
-	if (typeof content !== 'object' || content === null) return "This page can't be opened."
+	if (typeof content !== 'object' || content === null) return cantOpen
 	return { content: content as Content, page, autoTag: tag }
 }
 
@@ -185,13 +186,19 @@ const pageOpened = (editor: Editor) => {
 </script>
 
 <template>
-	<SfStatusDisplay v-if="problem" state="error" :message="problem" />
+	<!-- Without the site's header, the editor's other screens have Exit too. -->
+	<SfStatusDisplay v-if="problem" state="error" :message="problem">
+		<EditorExitButton />
+	</SfStatusDisplay>
 	<TiptapEditor
 		v-else-if="opening"
 		:key="opened"
 		:content="opening.content"
 		@opened="pageOpened"
 		@closed="store.closePage"
+		@refused="problem = cantOpen"
 	/>
-	<SfStatusDisplay v-else state="loading" message="Loading editor…" />
+	<SfStatusDisplay v-else state="loading" message="Loading editor…">
+		<EditorExitButton />
+	</SfStatusDisplay>
 </template>

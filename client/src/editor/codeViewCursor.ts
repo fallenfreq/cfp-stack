@@ -1,4 +1,4 @@
-import { underTheBar } from '@/editor/extensions/rememberCursor'
+import { underEditorTopBar } from '@/editor/extensions/scrollClearOfEditorTopBar'
 import { prettifyCode } from '@/utils/codeFormatting'
 import { codeViewHtml } from '@/utils/editor/codeViewHtml'
 import { elementFromString } from '@tiptap/core'
@@ -284,7 +284,7 @@ export const cursorFromCode = (code: string, cursor: CodeCursor, doc: PMNode): S
  */
 export const lineOnScreen = (view: EditorView, pos: number) => {
 	const { top, bottom } = view.coordsAtPos(pos)
-	return top >= underTheBar() && bottom <= innerHeight ? top : underTheBar()
+	return top >= underEditorTopBar() && bottom <= innerHeight ? top : underEditorTopBar()
 }
 
 /** Scrolls the line at `pos` to `top` on the screen. */

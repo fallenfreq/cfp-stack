@@ -713,7 +713,8 @@ test('Wrap selection keeps the blocks between the chosen ones', async ({ page })
 // (the editor warns once).
 test('clicking between the blocks in an inset Card selects the card', async ({ page }) => {
 	const warnings = appMessages(page, ['warning'])
-	await page.locator('#card-inset').scrollIntoViewIfNeeded()
+	// The gap mid-screen, clear of the editor's bars, as a person sees it.
+	await page.locator('#card-inset-first').evaluate((el) => el.scrollIntoView({ block: 'center' }))
 	// The floating toolbar follows the scroll a frame later; until then it can cover the spot.
 	await settle(page)
 	const above = await box(page.locator('#card-inset-first'))
@@ -3639,7 +3640,7 @@ const writeCode = (page: Page, code: string) =>
 		})
 	}, code)
 
-// The messages shown, dismissed: out of the way of the Code view button.
+// The messages shown, dismissed: the next case's message is its own, not counted with the last.
 const dismissMessages = async (page: Page) => {
 	for (const dismiss of await page
 		.locator('.toast')
@@ -4015,18 +4016,22 @@ test('the code view writes each block as the page does, and reads it back the sa
 })
 
 // The page's toolbar works on the page; over the code view it would stay where it was.
+// The path hides with the page, its row keeping its height so nothing moves.
 test("the page's toolbar and path aren't shown in the code view", async ({ page }) => {
 	await selectBlock(page, 'task-plain')
 	const toolbar = page.locator('.floating-toolbar')
 	const path = page.locator('.node-path button')
+	const bars = page.locator('.editor-top-bar')
 	await expect(toolbar).toBeVisible()
-	await expect(path).not.toHaveCount(0)
+	await expect(path.first()).toBeVisible()
+	const height = (await box(bars)).height
 	await switchView(page, true)
 	await expect(toolbar).toHaveCount(0)
-	await expect(path).toHaveCount(0)
+	await expect(path.first()).toBeHidden()
+	expect((await box(bars)).height, 'the bars as tall').toBe(height)
 	await switchView(page, false)
 	await expect(toolbar).toBeVisible()
-	await expect(path).not.toHaveCount(0)
+	await expect(path.first()).toBeVisible()
 })
 
 test('leaving the editor and coming back shows its content again, without a reload', async ({
@@ -4137,4 +4142,135 @@ test('a code block is coloured in its language, and plain with none or one not i
 	expect(await coloured('set'), 'JavaScript').toBeGreaterThan(0)
 	expect(await coloured('short'), 'its short name').toBeGreaterThan(0)
 	expect(await coloured('other'), 'a language not in the list').toBe(0)
+})
+
+// The editor's bars: the page's row, then the node path on a row of its own. Each control is big
+// enough to hit (WCAG's 24px least), on a phone too.
+test("the bars' controls are big enough to hit, and the path has a row of its own", async ({
+	page,
+}) => {
+	await page.locator('.tiptap p').first().click()
+	for (const width of [1440, 390]) {
+		await page.setViewportSize({ width, height: 844 })
+		await settle(page)
+		const bars = page.locator('.editor-top-bar')
+		const controls = await bars.locator('button:visible, input:visible').evaluateAll((els) =>
+			els.map((el) => ({
+				name: el.getAttribute('aria-label') ?? el.textContent?.trim() ?? '',
+				height: el.getBoundingClientRect().height,
+			})),
+		)
+		expect(controls.length, `controls at ${width}px`).toBeGreaterThan(3)
+		for (const { name, height } of controls)
+			expect(height, `${name} at ${width}px`).toBeGreaterThanOrEqual(24)
+		const exit = await box(bars.getByRole('button', { name: 'Exit' }))
+		const path = await box(page.locator('.node-path'))
+		expect(path.top, `the path under the page's row at ${width}px`).toBeGreaterThanOrEqual(
+			exit.bottom,
+		)
+		expect(
+			Math.abs(path.left - exit.left),
+			`the path from the row's start`,
+		).toBeLessThanOrEqual(1)
+		const menu = await box(bars.getByRole('button', { name: 'Editor actions' }))
+		expect(Math.abs(path.right - menu.right), `the path to the row's end`).toBeLessThanOrEqual(
+			1,
+		)
+	}
+})
+
+// On a narrow screen a path can be longer than its row, which scrolls: the crumb worked on stays
+// whole in view as it changes, and the page doesn't move.
+test('a path longer than its row keeps the crumb worked on in view', async ({ page }) => {
+	await page.setViewportSize({ width: 320, height: 700 })
+	await settle(page)
+	await page.getByText('A card', { exact: true }).click()
+	await settle(page)
+	const row = page.locator('.node-path')
+	expect(
+		await row.evaluate((el) => el.scrollWidth > el.clientWidth),
+		'the path longer than its row',
+	).toBe(true)
+	const currentWhole = () =>
+		row.evaluate((el) => {
+			const current = el.querySelector('.sf-on-current')!.getBoundingClientRect()
+			const shown = el.getBoundingClientRect()
+			return current.left >= shown.left - 1 && current.right <= shown.right + 1
+		})
+	const crumbs = row.getByRole('button')
+	// Picked by a press that doesn't scroll anything itself, as Playwright's click would.
+	for (const [which, at] of [
+		['the last', -1],
+		['the first', 1],
+	] as const) {
+		const before = await page.evaluate(() => scrollY)
+		await row.evaluate((el, at) => {
+			el.scrollLeft = at === 1 ? el.scrollWidth : 0
+		}, at)
+		await crumbs.nth(at).evaluate((crumb: HTMLElement) => crumb.click())
+		await settle(page)
+		expect(await currentWhole(), `${which} crumb picked`).toBe(true)
+		expect(await page.evaluate(() => scrollY), 'the page where it was').toBe(before)
+	}
+})
+
+// "⋯" holds the dark mode switch, which goes with the site's header. A press in the menu closes it.
+test('the editor menu switches dark mode', async ({ page }) => {
+	const scheme = () => css(page.locator('body'), 'background-color')
+	const menu = page.getByRole('button', { name: 'Editor actions' })
+	const dark = page.getByRole('switch', { name: 'Dark mode' })
+	const before = await scheme()
+	await menu.click()
+	const was = await dark.getAttribute('aria-checked')
+	await dark.click()
+	await expect(dark, 'the menu closed').toBeHidden()
+	// It fades across (main.css).
+	await expect.poll(scheme, 'the page in the other scheme').not.toBe(before)
+	await menu.click()
+	await expect(dark).not.toHaveAttribute('aria-checked', was!)
+})
+
+// The editor counts a line under its sticky bars as on the screen: moving the cursor up could leave
+// the line being written hidden under them. Now it scrolls the line clear, just under the bars, in
+// the page and in the code view, each an editor of its own.
+test('moving the cursor up keeps its line clear of the bars', async ({ page }) => {
+	const caret = () =>
+		shownEditor(page).evaluate((el: TiptapEditorHTMLElement) => {
+			const { view } = el.editor!
+			const line = view.coordsAtPos(view.state.selection.head)
+			const bars = document.querySelector('.editor-top-bar')!.getBoundingClientRect()
+			return { top: line.top, bars: bars.bottom }
+		})
+	const upFromUnderTheBars = async (where: string) => {
+		const start = await caret()
+		await page.evaluate((by) => window.scrollBy(0, by), start.top - start.bars - 4)
+		await settle(page)
+		for (const press of [1, 2, 3]) {
+			await page.keyboard.press('ArrowUp')
+			await settle(page)
+			const at = await caret()
+			expect(at.top, `${where}, up ${press}: its line below the bars`).toBeGreaterThanOrEqual(
+				at.bars,
+			)
+		}
+	}
+	await page.evaluate(() => {
+		const { editor } = document.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+		const paragraph = document.querySelectorAll('.tiptap > p')[8]!
+		editor!.chain().focus().setTextSelection(editor!.view.posAtDOM(paragraph, 0)).run()
+	})
+	await settle(page)
+	await upFromUnderTheBars('the page')
+
+	await switchView(page, true)
+	await shownEditor(page).evaluate((el: TiptapEditorHTMLElement) => {
+		const editor = el.editor!
+		editor
+			.chain()
+			.focus()
+			.setTextSelection(Math.floor(editor.state.doc.content.size / 2))
+			.run()
+	})
+	await settle(page)
+	await upFromUnderTheBars('the code view')
 })

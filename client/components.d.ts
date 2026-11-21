@@ -23,6 +23,7 @@ declare module 'vue' {
     ComingSoon: typeof import('./src/components/ComingSoon.vue')['default']
     CurrentLocation: typeof import('./src/components/demos/map/currentLocation.vue')['default']
     DarkModeSwitch: typeof import('./src/components/DarkModeSwitch.vue')['default']
+    EditorExitButton: typeof import('./src/components/editor/EditorExitButton.vue')['default']
     EditorTopBar: typeof import('./src/components/editor/EditorTopBar.vue')['default']
     EmailChangeCard: typeof import('./src/components/account/EmailChangeCard.vue')['default']
     FloatingDragHandle: typeof import('./src/components/editor/FloatingDragHandle.vue')['default']

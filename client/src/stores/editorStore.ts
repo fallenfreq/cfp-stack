@@ -6,7 +6,7 @@ import {
 	scrollLineTo,
 	type CodeCursor,
 } from '@/editor/codeViewCursor'
-import { underTheBar } from '@/editor/extensions/rememberCursor'
+import { underEditorTopBar } from '@/editor/extensions/scrollClearOfEditorTopBar'
 import router from '@/router'
 import { noAnswer, notifyError } from '@/services/errors'
 import { showConfirm, showPrompt } from '@/services/promptModal'
@@ -45,7 +45,7 @@ export interface OpenPage {
 	// tells edits from.
 	doc: ProseMirrorNode
 	savedDoc: ProseMirrorNode
-	saveStatus: 'idle' | 'saving' | 'saved' | 'error'
+	saveStatus: 'idle' | 'saving' | 'error'
 	// The save under way, from its start (its name question included) to its end.
 	saving: Promise<void> | null
 	// Closes the message that a refused save wasn't saved over, which the next save or leaving the
@@ -184,7 +184,8 @@ export const useEditorStore = defineStore('editor', () => {
 				return
 			}
 			const at = codeEditor?.state.selection
-			const top = codeEditor && at ? lineOnScreen(codeEditor.view, at.from) : underTheBar()
+			const top =
+				codeEditor && at ? lineOnScreen(codeEditor.view, at.from) : underEditorTopBar()
 			const written = code.value
 			// Its select-all also takes in the code block around the code.
 			const inCode = (pos: number) => Math.min(Math.max(pos - CODE_START, 0), written.length)
@@ -343,7 +344,6 @@ export const useEditorStore = defineStore('editor', () => {
 			codeProblem(`Not saved: ${problem}`)
 			return
 		}
-		open.saveStatus = 'saving'
 		// The page as it's sent: what's typed while it saves stays unsaved.
 		const doc = open.editor.state.doc
 		const json = open.editor.getJSON()
@@ -352,6 +352,7 @@ export const useEditorStore = defineStore('editor', () => {
 		)
 		try {
 			if (open.pageId !== null) {
+				open.saveStatus = 'saving'
 				if (!(await saveStored(open, open.pageId, contentJson))) {
 					open.saveStatus = 'idle'
 					return
@@ -360,11 +361,10 @@ export const useEditorStore = defineStore('editor', () => {
 				let name = open.name?.trim() || null
 				if (!name) {
 					name = await showPrompt('Page name')
-					if (name === null) {
-						open.saveStatus = 'idle'
-						return
-					}
+					if (name === null) return
 				}
+				// Saving once it has a name, not while it's asked.
+				open.saveStatus = 'saving'
 				// Made with its collection, in one write. With no answer it may have been made: Save
 				// again saves that page, with this name, not asked again.
 				const made = await createPage
@@ -388,15 +388,8 @@ export const useEditorStore = defineStore('editor', () => {
 			}
 			open.savedDoc = doc
 			if (page.value === open) await showAddress(open)
-			open.saveStatus = 'saved'
-			setTimeout(() => {
-				if (open.saveStatus === 'saved') open.saveStatus = 'idle'
-			}, 2000)
-			notify({
-				duration: 2000,
-				variant: 'success',
-				message: 'Saved',
-			})
+			// Save's own "Saved" says so (EditorTopBar).
+			open.saveStatus = 'idle'
 		} catch (error) {
 			open.saveStatus = 'error'
 			setTimeout(() => {

@@ -40,26 +40,67 @@ test('a page starts as far below the site nav as the nav sits below the top', as
 	page,
 	themeClass,
 }) => {
-	const roomBelowNav = async (first: string) => {
-		await page.evaluate(() => window.scrollTo(0, 0))
-		const nav = await box(page.locator('.site-nav'))
-		expect(nav.top, 'the theme leaves room above the nav').toBeGreaterThan(0)
-		const below = (await box(page.locator(first))).top - nav.bottom
-		expect(Math.abs(below - nav.top), `room above ${first}`).toBeLessThanOrEqual(1)
-	}
-	// The editor's bar adds no room of its own; a page with a title adds none either.
-	await openTests(page, themeClass)
-	await roomBelowNav('.editor-top-bar')
+	// A page with a title adds no room of its own.
+	await steadyRequests(page)
 	await page.goto('/contact')
 	await useTheme(page, themeClass)
-	await roomBelowNav('main h1')
+	await page.evaluate(() => window.scrollTo(0, 0))
+	const nav = await box(page.locator('.site-nav'))
+	expect(nav.top, 'the theme leaves room above the nav').toBeGreaterThan(0)
+	const below = (await box(page.locator('main h1'))).top - nav.bottom
+	expect(Math.abs(below - nav.top), 'room above the title').toBeLessThanOrEqual(1)
 })
 
-test('while writing, the page scrolls on until its last line sits under the bar, the footer at the bottom', async ({
+// The editor brings its own bars: the site's header and footer never show around it, not even
+// while it loads (the address being opened is asked about before its page is known).
+test("the editor shows its own bars, never the site's header or footer", async ({
 	page,
 	themeClass,
 }) => {
-	// The page's end, the footer and the room between them (the page margin, with none added).
+	await page.addInitScript(() => {
+		const seen = { header: false, footer: false }
+		Object.assign(window, { seen })
+		new MutationObserver(() => {
+			seen.header ||= document.querySelector('.app-header') !== null
+			seen.footer ||= document.querySelector('.app-footer') !== null
+		}).observe(document, { childList: true, subtree: true })
+	})
+	await openTests(page, themeClass)
+	expect(await page.evaluate(() => Reflect.get(window, 'seen'))).toEqual({
+		header: false,
+		footer: false,
+	})
+	expect((await box(page.locator('.editor-top-bar'))).top, 'the bars at the top').toBe(0)
+	// Leaving brings them back.
+	await moveTo(page, '/contact')
+	await expect(page.locator('.app-header')).toBeVisible()
+	await expect(page.locator('.app-footer')).toBeVisible()
+})
+
+test('while writing, the page scrolls on until its last line sits under the bars', async ({
+	page,
+	themeClass,
+}) => {
+	const scrollToTheEnd = () =>
+		page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+	const lastUnderTheBars = () =>
+		page.evaluate(() => {
+			const bars = document.querySelector('.editor-top-bar')!.getBoundingClientRect()
+			const last = document
+				.querySelector('.tiptap')!
+				.lastElementChild!.getBoundingClientRect()
+			return Math.round(last.top - bars.bottom)
+		})
+
+	await openTests(page, themeClass)
+	await scrollToTheEnd()
+	await settle(page)
+	expect(
+		Math.abs(await lastUnderTheBars()),
+		'the last line just under the bars',
+	).toBeLessThanOrEqual(1)
+
+	// A published page ends with the footer, straight after the content.
 	const end = () =>
 		page.evaluate(() => {
 			const content = document.querySelector('main')!.getBoundingClientRect()
@@ -67,43 +108,8 @@ test('while writing, the page scrolls on until its last line sits under the bar,
 			const margin = parseFloat(
 				getComputedStyle(document.querySelector('.app-frame')!).rowGap,
 			)
-			const bar = document.querySelector('.editor-top-bar')?.getBoundingClientRect()
-			const last = document
-				.querySelector('.tiptap')!
-				.lastElementChild!.getBoundingClientRect()
-			return { content: content.bottom, footer, margin, screen: innerHeight, bar, last }
+			return { content: content.bottom, footer, margin }
 		})
-	const scrollTo = (to: 'its end mid-screen' | 'the end') =>
-		page.evaluate((to) => {
-			const content = document.querySelector('main')!.getBoundingClientRect()
-			if (to === 'the end') window.scrollTo(0, document.documentElement.scrollHeight)
-			else window.scrollBy(0, content.bottom - innerHeight / 2)
-		}, to)
-
-	await openTests(page, themeClass)
-	await scrollTo('its end mid-screen')
-	await settle(page)
-	let at = await end()
-	expect(at.footer.top, 'the footer below the content, with room between').toBeGreaterThan(
-		at.content + at.margin,
-	)
-	expect(
-		Math.abs(at.footer.bottom - at.screen),
-		'at the bottom of the screen',
-	).toBeLessThanOrEqual(1)
-	await scrollTo('the end')
-	await settle(page)
-	at = await end()
-	expect(
-		Math.abs(at.last.top - at.bar!.bottom),
-		'the last line just under the bar',
-	).toBeLessThanOrEqual(1)
-	expect(
-		Math.abs(at.footer.bottom - at.screen),
-		'the footer still at the bottom',
-	).toBeLessThanOrEqual(1)
-
-	// A published page ends with the footer, straight after the content.
 	await fakeReplies(page, {
 		'Pages.getBySlug': storedPage('home', 'Home', [
 			{ type: 'paragraph', content: [{ type: 'text', text: 'A paragraph.' }] },
@@ -112,9 +118,9 @@ test('while writing, the page scrolls on until its last line sits under the bar,
 	await page.goto('/')
 	await useTheme(page, themeClass)
 	await expect(page.locator('main p')).toHaveText('A paragraph.')
-	await scrollTo('the end')
+	await scrollToTheEnd()
 	await settle(page)
-	at = await end()
+	const at = await end()
 	expect(Math.abs(at.footer.top - at.content - at.margin), 'no room added').toBeLessThanOrEqual(1)
 })
 
@@ -510,7 +516,11 @@ test("a stored page that can't open says so, with no editor to save", async ({
 		await openStored(page, themeClass, stored)
 		await expect(page.getByText(message), name).toBeVisible()
 		await expect(page.locator('.tiptap'), name).toHaveCount(0)
+		// Without the site's header, Exit is the way out.
+		await expect(page.getByRole('button', { name: 'Exit' }), name).toBeVisible()
 	}
+	await pressExit(page)
+	await expect(page, 'Exit: home').toHaveURL((url) => url.pathname === '/')
 
 	// A page that opens, then fails to arrive when it's fetched again.
 	await openStored(page, themeClass, oneParagraph)
@@ -547,8 +557,7 @@ test('Save in the code view saves the page, with the changes made to its code', 
 		await page.keyboard.press('ControlOrMeta+a')
 		await page.keyboard.type(code)
 	}
-	const save = page.getByRole('button', { name: 'Save' })
-	await page.getByRole('button', { name: 'Editor actions' }).click()
+	const save = bars(page).getByRole('button', { name: /^Save/ })
 	// Code the page can't read isn't saved, and says so.
 	await writeCode('<marquee>Moving</marquee>')
 	await save.click()
@@ -579,15 +588,22 @@ async function typeAtEnd(page: Page, text: string) {
 
 const leaveQuestion = (page: Page) =>
 	page.getByRole('dialog', { name: 'Leave without saving your changes?' })
-/** The editor's top bar saying the page has edits Save would keep, as leaving asks about. */
-const saysUnsaved = (page: Page) => page.getByText('Unsaved', { exact: true })
+/** The editor's bars, where Save and Exit are. */
+const bars = (page: Page) => page.locator('.editor-top-bar')
+/**
+ * Save saying a stored page has edits it would keep, as leaving asks about: "Save", where it says
+ * "Saved" without any.
+ */
+const saysUnsaved = (page: Page) => bars(page).getByRole('button', { name: 'Save', exact: true })
+/** Save saying the page is saved. */
+const saysSaved = (page: Page) => bars(page).getByRole('button', { name: 'Saved', exact: true })
+/** The messages the app shows, which screen readers are told of. */
+const messages = (page: Page) => page.locator('[aria-live="polite"]')
 
-/** Press Save, opening the editor's actions first if they're closed. */
-async function pressSave(page: Page) {
-	const actions = page.getByRole('button', { name: 'Editor actions' })
-	if ((await actions.getAttribute('aria-expanded')) !== 'true') await actions.click()
-	await page.getByRole('button', { name: 'Save' }).click()
-}
+/** Press Save, whatever it says. */
+const pressSave = (page: Page) => bars(page).getByRole('button', { name: /^Save/ }).click()
+/** Press the editor's Exit. */
+const pressExit = (page: Page) => page.getByRole('button', { name: 'Exit' }).click()
 
 /** Whether closing the tab asks first (the browser's own question, answered Stay). */
 async function closingAsks(page: Page): Promise<boolean> {
@@ -602,7 +618,7 @@ async function closingAsks(page: Page): Promise<boolean> {
 	return asked
 }
 
-// Leaving the editor dropped what wasn't saved, without a word: a link, Back, another page in the
+// Leaving the editor dropped what wasn't saved, without a word: Exit, Back, another page in the
 // editor, closing the tab.
 test('leaving a page with unsaved edits asks first, and Cancel keeps them', async ({
 	page,
@@ -616,17 +632,10 @@ test('leaving a page with unsaved edits asks first, and Cancel keeps them', asyn
 	await expect(text).toHaveText('A paragraph.')
 	await typeAtEnd(page, ' Typed.')
 	const question = leaveQuestion(page)
-	const contact = page.getByRole('link', { name: 'Contact' }).first()
 	const ways: [string, () => Promise<unknown>][] = [
-		['a link', () => contact.click()],
+		['Exit', () => pressExit(page)],
 		['Back', () => page.goBack()],
-		[
-			'another page in the editor',
-			async () => {
-				await page.getByRole('button', { name: 'Demo' }).click()
-				await page.getByRole('link', { name: 'Editor' }).click()
-			},
-		],
+		['another page in the editor', () => moveTo(page, '/editor?seed=true')],
 	]
 	for (const [way, leave] of ways) {
 		await leave()
@@ -638,7 +647,7 @@ test('leaving a page with unsaved edits asks first, and Cancel keeps them', asyn
 	}
 	// A question straight after another stays: the dialog took the first one's late close (Chrome)
 	// as Cancel for the second.
-	await contact.click()
+	await pressExit(page)
 	await expect(question).toBeVisible()
 	// Cancel, then Back in the same moment, faster than a person.
 	await page.evaluate(() => {
@@ -654,8 +663,7 @@ test('leaving a page with unsaved edits asks first, and Cancel keeps them', asyn
 	await expect(page).toHaveURL(/\/editor\/stored$/)
 
 	// Left for another page in the editor, the edits made there are asked about too.
-	await page.getByRole('button', { name: 'Demo' }).click()
-	await page.getByRole('link', { name: 'Editor' }).click()
+	await moveTo(page, '/editor?seed=true')
 	await question.getByRole('button', { name: 'Leave' }).click()
 	await expect(page).toHaveURL(/\/editor\?seed=true$/)
 	const demo = page.locator('.tiptap').first()
@@ -674,18 +682,17 @@ test('leaving with code not yet put into the page asks first', async ({ page, th
 	await page.keyboard.press('ControlOrMeta+a')
 	await page.keyboard.type('<p>From the code.</p>')
 	await expect(saysUnsaved(page)).toBeVisible()
-	await page.getByRole('link', { name: 'Contact' }).first().click()
+	await pressExit(page)
 	await expect(leaveQuestion(page)).toBeVisible()
 })
 
 // Only edits Save would keep are asked about: none for a page as it opened, undone back to it, or
 // saved (what's typed while it saves isn't), and none for a visitor, who can't save.
 test('leaving asks only about edits Save would keep', async ({ page, themeClass }) => {
-	const contact = page.getByRole('link', { name: 'Contact' }).first()
 	const leavesFreely = async (why: string) => {
 		await expect(saysUnsaved(page), why).toHaveCount(0)
-		await contact.click()
-		await expect(page, why).toHaveURL(/\/contact$/)
+		await pressExit(page)
+		await expect(page, why).not.toHaveURL(/\/editor/)
 		await expect(leaveQuestion(page), why).toHaveCount(0)
 	}
 	const text = page.locator('.tiptap p').first()
@@ -712,7 +719,7 @@ test('leaving asks only about edits Save would keep', async ({ page, themeClass 
 	await expect(text).toHaveText('A paragraph. Typed.')
 	await expect(saysUnsaved(page), 'typed again').toBeVisible()
 	await pressSave(page)
-	await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+	await expect(saysSaved(page)).toBeVisible()
 	await leavesFreely('saved')
 
 	// A new page moves to its own address when it's first saved: that's not leaving it, even with
@@ -744,7 +751,8 @@ test('leaving asks only about edits Save would keep', async ({ page, themeClass 
 	await expect(leaveQuestion(page), 'given its address').toHaveCount(0)
 	await expect(text).toHaveText('A new page. More.')
 	await expect(saysUnsaved(page), 'typed while it saved').toBeVisible()
-	await contact.click()
+	// A link out: Exit would go back to the place on the page moved to above.
+	await moveTo(page, '/contact')
 	await expect(leaveQuestion(page), 'typed while it saved').toBeVisible()
 	await leaveQuestion(page).getByRole('button', { name: 'Leave' }).click()
 	await expect(page).toHaveURL(/\/contact$/)
@@ -784,20 +792,87 @@ test('an admin whose sign-in has ended is still asked before leaving', async ({
 	await expect(text).toHaveText('A paragraph. Typed.')
 	await pressSave(page)
 	await expect(page.getByText('Not signed in')).toBeVisible()
-	const contact = page.getByRole('link', { name: 'Contact' }).first()
 	const question = leaveQuestion(page)
-	await contact.click()
+	await pressExit(page)
 	await question.getByRole('button', { name: 'Leave' }).click()
-	await expect(page).toHaveURL(/\/contact$/)
+	await expect(page).not.toHaveURL(/\/editor/)
 
 	// And on a page opened after.
 	await moveTo(page, '/editor')
 	await typeAtEnd(page, 'A new page.')
 	await expect(text).toHaveText('A new page.')
-	await contact.click()
+	await pressExit(page)
 	await expect(question, 'a page opened after').toBeVisible()
 	await question.getByRole('button', { name: 'Cancel' }).click()
 	expect(await closingAsks(page), 'closing the tab').toBe(true)
+})
+
+// Exit opens the page the editor was opened from in this tab, as a link does; opened any other
+// way, it goes home. Pressed twice before the first move lands, it's still one move: Back after it
+// returns to the editor.
+test('Exit goes back to the page the editor was opened from, or home', async ({
+	page,
+	themeClass,
+}) => {
+	const text = page.locator('.tiptap p').first()
+	await openStored(page, themeClass, oneParagraph)
+	await expect(text).toHaveText('A paragraph.')
+	await pressExit(page)
+	await expect(page, 'opened directly: home').toHaveURL((url) => url.pathname === '/')
+
+	await moveTo(page, '/contact')
+	await moveTo(page, '/editor/stored')
+	await expect(text).toHaveText('A paragraph.')
+	await pressExit(page)
+	await expect(page, 'the page it was opened from').toHaveURL(/\/contact$/)
+
+	await moveTo(page, '/editor/stored')
+	await expect(text).toHaveText('A paragraph.')
+	await page
+		.getByRole('button', { name: 'Exit' })
+		.evaluate((exit: HTMLElement) => [exit.click(), exit.click()])
+	await expect(page, 'pressed twice').toHaveURL(/\/contact$/)
+	await page.goBack()
+	await expect(page, 'one move: Back returns to the editor').toHaveURL(/\/editor\/stored$/)
+})
+
+// Save says how the page stands, in words: "Save" with edits to keep, "Saving…" while it saves
+// (not while a new page's name is asked), "Saved" once it has, with no message as well; "Save" on
+// a page never saved. Only whoever could save sees it: a visitor's press asked a name, then failed.
+test('Save says whether the page is saved, and only whoever could save sees it', async ({
+	page,
+	themeClass,
+}) => {
+	const text = page.locator('.tiptap p').first()
+	const saving = bars(page).getByRole('button', { name: 'Saving…' })
+	await openStored(page, themeClass, oneParagraph)
+	await expect(text).toHaveText('A paragraph.')
+	await expect(saysSaved(page), 'as it opened').toBeVisible()
+	const finishSave = await holdReplies(page, 'adminPages.save', { version: 2 })
+	await typeAtEnd(page, ' Typed.')
+	await expect(saysUnsaved(page), 'typed').toBeVisible()
+	await pressSave(page)
+	await expect(saving).toBeVisible()
+	finishSave()
+	await expect(saysSaved(page), 'saved').toBeVisible()
+	await expect(messages(page).getByText('Saved'), 'nothing else said').toHaveCount(0)
+
+	await moveTo(page, '/editor')
+	await expect(saysUnsaved(page), 'a page never saved').toBeVisible()
+	await pressSave(page)
+	const name = page.getByRole('textbox', { name: 'Page name' })
+	await expect(name).toBeVisible()
+	await expect(saving, 'while its name is asked').toHaveCount(0)
+	await name.press('Escape')
+	await expect(name).toBeHidden()
+	await expect(saysUnsaved(page), 'not named, not saved').toBeVisible()
+
+	// A visitor, signed out, on the demo.
+	await page.unrouteAll()
+	await steadyRequests(page)
+	await page.goto('/editor?seed=true')
+	await expect(page.locator('.tiptap').first()).toBeVisible()
+	await expect(bars(page).getByRole('button', { name: /^Sav/ }), 'a visitor').toHaveCount(0)
 })
 
 /** Answer API calls to `call` with `data`, each once the function returned is called. */
@@ -1157,6 +1232,12 @@ test('the editor opens a stored page where its cursor was left', async ({ page, 
 	await expect(editor, 'Back').toBeFocused()
 	expect(await cursorIn(), 'the cursor where it was left').toBe('Paragraph 50.')
 	await expect.poll(underTheBar, 'its line just under the bar').toBe(true)
+	// Where it opens is where the editor keeps a line clear of the bars: an arrow moves no page.
+	const opened = await scrolled(page)
+	await page.keyboard.press('ArrowLeft')
+	await page.keyboard.press('ArrowRight')
+	await settle(page)
+	expect(await scrolled(page), 'an arrow after opening').toBe(opened)
 
 	const late = { ms: 1000 }
 	await holdRequests(page, 'https://placehold.co/**', late)
@@ -1213,7 +1294,8 @@ test('the editor opens a stored page where its cursor was left', async ({ page, 
 // if something is still unsaved. A new page's first save shows its address at once: the move
 // waiting is held, refused, so the address can't take its place.
 test('leaving while a save is under way waits for it', async ({ page, themeClass }) => {
-	const contact = page.getByRole('link', { name: 'Contact' }).first()
+	// A link out, as the site nav's are.
+	const contact = { click: () => moveTo(page, '/contact') }
 	const question = leaveQuestion(page)
 	const text = page.locator('.tiptap p').first()
 	const name = page.getByRole('textbox', { name: 'Page name' })
@@ -1236,7 +1318,10 @@ test('leaving while a save is under way waits for it', async ({ page, themeClass
 	await contact.click()
 	await moveTo(page, '/editor/stored#further')
 	finishSave()
-	await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+	// Saved, not failed: Saving… goes with nothing said, and More, typed meanwhile, is unsaved.
+	await expect(bars(page).getByRole('button', { name: 'Saving…' })).toHaveCount(0)
+	await expect(page.getByRole('alert')).toHaveCount(0)
+	await expect(saysUnsaved(page), 'more typed meanwhile').toBeVisible()
 	await settle(page)
 	await expect(question, 'overtaken').toHaveCount(0)
 	await expect(page).toHaveURL(/\/editor\/stored#further$/)
@@ -1338,7 +1423,7 @@ test('a call the server never answers fails after 30 seconds', async ({ page, th
 	await typeAtEnd(page, ' Typed.')
 	await pressSave(page)
 	await saving
-	await page.getByRole('link', { name: 'Contact' }).first().click()
+	await moveTo(page, '/contact')
 	await page.clock.fastForward(29_000)
 	await settle(page)
 	await expect(noAnswer, 'within 30 seconds').toHaveCount(0)
@@ -1878,7 +1963,7 @@ test('a save refused as the page was saved elsewhere asks whether to save over i
 	now = { ...oneParagraph, version: 7, tags: [] }
 	refuse = false
 	await saveOver.click()
-	await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+	await expect(saysSaved(page)).toBeVisible()
 	await expect(
 		page.getByText('Not saved. Your edits are still here.'),
 		'untrue once saved',

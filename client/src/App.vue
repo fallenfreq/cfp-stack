@@ -4,13 +4,22 @@ import type { NavItem } from '@/components/navItems'
 import { useSyntaxHighlighting } from '@/composables/editor/syntaxHighlighting'
 import { hasRole, signedIn, signOut } from '@/services/session'
 import { computed, markRaw } from 'vue'
-import { RouterView } from 'vue-router'
+import { RouterView, START_LOCATION, useRouter } from 'vue-router'
 import { useScrollRestoration } from 'vue-router/experimental'
 
 // Code block colours on every page, not only in the editor.
 useSyntaxHighlighting()
 // Every page's place is kept and put back (router/pagePlace.ts).
 useScrollRestoration()
+
+const router = useRouter()
+// The editor brings its own bars (router/index.ts). Until the first page is known, the address
+// being opened is asked about, so the header doesn't show on the editor and then go.
+const opening = router.resolve(router.options.history.location)
+const isEditor = computed(() => {
+	const at = router.currentRoute.value
+	return (at === START_LOCATION ? opening : at).meta.editor === true
+})
 
 const navItems = computed<NavItem[]>(() => {
 	return [
@@ -65,7 +74,7 @@ const navItems = computed<NavItem[]>(() => {
 
 <template>
 	<div class="app-frame">
-		<header class="app-header sl-inset">
+		<header v-if="!isEditor" class="app-header sl-inset">
 			<SiteNav :items="navItems">
 				<template #brand>
 					<MothBrand />
@@ -81,7 +90,7 @@ const navItems = computed<NavItem[]>(() => {
 		</main>
 
 		<div class="app-end">
-			<BasicFooter class="app-footer" />
+			<BasicFooter v-if="!isEditor" class="app-footer" />
 		</div>
 	</div>
 	<PromptModal />
@@ -109,19 +118,16 @@ const navItems = computed<NavItem[]>(() => {
 
 	/* While writing, the page scrolls on past its end until its last line sits under the
 	   editor's top bar: room to bring the line being written up the screen, and for a panel to
-	   open below its button. The footer follows the content, then stays at the bottom of the
-	   screen while the room scrolls up. */
+	   open below its button. */
 	.app-frame:has(.tiptap[contenteditable='true']) .app-end {
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
 		min-block-size: calc(
 			100dvh - var(--sf-spacing_page) - var(--editor-top-bar-height, 0px) - 1lh
 		);
-	}
-	.app-frame:has(.tiptap[contenteditable='true']) .app-footer {
-		position: sticky;
-		inset-block-end: 0;
+		/* A WebKit workaround (Safari 27): its scroll anchoring, which keeps the line being written
+		   still as pictures above it load, works only with a size container outside the editor.
+		   The site's nav is one, and the editor hides it. Remove once WebKit is fixed
+		   (sf-system-todo.md, "Safari's scroll anchoring in the editor"). */
+		container-type: inline-size;
 	}
 }
 </style>

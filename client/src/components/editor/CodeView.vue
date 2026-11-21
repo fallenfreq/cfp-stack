@@ -6,6 +6,7 @@
 import { useEditor } from '@/composables/editor/useEditor'
 import { CodeBlockExtension } from '@/config/editor/codeBlockExtension'
 import { OwnLook } from '@/editor/extensions/ownLook'
+import { ScrollClearOfEditorTopBar } from '@/editor/extensions/scrollClearOfEditorTopBar'
 import { useEditorStore } from '@/stores/editorStore'
 import { Document } from '@tiptap/extension-document'
 import { Text } from '@tiptap/extension-text'
@@ -28,6 +29,7 @@ const editor = useEditor({
 		}),
 		UndoRedo,
 		OwnLook,
+		ScrollClearOfEditorTopBar,
 	],
 	content: {
 		type: 'doc',

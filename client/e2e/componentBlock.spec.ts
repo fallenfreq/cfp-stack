@@ -278,6 +278,9 @@ test('an interactive block in the slot of another works the same', async ({ page
 
 	const before = await pageText(page)
 	const innerHeading = page.locator('.tiptap h1', { hasText: 'Uneditable Heading' }).nth(1)
+	// Mid-screen, clear of the editor's bars and the block's toolbar, as a person sees it.
+	await innerHeading.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+	await settle(page)
 	await innerHeading.click()
 	await settle(page)
 	const selected = await page.evaluate(() => {

@@ -990,9 +990,9 @@ back on the line.
 - The outermost inset uses the page margin, `--sf-spacing_page` — a theme value for the
   room between the screen's side edges and content. The app uses the same room above the
   header and between the header, the page and the footer, so a page has no top or bottom
-  room of its own to add. While an editor is editable, the page also scrolls on until its last
-  line sits under the editor's top bar, the footer staying at the bottom; that room isn't the
-  theme's.
+  room of its own to add. The editor shows its own bars in place of the header and footer, and
+  while it's editable the page scrolls on until its last line sits under them; that room isn't
+  the theme's.
 - The page's content column stops growing at the page width, `--sf-width_page` — a theme
   value (default 80rem). Past it the column centres and the margins grow to fill the rest;
   bleeding children still reach the screen edges, and the line moves with the column. A
@@ -1269,6 +1269,15 @@ Storage and generation are application concerns.
 The editor exposes the content-author surface — picker controls translate to `sf-` and
 `sl-` classes on `node.attrs.class`. Component-author and theme-author surfaces live
 outside the editor.
+
+**The editor's screen** (owner, 2026-11-20) is full screen, as page editors' are (WordPress's
+since 5.4, Squarespace, Webflow): the site's header and footer go (the route's `editor` meta),
+and its top bar has two rows at every width, so each control has one place a phone and a desktop
+share. The page's row holds Exit, the name, the warnings, Save, Code view and "⋯"; the node path
+has the second row to itself, as wide as the screen. Exit opens the page the editor was opened
+from, as a link does, so the Leave question always applies; with none, home. Save says how the
+page stands in words ("Save", "Saving…", "Saved") and shows only to whoever could save. The
+editors scroll the line being written clear of the bar (`scrollClearOfEditorTopBar.ts`).
 
 Picker choices land in storage by a uniform pattern:
 

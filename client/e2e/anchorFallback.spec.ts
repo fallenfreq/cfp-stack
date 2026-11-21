@@ -73,8 +73,8 @@ const CASES: { name: string; open: (page: Page) => Promise<void> }[] = [
 		},
 	},
 	{
-		name: 'the nav menu',
-		open: (page) => page.locator('.site-nav [popovertarget]:visible').first().click(),
+		name: "the editor's menu",
+		open: (page) => page.getByRole('button', { name: 'Editor actions' }).click(),
 	},
 	{
 		name: 'a tooltip at the screen edge',
@@ -336,11 +336,22 @@ test('a panel too tall for the screen stops at its height and scrolls', async ({
 	themeClass,
 }) => {
 	const measure = async (script: boolean) => {
-		const page = await browser.newPage({ viewport: { width: 1440, height: 200 } })
+		const page = await browser.newPage({ viewport: { width: 1440, height: 800 } })
 		if (script) await page.addInitScript({ content: WITHOUT_ANCHOR_POSITIONING })
 		await openSeeded(page, 'true', DEMO_END, themeClass)
 		if (script) await page.addStyleTag({ content: NO_CSS_PLACEMENT })
-		await panelBeside(0.6, 'first')(page)
+		// A short screen: under the editor's bars (taller in the test theme), room for the toolbar
+		// and a line, not for the panel.
+		const toolbarTop = await page.evaluate(
+			() =>
+				document.querySelector('.editor-top-bar')!.getBoundingClientRect().bottom
+				+ parseFloat(
+					getComputedStyle(document.documentElement).getPropertyValue('--toolbar-height'),
+				),
+		)
+		const height = Math.round(toolbarTop + 60)
+		await page.setViewportSize({ width: 1440, height })
+		await panelBeside((toolbarTop + 8) / height, 'first')(page)
 		const box = page.locator(OPEN_BOX)
 		await expect(box).toBeVisible()
 		await settle(page)

@@ -9,6 +9,8 @@
 		<template #on>
 			<MaterialIcon>dark_mode</MaterialIcon>
 		</template>
+		<!-- Words given are the switch's label; with none (the site's header) it stays bare. -->
+		<template v-if="$slots['default']" #default><slot /></template>
 	</SfSwitch>
 </template>
 

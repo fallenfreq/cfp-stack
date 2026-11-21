@@ -1,9 +1,12 @@
 <template>
 	<div
 		ref="nodePathEl"
-		class="node-path sl-cluster sl-scroll-x sf-gap-2xs sf-text-xs"
+		class="node-path sl-cluster sl-scroll-x sf-gap-2xs"
 		:class="{ 'sf-is-overflow-left': isOverflowLeft, 'sf-is-overflow-right': isOverflowRight }"
+		:style="{ visibility: editorStore.isCodeView ? 'hidden' : undefined }"
 	>
+		<!-- The code view hides the page, so the path hides too, keeping its row's height: the
+		     page doesn't move as the code view opens and closes. -->
 		<template v-for="(segment, i) in path" :key="segment.depth">
 			<span v-if="i > 0" class="path-sep sf-icon sf-loudness-1" aria-hidden="true">›</span>
 			<SfButton
@@ -30,7 +33,7 @@ import { useEditorStore } from '@/stores/editorStore'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
 import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/vue-3'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 const props = defineProps<{ editor: Editor }>()
 const dragHandleStore = useDragHandleStore()
@@ -49,8 +52,6 @@ interface PathSegment {
 
 const path = computed((): PathSegment[] => {
 	void tick.value
-	// The code view hides the page, so it has no path to show.
-	if (editorStore.isCodeView) return []
 	const { state } = props.editor
 	const { selection } = state
 
@@ -95,6 +96,22 @@ const effectiveActiveDepth = computed(() => {
 	return Math.min(dragHandleStore.activeDepth, maxDepth)
 })
 
+// The crumb worked on, by the path's names and the depth picked: it changes only when either does,
+// not on every keystroke.
+const currentCrumb = computed(
+	() => `${path.value.map((segment) => segment.name).join('›')}:${effectiveActiveDepth.value}`,
+)
+// It stays whole in view. Only the row scrolls: the bar is always on screen, so the page has
+// nothing to move (measured in Chrome and WebKit).
+watch(
+	currentCrumb,
+	() =>
+		nodePathEl.value
+			?.querySelector('.sf-on-current')
+			?.scrollIntoView({ block: 'nearest', inline: 'nearest' }),
+	{ flush: 'post' },
+)
+
 const handleDepthClick = (segment: PathSegment) => {
 	if (segment.depth === 0) return
 	dragHandleStore.setActiveDepth(segment.depth)
@@ -136,12 +153,6 @@ onUnmounted(() => {
 
 <style>
 @layer ui {
-	/* Placement in the top bar's row — the top bar's rename mode also targets .node-path. */
-	.node-path {
-		flex: 1;
-		min-width: 0;
-	}
-
 	.path-sep {
 		user-select: none;
 	}

@@ -9,6 +9,8 @@ declare module 'vue-router' {
 		signIn?: boolean
 		// The page needs this role too: anyone signed in without it goes to No access.
 		role?: string
+		// The page is the editor, which brings its own bars in place of the site's header and footer.
+		editor?: boolean
 	}
 }
 
@@ -61,13 +63,14 @@ const router = createRouter({
 			// The demo and the layout test cases, open to anyone, and a new page.
 			path: '/editor',
 			name: 'editor',
+			meta: { editor: true },
 			component: () => import('../views/TiptapEditorDemo.vue'),
 		},
 		{
 			// A stored page, for admins. The same view as /editor: moving between the two keeps it.
 			path: '/editor/:slug',
 			name: 'editor-page',
-			meta: { signIn: true, role: 'admin' },
+			meta: { signIn: true, role: 'admin', editor: true },
 			component: () => import('../views/TiptapEditorDemo.vue'),
 		},
 		{

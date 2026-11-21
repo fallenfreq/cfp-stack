@@ -1,7 +1,6 @@
 <template>
-	<SfStatusDisplay v-if="invalid" state="error" message="This page can't be opened." />
-	<SfStatusDisplay v-else-if="!editor" state="loading" message="Loading editor…" />
-	<div v-else>
+	<!-- The editor is made as this mounts, so there's nothing to show for that moment. -->
+	<div v-if="editor">
 		<EditorTopBar :editor="editor" />
 		<!-- The code view shows instead of the page, which stays underneath with its undo. -->
 		<template v-if="!editorStore.isCodeView">
@@ -9,7 +8,6 @@
 			<ToolbarScrollHint :editor="editor" />
 			<FloatingDragHandle :editor="editor" />
 		</template>
-		<CodeViewToggle />
 		<!-- The document sits in the page shell, as a stored page does; the bars are the editor's.
 		     page-content: in an inset, its blocks become the inset's items (slLayout.ts). -->
 		<SfPageShell>
@@ -35,15 +33,15 @@ import {
 } from '@/editor/extensions/multiSelect'
 import { PageWarnings } from '@/editor/extensions/pageWarnings'
 import { RememberCursor } from '@/editor/extensions/rememberCursor'
+import { ScrollClearOfEditorTopBar } from '@/editor/extensions/scrollClearOfEditorTopBar'
 import { UpdateAttributesAt } from '@/editor/extensions/updateAttributesAt'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore.js'
 import { useMultiSelectStore } from '@/stores/multiSelectStore'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, type Content, type Editor } from '@tiptap/vue-3'
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { onBeforeUnmount, watch } from 'vue'
 import CodeView from './CodeView.vue'
-import CodeViewToggle from './CodeViewToggle.vue'
 import EditorTopBar from './EditorTopBar.vue'
 import FloatingDragHandle from './FloatingDragHandle.vue'
 import FloatingToolbar from './FloatingToolbar.vue'
@@ -53,9 +51,8 @@ import ToolbarScrollHint from './ToolbarScrollHint.vue'
 // (a new page). Read once: each page opens in a new editor.
 const props = defineProps<{ content: Content }>()
 // Once it has taken its content the editor has opened, for the view to open its page with; it
-// closes as it leaves the screen.
-const emit = defineEmits<{ opened: [editor: Editor]; closed: [editor: Editor] }>()
-const invalid = ref(false)
+// closes as it leaves the screen. Content it can't read it refuses, for the view to say so.
+const emit = defineEmits<{ opened: [editor: Editor]; closed: [editor: Editor]; refused: [] }>()
 
 const toolbarItems: ToolbarItem[] = defaultToolbarItems
 const dragHandleStore = useDragHandleStore()
@@ -92,6 +89,7 @@ const editor = useEditor({
 		Commands.extend({ name: 'slashCommands' }).configure({ suggestion }),
 		// The cursor is kept for a stored page (a new one once Save names it), and puts it in.
 		RememberCursor.configure({ key: () => useEditorStore().page?.slug ?? null }),
+		ScrollClearOfEditorTopBar,
 		PageWarnings,
 	],
 	content: '',
@@ -113,7 +111,7 @@ watch(editor, (newEditor) => {
 			.run()
 	} catch (error) {
 		console.error("This page can't be opened:", error)
-		invalid.value = true
+		emit('refused')
 		return
 	}
 	emit('opened', newEditor)
