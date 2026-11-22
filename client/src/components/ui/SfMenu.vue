@@ -18,5 +18,17 @@
 		justify-content: start;
 		text-align: start;
 	}
+
+	/* A closed group's items count towards the menu's width, as a select is as wide as its
+	   longest option, so opening one doesn't change it (from Safari 18.4). They take no room
+	   (flow-root keeps their margins in too) and stay hidden, from the keyboard and screen
+	   readers as well. */
+	.menu-list > li > details:not([open])::details-content {
+		content-visibility: visible;
+		visibility: hidden;
+		block-size: 0;
+		overflow: clip;
+		display: flow-root;
+	}
 }
 </style>

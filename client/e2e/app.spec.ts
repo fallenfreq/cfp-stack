@@ -36,6 +36,31 @@ test('the site nav swaps its links for a menu button when it is narrow', async (
 	}
 })
 
+// The phone menu lines up with its button's end, so a change of width would move its left edge:
+// a closed group's links count towards it, hidden and taking no room.
+test("the site's phone menu keeps its width when a group opens", async ({ page, themeClass }) => {
+	await steadyRequests(page)
+	await page.goto('/')
+	await useTheme(page, themeClass)
+	await page.setViewportSize({ width: 390, height: 844 })
+	await settle(page)
+	await page.getByRole('button', { name: 'Menu' }).click()
+	const menu = page.locator('.site-nav [popover]:popover-open')
+	const link = menu.getByRole('link', { name: 'Software Development' })
+	await expect(link, 'hidden while its group is closed').toBeHidden()
+	const heading = menu.getByText('Portfolio')
+	const group = menu.getByRole('group').filter({ hasText: 'Portfolio' })
+	expect((await box(group)).height, 'a closed group is as tall as its heading').toBe(
+		(await box(heading)).height,
+	)
+	const closed = await box(menu)
+	await heading.click()
+	await expect(link).toBeVisible()
+	const open = await box(menu)
+	expect(open.left, 'the left edge stays').toBe(closed.left)
+	expect(open.width, 'the width stays').toBe(closed.width)
+})
+
 test('a page starts as far below the site nav as the nav sits below the top', async ({
 	page,
 	themeClass,
