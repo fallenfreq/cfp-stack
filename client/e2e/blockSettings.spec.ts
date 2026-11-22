@@ -184,3 +184,18 @@ test("a picture's new address keeps its class, style and id", async ({ page }) =
 	await expect(picture).toHaveClass(selected)
 	await expect(picture).toHaveAttribute('style', 'width: 50%;')
 })
+
+// The block settings panel has a width of its own, so it measures itself: at its 300px, narrower
+// than xs, the names go above the fields, whatever the page's width.
+test('the block settings panel stacks its rows by its own width', async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 844 })
+	await settle(page)
+	await page.getByText('A card', { exact: true }).click()
+	await page
+		.getByRole('button', { name: /^Attributes/ })
+		.first()
+		.click()
+	const name = await box(panel(page).locator('label').getByText('id', { exact: true }))
+	const field = await box(panel(page).getByLabel('id', { exact: true }))
+	expect(name.bottom, 'the name above its field').toBeLessThanOrEqual(field.top)
+})

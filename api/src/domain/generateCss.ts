@@ -513,8 +513,8 @@ const section = (title: string): string =>
 //     itself): a layout holding a collapsing element is one. So a block in one side of a
 //     split measures the whole split; to stack by a side's width, make the side a layout (a
 //     stack). A width container takes no width from its content, so nothing sized by its
-//     content becomes one (SIZED_BY_CONTENT_SELECTOR) — it would be 0 wide; what it holds
-//     measures the next box out.
+//     content becomes one (SIZED_BY_CONTENT_SELECTOR, and a menu straight in a popover,
+//     hostsFor) — it would be 0 wide; what it holds measures the next box out.
 //   sl-hide-below-* / sl-show-below-* use the same widths to swap what shows: hidden at or
 //     below the width, or shown only then (a menu button in place of inline links). They're
 //     written per width band (slLayout.ts, widthBands), the bands block spacing and a theme's
@@ -591,11 +591,15 @@ function emitCollapseLayer(
 // The layouts that measure for what's inside them. A popover is laid out on its own (the top
 // layer), wherever it sits in the page: what's inside one doesn't make the boxes around it
 // measure — a toolbar row holding a closed panel would otherwise be 0 wide — and inside it,
-// layouts measure as usual.
+// layouts measure as usual. Except a menu straight in one: it's as wide as its items, so as a
+// width container it would be 0 wide; its items measure the next box out (the editor's "⋯"
+// shows Code view by its bar's width). Anything else straight in one measures as usual: the
+// block settings panel, with a width of its own, stacks its rows by that width. Only straight
+// in: a menu wrapped in a box with a width measures that width.
 function hostsFor(scope: string, inside: string): string[] {
 	return [
 		`:is(${COLLAPSE_HOST_SELECTOR})${scope}:where(:not([popover] *)):has(:is(${inside}):not([popover] *))`,
-		`[popover] :is(${COLLAPSE_HOST_SELECTOR})${scope}:has(${inside})`,
+		`[popover] :is(${COLLAPSE_HOST_SELECTOR})${scope}:where(:not([popover] > menu)):has(${inside})`,
 	]
 }
 

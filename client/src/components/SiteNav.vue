@@ -36,7 +36,7 @@
 						</button>
 					</SfTooltip>
 				</template>
-				<menu class="nav-menu sl-stack sf-gap-2xs">
+				<SfMenu>
 					<li v-for="item in inlineItems" :key="item.title">
 						<details v-if="item.children" :open="isAncestor(item, route.path)">
 							<summary
@@ -47,15 +47,15 @@
 								{{ item.title }}
 								<MaterialIcon class="nav-chevron">expand_more</MaterialIcon>
 							</summary>
-							<menu class="sl-stack sf-gap-2xs sf-is-nested">
+							<SfMenu class="sf-is-nested">
 								<li v-for="child in item.children" :key="child.title">
 									<SiteNavMenuLink :item="child" />
 								</li>
-							</menu>
+							</SfMenu>
 						</details>
 						<SiteNavMenuLink v-else :item="item" />
 					</li>
-				</menu>
+				</SfMenu>
 			</SfPopover>
 		</div>
 	</nav>
@@ -94,38 +94,28 @@ const groupCount = computed(
 
 <style>
 @layer ui {
-	.site-nav :is(ul, menu) {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-
 	.nav-icon-btn {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 	}
 
-	.nav-menu {
-		min-inline-size: 12rem;
-	}
-
 	/* The chevron stands in for the browser's marker, at the far end of the row. */
-	.nav-menu summary {
+	.site-nav [popover] summary {
 		list-style: none;
 		cursor: pointer;
 	}
-	.nav-menu summary::-webkit-details-marker {
+	.site-nav [popover] summary::-webkit-details-marker {
 		display: none;
 	}
 	.nav-chevron {
 		margin-inline-start: auto;
 	}
-	.nav-menu details[open] > summary .nav-chevron {
+	.site-nav [popover] details[open] > summary .nav-chevron {
 		rotate: 180deg;
 	}
 	/* A group's links sit just under its heading; the theme marks them as nested. */
-	.nav-menu details > menu {
+	.site-nav [popover] details > menu {
 		margin-block-start: var(--sf-spacing-2xs);
 	}
 }

@@ -16,11 +16,11 @@
 				</button>
 			</SfTooltip>
 		</template>
-		<menu class="nav-menu sl-stack sf-gap-2xs">
+		<SfMenu>
 			<li v-for="child in item.children" :key="child.title">
 				<SiteNavMenuLink :item="child" />
 			</li>
-		</menu>
+		</SfMenu>
 	</SfPopover>
 	<SfTooltip v-else :text="item.iconOnly ? item.title : ''" placement="bottom">
 		<RouterLink

@@ -1258,11 +1258,17 @@ widths set. Nothing in them becomes a width container; what they hold measures t
 out. Only these spots are known: one made by a block's own style or a component's CSS (a flex
 row, `fit-content`) isn't, so a layout in it that holds a collapsing block is 0 wide. App
 screens leave this out because their popovers and menus sit inside rows, so a
-component there keeps collapsing content out of such spots.
+component there keeps collapsing content out of such spots; the one they know is a menu straight
+in a popover (below).
 
 **A popover is laid out on its own.** What's inside one doesn't make the layouts around it
 measure, so a toolbar holding a closed panel keeps its width. Inside the popover, layouts
-measure as usual.
+measure as usual, except a menu straight in it: a menu is as wide as its items, so it never
+measures, and what it holds measures the next box out (the editor's "⋯" shows Code view by its
+bar's width). Anything else straight in it measures as usual: the block settings panel, with a
+width of its own, puts its names above their fields by that width. A menu that should measure a
+width of its own goes in a box in the popover, with the width on either: no longer straight in
+it, the menu measures like any layout (owner, 2026-11-22).
 
 **In a document, hide and show measure the page.** "Hide below md" means the page is
 narrower than md, wherever the element sits, so the layouts around it don't become width

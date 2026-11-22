@@ -5,7 +5,12 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ideas").
+Next: **the site's phone menu jumps when a group opens.** A menu is as wide as its items
+(`SfMenu`), and a closed group's links add no width, so opening "Portfolio" widens the menu from
+140px to 221px and, aligned to its button's end, its left edge moves 81px (29px with the old 12rem
+minimum). Proposal: the menu is as wide as every link it could show, open or closed; prove it in
+Chrome and WebKit first. Leaving it is the other choice. Waiting: pasting warns of what the page
+can't keep ("Ideas").
 
 ## Bigger work
 

@@ -52,6 +52,7 @@ declare module 'vue' {
     SfChip: typeof import('./src/components/SfChip.vue')['default']
     SfIcon: typeof import('./src/components/ui/SfIcon.vue')['default']
     SfIconButton: typeof import('./src/components/ui/SfIconButton.vue')['default']
+    SfMenu: typeof import('./src/components/ui/SfMenu.vue')['default']
     SfOverflowMenu: typeof import('./src/components/ui/SfOverflowMenu.vue')['default']
     SfPageShell: typeof import('./src/components/ui/SfPageShell.vue')['default']
     SfPopover: typeof import('./src/components/ui/SfPopover.vue')['default']

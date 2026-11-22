@@ -4185,6 +4185,10 @@ test("the bars' controls are big enough to hit, and the path has a row of its ow
 	}
 })
 
+/** The list "⋯" opens: the one holding the dark mode switch. */
+const editorMenu = (page: Page) =>
+	page.getByRole('list').filter({ has: page.getByRole('switch', { name: 'Dark mode' }) })
+
 // Where the page's row is narrow, the warnings and Code view go into "⋯", which wears the warning
 // count; where it's wide they're in the row and "⋯" has no mark.
 test('a narrow row moves the warnings and Code view into "⋯", which shows the count', async ({
@@ -4195,7 +4199,7 @@ test('a narrow row moves the warnings and Code view into "⋯", which shows the 
 	const menu = bars.getByRole('button', { name: 'Editor actions' })
 	const warnings = (where: Locator) => where.getByRole('button', { name: /go to the next/ })
 	const codeView = (where: Locator) => where.getByRole('button', { name: 'Code view' })
-	const items = page.locator('.overflow-menu')
+	const items = editorMenu(page)
 
 	await page.setViewportSize({ width: 1440, height: 844 })
 	await settle(page)
@@ -4273,6 +4277,26 @@ test('the editor menu switches dark mode', async ({ page }) => {
 	await expect.poll(scheme, 'the page in the other scheme').not.toBe(before)
 	await menu.click()
 	await expect(dark).not.toHaveAttribute('aria-checked', was!)
+})
+
+// The items in "⋯" stand apart, as in every menu, so one lit up never touches the next. The menu
+// is as wide as its items: it doesn't measure width itself, so it isn't 0 wide, and Code view and
+// the warnings in it go by the bar's width (sf-system.md, "A popover is laid out on its own").
+test('the items in "⋯" stand apart', async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 844 })
+	await settle(page)
+	await page.getByRole('button', { name: 'Editor actions' }).click()
+	const items = editorMenu(page).getByRole('listitem')
+	await expect(items, 'the warnings, Code view, dark mode and Settings').toHaveCount(4)
+	const boxes = await Promise.all((await items.all()).map(box))
+	for (const [i, item] of boxes.entries()) {
+		expect(item.width, `item ${i + 1} isn't 0 wide`).toBeGreaterThan(10)
+		if (i > 0)
+			expect(
+				item.top - boxes[i - 1]!.bottom,
+				`item ${i + 1} apart from the one before`,
+			).toBeGreaterThan(0)
+	}
 })
 
 // The editor counts a line under its sticky bars as on the screen: moving the cursor up could leave

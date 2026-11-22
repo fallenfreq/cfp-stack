@@ -5,7 +5,8 @@
 	     rows look apart. Side padding puts the controls on the page line (sl-inset-line). -->
 	<div ref="bar" class="editor-top-bar">
 		<!-- Where the row is narrow (xs), the warnings and Code view go into "⋯", which then wears the
-		     warning count. The menu's items measure this row too: nothing between is a layout. -->
+		     warning count. The menu's items measure this row too: a menu straight in a popover doesn't
+		     measure (sf-system.md, "A popover is laid out on its own"). -->
 		<div
 			class="top-bar__page sl-cluster sf-gap-2xs sl-inset-line sf-depth-1 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right"
 		>
