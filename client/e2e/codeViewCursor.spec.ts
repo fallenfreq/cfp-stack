@@ -111,18 +111,23 @@ test('a cursor in text is at the same place in the code and back, its line where
 	const inCode = await cursor(page)
 	expect(inCode.before).toMatch(/<p id="warned-stack-text">Two$/)
 	expect(inCode.after).toMatch(/^ arrangements<\/p>/)
-	expect(inCode.top, 'its line where it was on the screen').toBe(before.top)
+	// To within 1px: browsers scroll by whole pixels, and a line sits at a different fraction of
+	// one in each view.
+	expect(
+		Math.abs(inCode.top - before.top),
+		'its line where it was on the screen',
+	).toBeLessThanOrEqual(1)
 
 	// Moved in the code: the page's cursor goes there.
 	for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight')
 	await settle(page)
 	const moved = await cursor(page)
 	await switchView(page, false)
-	expect(await cursor(page)).toMatchObject({
-		before: 'Two arr',
-		after: 'angements',
-		top: moved.top,
-	})
+	const back = await cursor(page)
+	expect(back).toMatchObject({ before: 'Two arr', after: 'angements' })
+	expect(Math.abs(back.top - moved.top), 'its line where it was in the code').toBeLessThanOrEqual(
+		1,
+	)
 })
 
 test('selected text is selected in the code, and back', async ({ page }) => {

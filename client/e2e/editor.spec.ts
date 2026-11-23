@@ -7,6 +7,7 @@ import {
 	appMessages,
 	box,
 	css,
+	expectOnCorner,
 	moveTo,
 	nodePosition,
 	openSeeded,
@@ -4218,6 +4219,7 @@ test('a narrow row moves the warnings and Code view into "⋯", which shows the 
 	await expect(warnings(bars).first(), 'the warnings out of the narrow row').toBeHidden()
 	await expect(codeView(bars).first(), 'Code view out of the narrow row').toBeHidden()
 	await expect(mark, "the count on '⋯'").toBeVisible()
+	await expectOnCorner(mark, await box(menu), { x: 'right', y: 'top' }, "'⋯'s top end corner")
 	await menu.click()
 	await expect(codeView(items), 'Code view in the menu').toBeVisible()
 	await warnings(items).click()

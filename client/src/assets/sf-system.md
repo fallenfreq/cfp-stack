@@ -612,15 +612,13 @@ sf-chip          compact unit standing for an input, attribute or action — an
 sf-tag           short read-only label naming a category the item belongs to
 sf-status        short read-only label saying what state something is in
 sf-counter       short read-only label holding a count (3 unread, +2 more).
-                 The four compact units are separate element types: the root
-                 theme draws them alike, a theme may tell them apart. Worn with
-                 sf-single-line; colour comes from loudness × variant
-sf-badge         a mark on another element saying there's something there to
-                 look at, with nothing in it. A count there is a counter over
-                 the element (sf-counter sf-is-overlay), so counts are styled in
-                 one place. Both are out of the flow (the reset), so the theme
-                 decides their shape (a dot by default) and where on the element
-                 they sit, moving nothing else. Colour from loudness × variant
+                 The four compact units are separate element types, so a theme
+                 can draw them alike or tell them apart. Worn with
+                 sf-single-line
+sf-badge         a mark saying there's something there to look at, with nothing
+                 in it, in the line where it's written; over a box with sl-over
+                 (Placing a box over another). A count there is a counter
+                 (sf-counter sf-is-overlay), so counts are styled in one place
 sf-icon          content is a single icon (font icon or SVG). line-height:1
                  removes leading so padding drives vertical spacing
 sf-single-line   content is a single line of text. line-height:1 removes the
@@ -761,7 +759,8 @@ sf-is-overflow-top     content is clipped at the top
 sf-is-overflow-right   content is clipped at the right
 sf-is-overflow-bottom  content is clipped at the bottom
 sf-is-overflow-left    content is clipped at the left
-sf-is-overlay          element is physically positioned over other content
+sf-is-overlay          element is physically positioned over other content; worn by
+                       a placed box (sl-over) too
 sf-is-loading          element is in a loading / pending state; a busy button stays
                        enabled (aria-disabled) so it keeps focus
 sf-is-sticky           a sticky element is currently in its pinned position
@@ -984,7 +983,8 @@ sl-align-x-end     right
 ```
 
 Aligned sideways, a layout's items take their content's width instead of the full width.
-On a stack, y alignment shows only when the stack is taller than its content.
+On a stack, y alignment shows only when the stack is taller than its content. On `sl-over`
+they say where the box sits (Placing a box over another).
 
 A row of items side by side (`sl-columns`, `sl-split`, `sl-grid`, `sl-row`) stretches them to
 its height unless it's aligned. A shape (`sl-aspect-*`) counts as a height of the block's own:
@@ -1204,6 +1204,28 @@ missing fade. Theme authors cannot scope it away.
   natively, removing the caveat and the JS composable. Chrome/Edge only as of 2026-09;
   switch once Safari and Firefox ship it. Needs `@container` support in the generator.
 
+### Placing a box over another
+
+`sl-over` puts a box over the box it's in, out of the flow. Placing is layout, not the theme's
+(owner, 2026-11-22). The align words say where, and a side with no word is filled: alone it
+covers the box, `sl-align-y-end` alone is a bar along its foot, and both words put it on a
+corner.
+
+- It sits against the box it's in. The fixed CSS positions that box in the lowest layer, so any
+  rule that positions it wins; not a popover or dialog, which the browser places itself. It
+  isn't spaced or counted as a block.
+- It's drawn over the boxes around it, so a mark's poke-out shows whole in a list with no gap,
+  and under a pinned edge (`sl-pin-*`), which is drawn over all that scrolls under it.
+- A mark goes in a plain box with what it marks, as `SfBadge` does:
+  `<div><layout-card>…</layout-card><div class="sf-badge sl-over sl-align-x-end sl-align-y-start sf-is-overlay"></div></div>`.
+  Straight in a component block, it gets a warning instead of code that handles it.
+- It wears `sf-is-overlay`. Only a floating mark or count lets clicks through.
+- The theme draws it, and sets how far a floating mark pokes out (a margin on the mark).
+- Limits: write a mark after a layer in the same box, as two are drawn in the order written. A
+  box that clips cuts off the poke-out. A layer stops clicks on what's under it. A loud label
+  wearing `sf-is-overlay` loses its fill: give it a variant. A picture keeps its own size, so
+  it suits a corner.
+
 ### Theme contract
 
 Themes can influence layout **metrics** via the tokens layout primitives read — gap,
@@ -1269,6 +1291,9 @@ bar's width). Anything else straight in it measures as usual: the block settings
 width of its own, puts its names above their fields by that width. A menu that should measure a
 width of its own goes in a box in the popover, with the width on either: no longer straight in
 it, the menu measures like any layout (owner, 2026-11-22).
+
+**A placed box aligned sideways never measures** (`sl-over` with `sl-align-x-*`): it's as wide
+as its content, so it would be 0 wide. One held to both sides measures as usual.
 
 **In a document, hide and show measure the page.** "Hide below md" means the page is
 narrower than md, wherever the element sits, so the layouts around it don't become width
@@ -1366,6 +1391,13 @@ nav puts its links in a menu, so the name keeps its room in any theme; "⋯" the
 warning count (`SfBadge`). The badge is the mark's own component, not the menu's, so anything can
 wear one (owner, 2026-11-21).
 
+Changes not yet saved show as a mark on the page's name, as editors mark an edited document by its
+name; Save keeps one quiet look and says how the page stands in words ("Save", "Saving…",
+"Saved"), which screen readers hear. A filled Save wasn't wanted as the sign, and a coloured
+mark could read as "saved". The name's box is as wide as the name, so the mark is by
+it. Cmd+S (Ctrl+S) saves too, from anywhere in the editor; Save stays in the bar for touch screens
+(owner, 2026-11-22).
+
 Picker choices land in storage by a uniform pattern:
 
 - **Palette pick** → class pair on `node.attrs.class` (`sf-bg-primary-5` + `sf-bg-alpha-3`,
@@ -1457,8 +1489,8 @@ their items with a gap (`GAP_LAYOUTS` in `shared/layouts.ts`, which the validato
   sets a block's space above it wins (themes set looks, not spacing). It belongs to flow
   containers — the document, a node view's content box, a plain div block, a quote, a list
   item, a task item's content, a table cell — where each block after a shown block gets the
-  theme's `md` step above it (`xs` between list items); a block hidden at this width doesn't
-  count. Space under a block merges with the next block's space above, the larger showing, so
+  theme's `md` step above it (`xs` between list items); a block hidden at this width, or a
+  placed box (`sl-over`), doesn't count. Space under a block merges with the next block's space above, the larger showing, so
   it can widen a gap but not narrow it. Layouts are the author's
   choice, not the default: an element wearing a layout class isn't a flow container, so
   its gap alone spaces its children.
@@ -1497,7 +1529,8 @@ blocks in a component's content box (`throughNodeViews` in
   divided layout with a heading of its own, the first block gets a line.
 - **"After any block" means after a shown block.** A step from any block to a later one
   (`* + X`, `* ~ X`) is also written once per width band, after a block shown there, so a
-  block hidden at this width isn't counted (Container-responsive collapse). Only "any block"
+  block hidden at this width isn't counted (Container-responsive collapse). A placed box
+  (`sl-over`) isn't counted either, before or after. Only "any block"
   can be: in `h2 + p` a block hidden between the two still counts, as CSS can't say "the
   nearest shown block before it is a heading".
 - Rewritten rules keep their weight.
@@ -1618,6 +1651,10 @@ readers, walkers and types come with them.
   stack by the column's width, put it in an `sl-stack` in that column (Container-responsive
   collapse). An inset is left out: a layout straight in one stacks late only by the inset's two
   margins (48px with a 24px page margin), and bands holding Columns are common.
+- **`no-over-with-placement`**: `sl-over` with `sl-pin-*`, `sl-bleed`, `sl-center` or `sl-row`,
+  which place the box too, so one loses (Placing a box over another).
+- **`no-over-in-component`**: `sl-over` straight in a component block, where it sits on the
+  wrong box (Placing a box over another).
 - **`require-picture-size`**: a picture with no size of its own (Layout primitives, "A
   picture's space before it loads").
 - **`valid-heading-class`**: an `sf-heading-*` class on a block that isn't a heading, as the
@@ -1627,6 +1664,8 @@ readers, walkers and types come with them.
 - **`prefer-center-around-video`** (a suggestion): `sl-center` on a video. A Centre holding the
   video (the video's own style `max-width: none`) lays out the same; both work, it only points out the usual
   way.
+- **`prefer-overlay-on-over`** (a suggestion): `sl-over` without `sf-is-overlay` (Placing a box
+  over another).
 - **`max-hide-show-run`** (a suggestion): 100 or more side-by-side blocks in a row that each
   hide or show by width: put the blocks that hide together in one box and hide the box
   (Container-responsive collapse).

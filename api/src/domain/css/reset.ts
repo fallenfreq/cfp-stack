@@ -232,20 +232,18 @@ ${notInherited(LINE_PARTS)}
 		color: inherit;
 	}
 
-	/* Compact units are inline boxes, so their padding applies on a <span>. */
+	/* Compact units and marks are inline boxes, so their padding and size apply on a <span>. */
 	.sf-chip,
 	.sf-tag,
 	.sf-status,
-	.sf-counter {
+	.sf-counter,
+	.sf-badge {
 		display: inline-block;
 	}
 
-	/* A badge, or a count over another element, sits on that element out of the flow, whatever the
-	   theme: where the theme puts it moves nothing else, and it never takes a press meant for the
-	   element under it. */
-	.sf-badge,
-	.sf-counter.sf-is-overlay {
-		position: absolute;
+	/* A floating mark or count (placed with sl-over) never takes a press meant for the element
+	   under it. */
+	:is(.sf-badge, .sf-counter).sf-is-overlay {
 		pointer-events: none;
 	}
 

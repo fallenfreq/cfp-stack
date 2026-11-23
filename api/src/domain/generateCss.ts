@@ -513,8 +513,9 @@ const section = (title: string): string =>
 //     itself): a layout holding a collapsing element is one. So a block in one side of a
 //     split measures the whole split; to stack by a side's width, make the side a layout (a
 //     stack). A width container takes no width from its content, so nothing sized by its
-//     content becomes one (SIZED_BY_CONTENT_SELECTOR, and a menu straight in a popover,
-//     hostsFor) — it would be 0 wide; what it holds measures the next box out.
+//     content becomes one (SIZED_BY_CONTENT_SELECTOR, and a menu straight in a popover or a
+//     placed box aligned sideways, hostsFor) — it would be 0 wide; what it holds measures the
+//     next box out.
 //   sl-hide-below-* / sl-show-below-* use the same widths to swap what shows: hidden at or
 //     below the width, or shown only then (a menu button in place of inline links). They're
 //     written per width band (slLayout.ts, widthBands), the bands block spacing and a theme's
@@ -595,11 +596,15 @@ function emitCollapseLayer(
 // width container it would be 0 wide; its items measure the next box out (the editor's "⋯"
 // shows Code view by its bar's width). Anything else straight in one measures as usual: the
 // block settings panel, with a width of its own, stacks its rows by that width. Only straight
-// in: a menu wrapped in a box with a width measures that width.
+// in: a menu wrapped in a box with a width measures that width. Nor a box placed over another
+// and aligned sideways (sl-over): as wide as its content, it would be 0 wide too. One held to
+// both sides is as wide as its box and measures as usual.
+const PLACED_SIDEWAYS = '.sl-over:is(.sl-align-x-start, .sl-align-x-center, .sl-align-x-end)'
 function hostsFor(scope: string, inside: string): string[] {
+	const host = `:is(${COLLAPSE_HOST_SELECTOR})${scope}:where(:not(${PLACED_SIDEWAYS}))`
 	return [
-		`:is(${COLLAPSE_HOST_SELECTOR})${scope}:where(:not([popover] *)):has(:is(${inside}):not([popover] *))`,
-		`[popover] :is(${COLLAPSE_HOST_SELECTOR})${scope}:where(:not([popover] > menu)):has(${inside})`,
+		`${host}:where(:not([popover] *)):has(:is(${inside}):not([popover] *))`,
+		`[popover] ${host}:where(:not([popover] > menu)):has(${inside})`,
 	]
 }
 

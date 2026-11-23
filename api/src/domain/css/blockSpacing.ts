@@ -1,7 +1,7 @@
 import {
 	DOCUMENT_CONTAINER,
 	GAP_LAYOUT_SELECTOR,
-	NOT_A_BLOCK,
+	OUT_OF_FLOW,
 	type WidthBand,
 	shownAlways,
 	shownIn,
@@ -31,7 +31,7 @@ const FLOW_CONTAINER =
 
 export function blockSpacing(bands: readonly WidthBand[]): string {
 	const spaced = (shown: string, at: string) => {
-		const block = `:where(${shown}) ~ :where(:not(${NOT_A_BLOCK}))`
+		const block = `:where(${shown}) ~ :where(:not(${OUT_OF_FLOW}))`
 		return `${at}.tiptap:where(:not(${GAP_LAYOUT_SELECTOR})) > ${block},
 ${at}.tiptap ${FLOW_CONTAINER} > ${block} { margin-top: var(--sf-spacing-md); }\n`
 	}

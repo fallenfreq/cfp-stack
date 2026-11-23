@@ -10,9 +10,12 @@ import { noContainerUnits } from '@somefreq-app/validator/rules/noContainerUnits
 import { noContentSizedBox } from '@somefreq-app/validator/rules/noContentSizedBox'
 import { noDuplicateId } from '@somefreq-app/validator/rules/noDuplicateId'
 import { noOverflowHidden } from '@somefreq-app/validator/rules/noOverflowHidden'
+import { noOverInComponent } from '@somefreq-app/validator/rules/noOverInComponent'
+import { noOverWithPlacement } from '@somefreq-app/validator/rules/noOverWithPlacement'
 import { noWidthContainer } from '@somefreq-app/validator/rules/noWidthContainer'
 import { oneArrangementPerBox } from '@somefreq-app/validator/rules/oneArrangementPerBox'
 import { preferCenterAroundVideo } from '@somefreq-app/validator/rules/preferCenterAroundVideo'
+import { preferOverlayOnOver } from '@somefreq-app/validator/rules/preferOverlayOnOver'
 import { preferThemeColor } from '@somefreq-app/validator/rules/preferThemeColor'
 import { preferThemeRadius } from '@somefreq-app/validator/rules/preferThemeRadius'
 import { preferThemeText } from '@somefreq-app/validator/rules/preferThemeText'
@@ -26,9 +29,12 @@ const elementRules: readonly ElementRule[] = [
 	oneArrangementPerBox,
 	noBleedingCenter,
 	noCollapseStraightInColumns,
+	noOverWithPlacement,
+	noOverInComponent,
 	requirePictureSize,
 	validHeadingClass,
 	preferCenterAroundVideo,
+	preferOverlayOnOver,
 	maxHideShowRun,
 ]
 const boxRules: readonly CssRule[] = [noOverflowHidden, noContentSizedBox]

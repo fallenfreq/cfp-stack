@@ -122,7 +122,8 @@ bands().forEach(({ name, px }, band) => {
 	})
 
 	// No app screen holds such a box today, so the check adds one outside the page. A layout
-	// holding a hide/show block measures its own width there.
+	// holding a hide/show block measures its own width there. A plain box measures nothing, so a
+	// hide/show block in it is always shown, and has its line.
 	test(`on an app screen, divide lines are drawn only between shown blocks, ${name}`, async ({
 		page,
 	}) => {
@@ -133,7 +134,11 @@ bands().forEach(({ name, px }, band) => {
 			box.className = 'sl-stack sf-gap-sm sf-divide-y'
 			box.style.width = `${px}px`
 			box.innerHTML = '<p class="sl-hide-below-md">Hidden below md</p><p>One</p><p>Two</p>'
-			document.body.append(box)
+			const plain = document.createElement('div')
+			plain.id = 'app-divide-plain'
+			plain.className = 'sf-divide-y'
+			plain.innerHTML = '<p>One</p><p class="sl-hide-below-md">Two</p><p>Three</p>'
+			document.body.append(box, plain)
 		}, px)
 		await settle(page)
 		expect(await measuredBox(page.locator('#app-divide > p').nth(1))).toEqual({
@@ -143,5 +148,7 @@ bands().forEach(({ name, px }, band) => {
 		const { items } = await dividerLooks(page, 'app-divide', { shownOnly: true })
 		expect(items.length, 'blocks shown').toBe([2, 2, 2, 3][band])
 		expect(items).toEqual(items.map((_, i) => (i === 0 ? undivided : divided)))
+		const plain = await dividerLooks(page, 'app-divide-plain', { shownOnly: true })
+		expect(plain.items, 'in a plain box').toEqual([undivided, divided, divided])
 	})
 })

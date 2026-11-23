@@ -1,14 +1,16 @@
 <template>
 	<!-- A mark on what's inside, saying there's something there to look at: a count over it, or with
-	     none a mark alone. The theme decides their shape and where they sit; this box only gives
-	     them something to sit against. It's for sight only, so whoever uses a badge says what it
-	     means in words too (a name, or the item it points to). -->
+	     none a mark alone. This box holds both, so the mark sits on its top end corner (sl-over and
+	     the align words); the theme draws the mark and how far it pokes out. It's for sight only,
+	     so whoever uses a badge says what it means in words too (a name, or the item it points
+	     to). -->
 	<span class="badge-anchor">
 		<slot />
 		<span
 			v-if="count !== 0"
 			:class="[
-				count === undefined ? 'sf-badge' : 'sf-counter sf-is-overlay sf-single-line',
+				count === undefined ? 'sf-badge' : 'sf-counter sf-single-line',
+				'sl-over sl-align-x-end sl-align-y-start sf-is-overlay',
 				loudness && `sf-loudness-${loudness}`,
 				variant && `sf-variant-${variant}`,
 			]"
@@ -34,8 +36,8 @@ const { count = undefined } = defineProps<{
 
 <style scoped>
 @layer ui {
+	/* As big as what's inside, so the corner is its corner. */
 	.badge-anchor {
-		position: relative;
 		display: inline-flex;
 	}
 }

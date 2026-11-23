@@ -803,6 +803,198 @@
 	<p id="align-cluster-x-end-last">B</p>
 </div>
 
+<h2>Placing a box over another</h2>
+<p>
+	A placed box (sl-over) sits over the box it's in, where its align words say; a side with no word
+	is filled. A floating mark pokes out by the theme's margin.
+</p>
+
+<h3>A mark on each corner, and one centred on the top edge and one on the end edge</h3>
+<div data-container id="over-corners" style="height: 120px">
+	<p>A box with six marks</p>
+	<div
+		data-container
+		id="over-top-start"
+		class="sf-badge sl-over sl-align-x-start sl-align-y-start sf-is-overlay"
+	></div>
+	<div
+		data-container
+		id="over-top-end"
+		class="sf-badge sl-over sl-align-x-end sl-align-y-start sf-is-overlay"
+	></div>
+	<div
+		data-container
+		id="over-bottom-start"
+		class="sf-badge sl-over sl-align-x-start sl-align-y-end sf-is-overlay"
+	></div>
+	<div
+		data-container
+		id="over-bottom-end"
+		class="sf-badge sl-over sl-align-x-end sl-align-y-end sf-is-overlay"
+	></div>
+	<div
+		data-container
+		id="over-top-center"
+		class="sf-badge sl-over sl-align-x-center sl-align-y-start sf-is-overlay"
+	></div>
+	<div
+		data-container
+		id="over-end-center"
+		class="sf-badge sl-over sl-align-x-end sl-align-y-center sf-is-overlay"
+	></div>
+</div>
+
+<h3>A mark not placed sits in the flow, where it's written, filled as a floating one is</h3>
+<div data-container id="over-unplaced-box">
+	<p id="over-unplaced-before">Before the mark</p>
+	<div data-container id="over-unplaced" class="sf-badge"></div>
+	<p id="over-unplaced-after">After the mark</p>
+</div>
+
+<h3>A bar along the foot, and a layer over the whole box</h3>
+<div data-container id="over-bar-box" style="height: 120px">
+	<p>A box with a bar</p>
+	<div data-container id="over-bar" class="sl-over sl-align-y-end sf-is-overlay">
+		<p>Caption</p>
+	</div>
+</div>
+<div data-container id="over-layer-box" style="height: 120px">
+	<p>A box with a layer</p>
+	<div data-container id="over-layer" class="sl-over sf-is-overlay"></div>
+</div>
+
+<h3>Centred, a caption is as big as its words, not the edge</h3>
+<div data-container id="over-centred-box" style="height: 120px">
+	<p>A box with two captions</p>
+	<div
+		data-container
+		id="over-centred-x"
+		class="sl-over sl-align-x-center sl-align-y-end sf-is-overlay"
+	>
+		<p>Across</p>
+	</div>
+	<div
+		data-container
+		id="over-centred-y"
+		class="sl-over sl-align-x-end sl-align-y-center sf-is-overlay"
+	>
+		<p>Down</p>
+	</div>
+</div>
+
+<h3>A mark first in a box of text doesn't push the text down</h3>
+<div data-container id="over-first">
+	<div
+		data-container
+		class="sf-badge sl-over sl-align-x-end sl-align-y-start sf-is-overlay"
+	></div>
+	<p id="over-first-text">Text after a mark</p>
+</div>
+<div data-container id="over-first-twin"><p id="over-first-twin-text">Text</p></div>
+
+<h3>A mark on a Card's corner, not cut off by the Card</h3>
+<div data-container id="over-card-box">
+	<layout-card id="over-card" class="sf-size-md"><p>A marked Card</p></layout-card>
+	<div
+		data-container
+		id="over-card-mark"
+		class="sf-badge sl-over sl-align-x-end sl-align-y-start sf-is-overlay"
+	></div>
+</div>
+
+<h3>A mark on an inset's edge, not its column's</h3>
+<div data-container id="over-inset" class="sl-inset">
+	<p id="over-inset-line">On the line</p>
+	<div
+		data-container
+		id="over-inset-mark"
+		class="sf-badge sl-over sl-align-x-end sl-align-y-start sf-is-overlay"
+	></div>
+</div>
+
+<h3>In a list with no gap, each mark is drawn whole over the next item</h3>
+<div data-container id="over-tight" class="sl-stack" style="gap: 0">
+	<div data-container>
+		<layout-card class="sf-size-md"><p>A marked item</p></layout-card>
+		<div
+			data-container
+			id="over-tight-mark"
+			class="sf-badge sl-over sl-align-x-start sl-align-y-end sf-is-overlay"
+		></div>
+	</div>
+	<div data-container id="over-tight-next">
+		<layout-card class="sf-size-md"><p>The next marked item</p></layout-card>
+		<div
+			data-container
+			class="sf-badge sl-over sl-align-x-start sl-align-y-end sf-is-overlay"
+		></div>
+	</div>
+</div>
+
+<h3>A mark on a pinned Card stays on it, drawn on top, as the area scrolls</h3>
+<div data-container id="over-pin-area" class="sl-scroll-y" style="height: 200px">
+	<div data-container id="over-pin" class="sl-pin-top">
+		<layout-card class="sf-size-md"><p>Pinned and marked</p></layout-card>
+		<div
+			data-container
+			id="over-pin-mark"
+			class="sf-badge sl-over sl-align-x-start sl-align-y-start sf-is-overlay"
+		></div>
+	</div>
+	<layout-card class="sf-size-md"><p>Scrolls under</p></layout-card>
+	<div data-container id="over-under">
+		<layout-card class="sf-size-md"><p>Scrolls under, marked</p></layout-card>
+		<div
+			data-container
+			id="over-under-mark"
+			class="sf-badge sl-over sl-align-x-start sl-align-y-start sf-is-overlay"
+		></div>
+	</div>
+	<layout-card class="sf-size-md"><p>Scrolls under</p></layout-card>
+	<layout-card class="sf-size-md"><p>Scrolls under</p></layout-card>
+	<layout-card class="sf-size-md"><p>Scrolls under</p></layout-card>
+</div>
+
+<h3>Columns in a placed Stack aligned sideways measure the page, so they aren't 0 wide</h3>
+<div data-container style="height: 160px">
+	<p>A box with a placed Stack aligned sideways</p>
+	<div data-container class="sl-over sl-stack sl-align-x-end sl-align-y-start sf-is-overlay">
+		<layout-columns id="over-sideways-columns" columns="2" class="sf-gap-md sl-collapse-sm">
+			<p>One</p>
+			<p>Two</p>
+		</layout-columns>
+	</div>
+</div>
+
+<h3>Columns in a placed Stack along the foot of a 300px box stack by its width</h3>
+<div data-container style="width: 300px; height: 160px">
+	<p>A narrow box with a bar</p>
+	<div data-container id="over-bar-stack" class="sl-over sl-stack sl-align-y-end sf-is-overlay">
+		<layout-columns id="over-bar-columns" columns="2" class="sf-gap-md sl-collapse-sm">
+			<p>One</p>
+			<p>Two</p>
+		</layout-columns>
+	</div>
+</div>
+
+<h3>A mark in a divided stack has no divide line</h3>
+<div data-container id="over-divide" class="sl-stack sf-divide-y">
+	<p>One</p>
+	<p>Two</p>
+	<div
+		data-container
+		class="sf-badge sl-over sl-align-x-end sl-align-y-start sf-is-overlay"
+	></div>
+</div>
+<div data-container id="over-divide-twin" class="sl-stack">
+	<p>One</p>
+	<p>Two</p>
+	<div
+		data-container
+		class="sf-badge sl-over sl-align-x-end sl-align-y-start sf-is-overlay"
+	></div>
+</div>
+
 <h2>Warnings</h2>
 <h3>A Stack given an inset has two arrangements, its own and the inset: it's marked</h3>
 <layout-stack id="warned-stack" class="sl-inset"

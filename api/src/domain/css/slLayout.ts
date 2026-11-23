@@ -60,13 +60,26 @@ import { throughNodeViews } from './nodeViewSelectors.js'
 //     on to the page (which can fire the browser's back gesture).
 //   sl-scroll-frame — positions overlays on a scroll area's edges; the scroll area fills it
 //     and can still shrink (minmax(0, …)).
-//   sl-pin-* — sticky to one edge of the nearest scroll area.
+//   sl-pin-* — sticky to one edge of the nearest scroll area, drawn over what scrolls under it,
+//     placed boxes (sl-over) included.
 //   sl-align-x-* / sl-align-y-* — x is sideways and y is up and down, on every layout. After
 //     the layouts, so they beat a layout's own alignment (sl-cover's place-items,
 //     sl-split/sl-cluster's align-items). A grid aligns with justify-items (x) and align-items
 //     (y); a stack's sideways axis is align-items and its up-down axis justify-content; a
 //     cluster's sideways axis is justify-content. Aligned sideways, a layout's items take
 //     their content's width instead of the full width.
+//   sl-over — sits over the box it's in, out of the flow, held to all four sides: alone it
+//     covers the box. Each align word lets go of one side (x-start the end side, y-end the top),
+//     so the box takes its content's size there; a centre word keeps both sides and centres it
+//     with auto margins, as big as its content (a default in the lowest layer, so a size the
+//     theme gives it wins). grid-area: auto, so in a grid (an inset) it sits on the whole box,
+//     not its grid area. Drawn over the boxes around it, as the next box is positioned too when
+//     it holds a placed box, and would cover a poke-out; under a pinned edge (sl-pin-*). Two
+//     placed boxes in one box are drawn in the order written. The box it's in is positioned in
+//     the lowest layer, so a sticky or
+//     floating box stays as it is; not a popover or dialog, which the browser places itself
+//     and any author rule would beat. Full screen needs no exception: the browser's own rule
+//     there can't be beaten. After sl-scroll-frame, which positions a box too.
 //   sl-inset-line — content starts on the line of the inset it sits in (same sum as sl-inset;
 //     padding's % reads the parent's width, which matches when the element fills it). Outside
 //     any inset there's no width to follow (100%), so just the page margin. After sl-inset so
@@ -81,7 +94,7 @@ export const GAP_LAYOUT_SELECTOR = GAP_LAYOUTS.map((name) => `.${name}`).join(',
 // a component's content box (nodeViewSelectors.ts). Every theme rule goes through it too
 // (generateCss.ts).
 export const forBlocks = (selector: string, shown = '', only = ''): string =>
-	throughNodeViews(selector, GAP_LAYOUT_SELECTOR, shown, only)
+	throughNodeViews(selector, GAP_LAYOUT_SELECTOR, shown, only, `:not(${OUT_OF_FLOW})`)
 
 // The margin before an inset's line: the set margin, or half the width left over past the
 // column's limit if that's more. One sum for an inset's tracks, sl-inset-line's padding and a
@@ -146,8 +159,10 @@ export function widthBands(
 	return bands
 }
 
-// ProseMirror's widgets (the gap cursor) sit among the blocks but aren't blocks.
-export const NOT_A_BLOCK = '.ProseMirror-widget'
+// Sits among the blocks but out of the flow, so it isn't spaced or counted as the block before or
+// after another: ProseMirror's gap cursor (its stylesheet floats it) and a placed box (sl-over).
+// Only ever used inside :not(…).
+export const OUT_OF_FLOW = '.ProseMirror-widget, .sl-over'
 
 // A shown block, as the one before another: shown at every width, it wears none of the hide/show
 // classes (with no widths nothing hides); shown in a band, none of the band's hidden classes.
@@ -163,10 +178,10 @@ export const NOT_A_BLOCK = '.ProseMirror-widget'
 // such as when one is selected.
 export const shownAlways = (bands: readonly WidthBand[]): string => {
 	const swapping = new Set(bands.flatMap((band) => band.hidden))
-	return `:not(${[...swapping, NOT_A_BLOCK].join(', ')})`
+	return `:not(${[...swapping, OUT_OF_FLOW].join(', ')})`
 }
 export const shownIn = (band: WidthBand): string =>
-	`:not(${[...band.hidden, NOT_A_BLOCK].join(', ')})`
+	`:not(${[...band.hidden, OUT_OF_FLOW].join(', ')})`
 
 // Everything in a document whose width comes from its content, because a box around it sizes
 // what's inside to fit: a table cell, a cluster's items, a cover's centred items, a layout
@@ -210,10 +225,10 @@ export const SL_LAYOUT = `@layer sl-layout {
 	${INSET_DOCUMENT_MOUNT} { grid-column: full; }
 	${INSET_DOCUMENT} { padding-inline: ${LINE_MARGIN}; }
 	:is(.sf-depth-1, .sf-depth-2, .sf-depth-3).sl-inset { --sfx-inset-margin: var(--sf-padding, 0px); --sfx-inset-width: 100%; }
-	.sl-pin-bottom { position: sticky; bottom: 0; z-index: 1; }
-	.sl-pin-left { position: sticky; left: 0; z-index: 1; }
-	.sl-pin-right { position: sticky; right: 0; z-index: 1; }
-	.sl-pin-top { position: sticky; top: 0; z-index: 1; }
+	.sl-pin-bottom { position: sticky; bottom: 0; z-index: 2; }
+	.sl-pin-left { position: sticky; left: 0; z-index: 2; }
+	.sl-pin-right { position: sticky; right: 0; z-index: 2; }
+	.sl-pin-top { position: sticky; top: 0; z-index: 2; }
 	.sl-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
 	.sl-scroll-frame { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); }
 	.sl-scroll-x { overflow-x: auto; overscroll-behavior-x: contain; }
@@ -236,6 +251,13 @@ export const SL_LAYOUT = `@layer sl-layout {
 	.sl-cluster.sl-align-x-center { justify-content: center; }
 	.sl-cluster.sl-align-x-end { justify-content: end; }
 	.sl-cluster.sl-align-x-start { justify-content: start; }
+	.sl-over { position: absolute; inset: 0; grid-area: auto; z-index: 1; }
+	.sl-over.sl-align-x-start { inset-inline-end: auto; }
+	.sl-over.sl-align-x-end { inset-inline-start: auto; }
+	.sl-over.sl-align-x-center { margin-inline: auto; }
+	.sl-over.sl-align-y-start { inset-block-end: auto; }
+	.sl-over.sl-align-y-end { inset-block-start: auto; }
+	.sl-over.sl-align-y-center { margin-block: auto; }
 	.sl-inset-line { padding-inline: ${LINE_MARGIN}; }
 }
 @layer reset {
@@ -243,5 +265,8 @@ export const SL_LAYOUT = `@layer sl-layout {
 	:where(${SHAPE_SELECTOR}) { height: min-content; }
 	.sl-center:not(img, svg, video, canvas, audio, iframe, embed, object) { width: -webkit-fill-available; width: stretch; }
 	${forBlocks(':is(.sl-align-x-start, .sl-align-x-center, .sl-align-x-end) > .sl-center')} { width: auto; }
+	:where(:not(dialog, [popover])):has(> .sl-over) { position: relative; }
+	.sl-over.sl-align-x-center { inline-size: fit-content; }
+	.sl-over.sl-align-y-center { block-size: fit-content; }
 }
 `

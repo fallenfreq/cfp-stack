@@ -5,6 +5,8 @@ import {
 	appMessages,
 	box,
 	breakpoints,
+	css,
+	expectOnCorner,
 	moveTo,
 	openTests,
 	settle,
@@ -898,6 +900,116 @@ test('Save says whether the page is saved, and only whoever could save sees it',
 	await page.goto('/editor?seed=true')
 	await expect(page.locator('.tiptap').first()).toBeVisible()
 	await expect(bars(page).getByRole('button', { name: /^Sav/ }), 'a visitor').toHaveCount(0)
+})
+
+// Changes not yet saved show as a mark on the page's name; Save looks the same either way. The
+// loud Save this replaced lost its fill in the bar (dark words on no fill, in dark mode). The name
+// box is as wide as the name, so the mark on its top end corner is by it, and a name longer than
+// the room is cut short.
+test("a mark on the name says there are changes not yet saved, and Save's look doesn't change", async ({
+	page,
+	themeClass,
+}) => {
+	await openStored(page, themeClass, oneParagraph)
+	await page.setViewportSize({ width: 1280, height: 700 })
+	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
+	const name = bars(page).getByRole('textbox')
+	const save = bars(page).getByRole('button', { name: /^Save/ })
+	const mark = bars(page).locator('.sf-badge')
+	const saveLook = async () => [
+		await css(save, 'background-color'),
+		await css(save, 'color'),
+		await css(save, 'border-color'),
+	]
+	await expect(saysSaved(page)).toBeVisible()
+	await expect(mark, 'as it opened').toHaveCount(0)
+	const savedLook = await saveLook()
+
+	await typeAtEnd(page, ' Typed.')
+	await expect(saysUnsaved(page)).toBeVisible()
+	await expect(mark, 'typed').toBeVisible()
+	await settle(page)
+	expect(await saveLook(), "Save's look with changes").toEqual(savedLook)
+	// The name's width changes as its font loads (4px for "Stored"), so it's measured after.
+	await page.evaluate(() => document.fonts.ready)
+	const nameBox = await box(name)
+	await expectOnCorner(mark, nameBox, { x: 'right', y: 'top' }, "the name's top end corner")
+	expect(
+		(await box(save)).left - nameBox.right,
+		'the name box as wide as the name',
+	).toBeGreaterThan(200)
+
+	// A name longer than the room: cut short before Save, with the mark still in the row.
+	await page.setViewportSize({ width: 390, height: 700 })
+	await name.click()
+	await page.keyboard.type(' and a long name that goes on past the room')
+	await settle(page)
+	expect(await name.evaluate((el) => el.scrollWidth > el.clientWidth), 'cut short').toBe(true)
+	expect((await box(mark)).right, 'the mark before Save').toBeLessThanOrEqual(
+		(await box(save)).left,
+	)
+	await name.press('Escape')
+
+	const finishSave = await holdReplies(page, 'adminPages.save', { version: 2 })
+	finishSave()
+	await pressSave(page)
+	await expect(saysSaved(page)).toBeVisible()
+	await expect(mark, 'saved').toHaveCount(0)
+})
+
+// Cmd+S (Ctrl+S) saves as Save does, from the page and from the name box, whose name is kept
+// first, so a new page named there isn't asked its name. Pressed again while a save is under way,
+// it saves once: a new page would otherwise be made twice.
+test('Cmd+S saves, as Save does, from the page and the name box', async ({ page, themeClass }) => {
+	await openStored(page, themeClass, oneParagraph)
+	await expect(page.locator('.tiptap p').first()).toHaveText('A paragraph.')
+	let saves = 0
+	let letThrough = (): void => undefined
+	let held = Promise.resolve()
+	await page.route(
+		(url) => url.pathname.includes('adminPages.save'),
+		async (route) => {
+			saves++
+			await held
+			await route.fulfill({ json: [{ result: { data: { json: { version: saves + 1 } } } }] })
+		},
+	)
+	const saveKeys = 'ControlOrMeta+s'
+
+	await typeAtEnd(page, ' Typed.')
+	await expect(saysUnsaved(page)).toBeVisible()
+	await page.keyboard.press(saveKeys)
+	await expect(saysSaved(page), 'from the page').toBeVisible()
+	expect(saves).toBe(1)
+
+	held = new Promise((resolve) => (letThrough = resolve))
+	await typeAtEnd(page, ' More.')
+	await page.keyboard.press(saveKeys)
+	await expect(bars(page).getByRole('button', { name: 'Saving…' })).toBeVisible()
+	await page.keyboard.press(saveKeys)
+	letThrough()
+	await expect(saysSaved(page), 'pressed twice').toBeVisible()
+	expect(saves, 'pressed twice, saved once').toBe(2)
+
+	let madeName: string | null = null
+	await page.route(
+		(url) => url.pathname.includes('adminPages.create'),
+		(route) => {
+			madeName = route.request().postDataJSON()[0].json.name
+			return route.fulfill({
+				json: [{ result: { data: { json: { pageId: 2, slug: 'keyed', version: 1 } } } }],
+			})
+		},
+	)
+	await moveTo(page, '/editor')
+	await typeAtEnd(page, 'A new page.')
+	const name = bars(page).getByRole('textbox')
+	await name.click()
+	await name.fill('Keyed')
+	await name.press(saveKeys)
+	await expect(page).toHaveURL(/\/editor\/keyed$/)
+	expect(madeName, 'named in the name box').toBe('Keyed')
+	await expect(page.getByRole('textbox', { name: 'Page name' }), 'not asked').toHaveCount(0)
 })
 
 /** Answer API calls to `call` with `data`, each once the function returned is called. */

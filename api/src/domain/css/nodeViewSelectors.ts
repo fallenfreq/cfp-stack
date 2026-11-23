@@ -9,9 +9,11 @@
 //     reaches it.
 //   - Given shown (what counts as a shown block), a step from any block to a later one
 //     (`* + X`, `* ~ X`) starts from a shown block instead (`:where(shown) ~ X`), so a block
-//     hidden at this width isn't counted. Only "any block" can be read so: CSS can't say "the
-//     nearest shown block before X is a heading", so `h2 + p` still counts hidden blocks. Not
-//     inside :has(), whose blocks may measure another width.
+//     hidden at this width isn't counted. Given inFlow too, X must match it (a placed box
+//     isn't a block after another); not shown, as where nothing measures a width a hide/show X
+//     never counts as shown, and a hidden X draws nothing anyway. Only "any block" can be read
+//     so: CSS can't say "the nearest shown block before X is a heading", so `h2 + p` still
+//     counts hidden blocks. Not inside :has(), whose blocks may measure another width.
 //   - Given only (a compound), the element the selector finds must match it too: it's added to
 //     the last step, before any pseudo-element.
 // Inserted tests are zero-weight (:where) and a selector's alternatives share one weight, so a
@@ -34,6 +36,7 @@ interface Context {
 	stepAside: string
 	shown: string
 	only: string
+	inFlow: string
 	inHas: boolean
 }
 
@@ -55,8 +58,15 @@ interface Block {
 
 // stepAside: the layouts whose content box steps aside, as a selector list. shown: what counts as
 // a shown block, as a compound. only: what the element found must also match, as a compound.
-export function throughNodeViews(selector: string, stepAside = '', shown = '', only = ''): string {
-	const ctx: Context = { stepAside, shown, only, inHas: false }
+// inFlow: what counts as a block in the flow, as a compound.
+export function throughNodeViews(
+	selector: string,
+	stepAside = '',
+	shown = '',
+	only = '',
+	inFlow = '',
+): string {
+	const ctx: Context = { stepAside, shown, only, inFlow, inHas: false }
 	try {
 		return mapList(selector, ctx, false).join(', ')
 	} catch (e) {
@@ -95,11 +105,15 @@ function afterShown(steps: Step[], ctx: Context): Step[] {
 			&& (next?.combinator === '+' || next?.combinator === '~')
 		)
 	}
+	const shown = `:where(${ctx.shown})`
+	const inFlow = ctx.inFlow && `:where(${ctx.inFlow})`
 	return steps.map((step, i) => ({
 		combinator: anyThenLater(i - 1) ? '~' : step.combinator,
 		compound: anyThenLater(i)
-			? { ...step.compound, text: `:where(${ctx.shown})` }
-			: step.compound,
+			? { ...step.compound, text: shown }
+			: anyThenLater(i - 1)
+				? { ...step.compound, text: step.compound.text + inFlow }
+				: step.compound,
 	}))
 }
 

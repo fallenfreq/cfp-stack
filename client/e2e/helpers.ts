@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test'
 import type { TiptapEditorHTMLElement } from '@tiptap/vue-3'
 import { readFileSync } from 'node:fs'
+import { expect } from './fixtures'
 
 export interface Box {
 	left: number
@@ -190,6 +191,40 @@ export const box = (target: Locator): Promise<Box> =>
 		const { left, right, top, bottom, width, height } = el.getBoundingClientRect()
 		return { left, right, top, bottom, width, height }
 	})
+
+/** Two lengths the same to within 1px: browsers place boxes at fractions of one. */
+export const near = (a: number, b: number, what: string): void =>
+	expect(Math.abs(a - b), `${what}: ${a} against ${b}`).toBeLessThanOrEqual(1)
+
+const margins = (target: Locator) =>
+	target.evaluate((el) => {
+		const s = getComputedStyle(el)
+		return {
+			top: parseFloat(s.marginTop),
+			right: parseFloat(s.marginRight),
+			bottom: parseFloat(s.marginBottom),
+			left: parseFloat(s.marginLeft),
+		}
+	})
+
+/**
+ * A mark placed over `on` (sl-over), held to two of its sides: its edges there, less its own
+ * margin, the theme's (a floating mark pokes out by it).
+ */
+export async function expectOnCorner(
+	mark: Locator,
+	on: Box,
+	sides: { x: 'left' | 'right'; y: 'top' | 'bottom' },
+	what: string,
+): Promise<void> {
+	const at = await box(mark)
+	const margin = await margins(mark)
+	expect(at.width, `${what}: the theme draws the mark`).toBeGreaterThan(0)
+	if (sides.x === 'left') near(at.left, on.left + margin.left, `${what}, left`)
+	else near(at.right, on.right - margin.right, `${what}, right`)
+	if (sides.y === 'top') near(at.top, on.top + margin.top, `${what}, top`)
+	else near(at.bottom, on.bottom - margin.bottom, `${what}, bottom`)
+}
 
 /** How many columns a grid has; 1 means its items are stacked. */
 export const columnCount = (target: Locator): Promise<number> =>

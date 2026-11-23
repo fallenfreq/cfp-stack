@@ -378,25 +378,25 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sf-tag',
 		kind: 'element',
 		description:
-			'A short label naming a category the item belongs to. Read-only; wear with sf-single-line, a size, and a loudness and variant for its colour.',
+			'A short label naming a category the item belongs to. Read-only; wear with sf-single-line and a size.',
 	},
 	{
 		name: 'sf-status',
 		kind: 'element',
 		description:
-			'A short label saying what state something is in (verified, draft, failed). Read-only; wear with sf-single-line, a size, and a loudness and variant for its colour.',
+			'A short label saying what state something is in (verified, draft, failed). Read-only; wear with sf-single-line and a size.',
 	},
 	{
 		name: 'sf-counter',
 		kind: 'element',
 		description:
-			'A short label holding a count (3 unread, +2 more). Read-only; wear with sf-single-line, a size, and a loudness and variant for its colour.',
+			'A short label holding a count (3 unread, +2 more). Read-only; wear with sf-single-line and a size.',
 	},
 	{
 		name: 'sf-badge',
 		kind: 'element',
 		description:
-			'A mark on another element saying there is something there to look at, with nothing in it (for a count, sf-counter sf-is-overlay). The theme decides its shape (a dot by default) and where on the element it sits; a loudness and variant give its colour.',
+			"A mark saying there is something to look at, with nothing in it, in the line where it's written. Over a box, it wears sl-over, the align words for its corner, and sf-is-overlay. Its shape, size and colour are the theme's; a count is a counter (sf-counter).",
 	},
 	{
 		name: 'sf-avatar',
@@ -569,7 +569,7 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sf-is-overlay',
 		kind: 'context',
 		description:
-			'Element is physically positioned over other content — author-declared; theme decides treatment (translucency, blur, etc.)',
+			'Element is physically positioned over other content — author-declared; theme decides treatment (translucency, blur, etc.). Worn by a box placed over another with sl-over too.',
 	},
 	{
 		name: 'sf-is-sticky',
@@ -684,37 +684,43 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sl-align-y-start',
 		kind: 'layout',
 		description:
-			'Puts content at the top of the layout (the start of the block axis). Works on any layout; on a stack it shows only when the stack is taller than its content.',
+			"Puts content at the top of the layout (the start of the block axis). Works on any layout; on a stack it shows only when the stack is taller than its content. On sl-over, the box sits at the top of the box it's in.",
 	},
 	{
 		name: 'sl-align-y-center',
 		kind: 'layout',
 		description:
-			'Centres content up and down (the block axis). Works on any layout; on a stack it shows only when the stack is taller than its content.',
+			"Centres content up and down (the block axis). Works on any layout; on a stack it shows only when the stack is taller than its content. On sl-over, the box sits halfway down the box it's in.",
 	},
 	{
 		name: 'sl-align-y-end',
 		kind: 'layout',
 		description:
-			'Puts content at the bottom of the layout (the end of the block axis). Works on any layout; on a stack it shows only when the stack is taller than its content.',
+			"Puts content at the bottom of the layout (the end of the block axis). Works on any layout; on a stack it shows only when the stack is taller than its content. On sl-over, the box sits at the foot of the box it's in.",
 	},
 	{
 		name: 'sl-align-x-start',
 		kind: 'layout',
 		description:
-			'Puts content at the left (the start of the inline axis). Works on any layout; each item takes its content’s width instead of the full width.',
+			"Puts content at the left (the start of the inline axis). Works on any layout; each item takes its content’s width instead of the full width. On sl-over, the box sits at the start side of the box it's in.",
 	},
 	{
 		name: 'sl-align-x-center',
 		kind: 'layout',
 		description:
-			'Centres content sideways (the inline axis). Works on any layout; each item takes its content’s width instead of the full width.',
+			"Centres content sideways (the inline axis). Works on any layout; each item takes its content’s width instead of the full width. On sl-over, the box sits in the middle of the box it's in, sideways.",
 	},
 	{
 		name: 'sl-align-x-end',
 		kind: 'layout',
 		description:
-			'Puts content at the right (the end of the inline axis). Works on any layout; each item takes its content’s width instead of the full width.',
+			"Puts content at the right (the end of the inline axis). Works on any layout; each item takes its content’s width instead of the full width. On sl-over, the box sits at the end side of the box it's in.",
+	},
+	{
+		name: 'sl-over',
+		kind: 'layout',
+		description:
+			"Sits over the box it's in, out of the flow. sl-align-x-* and sl-align-y-* say where; a side with no word is filled (alone, it covers the box). On a layout they line up its contents the same way. Wear sf-is-overlay too.",
 	},
 	{
 		name: 'sl-row',
@@ -2933,21 +2939,23 @@ const ROOT_RULES: RuleSpec[] = [
 	]),
 
 	// ─── sf-badge, and a counter over another element ──────────────────────────
-	// A mark on another element, with nothing in it (sf-badge), or a count over one
-	// (sf-counter sf-is-overlay). The reset takes both out of the flow, so where they sit moves
-	// nothing else: here, on the top end corner, half over the edge; the mark a dot, the count a
-	// small round number. Colour comes from loudness × variant, as on any box.
-	...(
-		[
-			['inset-block-start', '0'],
-			['inset-inline-end', '0'],
-			['translate', '25% -25%'],
-			['border-radius', 'var(--sf-radius-full)'],
-		] as const
-	).flatMap(([cssProperty, value]): RuleSpec[] => [
-		{ classNames: ['sf-badge'], cssProperty, value },
-		{ classNames: ['sf-counter', 'sf-is-overlay'], cssProperty, value },
-	]),
+	// A mark, with nothing in it (sf-badge), or a count over a box (sf-counter sf-is-overlay):
+	// the mark a dot, the count a small round number. Where it sits is the author's (sl-over and
+	// the align words); how far a floating one pokes out past its corner is here, as a margin:
+	// held to two sides, it moves out only on those, at any corner and in right-to-left text. The
+	// mark is the text colour, floating too (the overlay's surface, the same layer, would win);
+	// one wearing a variant takes the variant's fill (loudness × variant, more classes), as on any
+	// box.
+	{ classNames: ['sf-badge'], cssProperty: 'border-radius', value: 'var(--sf-radius-full)' },
+	{
+		classNames: ['sf-counter', 'sf-is-overlay'],
+		cssProperty: 'border-radius',
+		value: 'var(--sf-radius-full)',
+	},
+	{ classNames: ['sf-badge', 'sf-is-overlay'], cssProperty: 'margin', value: '-0.125rem' },
+	{ classNames: ['sf-counter', 'sf-is-overlay'], cssProperty: 'margin', value: '-0.25rem' },
+	{ classNames: ['sf-badge'], cssProperty: 'background', value: 'currentColor' },
+	{ classNames: ['sf-badge', 'sf-is-overlay'], cssProperty: 'background', value: 'currentColor' },
 	{ classNames: ['sf-badge'], cssProperty: 'inline-size', value: '0.5rem' },
 	{ classNames: ['sf-badge'], cssProperty: 'block-size', value: '0.5rem' },
 	{

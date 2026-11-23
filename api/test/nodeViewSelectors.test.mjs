@@ -48,14 +48,18 @@ test("in a layout, a content box's first block follows the component's own parts
 
 test('given what counts as shown, "after any block" starts from a shown block', () => {
 	const shown = ':not(.sl-hide-below-md)'
-	const after = (s) => throughNodeViews(s, ASIDE, shown)
+	const inFlow = ':not(.sl-over)'
+	const after = (s) => throughNodeViews(s, ASIDE, shown, '', inFlow)
 	const q = `:is(.sf-divide-y, .sf-divide-y > ${C})`
 	const from = `:where(${shown})`
+	const to = `:where(${inFlow})`
 	assert.equal(
 		after('.sf-divide-y > * + *'),
-		`${q} > ${from} ~ *, .sf-divide-y:where(${ASIDE}) > ${from} ~ ${C} > *`,
+		`${q} > ${from} ~ ${to}, .sf-divide-y:where(${ASIDE}) > ${from} ~ ${C} > ${to}`,
 	)
-	assert.equal(after('.x > * ~ p'), map(`.x > ${from} ~ p`))
+	assert.equal(after('.x > * ~ p'), map(`.x > ${from} ~ p${to}`))
+	// Without inFlow, any later block.
+	assert.equal(throughNodeViews('.x > * ~ p', ASIDE, shown), map(`.x > ${from} ~ p`))
 	for (const alternative of splitList(after('.sf-divide-y > * + *')))
 		assert.deepEqual(specificity(alternative), specificity('.sf-divide-y > * + *'), alternative)
 	// Only from any block, and not inside :has().

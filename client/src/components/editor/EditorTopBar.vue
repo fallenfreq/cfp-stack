@@ -11,16 +11,31 @@
 			class="top-bar__page sl-cluster sf-gap-2xs sl-inset-line sf-depth-1 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right"
 		>
 			<EditorExitButton />
-			<input
-				ref="nameInput"
-				v-model="nameInputValue"
-				class="top-bar__name sf sf-field sf-single-line sf-is-contained sf-loudness-1 sf-on-hover sf-size-xs"
-				:title="currentName ?? 'Untitled'"
-				@focus="startRename"
-				@blur="commitRename"
-				@keyup.enter="nameInput?.blur()"
-				@keyup.escape="cancelRename"
-			/>
+			<!-- The name, in the row's free room, its box as wide as the name, so the mark saying the
+			     page has changes not yet saved is by it (the box has no edge to see). Save says it in
+			     words, as the mark is for sight only. -->
+			<div class="top-bar__name-room">
+				<SfBadge :count="store.hasUnsavedChanges ? undefined : 0">
+					<span class="top-bar__name-fit">
+						<!-- A hidden copy of the name, with the box's classes so it's the box's size,
+						     which the box takes. Spaces kept, as the box shows them. -->
+						<span :class="nameClasses" class="top-bar__name-copy" aria-hidden="true">{{
+							nameInputValue.replaceAll(' ', '\u00a0')
+						}}</span>
+						<input
+							ref="nameInput"
+							v-model="nameInputValue"
+							:class="nameClasses"
+							class="top-bar__name sf-on-hover"
+							:title="currentName ?? 'Untitled'"
+							@focus="startRename"
+							@blur="commitRename"
+							@keyup.enter="nameInput?.blur()"
+							@keyup.escape="cancelRename"
+						/>
+					</span>
+				</SfBadge>
+			</div>
 			<!-- The page's warnings (pageWarnings.ts): each press selects the next block with one. -->
 			<SfTooltip v-if="shownWarnings" text="Next warning" class="sl-hide-below-xs">
 				<SfButton
@@ -40,7 +55,7 @@
 				v-if="store.couldSave"
 				size="xs"
 				class="sf-is-contained sf-single-line"
-				:loudness="store.hasUnsavedChanges ? 3 : 1"
+				:loudness="1"
 				:variant="saveStatus === 'error' ? 'danger' : undefined"
 				:loading="saveStatus === 'saving'"
 				@click="store.save()"
@@ -173,6 +188,21 @@ const goToNextWarning = () => {
 	scrollBy({ top: top - Math.max(clear, (innerHeight - height) / 2) })
 }
 
+// Cmd+S (Ctrl+S) saves, as Save does, wherever the editor has the keys; the browser's own "Save
+// page as" is never what's meant here. A name being typed is kept first, as Enter does. Nothing
+// while a save is under way, as Save can't be pressed then either.
+const saveByKeys = (event: KeyboardEvent) => {
+	if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return
+	if (event.key.toLowerCase() !== 's' || !store.couldSave) return
+	event.preventDefault()
+	if (event.repeat || store.saveUnderWay()) return
+	if (document.activeElement === nameInput.value) nameInput.value?.blur()
+	void store.save()
+}
+onMounted(() => addEventListener('keydown', saveByKeys))
+onBeforeUnmount(() => removeEventListener('keydown', saveByKeys))
+
+const nameClasses = 'sf sf-field sf-single-line sf-is-contained sf-loudness-1 sf-size-xs'
 const renamingName = ref(false)
 // What the name box shows: the name, kept up to date by the watch below from the start.
 const nameInputValue = ref('')
@@ -219,12 +249,28 @@ const cancelRename = () => {
 		flex-direction: column;
 	}
 
-	/* Name input — chrome comes from its classes (a field of one line, in a contained bar), plus
-	   bare input:focus-visible for the editing look. It takes the row's free room, cut short
-	   with an ellipsis. */
+	/* The name: the room is the row's free room; in it, the name box takes its hidden copy's
+	   size, as the two share one grid cell: the name's width, or the room's, cut short with an
+	   ellipsis. The copy hides what overflows, so it can be narrower than its words and the page
+	   doesn't scroll sideways. A width of 0 keeps the input's own default width out of the fit.
+	   Chrome comes from the classes (a field of one line, in a contained bar), plus bare
+	   input:focus-visible for the editing look. */
+	.top-bar__name-room {
+		flex: 1 1 0;
+	}
+	.top-bar__name-fit {
+		display: grid;
+	}
+	.top-bar__name-fit > * {
+		grid-area: 1 / 1;
+	}
+	.top-bar__name-copy {
+		visibility: hidden;
+		overflow: hidden;
+	}
 	.top-bar__name {
-		flex: 1;
-		min-width: 0;
+		width: 0;
+		min-width: 100%;
 		text-overflow: ellipsis;
 		cursor: pointer;
 		outline: none;

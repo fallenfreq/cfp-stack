@@ -5,10 +5,13 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ideas").
+Next: a context's background beats a box's own fill ("Theme and classes"). Waiting: pasting warns of what the page can't keep ("Ideas").
 
 ## Bigger work
 
+- **The spec is too big to read** (`sf-system.md`, 1,730 lines; owner, 2026-11-23). Split it
+  into an overview file and pages that go deeper, with edge cases and patterns as pages of their
+  own. The doc citations `pnpm test` checks follow it.
 - **The validator and linter.** Its rules, and where each shows, are in `sf-system.md`,
   "Validator and linter"; new candidates go there. Left for later: the IDE linter, and a theme's
   check when it's saved, once there's a theme editor. The IDE linter's `valid-heading-class`
@@ -48,6 +51,16 @@ Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ide
   (example under "For the docs"). The validator's `no-collapse-straight-in-columns` leaves it
   out. `line.spec.ts` has no case for it yet. Collapse by a layout's own width (under
   "Ideas") would fix it too.
+- **What stacking layouts measure differs between page content and the app interface**
+  (parked 2026-11-22). In a page, nothing inside a box sized by its contents (a Cluster's item, a
+  box aligned sideways, a floating box aligned sideways) is measured; in the app, only known
+  spots are left out and the author gives a box a width (`sf-system.md`, "Container-responsive
+  collapse"). So one component acts differently in each: a dropdown component in a Cluster on a
+  page would stack its panel by the page's layout, not its own width; Columns in such a box
+  stack by different boxes in each. A likely fix, to measure: one rule for both, "nothing inside
+  a box sized by its contents is measured, except inside a popover, laid out on its own", but
+  as worded it would also ignore a box given a width inside one, which is the app's way out
+  today (a menu in a box with a width), so it needs that kept.
 - **The Split's default alignment.** A plain `sl-split` aligns its sides to the top; the Split
   block stretches them (its align setting's default). One default at the class (dropping
   `align-items: start`) moves to-do items, which are splits (the tick box's label grows from
@@ -289,6 +302,16 @@ Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ide
 - **"⋯"'s badge is for sight only.** Where the row is narrow, the warnings are in "⋯" and its
   badge shows how many, but its name stays "Editor actions": a name can't follow the row's width.
   A screen reader finds the warnings by opening the menu.
+- **The editor's page name sizes itself with its own CSS** (`EditorTopBar.vue`): the row's free
+  room, a box as wide as the name (a hidden copy it takes the size of), and cut short past the
+  room. Look at saying this with sf/sl classes instead (overflow, scroll and single-line classes
+  exist), or whether a class is missing.
+- **A context's background beats a box's own fill** (sf-context is a later layer than
+  sf-bundle). A loud label wearing `sf-is-overlay` takes the overlay's pale surface under its
+  white words; a contained loud button (`sf-is-contained`) has no fill under its dark words.
+  Variants have their own overlay rules; the floating dot has a patch
+  (`sf-badge sf-is-overlay`'s `currentColor`, `seed.ts`), which goes with the fix. Decide once
+  how a context's background treats a box with its own fill (owner, 2026-11-23: next).
 - **Icons:** decide whether in-text icons want `1.1em` (`material-symbols.css`): rounded glyphs
   look smaller.
 - **Raw tokens in component CSS.** A few components still read colour tokens directly
@@ -320,6 +343,11 @@ Next: the owner's pick. Waiting: pasting warns of what the page can't keep ("Ide
 
 ## Ideas, not decided
 
+- **A Badge block for page builders**, wrapping what it marks with the mark on its corner, as
+  `SfBadge` does in the app's screens. By hand today: the block and a mark in a plain block
+  (`sf-system.md`, "Placing a box over another").
+- **A picture behind words** (a hero image). `sl-over` can't: a placed box is drawn over the
+  box's content, and a placed picture keeps its own size (owner, 2026-11-23: parked).
 - **Bigger controls on a touch screen.** The editor's controls are the toolbar's size, `xs`
   (34–44px in the bar): above WCAG's 24px least, below the 44–48px Apple and Google give a touch
   (owner, 2026-11-20: a question of its own).

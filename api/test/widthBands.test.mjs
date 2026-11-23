@@ -43,9 +43,9 @@ test('a block shown at every width is told by its classes, named', () => {
 	])
 	assert.equal(
 		shownAlways(bands),
-		':not(.sl-hide-below-sm, .sl-hide-below-md, .sl-show-below-sm, .sl-show-below-md, .ProseMirror-widget)',
+		':not(.sl-hide-below-sm, .sl-hide-below-md, .sl-show-below-sm, .sl-show-below-md, .ProseMirror-widget, .sl-over)',
 	)
-	assert.equal(shownAlways([]), ':not(.ProseMirror-widget)')
+	assert.equal(shownAlways([]), ':not(.ProseMirror-widget, .sl-over)')
 })
 
 test('a width is a number and the same unit as the others, any unit', async () => {
