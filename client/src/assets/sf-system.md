@@ -171,19 +171,20 @@ per-property by specificity and don't need to live in a layer.
 
 ## Custom property conventions
 
-Five kinds of CSS custom properties appear across the system. They look alike but play
+Six kinds of CSS custom properties appear across the system. They look alike but play
 different roles. The prefix rule:
 
 > `--sf-*` — a value an author could reasonably write inline.
 > `--sfx-*` — only rules write this; internal rule-to-rule contract.
 
-| Kind             | Example                                     | Set by                                                     | Read by                          |
-| ---------------- | ------------------------------------------- | ---------------------------------------------------------- | -------------------------------- |
-| Theme token      | `--sf-primary-5`, `--sf-fg_primary`         | Theme class (`.theme-x { --sf-X: ... }`)                   | Rules across every layer         |
-| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`        | Utility class (with reset); a page's own style beats it    | Carrier class in the same family |
-| Layout channel   | `--sf-gap`, `--sf-padding`                  | `sf-gap-*` / `sf-padding-*` / `sf-size-*`; never inherited | The element that wears the class |
-| Bridge           | `--sfx-surface-color`, `--sfx-inset-margin` | Bundle rule (or layout rule, for `--sfx-inset-margin`)     | Higher-layer rule / descendants  |
-| Line part        | `--sfx-line-width`, `--sfx-line-color`      | The class whose meaning it carries; never inherited        | Each class that draws the line   |
+| Kind             | Example                                       | Set by                                                     | Read by                          |
+| ---------------- | --------------------------------------------- | ---------------------------------------------------------- | -------------------------------- |
+| Theme token      | `--sf-primary-5`, `--sf-fg_primary`           | Theme class (`.theme-x { --sf-X: ... }`)                   | Rules across every layer         |
+| Composition slot | `--sf-bg-alpha`, `--sf-shadow-color`          | Utility class (with reset); a page's own style beats it    | Carrier class in the same family |
+| Layout channel   | `--sf-gap`, `--sf-padding`                    | `sf-gap-*` / `sf-padding-*` / `sf-size-*`; never inherited | The element that wears the class |
+| Bridge           | `--sfx-surface-color`, `--sfx-inset-margin`   | Bundle rule (or layout rule, for `--sfx-inset-margin`)     | Higher-layer rule / descendants  |
+| Line part        | `--sfx-line-width`, `--sfx-line-color`        | The class whose meaning it carries; never inherited        | Each class that draws the line   |
+| Fill part        | `--sfx-fill-color`, `--sfx-fill-border-color` | The class that gives a box its fill; never inherited       | Each surface and context         |
 
 ### Theme tokens
 
@@ -314,6 +315,31 @@ line still steps out. A field has no line and no ring from one: its focus is its
 and a tint), and an error's border stays red while focused. In forced colours (Windows high
 contrast) shadows aren't drawn, so focus on an element with a line shows only as the line stepping
 out.
+
+### Fill parts
+
+A box's fill is what it has for its loudness or kind (a loud button, a tinted danger box) or a
+mark's own colour (an avatar, a badge). Its surface is what it's made of (a depth's surface, a
+field, an ordinary button's faint tint). A context (`sf-is-overlay`, `sf-is-contained`, a pinned
+cell) changes the surface, never the fill (owner, 2026-11-23). A context is a later layer than
+a fill, so it used to wipe out a loud label's fill when it floated, and every fill when contained.
+
+The fill is a part, as the line's are. The class that gives a box its fill passes
+`--sfx-fill-color` and draws `background: var(--sfx-fill-color)`; a tint also passes
+`--sfx-fill-border-color` and draws its border from it. Each surface and context draws
+`var(--sfx-fill-color, <its own>)`, so whichever rule wins draws the same fill, and a fill
+beats a surface on the same box. Both parts hold a whole colour and are registered as not
+inherited: a box inside a loud one doesn't take its fill.
+
+A theme changes a fill by setting its part, never `background`:
+
+- On the selector the root theme draws the fill with, or a stronger one: a weaker selector
+  loses to the root's (specificity counts before a theme's scope).
+- A fill the root theme doesn't have passes the part and draws from it.
+- A surface or context background of its own draws `var(--sfx-fill-color, <its own>)`, and a
+  context's border `var(--sfx-fill-border-color, <its own>)`, or it paints over a fill.
+- Hover and press paint over the fill with the root's colours (`sf-state`, a later layer), so
+  a theme restyles them too.
 
 ---
 
@@ -730,8 +756,8 @@ into the page colour (`--sf-surface-0`), so they look the same on any surface an
 dark mode. Coloured text is the colour moved halfway to the normal text's brightness with
 its colourfulness kept, so it reads on light and dark alike. One colour value per role
 serves both modes. Hover and press step each fill a little further without losing it.
-A floating box (`sf-is-overlay`) keeps its loudness: the tint sits on a solid surface so
-the page doesn't show through, and it keeps its depth's shadow (read through
+A floating or contained box keeps its fill ("Fill parts"): the tint is solid, so the page
+doesn't show through, and a floating tint keeps its depth's shadow (read through
 `--sfx-depth-shadow`).
 
 **Quiet is a shade of the text around it.** Quiet text, quiet icons and hover and press
@@ -780,8 +806,9 @@ sf-flush               container holds content edge-to-edge (opt-out of
 `sf-is-contained` is author-declared (like `sf-is-edge-*`) — the DOM structure is
 static, no JS detection needed. The class only _declares_ the condition; the theme
 decides how to express it. The default expression is to drop the element's own
-chrome (background, border) since the parent already delineates, but a theme is
-free to soften it differently — reduced padding, muted colour, no change at all.
+chrome (its surface and border) since the parent already delineates, never a fill or a
+tint's border ("Fill parts"), but a theme is free to soften it differently — reduced padding,
+muted colour, no change at all.
 Element-agnostic: applies equally to a `<button>` inside a card, a nested
 card-shaped `<div>`, or anything else that would otherwise draw its own container.
 
@@ -1222,9 +1249,8 @@ corner.
 - It wears `sf-is-overlay`. Only a floating mark or count lets clicks through.
 - The theme draws it, and sets how far a floating mark pokes out (a margin on the mark).
 - Limits: write a mark after a layer in the same box, as two are drawn in the order written. A
-  box that clips cuts off the poke-out. A layer stops clicks on what's under it. A loud label
-  wearing `sf-is-overlay` loses its fill: give it a variant. A picture keeps its own size, so
-  it suits a corner.
+  box that clips cuts off the poke-out. A layer stops clicks on what's under it. A picture
+  keeps its own size, so it suits a corner.
 
 ### Theme contract
 
@@ -1634,7 +1660,9 @@ readers, walkers and types come with them.
   settings. The component store runs it when a component is added. It checks code, so nothing
   checks the page as drawn.
 - **A theme's save** (later, once there's a theme editor) checks its rules with the rules that
-  read CSS, and refuses a selector outside the closed set (`valid-selector-shape`).
+  read CSS, and refuses a selector outside the closed set (`valid-selector-shape`). A candidate:
+  a fill's background or a tint's border set directly instead of through its part, as a
+  context would then change that fill ("Fill parts").
 
 **Rules that read elements** (a page's blocks; pages, screens and components in files)
 

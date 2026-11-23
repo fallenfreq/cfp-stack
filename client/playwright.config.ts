@@ -6,14 +6,16 @@ import { TEST_THEME_CLASS } from './e2e/testTheme'
 // Chrome and Playwright's WebKit (Safari's engine), and the dev server on 8788 (wrangler serves
 // the built client and the API), starting it if it isn't running. The stylesheet is built from the
 // seed in memory (e2e/globalSetup.ts). In each browser, every check runs under the root theme and
-// again under a deliberately different test theme; the demo page's and the theme comparison once.
+// again under a deliberately different test theme; the demo page's, the theme comparison and the
+// root theme's own looks (root-theme/) once.
 const themes = [
 	{ name: 'root theme', use: {} },
 	{
 		name: 'test theme',
 		use: { themeClass: TEST_THEME_CLASS },
-		// The demo page is checked as it looks; the theme check compares the two itself.
-		testIgnore: ['demo.spec.ts', 'theme.spec.ts'],
+		// The demo page is checked as it looks; the theme check compares the two itself; root-theme/
+		// checks how the root theme looks, which another theme may choose differently.
+		testIgnore: ['demo.spec.ts', 'theme.spec.ts', 'root-theme/**'],
 	},
 ]
 

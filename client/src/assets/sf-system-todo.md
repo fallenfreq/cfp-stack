@@ -5,7 +5,7 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: a context's background beats a box's own fill ("Theme and classes"). Waiting: pasting warns of what the page can't keep ("Ideas").
+Next: not chosen yet (the owner picks). Waiting: pasting warns of what the page can't keep ("Ideas").
 
 ## Bigger work
 
@@ -306,12 +306,6 @@ Next: a context's background beats a box's own fill ("Theme and classes"). Waiti
   room, a box as wide as the name (a hidden copy it takes the size of), and cut short past the
   room. Look at saying this with sf/sl classes instead (overflow, scroll and single-line classes
   exist), or whether a class is missing.
-- **A context's background beats a box's own fill** (sf-context is a later layer than
-  sf-bundle). A loud label wearing `sf-is-overlay` takes the overlay's pale surface under its
-  white words; a contained loud button (`sf-is-contained`) has no fill under its dark words.
-  Variants have their own overlay rules; the floating dot has a patch
-  (`sf-badge sf-is-overlay`'s `currentColor`, `seed.ts`), which goes with the fix. Decide once
-  how a context's background treats a box with its own fill (owner, 2026-11-23: next).
 - **Icons:** decide whether in-text icons want `1.1em` (`material-symbols.css`): rounded glyphs
   look smaller.
 - **Raw tokens in component CSS.** A few components still read colour tokens directly
@@ -321,6 +315,9 @@ Next: a context's background beats a box's own fill ("Theme and classes"). Waiti
 
 ## Small clean-ups
 
+- Checks of the root theme's own look (not behaviour every theme keeps) go in
+  `client/e2e/root-theme/`, which the test theme's runs skip (owner, 2026-11-23). Sort the
+  existing checks into it.
 - `AdminList.vue` draws its own loading, failed and empty messages rather than using
   `SfStatusDisplay`, so the same display is written twice.
 - `PromptModal.vue` and `StackableSheet.vue` say `sl-align-x-*` is grid-only; they could now use
@@ -343,6 +340,14 @@ Next: a context's background beats a box's own fill ("Theme and classes"). Waiti
 
 ## Ideas, not decided
 
+- **A box says what it has; later rules read it** (owner, 2026-11-23: a pattern for theme authors
+  and the theme editor). The line parts and the fill part (`sf-system.md`, "Fill parts") are
+  this already. Rules that undo a later layer and put it back could follow it:
+  `sf-is-contained × sf-boundary-right` (the separator contained clears), hover and pressed ×
+  variant (the kind's colour hover resets, and a theme's fill gives way to the root's colours on
+  hover), the three-side panels' corners (already read `--sfx-depth-radius`).
+- **A loud Save again.** The editor's Save went quiet because the bar it sits in is contained,
+  which wiped a loud button's fill; a contained box keeps its fill now (2026-11-23).
 - **A Badge block for page builders**, wrapping what it marks with the mark on its corner, as
   `SfBadge` does in the app's screens. By hand today: the block and a mark in a plain block
   (`sf-system.md`, "Placing a box over another").

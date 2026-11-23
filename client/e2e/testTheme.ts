@@ -1,6 +1,7 @@
 // A theme that looks deliberately unlike the root theme: twice the spacing, a wide page margin,
-// a narrower page, another font and taller lines, and divide lines drawn as a shadow instead of
-// a border. globalSetup.ts adds it to the tests' throwaway database only; it is never seeded.
+// a narrower page, another font and taller lines, divide lines drawn as a shadow instead of a
+// border, and fill colours of its own. globalSetup.ts adds it to the tests' throwaway database
+// only; it is never seeded.
 // Every layout check runs under it as well as the root theme, because a theme changes the
 // numbers layouts read, never how they behave (sf-system.md, "Theme contract").
 
@@ -26,5 +27,13 @@ export const TEST_THEME_RULES = [
 		pseudo: ' > * + *',
 		cssProperty: 'box-shadow',
 		value: '0 -3px 0 rgb(var(--sf-border_color))',
+	},
+	// Fills of its own, set as the fill part on the root theme's selectors (sf-system.md,
+	// "Fill parts"): a context keeps a theme's fill as it keeps the root's.
+	{ classNames: ['sf-avatar'], cssProperty: '--sfx-fill-color', value: 'rgb(128 0 128)' },
+	{
+		classNames: ['sf-loudness-3', 'sf-variant-primary'],
+		cssProperty: '--sfx-fill-color',
+		value: 'rgb(200 100 0)',
 	},
 ] as const

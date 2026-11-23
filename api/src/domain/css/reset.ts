@@ -14,6 +14,9 @@ const LINE_PARTS = [
 	'--sfx-line-gap',
 ]
 
+// A box's own fill, passed by the class that gives it one (sf-system.md, "Fill parts").
+const FILL_PARTS = ['--sfx-fill-color', '--sfx-fill-border-color']
+
 // Typeless and with no starting value, so a reader's own default still applies when it's unset.
 const notInherited = (names: readonly string[]) =>
 	names
@@ -32,6 +35,9 @@ ${notInherited(CHANNELS)}
 
 /* The line's parts likewise: a targeted or picked box doesn't change the lines inside it. */
 ${notInherited(LINE_PARTS)}
+
+/* A fill likewise: a box inside a loud one doesn't take its fill. */
+${notInherited(FILL_PARTS)}
 
 @layer reset {
 	/* Width includes padding and border. A border shows by giving it a width. */

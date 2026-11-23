@@ -39,7 +39,8 @@ edits go.
   dev server at 8788 (started if needed), with a stylesheet built from the seed in memory. In each
   browser, every check runs under the root theme and again under a deliberately different test
   theme (`e2e/testTheme.ts`, never seeded), so checks state behaviour, not looks or pixels; only
-  the demo page's and the theme comparison run once. The cases are on `/editor?seed=tests`. The
+  the demo page's, the theme comparison and the root theme's own looks (`e2e/root-theme/`) run
+  once. The cases are on `/editor?seed=tests`. The
   demo page's snapshot fails on any move; an intended one is accepted with `--update-snapshots`.
   WebKit has its own (`webkit/`): it draws text and form controls a little differently.
   `SF_SYSTEM_CSS=<file>` checks another stylesheet. Known limits are checks

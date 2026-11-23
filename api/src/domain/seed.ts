@@ -581,7 +581,7 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sf-is-contained',
 		kind: 'context',
 		description:
-			'Element sits inside a container that already provides visual boundary — author-declared; theme decides how to soften (default: drop own chrome)',
+			'Element sits inside a container that already provides visual boundary — author-declared; theme decides how to soften (default: drop own chrome, keep a fill)',
 	},
 	{
 		name: 'sf-is-nested',
@@ -888,6 +888,24 @@ const drawsLine = (classNames: [string, ...string[]]): RuleSpec[] => [
 	},
 ]
 
+// A box's own fill (sf-system.md, "Fill parts"): the class that gives it passes the part and
+// draws from it. Surfaces and contexts draw from the part first, so a context never changes a
+// fill, and whichever rule wins draws the same one. A theme changes a fill by setting its part.
+type RuleSelector =
+	| Omit<ClassOnlyRuleInput, 'cssProperty' | 'value'>
+	| Omit<ElementRuleInput, 'cssProperty' | 'value'>
+const fill = (selector: RuleSelector, color: string): RuleSpec[] => [
+	{ ...selector, cssProperty: '--sfx-fill-color', value: color },
+	{ ...selector, cssProperty: 'background', value: 'var(--sfx-fill-color)' },
+]
+// A tint's coloured border goes with its fill: a contained tint keeps it.
+const fillBorder = (selector: RuleSelector, color: string): RuleSpec[] => [
+	{ ...selector, cssProperty: '--sfx-fill-border-color', value: color },
+	{ ...selector, cssProperty: 'border', value: '1px solid var(--sfx-fill-border-color)' },
+]
+/** A surface's background, or the box's fill when it has one. */
+const underFill = (background: string) => `var(--sfx-fill-color, ${background})`
+
 // Layout primitives become query containers only when something inside them collapses.
 // A container ignores its own content when sizing its width, so an unconditional
 const ROOT_RULES: RuleSpec[] = [
@@ -900,7 +918,11 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: '--sfx-surface-color',
 		value: 'var(--sf-surface-0)',
 	},
-	{ classNames: ['sf-depth-0'], cssProperty: 'background', value: 'rgb(var(--sf-surface-0))' },
+	{
+		classNames: ['sf-depth-0'],
+		cssProperty: 'background',
+		value: underFill('rgb(var(--sf-surface-0))'),
+	},
 	{
 		classNames: ['sf-depth-0'],
 		cssProperty: 'color',
@@ -916,7 +938,11 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-surface-1)',
 	},
 	{ classNames: ['sf-depth-1'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
-	{ classNames: ['sf-depth-1'], cssProperty: 'background', value: 'rgb(var(--sf-surface-1))' },
+	{
+		classNames: ['sf-depth-1'],
+		cssProperty: 'background',
+		value: underFill('rgb(var(--sf-surface-1))'),
+	},
 	{
 		classNames: ['sf-depth-1'],
 		cssProperty: 'color',
@@ -953,7 +979,11 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-surface-2)',
 	},
 	{ classNames: ['sf-depth-2'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
-	{ classNames: ['sf-depth-2'], cssProperty: 'background', value: 'rgb(var(--sf-surface-2))' },
+	{
+		classNames: ['sf-depth-2'],
+		cssProperty: 'background',
+		value: underFill('rgb(var(--sf-surface-2))'),
+	},
 	{
 		classNames: ['sf-depth-2'],
 		cssProperty: 'color',
@@ -984,7 +1014,11 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-surface-3)',
 	},
 	{ classNames: ['sf-depth-3'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
-	{ classNames: ['sf-depth-3'], cssProperty: 'background', value: 'rgb(var(--sf-surface-3))' },
+	{
+		classNames: ['sf-depth-3'],
+		cssProperty: 'background',
+		value: underFill('rgb(var(--sf-surface-3))'),
+	},
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: 'color',
@@ -1202,7 +1236,7 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overflow-right'],
 		pseudo: ' .sl-pin-right',
 		cssProperty: 'background',
-		value: 'rgb(var(--sfx-surface-color, var(--sf-surface-0)))',
+		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface-0)))'),
 	},
 	{
 		classNames: ['sf-is-overflow-right'],
@@ -1256,7 +1290,7 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overflow-left'],
 		pseudo: ' .sl-pin-left',
 		cssProperty: 'background',
-		value: 'rgb(var(--sfx-surface-color, var(--sf-surface-0)))',
+		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface-0)))'),
 	},
 	{
 		classNames: ['sf-is-overflow-left'],
@@ -1310,7 +1344,7 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overflow-top'],
 		pseudo: ' .sl-pin-top',
 		cssProperty: 'background',
-		value: 'rgb(var(--sfx-surface-color, var(--sf-surface-0)))',
+		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface-0)))'),
 	},
 	{
 		classNames: ['sf-is-overflow-top'],
@@ -1364,7 +1398,7 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overflow-bottom'],
 		pseudo: ' .sl-pin-bottom',
 		cssProperty: 'background',
-		value: 'rgb(var(--sfx-surface-color, var(--sf-surface-0)))',
+		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface-0)))'),
 	},
 	{
 		classNames: ['sf-is-overflow-bottom'],
@@ -1617,10 +1651,11 @@ const ROOT_RULES: RuleSpec[] = [
 	// Overlay context — reads --sfx-surface-color (bridge variable set by each depth bundle) so one
 	// bare rule works at any depth without duplicating colour knowledge. Theme can compound
 	// (e.g. sf-depth-3.sf-is-overlay) to override for specific depths where different treatment is needed.
+	// A context changes a box's surface, never its fill (sf-system.md, "Fill parts").
 	{
 		classNames: ['sf-is-overlay'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sfx-surface-color, var(--sf-surface-0)) / var(--sf-alpha-9))',
+		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface-0)) / var(--sf-alpha-9))'),
 	},
 
 	// Sticky context — clear the all-sides elevation shadow the depth bundle adds; edge treatment
@@ -1634,7 +1669,8 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 
 	// Contained context — element sits inside a container that already delineates it.
-	// Default treatment: drop own chrome (background, border). Theme is free to override
+	// Default treatment: drop own chrome (surface, border), never a fill or a tint's border
+	// (sf-system.md, "Fill parts"). Theme is free to override
 	// with a subtler treatment (reduced padding, muted colour, etc.). Element-agnostic — fires
 	// on any tag that would otherwise draw its own container.
 	// sf-is-nested — repeated at each level, so the look adds up by itself: a guide line on
@@ -1650,8 +1686,12 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'padding-inline-start',
 		value: 'var(--sf-spacing-xs)',
 	},
-	{ classNames: ['sf-is-contained'], cssProperty: 'background', value: 'none' },
-	{ classNames: ['sf-is-contained'], cssProperty: 'border-color', value: 'transparent' },
+	{ classNames: ['sf-is-contained'], cssProperty: 'background', value: underFill('none') },
+	{
+		classNames: ['sf-is-contained'],
+		cssProperty: 'border-color',
+		value: 'var(--sfx-fill-border-color, transparent)',
+	},
 	{ classNames: ['sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
 	// A busy button stays focusable (so it isn't disabled); it dims like a disabled one.
 	{ classNames: ['sf-is-loading'], cssProperty: 'opacity', value: '0.4' },
@@ -1680,106 +1720,22 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'box-shadow',
 		value: 'none',
 	},
-	// sf-is-contained × sf-is-overlay — contained takes priority over overlay's tinted
-	// surface background. Both are single-class context rules; the compound wins by specificity.
-	// Without this, the generator's alphabetical emission order lets sf-is-overlay overwrite
-	// sf-is-contained's background: none at equal specificity.
-	{ classNames: ['sf-is-contained', 'sf-is-overlay'], cssProperty: 'background', value: 'none' },
-	// sf-is-overlay × sf-loudness-2/3 × sf-variant-* — a floating box keeps its loudness.
-	// The overlay's see-through surface would otherwise replace the variant's fill. At
-	// loudness-2 the shade is mixed with the box's own surface, and the depth's shadow comes
-	// back (a tinted box in a card is flat; a floating one isn't). At loudness-3 the fill
-	// is solid.
+	// sf-is-contained × sf-is-overlay — contained wins over the overlay's see-through surface
+	// (alphabetical emission order would let sf-is-overlay win at equal specificity).
 	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-featured'],
+		classNames: ['sf-is-contained', 'sf-is-overlay'],
 		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 15%, rgb(var(--sf-surface-0)))',
+		value: underFill('none'),
 	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-featured'],
-		cssProperty: 'box-shadow',
-		value: 'var(--sfx-depth-shadow, none)',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-featured'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary))',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-primary'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-primary'],
-		cssProperty: 'box-shadow',
-		value: 'var(--sfx-depth-shadow, none)',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-primary'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary))',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-danger'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-danger)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-danger'],
-		cssProperty: 'box-shadow',
-		value: 'var(--sfx-depth-shadow, none)',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-danger'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-danger))',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-warning'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-warning)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-warning'],
-		cssProperty: 'box-shadow',
-		value: 'var(--sfx-depth-shadow, none)',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-warning'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-warning))',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-success'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-success)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-info'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-info)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-success'],
-		cssProperty: 'box-shadow',
-		value: 'var(--sfx-depth-shadow, none)',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-2', 'sf-variant-info'],
-		cssProperty: 'box-shadow',
-		value: 'var(--sfx-depth-shadow, none)',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-success'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-success))',
-	},
-	{
-		classNames: ['sf-is-overlay', 'sf-loudness-3', 'sf-variant-info'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-info))',
-	},
+	// sf-is-overlay × sf-loudness-2 × sf-variant-* — a floating tint gets its depth's shadow back
+	// (a tinted box in a card is flat; a floating one isn't). It keeps its fill as any box does.
+	...(['featured', 'primary', 'danger', 'warning', 'success', 'info'] as const).map(
+		(variant): RuleSpec => ({
+			classNames: ['sf-is-overlay', 'sf-loudness-2', `sf-variant-${variant}`],
+			cssProperty: 'box-shadow',
+			value: 'var(--sfx-depth-shadow, none)',
+		}),
+	),
 	// sf-is-contained × sf-boundary-right — contained element that still marks a directional
 	// boundary (e.g. a toolbar slot handle with a right separator). sf-is-contained zeros
 	// border-color; this compound restores the right side at higher specificity (2 vs 1 class).
@@ -1889,26 +1845,22 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// Loudness-2 × variant: tinted fill + coloured border, no shadow. Featured keeps the
 	// surrounding text colour; danger/warning/success keep their variant colour.
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-featured'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-primary'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-primary)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-featured'],
-		cssProperty: 'border',
-		value: '1px solid color-mix(in oklab, rgb(var(--sf-primary)) 70%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-primary'],
-		cssProperty: 'border',
-		value: '1px solid color-mix(in oklab, rgb(var(--sf-primary)) 70%, rgb(var(--sf-surface-0)))',
-	},
+	...fill(
+		{ classNames: ['sf-loudness-2', 'sf-variant-featured'] },
+		'color-mix(in oklab, rgb(var(--sf-primary)) 15%, rgb(var(--sf-surface-0)))',
+	),
+	...fill(
+		{ classNames: ['sf-loudness-2', 'sf-variant-primary'] },
+		'color-mix(in oklab, rgb(var(--sf-primary)) 15%, rgb(var(--sf-surface-0)))',
+	),
+	...fillBorder(
+		{ classNames: ['sf-loudness-2', 'sf-variant-featured'] },
+		'color-mix(in oklab, rgb(var(--sf-primary)) 70%, rgb(var(--sf-surface-0)))',
+	),
+	...fillBorder(
+		{ classNames: ['sf-loudness-2', 'sf-variant-primary'] },
+		'color-mix(in oklab, rgb(var(--sf-primary)) 70%, rgb(var(--sf-surface-0)))',
+	),
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-featured'],
 		cssProperty: 'box-shadow',
@@ -1929,56 +1881,48 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'color',
 		value: 'inherit',
 	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-danger'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-danger)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-danger'],
-		cssProperty: 'border',
-		value: '1px solid color-mix(in oklab, rgb(var(--sf-danger)) 70%, rgb(var(--sf-surface-0)))',
-	},
+	...fill(
+		{ classNames: ['sf-loudness-2', 'sf-variant-danger'] },
+		'color-mix(in oklab, rgb(var(--sf-danger)) 15%, rgb(var(--sf-surface-0)))',
+	),
+	...fillBorder(
+		{ classNames: ['sf-loudness-2', 'sf-variant-danger'] },
+		'color-mix(in oklab, rgb(var(--sf-danger)) 70%, rgb(var(--sf-surface-0)))',
+	),
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-danger'],
 		cssProperty: 'box-shadow',
 		value: 'none',
 	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-warning'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-warning)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-warning'],
-		cssProperty: 'border',
-		value: '1px solid color-mix(in oklab, rgb(var(--sf-warning)) 70%, rgb(var(--sf-surface-0)))',
-	},
+	...fill(
+		{ classNames: ['sf-loudness-2', 'sf-variant-warning'] },
+		'color-mix(in oklab, rgb(var(--sf-warning)) 15%, rgb(var(--sf-surface-0)))',
+	),
+	...fillBorder(
+		{ classNames: ['sf-loudness-2', 'sf-variant-warning'] },
+		'color-mix(in oklab, rgb(var(--sf-warning)) 70%, rgb(var(--sf-surface-0)))',
+	),
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-warning'],
 		cssProperty: 'box-shadow',
 		value: 'none',
 	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-success'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-success)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-info'],
-		cssProperty: 'background',
-		value: 'color-mix(in oklab, rgb(var(--sf-info)) 15%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-success'],
-		cssProperty: 'border',
-		value: '1px solid color-mix(in oklab, rgb(var(--sf-success)) 70%, rgb(var(--sf-surface-0)))',
-	},
-	{
-		classNames: ['sf-loudness-2', 'sf-variant-info'],
-		cssProperty: 'border',
-		value: '1px solid color-mix(in oklab, rgb(var(--sf-info)) 70%, rgb(var(--sf-surface-0)))',
-	},
+	...fill(
+		{ classNames: ['sf-loudness-2', 'sf-variant-success'] },
+		'color-mix(in oklab, rgb(var(--sf-success)) 15%, rgb(var(--sf-surface-0)))',
+	),
+	...fill(
+		{ classNames: ['sf-loudness-2', 'sf-variant-info'] },
+		'color-mix(in oklab, rgb(var(--sf-info)) 15%, rgb(var(--sf-surface-0)))',
+	),
+	...fillBorder(
+		{ classNames: ['sf-loudness-2', 'sf-variant-success'] },
+		'color-mix(in oklab, rgb(var(--sf-success)) 70%, rgb(var(--sf-surface-0)))',
+	),
+	...fillBorder(
+		{ classNames: ['sf-loudness-2', 'sf-variant-info'] },
+		'color-mix(in oklab, rgb(var(--sf-info)) 70%, rgb(var(--sf-surface-0)))',
+	),
 	{
 		classNames: ['sf-loudness-2', 'sf-variant-success'],
 		cssProperty: 'box-shadow',
@@ -1991,16 +1935,8 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 
 	// Loudness-3 × variant: solid fill + that colour's fg_on_* text, in bold.
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-featured'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary))',
-	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-primary'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary))',
-	},
+	...fill({ classNames: ['sf-loudness-3', 'sf-variant-featured'] }, 'rgb(var(--sf-primary))'),
+	...fill({ classNames: ['sf-loudness-3', 'sf-variant-primary'] }, 'rgb(var(--sf-primary))'),
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-featured'],
 		cssProperty: 'color',
@@ -2021,11 +1957,7 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'font-weight',
 		value: 'var(--sf-weight-3)',
 	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-danger'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-danger))',
-	},
+	...fill({ classNames: ['sf-loudness-3', 'sf-variant-danger'] }, 'rgb(var(--sf-danger))'),
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-danger'],
 		cssProperty: 'color',
@@ -2036,11 +1968,7 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'font-weight',
 		value: 'var(--sf-weight-3)',
 	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-warning'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-warning))',
-	},
+	...fill({ classNames: ['sf-loudness-3', 'sf-variant-warning'] }, 'rgb(var(--sf-warning))'),
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-warning'],
 		cssProperty: 'color',
@@ -2051,16 +1979,8 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'font-weight',
 		value: 'var(--sf-weight-3)',
 	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-success'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-success))',
-	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-info'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-info))',
-	},
+	...fill({ classNames: ['sf-loudness-3', 'sf-variant-success'] }, 'rgb(var(--sf-success))'),
+	...fill({ classNames: ['sf-loudness-3', 'sf-variant-info'] }, 'rgb(var(--sf-info))'),
 	{
 		classNames: ['sf-loudness-3', 'sf-variant-success'],
 		cssProperty: 'color',
@@ -2795,7 +2715,7 @@ const ROOT_RULES: RuleSpec[] = [
 			elementSelector: el,
 			classNames: ['sf', 'sf-loudness-2'],
 			cssProperty: 'background',
-			value: 'rgb(from currentColor r g b / var(--sf-alpha-1))',
+			value: underFill('rgb(from currentColor r g b / var(--sf-alpha-1))'),
 		},
 		{
 			elementSelector: el,
@@ -2807,12 +2727,10 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// Loudness-3 solid fill — button-only. Non-button elements (cards) get loudness-3 prominence
 	// via sf-depth-1 × sf-loudness-3 shadow/border compounds; they keep their surface background.
-	{
-		elementSelector: 'button',
-		classNames: ['sf', 'sf-loudness-3'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-fg_primary))',
-	},
+	...fill(
+		{ elementSelector: 'button', classNames: ['sf', 'sf-loudness-3'] },
+		'rgb(var(--sf-fg_primary))',
+	),
 	{
 		elementSelector: 'button',
 		classNames: ['sf', 'sf-loudness-3'],
@@ -2876,11 +2794,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-thumb'], cssProperty: 'font-size', value: '0.8em' },
 	{ classNames: ['sf-thumb'], cssProperty: 'inline-size', value: '1.25em' },
 	{ classNames: ['sf-thumb'], cssProperty: 'block-size', value: '1.25em' },
-	{
-		classNames: ['sf-thumb'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-5))',
-	},
+	...fill({ classNames: ['sf-thumb'] }, 'rgb(var(--sf-fg_primary) / var(--sf-alpha-5))'),
 	{ classNames: ['sf-thumb'], cssProperty: 'color', value: 'rgb(var(--sf-fg_inverted))' },
 	{
 		classNames: ['sf-thumb', 'sf-on-current'],
@@ -2909,11 +2823,7 @@ const ROOT_RULES: RuleSpec[] = [
 			cssProperty: 'padding',
 			value: 'var(--sf-padding, var(--sf-spacing-2xs))',
 		},
-		{
-			classNames: [unit, 'sf-loudness-3'],
-			cssProperty: 'background',
-			value: 'rgb(var(--sf-fg_primary))',
-		},
+		...fill({ classNames: [unit, 'sf-loudness-3'] }, 'rgb(var(--sf-fg_primary))'),
 		{
 			classNames: [unit, 'sf-loudness-3'],
 			cssProperty: 'color',
@@ -2943,9 +2853,8 @@ const ROOT_RULES: RuleSpec[] = [
 	// the mark a dot, the count a small round number. Where it sits is the author's (sl-over and
 	// the align words); how far a floating one pokes out past its corner is here, as a margin:
 	// held to two sides, it moves out only on those, at any corner and in right-to-left text. The
-	// mark is the text colour, floating too (the overlay's surface, the same layer, would win);
-	// one wearing a variant takes the variant's fill (loudness × variant, more classes), as on any
-	// box.
+	// mark is the text colour, a fill, so floating keeps it; one wearing a variant takes the
+	// variant's fill (loudness × variant, a later layer), as on any box.
 	{ classNames: ['sf-badge'], cssProperty: 'border-radius', value: 'var(--sf-radius-full)' },
 	{
 		classNames: ['sf-counter', 'sf-is-overlay'],
@@ -2954,8 +2863,7 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-badge', 'sf-is-overlay'], cssProperty: 'margin', value: '-0.125rem' },
 	{ classNames: ['sf-counter', 'sf-is-overlay'], cssProperty: 'margin', value: '-0.25rem' },
-	{ classNames: ['sf-badge'], cssProperty: 'background', value: 'currentColor' },
-	{ classNames: ['sf-badge', 'sf-is-overlay'], cssProperty: 'background', value: 'currentColor' },
+	...fill({ classNames: ['sf-badge'] }, 'currentColor'),
 	{ classNames: ['sf-badge'], cssProperty: 'inline-size', value: '0.5rem' },
 	{ classNames: ['sf-badge'], cssProperty: 'block-size', value: '0.5rem' },
 	{
@@ -3002,60 +2910,36 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-avatar'], cssProperty: 'align-items', value: 'center' },
 	{ classNames: ['sf-avatar'], cssProperty: 'justify-content', value: 'center' },
 	{ classNames: ['sf-avatar'], cssProperty: 'border-radius', value: 'var(--sf-radius-full)' },
-	{ classNames: ['sf-avatar'], cssProperty: 'background', value: 'rgb(var(--sf-fg_primary))' },
+	...fill({ classNames: ['sf-avatar'] }, 'rgb(var(--sf-fg_primary))'),
 	{ classNames: ['sf-avatar'], cssProperty: 'color', value: 'rgb(var(--sf-fg_inverted))' },
 	// Variant compounds — semantic colour role overrides the neutral default fill.
 	// Bare sf-avatar still works if a theme doesn't define these (graceful degradation).
-	{
-		classNames: ['sf-avatar', 'sf-variant-featured'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary))',
-	},
+	...fill({ classNames: ['sf-avatar', 'sf-variant-featured'] }, 'rgb(var(--sf-primary))'),
 	{
 		classNames: ['sf-avatar', 'sf-variant-featured'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_on_primary))',
 	},
-	{
-		classNames: ['sf-avatar', 'sf-variant-primary'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary))',
-	},
+	...fill({ classNames: ['sf-avatar', 'sf-variant-primary'] }, 'rgb(var(--sf-primary))'),
 	{
 		classNames: ['sf-avatar', 'sf-variant-primary'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_on_primary))',
 	},
-	{
-		classNames: ['sf-avatar', 'sf-variant-danger'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-danger))',
-	},
+	...fill({ classNames: ['sf-avatar', 'sf-variant-danger'] }, 'rgb(var(--sf-danger))'),
 	{
 		classNames: ['sf-avatar', 'sf-variant-danger'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_on_danger))',
 	},
-	{
-		classNames: ['sf-avatar', 'sf-variant-warning'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-warning))',
-	},
+	...fill({ classNames: ['sf-avatar', 'sf-variant-warning'] }, 'rgb(var(--sf-warning))'),
 	{
 		classNames: ['sf-avatar', 'sf-variant-warning'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_on_warning))',
 	},
-	{
-		classNames: ['sf-avatar', 'sf-variant-success'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-success))',
-	},
-	{
-		classNames: ['sf-avatar', 'sf-variant-info'],
-		cssProperty: 'background',
-		value: 'rgb(var(--sf-info))',
-	},
+	...fill({ classNames: ['sf-avatar', 'sf-variant-success'] }, 'rgb(var(--sf-success))'),
+	...fill({ classNames: ['sf-avatar', 'sf-variant-info'] }, 'rgb(var(--sf-info))'),
 	{
 		classNames: ['sf-avatar', 'sf-variant-success'],
 		cssProperty: 'color',
@@ -3111,7 +2995,11 @@ const ROOT_RULES: RuleSpec[] = [
 	// field visually distinct on any raised parent (depth-1+); on a bare page
 	// (surface-0) the bg is the same as the canvas so it's invisible but the
 	// border still delineates. :focus-visible rules below override for focus.
-	{ classNames: ['sf-field'], cssProperty: 'background', value: 'rgb(var(--sf-surface-0))' },
+	{
+		classNames: ['sf-field'],
+		cssProperty: 'background',
+		value: underFill('rgb(var(--sf-surface-0))'),
+	},
 	{ classNames: ['sf-field'], cssProperty: 'color', value: 'rgb(var(--sf-fg_primary))' },
 	// Inherit typography from the parent (match surrounding text) without inheriting
 	// the reading line-height — the `font` shorthand would pull line-height too,
