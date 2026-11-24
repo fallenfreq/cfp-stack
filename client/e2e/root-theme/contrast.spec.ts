@@ -1,8 +1,8 @@
 import { expect, test } from '../fixtures'
 import { settle, steadyRequests } from '../helpers'
 
-// What the root theme draws on its page can be seen (sf-system.md, "Fill and ink"): a line or a
-// focus edge reaches 3:1 on what's behind it, words 4.5:1 (WCAG 1.4.11, 1.4.3). Measured from what
+// What the root theme draws on its page can be seen (sf-system.md, "Fill and ink"): a line, a
+// field's edge or a focus edge reaches 3:1 on what's behind it, words 4.5:1 (WCAG 1.4.11, 1.4.3). Measured from what
 // the browser draws, in light and dark, with the theme class on <html> as the app sets it.
 
 const MODES = [
@@ -27,6 +27,18 @@ const CASES = [
 		name: "a picked block's line with an error",
 		html: '<p class="sf-on-selected sf-is-error">Wrong</p>',
 		part: 'outline',
+		least: 3,
+	},
+	{
+		name: "a field's edge at rest",
+		html: '<input class="sf sf-field" />',
+		part: 'edge',
+		least: 3,
+	},
+	{
+		name: "the code box's edge at rest",
+		html: '<div class="sf-content-frame">code</div>',
+		part: 'edge',
 		least: 3,
 	},
 	{
@@ -113,8 +125,8 @@ for (const mode of MODES)
 				if (c.part === 'outline') {
 					color = getComputedStyle(box).outlineColor
 					under = behind(box.parentElement)
-				} else if (c.part === 'focus') {
-					box.focus()
+				} else if (c.part === 'edge' || c.part === 'focus') {
+					if (c.part === 'focus') box.focus()
 					color = getComputedStyle(box).borderTopColor
 					under = behind(box.parentElement)
 				} else if (c.part === 'link') {

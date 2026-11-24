@@ -428,6 +428,12 @@ which reaches 4.5:1 on the page in both themes. The brand's words (links in runn
 `sf-variant-primary` and `-featured`, `sf-on-current`) take the same rule; plain lilac on white
 is 2.04:1.
 
+**Edges** follow what they're for (owner, 2026-11-24). A field and the code box
+(`sf-content-frame`) at rest: the text colour at 60%, as an empty field has nothing else to show
+it's there, so its edge needs 3:1 (light 4.08, dark 6.61). Ordinary buttons and chips: the text
+colour at 30%, which is looks, as their words mark them out. Dividers, cards and tables:
+`--sf-border_color`, as they only separate.
+
 ### Colours and alpha
 
 Colours are stored as RGB triplets — three space-separated values, no `rgb()` wrapper:

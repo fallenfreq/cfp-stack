@@ -3010,10 +3010,12 @@ const ROOT_RULES: RuleSpec[] = [
 	// Frame around focusable content (CodeMirror, TipTap, contenteditable, iframe).
 	// The frame itself isn't focusable; :focus-within surfaces descendant focus as a
 	// border in the brand ink. Consumer keeps layout / overflow / transition scoped.
+	// At rest the edge is the text colour at 60%, as a field's: the frame is where you type,
+	// so it must be found (3:1); the border grey is for boxes you don't act on.
 	{
 		classNames: ['sf-content-frame'],
 		cssProperty: 'border',
-		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
+		value: 'var(--sf-stroke-1) solid rgb(var(--sf-fg_primary) / var(--sf-alpha-6))',
 	},
 	{
 		classNames: ['sf-content-frame'],
@@ -3052,10 +3054,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-field'], cssProperty: 'font-family', value: 'inherit' },
 	{ classNames: ['sf-field'], cssProperty: 'font-size', value: 'inherit' },
 	{ classNames: ['sf-field'], cssProperty: 'font-weight', value: 'inherit' },
+	// The text colour at 60%: a field has no words of its own to mark it out, so its edge
+	// is what shows it's there (3:1). Buttons' 30% edge is looks; their words show them.
 	{
 		classNames: ['sf-field'],
 		cssProperty: 'border',
-		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
+		value: 'var(--sf-stroke-1) solid rgb(var(--sf-fg_primary) / var(--sf-alpha-6))',
 	},
 	// Field owns its focus expression: the existing border re-colours to the brand ink,
 	// and the global `*:focus-visible` outline (2px) is suppressed. Consistent at

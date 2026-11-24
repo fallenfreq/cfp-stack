@@ -155,7 +155,6 @@ Checks:
 
 Each goes back to the to-do when this step lands:
 
-- Fields' and the code box's edges at rest: the text colour at 60% (agreed).
 - An edge steps aside for a line, so a selected chip or swatch shows one line (agreed; needs a new
   line part, its name for approval).
 - An error's or warning's border on fields only; every other box shows it with its line.
@@ -184,5 +183,11 @@ Each goes back to the to-do when this step lands:
 - 2026-11-24: committed without a review (owner): one review of the whole when the items below
   are done.
 
-Next: the first of "Later, one at a time" (fields' and the code box's edges at 60%), in its own
-session.
+- 2026-11-24: fields' and the code box's edges at rest: the text colour at 60% (v2.96.0). Checked:
+  typecheck, `pnpm test`, `pnpm test:ui` (1168 passed; the same 4 fail as above); the contrast
+  check's new edge cases fail on the old grey (1.27:1 light, 2.24:1 dark) and pass now; a look in
+  Chrome, light and dark. The owner approved the look; no review (one of the whole, as above).
+
+Next, in its own session: the menu's parent item ("Portfolio" on `/c/branding`), measured and
+with a proposal in the to-do; the phone menu (`SiteNav.vue`) looked at first. Then the rest of
+"Later, one at a time".
