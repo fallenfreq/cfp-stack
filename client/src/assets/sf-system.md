@@ -284,13 +284,13 @@ contract, not a hard-coded token.)
 The line round an element (an outline, so it moves nothing) says several things at once, each
 with one part of it, so no combination hides another (owner, 2026-11-21):
 
-| Part      | Says                                                          | Passed by                      |
-| --------- | ------------------------------------------------------------- | ------------------------------ |
-| Colour    | red an error, amber a warning, else the brand colour          | `sf-is-error`, `sf-is-warning` |
-| Dashes    | dashed an error, dotted a warning, else solid                 | `sf-is-error`, `sf-is-warning` |
-| Thickness | thick (`--sf-stroke-3`) targeted, else thin (`--sf-stroke-2`) | `sf-on-targeted`               |
-| Strength  | solid picked, else half see-through                           | `sf-on-selected`               |
-| Gap       | a small gap round small things, else none                     | `sf-size-xs`, `sf-size-2xs`    |
+| Part      | Says                                                               | Passed by                      |
+| --------- | ------------------------------------------------------------------ | ------------------------------ |
+| Colour    | the danger ink an error, warning ink a warning, else the brand ink | `sf-is-error`, `sf-is-warning` |
+| Dashes    | dashed an error, dotted a warning, else solid                      | `sf-is-error`, `sf-is-warning` |
+| Thickness | thick (`--sf-stroke-3`) targeted, else thin (`--sf-stroke-2`)      | `sf-on-targeted`               |
+| Strength  | solid picked, else half see-through                                | `sf-on-selected`               |
+| Gap       | a small gap round small things, else none                          | `sf-size-xs`, `sf-size-2xs`    |
 
 Each class passes its part (`--sfx-line-color`, `--sfx-line-style`, `--sfx-line-width`,
 `--sfx-line-alpha`, `--sfx-line-gap`), and each class that means something about the line also
@@ -304,8 +304,8 @@ The parts are registered as not inherited (`@property`, in the fixed reset), lik
 channels: a targeted box doesn't thicken the lines inside it. A field shows an error or warning on
 its own border instead (`sf-field sf-is-error`: no line).
 
-**Keyboard focus** is a 2px ring in the text colour against the element (owner, 2026-11-21; the
-brand colour falls short of 3:1 on white). With no line it is the element default outline. A line
+**Keyboard focus** is a 2px ring in the text colour against the element (owner, 2026-11-21; then,
+the brand colour fell short of 3:1 on white, and the text colour reads on any theme's page). With no line it is the element default outline. A line
 would replace that, so each class that draws the line also draws the ring with focus, as a shadow
 against the element, and steps the line out by the ring's width to go round it: focus and every
 part of the line show together. The element's own shadow gives way while it's focused. Focus on an
@@ -374,11 +374,16 @@ underscores (`--sf-fg_primary`); single-word names don't (`--sf-primary`).
 ```text
 --sf-fg_primary      default foreground
 --sf-fg_inverted     foreground on brand/inverse surfaces
---sf-primary         brand colour
---sf-danger          danger colour role (sf-variant-danger)
---sf-warning         warning colour role (sf-variant-warning)
---sf-success         success colour role (sf-variant-success)
---sf-info            info colour role (sf-variant-info)
+--sf-primary         brand colour: its fill, a step of the brand scale
+--sf-danger          danger colour role (sf-variant-danger): its fill
+--sf-warning         warning colour role (sf-variant-warning): its fill
+--sf-success         success colour role (sf-variant-success): its fill
+--sf-info            info colour role (sf-variant-info): its fill
+--sf-primary_ink     the brand's ink: lines, focus edges, marks (a step of the brand scale)
+--sf-danger_ink      danger's ink (an error's line and a field's error border)
+--sf-warning_ink     warning's ink
+--sf-success_ink     success's ink
+--sf-info_ink        info's ink
 --sf-fg_on_primary   text on a solid primary fill (loud primary/featured, a switch knob)
 --sf-fg_on_danger    text on a solid danger fill
 --sf-fg_on_warning   text on a solid warning fill
@@ -394,14 +399,41 @@ A theme changes the value; every reference picks it up.
 `fg_on_*` follow the fill, not light or dark mode: a theme picks the text for its red,
 amber and so on once, whichever mode is on. `fg_inverted` is for neutral fills (a fill
 in the text colour), where flipping with the mode is right. A theme that changes a colour
-role sets its `fg_on_*` to match.
+role sets its `fg_on_*` to match, and its ink where the ink isn't the fill (below).
+
+### Fill and ink
+
+Each colour has a **fill**, which paints a surface (a loud button, a tint, an avatar) and stays
+bright, and an **ink**, which draws on the page: the line round a block, a field's focus and error
+border, the switch's knob, a tick box (owner, 2026-11-24). An ink reaches 3:1 on its theme's
+background (WCAG 1.4.11); a bright fill can't, and a fill dark enough to would make every loud
+button and tint heavy. "Ink" names the job, not a border: a theme needn't draw borders at all.
+
+Where an ink equals its fill, the root theme points it at the fill (`--sf-danger_ink:
+var(--sf-danger)`), so a theme that changes the fill moves the ink with it. Where they differ
+(amber and green on white), a theme that changes the fill sets the ink too, as it sets `fg_on_*`;
+the root theme is always active, so an unset ink can't fall back to anything. The brand's fill and
+ink are steps of its scale (4 and 6 in the root theme), so a theme that sets the scale moves both.
+Pointing works because the theme class sits on `<html>` with `:root`, so `var()` resolves with
+the active theme's values.
+
+Every colour has an ink even where nothing in the root theme draws with it yet (success, info): a
+theme or component author drawing a green or blue line needs one, and it's the common case for a
+builder (owner, 2026-11-24). An ink with its own value is offered in the colour tools, as every
+colour with a value is; one that points at another colour is offered under that colour's name.
+
+**Coloured words** are neither: each colour's words are the colour mixed half with the text
+colour, chroma doubled (`oklch(from color-mix(in oklab, <colour> 50%, <text>) l calc(c * 2) h)`),
+which reaches 4.5:1 on the page in both themes. The brand's words (links in running text,
+`sf-variant-primary` and `-featured`, `sf-on-current`) take the same rule; plain lilac on white
+is 2.04:1.
 
 ### Colours and alpha
 
 Colours are stored as RGB triplets — three space-separated values, no `rgb()` wrapper:
 
 ```css
---sf-primary-5: 16 185 129;
+--sf-primary-5: 178 143 232;
 --sf-fg_primary: 38 40 36;
 ```
 
@@ -477,7 +509,7 @@ primitive it points to.
 - `--sf-card-radius` ✗ if it only appears in `.sf-card`; use `var(--sf-radius-2)` directly
 
 **Aliases only for theme-level decisions.** A semantic alias over a scale step is
-legitimate only when it represents a theme-level choice. `--sf-primary` = `--sf-primary-5`
+legitimate only when it represents a theme-level choice. `--sf-primary` = `--sf-primary-4`
 is valid because the theme decides which palette step is the brand. `--sf-alpha-subtle` =
 `--sf-alpha-3` is not — "subtle" is a styling opinion, not a theme decision. Use the
 scale step directly.
@@ -1356,7 +1388,8 @@ activation class on the element it themes or an ancestor (typically `<html>`).
 ```css
 /* token settings — no layer needed (custom properties cascade per-property) */
 .theme-editorial {
-	--sf-primary-5: 30 64 175;
+	--sf-primary: 30 64 175;
+	--sf-primary_ink: var(--sf-primary);
 }
 
 /* class overrides — must live in the matching layer, scoped to the theme */

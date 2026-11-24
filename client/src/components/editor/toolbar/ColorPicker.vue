@@ -187,8 +187,8 @@ const commit = () => {
 		background-image: linear-gradient(
 			45deg,
 			transparent 45%,
-			rgb(var(--sf-danger) / var(--sf-alpha-7)) 45%,
-			rgb(var(--sf-danger) / var(--sf-alpha-7)) 55%,
+			rgb(var(--sf-danger_ink) / var(--sf-alpha-7)) 45%,
+			rgb(var(--sf-danger_ink) / var(--sf-alpha-7)) 55%,
 			transparent 55%
 		);
 	}

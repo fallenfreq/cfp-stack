@@ -83,16 +83,17 @@ const ROOT_TOKENS: TokenSpec[] = [
 	// Shadow opacity (theme-character knob)
 	{ name: '--sf-shadow-opacity', value: '0.12', kind: 'number' },
 
-	// Primary palette
-	{ name: '--sf-primary-1', value: '209 250 229', kind: 'color-triplet' },
-	{ name: '--sf-primary-2', value: '167 243 208', kind: 'color-triplet' },
-	{ name: '--sf-primary-3', value: '110 231 183', kind: 'color-triplet' },
-	{ name: '--sf-primary-4', value: '52 211 153', kind: 'color-triplet' },
-	{ name: '--sf-primary-5', value: '16 185 129', kind: 'color-triplet' },
-	{ name: '--sf-primary-6', value: '5 150 105', kind: 'color-triplet' },
-	{ name: '--sf-primary-7', value: '4 120 87', kind: 'color-triplet' },
-	{ name: '--sf-primary-8', value: '6 95 70', kind: 'color-triplet' },
-	{ name: '--sf-primary-9', value: '4 78 56', kind: 'color-triplet' },
+	// Primary palette: soft lilac. The brand's fill is step 4 and its ink step 6 (sf-system.md,
+	// "Fill and ink").
+	{ name: '--sf-primary-1', value: '242 234 255', kind: 'color-triplet' },
+	{ name: '--sf-primary-2', value: '230 215 255', kind: 'color-triplet' },
+	{ name: '--sf-primary-3', value: '217 191 255', kind: 'color-triplet' },
+	{ name: '--sf-primary-4', value: '200 165 255', kind: 'color-triplet' },
+	{ name: '--sf-primary-5', value: '178 143 232', kind: 'color-triplet' },
+	{ name: '--sf-primary-6', value: '156 122 208', kind: 'color-triplet' },
+	{ name: '--sf-primary-7', value: '130 97 177', kind: 'color-triplet' },
+	{ name: '--sf-primary-8', value: '105 77 145', kind: 'color-triplet' },
+	{ name: '--sf-primary-9', value: '84 60 117', kind: 'color-triplet' },
 
 	// Surface palette (surface-0 = canvas)
 	{ name: '--sf-surface-0', value: '255 255 255', kind: 'color-triplet' },
@@ -165,20 +166,26 @@ const ROOT_TOKENS: TokenSpec[] = [
 	// Semantic tokens
 	{ name: '--sf-fg_primary', value: '38 40 36', kind: 'color-triplet' },
 	{ name: '--sf-fg_inverted', value: '255 255 255', kind: 'color-triplet' },
-	{ name: '--sf-primary', value: 'var(--sf-primary-5)', kind: 'color-triplet' },
+	{ name: '--sf-primary', value: 'var(--sf-primary-4)', kind: 'color-triplet' },
 	{ name: '--sf-border_color', value: '222 229 242', kind: 'color-triplet' },
 	{ name: '--sf-shadow', value: '0 0 0', kind: 'color-triplet' },
-	// Colour roles: the solid fill. Tints and coloured text are made from these by the rules,
-	// so one value serves light and dark.
-	{ name: '--sf-danger', value: '239 68 68', kind: 'color-triplet' },
+	// Colour roles. Each has a fill, which paints a surface (a loud button, a tint), and an ink,
+	// which draws a line or mark on the page and reaches 3:1 on its background (sf-system.md,
+	// "Fill and ink"). An ink that equals its fill points at it, so it follows a theme's fill.
+	{ name: '--sf-primary_ink', value: 'var(--sf-primary-6)', kind: 'color-triplet' },
+	{ name: '--sf-danger', value: '200 16 58', kind: 'color-triplet' },
+	{ name: '--sf-danger_ink', value: 'var(--sf-danger)', kind: 'color-triplet' },
 	{ name: '--sf-warning', value: '245 158 11', kind: 'color-triplet' },
+	{ name: '--sf-warning_ink', value: '214 110 0', kind: 'color-triplet' },
 	{ name: '--sf-success', value: '34 197 94', kind: 'color-triplet' },
-	{ name: '--sf-info', value: '59 130 246', kind: 'color-triplet' },
+	{ name: '--sf-success_ink', value: '8 160 72', kind: 'color-triplet' },
+	{ name: '--sf-info', value: '37 99 235', kind: 'color-triplet' },
+	{ name: '--sf-info_ink', value: 'var(--sf-info)', kind: 'color-triplet' },
 	// Text on a solid fill of each colour role; set to whatever reads on that fill.
-	{ name: '--sf-fg_on_primary', value: '255 255 255', kind: 'color-triplet' },
+	{ name: '--sf-fg_on_primary', value: '38 40 36', kind: 'color-triplet' },
 	{ name: '--sf-fg_on_danger', value: '255 255 255', kind: 'color-triplet' },
-	{ name: '--sf-fg_on_warning', value: '255 255 255', kind: 'color-triplet' },
-	{ name: '--sf-fg_on_success', value: '255 255 255', kind: 'color-triplet' },
+	{ name: '--sf-fg_on_warning', value: '38 40 36', kind: 'color-triplet' },
+	{ name: '--sf-fg_on_success', value: '38 40 36', kind: 'color-triplet' },
 	{ name: '--sf-fg_on_info', value: '255 255 255', kind: 'color-triplet' },
 ]
 
@@ -186,9 +193,12 @@ const DARK_TOKEN_OVERRIDES: TokenSpec[] = [
 	{ name: '--sf-fg_primary', value: '241 241 241', kind: 'color-triplet' },
 	{ name: '--sf-fg_inverted', value: '11 18 26', kind: 'color-triplet' },
 	{ name: '--sf-border_color', value: '61 76 88', kind: 'color-triplet' },
-	{ name: '--sf-primary', value: 'var(--sf-primary-4)', kind: 'color-triplet' },
-	// The lighter dark-mode brand fill reads with dark text.
-	{ name: '--sf-fg_on_primary', value: '11 18 26', kind: 'color-triplet' },
+	// The fills reach 3:1 on the dark page, so most inks are their fills here.
+	{ name: '--sf-primary_ink', value: 'var(--sf-primary)', kind: 'color-triplet' },
+	{ name: '--sf-danger_ink', value: '239 68 68', kind: 'color-triplet' },
+	{ name: '--sf-warning_ink', value: 'var(--sf-warning)', kind: 'color-triplet' },
+	{ name: '--sf-success_ink', value: 'var(--sf-success)', kind: 'color-triplet' },
+	{ name: '--sf-info_ink', value: '59 130 246', kind: 'color-triplet' },
 	// Surface palette — dark mode inverts the scale: 0 is the darkest canvas, higher = more elevated
 	{ name: '--sf-surface-0', value: '5 10 16', kind: 'color-triplet' },
 	{ name: '--sf-surface-1', value: '31 38 47', kind: 'color-triplet' },
@@ -862,7 +872,7 @@ type RuleSpec = ClassOnlyRuleInput | ElementRuleInput
 
 // The line round an element (sf-system.md, "Line parts"): each class that means something about it
 // passes its part, and each draws the same line from all the parts there, so whichever rule wins
-// draws them all. Parts left unset give a thin, half see-through, solid line in the brand colour.
+// draws them all. Parts left unset give a thin, half see-through, solid line in the brand ink.
 // With keyboard focus the line takes the place of the focus ring, so it draws the ring itself,
 // against the element, and steps out round it.
 const LINE_WIDTH = 'var(--sfx-line-width, var(--sf-stroke-2))'
@@ -871,7 +881,7 @@ const drawsLine = (classNames: [string, ...string[]]): RuleSpec[] => [
 	{
 		classNames,
 		cssProperty: 'outline',
-		value: `${LINE_WIDTH} var(--sfx-line-style, solid) rgb(var(--sfx-line-color, var(--sf-primary)) / var(--sfx-line-alpha, var(--sf-alpha-5)))`,
+		value: `${LINE_WIDTH} var(--sfx-line-style, solid) rgb(var(--sfx-line-color, var(--sf-primary_ink)) / var(--sfx-line-alpha, var(--sf-alpha-5)))`,
 	},
 	{ classNames, cssProperty: 'outline-offset', value: LINE_GAP },
 	{
@@ -1697,12 +1707,24 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-is-loading'], cssProperty: 'opacity', value: '0.4' },
 	// An error or warning colours a box's border, and its line: dashed for an error, dotted for a
 	// warning, so it doesn't rest on colour alone. A field's border is enough (below).
-	{ classNames: ['sf-is-error'], cssProperty: 'border-color', value: 'rgb(var(--sf-danger))' },
-	{ classNames: ['sf-is-error'], cssProperty: '--sfx-line-color', value: 'var(--sf-danger)' },
+	{
+		classNames: ['sf-is-error'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-danger_ink))',
+	},
+	{ classNames: ['sf-is-error'], cssProperty: '--sfx-line-color', value: 'var(--sf-danger_ink)' },
 	{ classNames: ['sf-is-error'], cssProperty: '--sfx-line-style', value: 'dashed' },
 	...drawsLine(['sf-is-error']),
-	{ classNames: ['sf-is-warning'], cssProperty: 'border-color', value: 'rgb(var(--sf-warning))' },
-	{ classNames: ['sf-is-warning'], cssProperty: '--sfx-line-color', value: 'var(--sf-warning)' },
+	{
+		classNames: ['sf-is-warning'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-warning_ink))',
+	},
+	{
+		classNames: ['sf-is-warning'],
+		cssProperty: '--sfx-line-color',
+		value: 'var(--sf-warning_ink)',
+	},
 	{ classNames: ['sf-is-warning'], cssProperty: '--sfx-line-style', value: 'dotted' },
 	...drawsLine(['sf-is-warning']),
 	// A field has no line, so no focus ring from one either.
@@ -1788,8 +1810,16 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// Variants — semantic colour only (text tint). Fill weight comes from loudness × variant
 	// compounds below. Bare variant with no loudness class = coloured text, no fill.
-	{ classNames: ['sf-variant-featured'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
-	{ classNames: ['sf-variant-primary'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
+	{
+		classNames: ['sf-variant-featured'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
+	{
+		classNames: ['sf-variant-primary'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
 	{
 		classNames: ['sf-variant-danger'],
 		cssProperty: 'color',
@@ -2087,12 +2117,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-focus', 'sf-is-error'],
 		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-danger))',
+		value: 'rgb(var(--sf-danger_ink))',
 	},
 	{
 		classNames: ['sf-on-focus', 'sf-is-warning'],
 		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-warning))',
+		value: 'rgb(var(--sf-warning_ink))',
 	},
 
 	// Hover × loudness-2 — one step past the resting tint, so the hover still shows.
@@ -2291,24 +2321,24 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-fg_on_danger))',
 	},
 
-	// Hover × drag-handle — icon accents to primary; border stays themed (subtle hover signal).
+	// Hover × drag-handle — icon takes the brand ink; border stays themed (subtle hover signal).
 	// Bare sf-on-hover rule already provides the fg_primary/alpha-1 background tint.
 	{
 		classNames: ['sf-drag-handle', 'sf-on-hover'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-primary))',
+		value: 'rgb(var(--sf-primary_ink))',
 	},
 
 	// Dragging state — primary accent throughout; tinted fill signals actively engaged.
 	{
 		classNames: ['sf-drag-handle', 'sf-on-dragging'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-primary))',
+		value: 'rgb(var(--sf-primary_ink))',
 	},
 	{
 		classNames: ['sf-drag-handle', 'sf-on-dragging'],
 		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-primary))',
+		value: 'rgb(var(--sf-primary_ink))',
 	},
 	{
 		classNames: ['sf-drag-handle', 'sf-on-dragging'],
@@ -2327,12 +2357,12 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-border_color))',
 	},
 
-	// Focus state — bordered inputs pick up a primary border on keyboard/click focus.
+	// Focus state — bordered inputs pick up the brand ink's border on keyboard/click focus.
 	// Vocabulary pseudo is :focus-visible; UAs treat form controls as always focus-visible.
 	{
 		classNames: ['sf-on-focus'],
 		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-primary))',
+		value: 'rgb(var(--sf-primary_ink))',
 	},
 
 	// Disabled state — dim + not-allowed cursor for interactive controls.
@@ -2358,7 +2388,7 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// Current state — tinted fill (toolbar toggles, breadcrumb leaf, keyboard-highlighted menu item).
 	// Reads as "this option is on right now" — distinct from sf-on-selected's outline chip.
-	// Text turns primary; fill and border are drawn from the text colour, so an element with a
+	// Text turns the brand's words colour; fill and border are drawn from the text colour, so an element with a
 	// colour variant keeps its role while on (variant × current compounds below).
 	{
 		classNames: ['sf-on-current'],
@@ -2370,7 +2400,11 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-color',
 		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
 	},
-	{ classNames: ['sf-on-current'], cssProperty: 'color', value: 'rgb(var(--sf-primary))' },
+	{
+		classNames: ['sf-on-current'],
+		cssProperty: 'color',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+	},
 	// Variant × current — keep the variant's colour while on (featured and primary are already
 	// primary). Same text colour as the bare variant rules.
 	{
@@ -2405,7 +2439,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-hover', 'sf-on-current'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-primary))',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
 	},
 	{
 		classNames: ['sf-variant-danger', 'sf-on-hover', 'sf-on-current'],
@@ -2537,7 +2571,7 @@ const ROOT_RULES: RuleSpec[] = [
 		elementSelector: 'button',
 		classNames: ['sf'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-border_color) / var(--sf-alpha-4))',
+		value: '1px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-3))',
 	},
 	{
 		elementSelector: 'button',
@@ -2558,7 +2592,10 @@ const ROOT_RULES: RuleSpec[] = [
 	// as a bare `a` rule, so a.sf and every class beat it.
 	...(
 		[
-			['color', 'rgb(var(--sf-primary))'],
+			[
+				'color',
+				'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+			],
 			['text-decoration', 'underline'],
 		] as const
 	).map(
@@ -2599,7 +2636,7 @@ const ROOT_RULES: RuleSpec[] = [
 		elementSelector: 'a',
 		classNames: ['sf'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-border_color) / var(--sf-alpha-4))',
+		value: '1px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-3))',
 	},
 	{
 		elementSelector: 'a',
@@ -2616,7 +2653,7 @@ const ROOT_RULES: RuleSpec[] = [
 			['border-radius', 'var(--sf-radius-2)'],
 			['--sf-padding', 'var(--sf-spacing-xs)'],
 			['padding', 'var(--sf-padding)'],
-			['border', '1px solid rgb(var(--sf-border_color) / var(--sf-alpha-4))'],
+			['border', '1px solid rgb(var(--sf-fg_primary) / var(--sf-alpha-3))'],
 		] as const
 	).map(
 		([cssProperty, value]): RuleSpec => ({
@@ -2717,12 +2754,6 @@ const ROOT_RULES: RuleSpec[] = [
 			cssProperty: 'background',
 			value: underFill('rgb(from currentColor r g b / var(--sf-alpha-1))'),
 		},
-		{
-			elementSelector: el,
-			classNames: ['sf', 'sf-loudness-2'],
-			cssProperty: 'border-color',
-			value: 'rgb(var(--sf-border_color) / var(--sf-alpha-5))',
-		},
 	]),
 
 	// Loudness-3 solid fill — button-only. Non-button elements (cards) get loudness-3 prominence
@@ -2737,6 +2768,13 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_inverted))',
 	},
+	// A loud button keeps its faint light edge: the 30% text-colour edge is for ordinary ones.
+	{
+		elementSelector: 'button',
+		classNames: ['sf', 'sf-loudness-3'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-border_color) / var(--sf-alpha-4))',
+	},
 
 	// ─── Input element ────────────────────────────────────────────────────────
 	// input.sf carries only input-specific chrome. Shared editable-form-control baseline
@@ -2747,7 +2785,7 @@ const ROOT_RULES: RuleSpec[] = [
 		elementSelector: 'input',
 		classNames: ['sf'],
 		cssProperty: 'accent-color',
-		value: 'rgb(var(--sf-primary))',
+		value: 'rgb(var(--sf-primary_ink))',
 	},
 	// Checkboxes and radios are sized from the text around them, so they grow and shrink
 	// with the type scale instead of each component fixing a pixel size.
@@ -2799,7 +2837,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-thumb', 'sf-on-current'],
 		cssProperty: 'background',
-		value: 'rgb(var(--sf-primary))',
+		value: 'rgb(var(--sf-primary_ink))',
 	},
 	{
 		classNames: ['sf-thumb', 'sf-on-current'],
@@ -2830,6 +2868,12 @@ const ROOT_RULES: RuleSpec[] = [
 			value: 'rgb(var(--sf-fg_inverted))',
 		},
 	]),
+	// A loud chip keeps its faint light edge, as a loud button does.
+	{
+		classNames: ['sf-chip', 'sf-loudness-3'],
+		cssProperty: 'border-color',
+		value: 'rgb(var(--sf-border_color) / var(--sf-alpha-3))',
+	},
 	// A chip you press or follow is still a chip: it keeps the chip's own shape and edge over
 	// the button / link baseline, which outranks bare markers. The compounds tie with
 	// button.sf / a.sf; sf-chip's cascade order settles it (a marker refines its element).
@@ -2844,7 +2888,7 @@ const ROOT_RULES: RuleSpec[] = [
 			elementSelector: el,
 			classNames: ['sf-chip'],
 			cssProperty: 'border',
-			value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color) / var(--sf-alpha-3))',
+			value: 'var(--sf-stroke-1) solid rgb(var(--sf-fg_primary) / var(--sf-alpha-3))',
 		},
 	]),
 
@@ -2965,7 +3009,7 @@ const ROOT_RULES: RuleSpec[] = [
 	// ─── sf-content-frame ─────────────────────────────────────────────────────
 	// Frame around focusable content (CodeMirror, TipTap, contenteditable, iframe).
 	// The frame itself isn't focusable; :focus-within surfaces descendant focus as a
-	// primary-tinted border. Consumer keeps layout / overflow / transition scoped.
+	// border in the brand ink. Consumer keeps layout / overflow / transition scoped.
 	{
 		classNames: ['sf-content-frame'],
 		cssProperty: 'border',
@@ -2980,7 +3024,7 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-content-frame'],
 		pseudo: ':focus-within',
 		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-primary))',
+		value: 'rgb(var(--sf-primary_ink))',
 	},
 
 	// ─── sf-field ─────────────────────────────────────────────────────────────
@@ -3013,7 +3057,7 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border',
 		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
 	},
-	// Field owns its focus expression: the existing border re-colours to primary,
+	// Field owns its focus expression: the existing border re-colours to the brand ink,
 	// and the global `*:focus-visible` outline (2px) is suppressed. Consistent at
 	// every sf-size-* — no size-scoped variants needed.
 	{ classNames: ['sf-field'], pseudo: ':focus-visible', cssProperty: 'outline', value: '0' },
@@ -3021,7 +3065,7 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-field'],
 		pseudo: ':focus-visible',
 		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-primary))',
+		value: 'rgb(var(--sf-primary_ink))',
 	},
 	{
 		classNames: ['sf-field'],

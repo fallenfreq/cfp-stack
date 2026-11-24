@@ -103,7 +103,7 @@ test('the count selects the next block with a warning, then the first', async ({
 
 // Each part of a block's line says one thing (sf-system.md, "Line parts"): a targeted block's line
 // is thick and half see-through, and keeps what else is true of it (a small block's problem its
-// colour and dashes, a picked block's line solid). The blocks inside keep their own lines.
+// colour and dashes, a picked block's line solid). Lines draw in the colours' inks. The blocks inside keep their own lines.
 test('a targeted line keeps what else is true of the block', async ({ page }) => {
 	await page.evaluate(() => {
 		document
@@ -121,14 +121,14 @@ test('a targeted line keeps what else is true of the block', async ({ page }) =>
 			return {
 				style: own.outlineStyle,
 				thick: own.outlineWidth === own.getPropertyValue('--sf-stroke-3').trim(),
-				danger: own.outlineColor.startsWith(`rgba(${rgb('--sf-danger')},`),
-				solidPrimary: own.outlineColor === `rgb(${rgb('--sf-primary')})`,
-				halfPrimary: own.outlineColor.startsWith(`rgba(${rgb('--sf-primary')},`),
+				danger: own.outlineColor.startsWith(`rgba(${rgb('--sf-danger_ink')},`),
+				solidBrand: own.outlineColor === `rgb(${rgb('--sf-primary_ink')})`,
+				halfBrand: own.outlineColor.startsWith(`rgba(${rgb('--sf-primary_ink')},`),
 			}
 		})
 
 	await selectBlock(page, 'quote')
-	expect(await lineOf('quote')).toMatchObject({ style: 'solid', thick: true, halfPrimary: true })
+	expect(await lineOf('quote')).toMatchObject({ style: 'solid', thick: true, halfBrand: true })
 	// A problem inside keeps its own thin line.
 	expect(await lineOf('inside')).toMatchObject({ style: 'dashed', thick: false, danger: true })
 
@@ -140,6 +140,6 @@ test('a targeted line keeps what else is true of the block', async ({ page }) =>
 	expect(await lineOf('picked')).toMatchObject({
 		style: 'solid',
 		thick: true,
-		solidPrimary: true,
+		solidBrand: true,
 	})
 })

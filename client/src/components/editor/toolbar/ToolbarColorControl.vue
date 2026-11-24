@@ -55,7 +55,7 @@ const current = computed<{ theme: ThemeColor | null; fixed: string | null }>(() 
 })
 
 const NO_COLOR_STRIPE =
-	'linear-gradient(45deg, transparent 45%, rgba(var(--sf-danger) / var(--sf-alpha-6)) 45%, rgba(var(--sf-danger) / var(--sf-alpha-6)) 55%, transparent 55%)'
+	'linear-gradient(45deg, transparent 45%, rgba(var(--sf-danger_ink) / var(--sf-alpha-6)) 45%, rgba(var(--sf-danger_ink) / var(--sf-alpha-6)) 55%, transparent 55%)'
 
 const swatchStyle = computed<CSSProperties>(() => {
 	// A fixed colour shows over a theme one, on the page as here.

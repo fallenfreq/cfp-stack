@@ -5,7 +5,8 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: not chosen yet (the owner picks). Waiting: pasting warns of what the page can't keep ("Ideas").
+Next: contrast on white, its next item (`docs/plans/contrast-on-white.md`, "Later, one at a
+time"), one per session; one review of the whole once they're done. Waiting: pasting warns of what the page can't keep ("Ideas").
 
 ## Bigger work
 
@@ -283,12 +284,51 @@ Next: not chosen yet (the owner picks). Waiting: pasting warns of what the page 
 
 ## Theme and classes
 
-- **Contrast on white** (measured 2026-11-21, WCAG 1.4.11 asks 3:1). On the light theme the
-  brand green (2.5:1) and amber (2.1:1) fall short as lines, and every half see-through line does
-  (1.5–2.0:1), so an unselected block's warning is faint. Also brand-coloured focus looks: a
-  field's focus border, `sf-on-focus`, the switch, the editor frame's `:focus-within`. Likely
-  darker line colours for the light theme. A field with an error shows focus only by its tint (its
-  border stays red); a ring round it was offered and left for now.
+- **Contrast on white: agreed, to build** (owner, 2026-11-24; mock-up measured live in light and
+  dark: https://claude.ai/artifact/CorPbLwW7JpucyPQ36Na6Q). The reasons go into the spec as it
+  lands (`sf-system.md`, "Line parts", and a new section on fill and ink).
+    - **Fill and ink.** Each colour has a fill, which paints a surface and stays bright, and an
+      ink, which draws on the page: lines, focus edges, the switch's knob, a tick box. An ink
+      reaches 3:1 on the theme's background. New tokens (names approved):
+      `--sf-primary_ink` (an alias for a step of the brand scale), `--sf-danger_ink`,
+      `--sf-warning_ink`, `--sf-success_ink`, `--sf-info_ink`. Where an ink equals its fill the
+      root theme points it at the fill, so it follows a theme's fill; where they differ, a theme
+      that changes the fill sets the ink too, as it sets `fg_on_*` (the root theme is always
+      active, so nothing can "fall back"). "Ink" names the job: a theme needn't draw borders at
+      all.
+    - **Colours** (dark fills as light; words on the dark brand fill are already dark):
+
+        | Colour  | Fill, light (was)              | Ink, light  | Words on the fill | Ink, dark  |
+        | ------- | ------------------------------ | ----------- | ----------------- | ---------- |
+        | brand   | soft lilac 200 165 255 (green) | 156 122 208 | dark (white)      | the fill   |
+        | danger  | 200 16 58 (239 68 68)          | the fill    | white             | 239 68 68  |
+        | warning | 245 158 11, unchanged          | 214 110 0   | dark (white)      | the fill   |
+        | success | 34 197 94, unchanged           | 8 160 72    | dark (white)      | the fill   |
+        | info    | 37 99 235 (59 130 246)         | the fill    | white             | 59 130 246 |
+
+        The brand's 9-step scale becomes lilac; its fill and ink are steps of it. Danger moved to
+        crimson so it doesn't look like the brand; dark words go where white fails 4.5:1, as most
+        systems do (the dark theme's brand button already has them).
+
+    - **Rules that read the ink, not the fill:** the line's colour, a field's focus border,
+      `sf-on-focus`, `sf-content-frame:focus-within`, the drag handle's hover and dragging, the
+      switch's knob when on, `input.sf`'s `accent-color`.
+    - **Brand-coloured words** (links in running text, `sf-variant-primary` and `-featured`, so
+      the logo too, `sf-on-current`) take the rule the other colours' words already use: the colour mixed half
+      with the text colour, chroma doubled (lilac: 5.55:1 light, 12.65:1 dark). Plain lilac on
+      white is 2.04:1.
+    - **Edges.** A field and the code frame at rest: the text colour at 60% (light 1.27 → 4.08,
+      dark 2.24 → 6.61). Buttons and chips (`button.sf`, `a.sf`, `summary.sf`, `sf-chip`): the
+      text colour at 30% (light 1.07 → 1.86, dark 1.18 → 2.42); their words mark them out, so
+      this is looks, not 3:1. Dividers, cards and tables keep `--sf-border_color`.
+    - **New: an edge steps aside for a line.** While a line is drawn round something with its
+      own edge (button, chip, swatch), the edge goes clear, same width, so one line shows and
+      nothing moves. Fields keep theirs: they get no line, and show errors and focus on it.
+    - **Unchanged:** the line parts (solid picked, else half see-through; thick targeted; dashes),
+      keyboard focus, tinted boxes. A half see-through line is a ghost, a hint: the warnings
+      count, "Next warning" and the node path show the same, so it isn't held to 3:1.
+    - **Left for later:** pink mode isn't redone. Quiet brand words (`sf-loudness-1` with a
+      variant, at 60%) stay short of 4.5:1. The drag handle's icon is 2.36:1.
 
 - **`sf-on-*` state rules.** Every state has its bare rule; `sf-on-hover` has no border channel
   yet.
