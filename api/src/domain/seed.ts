@@ -2462,12 +2462,14 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-info)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
 	},
 
-	// Ancestor state — muted primary text, no fill. Reads as "on the trail to current".
+	// Ancestor state: the brand's words, no fill. Reads as "on the trail to current"; the
+	// current item has the same words in a tinted box, other items the text colour. Full
+	// strength, as faded lilac can't be read (1.53:1 on the light header).
 	// Nav sidebars, breadcrumb non-leaf segments.
 	{
 		classNames: ['sf-on-ancestor'],
 		cssProperty: 'color',
-		value: 'rgba(var(--sf-primary) / var(--sf-alpha-7))',
+		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
 	},
 
 	// ─── Content-type markers ─────────────────────────────────────────────────

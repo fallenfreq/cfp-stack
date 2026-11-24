@@ -425,8 +425,10 @@ colour with a value is; one that points at another colour is offered under that 
 **Coloured words** are neither: each colour's words are the colour mixed half with the text
 colour, chroma doubled (`oklch(from color-mix(in oklab, <colour> 50%, <text>) l calc(c * 2) h)`),
 which reaches 4.5:1 on the page in both themes. The brand's words (links in running text,
-`sf-variant-primary` and `-featured`, `sf-on-current`) take the same rule; plain lilac on white
-is 2.04:1.
+`sf-variant-primary` and `-featured`, `sf-on-current`, `sf-on-ancestor`) take the same rule;
+plain lilac on white is 2.04:1. A menu's parent item (`sf-on-ancestor`) was the brand at 70%,
+1.53:1 on the light header; it now shares the current item's words without its tinted box, so
+plain, parent and current still differ (owner, 2026-11-24).
 
 **Edges** follow what they're for (owner, 2026-11-24). A field and the code box
 (`sf-content-frame`) at rest: the text colour at 60%, as an empty field has nothing else to show

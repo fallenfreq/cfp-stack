@@ -329,11 +329,6 @@ time"), one per session; one review of the whole once they're done. Waiting: pas
       count, "Next warning" and the node path show the same, so it isn't held to 3:1.
     - **Left for later:** pink mode isn't redone. Quiet brand words (`sf-loudness-1` with a
       variant, at 60%) stay short of 4.5:1. The drag handle's icon is 2.36:1.
-    - **Raised 2026-11-24: the menu's parent item is nearly invisible.** On a nested page
-      (`/c/branding`) the header's "Portfolio" wears `sf-on-ancestor`, the brand fill at 70%: on
-      the light header 1.53:1 (green was 1.83, also short), dark 4.42 (green 4.62). Proposed: it
-      takes the brand words at full strength, no tint (light 5.05, dark 9.71); the current item
-      keeps its tint, so the two still differ. Not yet agreed.
 
 - **`sf-on-*` state rules.** Every state has its bare rule; `sf-on-hover` has no border channel
   yet.

@@ -159,7 +159,7 @@ Each goes back to the to-do when this step lands:
   line part, its name for approval).
 - An error's or warning's border on fields only; every other box shows it with its line.
 - The quote's stripe in the ink.
-- Quiet brand words (`sf-loudness-1`, `sf-on-ancestor`) short of 4.5:1.
+- Quiet brand words (`sf-loudness-1`) short of 4.5:1.
 - The drag handle's icon, 2.36:1.
 
 ## Progress
@@ -188,6 +188,12 @@ Each goes back to the to-do when this step lands:
   check's new edge cases fail on the old grey (1.27:1 light, 2.24:1 dark) and pass now; a look in
   Chrome, light and dark. The owner approved the look; no review (one of the whole, as above).
 
-Next, in its own session: the menu's parent item ("Portfolio" on `/c/branding`), measured and
-with a proposal in the to-do; the phone menu (`SiteNav.vue`) looked at first. Then the rest of
-"Later, one at a time".
+- 2026-11-24: the menu's parent item (`sf-on-ancestor`, "Portfolio" on `/c/branding`), raised by
+  the owner: it was the brand at 70%, 1.53:1 on the light header (green was 1.83). It now takes
+  the brand words, no tinted box (light 5.05, dark 9.71 on the header); the owner chose it from
+  Chrome with plain, parent and current side by side, in the header's menu and the phone menu
+  (v2.97.0). Checked: typecheck, `pnpm test`, `pnpm test:ui` (1168 passed; the same 4 fail); the
+  contrast check's new case fails on the old colour (1.63:1 light) and passes now; a look in
+  Chrome, light and dark, desktop and phone. No review (one of the whole).
+
+Next: the first of "Later, one at a time" (an edge steps aside for a line), in its own session.

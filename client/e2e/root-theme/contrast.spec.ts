@@ -54,6 +54,12 @@ const CASES = [
 		least: 4.5,
 	},
 	{
+		name: "a menu's parent item, on a page under it",
+		html: '<button class="sf sf-is-contained sf-on-ancestor">Portfolio</button>',
+		part: 'words',
+		least: 4.5,
+	},
+	{
 		name: 'words on a loud brand button',
 		html: '<button class="sf sf-loudness-3 sf-variant-primary">Save</button>',
 		part: 'words',
