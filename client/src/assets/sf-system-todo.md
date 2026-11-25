@@ -321,15 +321,17 @@ time"), one per session; one review of the whole once they're done. Waiting: pas
       dark 2.24 → 6.61). Buttons and chips (`button.sf`, `a.sf`, `summary.sf`, `sf-chip`): the
       text colour at 30% (light 1.07 → 1.86, dark 1.18 → 2.42); their words mark them out, so
       this is looks, not 3:1. Dividers, cards and tables keep `--sf-border_color`.
-    - **The line and edges** (owner, 2026-11-25, v2.98.0, `sf-system.md` "Line parts"): the line
-      lies over the 1px edge (a swatch keeps a 2px gap) and edges never change for a state; full
+    - **The line and edges** (owner, 2026-11-25, v2.98.1, `sf-system.md` "Line parts"): the line
+      lies over the 1px edge (a swatch keeps a 2px gap, and room for it) and edges never change
+      for a state; full
       strength unless targeted, which is wide and faint; focus's ring just outside the line;
       fields have no rules of their own. A targeted line is a hint, so it isn't held to 3:1: the
       warnings count, "Next warning" and the node path show the same.
     - **Open:** in forced colours (Windows high contrast) a focused element with a line shows no
       focus: the ring is a shadow, which isn't drawn there. Picked's and current's words take a
       compound per colour and again for hover: text parts (`docs/plans/contrast-on-white.md`)
-      would make each one rule.
+      would make each one rule. Until then a picked loud button's words take picked's colour over
+      the fill's, unreadable (none in the app; a page author could write one).
     - **Left for later:** pink mode isn't redone. Quiet brand words (`sf-loudness-1` with a
       variant, at 60%) stay short of 4.5:1. The drag handle's icon is 2.36:1.
 

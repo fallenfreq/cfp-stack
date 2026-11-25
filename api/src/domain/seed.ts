@@ -418,7 +418,7 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sf-field',
 		kind: 'element',
 		description:
-			'Editable form-control chrome shared by input, select, textarea — border, radius, font, padding-bridge, focus contract. Wear alongside sf on form elements that want field chrome (checkbox/radio/range wear sf alone for accent-color only). Element-specific additions (chevron on select) via compound rules like select.sf-field.',
+			'Editable form-control chrome shared by input, select, textarea — border, radius, font, padding-bridge. Wear alongside sf on form elements that want field chrome (checkbox/radio/range wear sf alone for accent-color only). Element-specific additions (chevron on select) via compound rules like select.sf-field.',
 	},
 	{
 		name: 'sf-scrim',
@@ -885,12 +885,13 @@ const drawsLine = (classNames: [string, ...string[]]): RuleSpec[] => [
 		value: `${LINE_WIDTH} var(--sfx-line-style, solid) rgb(var(--sfx-line-color, var(--sf-primary_ink)) / var(--sfx-line-alpha, 1))`,
 	},
 	{ classNames, cssProperty: 'outline-offset', value: LINE_GAP },
-	// The ring reaches past the line by its own width; the line, drawn over it, hides the rest.
+	// The ring just outside the line. A shadow can't leave a hole, so under the line it takes the
+	// surface the element sits on: a dashed or faint line's gaps look as they do unfocused.
 	{
 		classNames,
 		pseudo: ':focus-visible',
 		cssProperty: 'box-shadow',
-		value: `0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH} + var(--sf-stroke-2)) rgb(var(--sf-fg_primary))`,
+		value: `0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH}) rgb(var(--sfx-surface-color, var(--sf-surface-0))), 0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH} + var(--sf-stroke-2)) rgb(var(--sf-fg_primary))`,
 	},
 ]
 
@@ -2921,6 +2922,15 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-swatch'], cssProperty: 'border-radius', value: 'var(--sf-radius-1)' },
 	// Its line stands apart, so a lilac line round a lilac swatch still shows (Line parts).
 	{ classNames: ['sf-swatch'], cssProperty: '--sfx-line-gap', value: 'var(--sf-stroke-2)' },
+	// The gap is its own, so it keeps room for it, all round as it can't tell a row from a column:
+	// set the smallest spacing apart, a picked line stays off the next swatch. Only one that can be
+	// pressed, so can be picked or tabbed to (a colour shown inside a button doesn't grow it).
+	{
+		classNames: ['sf-swatch'],
+		pseudo: ':enabled',
+		cssProperty: 'margin',
+		value: 'var(--sf-stroke-2)',
+	},
 
 	// Swatch hover — the line keeps the swatch's own colour intact (bare sf-on-hover bg tint
 	// would be masked by the inline background-color anyway; the line gives real feedback).
@@ -2931,6 +2941,12 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-alpha-5)',
 	},
 	...drawsLine(['sf-swatch', 'sf-on-hover']),
+	// A picked swatch keeps its full line under the pointer: clicking it again changes nothing.
+	{
+		classNames: ['sf-swatch', 'sf-on-hover', 'sf-on-selected'],
+		cssProperty: '--sfx-line-alpha',
+		value: '1',
+	},
 
 	// ─── sf-avatar ────────────────────────────────────────────────────────────
 	// User / entity identity indicator. Solid-fill compact element for initials,
@@ -3029,7 +3045,7 @@ const ROOT_RULES: RuleSpec[] = [
 	// Fields are writable surfaces. Explicit background + text colour make the
 	// field visually distinct on any raised parent (depth-1+); on a bare page
 	// (surface-0) the bg is the same as the canvas so it's invisible but the
-	// border still delineates. :focus-visible rules below override for focus.
+	// border still delineates. Focus shows as on anything else.
 	{
 		classNames: ['sf-field'],
 		cssProperty: 'background',

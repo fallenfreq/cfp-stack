@@ -54,3 +54,73 @@ test('the line lies over the edge, and the edge stays as it is', async ({ page }
 	expect(measured.pickedChip.words).toBe(measured.current.words)
 	expect(measured.pickedDangerChip.words).toBe(measured.dangerChip.words)
 })
+
+test("a picked swatch's line stays full under the pointer; another swatch's is a faint hint", async ({
+	page,
+}) => {
+	await steadyRequests(page)
+	await page.goto('/')
+	await settle(page)
+	await page.evaluate(() => {
+		const host = document.createElement('div')
+		host.className = 'sf-depth-0'
+		host.style.cssText = 'position: fixed; inset: 40px auto auto 40px; display: flex; gap: 16px'
+		host.innerHTML =
+			'<button id="picked" class="sf-swatch sf-on-hover sf-on-selected" style="width: 24px; height: 24px; background: teal"></button>'
+			+ '<button id="other" class="sf-swatch sf-on-hover" style="width: 24px; height: 24px; background: teal"></button>'
+		document.body.append(host)
+	})
+	const line = (id: string) =>
+		page.locator(`#${id}`).evaluate((el) => getComputedStyle(el).outlineColor)
+
+	const resting = await line('picked')
+	await page.locator('#picked').hover()
+	expect(await line('picked')).toBe(resting)
+	await page.locator('#other').hover()
+	expect(await line('other')).toMatch(/^rgba\(.*, 0\.5\)$/)
+})
+
+test("a picked swatch's line and focus ring stay off the next swatch; a colour shown in a button doesn't grow it", async ({
+	page,
+}) => {
+	await steadyRequests(page)
+	await page.goto('/')
+	await settle(page)
+	const measured = await page.evaluate(() => {
+		const host = document.createElement('div')
+		host.className = 'sf-depth-0'
+		host.style.cssText =
+			'position: fixed; inset: 40px auto auto 40px; display: flex; gap: var(--sf-spacing-2xs)'
+		host.innerHTML =
+			'<button id="picked" class="sf-swatch sf-on-selected" style="width: 24px; height: 24px"></button>'
+			+ '<button id="next" class="sf-swatch" style="width: 24px; height: 24px"></button>'
+			+ '<button id="shows" class="sf"><span class="sf-swatch" style="display: block; width: 16px; height: 16px"></span></button>'
+		document.body.append(host)
+		const picked = host.querySelector('#picked')!
+		const own = getComputedStyle(picked)
+		const line = parseFloat(own.outlineOffset) + parseFloat(own.outlineWidth)
+		const ring = line + parseFloat(own.getPropertyValue('--sf-stroke-2'))
+		const shows = host.querySelector<HTMLElement>('#shows')!
+		const swatchIn = shows.firstElementChild!.getBoundingClientRect()
+		const button = shows.getBoundingClientRect()
+		const padding = getComputedStyle(shows)
+		return {
+			apart:
+				host.querySelector('#next')!.getBoundingClientRect().left
+				- picked.getBoundingClientRect().right,
+			line,
+			ring,
+			// The button holds just the colour and its own padding and edge.
+			buttonGrows:
+				button.width
+				- swatchIn.width
+				- parseFloat(padding.paddingLeft)
+				- parseFloat(padding.paddingRight)
+				- parseFloat(padding.borderLeftWidth)
+				- parseFloat(padding.borderRightWidth),
+		}
+	})
+	expect(measured.line).toBeGreaterThan(0)
+	expect(measured.ring).toBeLessThan(measured.apart)
+	expect(measured.buttonGrows).toBe(0)
+})

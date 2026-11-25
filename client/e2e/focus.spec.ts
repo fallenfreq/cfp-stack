@@ -3,7 +3,8 @@ import { expect, test } from './fixtures'
 import { openTests } from './helpers'
 
 // Keyboard focus (sf-system.md, "Line parts"): a ring in the text colour. An element with a line
-// keeps it where it is, and the ring reaches just past it, so both show; a field is no different.
+// keeps it where it is, and the ring reaches just past it, so both show; under the line, the
+// surface it sits on, so a dashed line's gaps stay gaps. A field is no different.
 
 test.beforeEach(async ({ page, themeClass }) => {
 	await openTests(page, themeClass)
@@ -31,13 +32,18 @@ const focusLook = (page: Page, id: string) =>
 	page.locator(`#${id}`).evaluate((el) => {
 		const own = getComputedStyle(el)
 		const token = (name: string) => own.getPropertyValue(name).trim()
-		const text = `rgb(${token('--sf-fg_primary').split(/\s+/).join(', ')})`
+		const rgb = (value: string) => `rgb(${value.split(/\s+/).join(', ')})`
+		const text = rgb(token('--sf-fg_primary'))
+		const surface = rgb(token('--sfx-surface-color') || token('--sf-surface-0'))
 		const px = (name: string) => parseFloat(token(name))
 		// How far the line reaches past the edge, from where it sits and its width.
 		const reach = parseFloat(own.outlineOffset) + parseFloat(own.outlineWidth)
 		return {
-			// The ring: the text colour, reaching past the line by its own width.
-			ringOutside: own.boxShadow === `${text} 0px 0px 0px ${reach + px('--sf-stroke-2')}px`,
+			// Under the line, the surface it sits on; past it, the ring in the text colour, as wide as
+			// the line.
+			ringOutside:
+				own.boxShadow
+				=== `${surface} 0px 0px 0px ${reach}px, ${text} 0px 0px 0px ${reach + px('--sf-stroke-2')}px`,
 			outlineInText: own.outlineStyle === 'solid' && own.outlineColor === text,
 			offset: own.outlineOffset,
 			outline: own.outlineStyle,

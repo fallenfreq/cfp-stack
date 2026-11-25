@@ -296,8 +296,11 @@ Each class passes its part (`--sfx-line-color`, `--sfx-line-style`, `--sfx-line-
 `--sfx-line-alpha`, `--sfx-line-gap`), and each class that means something about the line also
 draws it, from all the parts there, with the defaults above (`sf-on-selected` passes nothing: it
 only draws, so a picked thing has a thin solid line; a colour swatch draws it faint while
-hovered, a hint). Every one draws the same line, so it doesn't matter which rule wins, and no
-combination needs its own rule. The dashes repeat the colour on purpose, so a warning doesn't
+hovered, a hint, and full again when it's the picked one). Every one draws the same line, so it
+doesn't matter which rule wins, and no other combination needs its own rule. A swatch that can be
+pressed keeps a margin as wide as its gap, all round, so set the smallest spacing apart its
+picked line and focus ring stay off the next one; a colour shown inside a button has none, so it
+doesn't grow the button (owner, 2026-11-25). The dashes repeat the colour on purpose, so a warning doesn't
 rest on colour alone. Picked also turns the words the brand's words (as `sf-on-current`), and a
 colour variant keeps its own.
 
@@ -324,7 +327,11 @@ does, so a theme has one way to draw each state.
 short of 3:1 on white, and the text colour reads on any theme's page). With no line it is the
 element default outline. A line would replace that, so each class that draws the line also draws
 the ring with focus, as a shadow reaching just past the line (owner, 2026-11-25): the line stays
-where it is, and focus and every part of the line show together. The element's own shadow gives
+where it is, and focus and every part of the line show together. A shadow can't leave a hole, so
+under the line it takes the colour of the surface the element sits on (`--sfx-surface-color`):
+a dashed or faint line's gaps look as they do unfocused. On a fill that isn't a surface (a loud
+button, a hover tint), or round an element that is itself one, the gaps show that surface instead:
+1px, an accepted limit. The element's own shadow gives
 way while it's focused. Focus on an element whose only line is an error or warning is drawn in
 the context layer, so a higher-ranked shadow there (an `sf-shadow-*` utility, `sf-is-overlay`
 compounds) shows instead of the ring. A field is no different: with focus alone it shows the
@@ -721,7 +728,7 @@ sf-drag-handle   drag affordance — dim at rest, accents to primary on hover
 sf-swatch        small colour-surface tile — palette chip, preview.
                  Theme decides border/radius/padding; consumers set width/height
 sf-field         editable form-control chrome shared by input/select/textarea —
-                 border, radius, font, padding-bridge, focus contract
+                 border, radius, font, padding-bridge
 sf-scrim         modal backdrop — darkening + blur overlay for dialogs/modals.
                  Chrome only; consumer owns positioning (fixed, inset:0, z-index)
 sf-content-frame frame around focusable content that itself is not focusable —

@@ -155,9 +155,9 @@ Checks:
 
 Each goes back to the to-do when this step lands:
 
-- Picked words: a picked chip's words in the brand's words, a coloured chip keeping its own
-  (owner, 2026-11-25). Done through "text parts" (a reviewer's proposal, below), not ten
-  compounds.
+- Text parts (a reviewer's proposal, below): picked's and current's words, now ten compounds
+  and their hover ones, each one rule. A picked loud button keeps its fill's words, which it
+  doesn't today (unreadable; none in the app): a check for it comes with the step.
 - A picked danger chip among plain ones is hard to tell from the others: whether picked's line
   should take the chip's colour (owner disagrees with keeping it lilac; to look at).
 - The quote's stripe in the ink.
@@ -199,33 +199,39 @@ Each goes back to the to-do when this step lands:
   Chrome, light and dark, desktop and phone. No review (one of the whole).
 
 - 2026-11-25: the line and edges, decided with the owner from a side-by-side mock-up built from
-  the served stylesheet (https://claude.ai/artifact/UbuiiV334K833jNCxDAMAF). Tried and dropped:
-  an edge going clear for a line (it hid authors' borders on selected blocks), the line lying over
-  the edge (the edge showed through dashes and a faint line), and rings for selection (rings for
-  picked, targeted and tabbed clashed). Decided: the line stands 2px out on everything (the old
-  1px small-size gap plus a swatch's faint edge read as 2px); a state never changes an edge, so
-  an error or warning shows with its line only; fields have no rules of their own, and
-  `sf-on-focus` loses its lilac edge, so focus is the outline everywhere; an error or warning is
-  full strength unless targeted; targeted is wide and faint in the line's colour (lilac when
-  nothing else colours it). Built (v2.98.0).
-  Text parts (for picked words, next): a reviewer proposed each colour and loud fill passing its
-  word colour (`--sfx-text-color`) and strength (`--sfx-text-alpha`), read by picked, current and
-  hover, with hover saying "full strength" instead of resetting the words (its `color: inherit`,
-  added in June to undo quiet words, is why 13 hover compounds exist): one rule for picked and 22
-  removed. Proved in Chrome: the fallbacks and `oklch(from …)` work. Visible changes for the
-  owner to agree: hovered coloured words keep their colour; quiet brand words become the brand's
-  words at 60%. Names need approval.
-
-- 2026-11-25: changed before committing, from the mock-up (owner: "this is the one"): the line
-  lies over the 1px edge instead of 2px out (a picked chip's line pressed on its neighbour 4px
-  away; over the edge, a chip shows one line); the edge isn't cleared (under dashes it reads as a
-  thinner, lighter line); only a swatch keeps a gap, 2px; keyboard focus's ring goes just outside
+  the served stylesheet (https://claude.ai/artifact/UbuiiV334K833jNCxDAMAF; owner: "this is the
+  one"). Tried and dropped: an edge going clear for a line (it hid authors' borders on selected
+  blocks; under dashes the edge reads as a thinner, lighter line, which the owner likes), the line
+  standing 2px out on everything (a picked chip's line pressed on its neighbour 4px away), and
+  rings for selection (rings for picked, targeted and tabbed clashed). Decided: the line lies over
+  the 1px edge, and only a swatch keeps a gap, 2px; a state never changes an edge, so an error or
+  warning shows with its line only; fields have no rules of their own, and `sf-on-focus` loses its
+  lilac edge; an error or warning is full strength unless targeted; targeted is wide and faint in
+  the line's colour (lilac when nothing else colours it); keyboard focus's ring goes just outside
   the line, which no longer steps out; picked words built the long way (ten compounds, as
   `sf-on-current` has), so the owner sees them live, until text parts replace both. Known gap: in
   forced colours a focused element with a line shows no focus (the ring is a shadow; the line used
   to step out). Checked: typecheck, `pnpm test`, `pnpm test:ui`; the changed checks fail on the
-  v2.98 build first (offset 2px for -1px; the focus look). Committed and pushed at the owner's
-  word, to review on the live site.
+  previous build first (the line's offset; the focus look). Committed and pushed at the owner's
+  word, to review on the live site (v2.98.0).
+  Text parts (next): a reviewer proposed each colour and loud fill passing its word colour
+  (`--sfx-text-color`) and strength (`--sfx-text-alpha`), read by picked, current and hover, with
+  hover saying "full strength" instead of resetting the words (its `color: inherit`, added in June
+  to undo quiet words, is why 13 hover compounds exist): one rule for picked and 22 removed.
+  Proved in Chrome: the fallbacks and `oklch(from …)` work. Visible changes for the owner to
+  agree: hovered coloured words keep their colour; quiet brand words become the brand's words at
+  60%. Names need approval.
 
-Next: the owner's look on live, then one review; then text parts (replacing picked's and
-current's compounds), the forced-colours focus gap, and the picked danger chip's line.
+- 2026-11-25: the owner looked on live ("looks good"); one review of the whole (one agent), 7
+  findings, each shown in Chrome or by a check first. Fixed (v2.98.1): a picked swatch went faint
+  under the pointer (one rule keeps it full); keyboard focus's ring showed through a dashed or
+  faint line's gaps and filled a swatch's gap (under the line the shadow takes the surface the
+  element sits on: owner chose it from a side-by-side; on a fill that isn't a surface, 1px of the
+  surface shows, accepted); a picked swatch's line met its neighbour 4px away (a swatch that can
+  be pressed keeps a 2px margin all round, owner; a colour inside a button has none); this plan
+  contradicting itself; old words on fields' focus rules; a check that passed without picked.
+  Logged: a picked loud button's words are unreadable (none in the app), for text parts. Checked:
+  typecheck, `pnpm test`, `pnpm test:ui`; each new check fails without its fix.
+
+Next: text parts (replacing picked's and current's compounds), the forced-colours focus gap, and
+the picked danger chip's line.
