@@ -289,32 +289,48 @@ with one part of it, so no combination hides another (owner, 2026-11-21):
 | Colour    | the danger ink an error, warning ink a warning, else the brand ink | `sf-is-error`, `sf-is-warning` |
 | Dashes    | dashed an error, dotted a warning, else solid                      | `sf-is-error`, `sf-is-warning` |
 | Thickness | thick (`--sf-stroke-3`) targeted, else thin (`--sf-stroke-2`)      | `sf-on-targeted`               |
-| Strength  | solid picked, else half see-through                                | `sf-on-selected`               |
-| Gap       | a small gap round small things, else none                          | `sf-size-xs`, `sf-size-2xs`    |
+| Strength  | half see-through targeted, else full                               | `sf-on-targeted`               |
+| Gap       | a gap (`--sf-stroke-2`) round a swatch, else none: over the edge   | `sf-swatch`                    |
 
 Each class passes its part (`--sfx-line-color`, `--sfx-line-style`, `--sfx-line-width`,
 `--sfx-line-alpha`, `--sfx-line-gap`), and each class that means something about the line also
-draws it, from all the parts there, with the defaults above (and a colour swatch draws it while
-hovered). Every one draws the same line, so it
-doesn't matter which rule wins, and no combination needs its own rule. A size passes only the gap:
-a size rule that drew the whole line won ties on its order number and hid an error's colour. The
-dashes repeat the colour on purpose, so a warning doesn't rest on colour alone.
+draws it, from all the parts there, with the defaults above (`sf-on-selected` passes nothing: it
+only draws, so a picked thing has a thin solid line; a colour swatch draws it faint while
+hovered, a hint). Every one draws the same line, so it doesn't matter which rule wins, and no
+combination needs its own rule. The dashes repeat the colour on purpose, so a warning doesn't
+rest on colour alone. Picked also turns the words the brand's words (as `sf-on-current`), and a
+colour variant keeps its own.
+
+Why (owner, 2026-11-25, chosen from a side-by-side mock-up of the served stylesheet): an error or
+warning is full strength, so it reaches 3:1 wherever it is (half see-through it was 2.0–2.5:1).
+Wide and faint is what says "targeted", in whatever colour the line has: a targeted block with an
+error keeps its dashes and colour, and picked is told apart by its thin solid line and its words.
+The line lies over the element's 1px edge (just inside its box where it has none), so a picked
+chip shows one line and its neighbours 4px away stay clear. The edge isn't changed: under dashes
+or a faint line it shows as a thinner, lighter line, which reads fine, and a Card's, a divider's
+or an author's border is never hidden. A swatch alone keeps a gap, so the line doesn't meet its
+colour. The line is an outline, not a thicker coloured border, because a border is part of the
+box's size: thickening it would move the page, and most blocks have none to colour.
 
 The parts are registered as not inherited (`@property`, in the fixed reset), like the layout
-channels: a targeted box doesn't thicken the lines inside it. A field shows an error or warning on
-its own border instead (`sf-field sf-is-error`: no line).
+channels: a targeted box doesn't thicken the lines inside it.
 
-**Keyboard focus** is a 2px ring in the text colour against the element (owner, 2026-11-21; then,
-the brand colour fell short of 3:1 on white, and the text colour reads on any theme's page). With no line it is the element default outline. A line
-would replace that, so each class that draws the line also draws the ring with focus, as a shadow
-against the element, and steps the line out by the ring's width to go round it: focus and every
-part of the line show together. The element's own shadow gives way while it's focused. Focus on an
-element whose only line is an error or warning is drawn in the context layer, so a higher-ranked
-shadow there (an `sf-shadow-*` utility, `sf-is-overlay` compounds) shows instead of the ring; its
-line still steps out. A field has no line and no ring from one: its focus is its own (the border
-and a tint), and an error's border stays red while focused. In forced colours (Windows high
-contrast) shadows aren't drawn, so focus on an element with a line shows only as the line stepping
-out.
+**Nothing changes an edge for a state.** An error or warning shows with the line only, on fields
+too; it used to colour the element's edge as well, which showed two lines (owner, 2026-11-25).
+Fields have no rules of their own here: they show focus, errors and warnings as everything else
+does, so a theme has one way to draw each state.
+
+**Keyboard focus** is a 2px ring in the text colour (owner, 2026-11-21; then, the brand colour fell
+short of 3:1 on white, and the text colour reads on any theme's page). With no line it is the
+element default outline. A line would replace that, so each class that draws the line also draws
+the ring with focus, as a shadow reaching just past the line (owner, 2026-11-25): the line stays
+where it is, and focus and every part of the line show together. The element's own shadow gives
+way while it's focused. Focus on an element whose only line is an error or warning is drawn in
+the context layer, so a higher-ranked shadow there (an `sf-shadow-*` utility, `sf-is-overlay`
+compounds) shows instead of the ring. A field is no different: with focus alone it shows the
+outline, with an error the dashed line and the ring outside it. In forced colours (Windows high
+contrast) shadows aren't drawn, so focus on an element with a line doesn't show (it used to show
+as the line stepping out); open in the to-do.
 
 ### Fill parts
 
@@ -380,7 +396,7 @@ underscores (`--sf-fg_primary`); single-word names don't (`--sf-primary`).
 --sf-success         success colour role (sf-variant-success): its fill
 --sf-info            info colour role (sf-variant-info): its fill
 --sf-primary_ink     the brand's ink: lines, focus edges, marks (a step of the brand scale)
---sf-danger_ink      danger's ink (an error's line and a field's error border)
+--sf-danger_ink      danger's ink (an error's line)
 --sf-warning_ink     warning's ink
 --sf-success_ink     success's ink
 --sf-info_ink        info's ink
@@ -404,8 +420,8 @@ role sets its `fg_on_*` to match, and its ink where the ink isn't the fill (belo
 ### Fill and ink
 
 Each colour has a **fill**, which paints a surface (a loud button, a tint, an avatar) and stays
-bright, and an **ink**, which draws on the page: the line round a block, a field's focus and error
-border, the switch's knob, a tick box (owner, 2026-11-24). An ink reaches 3:1 on its theme's
+bright, and an **ink**, which draws on the page: the line round a block or a field, the code box's
+focus edge, the switch's knob, a tick box (owner, 2026-11-24). An ink reaches 3:1 on its theme's
 background (WCAG 1.4.11); a bright fill can't, and a fill dark enough to would make every loud
 button and tint heavy. "Ink" names the job, not a border: a theme needn't draw borders at all.
 
@@ -881,8 +897,8 @@ colour, elevation are the theme's calls.
 
 Who sets a class can change (an author writes `sf-is-nested`, code adds `sf-on-selected`);
 what it's about doesn't, and the layers follow it. So a fact that must stay visible while a
-person acts needs a compound: `sf-on-focus sf-is-error` keeps a field's error border while
-it has focus.
+person acts can't rely on its rule winning: the line's parts carry an error's colour and dashes
+through a picked or targeted line, whichever rule wins (Line parts).
 
 `sf-on-disabled` and `sf-is-disabled` show the difference. The first is a control the
 browser has disabled (`:disabled`): it can't be used. The second only looks disabled because

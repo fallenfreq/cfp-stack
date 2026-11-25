@@ -615,13 +615,13 @@ const VOCABULARY: VocabSpec[] = [
 		name: 'sf-is-error',
 		kind: 'context',
 		description:
-			'Element or field is in a validation / error state. Theme decides the look (default: danger-coloured border and outline). Pair with aria-invalid on fields.',
+			'Element or field is in a validation / error state. Theme decides the look (default: a dashed line in the danger colour round it). Pair with aria-invalid on fields.',
 	},
 	{
 		name: 'sf-is-warning',
 		kind: 'context',
 		description:
-			'Element or field needs a look but is not in error — e.g. a weak password, or a block the editor suggests changing. Theme decides the look (default: warning-coloured border and outline).',
+			'Element or field needs a look but is not in error — e.g. a weak password, or a block the editor suggests changing. Theme decides the look (default: a dotted line in the warning colour round it).',
 	},
 	{
 		name: 'sf-is-disabled',
@@ -872,29 +872,25 @@ type RuleSpec = ClassOnlyRuleInput | ElementRuleInput
 
 // The line round an element (sf-system.md, "Line parts"): each class that means something about it
 // passes its part, and each draws the same line from all the parts there, so whichever rule wins
-// draws them all. Parts left unset give a thin, half see-through, solid line in the brand ink.
-// With keyboard focus the line takes the place of the focus ring, so it draws the ring itself,
-// against the element, and steps out round it.
+// draws them all. Parts left unset give a thin, solid line in the brand ink lying over the
+// element's 1px edge, which stays as it is (a swatch passes a gap, so the line doesn't meet its
+// colour). With keyboard focus the line takes the place of the focus outline, so it draws the
+// ring itself, just outside the line.
 const LINE_WIDTH = 'var(--sfx-line-width, var(--sf-stroke-2))'
-const LINE_GAP = 'var(--sfx-line-gap, 0px)'
+const LINE_GAP = 'var(--sfx-line-gap, calc(0px - var(--sf-stroke-1)))'
 const drawsLine = (classNames: [string, ...string[]]): RuleSpec[] => [
 	{
 		classNames,
 		cssProperty: 'outline',
-		value: `${LINE_WIDTH} var(--sfx-line-style, solid) rgb(var(--sfx-line-color, var(--sf-primary_ink)) / var(--sfx-line-alpha, var(--sf-alpha-5)))`,
+		value: `${LINE_WIDTH} var(--sfx-line-style, solid) rgb(var(--sfx-line-color, var(--sf-primary_ink)) / var(--sfx-line-alpha, 1))`,
 	},
 	{ classNames, cssProperty: 'outline-offset', value: LINE_GAP },
+	// The ring reaches past the line by its own width; the line, drawn over it, hides the rest.
 	{
 		classNames,
 		pseudo: ':focus-visible',
 		cssProperty: 'box-shadow',
-		value: '0 0 0 var(--sf-stroke-2) rgb(var(--sf-fg_primary))',
-	},
-	{
-		classNames,
-		pseudo: ':focus-visible',
-		cssProperty: 'outline-offset',
-		value: `calc(${LINE_GAP} + var(--sf-stroke-2))`,
+		value: `0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH} + var(--sf-stroke-2)) rgb(var(--sf-fg_primary))`,
 	},
 ]
 
@@ -1112,9 +1108,6 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-size-md'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-md)' },
 	{ classNames: ['sf-size-lg'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-lg)' },
 	{ classNames: ['sf-size-xl'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xl)' },
-	// Small things keep a line a little apart from their edge; size changes nothing else about it.
-	{ classNames: ['sf-size-2xs'], cssProperty: '--sfx-line-gap', value: 'var(--sf-stroke-1)' },
-	{ classNames: ['sf-size-xs'], cssProperty: '--sfx-line-gap', value: 'var(--sf-stroke-1)' },
 
 	// Heading — font-size + line-height
 	{ classNames: ['sf-heading-1'], cssProperty: 'font-size', value: 'var(--sf-text-4xl)' },
@@ -1705,21 +1698,11 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
 	// A busy button stays focusable (so it isn't disabled); it dims like a disabled one.
 	{ classNames: ['sf-is-loading'], cssProperty: 'opacity', value: '0.4' },
-	// An error or warning colours a box's border, and its line: dashed for an error, dotted for a
-	// warning, so it doesn't rest on colour alone. A field's border is enough (below).
-	{
-		classNames: ['sf-is-error'],
-		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-danger_ink))',
-	},
+	// An error or warning shows with the line alone, fields too: dashed for an error, dotted for a
+	// warning, so it doesn't rest on colour alone. The element's own edge stays as it is.
 	{ classNames: ['sf-is-error'], cssProperty: '--sfx-line-color', value: 'var(--sf-danger_ink)' },
 	{ classNames: ['sf-is-error'], cssProperty: '--sfx-line-style', value: 'dashed' },
 	...drawsLine(['sf-is-error']),
-	{
-		classNames: ['sf-is-warning'],
-		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-warning_ink))',
-	},
 	{
 		classNames: ['sf-is-warning'],
 		cssProperty: '--sfx-line-color',
@@ -1727,21 +1710,6 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-is-warning'], cssProperty: '--sfx-line-style', value: 'dotted' },
 	...drawsLine(['sf-is-warning']),
-	// A field has no line, so no focus ring from one either.
-	{ classNames: ['sf-field', 'sf-is-error'], cssProperty: 'outline', value: 'none' },
-	{ classNames: ['sf-field', 'sf-is-warning'], cssProperty: 'outline', value: 'none' },
-	{
-		classNames: ['sf-field', 'sf-is-error'],
-		pseudo: ':focus-visible',
-		cssProperty: 'box-shadow',
-		value: 'none',
-	},
-	{
-		classNames: ['sf-field', 'sf-is-warning'],
-		pseudo: ':focus-visible',
-		cssProperty: 'box-shadow',
-		value: 'none',
-	},
 	// sf-is-contained × sf-is-overlay — contained wins over the overlay's see-through surface
 	// (alphabetical emission order would let sf-is-overlay win at equal specificity).
 	{
@@ -2113,17 +2081,6 @@ const ROOT_RULES: RuleSpec[] = [
 	// A control that is busy and also natively disabled (hand-written markup; SfButton never
 	// disables while busy) keeps the busy cursor rather than "not allowed".
 	{ classNames: ['sf-on-disabled', 'sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
-	// An error or warning stays visible while the field has focus.
-	{
-		classNames: ['sf-on-focus', 'sf-is-error'],
-		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-danger_ink))',
-	},
-	{
-		classNames: ['sf-on-focus', 'sf-is-warning'],
-		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-warning_ink))',
-	},
 
 	// Hover × loudness-2 — one step past the resting tint, so the hover still shows.
 	{
@@ -2357,14 +2314,6 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-border_color))',
 	},
 
-	// Focus state — bordered inputs pick up the brand ink's border on keyboard/click focus.
-	// Vocabulary pseudo is :focus-visible; UAs treat form controls as always focus-visible.
-	{
-		classNames: ['sf-on-focus'],
-		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-primary_ink))',
-	},
-
 	// Disabled state — dim + not-allowed cursor for interactive controls.
 	// Vocabulary pseudo is :disabled so the class only fires on form elements
 	// in their native disabled state (matches how sf-on-hover fires on :hover).
@@ -2375,14 +2324,44 @@ const ROOT_RULES: RuleSpec[] = [
 	// interactive (no cursor change). Use for muted-but-clickable elements at any loudness tier.
 	{ classNames: ['sf-is-disabled'], cssProperty: 'opacity', value: '0.4' },
 
-	// Picked makes the line solid; targeted makes it thick. Each says one thing, so every
-	// combination with the others (an error, a small size) shows.
-	{ classNames: ['sf-on-selected'], cssProperty: '--sfx-line-alpha', value: '1' },
+	// Picked draws the line; targeted makes it wide and faint, in whatever colour it has. Each says
+	// one thing, so every combination with the others (an error, picked) shows.
 	...drawsLine(['sf-on-selected']),
+	// Picked words: the brand's words, as the current item's. A colour variant keeps its own, and so
+	// does a hovered one (hover resets words). The same shape as sf-on-current's compounds; both
+	// shrink to one rule once each colour passes its words along (sf-system-todo.md).
+	...(['primary', 'danger', 'warning', 'success', 'info'] as const).flatMap(
+		(role): RuleSpec[] => {
+			const value = `oklch(from color-mix(in oklab, rgb(var(--sf-${role})) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)`
+			const variant = `sf-variant-${role}`
+			return role === 'primary'
+				? [
+						{ classNames: ['sf-on-selected'], cssProperty: 'color', value },
+						{
+							classNames: ['sf-on-hover', 'sf-on-selected'],
+							cssProperty: 'color',
+							value,
+						},
+					]
+				: [
+						{ classNames: [variant, 'sf-on-selected'], cssProperty: 'color', value },
+						{
+							classNames: [variant, 'sf-on-hover', 'sf-on-selected'],
+							cssProperty: 'color',
+							value,
+						},
+					]
+		},
+	),
 	{
 		classNames: ['sf-on-targeted'],
 		cssProperty: '--sfx-line-width',
 		value: 'var(--sf-stroke-3)',
+	},
+	{
+		classNames: ['sf-on-targeted'],
+		cssProperty: '--sfx-line-alpha',
+		value: 'var(--sf-alpha-5)',
 	},
 	...drawsLine(['sf-on-targeted']),
 
@@ -2940,9 +2919,17 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color) / var(--sf-alpha-2))',
 	},
 	{ classNames: ['sf-swatch'], cssProperty: 'border-radius', value: 'var(--sf-radius-1)' },
+	// Its line stands apart, so a lilac line round a lilac swatch still shows (Line parts).
+	{ classNames: ['sf-swatch'], cssProperty: '--sfx-line-gap', value: 'var(--sf-stroke-2)' },
 
 	// Swatch hover — the line keeps the swatch's own colour intact (bare sf-on-hover bg tint
 	// would be masked by the inline background-color anyway; the line gives real feedback).
+	// Faint: a hint, so it doesn't look picked.
+	{
+		classNames: ['sf-swatch', 'sf-on-hover'],
+		cssProperty: '--sfx-line-alpha',
+		value: 'var(--sf-alpha-5)',
+	},
 	...drawsLine(['sf-swatch', 'sf-on-hover']),
 
 	// ─── sf-avatar ────────────────────────────────────────────────────────────
@@ -3062,28 +3049,6 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-field'],
 		cssProperty: 'border',
 		value: 'var(--sf-stroke-1) solid rgb(var(--sf-fg_primary) / var(--sf-alpha-6))',
-	},
-	// Field owns its focus expression: the existing border re-colours to the brand ink,
-	// and the global `*:focus-visible` outline (2px) is suppressed. Consistent at
-	// every sf-size-* — no size-scoped variants needed.
-	{ classNames: ['sf-field'], pseudo: ':focus-visible', cssProperty: 'outline', value: '0' },
-	{
-		classNames: ['sf-field'],
-		pseudo: ':focus-visible',
-		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-primary_ink))',
-	},
-	{
-		classNames: ['sf-field'],
-		pseudo: ':focus-visible',
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_primary))',
-	},
-	{
-		classNames: ['sf-field'],
-		pseudo: ':focus-visible',
-		cssProperty: 'background-color',
-		value: 'rgba(var(--sf-fg_primary) / var(--sf-alpha-1))',
 	},
 	// Placeholder — muted foreground tint so hint text reads as inactive.
 	{

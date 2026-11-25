@@ -2,8 +2,10 @@ import { expect, test } from '../fixtures'
 import { settle, steadyRequests } from '../helpers'
 
 // What the root theme draws on its page can be seen (sf-system.md, "Fill and ink"): a line, a
-// field's edge or a focus edge reaches 3:1 on what's behind it, words 4.5:1 (WCAG 1.4.11, 1.4.3). Measured from what
-// the browser draws, in light and dark, with the theme class on <html> as the app sets it.
+// field's edge or keyboard focus reaches 3:1 on what's behind it, words 4.5:1 (WCAG 1.4.11,
+// 1.4.3). A targeted line is a hint and isn't measured (sf-system.md, "Line parts"). Measured
+// from what the browser draws, in light and dark, with the theme class on <html> as the app sets
+// it.
 
 const MODES = [
 	{ name: 'light', dark: false },
@@ -30,6 +32,24 @@ const CASES = [
 		least: 3,
 	},
 	{
+		name: "a block's warning line",
+		html: '<p class="sf-is-warning">Warned</p>',
+		part: 'outline',
+		least: 3,
+	},
+	{
+		name: "a block's error line",
+		html: '<p class="sf-is-error">Wrong</p>',
+		part: 'outline',
+		least: 3,
+	},
+	{
+		name: "a field's error line",
+		html: '<input class="sf sf-field sf-is-error" />',
+		part: 'outline',
+		least: 3,
+	},
+	{
 		name: "a field's edge at rest",
 		html: '<input class="sf sf-field" />',
 		part: 'edge',
@@ -42,7 +62,7 @@ const CASES = [
 		least: 3,
 	},
 	{
-		name: "a field's focus edge",
+		name: "a field's keyboard focus",
 		html: '<input class="sf sf-field" />',
 		part: 'focus',
 		least: 3,
@@ -128,11 +148,14 @@ for (const mode of MODES)
 				let el: HTMLElement = box
 				let color: string
 				let under: string
-				if (c.part === 'outline') {
-					color = getComputedStyle(box).outlineColor
-					under = behind(box.parentElement)
-				} else if (c.part === 'edge' || c.part === 'focus') {
+				if (c.part === 'outline' || c.part === 'focus') {
+					// A field's text box shows focus-visible however it was focused.
 					if (c.part === 'focus') box.focus()
+					const own = getComputedStyle(box)
+					// No line drawn: nothing to see.
+					color = own.outlineStyle === 'none' ? 'transparent' : own.outlineColor
+					under = behind(box.parentElement)
+				} else if (c.part === 'edge') {
 					color = getComputedStyle(box).borderTopColor
 					under = behind(box.parentElement)
 				} else if (c.part === 'link') {

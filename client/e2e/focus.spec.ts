@@ -2,9 +2,8 @@ import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
 import { openTests } from './helpers'
 
-// Keyboard focus (sf-system.md, "Line parts"): a ring in the text colour against the element. An
-// element with a line keeps it, stepped out round the ring, so both show; a field with an error
-// keeps its own focus look.
+// Keyboard focus (sf-system.md, "Line parts"): a ring in the text colour. An element with a line
+// keeps it where it is, and the ring reaches just past it, so both show; a field is no different.
 
 test.beforeEach(async ({ page, themeClass }) => {
 	await openTests(page, themeClass)
@@ -34,29 +33,34 @@ const focusLook = (page: Page, id: string) =>
 		const token = (name: string) => own.getPropertyValue(name).trim()
 		const text = `rgb(${token('--sf-fg_primary').split(/\s+/).join(', ')})`
 		const px = (name: string) => parseFloat(token(name))
+		// How far the line reaches past the edge, from where it sits and its width.
+		const reach = parseFloat(own.outlineOffset) + parseFloat(own.outlineWidth)
 		return {
-			ring: own.boxShadow === `${text} 0px 0px 0px ${token('--sf-stroke-2')}`,
+			// The ring: the text colour, reaching past the line by its own width.
+			ringOutside: own.boxShadow === `${text} 0px 0px 0px ${reach + px('--sf-stroke-2')}px`,
 			outlineInText: own.outlineStyle === 'solid' && own.outlineColor === text,
-			// A small thing's gap and the ring's width.
-			steppedOut: own.outlineOffset === `${px('--sf-stroke-1') + px('--sf-stroke-2')}px`,
+			offset: own.outlineOffset,
 			outline: own.outlineStyle,
-			shadow: own.boxShadow,
 		}
 	})
 
 test('focus shows with a line and without one', async ({ page, browserName }) => {
 	await page.locator('#start').focus()
 
-	// Picked: the ring against the swatch, its solid line stepped out round it.
+	// Picked: the swatch's solid line where it was, the ring just outside it.
+	const restingOffset = (await focusLook(page, 'picked')).offset
 	await tabTo(page, browserName, 'picked')
-	expect(await focusLook(page, 'picked')).toMatchObject({ ring: true, steppedOut: true })
-	expect((await focusLook(page, 'picked')).outline).toBe('solid')
+	expect(await focusLook(page, 'picked')).toMatchObject({
+		ringOutside: true,
+		outline: 'solid',
+		offset: restingOffset,
+	})
 
 	// No line: the outline, in the text colour.
 	await tabTo(page, browserName, 'plain')
 	expect(await focusLook(page, 'plain')).toMatchObject({ outlineInText: true })
 
-	// A field with an error: no line, and no ring from one.
+	// A field with an error: as anything else, its dashed line and the ring outside it.
 	await tabTo(page, browserName, 'field')
-	expect(await focusLook(page, 'field')).toMatchObject({ outline: 'none', shadow: 'none' })
+	expect(await focusLook(page, 'field')).toMatchObject({ ringOutside: true, outline: 'dashed' })
 })

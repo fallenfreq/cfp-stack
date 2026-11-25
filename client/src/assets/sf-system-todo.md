@@ -310,8 +310,8 @@ time"), one per session; one review of the whole once they're done. Waiting: pas
         crimson so it doesn't look like the brand; dark words go where white fails 4.5:1, as most
         systems do (the dark theme's brand button already has them).
 
-    - **Rules that read the ink, not the fill:** the line's colour, a field's focus border,
-      `sf-on-focus`, `sf-content-frame:focus-within`, the drag handle's hover and dragging, the
+    - **Rules that read the ink, not the fill:** the line's colour,
+      `sf-content-frame:focus-within`, the drag handle's hover and dragging, the
       switch's knob when on, `input.sf`'s `accent-color`.
     - **Brand-coloured words** (links in running text, `sf-variant-primary` and `-featured`, so
       the logo too, `sf-on-current`) take the rule the other colours' words already use: the colour mixed half
@@ -321,12 +321,15 @@ time"), one per session; one review of the whole once they're done. Waiting: pas
       dark 2.24 → 6.61). Buttons and chips (`button.sf`, `a.sf`, `summary.sf`, `sf-chip`): the
       text colour at 30% (light 1.07 → 1.86, dark 1.18 → 2.42); their words mark them out, so
       this is looks, not 3:1. Dividers, cards and tables keep `--sf-border_color`.
-    - **New: an edge steps aside for a line.** While a line is drawn round something with its
-      own edge (button, chip, swatch), the edge goes clear, same width, so one line shows and
-      nothing moves. Fields keep theirs: they get no line, and show errors and focus on it.
-    - **Unchanged:** the line parts (solid picked, else half see-through; thick targeted; dashes),
-      keyboard focus, tinted boxes. A half see-through line is a ghost, a hint: the warnings
-      count, "Next warning" and the node path show the same, so it isn't held to 3:1.
+    - **The line and edges** (owner, 2026-11-25, v2.98.0, `sf-system.md` "Line parts"): the line
+      lies over the 1px edge (a swatch keeps a 2px gap) and edges never change for a state; full
+      strength unless targeted, which is wide and faint; focus's ring just outside the line;
+      fields have no rules of their own. A targeted line is a hint, so it isn't held to 3:1: the
+      warnings count, "Next warning" and the node path show the same.
+    - **Open:** in forced colours (Windows high contrast) a focused element with a line shows no
+      focus: the ring is a shadow, which isn't drawn there. Picked's and current's words take a
+      compound per colour and again for hover: text parts (`docs/plans/contrast-on-white.md`)
+      would make each one rule.
     - **Left for later:** pink mode isn't redone. Quiet brand words (`sf-loudness-1` with a
       variant, at 60%) stay short of 4.5:1. The drag handle's icon is 2.36:1.
 
