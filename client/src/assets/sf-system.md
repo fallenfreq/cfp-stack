@@ -1753,7 +1753,10 @@ readers, walkers and types come with them.
   every theme can make its warnings fit. Its Attributes panel lists why, above the rows
   where most are fixed, with the classes the block wears by itself, which no row shows, so a
   warning appears or goes as the class row's change applies. The node path shows the blocks
-  around the cursor that have one, and the top bar's count goes to the next. Warnings are for
+  around the cursor that have one, and the top bar's count goes to the next. The Attributes
+  button, the path's crumbs and the count each take the colour of the warnings they point to, as
+  a block's line does: the error colour where a problem is among them, the warning colour for
+  suggestions alone. Warnings are for
   the person editing: a save never waits for them or stops on them, and nothing checks a page
   on the server when it's saved.
 - **An IDE linter** (later) checks pages, screens and components written in files, with every

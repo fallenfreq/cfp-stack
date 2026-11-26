@@ -27,8 +27,7 @@
 
 <script setup lang="ts">
 import { useScrollOverflow } from '@/composables/useScrollOverflow'
-import { warningsOn } from '@/editor/extensions/pageWarnings'
-import type { PageWarning } from '@/editor/pageRules'
+import { warningsOn, warningVariantOf } from '@/editor/extensions/pageWarnings'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { getNodeAlias } from '@/utils/editor/nodeRegistry'
@@ -48,13 +47,7 @@ interface PathSegment {
 	name: string
 	depth: number
 	start: number // $pos.start(depth); -1 for leaf nodes
-	warningVariant: 'danger' | 'warning' | undefined // its warnings' colour, as its block's line
-}
-
-// A problem shows as the theme's error, suggestions alone as its warning (pageWarnings.ts).
-const warningVariantOf = (warnings: readonly PageWarning[]) => {
-	if (warnings.some(({ type }) => type === 'problem')) return 'danger'
-	return warnings.length ? 'warning' : undefined
+	warningVariant: ReturnType<typeof warningVariantOf> // its warnings' colour, as its block's line
 }
 
 const path = computed((): PathSegment[] => {

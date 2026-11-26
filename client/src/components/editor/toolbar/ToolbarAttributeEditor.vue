@@ -2,7 +2,7 @@
 	<ToolbarPanelItem
 		icon="tune"
 		:tooltip="buttonName"
-		:variant="warnings.length ? 'warning' : undefined"
+		:variant="warningVariant"
 		:open="open"
 		align="end"
 		@update:open="setOpen"
@@ -99,7 +99,7 @@ import { useToolbarNodeControl } from '@/composables/editor/useToolbarNodeContro
 import { useNodeClassTokens } from '@/config/editor/nodeClassTokens'
 import type { EnumExtensionAttribute } from '@/editor/enumAttr'
 import type { ToolbarItemContext } from '@/editor/extensions/floatingToolbar/types'
-import { blockWearsIn, warningsOn } from '@/editor/extensions/pageWarnings'
+import { blockWearsIn, warningsOn, warningVariantOf } from '@/editor/extensions/pageWarnings'
 import { getClassToken } from '@/utils/editor/classTokens'
 import { filterNonDefaultAttrs } from '@/utils/editor/editorUtils'
 import type { Editor } from '@tiptap/vue-3'
@@ -124,6 +124,7 @@ watch(open, (isOpen) => {
 const warnings = computed(() =>
 	blockPos.value === null ? [] : warningsOn(props.editor.state, blockPos.value),
 )
+const warningVariant = computed(() => warningVariantOf(warnings.value))
 const ownClasses = computed(() =>
 	blockPos.value === null ? [] : blockWearsIn(props.editor)(block.value, blockPos.value),
 )

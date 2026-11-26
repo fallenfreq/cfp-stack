@@ -4,7 +4,8 @@ import { expect, test } from './fixtures'
 import { nodePosition, openTests, selectBlock, settle } from './helpers'
 
 // Warnings on the blocks (pageWarnings.ts), on the test page's "Warnings" cases. Each block a rule
-// names is marked; its Attributes panel lists why; the node path and the top bar's count find it.
+// names is marked; its Attributes panel lists why; the node path and the top bar's count find it,
+// each in the colour of what they point to.
 
 test.beforeEach(async ({ page, themeClass }) => {
 	await openTests(page, themeClass)
@@ -99,6 +100,43 @@ test('the count selects the next block with a warning, then the first', async ({
 		/\bsf-is-(error|warning)\b/,
 	)
 	await expect(attributes(page)).toHaveAccessibleName(/^Attributes: \d+ warnings?$/)
+})
+
+// What points to warnings takes their blocks' colour: a problem's wherever there's one among them,
+// otherwise a suggestion's. The top bar's count, and its count on "⋮" where the row is narrow, go by
+// the page; the Attributes button by its block.
+test("the count and the Attributes button take a problem's colour over a suggestion's", async ({
+	page,
+}) => {
+	const setPage = (html: string) =>
+		page.evaluate((html) => {
+			document
+				.querySelector<TiptapEditorHTMLElement>('.tiptap')!
+				.editor!.commands.setContent(html)
+		}, html)
+	const count = page.locator('.editor-top-bar').getByRole('button', { name: /go to the next/ })
+	const onMenu = page.locator('.editor-top-bar .sf-counter')
+	const suggestion = '<p id="suggested" style="color: red">A suggestion</p>'
+
+	await setPage(suggestion)
+	await selectBlock(page, 'suggested')
+	for (const pointer of [count, onMenu, attributes(page)])
+		await expect(pointer).toHaveClass(/\bsf-variant-warning\b/)
+
+	await setPage(`${suggestion}<p id="problem" style="width: 10cqw">A problem</p>`)
+	await selectBlock(page, 'suggested')
+	await expect(count).toHaveClass(/\bsf-variant-danger\b/)
+	await expect(onMenu).toHaveClass(/\bsf-variant-danger\b/)
+	await expect(attributes(page)).toHaveClass(/\bsf-variant-warning\b/)
+	await selectBlock(page, 'problem')
+	await expect(attributes(page)).toHaveClass(/\bsf-variant-danger\b/)
+
+	// Narrow, the count is an item in "⋮".
+	await page.setViewportSize({ width: 390, height: 844 })
+	await page.getByRole('button', { name: 'Editor actions' }).click()
+	await expect(page.getByRole('button', { name: /go to the next/ })).toHaveClass(
+		/\bsf-variant-danger\b/,
+	)
 })
 
 // Each part of a block's line says one thing (sf-system.md, "Line parts"): a targeted block's line

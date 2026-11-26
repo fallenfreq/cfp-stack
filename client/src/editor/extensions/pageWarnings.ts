@@ -70,18 +70,36 @@ export const nextWarned = (state: EditorState): number | undefined => {
 	return inOrder.find((pos) => pos > state.selection.from) ?? inOrder[0]
 }
 
-// A block a problem names is marked as one, whatever else names it.
+// How each type shows: a problem as the theme's error, a suggestion as its warning, on a block
+// (its mark) and on what points to it (a control's colour).
+const howEachTypeShows = {
+	problem: { mark: 'sf-is-error', variant: 'danger' },
+	suggestion: { mark: 'sf-is-warning', variant: 'warning' },
+} as const satisfies Record<PageWarning['type'], { mark: string; variant: string }>
+
+// Where several meet, on a block or on what points to blocks, a problem outranks suggestions.
+const howShown = (warnings: readonly PageWarning[]) => {
+	const first = warnings.find(({ type }) => type === 'problem') ?? warnings[0]
+	return first && howEachTypeShows[first.type]
+}
+
+/** The colour of a control pointing to these warnings, as their blocks' lines; none for none. */
+export const warningVariantOf = (warnings: readonly PageWarning[]) => howShown(warnings)?.variant
+
 const marksFor = (doc: PMNode, warnings: readonly PageWarning[]) => {
-	const marked = new Map<number, string>()
-	for (const { type, blocks } of warnings)
-		for (const block of blocks)
-			if (marked.get(block) !== 'sf-is-error')
-				marked.set(block, type === 'problem' ? 'sf-is-error' : 'sf-is-warning')
+	// Each block's warnings, gathered in one pass: this runs after every change.
+	const onBlock = new Map<number, PageWarning[]>()
+	for (const warning of warnings)
+		for (const block of warning.blocks)
+			onBlock.set(block, [...(onBlock.get(block) ?? []), warning])
 	return DecorationSet.create(
 		doc,
-		[...marked].flatMap(([pos, name]) => {
+		[...onBlock].flatMap(([pos, named]) => {
 			const node = doc.nodeAt(pos)
-			return node ? [Decoration.node(pos, pos + node.nodeSize, { class: name })] : []
+			const shown = howShown(named)
+			return node && shown
+				? [Decoration.node(pos, pos + node.nodeSize, { class: shown.mark })]
+				: []
 		}),
 	)
 }

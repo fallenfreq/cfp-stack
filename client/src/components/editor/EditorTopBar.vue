@@ -41,7 +41,7 @@
 				<SfButton
 					size="xs"
 					:loudness="1"
-					variant="warning"
+					:variant="warningVariant"
 					class="sf-is-contained sf-single-line"
 					:aria-label="warningsName"
 					@mousedown.prevent
@@ -66,7 +66,7 @@
 			<div class="sl-cluster sl-hide-below-xs"><CodeViewToggle /></div>
 			<SfBadge
 				:count="shownWarnings"
-				variant="warning"
+				:variant="warningVariant"
 				:loudness="3"
 				class="sl-show-below-xs"
 			>
@@ -75,7 +75,7 @@
 						<SfButton
 							size="xs"
 							:loudness="1"
-							variant="warning"
+							:variant="warningVariant"
 							class="sf-is-contained sf-single-line"
 							:aria-label="warningsName"
 							@click="goToNextWarning"
@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextWarned, pageWarnings } from '@/editor/extensions/pageWarnings'
+import { nextWarned, pageWarnings, warningVariantOf } from '@/editor/extensions/pageWarnings'
 import { editorTopBarHeight } from '@/editor/extensions/scrollClearOfEditorTopBar'
 import { useDragHandleStore } from '@/stores/dragHandleStore'
 import { useEditorStore } from '@/stores/editorStore'
@@ -162,7 +162,9 @@ const saveWords = computed(() =>
 			: 'Save',
 )
 
-const warningCount = computed(() => pageWarnings(props.editor.state).length)
+const warnings = computed(() => pageWarnings(props.editor.state))
+const warningCount = computed(() => warnings.value.length)
+const warningVariant = computed(() => warningVariantOf(warnings.value))
 // The code view hides the page, and with it the warnings.
 const shownWarnings = computed(() => (isCodeView.value ? 0 : warningCount.value))
 const warningsWords = computed(
