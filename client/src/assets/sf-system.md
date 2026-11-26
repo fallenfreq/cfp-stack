@@ -185,6 +185,7 @@ different roles. The prefix rule:
 | Bridge           | `--sfx-surface-color`, `--sfx-inset-margin`   | Bundle rule (or layout rule, for `--sfx-inset-margin`)     | Higher-layer rule / descendants  |
 | Line part        | `--sfx-line-width`, `--sfx-line-color`        | The class whose meaning it carries; never inherited        | Each class that draws the line   |
 | Fill part        | `--sfx-fill-color`, `--sfx-fill-border-color` | The class that gives a box its fill; never inherited       | Each surface and context         |
+| Text part        | `--sfx-text-color`, `--sfx-text-alpha`        | A colour or a fill; quiet and hover; never inherited       | Picked, current, loud hover      |
 
 ### Theme tokens
 
@@ -301,8 +302,8 @@ doesn't matter which rule wins, and no other combination needs its own rule. A s
 pressed keeps a margin as wide as its gap, all round, so set the smallest spacing apart its
 picked line and focus ring stay off the next one; a colour shown inside a button has none, so it
 doesn't grow the button (owner, 2026-11-25). The dashes repeat the colour on purpose, so a warning doesn't
-rest on colour alone. Picked also turns the words the brand's words (as `sf-on-current`), and a
-colour variant keeps its own.
+rest on colour alone. Picked's words are the element's own, else the brand's, as current's
+("Text parts").
 
 Why (owner, 2026-11-25, chosen from a side-by-side mock-up of the served stylesheet): an error or
 warning is full strength, so it reaches 3:1 wherever it is (half see-through it was 2.0–2.5:1).
@@ -363,6 +364,40 @@ A theme changes a fill by setting its part, never `background`:
   context's border `var(--sfx-fill-border-color, <its own>)`, or it paints over a fill.
 - Hover and press paint over the fill with the root's colours (`sf-state`, a later layer), so
   a theme restyles them too.
+- Being on (`sf-on-current`) draws its tint as `var(--sfx-fill-color, <the tint>)`, so a box
+  with a fill keeps it while on, as with a context (owner, 2026-11-26).
+
+### Text parts
+
+A box's words say two things, each a part, as the line's and the fill's do (owner, 2026-11-25):
+
+| Part                          | Says                                                       | Passed by                                         |
+| ----------------------------- | ---------------------------------------------------------- | ------------------------------------------------- |
+| Colour (`--sfx-text-color`)   | what the words are: a colour's words, or those for a fill  | each colour (`sf-variant-*`); each fill           |
+| Strength (`--sfx-text-alpha`) | how strong: 60% quiet, 40% a quiet icon, full when hovered | `sf-loudness-1`, `sf-icon` with it, `sf-on-hover` |
+
+A fill is a loud button, chip, tag, status or counter, a loud colour, an avatar or the switch's
+knob; it passes its `fg_on_*` (or `fg_inverted`). Whatever passes the colour draws the words from
+it at the strength passed, so quiet coloured words are that colour at 60%, with no rule of their
+own. Picked and current read the colour, `var(--sfx-text-color, <the brand's words>)`: a coloured
+thing keeps its colour and a loud one its fill's words, one rule each; current says it again
+with hover, or the loud hover rule below would win on a loud link that is on. Under the pointer a loud
+thing turns dark, so its words are its fill's, or light where it has no fill of its own (an
+author's loud link).
+
+Why: hover used to reset the words to the text around it (`color: inherit`, to undo quiet), which
+took every colour's away, so picked, current and hover each needed a rule per colour to put it
+back, 33 in all. Hover now passes full strength and leaves the colour alone: a warning stays amber
+under the pointer, on a tint in its colour. Picked's words used to beat a loud fill's (violet on
+lilac, 2.72:1).
+
+Limits, none in the app: a plain loud button that is on doesn't darken under the pointer; a filled
+box that is on looks nearly as it does off (only its edge changes); a quiet coloured avatar's
+words are at 60% on its fill. Coloured words on a hover tint can dip under 4.5:1 (Portfolio
+4.42:1).
+
+A theme changes words by setting the part, never `color`, as with fills. Both parts are
+registered as not inherited: a box inside a red or a quiet one doesn't take its words.
 
 ---
 
@@ -449,7 +484,8 @@ colour with a value is; one that points at another colour is offered under that 
 colour, chroma doubled (`oklch(from color-mix(in oklab, <colour> 50%, <text>) l calc(c * 2) h)`),
 which reaches 4.5:1 on the page in both themes. The brand's words (links in running text,
 `sf-variant-primary` and `-featured`, `sf-on-current`, `sf-on-ancestor`) take the same rule;
-plain lilac on white is 2.04:1. A menu's parent item (`sf-on-ancestor`) was the brand at 70%,
+plain lilac on white is 2.04:1. Quiet brand words are the brand's words at quiet's 60%, 2.52:1,
+short of 4.5:1 for now. A menu's parent item (`sf-on-ancestor`) was the brand at 70%,
 1.53:1 on the light header; it now shares the current item's words without its tinted box, so
 plain, parent and current still differ (owner, 2026-11-24).
 
@@ -829,6 +865,8 @@ tints are made from the text colour where they sit (`currentColor`), not from th
 white text, and on a card a faded version of the card's text. Each box sets only its own
 text colour: a solid fill its `fg_on_*`, a `sf-depth-*` surface the theme's `fg_primary`, so
 a card inside a coloured box has normal text again. No rule redefines a theme token.
+Quiet passes its strength rather than a colour (60%, an icon 40%; "Text parts"), so a colour's
+words read it too, and hover passes full strength.
 A marker with its own colour that is worn with a depth (`sf-drag-handle`) needs a compound
 with that depth, since depth sits in the higher layer.
 

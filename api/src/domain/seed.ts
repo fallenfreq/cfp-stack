@@ -913,6 +913,22 @@ const fillBorder = (selector: RuleSelector, color: string): RuleSpec[] => [
 /** A surface's background, or the box's fill when it has one. */
 const underFill = (background: string) => `var(--sfx-fill-color, ${background})`
 
+// A box's words (sf-system.md, "Text parts"): a colour or a fill passes what its words are and
+// draws them at the strength passed (quiet's, or full under the pointer), so a quiet colour needs
+// no rule of its own, and picked and current read the words instead of one rule per colour.
+const words = (selector: RuleSelector, color: string): RuleSpec[] => [
+	{ ...selector, cssProperty: '--sfx-text-color', value: color },
+	{
+		...selector,
+		cssProperty: 'color',
+		value: 'rgb(from var(--sfx-text-color) r g b / var(--sfx-text-alpha, 1))',
+	},
+]
+/** A colour's words on the page: the colour mixed half with the text colour, its chroma doubled. */
+const colourWords = (role: string) =>
+	`oklch(from color-mix(in oklab, rgb(var(--sf-${role})) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)`
+const BRAND_WORDS = colourWords('primary')
+
 // Layout primitives become query containers only when something inside them collapses.
 // A container ignores its own content when sizing its width, so an unconditional
 const ROOT_RULES: RuleSpec[] = [
@@ -1051,20 +1067,22 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-depth-3'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 
 	// Loudness bare rules — apply at any depth; compounds below refine per-surface behaviour.
-	// loudness-1: muted foreground (low-attention text/element). Border cleared so text-only
-	// tier has no visible chrome. Pairs with sf-on-hover for dim-at-rest, full-on-hover pattern.
+	// loudness-1: muted foreground (low-attention text/element). It passes its strength, which a
+	// colour's words read too. Border cleared so text-only tier has no visible chrome. Pairs with
+	// sf-on-hover, which passes full strength, for dim-at-rest, full-on-hover pattern.
+	{ classNames: ['sf-loudness-1'], cssProperty: '--sfx-text-alpha', value: 'var(--sf-alpha-6)' },
 	{
 		classNames: ['sf-loudness-1'],
 		cssProperty: 'color',
-		value: 'rgb(from currentColor r g b / var(--sf-alpha-6))',
+		value: 'rgb(from currentColor r g b / var(--sfx-text-alpha))',
 	},
 	{ classNames: ['sf-loudness-1'], cssProperty: 'border-color', value: 'transparent' },
-	// A quiet icon sits a step below quiet text: a glyph carries more ink than a line of
-	// text in the same colour.
+	// A quiet icon sits a step below quiet text, in any colour: a glyph carries more ink than a
+	// line of text in the same colour.
 	{
 		classNames: ['sf-icon', 'sf-loudness-1'],
-		cssProperty: 'color',
-		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
+		cssProperty: '--sfx-text-alpha',
+		value: 'var(--sf-alpha-4)',
 	},
 
 	// loudness-3 solid fill is button-only — see button.sf.sf-loudness-3 compound in the
@@ -1777,70 +1795,16 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sfx-depth-radius, 0)',
 	},
 
-	// Variants — semantic colour only (text tint). Fill weight comes from loudness × variant
-	// compounds below. Bare variant with no loudness class = coloured text, no fill.
-	{
-		classNames: ['sf-variant-featured'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-primary'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-danger'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-warning'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-warning)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-success'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-success)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-info'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-info)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-
-	// Loudness-1 × variant: dim the colour (muted text, no fill).
-	{
-		classNames: ['sf-loudness-1', 'sf-variant-featured'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-primary) / var(--sf-alpha-6))',
-	},
-	{
-		classNames: ['sf-loudness-1', 'sf-variant-primary'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-primary) / var(--sf-alpha-6))',
-	},
-	{
-		classNames: ['sf-loudness-1', 'sf-variant-danger'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h / var(--sf-alpha-6))',
-	},
-	{
-		classNames: ['sf-loudness-1', 'sf-variant-warning'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-warning)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h / var(--sf-alpha-6))',
-	},
-	{
-		classNames: ['sf-loudness-1', 'sf-variant-success'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-success)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h / var(--sf-alpha-6))',
-	},
-	{
-		classNames: ['sf-loudness-1', 'sf-variant-info'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-info)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h / var(--sf-alpha-6))',
-	},
+	// Variants — semantic colour only: each passes its words, read at quiet's strength when quiet
+	// (muted, no fill). Fill weight comes from loudness × variant compounds below. Bare variant
+	// with no loudness class = coloured text, no fill.
+	...(['featured', 'primary', 'danger', 'warning', 'success', 'info'] as const).flatMap(
+		(variant) =>
+			words(
+				{ classNames: [`sf-variant-${variant}`] },
+				variant === 'featured' ? BRAND_WORDS : colourWords(variant),
+			),
+	),
 
 	// Loudness-2 × variant: tinted fill + coloured border, no shadow. Featured keeps the
 	// surrounding text colour; danger/warning/success keep their variant colour.
@@ -1933,73 +1897,24 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'none',
 	},
 
-	// Loudness-3 × variant: solid fill + that colour's fg_on_* text, in bold.
-	...fill({ classNames: ['sf-loudness-3', 'sf-variant-featured'] }, 'rgb(var(--sf-primary))'),
-	...fill({ classNames: ['sf-loudness-3', 'sf-variant-primary'] }, 'rgb(var(--sf-primary))'),
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-featured'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_primary))',
-	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-featured'],
-		cssProperty: 'font-weight',
-		value: 'var(--sf-weight-3)',
-	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-primary'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_primary))',
-	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-primary'],
-		cssProperty: 'font-weight',
-		value: 'var(--sf-weight-3)',
-	},
-	...fill({ classNames: ['sf-loudness-3', 'sf-variant-danger'] }, 'rgb(var(--sf-danger))'),
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-danger'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_danger))',
-	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-danger'],
-		cssProperty: 'font-weight',
-		value: 'var(--sf-weight-3)',
-	},
-	...fill({ classNames: ['sf-loudness-3', 'sf-variant-warning'] }, 'rgb(var(--sf-warning))'),
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-warning'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_warning))',
-	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-warning'],
-		cssProperty: 'font-weight',
-		value: 'var(--sf-weight-3)',
-	},
-	...fill({ classNames: ['sf-loudness-3', 'sf-variant-success'] }, 'rgb(var(--sf-success))'),
-	...fill({ classNames: ['sf-loudness-3', 'sf-variant-info'] }, 'rgb(var(--sf-info))'),
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-success'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_success))',
-	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-info'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_info))',
-	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-success'],
-		cssProperty: 'font-weight',
-		value: 'var(--sf-weight-3)',
-	},
-	{
-		classNames: ['sf-loudness-3', 'sf-variant-info'],
-		cssProperty: 'font-weight',
-		value: 'var(--sf-weight-3)',
-	},
+	// Loudness-3 × variant: solid fill + that colour's fg_on_* words, in bold.
+	...(
+		[
+			['featured', 'primary'],
+			['primary', 'primary'],
+			['danger', 'danger'],
+			['warning', 'warning'],
+			['success', 'success'],
+			['info', 'info'],
+		] as const
+	).flatMap(([variant, role]): RuleSpec[] => {
+		const loud: RuleSelector = { classNames: ['sf-loudness-3', `sf-variant-${variant}`] }
+		return [
+			...fill(loud, `rgb(var(--sf-${role}))`),
+			...words(loud, `rgb(var(--sf-fg_on_${role}))`),
+			{ ...loud, cssProperty: 'font-weight', value: 'var(--sf-weight-3)' },
+		]
+	}),
 
 	// Boundary — content separation signal; one rule per edge + shorthand composites.
 	// Theme decides the full treatment; default is a 1px themed border.
@@ -2062,21 +1977,15 @@ const ROOT_RULES: RuleSpec[] = [
 		value: '1px solid rgb(var(--sf-border_color))',
 	},
 
-	// Hover state — bare rules restore the surrounding text colour (undoing quiet) and add
-	// a subtle fill in it.
-	// Compounds (e.g. sf-on-hover × sf-variant-featured) override per variant where needed.
-	{ classNames: ['sf-on-hover'], cssProperty: 'color', value: 'inherit' },
+	// Hover state — the words at full strength (undoing quiet), in their own colour, and a subtle
+	// fill in it, so a coloured thing gets a tint in its colour. It passes the strength rather
+	// than setting the words, as resetting them took every colour's away (sf-system.md, "Text
+	// parts").
+	{ classNames: ['sf-on-hover'], cssProperty: '--sfx-text-alpha', value: '1' },
 	{
 		classNames: ['sf-on-hover'],
 		cssProperty: 'background',
 		value: 'rgb(from currentColor r g b / var(--sf-alpha-1))',
-	},
-	// Hover × danger — override generic on-hover's colour reset to keep danger colour; the
-	// generic tint, drawn from that colour, gives the danger fill.
-	{
-		classNames: ['sf-on-hover', 'sf-variant-danger'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
 	},
 
 	// A control that is busy and also natively disabled (hand-written markup; SfButton never
@@ -2166,11 +2075,13 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-active', 'sf-on-current'],
 		cssProperty: 'background',
-		value: 'rgb(from currentColor r g b / var(--sf-alpha-3))',
+		value: underFill('rgb(from currentColor r g b / var(--sf-alpha-3))'),
 	},
 
 	// Hover × loudness-3 — darken the solid fill rather than overlaying fg_primary tint.
 	// Three-class compounds (0-3-0) beat two-class hover × variant (0-2-0) in sf-state layer.
+	// Under the pointer a loud thing is dark, so its words are its fill's, or light where it has
+	// no fill of its own (an author's loud link).
 	{
 		classNames: ['sf-on-hover', 'sf-loudness-3'],
 		cssProperty: 'background',
@@ -2179,17 +2090,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-hover', 'sf-loudness-3'],
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
+		value: 'var(--sfx-text-color, rgb(var(--sf-fg_inverted)))',
 	},
 	{
 		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-warning'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-warning) / 0.85)',
-	},
-	{
-		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-warning'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_warning))',
 	},
 	{
 		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-success'],
@@ -2200,16 +2106,6 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-info'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-info) / 0.85)',
-	},
-	{
-		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-success'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_success))',
-	},
-	{
-		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-info'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_info))',
 	},
 	// Pressing a solid fill goes a step further than hover; the fill stays solid enough
 	// for its text.
@@ -2259,24 +2155,9 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'rgb(var(--sf-primary) / 0.85)',
 	},
 	{
-		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-featured'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_primary))',
-	},
-	{
-		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-primary'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_primary))',
-	},
-	{
 		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-danger'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-danger) / 0.85)',
-	},
-	{
-		classNames: ['sf-on-hover', 'sf-loudness-3', 'sf-variant-danger'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_danger))',
 	},
 
 	// Hover × drag-handle — icon takes the brand ink; border stays themed (subtle hover signal).
@@ -2328,32 +2209,12 @@ const ROOT_RULES: RuleSpec[] = [
 	// Picked draws the line; targeted makes it wide and faint, in whatever colour it has. Each says
 	// one thing, so every combination with the others (an error, picked) shows.
 	...drawsLine(['sf-on-selected']),
-	// Picked words: the brand's words, as the current item's. A colour variant keeps its own, and so
-	// does a hovered one (hover resets words). The same shape as sf-on-current's compounds; both
-	// shrink to one rule once each colour passes its words along (sf-system-todo.md).
-	...(['primary', 'danger', 'warning', 'success', 'info'] as const).flatMap(
-		(role): RuleSpec[] => {
-			const value = `oklch(from color-mix(in oklab, rgb(var(--sf-${role})) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)`
-			const variant = `sf-variant-${role}`
-			return role === 'primary'
-				? [
-						{ classNames: ['sf-on-selected'], cssProperty: 'color', value },
-						{
-							classNames: ['sf-on-hover', 'sf-on-selected'],
-							cssProperty: 'color',
-							value,
-						},
-					]
-				: [
-						{ classNames: [variant, 'sf-on-selected'], cssProperty: 'color', value },
-						{
-							classNames: [variant, 'sf-on-hover', 'sf-on-selected'],
-							cssProperty: 'color',
-							value,
-						},
-					]
-		},
-	),
+	// Picked words: the element's own (a colour's, or a fill's on a loud box), else the brand's.
+	{
+		classNames: ['sf-on-selected'],
+		cssProperty: 'color',
+		value: `var(--sfx-text-color, ${BRAND_WORDS})`,
+	},
 	{
 		classNames: ['sf-on-targeted'],
 		cssProperty: '--sfx-line-width',
@@ -2368,12 +2229,13 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// Current state — tinted fill (toolbar toggles, breadcrumb leaf, keyboard-highlighted menu item).
 	// Reads as "this option is on right now" — distinct from sf-on-selected's outline chip.
-	// Text turns the brand's words colour; fill and border are drawn from the text colour, so an element with a
-	// colour variant keeps its role while on (variant × current compounds below).
+	// The words are the element's own, else the brand's, as picked's; the tint and edge are drawn
+	// from them, so a colour keeps its role while on. Being on never takes a fill away, as a
+	// context never does: a loud or tinted box keeps its fill and its words.
 	{
 		classNames: ['sf-on-current'],
 		cssProperty: 'background',
-		value: 'rgb(from currentColor r g b / var(--sf-alpha-1))',
+		value: underFill('rgb(from currentColor r g b / var(--sf-alpha-1))'),
 	},
 	{
 		classNames: ['sf-on-current'],
@@ -2383,63 +2245,21 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-current'],
 		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	// Variant × current — keep the variant's colour while on (featured and primary are already
-	// primary). Same text colour as the bare variant rules.
-	{
-		classNames: ['sf-variant-danger', 'sf-on-current'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-warning', 'sf-on-current'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-warning)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-success', 'sf-on-current'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-success)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-info', 'sf-on-current'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-info)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+		value: `var(--sfx-text-color, ${BRAND_WORDS})`,
 	},
 
-	// Hover × current — intensify the current tint on the currently-selected item. Keeps the
-	// current colour, which generic on-hover would reset to the parent's (variant × hover ×
-	// current keeps a variant's colour the same way).
+	// Hover × current — intensify the current tint on the currently-selected item. It says the
+	// words again: hover × loudness-3 is as strong and sorts before it in the stylesheet, and on
+	// its own would give a loud link with no fill light words on this tint.
 	{
 		classNames: ['sf-on-hover', 'sf-on-current'],
 		cssProperty: 'background',
-		value: 'rgb(from currentColor r g b / var(--sf-alpha-2))',
+		value: underFill('rgb(from currentColor r g b / var(--sf-alpha-2))'),
 	},
 	{
 		classNames: ['sf-on-hover', 'sf-on-current'],
 		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-danger', 'sf-on-hover', 'sf-on-current'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-danger)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-warning', 'sf-on-hover', 'sf-on-current'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-warning)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-success', 'sf-on-hover', 'sf-on-current'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-success)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
-	},
-	{
-		classNames: ['sf-variant-info', 'sf-on-hover', 'sf-on-current'],
-		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-info)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+		value: `var(--sfx-text-color, ${BRAND_WORDS})`,
 	},
 
 	// Ancestor state: the brand's words, no fill. Reads as "on the trail to current"; the
@@ -2449,7 +2269,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-on-ancestor'],
 		cssProperty: 'color',
-		value: 'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+		value: BRAND_WORDS,
 	},
 
 	// ─── Content-type markers ─────────────────────────────────────────────────
@@ -2576,7 +2396,7 @@ const ROOT_RULES: RuleSpec[] = [
 		[
 			[
 				'color',
-				'oklch(from color-mix(in oklab, rgb(var(--sf-primary)) 50%, rgb(var(--sf-fg_primary))) l calc(c * 2) h)',
+				BRAND_WORDS,
 			],
 			['text-decoration', 'underline'],
 		] as const
@@ -2744,12 +2564,10 @@ const ROOT_RULES: RuleSpec[] = [
 		{ elementSelector: 'button', classNames: ['sf', 'sf-loudness-3'] },
 		'rgb(var(--sf-fg_primary))',
 	),
-	{
-		elementSelector: 'button',
-		classNames: ['sf', 'sf-loudness-3'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_inverted))',
-	},
+	...words(
+		{ elementSelector: 'button', classNames: ['sf', 'sf-loudness-3'] },
+		'rgb(var(--sf-fg_inverted))',
+	),
 	// A loud button keeps its faint light edge: the 30% text-colour edge is for ordinary ones.
 	{
 		elementSelector: 'button',
@@ -2815,17 +2633,13 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-thumb'], cssProperty: 'inline-size', value: '1.25em' },
 	{ classNames: ['sf-thumb'], cssProperty: 'block-size', value: '1.25em' },
 	...fill({ classNames: ['sf-thumb'] }, 'rgb(var(--sf-fg_primary) / var(--sf-alpha-5))'),
-	{ classNames: ['sf-thumb'], cssProperty: 'color', value: 'rgb(var(--sf-fg_inverted))' },
+	...words({ classNames: ['sf-thumb'] }, 'rgb(var(--sf-fg_inverted))'),
 	{
 		classNames: ['sf-thumb', 'sf-on-current'],
 		cssProperty: 'background',
 		value: 'rgb(var(--sf-primary_ink))',
 	},
-	{
-		classNames: ['sf-thumb', 'sf-on-current'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_primary))',
-	},
+	...words({ classNames: ['sf-thumb', 'sf-on-current'] }, 'rgb(var(--sf-fg_on_primary))'),
 
 	// ─── Compact units: sf-chip, sf-tag, sf-status, sf-counter ────────────────
 	// Each is its own element type. A chip stands for an input, attribute or action (an entered
@@ -2844,11 +2658,7 @@ const ROOT_RULES: RuleSpec[] = [
 			value: 'var(--sf-padding, var(--sf-spacing-2xs))',
 		},
 		...fill({ classNames: [unit, 'sf-loudness-3'] }, 'rgb(var(--sf-fg_primary))'),
-		{
-			classNames: [unit, 'sf-loudness-3'],
-			cssProperty: 'color',
-			value: 'rgb(var(--sf-fg_inverted))',
-		},
+		...words({ classNames: [unit, 'sf-loudness-3'] }, 'rgb(var(--sf-fg_inverted))'),
 	]),
 	// A loud chip keeps its faint light edge, as a loud button does.
 	{
@@ -2961,45 +2771,25 @@ const ROOT_RULES: RuleSpec[] = [
 	{ classNames: ['sf-avatar'], cssProperty: 'justify-content', value: 'center' },
 	{ classNames: ['sf-avatar'], cssProperty: 'border-radius', value: 'var(--sf-radius-full)' },
 	...fill({ classNames: ['sf-avatar'] }, 'rgb(var(--sf-fg_primary))'),
-	{ classNames: ['sf-avatar'], cssProperty: 'color', value: 'rgb(var(--sf-fg_inverted))' },
+	...words({ classNames: ['sf-avatar'] }, 'rgb(var(--sf-fg_inverted))'),
 	// Variant compounds — semantic colour role overrides the neutral default fill.
 	// Bare sf-avatar still works if a theme doesn't define these (graceful degradation).
-	...fill({ classNames: ['sf-avatar', 'sf-variant-featured'] }, 'rgb(var(--sf-primary))'),
-	{
-		classNames: ['sf-avatar', 'sf-variant-featured'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_primary))',
-	},
-	...fill({ classNames: ['sf-avatar', 'sf-variant-primary'] }, 'rgb(var(--sf-primary))'),
-	{
-		classNames: ['sf-avatar', 'sf-variant-primary'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_primary))',
-	},
-	...fill({ classNames: ['sf-avatar', 'sf-variant-danger'] }, 'rgb(var(--sf-danger))'),
-	{
-		classNames: ['sf-avatar', 'sf-variant-danger'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_danger))',
-	},
-	...fill({ classNames: ['sf-avatar', 'sf-variant-warning'] }, 'rgb(var(--sf-warning))'),
-	{
-		classNames: ['sf-avatar', 'sf-variant-warning'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_warning))',
-	},
-	...fill({ classNames: ['sf-avatar', 'sf-variant-success'] }, 'rgb(var(--sf-success))'),
-	...fill({ classNames: ['sf-avatar', 'sf-variant-info'] }, 'rgb(var(--sf-info))'),
-	{
-		classNames: ['sf-avatar', 'sf-variant-success'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_success))',
-	},
-	{
-		classNames: ['sf-avatar', 'sf-variant-info'],
-		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_on_info))',
-	},
+	...(
+		[
+			['featured', 'primary'],
+			['primary', 'primary'],
+			['danger', 'danger'],
+			['warning', 'warning'],
+			['success', 'success'],
+			['info', 'info'],
+		] as const
+	).flatMap(([variant, role]): RuleSpec[] => {
+		const avatar: RuleSelector = { classNames: ['sf-avatar', `sf-variant-${variant}`] }
+		return [
+			...fill(avatar, `rgb(var(--sf-${role}))`),
+			...words(avatar, `rgb(var(--sf-fg_on_${role}))`),
+		]
+	}),
 
 	// ─── sf-scrim ─────────────────────────────────────────────────────────────
 	// Modal backdrop. Black tint darkens regardless of theme; alpha via token.

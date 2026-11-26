@@ -327,13 +327,16 @@ time"), one per session; one review of the whole once they're done. Waiting: pas
       strength unless targeted, which is wide and faint; focus's ring just outside the line;
       fields have no rules of their own. A targeted line is a hint, so it isn't held to 3:1: the
       warnings count, "Next warning" and the node path show the same.
+    - **Text parts** (owner, 2026-11-26, v2.99.0, `sf-system.md` "Text parts"): a colour or fill
+      passes its words, quiet and hover their strength; picked and current read the words, one
+      rule each; hovered colours keep their colour; being on keeps a fill.
     - **Open:** in forced colours (Windows high contrast) a focused element with a line shows no
-      focus: the ring is a shadow, which isn't drawn there. Picked's and current's words take a
-      compound per colour and again for hover: text parts (`docs/plans/contrast-on-white.md`)
-      would make each one rule. Until then a picked loud button's words take picked's colour over
-      the fill's, unreadable (none in the app; a page author could write one).
-    - **Left for later:** pink mode isn't redone. Quiet brand words (`sf-loudness-1` with a
-      variant, at 60%) stay short of 4.5:1. The drag handle's icon is 2.36:1.
+      focus: the ring is a shadow, which isn't drawn there.
+    - **Left for later:** pink mode isn't redone. Quiet brand words (the brand's words at 60%,
+      2.52:1) stay short of 4.5:1. Coloured words on a hover tint dip below 4.5:1 (Portfolio
+      4.42:1, the node path's current block 4.19:1). The drag handle's icon is 2.36:1. A filled
+      toggle that is on looks nearly as it does off, and doesn't show under the pointer that
+      pressing turns it off; a look of its own for that could come (owner, 2026-11-26).
 
 - **`sf-on-*` state rules.** Every state has its bare rule; `sf-on-hover` has no border channel
   yet.
@@ -389,8 +392,8 @@ time"), one per session; one review of the whole once they're done. Waiting: pas
   and the theme editor). The line parts and the fill part (`sf-system.md`, "Fill parts") are
   this already. Rules that undo a later layer and put it back could follow it:
   `sf-is-contained × sf-boundary-right` (the separator contained clears), hover and pressed ×
-  variant (the kind's colour hover resets, and a theme's fill gives way to the root's colours on
-  hover), the three-side panels' corners (already read `--sfx-depth-radius`).
+  variant (a theme's fill gives way to the root's colours on hover; words are text parts now),
+  the three-side panels' corners (already read `--sfx-depth-radius`).
 - **A loud Save again.** The editor's Save went quiet because the bar it sits in is contained,
   which wiped a loud button's fill; a contained box keeps its fill now (2026-11-23).
 - **A Badge block for page builders**, wrapping what it marks with the mark on its corner, as

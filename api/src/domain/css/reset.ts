@@ -17,6 +17,10 @@ const LINE_PARTS = [
 // A box's own fill, passed by the class that gives it one (sf-system.md, "Fill parts").
 const FILL_PARTS = ['--sfx-fill-color', '--sfx-fill-border-color']
 
+// A box's words: their colour, passed by a colour or a fill, and their strength, passed by quiet
+// and hover (sf-system.md, "Text parts").
+const TEXT_PARTS = ['--sfx-text-color', '--sfx-text-alpha']
+
 // Typeless and with no starting value, so a reader's own default still applies when it's unset.
 const notInherited = (names: readonly string[]) =>
 	names
@@ -38,6 +42,9 @@ ${notInherited(LINE_PARTS)}
 
 /* A fill likewise: a box inside a loud one doesn't take its fill. */
 ${notInherited(FILL_PARTS)}
+
+/* Words likewise: a box inside a red or a quiet one doesn't take its words. */
+${notInherited(TEXT_PARTS)}
 
 @layer reset {
 	/* Width includes padding and border. A border shows by giving it a width. */

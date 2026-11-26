@@ -14,10 +14,18 @@ test('the line lies over the edge, and the edge stays as it is', async ({ page }
 		const host = document.createElement('div')
 		host.className = 'sf-depth-0'
 		document.body.append(host)
+		// Words as the pixel drawn: the browser may write one colour in different syntaxes.
+		const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!
+		const drawn = (color: string) => {
+			ctx.clearRect(0, 0, 1, 1)
+			ctx.fillStyle = color
+			ctx.fillRect(0, 0, 1, 1)
+			return ctx.getImageData(0, 0, 1, 1).data.join()
+		}
 		const look = (html: string) => {
 			host.innerHTML = html
 			const own = getComputedStyle(host.firstElementChild!)
-			return { offset: own.outlineOffset, edge: own.borderTopColor, words: own.color }
+			return { offset: own.outlineOffset, edge: own.borderTopColor, words: drawn(own.color) }
 		}
 		const token = (name: string) => getComputedStyle(host).getPropertyValue(name).trim()
 		return {

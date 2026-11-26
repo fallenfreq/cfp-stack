@@ -151,13 +151,111 @@ Checks:
   brand link and the words on a loud brand and a loud amber button.
 - `warnings.spec.ts` compares the line with the inks.
 
+## Text parts (this step)
+
+Agreed with the owner on 2026-11-25 from a side-by-side built from the served stylesheet
+(https://claude.ai/artifact/9y1RH89nQECdaAPSm2BS1X; owner: "looks good"). Names approved.
+
+### What an author sees
+
+| Where                                                                   | Today (light)                                                                 | After (light)                                                   |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Coloured words under the pointer (3 warnings, a node-path warning, ⚙)  | plain words, grey tint (12.25:1); red keeps its own                           | the colour at full strength, its own tint (4.84:1)              |
+| Pressing a coloured button                                              | grey tint                                                                     | a tint in its colour, as on hover                               |
+| Portfolio (`sf-on-ancestor`) under the pointer, header and phone menu   | plain words                                                                   | violet words, violet tint (4.42:1, accepted below)              |
+| Quiet brand words (`sf-loudness-1 sf-variant-primary`; none in the app) | the lilac fill at 60%, 1.51:1                                                 | the brand words at 60%, 2.52:1                                  |
+| A picked loud button (none in the app)                                  | violet words on lilac 2.72:1; on red 1.52:1                                   | its fill's words, 7.28:1 / 5.85:1                               |
+| A loud or tinted button that is on (`sf-on-current`; none in the app)   | a pale tint of its words replaces the fill; loud red under the pointer 1.83:1 | keeps its fill and its words; loud red under the pointer 4.87:1 |
+
+Unchanged: plain and loud buttons at rest and under the pointer, red under the pointer, current
+items, picked chips, tints, fills, the drag handle, links, `sf-on-ancestor` at rest.
+
+**Accepted limit:** coloured words on a hover tint dip below 4.5:1 (Portfolio 4.42:1; the node
+path's current block already goes 4.84 → 4.19:1 today). One fix for every tint, later (below).
+
+### The parts
+
+Two parts, registered as not inherited, as the line's and the fill's are (`css/reset.ts`):
+
+- `--sfx-text-color`: what an element's words are. Each colour passes its words
+  (`sf-variant-*`), each fill its `fg_on_*` (loud colours, plain loud buttons, chips, tags,
+  statuses, counters, avatars, the switch's knob). A `words()` helper beside `fill()` passes the
+  part and draws `color` from it, so a fill's words always come with it.
+- `--sfx-text-alpha`: how strong. Quiet passes 60%; hover passes 1, "full
+  strength", instead of resetting the words.
+
+Readers:
+
+| Rule                                             | Today                                     | After                                                                                     |
+| ------------------------------------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `sf-loudness-1`                                  | `currentColor` at 60%                     | `currentColor` at `--sfx-text-alpha`                                                      |
+| `sf-icon` × `sf-loudness-1`                      | `currentColor` at 40%                     | passes 40% as its strength, so hover lifts it; a coloured quiet icon is 40% too (was 60%) |
+| `sf-variant-*`                                   | its words                                 | its part at `var(--sfx-text-alpha, 1)`                                                    |
+| `sf-loudness-1` × `sf-variant-*` (6)             | the words at 60% (brand: the fill at 60%) | removed: the bare variant reads quiet's strength                                          |
+| `sf-on-hover`                                    | `color: inherit`                          | `--sfx-text-alpha: 1`; no colour                                                          |
+| Hover × danger (1)                               | undo hover's reset                        | removed                                                                                   |
+| Hover × loud (7)                                 | undo hover's reset, per colour            | one rule: `var(--sfx-text-color, <light words>)`                                          |
+| `sf-on-selected` (10 with hover)                 | brand words; a colour keeps its own       | one rule: `var(--sfx-text-color, <brand words>)`                                          |
+| `sf-on-current` (10 with hover)                  | the same, as compounds                    | two rules, at rest and with hover, as picked's                                            |
+| `sf-on-current`'s tint (3: rest, hover, pressed) | a tint of its words                       | `var(--sfx-fill-color, <the tint>)`: a fill stays                                         |
+
+32 colour rules go and 1 is added. `sf-on-ancestor`, links and the drag handle don't read the parts.
+
+Hover × loud stays a rule because the theme paints a loud thing dark under the pointer, so its
+words must turn light even when the thing has no fill of its own: a loud link an author writes
+with no colour (none in the app). Without the rule it goes dark on dark, 1.61:1 under the pointer
+and 2.65:1 pressed; with it, as today, 9.23:1 and 5.61:1. Shown to the owner on 2026-11-25
+(https://claude.ai/artifact/EgDsHAtGQawpo22SbCaUxF).
+
+Being on never takes a fill away, as a context never does. Current's tint is drawn from its words,
+and a loud fill's words are light, so as first written a loud button that is on became light words
+on a light tint (1.00:1). Now a filled button that is on keeps its fill and its words. Agreed with
+the owner on 2026-11-26 (https://claude.ai/artifact/JCSU14xPdGZSKTVcDcs4uw). **Accepted limit:** a
+plain loud button that is on doesn't darken under the pointer (its words stay 14.88:1); the owner:
+pressing it may turn it off, but "I'm willing to accept this". A filled button that is on looks
+nearly as it does off (only its edge changes); a different look for on can come later.
+
+Current keeps a colour in its hover rule, after hover × loud in the same layer, so a loud link
+that is on and has no fill keeps the brand words on the brand tint under the pointer and pressed,
+as today. Without it hover × loud wins and the link's words go light on a light tint, about 1:1
+(the plan's review, 2026-11-26; none in the app).
+
+Edge cases, no code: a tinted brand button (`sf-loudness-2 sf-variant-primary`) keeps plain
+words with `color: inherit`; picked or current it takes the brand words, as today. The part isn't
+inherited, so a picked plain chip inside a red box takes the brand words, as today.
+
+### Building it
+
+Build, `pnpm typecheck --all`, `pnpm test`, `pnpm test:ui`, seed version 2.99.0 and
+`pnpm seed:local`, a look in Chrome (the editor's top bar, node path and ⚙ with a warning; the
+header and phone menu on `/c/branding`; light and dark), one review, the owner's go-ahead, commit.
+
+Checks, in `client/e2e/root-theme/contrast.spec.ts`. The spec's cases measure words at rest, so
+a case can now put the pointer on its element (and press) first, with a real pointer. What's
+behind the words is every background from the page up to the element, laid one over the other,
+since a loud fill under the pointer or pressed is see-through (85%, 70%); today's measure takes
+the first solid one and would measure light words against the page.
+
+- Words 4.5:1: a picked loud button (fails today); a loud red button that is on, and a loud link
+  with no colour under the pointer and pressed (both pass today; they guard the fixes above).
+- Keeps its colour: an amber button's words are the same colour under the pointer as at rest
+  (fails today). A readability check can't see this: amber passes 4.5:1 before and after.
+
+No check for quiet brand words: at 2.52:1 they stay short of 4.5:1, a limit already listed below.
+
+The spec: "Custom property conventions" gains a Text part row; a "Text parts" section after
+"Fill parts" with the reasons (hover's reset was why the compounds existed; a theme sets the part,
+never `color`, as with fills); "Line parts" (picked's words: the element's own, else the brand's);
+"Quiet is a shade…" (quiet passes its strength, hover full strength); "Fill and ink" (quiet brand
+words). `seed.ts` comments that go untrue. The to-do's "Open" entry loses text parts and gains the
+hover tint limit.
+
 ## Later, one at a time
 
 Each goes back to the to-do when this step lands:
 
-- Text parts (a reviewer's proposal, below): picked's and current's words, now ten compounds
-  and their hover ones, each one rule. A picked loud button keeps its fill's words, which it
-  doesn't today (unreadable; none in the app): a check for it comes with the step.
+- Coloured words on a hover tint dip below 4.5:1 (Portfolio under the pointer 4.42:1, the node
+  path's current block 4.19:1).
 - A picked danger chip among plain ones is hard to tell from the others: whether picked's line
   should take the chip's colour (owner disagrees with keeping it lilac; to look at).
 - The quote's stripe in the ink.
@@ -233,5 +331,16 @@ Each goes back to the to-do when this step lands:
   Logged: a picked loud button's words are unreadable (none in the app), for text parts. Checked:
   typecheck, `pnpm test`, `pnpm test:ui`; each new check fails without its fix.
 
-Next: text parts (replacing picked's and current's compounds), the forced-colours focus gap, and
-the picked danger chip's line.
+- 2026-11-25: text parts agreed from a mock-up (above): hovered colours keep their colour, quiet
+  brand words become the brand words at 60%, a picked loud button keeps its fill's words; the
+  hover tint's 4.42:1 accepted for now; names approved.
+- 2026-11-26: the plan's review found two looks it would break, both agreed fixed from mock-ups:
+  loud words stay light under the pointer, and being on keeps a fill. The checks now put a real
+  pointer on an element and test an amber button keeping its colour.
+- 2026-11-26: text parts built (v2.99.0). Found while building: the quiet icon set its own colour,
+  which only hover's reset lifted, so it passes its strength instead. Checked against the agreed
+  mock-up in 2,268 combinations, light and dark: the same but for that icon and a quiet coloured
+  avatar (its words at 60% on its fill; none in the app). The new checks fail on v2.98.2 (picked
+  loud brand button 2.72:1 light, 1.30:1 dark; amber under the pointer turned plain).
+
+Next: the forced-colours focus gap, then the picked danger chip's line.
