@@ -4,7 +4,7 @@
 	     layer above them (depth 2); the page's row meets only the path's, so it's depth 1, and the two
 	     rows look apart. Side padding puts the controls on the page line (sl-inset-line). -->
 	<div ref="bar" class="editor-top-bar">
-		<!-- Where the row is narrow (xs), the warnings and Code view go into "⋯", which then wears the
+		<!-- Where the row is narrow (xs), the warnings and Code view go into "⋮", which then wears the
 		     warning count. The menu's items measure this row too: a menu straight in a popover doesn't
 		     measure (sf-system.md, "A popover is laid out on its own"). -->
 		<div

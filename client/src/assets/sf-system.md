@@ -1375,7 +1375,7 @@ in a popover (below).
 **A popover is laid out on its own.** What's inside one doesn't make the layouts around it
 measure, so a toolbar holding a closed panel keeps its width. Inside the popover, layouts
 measure as usual, except a menu straight in it: a menu is as wide as its items, so it never
-measures, and what it holds measures the next box out (the editor's "⋯" shows Code view by its
+measures, and what it holds measures the next box out (the editor's "⋮" shows Code view by its
 bar's width). Anything else straight in it measures as usual: the block settings panel, with a
 width of its own, puts its names above their fields by that width. A menu that should measure a
 width of its own goes in a box in the popover, with the width on either: no longer straight in
@@ -1465,7 +1465,7 @@ outside the editor.
 **The editor's screen** (owner, 2026-11-20) is full screen, as page editors' are (WordPress's
 since 5.4, Squarespace, Webflow): the site's header and footer go (the route's `editor` meta),
 and its top bar has two rows at every width, so each control has one place a phone and a desktop
-share. The page's row holds Exit, the name, the warnings, Save, Code view and "⋯"; the node path
+share. The page's row holds Exit, the name, the warnings, Save, Code view and "⋮"; the node path
 has the second row to itself, as wide as the screen. Exit opens the page the editor was opened
 from, as a link does, so the Leave question always applies; with none, home. Save says how the
 page stands in words ("Save", "Saving…", "Saved") and shows only to whoever could save. The
@@ -1476,8 +1476,8 @@ above them. The page's row meets only the path's, so it's depth 1, and the two r
 (owner, 2026-11-21).
 
 Exit is an arrow back, not ✕, which reads as closing and throwing away (owner, 2026-11-21). Where
-the page's row is narrow (`xs`, a phone), the warnings and Code view go into "⋯", as the site's
-nav puts its links in a menu, so the name keeps its room in any theme; "⋯" then wears the
+the page's row is narrow (`xs`, a phone), the warnings and Code view go into "⋮", as the site's
+nav puts its links in a menu, so the name keeps its room in any theme; "⋮" then wears the
 warning count (`SfBadge`). The badge is the mark's own component, not the menu's, so anything can
 wear one (owner, 2026-11-21).
 

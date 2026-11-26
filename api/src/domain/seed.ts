@@ -2878,9 +2878,10 @@ const ROOT_RULES: RuleSpec[] = [
 	// A mark, with nothing in it (sf-badge), or a count over a box (sf-counter sf-is-overlay):
 	// the mark a dot, the count a small round number. Where it sits is the author's (sl-over and
 	// the align words); how far a floating one pokes out past its corner is here, as a margin:
-	// held to two sides, it moves out only on those, at any corner and in right-to-left text. The
-	// mark is the text colour, a fill, so floating keeps it; one wearing a variant takes the
-	// variant's fill (loudness × variant, a later layer), as on any box.
+	// held to two sides, it moves out only on those, at any corner and in right-to-left text. A
+	// count pokes out sideways only, as a bar's count at the top of the screen would touch its edge
+	// (owner, 2026-11-26). The mark is the text colour, a fill, so floating keeps it; one wearing a
+	// variant takes the variant's fill (loudness × variant, a later layer), as on any box.
 	{ classNames: ['sf-badge'], cssProperty: 'border-radius', value: 'var(--sf-radius-full)' },
 	{
 		classNames: ['sf-counter', 'sf-is-overlay'],
@@ -2888,7 +2889,7 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-radius-full)',
 	},
 	{ classNames: ['sf-badge', 'sf-is-overlay'], cssProperty: 'margin', value: '-0.125rem' },
-	{ classNames: ['sf-counter', 'sf-is-overlay'], cssProperty: 'margin', value: '-0.25rem' },
+	{ classNames: ['sf-counter', 'sf-is-overlay'], cssProperty: 'margin', value: '0 -0.5rem' },
 	...fill({ classNames: ['sf-badge'] }, 'currentColor'),
 	{ classNames: ['sf-badge'], cssProperty: 'inline-size', value: '0.5rem' },
 	{ classNames: ['sf-badge'], cssProperty: 'block-size', value: '0.5rem' },

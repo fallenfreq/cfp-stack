@@ -344,7 +344,7 @@ time"), one per session; one review of the whole once they're done. Waiting: pas
   could give fields less padding at each size. Code view is 36px, as `ToolbarIcon` wears
   `sf-text-lg`. Every `SfButton` could wear `sf-single-line`, as its words never wrap, but for
   the block picker's and the Attributes panel's rows, which wrap.
-- **"⋯"'s badge is for sight only.** Where the row is narrow, the warnings are in "⋯" and its
+- **"⋮"'s badge is for sight only.** Where the row is narrow, the warnings are in "⋮" and its
   badge shows how many, but its name stays "Editor actions": a name can't follow the row's width.
   A screen reader finds the warnings by opening the menu.
 - **The editor's page name sizes itself with its own CSS** (`EditorTopBar.vue`): the row's free

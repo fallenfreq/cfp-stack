@@ -7,7 +7,7 @@ import {
 	faArrowLeft,
 	faCheck,
 	faChevronDown,
-	faEllipsis,
+	faEllipsisVertical,
 	faEye,
 	faEyeSlash,
 	faGear,
@@ -25,7 +25,7 @@ defineOptions({ inheritAttrs: false })
 const icons = {
 	plus: faPlus,
 	'arrow-left': faArrowLeft,
-	'three-dot': faEllipsis,
+	'three-dot': faEllipsisVertical,
 	'drag-handle': faGripVertical,
 	check: faCheck,
 	x: faXmark,
