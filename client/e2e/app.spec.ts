@@ -958,6 +958,60 @@ test("a mark on the name says there are changes not yet saved, and Save's look d
 	await expect(mark, 'saved').toHaveCount(0)
 })
 
+// An untitled page's name box holds nothing and shows "Untitled" as its hint, so a click, or a
+// name deleted whole, leaves it as wide as the hint and its row as tall as before.
+test("an untitled page's name box keeps its size when clicked or emptied", async ({
+	page,
+	themeClass,
+}) => {
+	await steadyRequests(page)
+	await page.goto('/editor')
+	await useTheme(page, themeClass)
+	await page.evaluate(() => document.fonts.ready)
+	const name = bars(page).getByRole('textbox')
+	const row = bars(page).locator('.top-bar__page')
+	const size = async () => [(await box(name)).width, (await box(row)).height]
+	const untitled = await size()
+
+	await name.click()
+	expect(await size(), 'clicked').toEqual(untitled)
+	await page.keyboard.type('Named')
+	await page.keyboard.press('ControlOrMeta+a')
+	await page.keyboard.press('Backspace')
+	expect(await size(), 'a name deleted whole').toEqual(untitled)
+	await name.press('Escape')
+	expect(await size(), 'left').toEqual(untitled)
+	await expect(name).toHaveAttribute('placeholder', 'Untitled')
+})
+
+// The name box reads as a title at rest; typed in, it's drawn as a field (a field's background,
+// the page's own, its edge and full words) with no focus ring, also with the pointer over it.
+test('the name box, typed in, is drawn as a field with no ring', async ({ page, themeClass }) => {
+	await steadyRequests(page)
+	await page.goto('/editor')
+	await useTheme(page, themeClass)
+	const name = bars(page).getByRole('textbox')
+	const done = () => name.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
+	const fieldBackground = await css(page.locator('body'), 'background-color')
+	const transparent = 'rgba(0, 0, 0, 0)'
+	expect(await css(name, 'background-color'), 'at rest').toBe(transparent)
+	expect(await css(name, 'border-color'), 'at rest').toBe(transparent)
+
+	await name.click()
+	for (const why of ['typed in', 'typed in, the pointer over it']) {
+		if (why !== 'typed in') await name.hover()
+		await done()
+		expect(await css(name, 'background-color'), why).toBe(fieldBackground)
+		expect(await css(name, 'border-color'), why).not.toBe(transparent)
+		expect(await css(name, 'color'), `${why}: full words`).not.toMatch(/\/ 0\.\d+\)$/)
+		expect(await css(name, 'outline-color'), `${why}: no ring`).toMatch(/, 0\)$/)
+	}
+	await page.mouse.move(600, 400)
+	await name.press('Escape')
+	await done()
+	expect(await css(name, 'background-color'), 'left').toBe(transparent)
+})
+
 // Cmd+S (Ctrl+S) saves as Save does, from the page and from the name box, whose name is kept
 // first, so a new page named there isn't asked its name. Pressed again while a save is under way,
 // it saves once: a new page would otherwise be made twice.

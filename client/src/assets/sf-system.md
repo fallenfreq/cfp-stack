@@ -321,8 +321,8 @@ channels: a targeted box doesn't thicken the lines inside it.
 
 **Nothing changes an edge for a state.** An error or warning shows with the line only, on fields
 too; it used to colour the element's edge as well, which showed two lines (owner, 2026-11-25).
-Fields have no rules of their own here: they show focus, errors and warnings as everything else
-does, so a theme has one way to draw each state.
+Fields have no rules of their own here: they show errors and warnings as everything else does,
+and focus too, but for a contained field (below), so a theme has one way to draw each state.
 
 **Keyboard focus** is a 2px ring in the text colour (owner, 2026-11-21; then, the brand colour fell
 short of 3:1 on white, and the text colour reads on any theme's page). With no line it is the
@@ -335,10 +335,25 @@ button, a hover tint), or round an element that is itself one, the gaps show tha
 1px, an accepted limit. The element's own shadow gives
 way while it's focused. Focus on an element whose only line is an error or warning is drawn in
 the context layer, so a higher-ranked shadow there (an `sf-shadow-*` utility, `sf-is-overlay`
-compounds) shows instead of the ring. A field is no different: with focus alone it shows the
-outline, with an error the dashed line and the ring outside it. In forced colours (Windows high
-contrast) shadows aren't drawn, so focus on an element with a line doesn't show (it used to show
-as the line stepping out); open in the to-do.
+compounds) shows instead of the ring. A field is no different (a contained one aside, below):
+with focus alone it shows the outline, with an error the dashed line and the ring outside it. In
+forced colours (Windows high contrast) shadows aren't drawn, so focus on an element with a line
+doesn't show (it used to show as the line stepping out); open in the to-do.
+
+The ring's strength is a part, `--sfx-ring-alpha` (full when unset), which both rings read: the
+element default outline and the shadow past a line. A look that shows focus another way sets it to
+0, never `outline`, which is also an error's line. Strength, not width: forced colours draws a
+see-through outline in its own colour, so focus still shows there, but no outline 0 wide. It is
+registered as not inherited, like the line's parts.
+
+**A contained field shows focus as a field** (`sf-field sf-is-contained sf-on-focus`, owner,
+2026-11-26, chosen from a mock-up of five ways): while it's typed in, it's drawn as a field in
+full, its surface, edge and full-strength words, quiet or not, with no ring. At rest it reads as a
+title (the editor's page name). It stays contained while typed in, as it still is, so the look is
+the theme's rule, not classes taken off. Its strength part is set to 0, so an error's line stays.
+The rule is a state one (`sf-on-focus`), so the hover tint doesn't take its place while typing.
+It overrides quiet as hover does: without an edge, focus would be white on the bar's near-white
+in the light theme (1.1:1); the edge reaches 3:1.
 
 ### Fill parts
 
@@ -371,10 +386,10 @@ A theme changes a fill by setting its part, never `background`:
 
 A box's words say two things, each a part, as the line's and the fill's do (owner, 2026-11-25):
 
-| Part                          | Says                                                       | Passed by                                         |
-| ----------------------------- | ---------------------------------------------------------- | ------------------------------------------------- |
-| Colour (`--sfx-text-color`)   | what the words are: a colour's words, or those for a fill  | each colour (`sf-variant-*`); each fill           |
-| Strength (`--sfx-text-alpha`) | how strong: 60% quiet, 40% a quiet icon, full when hovered | `sf-loudness-1`, `sf-icon` with it, `sf-on-hover` |
+| Part                          | Says                                                                                     | Passed by                                                                             |
+| ----------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Colour (`--sfx-text-color`)   | what the words are: a colour's words, or those for a fill                                | each colour (`sf-variant-*`); each fill                                               |
+| Strength (`--sfx-text-alpha`) | how strong: 60% quiet, 40% a quiet icon, full when hovered or a contained field typed in | `sf-loudness-1`, `sf-icon` with it, `sf-on-hover`, `sf-on-focus` on a contained field |
 
 A fill is a loud button, chip, tag, status or counter, a loud colour, an avatar or the switch's
 knob; it passes its `fg_on_*` (or `fg_inverted`). Whatever passes the colour draws the words from

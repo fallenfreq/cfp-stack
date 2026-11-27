@@ -5,8 +5,15 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next: contrast on white, its next item (`docs/plans/contrast-on-white.md`, "Later, one at a
-time"), one per session; one review of the whole once they're done. Waiting: pasting warns of what the page can't keep ("Ideas").
+Next, from the editor's page name box (`EditorTopBar.vue`; owner, 2026-11-26):
+
+- **Where the unsaved dot sits** (discuss next): the owner doesn't like it sitting on the box's
+  edge line. Settle it with the dot at middle right, not top right: `SfBadge` always places its
+  mark at the top end corner (a prop was floated: `alignY`, `start` or `center`).
+
+Then contrast on white, its next item (`docs/plans/contrast-on-white.md`, "Later, one at a
+time"), one per session; one review of the whole once they're done. Waiting: pasting warns of
+what the page can't keep ("Ideas").
 
 ## Bigger work
 
@@ -393,7 +400,10 @@ time"), one per session; one review of the whole once they're done. Waiting: pas
   this already. Rules that undo a later layer and put it back could follow it:
   `sf-is-contained × sf-boundary-right` (the separator contained clears), hover and pressed ×
   variant (a theme's fill gives way to the root's colours on hover; words are text parts now),
-  the three-side panels' corners (already read `--sfx-depth-radius`).
+  the three-side panels' corners (already read `--sfx-depth-radius`), and a contained field typed
+  in, which restates the field's surface and edge (owner, 2026-11-26: one place to change, both
+  follow). Today they share tokens only, so a theme that rewrites the `sf-field` rule leaves the
+  typed-in look behind.
 - **A loud Save again.** The editor's Save went quiet because the bar it sits in is contained,
   which wiped a loud button's fill; a contained box keeps its fill now (2026-11-23).
 - **A Badge block for page builders**, wrapping what it marks with the mark on its corner, as

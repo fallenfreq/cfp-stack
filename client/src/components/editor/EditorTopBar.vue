@@ -17,17 +17,19 @@
 			<div class="top-bar__name-room">
 				<SfBadge :count="store.hasUnsavedChanges ? undefined : 0">
 					<span class="top-bar__name-fit">
-						<!-- A hidden copy of the name, with the box's classes so it's the box's size,
-						     which the box takes. Spaces kept, as the box shows them. -->
+						<!-- A hidden copy of what the box shows (the name, or with none the hint), with
+						     the box's classes so it's the box's size, which the box takes. Spaces kept,
+						     as the box shows them. -->
 						<span :class="nameClasses" class="top-bar__name-copy" aria-hidden="true">{{
-							nameInputValue.replaceAll(' ', '\u00a0')
+							(nameInputValue || untitled).replaceAll(' ', '\u00a0')
 						}}</span>
 						<input
 							ref="nameInput"
 							v-model="nameInputValue"
 							:class="nameClasses"
-							class="top-bar__name sf-on-hover"
-							:title="currentName ?? 'Untitled'"
+							class="top-bar__name sf-on-hover sf-on-focus"
+							:placeholder="untitled"
+							:title="currentName ?? untitled"
 							@focus="startRename"
 							@blur="commitRename"
 							@keyup.enter="nameInput?.blur()"
@@ -206,20 +208,21 @@ onBeforeUnmount(() => removeEventListener('keydown', saveByKeys))
 
 const nameClasses = 'sf sf-field sf-single-line sf-is-contained sf-loudness-1 sf-size-xs'
 const renamingName = ref(false)
-// What the name box shows: the name, kept up to date by the watch below from the start.
+// What the name box holds: the name, kept up to date by the watch below from the start. A page
+// with none holds nothing and shows "Untitled" as its hint, so a click doesn't empty the box.
+const untitled = 'Untitled'
 const nameInputValue = ref('')
 const nameInput = ref<HTMLInputElement | null>(null)
 
 watch(
 	currentName,
 	(val) => {
-		if (!renamingName.value) nameInputValue.value = val ?? 'Untitled'
+		if (!renamingName.value) nameInputValue.value = val ?? ''
 	},
 	{ immediate: true },
 )
 
 const startRename = () => {
-	nameInputValue.value = currentName.value ?? ''
 	renamingName.value = true
 }
 
@@ -229,13 +232,13 @@ const commitRename = () => {
 	if (trimmed && trimmed !== currentName.value) {
 		store.renamePage(trimmed)
 	} else {
-		nameInputValue.value = currentName.value ?? 'Untitled'
+		nameInputValue.value = currentName.value ?? ''
 	}
 }
 
 const cancelRename = () => {
 	renamingName.value = false
-	nameInputValue.value = currentName.value ?? 'Untitled'
+	nameInputValue.value = currentName.value ?? ''
 	nameInput.value?.blur()
 }
 </script>
@@ -255,8 +258,8 @@ const cancelRename = () => {
 	   size, as the two share one grid cell: the name's width, or the room's, cut short with an
 	   ellipsis. The copy hides what overflows, so it can be narrower than its words and the page
 	   doesn't scroll sideways. A width of 0 keeps the input's own default width out of the fit.
-	   Chrome comes from the classes (a field of one line, in a contained bar), plus bare
-	   input:focus-visible for the editing look. */
+	   Chrome comes from the classes: a field of one line, contained in the bar, with a look for
+	   focus. */
 	.top-bar__name-room {
 		flex: 1 1 0;
 	}
@@ -275,7 +278,6 @@ const cancelRename = () => {
 		min-width: 100%;
 		text-overflow: ellipsis;
 		cursor: pointer;
-		outline: none;
 	}
 	.top-bar__name:focus {
 		cursor: text;

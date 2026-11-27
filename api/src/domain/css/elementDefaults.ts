@@ -10,8 +10,9 @@ export const SF_ELEMENT_DEFAULTS = `@layer sf-element {
 		line-height: var(--sf-leading-relaxed);
 	}
 	/* Keyboard focus: a ring in the text colour, against the element. An element with a line
-	   shows it with the line's own rules (sf-system.md, "Line parts"). */
+	   shows it with the line's own rules (sf-system.md, "Line parts"). A look that shows focus
+	   another way sets the ring's strength to 0, which forced colours still draws. */
 	*:focus-visible {
-		outline: var(--sf-stroke-2) solid rgb(var(--sf-fg_primary));
+		outline: var(--sf-stroke-2) solid rgb(var(--sf-fg_primary) / var(--sfx-ring-alpha, 1));
 	}
 }`

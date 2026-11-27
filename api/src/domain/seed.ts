@@ -891,7 +891,7 @@ const drawsLine = (classNames: [string, ...string[]]): RuleSpec[] => [
 		classNames,
 		pseudo: ':focus-visible',
 		cssProperty: 'box-shadow',
-		value: `0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH}) rgb(var(--sfx-surface-color, var(--sf-surface-0))), 0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH} + var(--sf-stroke-2)) rgb(var(--sf-fg_primary))`,
+		value: `0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH}) rgb(var(--sfx-surface-color, var(--sf-surface-0))), 0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH} + var(--sf-stroke-2)) rgb(var(--sf-fg_primary) / var(--sfx-ring-alpha, 1))`,
 	},
 ]
 
@@ -1714,6 +1714,26 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-color',
 		value: 'var(--sfx-fill-border-color, transparent)',
 	},
+	// A contained field with a focus look, typed in: drawn as a field in full, its surface, edge
+	// and full words, quiet or not, with no ring (sf-system.md, "A contained field shows focus as
+	// a field"). A state rule, so hover doesn't take its place while typing.
+	...(
+		[
+			['background', underFill('rgb(var(--sf-surface-0))')],
+			[
+				'border-color',
+				'var(--sfx-fill-border-color, rgb(var(--sf-fg_primary) / var(--sf-alpha-6)))',
+			],
+			['--sfx-text-alpha', '1'],
+			['--sfx-ring-alpha', '0'],
+		] as const
+	).map(
+		([cssProperty, value]): RuleSpec => ({
+			classNames: ['sf-field', 'sf-is-contained', 'sf-on-focus'],
+			cssProperty,
+			value,
+		}),
+	),
 	{ classNames: ['sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
 	// A busy button stays focusable (so it isn't disabled); it dims like a disabled one.
 	{ classNames: ['sf-is-loading'], cssProperty: 'opacity', value: '0.4' },

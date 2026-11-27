@@ -21,6 +21,10 @@ const FILL_PARTS = ['--sfx-fill-color', '--sfx-fill-border-color']
 // and hover (sf-system.md, "Text parts").
 const TEXT_PARTS = ['--sfx-text-color', '--sfx-text-alpha']
 
+// The focus ring's strength, passed by a look that shows focus another way (sf-system.md,
+// "Keyboard focus").
+const RING_PARTS = ['--sfx-ring-alpha']
+
 // Typeless and with no starting value, so a reader's own default still applies when it's unset.
 const notInherited = (names: readonly string[]) =>
 	names
@@ -45,6 +49,9 @@ ${notInherited(FILL_PARTS)}
 
 /* Words likewise: a box inside a red or a quiet one doesn't take its words. */
 ${notInherited(TEXT_PARTS)}
+
+/* The ring likewise: a box shown without it doesn't take it off what's inside. */
+${notInherited(RING_PARTS)}
 
 @layer reset {
 	/* Width includes padding and border. A border shows by giving it a width. */
