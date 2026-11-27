@@ -959,7 +959,8 @@ test("a mark on the name says there are changes not yet saved, and Save's look d
 })
 
 // An untitled page's name box holds nothing and shows "Untitled" as its hint, so a click, or a
-// name deleted whole, leaves it as wide as the hint and its row as tall as before.
+// name deleted whole, leaves it as wide as the hint and its row as tall as before. It's never
+// narrower than the hint, even holding only a space.
 test("an untitled page's name box keeps its size when clicked or emptied", async ({
 	page,
 	themeClass,
@@ -979,6 +980,8 @@ test("an untitled page's name box keeps its size when clicked or emptied", async
 	await page.keyboard.press('ControlOrMeta+a')
 	await page.keyboard.press('Backspace')
 	expect(await size(), 'a name deleted whole').toEqual(untitled)
+	await page.keyboard.type(' ')
+	expect(await size(), 'a space').toEqual(untitled)
 	await name.press('Escape')
 	expect(await size(), 'left').toEqual(untitled)
 	await expect(name).toHaveAttribute('placeholder', 'Untitled')
@@ -1010,6 +1013,18 @@ test('the name box, typed in, is drawn as a field with no ring', async ({ page, 
 	await name.press('Escape')
 	await done()
 	expect(await css(name, 'background-color'), 'left').toBe(transparent)
+})
+
+// A field shows focus with its cursor, not the ring: a browser shows focus on a field clicked as
+// well as tabbed to, so the ring would make a click look like Tab.
+test('a field clicked into shows no focus ring', async ({ page, themeClass }) => {
+	await openStored(page, themeClass, oneParagraph)
+	await moveTo(page, '/editor')
+	await pressSave(page)
+	const name = page.getByRole('textbox', { name: 'Page name' })
+	await name.click()
+	await expect(name).toBeFocused()
+	expect(await css(name, 'outline-color')).toMatch(/, 0\)$/)
 })
 
 // Cmd+S (Ctrl+S) saves as Save does, from the page and from the name box, whose name is kept

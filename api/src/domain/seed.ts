@@ -1734,6 +1734,18 @@ const ROOT_RULES: RuleSpec[] = [
 			value,
 		}),
 	),
+	// A field typed into shows focus with its cursor, not the ring, as browsers show focus on one
+	// clicked as well as tabbed to (sf-system.md, "A field typed into shows focus with its
+	// cursor"). Not a select: it has no cursor, and a click doesn't show its ring.
+	...(['input', 'textarea'] as const).map(
+		(elementSelector): RuleSpec => ({
+			elementSelector,
+			classNames: ['sf-field'],
+			pseudo: ':focus-visible',
+			cssProperty: '--sfx-ring-alpha',
+			value: '0',
+		}),
+	),
 	{ classNames: ['sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
 	// A busy button stays focusable (so it isn't disabled); it dims like a disabled one.
 	{ classNames: ['sf-is-loading'], cssProperty: 'opacity', value: '0.4' },

@@ -17,11 +17,16 @@
 			<div class="top-bar__name-room">
 				<SfBadge :count="store.hasUnsavedChanges ? undefined : 0">
 					<span class="top-bar__name-fit">
-						<!-- A hidden copy of what the box shows (the name, or with none the hint), with
-						     the box's classes so it's the box's size, which the box takes. Spaces kept,
-						     as the box shows them. -->
+						<!-- Hidden copies of what the box holds and of its hint, with the box's classes
+						     so each is the box's size: the box takes the wider, so it's never narrower
+						     than the hint, even holding a space or a letter. Spaces kept, as the box
+						     shows them. The hint's first: the row lines up on the first's text, and
+						     the other's is empty with no name. -->
 						<span :class="nameClasses" class="top-bar__name-copy" aria-hidden="true">{{
-							(nameInputValue || untitled).replaceAll(' ', '\u00a0')
+							untitled
+						}}</span>
+						<span :class="nameClasses" class="top-bar__name-copy" aria-hidden="true">{{
+							nameInputValue.replaceAll(' ', '\u00a0')
 						}}</span>
 						<input
 							ref="nameInput"
@@ -254,9 +259,9 @@ const cancelRename = () => {
 		flex-direction: column;
 	}
 
-	/* The name: the room is the row's free room; in it, the name box takes its hidden copy's
-	   size, as the two share one grid cell: the name's width, or the room's, cut short with an
-	   ellipsis. The copy hides what overflows, so it can be narrower than its words and the page
+	/* The name: the room is the row's free room; in it, the name box takes its hidden copies'
+	   size, as they share one grid cell: the name's width or the hint's, or the room's, cut short
+	   with an ellipsis. A copy hides what overflows, so it can be narrower than its words and the page
 	   doesn't scroll sideways. A width of 0 keeps the input's own default width out of the fit.
 	   Chrome comes from the classes: a field of one line, contained in the bar, with a look for
 	   focus. */

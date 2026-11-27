@@ -322,7 +322,7 @@ channels: a targeted box doesn't thicken the lines inside it.
 **Nothing changes an edge for a state.** An error or warning shows with the line only, on fields
 too; it used to colour the element's edge as well, which showed two lines (owner, 2026-11-25).
 Fields have no rules of their own here: they show errors and warnings as everything else does,
-and focus too, but for a contained field (below), so a theme has one way to draw each state.
+and focus too, but while typed into (below), so a theme has one way to draw each state.
 
 **Keyboard focus** is a 2px ring in the text colour (owner, 2026-11-21; then, the brand colour fell
 short of 3:1 on white, and the text colour reads on any theme's page). With no line it is the
@@ -335,8 +335,9 @@ button, a hover tint), or round an element that is itself one, the gaps show tha
 1px, an accepted limit. The element's own shadow gives
 way while it's focused. Focus on an element whose only line is an error or warning is drawn in
 the context layer, so a higher-ranked shadow there (an `sf-shadow-*` utility, `sf-is-overlay`
-compounds) shows instead of the ring. A field is no different (a contained one aside, below):
-with focus alone it shows the outline, with an error the dashed line and the ring outside it. In
+compounds) shows instead of the ring. A dropdown is no different: with focus alone it shows the
+outline, with an error the dashed line and the ring outside it. A field typed into shows its
+cursor instead (below). In
 forced colours (Windows high contrast) shadows aren't drawn, so focus on an element with a line
 doesn't show (it used to show as the line stepping out); open in the to-do.
 
@@ -346,6 +347,14 @@ element default outline and the shadow past a line. A look that shows focus anot
 see-through outline in its own colour, so focus still shows there, but no outline 0 wide. It is
 registered as not inherited, like the line's parts.
 
+**A field typed into shows focus with its cursor** (`input` and `textarea` with `sf-field`, owner,
+2026-11-27): no ring, its strength set to 0. Browsers show focus (`:focus-visible`) on such a field
+clicked as well as tabbed to, unlike a button, so the ring made a click look like Tab, which most
+sites don't. The browser's own cursor is the mark: the W3C's guidance names it a text field's focus
+mark (Understanding 2.4.7, its examples; 1.4.11, its text input figure), so its colour is never
+restyled. A dropdown has no cursor, so it keeps the ring, which a click doesn't show. Forced colours
+still draws the outline.
+
 **A contained field shows focus as a field** (`sf-field sf-is-contained sf-on-focus`, owner,
 2026-11-26, chosen from a mock-up of five ways): while it's typed in, it's drawn as a field in
 full, its surface, edge and full-strength words, quiet or not, with no ring. At rest it reads as a
@@ -353,7 +362,8 @@ title (the editor's page name). It stays contained while typed in, as it still i
 the theme's rule, not classes taken off. Its strength part is set to 0, so an error's line stays.
 The rule is a state one (`sf-on-focus`), so the hover tint doesn't take its place while typing.
 It overrides quiet as hover does: without an edge, focus would be white on the bar's near-white
-in the light theme (1.1:1); the edge reaches 3:1.
+in the light theme (1.1:1); the edge reaches 3:1. The edge stays in a box with no padding, where it
+meets the box's own (owner, 2026-11-27): it's the look the field has with contained taken off.
 
 ### Fill parts
 

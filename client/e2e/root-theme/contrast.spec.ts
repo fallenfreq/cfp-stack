@@ -3,7 +3,7 @@ import { expect, test } from '../fixtures'
 import { settle, steadyRequests } from '../helpers'
 
 // What the root theme draws on its page can be seen (sf-system.md, "Fill and ink"): a line, a
-// field's edge or keyboard focus reaches 3:1 on what's behind it, words 4.5:1 (WCAG 1.4.11,
+// field's edge or its cursor reaches 3:1 on what's behind it, words 4.5:1 (WCAG 1.4.11,
 // 1.4.3). A targeted line is a hint and isn't measured (sf-system.md, "Line parts"). Measured
 // from what the browser draws, in light and dark, with the theme class on <html> as the app sets
 // it, and with a real pointer over the element (and pressing it) where a case says so.
@@ -13,7 +13,7 @@ const MODES = [
 	{ name: 'dark', dark: true },
 ]
 
-type Part = 'outline' | 'edge' | 'focus' | 'link' | 'words'
+type Part = 'outline' | 'edge' | 'cursor' | 'link' | 'words'
 type Pointer = 'over' | 'pressing'
 
 const CASES: { name: string; html: string; part: Part; least: number; pointer?: Pointer }[] = [
@@ -66,9 +66,9 @@ const CASES: { name: string; html: string; part: Part; least: number; pointer?: 
 		least: 3,
 	},
 	{
-		name: "a field's keyboard focus",
+		name: "a field's cursor, which shows its focus",
 		html: '<input class="sf sf-field" />',
-		part: 'focus',
+		part: 'cursor',
 		least: 3,
 	},
 	{
@@ -199,13 +199,17 @@ const measure = (page: Page, part: Part) =>
 		const box = document.getElementById('contrast-case')!.firstElementChild as HTMLElement
 		let color: string
 		let under: string[]
-		if (part === 'outline' || part === 'focus') {
-			// A field's text box shows focus-visible however it was focused.
-			if (part === 'focus') box.focus()
+		if (part === 'outline') {
 			const own = getComputedStyle(box)
 			// No line drawn: nothing to see.
 			color = own.outlineStyle === 'none' ? 'transparent' : own.outlineColor
 			under = behind(box.parentElement)
+		} else if (part === 'cursor') {
+			// In the field, on its own background; with no colour of its own, its words'.
+			box.focus()
+			const own = getComputedStyle(box)
+			color = own.caretColor === 'auto' ? own.color : own.caretColor
+			under = behind(box)
 		} else if (part === 'edge') {
 			color = getComputedStyle(box).borderTopColor
 			under = behind(box.parentElement)

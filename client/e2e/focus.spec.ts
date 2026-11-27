@@ -4,7 +4,9 @@ import { openTests } from './helpers'
 
 // Keyboard focus (sf-system.md, "Line parts"): a ring in the text colour. An element with a line
 // keeps it where it is, and the ring reaches just past it, so both show; under the line, the
-// surface it sits on, so a dashed line's gaps stay gaps. A field is no different.
+// surface it sits on, so a dashed line's gaps stay gaps. A field typed into shows its cursor
+// instead, with no ring, and keeps its error line (sf-system.md, "A field typed into shows focus
+// with its cursor").
 
 test.beforeEach(async ({ page, themeClass }) => {
 	await openTests(page, themeClass)
@@ -45,13 +47,19 @@ const focusLook = (page: Page, id: string) =>
 				own.boxShadow
 				=== `${surface} 0px 0px 0px ${reach}px, ${text} 0px 0px 0px ${reach + px('--sf-stroke-2')}px`,
 			outlineInText: own.outlineStyle === 'solid' && own.outlineColor === text,
+			// No ring: the outline, or the shadow's last ring, see-through.
+			noRing:
+				/, 0\)$/.test(own.outlineColor)
+				|| /, 0\) 0px 0px 0px [\d.]+px$/.test(own.boxShadow),
 			offset: own.outlineOffset,
 			outline: own.outlineStyle,
 		}
 	})
 
 test('focus shows with a line and without one', async ({ page, browserName }) => {
+	// A field: no ring.
 	await page.locator('#start').focus()
+	expect(await focusLook(page, 'start')).toMatchObject({ noRing: true })
 
 	// Picked: the swatch's solid line where it was, the ring just outside it.
 	const restingOffset = (await focusLook(page, 'picked')).offset
@@ -66,7 +74,7 @@ test('focus shows with a line and without one', async ({ page, browserName }) =>
 	await tabTo(page, browserName, 'plain')
 	expect(await focusLook(page, 'plain')).toMatchObject({ outlineInText: true })
 
-	// A field with an error: as anything else, its dashed line and the ring outside it.
+	// A field with an error: its dashed line, and no ring.
 	await tabTo(page, browserName, 'field')
-	expect(await focusLook(page, 'field')).toMatchObject({ ringOutside: true, outline: 'dashed' })
+	expect(await focusLook(page, 'field')).toMatchObject({ noRing: true, outline: 'dashed' })
 })
