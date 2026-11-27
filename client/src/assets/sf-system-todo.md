@@ -5,14 +5,19 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next, discussed before any code: **the page name box typed in** (`EditorTopBar.vue`; owner,
-2026-11-27). What it draws today (a contained field typed in drawn as a field: its near-black
-surface, its edge in the text colour at 60%, full words) isn't what the owner chose from the five
-mock-ups (77fb559): the design changed after. Find what changed first. The owner wants less
-contrast against the bar and no edge. The same field not
-contained, measured, has no edge but the same near-black fill, and its words at 60% (quiet), so
-it isn't that either. Related: "A box says what it has" (Ideas), as this look restates the
-field's surface and edge.
+Next, discussed before any code: **light mode's surfaces, and the name box typed in**
+(`EditorTopBar.vue`; owner, 2026-11-27). Decided:
+
+- **A quiet, contained field has no edge**, typed in too (`sf-field sf-is-contained sf-on-focus`
+  draws one today, its edge in the text colour at 60%).
+- **Light mode's surfaces are what's wrong**: a field (`surface-0`, white) on the bar
+  (`sf-depth-1`, `#f4f4f5`) is 1.1:1, which is why the typed-in look took an edge (`sf-system.md`,
+  "A contained field shows focus as a field"). Measured the same day in dark mode: a field
+  `rgb(5,10,16)` on the bar `rgb(31,38,47)`, which the owner found too strong.
+
+What the box draws today isn't what the owner chose from the five mock-ups (77fb559): the design
+changed after; find what changed first. A quiet field typed in keeps its words at 60%. Related:
+"A box says what it has" (Ideas), as the typed-in look restates the field's surface and edge.
 
 Then contrast on white, its next item (`docs/plans/contrast-on-white.md`, "Later, one at a
 time"), one per session; one review of the whole once they're done. Waiting: pasting warns of
