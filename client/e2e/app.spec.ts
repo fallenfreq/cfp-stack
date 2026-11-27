@@ -7,6 +7,7 @@ import {
 	breakpoints,
 	css,
 	expectOnCorner,
+	fontLoaded,
 	moveTo,
 	openTests,
 	settle,
@@ -932,7 +933,7 @@ test("a mark on the name says there are changes not yet saved, and Save's look d
 	await settle(page)
 	expect(await saveLook(), "Save's look with changes").toEqual(savedLook)
 	// The name's width changes as its font loads (4px for "Stored"), so it's measured after.
-	await page.evaluate(() => document.fonts.ready)
+	await fontLoaded(name)
 	const nameBox = await box(name)
 	await expectOnCorner(mark, nameBox, { x: 'right', y: 'top' }, "the name's top end corner")
 	expect(
@@ -958,9 +959,8 @@ test("a mark on the name says there are changes not yet saved, and Save's look d
 	await expect(mark, 'saved').toHaveCount(0)
 })
 
-// An untitled page's name box holds nothing and shows "Untitled" as its hint, so a click, or a
-// name deleted whole, leaves it as wide as the hint and its row as tall as before. It's never
-// narrower than the hint, even holding only a space.
+// An untitled page's name box, holding nothing, is as wide as it is holding its hint's words, and
+// stays so, the bar as tall, clicked, emptied, holding only a space and left.
 test("an untitled page's name box keeps its size when clicked or emptied", async ({
 	page,
 	themeClass,
@@ -968,23 +968,41 @@ test("an untitled page's name box keeps its size when clicked or emptied", async
 	await steadyRequests(page)
 	await page.goto('/editor')
 	await useTheme(page, themeClass)
-	await page.evaluate(() => document.fonts.ready)
 	const name = bars(page).getByRole('textbox')
-	const row = bars(page).locator('.top-bar__page')
-	const size = async () => [(await box(name)).width, (await box(row)).height]
+	await fontLoaded(name)
+	const size = async () => [(await box(name)).width, (await box(bars(page))).height]
 	const untitled = await size()
 
 	await name.click()
 	expect(await size(), 'clicked').toEqual(untitled)
-	await page.keyboard.type('Named')
-	await page.keyboard.press('ControlOrMeta+a')
-	await page.keyboard.press('Backspace')
-	expect(await size(), 'a name deleted whole').toEqual(untitled)
-	await page.keyboard.type(' ')
-	expect(await size(), 'a space').toEqual(untitled)
+	const hint = (await name.getAttribute('placeholder')) ?? ''
+	for (const [why, words] of [
+		['holding its hint', hint],
+		['emptied', ''],
+		['a space', ' '],
+	] as const) {
+		await name.fill(words)
+		expect(await size(), why).toEqual(untitled)
+	}
 	await name.press('Escape')
 	expect(await size(), 'left').toEqual(untitled)
-	await expect(name).toHaveAttribute('placeholder', 'Untitled')
+})
+
+// A named page's name box, emptied, hints at its name, which leaving it empty keeps, and stays as
+// wide as with it.
+test("a named page's name box, emptied, shows the name it keeps", async ({ page, themeClass }) => {
+	await openStored(page, themeClass, oneParagraph)
+	const name = bars(page).getByRole('textbox')
+	await expect(name).toHaveValue('Stored')
+	await fontLoaded(name)
+	const named = (await box(name)).width
+
+	await name.click()
+	await name.fill('')
+	await expect(name).toHaveAttribute('placeholder', 'Stored')
+	expect((await box(name)).width, 'as wide').toBe(named)
+	await name.blur()
+	await expect(name).toHaveValue('Stored')
 })
 
 // The name box reads as a title at rest; typed in, it's drawn as a field (a field's background,

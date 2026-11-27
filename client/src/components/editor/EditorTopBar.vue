@@ -17,13 +17,13 @@
 			<div class="top-bar__name-room">
 				<SfBadge :count="store.hasUnsavedChanges ? undefined : 0">
 					<span class="top-bar__name-fit">
-						<!-- Hidden copies of what the box holds and of its hint, with the box's classes
+						<!-- Hidden copies of its hint and of what the box holds, with the box's classes
 						     so each is the box's size: the box takes the wider, so it's never narrower
 						     than the hint, even holding a space or a letter. Spaces kept, as the box
 						     shows them. The hint's first: the row lines up on the first's text, and
 						     the other's is empty with no name. -->
 						<span :class="nameClasses" class="top-bar__name-copy" aria-hidden="true">{{
-							untitled
+							hint.replaceAll(' ', '\u00a0')
 						}}</span>
 						<span :class="nameClasses" class="top-bar__name-copy" aria-hidden="true">{{
 							nameInputValue.replaceAll(' ', '\u00a0')
@@ -33,8 +33,8 @@
 							v-model="nameInputValue"
 							:class="nameClasses"
 							class="top-bar__name sf-on-hover sf-on-focus"
-							:placeholder="untitled"
-							:title="currentName ?? untitled"
+							:placeholder="hint"
+							:title="hint"
 							@focus="startRename"
 							@blur="commitRename"
 							@keyup.enter="nameInput?.blur()"
@@ -214,8 +214,9 @@ onBeforeUnmount(() => removeEventListener('keydown', saveByKeys))
 const nameClasses = 'sf sf-field sf-single-line sf-is-contained sf-loudness-1 sf-size-xs'
 const renamingName = ref(false)
 // What the name box holds: the name, kept up to date by the watch below from the start. A page
-// with none holds nothing and shows "Untitled" as its hint, so a click doesn't empty the box.
-const untitled = 'Untitled'
+// with none holds nothing, so a click doesn't empty the box. Its hint is what an empty box leaves
+// the page called: its name, which leaving it empty keeps, or with none "Untitled".
+const hint = computed(() => currentName.value ?? 'Untitled')
 const nameInputValue = ref('')
 const nameInput = ref<HTMLInputElement | null>(null)
 

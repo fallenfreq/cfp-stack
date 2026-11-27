@@ -80,6 +80,17 @@ export async function useTheme(page: Page, themeClass: string | null): Promise<v
 	await settle(page)
 }
 
+/**
+ * Wait for the font a box shows its words in, so it's measured at its size: `document.fonts.ready`
+ * can resolve before the box asks for its font, which then loads after.
+ */
+export const fontLoaded = (box: Locator) =>
+	box.evaluate(async (el) => {
+		const words =
+			el instanceof HTMLInputElement ? el.value || el.placeholder : (el.textContent ?? '')
+		await document.fonts.load(getComputedStyle(el).font, words || ' ')
+	})
+
 /** Open the editor with a seeded document ('tests' or the demo, 'true') and wait for it to settle. */
 export async function openSeeded(
 	page: Page,

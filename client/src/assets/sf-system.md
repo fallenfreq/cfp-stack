@@ -404,7 +404,9 @@ A box's words say two things, each a part, as the line's and the fill's do (owne
 A fill is a loud button, chip, tag, status or counter, a loud colour, an avatar or the switch's
 knob; it passes its `fg_on_*` (or `fg_inverted`). Whatever passes the colour draws the words from
 it at the strength passed, so quiet coloured words are that colour at 60%, with no rule of their
-own. Picked and current read the colour, `var(--sfx-text-color, <the brand's words>)`: a coloured
+own. A field's hint (its placeholder) isn't its words: 50%, read by neither part, so hover
+doesn't brighten it and it reads as nothing entered yet, the editor's "Untitled" too (owner,
+2026-11-27). Picked and current read the colour, `var(--sfx-text-color, <the brand's words>)`: a coloured
 thing keeps its colour and a loud one its fill's words, one rule each; current says it again
 with hover, or the loud hover rule below would win on a loud link that is on. Under the pointer a loud
 thing turns dark, so its words are its fill's, or light where it has no fill of its own (an
