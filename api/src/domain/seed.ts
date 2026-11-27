@@ -1714,17 +1714,13 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-color',
 		value: 'var(--sfx-fill-border-color, transparent)',
 	},
-	// A contained field with a focus look, typed in: drawn as a field in full, its surface, edge
-	// and full words, quiet or not, with no ring (sf-system.md, "A contained field shows focus as
-	// a field"). A state rule, so hover doesn't take its place while typing.
+	// A contained field with a focus look, typed in: a field's surface at half strength, so it sits
+	// halfway between a field and the box it's in, with no edge, as contained has none, and no ring
+	// (sf-system.md, "A contained field shows focus as a field"). A state rule, so hover doesn't
+	// take its place while typing.
 	...(
 		[
-			['background', underFill('rgb(var(--sf-surface-0))')],
-			[
-				'border-color',
-				'var(--sfx-fill-border-color, rgb(var(--sf-fg_primary) / var(--sf-alpha-6)))',
-			],
-			['--sfx-text-alpha', '1'],
+			['background', underFill('rgb(var(--sf-surface-0) / var(--sf-alpha-5))')],
 			['--sfx-ring-alpha', '0'],
 		] as const
 	).map(
@@ -1736,16 +1732,25 @@ const ROOT_RULES: RuleSpec[] = [
 	),
 	// A field typed into shows focus with its cursor, not the ring, as browsers show focus on one
 	// clicked as well as tabbed to (sf-system.md, "A field typed into shows focus with its
-	// cursor"). Not a select: it has no cursor, and a click doesn't show its ring.
-	...(['input', 'textarea'] as const).map(
-		(elementSelector): RuleSpec => ({
+	// cursor"). Not a select: it has no cursor, and a click doesn't show its ring. A quiet one's
+	// words are at full strength while typed in, as they're what's being written (owner,
+	// 2026-11-27); quiet named here, so the rule is in quiet's layer and wins.
+	...(['input', 'textarea'] as const).flatMap((elementSelector): RuleSpec[] => [
+		{
 			elementSelector,
 			classNames: ['sf-field'],
 			pseudo: ':focus-visible',
 			cssProperty: '--sfx-ring-alpha',
 			value: '0',
-		}),
-	),
+		},
+		{
+			elementSelector,
+			classNames: ['sf-field', 'sf-loudness-1'],
+			pseudo: ':focus-visible',
+			cssProperty: '--sfx-text-alpha',
+			value: '1',
+		},
+	]),
 	{ classNames: ['sf-is-loading'], cssProperty: 'cursor', value: 'progress' },
 	// A busy button stays focusable (so it isn't disabled); it dims like a disabled one.
 	{ classNames: ['sf-is-loading'], cssProperty: 'opacity', value: '0.4' },

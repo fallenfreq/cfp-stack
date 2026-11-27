@@ -353,17 +353,21 @@ clicked as well as tabbed to, unlike a button, so the ring made a click look lik
 sites don't. The browser's own cursor is the mark: the W3C's guidance names it a text field's focus
 mark (Understanding 2.4.7, its examples; 1.4.11, its text input figure), so its colour is never
 restyled. A dropdown has no cursor, so it keeps the ring, which a click doesn't show. Forced colours
-still draws the outline.
+still draws the outline. A quiet field's words are at full strength while it's typed in, contained
+or not, as they're what's being written (owner, 2026-11-27); the rule names quiet, so it's in
+quiet's layer and wins.
 
 **A contained field shows focus as a field** (`sf-field sf-is-contained sf-on-focus`, owner,
-2026-11-26, chosen from a mock-up of five ways): while it's typed in, it's drawn as a field in
-full, its surface, edge and full-strength words, quiet or not, with no ring. At rest it reads as a
-title (the editor's page name). It stays contained while typed in, as it still is, so the look is
-the theme's rule, not classes taken off. Its strength part is set to 0, so an error's line stays.
-The rule is a state one (`sf-on-focus`), so the hover tint doesn't take its place while typing.
-It overrides quiet as hover does: without an edge, focus would be white on the bar's near-white
-in the light theme (1.1:1); the edge reaches 3:1. The edge stays in a box with no padding, where it
-meets the box's own (owner, 2026-11-27): it's the look the field has with contained taken off.
+2026-11-26, chosen from a mock-up of five ways): while it's typed in, it takes a field's surface
+at half strength, with no ring, and full-strength words as any quiet field does. Half strength
+puts it halfway between a field and the box it's in: a field's full surface on the dark bar was
+too strong (owner, 2026-11-27), and the theme needn't know what the box is. It has no edge, as
+nothing contained has one (owner, 2026-11-27). At rest it reads as a title (the editor's page
+name). It stays contained while typed in, as it still is, so the look is the theme's rule, not
+classes taken off. Its ring's strength is set to 0, so an error's line stays. The rule is a state
+one (`sf-on-focus`), so the hover tint doesn't take its place while typing. Known gap: in the
+light theme it barely shows on the bar (a field's surface there is 1.1:1, half of it less), as
+light mode's surfaces are too close (to-do, "Current state").
 
 ### Fill parts
 
@@ -396,10 +400,10 @@ A theme changes a fill by setting its part, never `background`:
 
 A box's words say two things, each a part, as the line's and the fill's do (owner, 2026-11-25):
 
-| Part                          | Says                                                                                     | Passed by                                                                             |
-| ----------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Colour (`--sfx-text-color`)   | what the words are: a colour's words, or those for a fill                                | each colour (`sf-variant-*`); each fill                                               |
-| Strength (`--sfx-text-alpha`) | how strong: 60% quiet, 40% a quiet icon, full when hovered or a contained field typed in | `sf-loudness-1`, `sf-icon` with it, `sf-on-hover`, `sf-on-focus` on a contained field |
+| Part                          | Says                                                                                 | Passed by                                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Colour (`--sfx-text-color`)   | what the words are: a colour's words, or those for a fill                            | each colour (`sf-variant-*`); each fill                                                              |
+| Strength (`--sfx-text-alpha`) | how strong: 60% quiet, 40% a quiet icon, full when hovered or a quiet field typed in | `sf-loudness-1`, `sf-icon` with it, `sf-on-hover`, an `input` or `textarea` with `sf-field` typed in |
 
 A fill is a loud button, chip, tag, status or counter, a loud colour, an avatar or the switch's
 knob; it passes its `fg_on_*` (or `fg_inverted`). Whatever passes the colour draws the words from

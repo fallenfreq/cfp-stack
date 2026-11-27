@@ -1003,15 +1003,20 @@ test("a named page's name box, emptied, shows the name it keeps", async ({ page,
 	await expect(name).toHaveValue('Stored')
 })
 
-// The name box reads as a title at rest; typed in, it's drawn as a field (a field's background,
-// the page's own, its edge and full words) with no focus ring, also with the pointer over it.
-test('the name box, typed in, is drawn as a field with no ring', async ({ page, themeClass }) => {
+// The name box reads as a title at rest; typed in, it takes a field's background (the page's own)
+// at half strength and full words, with no edge, as it's contained (owner, 2026-11-27), and no
+// focus ring, also with the pointer over it.
+test("the name box, typed in, takes a field's surface at half strength, with no edge or ring", async ({
+	page,
+	themeClass,
+}) => {
 	await steadyRequests(page)
 	await page.goto('/editor')
 	await useTheme(page, themeClass)
 	const name = bars(page).getByRole('textbox')
 	const done = () => name.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
-	const fieldBackground = await css(page.locator('body'), 'background-color')
+	const field = await css(page.locator('body'), 'background-color')
+	const halfField = field.replace(/^rgb\((.*)\)$/, 'rgba($1, 0.5)')
 	const transparent = 'rgba(0, 0, 0, 0)'
 	expect(await css(name, 'background-color'), 'at rest').toBe(transparent)
 	expect(await css(name, 'border-color'), 'at rest').toBe(transparent)
@@ -1020,8 +1025,10 @@ test('the name box, typed in, is drawn as a field with no ring', async ({ page, 
 	for (const why of ['typed in', 'typed in, the pointer over it']) {
 		if (why !== 'typed in') await name.hover()
 		await done()
-		expect(await css(name, 'background-color'), why).toBe(fieldBackground)
-		expect(await css(name, 'border-color'), why).not.toBe(transparent)
+		expect(await css(name, 'background-color'), `${why}: half a field's surface`).toBe(
+			halfField,
+		)
+		expect(await css(name, 'border-color'), `${why}: no edge`).toBe(transparent)
 		expect(await css(name, 'color'), `${why}: full words`).not.toMatch(/\/ 0\.\d+\)$/)
 		expect(await css(name, 'outline-color'), `${why}: no ring`).toMatch(/, 0\)$/)
 	}

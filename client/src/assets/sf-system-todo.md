@@ -5,19 +5,14 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next, discussed before any code: **light mode's surfaces, and the name box typed in**
-(`EditorTopBar.vue`; owner, 2026-11-27). Decided:
-
-- **A quiet, contained field has no edge**, typed in too (`sf-field sf-is-contained sf-on-focus`
-  draws one today, its edge in the text colour at 60%).
-- **Light mode's surfaces are what's wrong**: a field (`surface-0`, white) on the bar
-  (`sf-depth-1`, `#f4f4f5`) is 1.1:1, which is why the typed-in look took an edge (`sf-system.md`,
-  "A contained field shows focus as a field"). Measured the same day in dark mode: a field
-  `rgb(5,10,16)` on the bar `rgb(31,38,47)`, which the owner found too strong.
-
-What the box draws today isn't what the owner chose from the five mock-ups (77fb559): the design
-changed after; find what changed first. A quiet field typed in keeps its words at 60%. Related:
-"A box says what it has" (Ideas), as the typed-in look restates the field's surface and edge.
+Next, discussed before any code: **light mode's surfaces are what's wrong** (owner, 2026-11-27).
+A field (`surface-0`, white) on the editor's bar (`sf-depth-1`, `#f4f4f5`) is 1.1:1, so the page
+name box typed in barely shows: it has no edge, as it's contained, and a field's surface at half
+strength (v2.102.0; `sf-system.md`, "A contained field shows focus as a field", known gap). In
+dark mode a field's full surface (`rgb(5,10,16)` on the bar `rgb(31,38,47)`) was too strong, so
+half strength suits dark; look at light's surfaces with it. The demo of every field, dark and
+light: https://claude.ai/artifact/G3q7yBqsHKqzsmktF4v8YD. Related: "A box says what it has"
+(Ideas), as the typed-in look restates the field's surface.
 
 Then contrast on white, its next item (`docs/plans/contrast-on-white.md`, "Later, one at a
 time"), one per session; one review of the whole once they're done. Waiting: pasting warns of
