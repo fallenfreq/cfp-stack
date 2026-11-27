@@ -5,11 +5,18 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next, from the editor's page name box (`EditorTopBar.vue`; owner, 2026-11-26):
+Next, from the editor's page name box (`EditorTopBar.vue`; owner, 2026-11-26 and 27), one
+session, discussed before any code:
 
-- **Where the unsaved dot sits** (discuss next): the owner doesn't like it sitting on the box's
-  edge line. Settle it with the dot at middle right, not top right: `SfBadge` always places its
-  mark at the top end corner (a prop was floated: `alignY`, `start` or `center`).
+- **Where a mark sits** (discuss next): the owner doesn't like the unsaved dot sitting on the
+  box's edge line (`.sf-badge.sf-is-overlay` is 2px out every way, so it's on the corner; middle
+  right was suggested). The owner's view: a mark should be placed with the position classes we
+  have (`sl-align-x-*`, `sl-align-y-*`), not a new prop (`alignY` was floated); `SfBadge` hard-codes
+  `sl-align-x-end sl-align-y-start` today. Then a way to move it along x or y, by a positive or
+  negative amount, from where the classes put it; today only the theme's negative margin does
+  (the counter's is `0 -0.5rem`). Check what the classes already allow first.
+- **The ⋮ counter against the screen's edge**: the owner doesn't want the top bar's warning
+  count touching it (at 390px it's 16px from the right, 6px from the top; ask which edge).
 
 Then contrast on white, its next item (`docs/plans/contrast-on-white.md`, "Later, one at a
 time"), one per session; one review of the whole once they're done. Waiting: pasting warns of
@@ -370,6 +377,10 @@ what the page can't keep ("Ideas").
 
 ## Small clean-ups
 
+- **A flaky check:** "the editor opens a stored page where its cursor was left" (`app.spec.ts`)
+  is 1–2px out about 1 run in 100 (2026-11-27). Likely the font arriving late: the bar grows
+  88→90px then, and `openSeeded`'s `document.fonts.ready` can resolve before a box asks for its
+  font (`fontLoaded` in `helpers.ts` waits for one box's).
 - Checks of the root theme's own look (not behaviour every theme keeps) go in
   `client/e2e/root-theme/`, which the test theme's runs skip (owner, 2026-11-23). Sort the
   existing checks into it.
