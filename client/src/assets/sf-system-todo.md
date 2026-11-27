@@ -5,18 +5,14 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next, from the editor's page name box (`EditorTopBar.vue`; owner, 2026-11-26 and 27), one
-session, discussed before any code:
-
-- **Where a mark sits** (discuss next): the owner doesn't like the unsaved dot sitting on the
-  box's edge line (`.sf-badge.sf-is-overlay` is 2px out every way, so it's on the corner; middle
-  right was suggested). The owner's view: a mark should be placed with the position classes we
-  have (`sl-align-x-*`, `sl-align-y-*`), not a new prop (`alignY` was floated); `SfBadge` hard-codes
-  `sl-align-x-end sl-align-y-start` today. Then a way to move it along x or y, by a positive or
-  negative amount, from where the classes put it; today only the theme's negative margin does
-  (the counter's is `0 -0.5rem`). Check what the classes already allow first.
-- **The ⋮ counter against the screen's edge**: the owner doesn't want the top bar's warning
-  count touching it (at 390px it's 16px from the right, 6px from the top; ask which edge).
+Next, discussed before any code: **the page name box typed in** (`EditorTopBar.vue`; owner,
+2026-11-27). What it draws today (a contained field typed in drawn as a field: its near-black
+surface, its edge in the text colour at 60%, full words) isn't what the owner chose from the five
+mock-ups (77fb559): the design changed after. Find what changed first. The owner wants less
+contrast against the bar and no edge. The same field not
+contained, measured, has no edge but the same near-black fill, and its words at 60% (quiet), so
+it isn't that either. Related: "A box says what it has" (Ideas), as this look restates the
+field's surface and edge.
 
 Then contrast on white, its next item (`docs/plans/contrast-on-white.md`, "Later, one at a
 time"), one per session; one review of the whole once they're done. Waiting: pasting warns of
@@ -420,6 +416,9 @@ what the page can't keep ("Ideas").
 - **A Badge block for page builders**, wrapping what it marks with the mark on its corner, as
   `SfBadge` does in the app's screens. By hand today: the block and a mark in a plain block
   (`sf-system.md`, "Placing a box over another").
+- **Moving a placed mark by an amount, for page builders** (owner, 2026-11-27: parked until a
+  page needs it). Component creators use `translate` (`sf-system.md`, "Placing a box over
+  another"); page builders have the nine spots only, with no class for an amount.
 - **A picture behind words** (a hero image). `sl-over` can't: a placed box is drawn over the
   box's content, and a placed picture keeps its own size (owner, 2026-11-23: parked).
 - **Bigger controls on a touch screen.** The editor's controls are the toolbar's size, `xs`

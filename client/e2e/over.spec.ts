@@ -123,6 +123,14 @@ test("a mark not placed sits where it's written, filled as a floating one is", a
 	).toBe(await css(mark, 'background-color'))
 })
 
+// A dot has no content to hold it open, so a row or stack short of room would squash it.
+test('a mark in a stack short of room keeps its size', async ({ page }) => {
+	const roomy = await box(page.locator('#over-unplaced'))
+	const squeezed = await box(page.locator('#over-squeezed'))
+	near(squeezed.width, roomy.width, 'as wide')
+	near(squeezed.height, roomy.height, 'as tall')
+})
+
 test("a mark first in a box of text doesn't push the text down", async ({ page }) => {
 	const after = async (boxId: string, textId: string) =>
 		(await box(page.locator(`#${textId}`))).top - (await box(page.locator(`#${boxId}`))).top

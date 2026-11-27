@@ -770,7 +770,9 @@ sf-counter       short read-only label holding a count (3 unread, +2 more).
 sf-badge         a mark saying there's something there to look at, with nothing
                  in it, in the line where it's written; over a box with sl-over
                  (Placing a box over another). A count there is a counter
-                 (sf-counter sf-is-overlay), so counts are styled in one place
+                 (sf-counter sf-is-overlay), so counts are styled in one place.
+                 It keeps the theme's size: a row or stack short of room
+                 doesn't squash it, as it has no content to hold it open
 sf-icon          content is a single icon (font icon or SVG). line-height:1
                  removes leading so padding drives vertical spacing
 sf-single-line   content is a single line of text. line-height:1 removes the
@@ -1375,10 +1377,20 @@ corner.
   `<div><layout-card>…</layout-card><div class="sf-badge sl-over sl-align-x-end sl-align-y-start sf-is-overlay"></div></div>`.
   Straight in a component block, it gets a warning instead of code that handles it.
 - It wears `sf-is-overlay`. Only a floating mark or count lets clicks through.
-- The theme draws it, and sets how far a floating mark pokes out (a margin on the mark).
+- The theme draws it, and sets how far a floating mark pokes out (a margin on the mark), as that
+  goes with the mark's size; where it sits is whoever places it (owner, 2026-11-27).
+- To move a placed mark from where its words put it, use `translate`: it adds to the theme's
+  margin and the placing, at any spot, centred too. A margin of your own loses to the theme's,
+  whose layers come after a component's.
+- Nothing keeps room round a box for a poke-out. A mark comes and goes, so room made only while
+  it shows would move what's beside it, and room kept always would space boxes for a mark they
+  mostly don't have (owner, 2026-11-27).
+  Where a box cuts it off (a scroll area, the top of the screen), give the mark room there or
+  put it somewhere else.
 - Limits: write a mark after a layer in the same box, as two are drawn in the order written. A
   box that clips cuts off the poke-out. A layer stops clicks on what's under it. A picture
-  keeps its own size, so it suits a corner.
+  keeps its own size, so it suits a corner. `translate` sideways isn't turned round in
+  right-to-left text.
 
 ### Theme contract
 
@@ -1542,15 +1554,21 @@ above them. The page's row meets only the path's, so it's depth 1, and the two r
 
 Exit is an arrow back, not ✕, which reads as closing and throwing away (owner, 2026-11-21). Where
 the page's row is narrow (`xs`, a phone), the warnings and Code view go into "⋮", as the site's
-nav puts its links in a menu, so the name keeps its room in any theme; "⋮" then wears the
-warning count (`SfBadge`). The badge is the mark's own component, not the menu's, so anything can
-wear one (owner, 2026-11-21).
+nav puts its links in a menu, so the name keeps its room in any theme; "⋮" then wears a mark
+(`SfBadge`). The badge is the mark's own component, not the menu's, so anything can wear one
+(owner, 2026-11-21). The mark is a dot in the warnings' colour, as apps mark a "⋮" with something
+in it; the number is the menu's first item. A count from two figures grew back over the narrow
+dots (owner, 2026-11-27). The dot sits on the top end corner, so the page's row is a size up
+(`sf-size-xs`, the path's `sf-size-2xs`): its padding gives the dot room under the top of the
+screen, as the theme's own padding beats any the bar could add (owner, 2026-11-27).
 
 Changes not yet saved show as a mark on the page's name, as editors mark an edited document by its
 name; Save keeps one quiet look and says how the page stands in words ("Save", "Saving…",
 "Saved"), which screen readers hear. A filled Save wasn't wanted as the sign, and a coloured
-mark could read as "saved". The name's box is as wide as the name, so the mark is by
-it. Cmd+S (Ctrl+S) saves too, from anywhere in the editor; Save stays in the bar for touch screens
+mark could read as "saved". The name's box is as wide as the name, and the mark follows it on
+its line, centred, a gap after the box, as editors put an unsaved dot after a file's name; on the
+box's corner it sat on the box's edge (owner, 2026-11-27). Cmd+S (Ctrl+S) saves too, from
+anywhere in the editor; Save stays in the bar for touch screens
 (owner, 2026-11-22).
 
 Picker choices land in storage by a uniform pattern:

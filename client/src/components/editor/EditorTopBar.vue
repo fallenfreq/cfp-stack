@@ -4,44 +4,44 @@
 	     layer above them (depth 2); the page's row meets only the path's, so it's depth 1, and the two
 	     rows look apart. Side padding puts the controls on the page line (sl-inset-line). -->
 	<div ref="bar" class="editor-top-bar">
-		<!-- Where the row is narrow (xs), the warnings and Code view go into "⋮", which then wears the
-		     warning count. The menu's items measure this row too: a menu straight in a popover doesn't
-		     measure (sf-system.md, "A popover is laid out on its own"). -->
+		<!-- Where the row is narrow (xs), the warnings and Code view go into "⋮", which then wears a
+		     mark in the warnings' colour; the number is its first item, as a count from two figures
+		     would cover the dots. The menu's items measure this row too: a menu straight in a
+		     popover doesn't measure (sf-system.md, "A popover is laid out on its own"). -->
 		<div
-			class="top-bar__page sl-cluster sf-gap-2xs sl-inset-line sf-depth-1 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right"
+			class="top-bar__page sl-cluster sf-gap-2xs sl-inset-line sf-depth-1 sf-size-xs sf-is-sticky sf-is-edge-left sf-is-edge-right"
 		>
 			<EditorExitButton />
-			<!-- The name, in the row's free room, its box as wide as the name, so the mark saying the
-			     page has changes not yet saved is by it (the box has no edge to see). Save says it in
-			     words, as the mark is for sight only. -->
+			<!-- The name, in the row's free room, its box as wide as the name, and after it the mark
+			     saying the page has changes not yet saved (beside it, not on its corner, where it sat
+			     on the box's edge). Save says it in words, as the mark is for sight only. -->
 			<div class="top-bar__name-room">
-				<SfBadge :count="store.hasUnsavedChanges ? undefined : 0">
-					<span class="top-bar__name-fit">
-						<!-- Hidden copies of its hint and of what the box holds, with the box's classes
-						     so each is the box's size: the box takes the wider, so it's never narrower
-						     than the hint, even holding a space or a letter. Spaces kept, as the box
-						     shows them. The hint's first: the row lines up on the first's text, and
-						     the other's is empty with no name. -->
-						<span :class="nameClasses" class="top-bar__name-copy" aria-hidden="true">{{
-							hint.replaceAll(' ', '\u00a0')
-						}}</span>
-						<span :class="nameClasses" class="top-bar__name-copy" aria-hidden="true">{{
-							nameInputValue.replaceAll(' ', '\u00a0')
-						}}</span>
-						<input
-							ref="nameInput"
-							v-model="nameInputValue"
-							:class="nameClasses"
-							class="top-bar__name sf-on-hover sf-on-focus"
-							:placeholder="hint"
-							:title="hint"
-							@focus="startRename"
-							@blur="commitRename"
-							@keyup.enter="nameInput?.blur()"
-							@keyup.escape="cancelRename"
-						/>
-					</span>
-				</SfBadge>
+				<span class="top-bar__name-fit">
+					<!-- Hidden copies of its hint and of what the box holds, with the box's classes
+					     so each is the box's size: the box takes the wider, so it's never narrower
+					     than the hint, even holding a space or a letter. Spaces kept, as the box
+					     shows them. The hint's first: the row lines up on the first's text, and
+					     the other's is empty with no name. -->
+					<span :class="nameClasses" class="top-bar__name-copy" aria-hidden="true">{{
+						hint.replaceAll(' ', '\u00a0')
+					}}</span>
+					<span :class="nameClasses" class="top-bar__name-copy" aria-hidden="true">{{
+						nameInputValue.replaceAll(' ', '\u00a0')
+					}}</span>
+					<input
+						ref="nameInput"
+						v-model="nameInputValue"
+						:class="nameClasses"
+						class="top-bar__name sf-on-hover sf-on-focus"
+						:placeholder="hint"
+						:title="hint"
+						@focus="startRename"
+						@blur="commitRename"
+						@keyup.enter="nameInput?.blur()"
+						@keyup.escape="cancelRename"
+					/>
+				</span>
+				<span v-if="store.hasUnsavedChanges" class="sf-badge" aria-hidden="true" />
 			</div>
 			<!-- The page's warnings (pageWarnings.ts): each press selects the next block with one. -->
 			<SfTooltip v-if="shownWarnings" text="Next warning" class="sl-hide-below-xs">
@@ -72,7 +72,7 @@
 			<!-- Its own box, as the toggle's classes go to its button, not its tooltip's box. -->
 			<div class="sl-cluster sl-hide-below-xs"><CodeViewToggle /></div>
 			<SfBadge
-				:count="shownWarnings"
+				:count="shownWarnings ? undefined : 0"
 				:variant="warningVariant"
 				:loudness="3"
 				class="sl-show-below-xs"
@@ -251,7 +251,8 @@ const cancelRename = () => {
 
 <style>
 @layer ui {
-	/* Layout only: the two rows, each padded by its depth × sf-size-2xs. */
+	/* Layout only: the two rows, each padded by its depth × size. The page's row is a size up
+	   (xs), so the mark on the corner of "⋮" has room under the top of the screen. */
 	.editor-top-bar {
 		position: sticky;
 		top: 0;
@@ -265,9 +266,13 @@ const cancelRename = () => {
 	   with an ellipsis. A copy hides what overflows, so it can be narrower than its words and the page
 	   doesn't scroll sideways. A width of 0 keeps the input's own default width out of the fit.
 	   Chrome comes from the classes: a field of one line, contained in the bar, with a look for
-	   focus. */
+	   focus. The unsaved mark follows the name on its line, centred, and never wraps under it
+	   (a cluster would). */
 	.top-bar__name-room {
 		flex: 1 1 0;
+		display: flex;
+		align-items: center;
+		gap: var(--sf-spacing-2xs);
 	}
 	.top-bar__name-fit {
 		display: grid;

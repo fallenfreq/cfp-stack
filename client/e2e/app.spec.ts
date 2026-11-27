@@ -6,7 +6,6 @@ import {
 	box,
 	breakpoints,
 	css,
-	expectOnCorner,
 	fontLoaded,
 	moveTo,
 	openTests,
@@ -906,8 +905,8 @@ test('Save says whether the page is saved, and only whoever could save sees it',
 // Changes not yet saved show as a mark on the page's name; Save looks the same either way. The
 // loud Save this replaced lost its fill in the bar, before a contained box kept its fill
 // (sf-system-todo.md, "Ideas, not decided": a loud Save again). The name
-// box is as wide as the name, so the mark on its top end corner is by it, and a name longer than
-// the room is cut short.
+// box is as wide as the name, with the mark after it, and a name longer than the room is cut
+// short.
 test("a mark on the name says there are changes not yet saved, and Save's look doesn't change", async ({
 	page,
 	themeClass,
@@ -935,7 +934,6 @@ test("a mark on the name says there are changes not yet saved, and Save's look d
 	// The name's width changes as its font loads (4px for "Stored"), so it's measured after.
 	await fontLoaded(name)
 	const nameBox = await box(name)
-	await expectOnCorner(mark, nameBox, { x: 'right', y: 'top' }, "the name's top end corner")
 	expect(
 		(await box(save)).left - nameBox.right,
 		'the name box as wide as the name',

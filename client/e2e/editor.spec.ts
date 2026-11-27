@@ -4190,9 +4190,9 @@ test("the bars' controls are big enough to hit, and the path has a row of its ow
 const editorMenu = (page: Page) =>
 	page.getByRole('list').filter({ has: page.getByRole('switch', { name: 'Dark mode' }) })
 
-// Where the page's row is narrow, the warnings and Code view go into "⋯", which wears the warning
-// count; where it's wide they're in the row and "⋯" has no mark.
-test('a narrow row moves the warnings and Code view into "⋯", which shows the count', async ({
+// Where the page's row is narrow, the warnings and Code view go into "⋯", which wears a mark, the
+// number being its first item; where it's wide they're in the row and "⋯" has no mark.
+test('a narrow row moves the warnings and Code view into "⋯", which wears a mark', async ({
 	page,
 }) => {
 	await page.locator('.tiptap p').first().click()
@@ -4205,8 +4205,8 @@ test('a narrow row moves the warnings and Code view into "⋯", which shows the 
 	await page.setViewportSize({ width: 1440, height: 844 })
 	await settle(page)
 	const count = /^(\d+) warnings?:/.exec((await warnings(bars).getAttribute('aria-label'))!)![1]!
-	// The count as a mark on its own, not the warnings button's words.
-	const mark = bars.getByText(count, { exact: true })
+	// The mark floating on "⋯", not the name's.
+	const mark = bars.locator('.sf-badge.sf-is-overlay')
 	await expect(codeView(bars), 'Code view in the wide row').toBeVisible()
 	await expect(mark, 'no mark where the warnings show').toBeHidden()
 	await menu.click()
@@ -4218,10 +4218,11 @@ test('a narrow row moves the warnings and Code view into "⋯", which shows the 
 	await settle(page)
 	await expect(warnings(bars).first(), 'the warnings out of the narrow row').toBeHidden()
 	await expect(codeView(bars).first(), 'Code view out of the narrow row').toBeHidden()
-	await expect(mark, "the count on '⋯'").toBeVisible()
+	await expect(mark, "a mark on '⋯'").toBeVisible()
 	await expectOnCorner(mark, await box(menu), { x: 'right', y: 'top' }, "'⋯'s top end corner")
 	await menu.click()
 	await expect(codeView(items), 'Code view in the menu').toBeVisible()
+	await expect(warnings(items), 'the number in the menu').toContainText(`${count} warning`)
 	await warnings(items).click()
 	await expect(
 		page.locator('.ProseMirror-selectednode'),

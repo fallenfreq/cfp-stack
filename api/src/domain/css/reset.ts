@@ -261,6 +261,12 @@ ${notInherited(RING_PARTS)}
 		display: inline-block;
 	}
 
+	/* A mark is the size the theme gives it: a row short of room cuts something else short
+	   rather than squash a dot to an oval (it has no content to hold it open, as a count has). */
+	.sf-badge {
+		flex-shrink: 0;
+	}
+
 	/* A floating mark or count (placed with sl-over) never takes a press meant for the element
 	   under it. */
 	:is(.sf-badge, .sf-counter).sf-is-overlay {

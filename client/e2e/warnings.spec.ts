@@ -103,7 +103,7 @@ test('the count selects the next block with a warning, then the first', async ({
 })
 
 // What points to warnings takes their blocks' colour: a problem's wherever there's one among them,
-// otherwise a suggestion's. The top bar's count, and its count on "⋮" where the row is narrow, go by
+// otherwise a suggestion's. The top bar's count, and its mark on "⋮" where the row is narrow, go by
 // the page; the Attributes button by its block.
 test("the count and the Attributes button take a problem's colour over a suggestion's", async ({
 	page,
@@ -115,7 +115,7 @@ test("the count and the Attributes button take a problem's colour over a suggest
 				.editor!.commands.setContent(html)
 		}, html)
 	const count = page.locator('.editor-top-bar').getByRole('button', { name: /go to the next/ })
-	const onMenu = page.locator('.editor-top-bar .sf-counter')
+	const onMenu = page.locator('.editor-top-bar .sf-badge.sf-is-overlay')
 	const suggestion = '<p id="suggested" style="color: red">A suggestion</p>'
 
 	await setPage(suggestion)
