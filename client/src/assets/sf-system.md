@@ -445,6 +445,7 @@ tokens are prefixed `--sf-`. Two kinds, distinguished by separator:
 --sf-leading-*    line height      (none, tight, snug, normal, relaxed, loose)
 --sf-tracking-*   letter spacing   (tight, normal, wide)
 --sf-shadow-*     shadow elevation (sm..xl)
+--sf-blur-*       backdrop blur    (sm, md; a scrim's, a floating box's)
 --sf-primary-*    primary palette  (1..9)
 --sf-surface-*    neutral range    (0..9; 0 the end away from the text)
 --sf-alpha-*      channel-tint alpha values     (1..9)
@@ -988,7 +989,7 @@ colour), so it lifts off what scrolls under it, a Card the same shade as the bar
 2026-11-28). The edge is the theme's.
 
 **Floating boxes**: the root theme draws a box over content (`sf-is-overlay`) nearly solid (95%)
-and blurs what's behind it, so words passing under a toolbar don't show through as words (owner,
+and blurs what's behind it (`--sf-blur-md`), so words passing under a toolbar don't show through as words (owner,
 2026-11-28).
 
 `sf-flush` opts out of the chrome-class padding default — wear alongside `sf-depth-*`

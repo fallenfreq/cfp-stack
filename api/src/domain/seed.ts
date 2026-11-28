@@ -83,6 +83,10 @@ const ROOT_TOKENS: TokenSpec[] = [
 	// Shadow opacity (theme-character knob)
 	{ name: '--sf-shadow-opacity', value: '0.12', kind: 'number' },
 
+	// Blur: how much a box blurs what's behind it (a scrim's, a floating box's).
+	{ name: '--sf-blur-sm', value: '8px', kind: 'length' },
+	{ name: '--sf-blur-md', value: '12px', kind: 'length' },
+
 	// Primary palette: soft lilac. The brand's fill is step 4 and its ink step 6 (sf-system.md,
 	// "Fill and ink").
 	{ name: '--sf-primary-1', value: '242 234 255', kind: 'color-triplet' },
@@ -1700,7 +1704,11 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'background',
 		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface_page)) / 0.95)'),
 	},
-	{ classNames: ['sf-is-overlay'], cssProperty: 'backdrop-filter', value: 'blur(12px)' },
+	{
+		classNames: ['sf-is-overlay'],
+		cssProperty: 'backdrop-filter',
+		value: 'blur(var(--sf-blur-md))',
+	},
 
 	// Sticky context: a stuck bar's edge is a line under it and a soft shadow below, in place of
 	// the depth's all-round shadow, so it lifts off what scrolls under it (sf-system.md, "Stuck
@@ -2859,14 +2867,13 @@ const ROOT_RULES: RuleSpec[] = [
 	}),
 
 	// ─── sf-scrim ─────────────────────────────────────────────────────────────
-	// Modal backdrop. Black tint darkens regardless of theme; alpha via token.
-	// Its blur is its own, as sf-is-overlay's is; a blur scale is parked (sf-system-todo.md).
+	// Modal backdrop. Black tint darkens regardless of theme; alpha and blur via tokens.
 	{
 		classNames: ['sf-scrim'],
 		cssProperty: 'background',
 		value: 'rgb(0 0 0 / var(--sf-alpha-5))',
 	},
-	{ classNames: ['sf-scrim'], cssProperty: 'backdrop-filter', value: 'blur(8px)' },
+	{ classNames: ['sf-scrim'], cssProperty: 'backdrop-filter', value: 'blur(var(--sf-blur-sm))' },
 
 	// ─── sf-content-frame ─────────────────────────────────────────────────────
 	// Frame around focusable content (CodeMirror, TipTap, contenteditable, iframe).

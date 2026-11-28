@@ -12,8 +12,6 @@ what the page can't keep ("Ideas").
 The page's surface (v2.103.0) and light's grey page with white raised surfaces (v2.104.0) landed
 (owner, 2026-11-28): no code review yet; the owner may ask for one. Parked from them:
 
-- **A blur scale** (`--sf-blur-*`, a new token for the owner to approve): the scrim's blur and a
-  floating box's are each their own value (8px, 12px).
 - **Dark's coloured words on a bar**: the editor path bar's picked chip is 3.74:1 (4.01 before);
   joins contrast on white's coloured words item, with whatever the contrast check's new bar cases
   report. With it, dark's red on its lighter surfaces: a field's error line is 2.59:1 on a menu
