@@ -4,7 +4,7 @@
 export const SF_ELEMENT_DEFAULTS = `@layer sf-element {
 	body {
 		color: rgb(var(--sf-fg_primary));
-		background-color: rgb(var(--sf-surface-0));
+		background-color: rgb(var(--sf-surface_page));
 		font-family: var(--sf-font-1);
 		font-size: var(--sf-text-base);
 		line-height: var(--sf-leading-relaxed);

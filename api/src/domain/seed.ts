@@ -95,12 +95,14 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-primary-8', value: '105 77 145', kind: 'color-triplet' },
 	{ name: '--sf-primary-9', value: '84 60 117', kind: 'color-triplet' },
 
-	// Surface palette (surface-0 = canvas)
+	// Surface palette: the neutral range, 0 the end away from the text. The page is
+	// --sf-surface_page; depths 1-3 take 2-4. Light keeps its surfaces near white and shows height
+	// with lines and shadows (sf-system.md, "Surfaces").
 	{ name: '--sf-surface-0', value: '255 255 255', kind: 'color-triplet' },
-	{ name: '--sf-surface-1', value: '244 244 245', kind: 'color-triplet' },
-	{ name: '--sf-surface-2', value: '228 228 231', kind: 'color-triplet' },
-	{ name: '--sf-surface-3', value: '212 212 216', kind: 'color-triplet' },
-	{ name: '--sf-surface-4', value: '161 161 170', kind: 'color-triplet' },
+	{ name: '--sf-surface-1', value: '250 250 250', kind: 'color-triplet' },
+	{ name: '--sf-surface-2', value: '244 244 245', kind: 'color-triplet' },
+	{ name: '--sf-surface-3', value: '228 228 231', kind: 'color-triplet' },
+	{ name: '--sf-surface-4', value: '212 212 216', kind: 'color-triplet' },
 	{ name: '--sf-surface-5', value: '113 113 122', kind: 'color-triplet' },
 	{ name: '--sf-surface-6', value: '82 82 91', kind: 'color-triplet' },
 	{ name: '--sf-surface-7', value: '63 63 70', kind: 'color-triplet' },
@@ -167,7 +169,11 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-fg_primary', value: '38 40 36', kind: 'color-triplet' },
 	{ name: '--sf-fg_inverted', value: '255 255 255', kind: 'color-triplet' },
 	{ name: '--sf-primary', value: 'var(--sf-primary-4)', kind: 'color-triplet' },
-	{ name: '--sf-border_color', value: '222 229 242', kind: 'color-triplet' },
+	// The page's surface: the shade the page and fields are, which differs by mode.
+	{ name: '--sf-surface_page', value: 'var(--sf-surface-0)', kind: 'color-triplet' },
+	// A border is its colour at its strength: the text colour, faint, reads alike on every surface.
+	{ name: '--sf-border_color', value: 'var(--sf-fg_primary)', kind: 'color-triplet' },
+	{ name: '--sf-border_alpha', value: '0.12', kind: 'number' },
 	{ name: '--sf-shadow', value: '0 0 0', kind: 'color-triplet' },
 	// Colour roles. Each has a fill, which paints a surface (a loud button, a tint), and an ink,
 	// which draws a line or mark on the page and reaches 3:1 on its background (sf-system.md,
@@ -192,19 +198,22 @@ const ROOT_TOKENS: TokenSpec[] = [
 const DARK_TOKEN_OVERRIDES: TokenSpec[] = [
 	{ name: '--sf-fg_primary', value: '241 241 241', kind: 'color-triplet' },
 	{ name: '--sf-fg_inverted', value: '11 18 26', kind: 'color-triplet' },
-	{ name: '--sf-border_color', value: '61 76 88', kind: 'color-triplet' },
+	// Shadows barely show on dark at the root's strength.
+	{ name: '--sf-shadow-opacity', value: '0.4', kind: 'number' },
 	// The fills reach 3:1 on the dark page, so most inks are their fills here.
 	{ name: '--sf-primary_ink', value: 'var(--sf-primary)', kind: 'color-triplet' },
 	{ name: '--sf-danger_ink', value: '239 68 68', kind: 'color-triplet' },
 	{ name: '--sf-warning_ink', value: 'var(--sf-warning)', kind: 'color-triplet' },
 	{ name: '--sf-success_ink', value: 'var(--sf-success)', kind: 'color-triplet' },
 	{ name: '--sf-info_ink', value: '59 130 246', kind: 'color-triplet' },
-	// Surface palette — dark mode inverts the scale: 0 is the darkest canvas, higher = more elevated
+	// Surface palette: 0 is near-black, for tints to fade towards; the page is 1, as a black page is
+	// harsh, and each depth a step lighter, as dark shows height by lighter surfaces.
+	{ name: '--sf-surface_page', value: 'var(--sf-surface-1)', kind: 'color-triplet' },
 	{ name: '--sf-surface-0', value: '5 10 16', kind: 'color-triplet' },
 	{ name: '--sf-surface-1', value: '31 38 47', kind: 'color-triplet' },
-	{ name: '--sf-surface-2', value: '42 52 63', kind: 'color-triplet' },
-	{ name: '--sf-surface-3', value: '55 66 78', kind: 'color-triplet' },
-	{ name: '--sf-surface-4', value: '72 84 98', kind: 'color-triplet' },
+	{ name: '--sf-surface-2', value: '47 57 68', kind: 'color-triplet' },
+	{ name: '--sf-surface-3', value: '58 69 82', kind: 'color-triplet' },
+	{ name: '--sf-surface-4', value: '71 82 96', kind: 'color-triplet' },
 	{ name: '--sf-surface-5', value: '93 107 122', kind: 'color-triplet' },
 	{ name: '--sf-surface-6', value: '118 133 148', kind: 'color-triplet' },
 	{ name: '--sf-surface-7', value: '148 163 177', kind: 'color-triplet' },
@@ -259,7 +268,11 @@ const MODIFIER_ORDER = 10
 
 const VOCABULARY: VocabSpec[] = [
 	// Depth bundles
-	{ name: 'sf-depth-0', kind: 'bundle', description: 'Canvas / page — bottommost surface' },
+	{
+		name: 'sf-depth-0',
+		kind: 'bundle',
+		description: "The page's surface — the page, and a box flat on it",
+	},
 	{ name: 'sf-depth-1', kind: 'bundle', description: 'One level above canvas — cards, wells' },
 	{ name: 'sf-depth-2', kind: 'bundle', description: 'Further raised — dropdowns, popovers' },
 	{ name: 'sf-depth-3', kind: 'bundle', description: 'Topmost — modals' },
@@ -891,7 +904,7 @@ const drawsLine = (classNames: [string, ...string[]]): RuleSpec[] => [
 		classNames,
 		pseudo: ':focus-visible',
 		cssProperty: 'box-shadow',
-		value: `0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH}) rgb(var(--sfx-surface-color, var(--sf-surface-0))), 0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH} + var(--sf-stroke-2)) rgb(var(--sf-fg_primary) / var(--sfx-ring-alpha, 1))`,
+		value: `0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH}) rgb(var(--sfx-surface-color, var(--sf-surface_page))), 0 0 0 calc(${LINE_GAP} + ${LINE_WIDTH} + var(--sf-stroke-2)) rgb(var(--sf-fg_primary) / var(--sfx-ring-alpha, 1))`,
 	},
 ]
 
@@ -912,6 +925,8 @@ const fillBorder = (selector: RuleSelector, color: string): RuleSpec[] => [
 ]
 /** A surface's background, or the box's fill when it has one. */
 const underFill = (background: string) => `var(--sfx-fill-color, ${background})`
+/** A border: the theme's border colour at its strength (sf-system.md, "Edges"). */
+const BORDER = 'rgb(var(--sf-border_color) / var(--sf-border_alpha))'
 
 // A box's words (sf-system.md, "Text parts"): a colour or a fill passes what its words are and
 // draws them at the strength passed (quiet's, or full under the pointer), so a quiet colour needs
@@ -935,36 +950,38 @@ const ROOT_RULES: RuleSpec[] = [
 	// Depth bundles — background + elevation cues.
 	// --sfx-surface-color is set alongside background so sf-is-overlay can add alpha without
 	// needing to know which surface token the depth chose.
-	// depth-0: canvas, no elevation
+	// depth-0: the page's surface, no elevation. Padded only by a size: no default, as a page
+	// isn't padded unless asked.
 	{
 		classNames: ['sf-depth-0'],
 		cssProperty: '--sfx-surface-color',
-		value: 'var(--sf-surface-0)',
+		value: 'var(--sf-surface_page)',
 	},
 	{
 		classNames: ['sf-depth-0'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sf-surface-0))'),
+		value: underFill('rgb(var(--sf-surface_page))'),
 	},
 	{
 		classNames: ['sf-depth-0'],
 		cssProperty: 'color',
 		value: 'rgb(var(--sf-fg_primary))',
 	},
+	{ classNames: ['sf-depth-0'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 
 	// depth-1: cards, wells — background + shadow + radius
 	// Border is intentionally absent at the default level; flat themes add one by overriding
-	// box-shadow to none and adding border: 1px solid rgb(var(--sf-border_color)) instead.
+	// box-shadow to none and adding a border (BORDER) instead.
 	{
 		classNames: ['sf-depth-1'],
 		cssProperty: '--sfx-surface-color',
-		value: 'var(--sf-surface-1)',
+		value: 'var(--sf-surface-2)',
 	},
 	{ classNames: ['sf-depth-1'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
 	{
 		classNames: ['sf-depth-1'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sf-surface-1))'),
+		value: underFill('rgb(var(--sf-surface-2))'),
 	},
 	{
 		classNames: ['sf-depth-1'],
@@ -999,13 +1016,13 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-depth-2'],
 		cssProperty: '--sfx-surface-color',
-		value: 'var(--sf-surface-2)',
+		value: 'var(--sf-surface-3)',
 	},
 	{ classNames: ['sf-depth-2'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
 	{
 		classNames: ['sf-depth-2'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sf-surface-2))'),
+		value: underFill('rgb(var(--sf-surface-3))'),
 	},
 	{
 		classNames: ['sf-depth-2'],
@@ -1034,13 +1051,13 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: '--sfx-surface-color',
-		value: 'var(--sf-surface-3)',
+		value: 'var(--sf-surface-4)',
 	},
 	{ classNames: ['sf-depth-3'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sf-surface-3))'),
+		value: underFill('rgb(var(--sf-surface-4))'),
 	},
 	{
 		classNames: ['sf-depth-3'],
@@ -1098,13 +1115,13 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-depth-1', 'sf-loudness-3'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{ classNames: ['sf-depth-1', 'sf-loudness-1'], cssProperty: 'box-shadow', value: 'none' },
 	{
 		classNames: ['sf-depth-1', 'sf-loudness-1'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 
 	// sf-depth-1 × sf-variant-alt-1 — flat with border; visually distinct from the default
@@ -1113,7 +1130,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-depth-1', 'sf-variant-alt-1'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 
 	// Size bundles — this theme spends size on --sf-padding (read by the element that wears
@@ -1258,7 +1275,7 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overflow-right'],
 		pseudo: ' .sl-pin-right',
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface-0)))'),
+		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface_page)))'),
 	},
 	{
 		classNames: ['sf-is-overflow-right'],
@@ -1312,7 +1329,7 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overflow-left'],
 		pseudo: ' .sl-pin-left',
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface-0)))'),
+		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface_page)))'),
 	},
 	{
 		classNames: ['sf-is-overflow-left'],
@@ -1366,7 +1383,7 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overflow-top'],
 		pseudo: ' .sl-pin-top',
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface-0)))'),
+		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface_page)))'),
 	},
 	{
 		classNames: ['sf-is-overflow-top'],
@@ -1420,7 +1437,7 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-is-overflow-bottom'],
 		pseudo: ' .sl-pin-bottom',
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface-0)))'),
+		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface_page)))'),
 	},
 	{
 		classNames: ['sf-is-overflow-bottom'],
@@ -1677,17 +1694,23 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-is-overlay'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface-0)) / var(--sf-alpha-9))'),
+		value: underFill(
+			'rgb(var(--sfx-surface-color, var(--sf-surface_page)) / var(--sf-alpha-9))',
+		),
 	},
 
-	// Sticky context — clear the all-sides elevation shadow the depth bundle adds; edge treatment
-	// (border-bottom, directional shadow) is theme territory — a bare border is the fallback so sticky
-	// bars have a visible boundary without bleeding elevation into the page.
-	{ classNames: ['sf-is-sticky'], cssProperty: 'box-shadow', value: 'none' },
+	// Sticky context: a stuck bar's edge is a line under it and a soft shadow below, in place of
+	// the depth's all-round shadow, so it lifts off what scrolls under it (sf-system.md, "Stuck
+	// bars"). Edge treatment is the theme's.
+	{
+		classNames: ['sf-is-sticky'],
+		cssProperty: 'box-shadow',
+		value: '0 10px 32px -12px var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+	},
 	{
 		classNames: ['sf-is-sticky'],
 		cssProperty: 'border-bottom',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 
 	// Contained context — element sits inside a container that already delineates it.
@@ -1701,7 +1724,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-is-nested'],
 		cssProperty: 'border-inline-start',
-		value: 'var(--sf-stroke-2) solid rgb(var(--sf-border_color))',
+		value: `var(--sf-stroke-2) solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-is-nested'],
@@ -1714,13 +1737,13 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border-color',
 		value: 'var(--sfx-fill-border-color, transparent)',
 	},
-	// A contained field with a focus look, typed in: a field's surface at half strength, so it sits
-	// halfway between a field and the box it's in, with no edge, as contained has none, and no ring
-	// (sf-system.md, "A contained field shows focus as a field"). A state rule, so hover doesn't
-	// take its place while typing.
+	// A contained field with a focus look, typed in: a tint of its words' colour, as hover's but
+	// stronger, so it shows on any surface, the page's own included; no edge, as contained has none,
+	// and no ring (sf-system.md, "A contained field shows focus as a field"). A state rule, so hover
+	// doesn't take its place while typing.
 	...(
 		[
-			['background', underFill('rgb(var(--sf-surface-0) / var(--sf-alpha-5))')],
+			['background', underFill('rgb(from currentColor r g b / var(--sf-alpha-2))')],
 			['--sfx-ring-alpha', '0'],
 		] as const
 	).map(
@@ -1788,7 +1811,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-is-contained', 'sf-boundary-right'],
 		cssProperty: 'border-right-color',
-		value: 'rgb(var(--sf-border_color))',
+		value: BORDER,
 	},
 
 	// Flush context — opts out of chrome-class padding default. sf-context layer beats
@@ -1959,59 +1982,59 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-boundary-top'],
 		cssProperty: 'border-top',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-boundary-bottom'],
 		cssProperty: 'border-bottom',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-boundary-left'],
 		cssProperty: 'border-left',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-boundary-right'],
 		cssProperty: 'border-right',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-boundary-x'],
 		cssProperty: 'border-left',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-boundary-x'],
 		cssProperty: 'border-right',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-boundary-y'],
 		cssProperty: 'border-top',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-boundary-y'],
 		cssProperty: 'border-bottom',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-boundary'],
 		cssProperty: 'border',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-divide-y'],
 		pseudo: ' > * + *',
 		cssProperty: 'border-top',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{
 		classNames: ['sf-divide-x'],
 		pseudo: ' > * + *',
 		cssProperty: 'border-left',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 
 	// Hover state — the words at full strength (undoing quiet), in their own colour, and a subtle
@@ -2230,7 +2253,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-drag-handle', 'sf-is-contained', 'sf-on-dragging'],
 		cssProperty: 'border-right-color',
-		value: 'rgb(var(--sf-border_color))',
+		value: BORDER,
 	},
 
 	// Disabled state — dim + not-allowed cursor for interactive controls.
@@ -2368,7 +2391,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-drag-handle'],
 		cssProperty: 'border',
-		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
+		value: `var(--sf-stroke-1) solid ${BORDER}`,
 	},
 	// sf-drag-handle × sf-is-contained — sits in toolbar slot; drop shadow and radius.
 	// sf-is-contained already zeros border-color; sf-boundary-right restores the separator.
@@ -2605,12 +2628,13 @@ const ROOT_RULES: RuleSpec[] = [
 		{ elementSelector: 'button', classNames: ['sf', 'sf-loudness-3'] },
 		'rgb(var(--sf-fg_inverted))',
 	),
-	// A loud button keeps its faint light edge: the 30% text-colour edge is for ordinary ones.
+	// A loud button keeps a faint edge in its words' colour: its fill is the text colour, so an
+	// edge in the text colour (a border, or the ordinary 30% edge) would vanish into it.
 	{
 		elementSelector: 'button',
 		classNames: ['sf', 'sf-loudness-3'],
 		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-border_color) / var(--sf-alpha-4))',
+		value: 'rgb(var(--sf-fg_inverted) / var(--sf-alpha-4))',
 	},
 
 	// ─── Input element ────────────────────────────────────────────────────────
@@ -2697,11 +2721,11 @@ const ROOT_RULES: RuleSpec[] = [
 		...fill({ classNames: [unit, 'sf-loudness-3'] }, 'rgb(var(--sf-fg_primary))'),
 		...words({ classNames: [unit, 'sf-loudness-3'] }, 'rgb(var(--sf-fg_inverted))'),
 	]),
-	// A loud chip keeps its faint light edge, as a loud button does.
+	// A loud chip keeps a faint edge in its words' colour, as a loud button does.
 	{
 		classNames: ['sf-chip', 'sf-loudness-3'],
 		cssProperty: 'border-color',
-		value: 'rgb(var(--sf-border_color) / var(--sf-alpha-3))',
+		value: 'rgb(var(--sf-fg_inverted) / var(--sf-alpha-3))',
 	},
 	// A chip you press or follow is still a chip: it keeps the chip's own shape and edge over
 	// the button / link baseline, which outranks bare markers. The compounds tie with
@@ -2873,14 +2897,12 @@ const ROOT_RULES: RuleSpec[] = [
 	// Control-scale default, same as button.sf; sf-size-* overrides.
 	{ classNames: ['sf-field'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xs)' },
 	{ classNames: ['sf-field'], cssProperty: 'padding', value: 'var(--sf-padding)' },
-	// Fields are writable surfaces. Explicit background + text colour make the
-	// field visually distinct on any raised parent (depth-1+); on a bare page
-	// (surface-0) the bg is the same as the canvas so it's invisible but the
-	// border still delineates. Focus shows as on anything else.
+	// Fields are writable surfaces, the page's colour: distinct on any raised parent; on the page
+	// itself the edge shows where it is. Focus shows as on anything else.
 	{
 		classNames: ['sf-field'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sf-surface-0))'),
+		value: underFill('rgb(var(--sf-surface_page))'),
 	},
 	{ classNames: ['sf-field'], cssProperty: 'color', value: 'rgb(var(--sf-fg_primary))' },
 	// Inherit typography from the parent (match surrounding text) without inheriting
@@ -2951,7 +2973,7 @@ const ROOT_RULES: RuleSpec[] = [
 		elementSelector: 'hr',
 		classNames: ['sf'],
 		cssProperty: 'border-top',
-		value: 'var(--sf-stroke-1) solid rgb(var(--sf-border_color))',
+		value: `var(--sf-stroke-1) solid ${BORDER}`,
 	},
 
 	// ─── Table elements ───────────────────────────────────────────────────────
@@ -2973,7 +2995,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		elementSelector: 'td',
 		cssProperty: 'border-bottom',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{ elementSelector: 'td', cssProperty: 'vertical-align', value: 'middle' },
 	{
@@ -2990,7 +3012,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		elementSelector: 'th',
 		cssProperty: 'border-bottom',
-		value: '1px solid rgb(var(--sf-border_color))',
+		value: `1px solid ${BORDER}`,
 	},
 	{ elementSelector: 'th', cssProperty: 'text-align', value: 'left' },
 	{ elementSelector: 'th', cssProperty: 'vertical-align', value: 'middle' },

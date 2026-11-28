@@ -204,7 +204,7 @@ onUnmounted(() => {
 		min-height: 44px;
 		max-height: 150px;
 		overflow-y: auto;
-		background: rgb(var(--sf-surface-0));
+		background: rgb(var(--sf-surface_page));
 	}
 
 	.style-editor-frame--fs :deep(.cm-editor) {

@@ -186,6 +186,8 @@ function emitTokenBlocks(themesList: Theme[], tokensByTheme: Map<string, ThemeTo
 interface BucketEntry {
 	suffix: string
 	name: string
+	/** A colour's own strength, where a `_alpha` token sits beside its `_color` one. */
+	alpha?: string
 }
 interface Buckets {
 	palette: BucketEntry[]
@@ -215,8 +217,6 @@ function familyOf(suffix: string): string {
 	return m?.[1] ?? suffix
 }
 
-const TRIPLET = /^\s*\d+\s+\d+\s+\d+\s*$/
-
 function classifyTokens(rootTokens: ThemeToken[]): Buckets {
 	const b: Buckets = {
 		palette: [],
@@ -238,10 +238,12 @@ function classifyTokens(rootTokens: ThemeToken[]): Buckets {
 
 		const entry: BucketEntry = { suffix, name: tk.name }
 		if (tk.kind === 'color-triplet') {
-			// Skip semantic aliases whose values are var() refs (e.g. --sf-primary:
-			// var(--sf-primary-5)). Those are not palette steps and would produce a
-			// phantom shade entry alongside the numbered steps they alias.
-			if (!TRIPLET.test(tk.value)) continue
+			// A colour that points at another (--sf-primary: var(--sf-primary-4)) is offered by its
+			// own name, so a choice of it follows a theme that points it elsewhere (sf-system.md,
+			// "Fill and ink").
+			const alphaName = tk.name.replace(/_color$/, '_alpha')
+			if (alphaName !== tk.name && rootTokens.some((t) => t.name === alphaName))
+				entry.alpha = `var(${alphaName})`
 			b.palette.push(entry)
 			if (suffix.startsWith('fg_') || suffix.startsWith('border_')) b.semantic.push(entry)
 			continue
@@ -438,9 +440,9 @@ function forNodeViews(selector: string, shown: string): string | null {
 function emitSemanticLayer(semantic: BucketEntry[]): string {
 	if (semantic.length === 0) return ''
 	let out = '@layer sf-semantic {\n'
-	for (const { suffix, name } of semantic) {
+	for (const { suffix, name, alpha } of semantic) {
 		const property = suffix.startsWith('fg_') ? 'color' : 'border-color'
-		out += `\t.sf-${suffix} { ${property}: rgb(var(${name})); }\n`
+		out += `\t.sf-${suffix} { ${property}: rgb(var(${name}) / ${alpha ?? '1'}); }\n`
 	}
 	return out + '}\n'
 }
@@ -625,6 +627,7 @@ function emitEditorLayer(b: Buckets): string {
 		fg_primary: 'Semantic — fg_primary',
 		fg_inverted: 'Semantic — fg_inverted',
 		border_color: 'Semantic — border_color',
+		surface_page: 'Semantic — surface_page',
 		shadow: 'Semantic — shadow',
 		danger: 'Semantic — danger',
 	}
@@ -634,6 +637,7 @@ function emitEditorLayer(b: Buckets): string {
 		'fg_primary',
 		'fg_inverted',
 		'border_color',
+		'surface_page',
 		'shadow',
 		'danger',
 	]
@@ -648,13 +652,13 @@ function emitEditorLayer(b: Buckets): string {
 		if (!items) continue
 		let s = section(familyTitles[fam] ?? fam)
 		for (const e of items)
-			s += `\t.sf-bg-${e.suffix} { --sf-bg-alpha: 1; background-color: rgb(var(${e.name}) / var(--sf-bg-alpha)); }\n`
+			s += `\t.sf-bg-${e.suffix} { --sf-bg-alpha: ${e.alpha ?? 1}; background-color: rgb(var(${e.name}) / var(--sf-bg-alpha)); }\n`
 		for (const e of items)
-			s += `\t.sf-color-${e.suffix} { --sf-color-alpha: 1; color: rgb(var(${e.name}) / var(--sf-color-alpha)); }\n`
+			s += `\t.sf-color-${e.suffix} { --sf-color-alpha: ${e.alpha ?? 1}; color: rgb(var(${e.name}) / var(--sf-color-alpha)); }\n`
 		for (const e of items)
-			s += `\t.sf-border-${e.suffix} { --sf-border-alpha: 1; border-color: rgb(var(${e.name}) / var(--sf-border-alpha)); }\n`
+			s += `\t.sf-border-${e.suffix} { --sf-border-alpha: ${e.alpha ?? 1}; border-color: rgb(var(${e.name}) / var(--sf-border-alpha)); }\n`
 		for (const e of items)
-			s += `\t.sf-shadow-color-${e.suffix} { --sf-shadow-alpha: 1; --sf-shadow-color: rgb(var(${e.name}) / var(--sf-shadow-alpha)); }\n`
+			s += `\t.sf-shadow-color-${e.suffix} { --sf-shadow-alpha: ${e.alpha ?? 1}; --sf-shadow-color: rgb(var(${e.name}) / var(--sf-shadow-alpha)); }\n`
 		sections.push(s)
 	}
 

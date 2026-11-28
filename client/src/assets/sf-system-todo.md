@@ -5,18 +5,20 @@ still true. The spec is `sf-system.md`; what was done, and why, is in the commit
 
 ## Current state (resume here)
 
-Next, discussed before any code: **light mode's surfaces are what's wrong** (owner, 2026-11-27).
-A field (`surface-0`, white) on the editor's bar (`sf-depth-1`, `#f4f4f5`) is 1.1:1, so the page
-name box typed in barely shows: it has no edge, as it's contained, and a field's surface at half
-strength (v2.102.0; `sf-system.md`, "A contained field shows focus as a field", known gap). In
-dark mode a field's full surface (`rgb(5,10,16)` on the bar `rgb(31,38,47)`) was too strong, so
-half strength suits dark; look at light's surfaces with it. The demo of every field, dark and
-light: https://claude.ai/artifact/G3q7yBqsHKqzsmktF4v8YD. Related: "A box says what it has"
-(Ideas), as the typed-in look restates the field's surface.
-
-Then contrast on white, its next item (`docs/plans/contrast-on-white.md`, "Later, one at a
+Next: contrast on white, its next item (`docs/plans/contrast-on-white.md`, "Later, one at a
 time"), one per session; one review of the whole once they're done. Waiting: pasting warns of
 what the page can't keep ("Ideas").
+
+The page's surface landed (v2.103.0, owner, 2026-11-28): no code review yet; the owner may ask for
+one. Parked from it:
+
+- **A token per depth**, for white menus and dialogs with a shadow in light, as light themes
+  usually show height (`sf-system.md`, "Surfaces").
+- **Dark's coloured words on a bar**: the editor path bar's picked chip is 3.74:1 (4.01 before);
+  joins contrast on white's coloured words item, with whatever the contrast check's new bar cases
+  report.
+- **To check**: leaving the editor after typing only a new page name didn't ask "Leave without
+  saving?" (seen 2026-11-28; may be by design).
 
 ## Bigger work
 

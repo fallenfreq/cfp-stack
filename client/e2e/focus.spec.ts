@@ -36,7 +36,7 @@ const focusLook = (page: Page, id: string) =>
 		const token = (name: string) => own.getPropertyValue(name).trim()
 		const rgb = (value: string) => `rgb(${value.split(/\s+/).join(', ')})`
 		const text = rgb(token('--sf-fg_primary'))
-		const surface = rgb(token('--sfx-surface-color') || token('--sf-surface-0'))
+		const surface = rgb(token('--sfx-surface-color') || token('--sf-surface_page'))
 		const px = (name: string) => parseFloat(token(name))
 		// How far the line reaches past the edge, from where it sits and its width.
 		const reach = parseFloat(own.outlineOffset) + parseFloat(own.outlineWidth)
@@ -56,7 +56,15 @@ const focusLook = (page: Page, id: string) =>
 		}
 	})
 
-test('focus shows with a line and without one', async ({ page, browserName }) => {
+// In dark too, where the page isn't the range's end, so a rule taking shade 0 for the page shows.
+for (const mode of ['light', 'dark'])
+	test(`focus shows with a line and without one, ${mode}`, async ({ page, browserName }) => {
+		if (mode === 'dark')
+			await page.evaluate(() => document.documentElement.classList.add('theme-dark'))
+		await focusShows(page, browserName)
+	})
+
+const focusShows = async (page: Page, browserName: string) => {
 	// A field: no ring.
 	await page.locator('#start').focus()
 	expect(await focusLook(page, 'start')).toMatchObject({ noRing: true })
@@ -77,4 +85,4 @@ test('focus shows with a line and without one', async ({ page, browserName }) =>
 	// A field with an error: its dashed line, and no ring.
 	await tabTo(page, browserName, 'field')
 	expect(await focusLook(page, 'field')).toMatchObject({ noRing: true, outline: 'dashed' })
-})
+}

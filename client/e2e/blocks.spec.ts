@@ -154,6 +154,27 @@ test("in a Card used as an inset, a block or a video set to bleed reaches the ca
 	expect(Math.abs(bleed.top - first.bottom - gap)).toBeLessThanOrEqual(1)
 })
 
+// Depth 0 is the page's surface: a size pads it, as it pads a Card, and with none it isn't
+// padded; an inset on it keeps the page's line at its sides, its size padding only its top and
+// bottom (sf-system.md, "Chrome padding").
+test("a box on the page's surface is padded by its size, and an inset on it keeps the page's line", async ({
+	page,
+}) => {
+	const cardPadding = await css(page.locator('#divide-card-twin'), 'padding-top')
+	expect(parseFloat(cardPadding), 'a sized Card is padded').toBeGreaterThan(0)
+	expect(await css(page.locator('#page-surface-sized'), 'padding'), 'sized').toBe(cardPadding)
+	expect(await css(page.locator('#page-surface-plain'), 'padding'), 'no size').toBe('0px')
+
+	const inset = await box(page.locator('#page-surface-inset'))
+	const text = await box(page.locator('#page-surface-inset-text'))
+	const line = await box(page.locator('#page-surface-heading'))
+	expect(Math.abs(text.left - line.left), "an inset: the page's line").toBeLessThanOrEqual(1)
+	expect(
+		Math.abs(text.top - inset.top - parseFloat(cardPadding)),
+		'its size, above',
+	).toBeLessThanOrEqual(1)
+})
+
 const pinnedAfterScrolling = async (page: Page, area: Locator, pinned: Locator) => {
 	await area.evaluate((el) => (el.scrollTop = 120))
 	await settle(page)

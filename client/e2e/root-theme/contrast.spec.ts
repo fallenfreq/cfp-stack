@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '../fixtures'
 import { settle, steadyRequests } from '../helpers'
 
-// What the root theme draws on its page can be seen (sf-system.md, "Fill and ink"): a line, a
+// What the root theme draws on its page and bars can be seen (sf-system.md, "Fill and ink"): a line, a
 // field's edge or its cursor reaches 3:1 on what's behind it, words 4.5:1 (WCAG 1.4.11,
 // 1.4.3). A targeted line is a hint and isn't measured (sf-system.md, "Line parts"). Measured
 // from what the browser draws, in light and dark, with the theme class on <html> as the app sets
@@ -16,7 +16,22 @@ const MODES = [
 type Part = 'outline' | 'edge' | 'cursor' | 'link' | 'words'
 type Pointer = 'over' | 'pressing'
 
-const CASES: { name: string; html: string; part: Part; least: number; pointer?: Pointer }[] = [
+// Each case on the page and on a bar (depth 1), where the editor's bars and the page's Cards sit;
+// one that also occurs on a menu (depth 2) is measured there too (owner, 2026-11-28).
+const SURFACES = [
+	{ name: 'the page', depth: 'sf-depth-0' },
+	{ name: 'a bar', depth: 'sf-depth-1' },
+]
+const MENU = { name: 'a menu', depth: 'sf-depth-2' }
+
+const CASES: {
+	name: string
+	html: string
+	part: Part
+	least: number
+	pointer?: Pointer
+	onMenu?: boolean
+}[] = [
 	{
 		name: "a picked block's line",
 		html: '<p class="sf-on-selected">Picked</p>',
@@ -82,6 +97,7 @@ const CASES: { name: string; html: string; part: Part; least: number; pointer?: 
 		html: '<button class="sf sf-is-contained sf-on-ancestor">Portfolio</button>',
 		part: 'words',
 		least: 4.5,
+		onMenu: true,
 	},
 	{
 		name: 'words on a loud brand button',
@@ -136,19 +152,23 @@ const CASES: { name: string; html: string; part: Part; least: number; pointer?: 
 	},
 ]
 
-// Each case is drawn alone in a box of its own on the page, kept in view so the pointer reaches it.
-const show = (page: Page, html: string) =>
-	page.evaluate((markup) => {
-		let box = document.getElementById('contrast-case')
-		if (!box) {
-			box = document.createElement('div')
-			box.id = 'contrast-case'
-			box.className = 'sf-depth-0'
-			box.style.cssText = 'position: fixed; inset: 40% auto auto 40%; z-index: 2147483647'
-			document.body.append(box)
-		}
-		box.innerHTML = markup
-	}, html)
+// Each case is drawn alone in a box of its own, of the surface given, kept in view so the pointer
+// reaches it.
+const show = (page: Page, html: string, depth = 'sf-depth-0') =>
+	page.evaluate(
+		([markup, depth]) => {
+			let box = document.getElementById('contrast-case')
+			if (!box) {
+				box = document.createElement('div')
+				box.id = 'contrast-case'
+				box.style.cssText = 'position: fixed; inset: 40% auto auto 40%; z-index: 2147483647'
+				document.body.append(box)
+			}
+			box.className = depth!
+			box.innerHTML = markup!
+		},
+		[html, depth] as const,
+	)
 
 // The pointer away, over the case, or pressing it; then any fade the theme starts is finished, so
 // what's measured is what the pointer leaves, not a step on the way.
@@ -222,7 +242,9 @@ const measure = (page: Page, part: Part) =>
 	}, part)
 
 for (const mode of MODES)
-	test(`lines, focus edges and words can be seen on the page, ${mode.name}`, async ({ page }) => {
+	test(`lines, focus edges and words can be seen on the page and a bar, ${mode.name}`, async ({
+		page,
+	}) => {
 		await steadyRequests(page)
 		await page.goto('/')
 		await page.evaluate(
@@ -231,15 +253,16 @@ for (const mode of MODES)
 		)
 		await settle(page)
 
-		for (const c of CASES) {
-			await show(page, c.html)
-			await putPointer(page, c.pointer)
-			const measured = await measure(page, c.part)
-			if (c.pointer === 'pressing') await page.mouse.up()
-			expect
-				.soft(measured, `${c.name}: ${measured.toFixed(2)}:1`)
-				.toBeGreaterThanOrEqual(c.least)
-		}
+		for (const c of CASES)
+			for (const surface of c.onMenu ? [...SURFACES, MENU] : SURFACES) {
+				await show(page, c.html, surface.depth)
+				await putPointer(page, c.pointer)
+				const measured = await measure(page, c.part)
+				if (c.pointer === 'pressing') await page.mouse.up()
+				expect
+					.soft(measured, `${c.name}, on ${surface.name}: ${measured.toFixed(2)}:1`)
+					.toBeGreaterThanOrEqual(c.least)
+			}
 	})
 
 // Under the pointer, coloured words keep their colour at full strength: the editor's quiet amber

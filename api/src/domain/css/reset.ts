@@ -61,7 +61,7 @@ ${notInherited(RING_PARTS)}
 		box-sizing: border-box;
 		border-width: 0;
 		border-style: solid;
-		border-color: rgb(var(--sf-border_color));
+		border-color: rgb(var(--sf-border_color) / var(--sf-border_alpha));
 	}
 
 	html {

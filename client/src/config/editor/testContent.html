@@ -106,6 +106,18 @@
 	></iframe>
 </layout-card>
 
+<h3 id="page-surface-heading">
+	A box on the page's surface (depth 0) is padded by its size alone, and an inset on it keeps the
+	page's line
+</h3>
+<div data-container id="page-surface-sized" class="sf-depth-0 sf-size-md">
+	<p>Padded by its size</p>
+</div>
+<div data-container id="page-surface-plain" class="sf-depth-0"><p>Not padded</p></div>
+<div data-container id="page-surface-inset" class="sf-depth-0 sf-size-md sl-inset">
+	<p id="page-surface-inset-text">On the page's line</p>
+</div>
+
 <h3>A pinned Card stays at the top of its scroll area</h3>
 <div data-container id="pin-area" class="sl-scroll-y" style="height: 200px">
 	<layout-card id="pin-card" class="sf-size-md sl-pin-top"><p>Pinned</p></layout-card>

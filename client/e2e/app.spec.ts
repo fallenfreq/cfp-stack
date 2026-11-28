@@ -1003,10 +1003,11 @@ test("a named page's name box, emptied, shows the name it keeps", async ({ page,
 	await expect(name).toHaveValue('Stored')
 })
 
-// The name box reads as a title at rest; typed in, it takes a field's background (the page's own)
-// at half strength and full words, with no edge, as it's contained (owner, 2026-11-27), and no
-// focus ring, also with the pointer over it.
-test("the name box, typed in, takes a field's surface at half strength, with no edge or ring", async ({
+// The name box reads as a title at rest. Under the pointer it takes a tint of its words' colour
+// (the theme's first see-through step); typed in, a stronger one (its second), so both go towards
+// the words and it shows on any surface, the page's own included; full words, no edge, as it's
+// contained, and no focus ring, also with the pointer over it (owner, 2026-11-28).
+test('the name box takes a tint of its words under the pointer and a stronger one typed in', async ({
 	page,
 	themeClass,
 }) => {
@@ -1015,24 +1016,53 @@ test("the name box, typed in, takes a field's surface at half strength, with no 
 	await useTheme(page, themeClass)
 	const name = bars(page).getByRole('textbox')
 	const done = () => name.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
-	const field = await css(page.locator('body'), 'background-color')
-	const halfField = field.replace(/^rgb\((.*)\)$/, 'rgba($1, 0.5)')
+	// Its background and words as the browser paints them (red, green, blue, see-through 0-1), and
+	// the theme's see-through step it should take.
+	const look = (step: number) =>
+		name.evaluate((el, step) => {
+			const canvas = document.createElement('canvas')
+			canvas.width = canvas.height = 1
+			const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+			const paint = (color: string) => {
+				ctx.clearRect(0, 0, 1, 1)
+				ctx.fillStyle = color
+				ctx.fillRect(0, 0, 1, 1)
+				const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
+				return { rgb: [r!, g!, b!], alpha: a! / 255 }
+			}
+			const style = getComputedStyle(el)
+			return {
+				background: paint(style.backgroundColor),
+				words: paint(style.color),
+				step: Number(style.getPropertyValue(`--sf-alpha-${step}`)),
+			}
+		}, step)
+	const tintOfWords = async (why: string, step: number) => {
+		const { background, words, step: alpha } = await look(step)
+		expect(words.alpha, `${why}: full words`).toBe(1)
+		for (const [i, channel] of background.rgb.entries())
+			expect(
+				Math.abs(channel - words.rgb[i]!),
+				`${why}: the words' colour`,
+			).toBeLessThanOrEqual(2)
+		expect(background.alpha, `${why}: the theme's step ${step}`).toBeCloseTo(alpha, 1)
+	}
 	const transparent = 'rgba(0, 0, 0, 0)'
 	expect(await css(name, 'background-color'), 'at rest').toBe(transparent)
 	expect(await css(name, 'border-color'), 'at rest').toBe(transparent)
 
+	await name.hover()
+	await done()
+	await tintOfWords('the pointer over it', 1)
+
 	await name.click()
-	for (const why of ['typed in', 'typed in, the pointer over it']) {
-		if (why !== 'typed in') await name.hover()
+	for (const why of ['typed in, the pointer over it', 'typed in']) {
+		if (why === 'typed in') await page.mouse.move(600, 400)
 		await done()
-		expect(await css(name, 'background-color'), `${why}: half a field's surface`).toBe(
-			halfField,
-		)
+		await tintOfWords(why, 2)
 		expect(await css(name, 'border-color'), `${why}: no edge`).toBe(transparent)
-		expect(await css(name, 'color'), `${why}: full words`).not.toMatch(/\/ 0\.\d+\)$/)
 		expect(await css(name, 'outline-color'), `${why}: no ring`).toMatch(/, 0\)$/)
 	}
-	await page.mouse.move(600, 400)
 	await name.press('Escape')
 	await done()
 	expect(await css(name, 'background-color'), 'left').toBe(transparent)

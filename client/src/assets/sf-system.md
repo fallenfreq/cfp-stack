@@ -250,12 +250,12 @@ Rule-to-rule contract when a context/state/utility rule needs a value a bundle o
 The bundle publishes it as `--sfx-*` alongside its main declaration; the higher-priority
 layer reads it. Neither theme authors nor content authors touch these.
 
-| Variable              | Set by                              | Read by                                   |
-| --------------------- | ----------------------------------- | ----------------------------------------- |
-| `--sfx-surface-color` | `sf-depth-*`                        | `sf-is-overlay`                           |
-| `--sfx-depth-radius`  | `sf-depth-*`                        | `sf-is-edge-*` compounds                  |
-| `--sfx-depth-shadow`  | `sf-depth-*`                        | `sf-is-overlay` × loudness × variant      |
-| `--sfx-inset-margin`  | `sf-depth-*` + `sl-inset` compounds | `sl-inset`, `sl-inset-line` (descendants) |
+| Variable              | Set by                            | Read by                                   |
+| --------------------- | --------------------------------- | ----------------------------------------- |
+| `--sfx-surface-color` | `sf-depth-*`                      | `sf-is-overlay`                           |
+| `--sfx-depth-radius`  | `sf-depth-*`                      | `sf-is-edge-*` compounds                  |
+| `--sfx-depth-shadow`  | `sf-depth-*`                      | `sf-is-overlay` × loudness × variant      |
+| `--sfx-inset-margin`  | `sf-depth-1` to `-3` + `sl-inset` | `sl-inset`, `sl-inset-line` (descendants) |
 
 Two authoring rules keep the surface honest:
 
@@ -358,16 +358,16 @@ or not, as they're what's being written (owner, 2026-11-27); the rule names quie
 quiet's layer and wins.
 
 **A contained field shows focus as a field** (`sf-field sf-is-contained sf-on-focus`, owner,
-2026-11-26, chosen from a mock-up of five ways): while it's typed in, it takes a field's surface
-at half strength, with no ring, and full-strength words as any quiet field does. Half strength
-puts it halfway between a field and the box it's in: a field's full surface on the dark bar was
-too strong (owner, 2026-11-27), and the theme needn't know what the box is. It has no edge, as
-nothing contained has one (owner, 2026-11-27). At rest it reads as a title (the editor's page
-name). It stays contained while typed in, as it still is, so the look is the theme's rule, not
-classes taken off. Its ring's strength is set to 0, so an error's line stays. The rule is a state
-one (`sf-on-focus`), so the hover tint doesn't take its place while typing. Known gap: in the
-light theme it barely shows on the bar (a field's surface there is 1.1:1, half of it less), as
-light mode's surfaces are too close (to-do, "Current state").
+2026-11-26, chosen from a mock-up of five ways): while it's typed in, it takes a tint of its words'
+colour at the theme's second see-through step (20%), with no ring, and full-strength words as any
+quiet field does. Under the pointer it has the first step (10%), so both go towards its words and
+typing is the stronger (owner, 2026-11-28). A tint of its words shows on any surface, the page's
+own included, so the theme needn't know what the box is and the editor's top bar can be the page's
+colour; the page's colour at half strength, before, went the other way from hover and vanished on
+the page. It has no edge, as nothing contained has one (owner, 2026-11-27). At rest it reads as a
+title (the editor's page name). It stays contained while typed in, as it still is, so the look is
+the theme's rule, not classes taken off. Its ring's strength is set to 0, so an error's line stays.
+The rule is a state one (`sf-on-focus`), so the hover tint doesn't take its place while typing.
 
 ### Fill parts
 
@@ -446,7 +446,7 @@ tokens are prefixed `--sf-`. Two kinds, distinguished by separator:
 --sf-tracking-*   letter spacing   (tight, normal, wide)
 --sf-shadow-*     shadow elevation (sm..xl)
 --sf-primary-*    primary palette  (1..9)
---sf-surface-*    neutral palette  (0..9)
+--sf-surface-*    neutral range    (0..9; 0 the end away from the text)
 --sf-alpha-*      channel-tint alpha values     (1..9)
 --sf-opacity-*    element-wide opacity values   (1..9)
 --sf-weight-*     font weight      (1..4)
@@ -478,7 +478,9 @@ underscores (`--sf-fg_primary`); single-word names don't (`--sf-primary`).
 --sf-fg_on_warning   text on a solid warning fill
 --sf-fg_on_success   text on a solid success fill
 --sf-fg_on_info      text on a solid info fill
---sf-border_color    border colour
+--sf-border_color    border colour (the root theme points it at the text colour)
+--sf-border_alpha    border strength: a border is its colour at this (0.12 in the root theme)
+--sf-surface_page    the page's surface: the shade the page and fields are (light 0, dark 1)
 --sf-shadow          shadow colour
 --sf-spacing_page    page margin: room at the screen's edges and around the header and footer
 ```
@@ -508,8 +510,11 @@ the active theme's values.
 
 Every colour has an ink even where nothing in the root theme draws with it yet (success, info): a
 theme or component author drawing a green or blue line needs one, and it's the common case for a
-builder (owner, 2026-11-24). An ink with its own value is offered in the colour tools, as every
-colour with a value is; one that points at another colour is offered under that colour's name.
+builder (owner, 2026-11-24). Every colour is offered in the colour tools by its own name, one that
+points at another included (the brand, the inks, the page's surface, the border colour), with
+classes that read it, so an author's choice follows a theme that points it elsewhere later
+(owner, 2026-11-28). A colour with a strength beside it (`--sf-border_alpha` beside
+`--sf-border_color`) is offered at that strength, which a strength class still changes.
 
 **Coloured words** are neither: each colour's words are the colour mixed half with the text
 colour, chroma doubled (`oklch(from color-mix(in oklab, <colour> 50%, <text>) l calc(c * 2) h)`),
@@ -523,8 +528,15 @@ plain, parent and current still differ (owner, 2026-11-24).
 **Edges** follow what they're for (owner, 2026-11-24). A field and the code box
 (`sf-content-frame`) at rest: the text colour at 60%, as an empty field has nothing else to show
 it's there, so its edge needs 3:1 (light 4.08, dark 6.61). Ordinary buttons and chips: the text
-colour at 30%, which is looks, as their words mark them out. Dividers, cards and tables:
-`--sf-border_color`, as they only separate.
+colour at 30%, which is looks, as their words mark them out. Dividers, cards, tables and a stuck
+bar's line: the border colour at the border's strength, as they only separate (owner, 2026-11-28).
+The root theme's border is the text colour at 12%: a faint text colour darkens or lightens whatever
+it's on by the same amount, so a line reads alike on the page, a bar, a menu and a dialog (about
+1.25:1 on each), where a fixed grey vanished on a menu or was too strong on a bar. A theme can set a
+fixed colour at full strength instead. A loud button's and a loud chip's faint edge is its words'
+colour (`--sf-fg_inverted`) at 40% and 30%: its fill is the text colour, so an edge in the text
+colour would vanish into it. A swatch's edge is the border colour at 20%, so a white swatch shows on
+white.
 
 ### Colours and alpha
 
@@ -613,7 +625,7 @@ is valid because the theme decides which palette step is the brand. `--sf-alpha-
 scale step directly.
 
 **Compose before naming.** If a value can be built at the use site from existing tokens
-(`var(--sf-stroke-1) solid rgb(var(--sf-border_color))`), do that — a new composed token
+(`var(--sf-stroke-1) solid rgb(var(--sf-border_color) / var(--sf-border_alpha))`), do that — a new composed token
 earns its place only when themes would plausibly override the whole treatment as a unit,
 not just its parts.
 
@@ -628,7 +640,7 @@ and theme overrides both live inside the matching `@layer` block:
 @layer sf-bundle {
 	/* default — uses tokens for values */
 	.sf-depth-1 {
-		background: rgb(var(--sf-surface-1));
+		background: rgb(var(--sf-surface-2));
 		box-shadow: var(--sf-shadow-md);
 		border-radius: var(--sf-radius-2);
 	}
@@ -637,7 +649,7 @@ and theme overrides both live inside the matching `@layer` block:
 	@scope (.theme-flat) {
 		.sf-depth-1 {
 			box-shadow: none;
-			border: 1px solid rgb(var(--sf-border_color));
+			border: 1px solid rgb(var(--sf-border_color) / var(--sf-border_alpha));
 		}
 	}
 }
@@ -662,11 +674,23 @@ depth-1 card needs to read as above it — depth coordinates that relationship r
 of how CSS implements the actual stacking.
 
 ```text
-sf-depth-0   canvas / page
-sf-depth-1   cards, wells
+sf-depth-0   the page's surface: the page, and a box flat on it
+sf-depth-1   cards, wells, bars
 sf-depth-2   dropdowns, popovers
 sf-depth-3   modals
 ```
+
+**Surfaces** (owner, 2026-11-28). Depth 0 is the page's surface (`--sf-surface_page`); depths 1
+to 3 take shades 2 to 4 of the neutral range, whose shade 0 is the end away from the text. Only the
+page differs by mode in which shade it is, so only the page has a token: light's page is shade 0
+(white), dark's shade 1 (`rgb(31,38,47)`), as a black page is harsh, keeping near-black for tints
+to fade towards. Fields are the page's colour in both modes, shown by their edge. Light and dark
+show height differently, as light and dark themes usually do: dark with each depth a step lighter
+(1.30, 1.20, 1.23 between neighbours), as shadows barely show on dark, so its shadows are also
+stronger (40%); light with surfaces near white (`#f4f4f5`, `#e4e4e7`, `#d4d4d8`) and lines and
+shadows between them. A surface on a surface isn't held to a contrast; a control's edge is, and a
+field has its 3:1 edge. White menus and dialogs in light, each depth with a token of its own, are
+parked (to-do).
 
 **Headings** — typographic prominence. h1–h6 encode document outline position; these
 classes carry visual prominence, which does not always align — a deeply nested section's
@@ -884,8 +908,9 @@ how to express it at each size.
 On a box, loudness steps the same box up: a variant alone colours the text,
 `sf-loudness-2` adds a tint and a border in that colour, `sf-loudness-3` fills it solid
 with the matching `fg_on_*` text in bold. The loudness-2 shades are solid: the colour mixed
-into the page colour (`--sf-surface-0`), so they look the same on any surface and follow
-dark mode. Coloured text is the colour moved halfway to the normal text's brightness with
+into shade 0 (`--sf-surface-0`), the end of the neutral range away from the text (white in light,
+near-black in dark), so they look the same on any surface and follow dark mode; in dark they sit
+a little darker than the page (owner, 2026-11-28). Coloured text is the colour moved halfway to the normal text's brightness with
 its colourfulness kept, so it reads on light and dark alike. One colour value per role
 serves both modes. Hover and press step each fill a little further without losing it.
 A floating or contained box keeps its fill ("Fill parts"): the tint is solid, so the page
@@ -946,6 +971,16 @@ muted colour, no change at all.
 Element-agnostic: applies equally to a `<button>` inside a card, a nested
 card-shaped `<div>`, or anything else that would otherwise draw its own container.
 
+**Chrome padding**: every `sf-depth-*` pads itself by `--sf-padding`, which its size sets
+(`sf-size-*`). Depths 1 to 3 default it to a card's; depth 0, the page's surface, has no default,
+as a page isn't padded unless a size asks, and an inset on it keeps the page's line at its sides,
+its size padding only its top and bottom (owner, 2026-11-28; the editor's top bar, below).
+
+**Stuck bars**: a stuck bar (`sf-is-sticky`) gives up its depth's all-round shadow for a line
+under it in the border colour and a soft shadow below (`0 10px 32px -12px`, the theme's shadow
+colour), so it lifts off what scrolls under it, a Card the same shade as the bar included (owner,
+2026-11-28). The edge is the theme's.
+
 `sf-flush` opts out of the chrome-class padding default — wear alongside `sf-depth-*`
 when the child touches the container's inner edge (image cards, toolbar slots).
 **Follow-up:** move padding to an `sl-pad-*` layout family
@@ -993,7 +1028,7 @@ naming, mirroring the token name).
 
 ```text
 sf-fg_primary    color:        rgb(var(--sf-fg_primary))
-sf-border_color    border-color: rgb(var(--sf-border_color))
+sf-border_color  border-color: rgb(var(--sf-border_color) / var(--sf-border_alpha))
 ```
 
 The author signals "this property should track a theme value"; the theme controls the
@@ -1233,8 +1268,8 @@ back on the line.
   card that isn't itself an inset), its content centres at the page width again.
 - An inset that bleeds inside another carries the same margin, so they share one line.
   One that doesn't bleed sits inside the line, so its content moves in by another margin.
-- An inset on a chrome box (`sf-depth-1 sl-inset`) uses that box's own padding — whatever
-  the theme gives it. The card looks unchanged, and its children can bleed to its edges.
+- An inset on a raised box (`sf-depth-1 sl-inset`, to depth 3) uses that box's own padding —
+  whatever the theme gives it. One on depth 0, the page's surface, keeps the page's line. The card looks unchanged, and its children can bleed to its edges.
   Everything inside lines up with the card instead of the page. The page width limit
   doesn't apply inside it: the card's column is its full width.
 - Unless that box actually bleeds (a direct child of an inset): its edges are then the
@@ -1552,9 +1587,11 @@ from, as a link does, so the Leave question always applies; with none, home. Sav
 page stands in words ("Save", "Saving…", "Saved") and shows only to whoever could save. The
 editors scroll the line being written clear of the bar (`scrollClearOfEditorTopBar.ts`).
 
-The path's row is depth 2: it's the row the page's Cards (depth 1) scroll under, so it's a layer
-above them. The page's row meets only the path's, so it's depth 1, and the two rows look apart
-(owner, 2026-11-21).
+The page's row is on the page's surface (depth 0), padded by its size; the path's row is a bar
+(depth 1) dividing it from the page. The page's Cards (depth 1) scroll under the path's row, the
+same shade: its stuck line and soft shadow lift it off them (owner, 2026-11-28). It was depth 2,
+a layer above them, which put its coloured words on the menu shade and let the ⋮ menu blend
+into it.
 
 Exit is an arrow back, not ✕, which reads as closing and throwing away (owner, 2026-11-21). Where
 the page's row is narrow (`xs`, a phone), the warnings and Code view go into "⋮", as the site's

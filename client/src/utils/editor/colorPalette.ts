@@ -31,9 +31,17 @@ export interface AlphaStep {
 	label: string
 }
 
-/** The colour a theme colour paints, for a swatch. Its variables, so the theme draws it. */
-export const swatchColor = ({ color, alpha }: ThemeColor): string =>
-	alpha ? `rgb(var(--sf-${color}) / var(--sf-alpha-${alpha}))` : `rgb(var(--sf-${color}))`
+/**
+ * The colour a theme colour paints, for a swatch. Its variables, so the theme draws it. Solid is
+ * the colour's own strength where it has one (`--sf-border_alpha` beside `--sf-border_color`), as
+ * its class draws it.
+ */
+export const swatchColor = ({ color, alpha }: ThemeColor): string => {
+	const own = color.endsWith('_color')
+		? `var(--sf-${color.replace(/_color$/, '_alpha')}, 1)`
+		: '1'
+	return `rgb(var(--sf-${color}) / ${alpha ? `var(--sf-alpha-${alpha})` : own})`
+}
 
 /** A theme colour from a block's classes, by the prefix of its kind (`sf-bg-`, `sf-shadow-color-`). */
 export const readThemeColor = (
@@ -61,13 +69,12 @@ export const themeColorClasses = (
 	alphaPrefix: string,
 ): string[] => [`${colorPrefix}${color}`, ...(alpha ? [`${alphaPrefix}${alpha}`] : [])]
 
-const TRIPLET = /^\s*\d+\s+\d+\s+\d+\s*$/
 const ALPHA = /^--sf-alpha-(\d+)$/
 
 // The theme's colours and see-through steps, from its tokens. A colour is a family and a shade:
 // `--sf-primary-5` is family `primary`, shade `5`; one with no number (`--sf-fg_primary`) is a
-// family of one. Only colours the theme makes classes for: a token pointing at another
-// (`--sf-primary: var(--sf-primary-5)`) has none.
+// family of one. A token pointing at another (`--sf-primary: var(--sf-primary-4)`) is offered by
+// its own name, so a choice of it follows the theme.
 export function useColorPalette() {
 	const store = useThemeTokensStore()
 
@@ -76,7 +83,6 @@ export function useColorPalette() {
 		for (const tk of store.rootTokens) {
 			if (tk.kind !== 'color-triplet') continue
 			if (!tk.name.startsWith('--sf-')) continue
-			if (!TRIPLET.test(tk.value)) continue
 			const name = tk.name.slice('--sf-'.length)
 			const match = name.match(/^(.+)-(\d+)$/)
 			const familyKey = match ? match[1]! : name

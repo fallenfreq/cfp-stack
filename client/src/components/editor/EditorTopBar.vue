@@ -1,15 +1,15 @@
 <template>
 	<!-- The editor's bars: the page's, then the node path. One sticky box, whose height the page is
-	     given. Only the path's row meets the page, whose Cards (depth 1) scroll under it, so it's a
-	     layer above them (depth 2); the page's row meets only the path's, so it's depth 1, and the two
-	     rows look apart. Side padding puts the controls on the page line (sl-inset-line). -->
+	     given. The page's row is on the page's surface (depth 0); the path's row is a bar (depth 1)
+	     dividing it from the page, and its stuck line and shadow lift it off the Cards (depth 1) that
+	     scroll under it. Side padding puts the controls on the page line (sl-inset-line). -->
 	<div ref="bar" class="editor-top-bar">
 		<!-- Where the row is narrow (xs), the warnings and Code view go into "⋮", which then wears a
 		     mark in the warnings' colour; the number is its first item, as a count from two figures
 		     would cover the dots. The menu's items measure this row too: a menu straight in a
 		     popover doesn't measure (sf-system.md, "A popover is laid out on its own"). -->
 		<div
-			class="top-bar__page sl-cluster sf-gap-2xs sl-inset-line sf-depth-1 sf-size-xs sf-is-sticky sf-is-edge-left sf-is-edge-right"
+			class="top-bar__page sl-cluster sf-gap-2xs sl-inset-line sf-depth-0 sf-size-xs sf-is-sticky sf-is-edge-left sf-is-edge-right"
 		>
 			<EditorExitButton />
 			<!-- The name, in the row's free room, its box as wide as the name, and after it the mark
@@ -114,7 +114,7 @@
 		</div>
 		<!-- The box, apart from the path's scroll area. -->
 		<div
-			class="sl-inset-line sf-depth-2 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right"
+			class="sl-inset-line sf-depth-1 sf-size-2xs sf-is-sticky sf-is-edge-left sf-is-edge-right"
 		>
 			<NodePath :editor="editor" />
 		</div>
