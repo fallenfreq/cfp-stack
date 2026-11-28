@@ -91,7 +91,10 @@ export function useColorPalette() {
 		}
 		return Object.entries(groups).map(([key, shades]) => ({
 			key,
-			shades: shades.sort((a, b) => (Number(a.key) || 0) - (Number(b.key) || 0)),
+			// The steps in order, then a colour of the family's own name (`primary` after its steps).
+			shades: shades.sort(
+				(a, b) => (Number(a.key) || Infinity) - (Number(b.key) || Infinity),
+			),
 		}))
 	})
 

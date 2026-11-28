@@ -194,7 +194,7 @@ test('no shadow picked on a block with none changes nothing', async ({ page }) =
 })
 
 test('a colour class the theme makes no colour for is not one of its colours', async ({ page }) => {
-	await setPage(page, '<p id="words">Some <span class="sf-color-primary">words</span></p>')
+	await setPage(page, '<p id="words">Some <span class="sf-color-brand">words</span></p>')
 	await selectWords(page, 'words', 'words')
 	await openColor(page)
 	await expect(panel(page)).toContainText('Not a theme colour')

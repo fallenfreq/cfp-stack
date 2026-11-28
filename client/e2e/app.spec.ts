@@ -1040,11 +1040,14 @@ test('the name box takes a tint of its words under the pointer and a stronger on
 	const tintOfWords = async (why: string, step: number) => {
 		const { background, words, step: alpha } = await look(step)
 		expect(words.alpha, `${why}: full words`).toBe(1)
+		// A see-through colour is kept in 8 bits already weakened, so its colour reads back to within
+		// half a step over its strength (5 at 10%).
+		const within = Math.ceil(0.5 / alpha) + 1
 		for (const [i, channel] of background.rgb.entries())
 			expect(
 				Math.abs(channel - words.rgb[i]!),
 				`${why}: the words' colour`,
-			).toBeLessThanOrEqual(2)
+			).toBeLessThanOrEqual(within)
 		expect(background.alpha, `${why}: the theme's step ${step}`).toBeCloseTo(alpha, 1)
 	}
 	const transparent = 'rgba(0, 0, 0, 0)'

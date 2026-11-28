@@ -584,7 +584,7 @@ they're a tool of their own, not part of the theme's colour tools.
 
 The tools keep a theme colour as its names, the colour's and its see-through step's (`primary-5`,
 `3`), from the class they read to the class they write, so nothing is turned into a colour value
-and read back: a class the theme makes no colour for (`sf-color-primary`) is written back as it
+and read back: a class the theme makes no colour for (`sf-color-brand`) is written back as it
 came, and a see-through step needs no theme tokens to be kept.
 
 ### Corners
@@ -973,8 +973,9 @@ card-shaped `<div>`, or anything else that would otherwise draw its own containe
 
 **Chrome padding**: every `sf-depth-*` pads itself by `--sf-padding`, which its size sets
 (`sf-size-*`). Depths 1 to 3 default it to a card's; depth 0, the page's surface, has no default,
-as a page isn't padded unless a size asks, and an inset on it keeps the page's line at its sides,
-its size padding only its top and bottom (owner, 2026-11-28; the editor's top bar, below).
+as a page isn't padded unless a size asks, and an inset on it is a plain inset, the page's margin
+at its sides, its size padding only its top and bottom (owner, 2026-11-28; the editor's top bar,
+below).
 
 **Stuck bars**: a stuck bar (`sf-is-sticky`) gives up its depth's all-round shadow for a line
 under it in the border colour and a soft shadow below (`0 10px 32px -12px`, the theme's shadow
@@ -1269,7 +1270,7 @@ back on the line.
 - An inset that bleeds inside another carries the same margin, so they share one line.
   One that doesn't bleed sits inside the line, so its content moves in by another margin.
 - An inset on a raised box (`sf-depth-1 sl-inset`, to depth 3) uses that box's own padding —
-  whatever the theme gives it. One on depth 0, the page's surface, keeps the page's line. The card looks unchanged, and its children can bleed to its edges.
+  whatever the theme gives it. One on depth 0, the page's surface, is a plain inset. The card looks unchanged, and its children can bleed to its edges.
   Everything inside lines up with the card instead of the page. The page width limit
   doesn't apply inside it: the card's column is its full width.
 - Unless that box actually bleeds (a direct child of an inset): its edges are then the

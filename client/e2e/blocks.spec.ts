@@ -155,9 +155,9 @@ test("in a Card used as an inset, a block or a video set to bleed reaches the ca
 })
 
 // Depth 0 is the page's surface: a size pads it, as it pads a Card, and with none it isn't
-// padded; an inset on it keeps the page's line at its sides, its size padding only its top and
-// bottom (sf-system.md, "Chrome padding").
-test("a box on the page's surface is padded by its size, and an inset on it keeps the page's line", async ({
+// padded; an inset on it is a plain inset, the page's margin at its sides, its size padding only
+// its top and bottom (sf-system.md, "Chrome padding").
+test("a box on the page's surface is padded by its size, and an inset on it has the page's margin", async ({
 	page,
 }) => {
 	const cardPadding = await css(page.locator('#divide-card-twin'), 'padding-top')
@@ -165,10 +165,15 @@ test("a box on the page's surface is padded by its size, and an inset on it keep
 	expect(await css(page.locator('#page-surface-sized'), 'padding'), 'sized').toBe(cardPadding)
 	expect(await css(page.locator('#page-surface-plain'), 'padding'), 'no size').toBe('0px')
 
+	// A plain inset's margin, from the plain inset case.
+	const pageMargin =
+		(await box(page.locator('#inset-first'))).left - (await box(page.locator('#inset'))).left
 	const inset = await box(page.locator('#page-surface-inset'))
 	const text = await box(page.locator('#page-surface-inset-text'))
-	const line = await box(page.locator('#page-surface-heading'))
-	expect(Math.abs(text.left - line.left), "an inset: the page's line").toBeLessThanOrEqual(1)
+	expect(
+		Math.abs(text.left - inset.left - pageMargin),
+		"an inset: the page's margin",
+	).toBeLessThanOrEqual(1)
 	expect(
 		Math.abs(text.top - inset.top - parseFloat(cardPadding)),
 		'its size, above',

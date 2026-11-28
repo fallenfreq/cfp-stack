@@ -102,18 +102,19 @@ const activeFamily = computed<PaletteFamily | undefined>(() =>
 const activeShade = computed(() => activeFamily.value?.shades[shadeIndex.value] ?? null)
 
 const headerLabel = computed(() => {
-	// A class the theme makes no colour for (`sf-color-primary`) isn't one of its colours either.
+	// A class the theme makes no colour for (`sf-color-brand`) isn't one of its colours either.
 	if (props.fixed || (props.value && !picked.value)) return 'Not a theme colour'
 	if (!picked.value) return props.noneLabel
 	if (!activeShade.value) return ''
-	const family = activeFamily.value!
-	if (family.shades.length > 1) return `${family.key}-${activeShade.value.key}`
-	return family.key
+	// The colour's name in the theme: a step (`primary-5`), or one of its own (`primary`).
+	return activeShade.value.name
 })
 
-// Pick a representative chip color: middle shade for multi-shade, the only shade otherwise.
+// Pick a representative chip color: the middle step for a scale, the only shade otherwise.
 const chipStyle = (family: PaletteFamily) => {
-	const mid = family.shades[Math.floor(family.shades.length / 2)]
+	const steps = family.shades.filter((s) => s.key !== s.name)
+	const from = steps.length ? steps : family.shades
+	const mid = from[Math.floor(from.length / 2)]
 	return mid ? { background: swatchColor({ color: mid.name, alpha: null }) } : {}
 }
 
