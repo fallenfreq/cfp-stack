@@ -9,14 +9,15 @@ Next: contrast on white, its next item (`docs/plans/contrast-on-white.md`, "Late
 time"), one per session; one review of the whole once they're done. Waiting: pasting warns of
 what the page can't keep ("Ideas").
 
-The page's surface landed (v2.103.0, owner, 2026-11-28): no code review yet; the owner may ask for
-one. Parked from it:
+The page's surface (v2.103.0) and light's grey page with white raised surfaces (v2.104.0) landed
+(owner, 2026-11-28): no code review yet; the owner may ask for one. Parked from them:
 
-- **A token per depth**, for white menus and dialogs with a shadow in light, as light themes
-  usually show height (`sf-system.md`, "Surfaces").
+- **A blur scale** (`--sf-blur-*`, a new token for the owner to approve): the scrim's blur and a
+  floating box's are each their own value (8px, 12px).
 - **Dark's coloured words on a bar**: the editor path bar's picked chip is 3.74:1 (4.01 before);
   joins contrast on white's coloured words item, with whatever the contrast check's new bar cases
-  report.
+  report. With it, dark's red on its lighter surfaces: a field's error line is 2.59:1 on a menu
+  and 2.11:1 on a modal (the contrast check fails there until it's fixed).
 - **To check**: leaving the editor after typing only a new page name didn't ask "Leave without
   saving?" (seen 2026-11-28; may be by design).
 

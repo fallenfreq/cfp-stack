@@ -95,9 +95,9 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-primary-8', value: '105 77 145', kind: 'color-triplet' },
 	{ name: '--sf-primary-9', value: '84 60 117', kind: 'color-triplet' },
 
-	// Surface palette: the neutral range, 0 the end away from the text. The page is
-	// --sf-surface_page; depths 1-3 take 2-4. Light keeps its surfaces near white and shows height
-	// with lines and shadows (sf-system.md, "Surfaces").
+	// Surface palette: the neutral range, 0 the end away from the text. In light the page is 2
+	// (--sf-surface_page) and what's raised off it is 0, white, lifted by its shadow; 3 and up are
+	// for lines and fills, as words on them would fall short (sf-system.md, "Surfaces").
 	{ name: '--sf-surface-0', value: '255 255 255', kind: 'color-triplet' },
 	{ name: '--sf-surface-1', value: '250 250 250', kind: 'color-triplet' },
 	{ name: '--sf-surface-2', value: '244 244 245', kind: 'color-triplet' },
@@ -169,8 +169,8 @@ const ROOT_TOKENS: TokenSpec[] = [
 	{ name: '--sf-fg_primary', value: '38 40 36', kind: 'color-triplet' },
 	{ name: '--sf-fg_inverted', value: '255 255 255', kind: 'color-triplet' },
 	{ name: '--sf-primary', value: 'var(--sf-primary-4)', kind: 'color-triplet' },
-	// The page's surface: the shade the page and fields are, which differs by mode.
-	{ name: '--sf-surface_page', value: 'var(--sf-surface-0)', kind: 'color-triplet' },
+	// The page's surface, which differs by mode: what isn't on a depth reads it.
+	{ name: '--sf-surface_page', value: 'var(--sf-surface-2)', kind: 'color-triplet' },
 	// A border is its colour at its strength: the text colour, faint, reads alike on every surface.
 	{ name: '--sf-border_color', value: 'var(--sf-fg_primary)', kind: 'color-triplet' },
 	{ name: '--sf-border_alpha', value: '0.12', kind: 'number' },
@@ -207,7 +207,7 @@ const DARK_TOKEN_OVERRIDES: TokenSpec[] = [
 	{ name: '--sf-success_ink', value: 'var(--sf-success)', kind: 'color-triplet' },
 	{ name: '--sf-info_ink', value: '59 130 246', kind: 'color-triplet' },
 	// Surface palette: 0 is near-black, for tints to fade towards; the page is 1, as a black page is
-	// harsh, and each depth a step lighter, as dark shows height by lighter surfaces.
+	// harsh, and each depth a step lighter, as dark shows height by lighter surfaces (DARK_RULES).
 	{ name: '--sf-surface_page', value: 'var(--sf-surface-1)', kind: 'color-triplet' },
 	{ name: '--sf-surface-0', value: '5 10 16', kind: 'color-triplet' },
 	{ name: '--sf-surface-1', value: '31 38 47', kind: 'color-triplet' },
@@ -969,19 +969,20 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-depth-0'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 
+	// depth-1 to 3: raised off the page, white in light (DARK_RULES gives dark its steps).
 	// depth-1: cards, wells — background + shadow + radius
 	// Border is intentionally absent at the default level; flat themes add one by overriding
 	// box-shadow to none and adding a border (BORDER) instead.
 	{
 		classNames: ['sf-depth-1'],
 		cssProperty: '--sfx-surface-color',
-		value: 'var(--sf-surface-2)',
+		value: 'var(--sf-surface-0)',
 	},
 	{ classNames: ['sf-depth-1'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
 	{
 		classNames: ['sf-depth-1'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sf-surface-2))'),
+		value: underFill('rgb(var(--sf-surface-0))'),
 	},
 	{
 		classNames: ['sf-depth-1'],
@@ -1012,17 +1013,19 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-depth-1'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 
-	// depth-2: dropdowns, popovers — stronger shadow
+	// depth-2: dropdowns, popovers — stronger shadow, and an edge: what floats can sit over a
+	// surface its own colour (a white menu on a white card). The edge is a ring in the shadow, so
+	// it takes no room.
 	{
 		classNames: ['sf-depth-2'],
 		cssProperty: '--sfx-surface-color',
-		value: 'var(--sf-surface-3)',
+		value: 'var(--sf-surface-0)',
 	},
 	{ classNames: ['sf-depth-2'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
 	{
 		classNames: ['sf-depth-2'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sf-surface-3))'),
+		value: underFill('rgb(var(--sf-surface-0))'),
 	},
 	{
 		classNames: ['sf-depth-2'],
@@ -1032,12 +1035,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-depth-2'],
 		cssProperty: 'box-shadow',
-		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+		value: `0 0 0 1px ${BORDER}, var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))`,
 	},
 	{
 		classNames: ['sf-depth-2'],
 		cssProperty: '--sfx-depth-shadow',
-		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+		value: `0 0 0 1px ${BORDER}, var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))`,
 	},
 	{ classNames: ['sf-depth-2'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	{
@@ -1047,17 +1050,17 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-depth-2'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 
-	// depth-3: modals — strongest shadow
+	// depth-3: modals — strongest shadow, and depth-2's edge
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: '--sfx-surface-color',
-		value: 'var(--sf-surface-4)',
+		value: 'var(--sf-surface-0)',
 	},
 	{ classNames: ['sf-depth-3'], cssProperty: '--sfx-depth-radius', value: 'var(--sf-radius-2)' },
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sf-surface-4))'),
+		value: underFill('rgb(var(--sf-surface-0))'),
 	},
 	{
 		classNames: ['sf-depth-3'],
@@ -1067,12 +1070,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: 'box-shadow',
-		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+		value: `0 0 0 1px ${BORDER}, var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))`,
 	},
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: '--sfx-depth-shadow',
-		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
+		value: `0 0 0 1px ${BORDER}, var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))`,
 	},
 	// Matches sf-depth-1/2 — chip-scale radius belongs to sf-chip, not depth.
 	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
@@ -1690,14 +1693,14 @@ const ROOT_RULES: RuleSpec[] = [
 	// Overlay context — reads --sfx-surface-color (bridge variable set by each depth bundle) so one
 	// bare rule works at any depth without duplicating colour knowledge. Theme can compound
 	// (e.g. sf-depth-3.sf-is-overlay) to override for specific depths where different treatment is needed.
-	// A context changes a box's surface, never its fill (sf-system.md, "Fill parts").
+	// A context changes a box's surface, never its fill (sf-system.md, "Fill parts"). Nearly solid,
+	// with what's behind blurred, so words passing under don't show through as words.
 	{
 		classNames: ['sf-is-overlay'],
 		cssProperty: 'background',
-		value: underFill(
-			'rgb(var(--sfx-surface-color, var(--sf-surface_page)) / var(--sf-alpha-9))',
-		),
+		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface_page)) / 0.95)'),
 	},
+	{ classNames: ['sf-is-overlay'], cssProperty: 'backdrop-filter', value: 'blur(12px)' },
 
 	// Sticky context: a stuck bar's edge is a line under it and a soft shadow below, in place of
 	// the depth's all-round shadow, so it lifts off what scrolls under it (sf-system.md, "Stuck
@@ -2857,8 +2860,7 @@ const ROOT_RULES: RuleSpec[] = [
 
 	// ─── sf-scrim ─────────────────────────────────────────────────────────────
 	// Modal backdrop. Black tint darkens regardless of theme; alpha via token.
-	// backdrop-filter blur value is scrim-specific chrome — if blur becomes multi-use
-	// across the vocabulary, introduce a --sf-blur-* scale.
+	// Its blur is its own, as sf-is-overlay's is; a blur scale is parked (sf-system-todo.md).
 	{
 		classNames: ['sf-scrim'],
 		cssProperty: 'background',
@@ -2897,12 +2899,12 @@ const ROOT_RULES: RuleSpec[] = [
 	// Control-scale default, same as button.sf; sf-size-* overrides.
 	{ classNames: ['sf-field'], cssProperty: '--sf-padding', value: 'var(--sf-spacing-xs)' },
 	{ classNames: ['sf-field'], cssProperty: 'padding', value: 'var(--sf-padding)' },
-	// Fields are writable surfaces, the page's colour: distinct on any raised parent; on the page
-	// itself the edge shows where it is. Focus shows as on anything else.
+	// Fields are writable surfaces: white in light, and in dark the page's colour (DARK_RULES); the
+	// edge shows where one is on a surface its own colour. Focus shows as on anything else.
 	{
 		classNames: ['sf-field'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sf-surface_page))'),
+		value: underFill('rgb(var(--sf-surface-0))'),
 	},
 	{ classNames: ['sf-field'], cssProperty: 'color', value: 'rgb(var(--sf-fg_primary))' },
 	// Inherit typography from the parent (match surrounding text) without inheriting
@@ -3051,6 +3053,27 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 ]
 
+// Dark shows height by lighter surfaces, a step a depth up from the page, where light makes all
+// that's raised white; and its fields are the page's colour (sf-system.md, "Surfaces").
+const DARK_RULES: RuleSpec[] = [
+	...(['1', '2', '3'] as const).flatMap((depth): RuleSpec[] => {
+		const shade = `var(--sf-surface-${Number(depth) + 1})`
+		return [
+			{ classNames: [`sf-depth-${depth}`], cssProperty: '--sfx-surface-color', value: shade },
+			{
+				classNames: [`sf-depth-${depth}`],
+				cssProperty: 'background',
+				value: underFill(`rgb(${shade})`),
+			},
+		]
+	}),
+	{
+		classNames: ['sf-field'],
+		cssProperty: 'background',
+		value: underFill('rgb(var(--sf-surface_page))'),
+	},
+]
+
 // ─── Collapse thresholds ─────────────────────────────────────────────────
 // System config — not theme data. Seeded idempotently (upsert); not wiped
 // by wipeDesignSystem so user edits survive a theme reseed.
@@ -3115,6 +3138,10 @@ export async function seed(db: Db) {
 	let rulesCreated = 0
 	for (const r of ROOT_RULES) {
 		await applyRule(db, ROOT_ID, r)
+		rulesCreated++
+	}
+	for (const r of DARK_RULES) {
+		await applyRule(db, DARK_ID, r)
 		rulesCreated++
 	}
 

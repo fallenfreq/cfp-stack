@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '../fixtures'
 import { settle, steadyRequests } from '../helpers'
 
-// What the root theme draws on its page and bars can be seen (sf-system.md, "Fill and ink"): a line, a
+// What the root theme draws on its surfaces can be seen (sf-system.md, "Fill and ink"): a line, a
 // field's edge or its cursor reaches 3:1 on what's behind it, words 4.5:1 (WCAG 1.4.11,
 // 1.4.3). A targeted line is a hint and isn't measured (sf-system.md, "Line parts"). Measured
 // from what the browser draws, in light and dark, with the theme class on <html> as the app sets
@@ -16,13 +16,18 @@ const MODES = [
 type Part = 'outline' | 'edge' | 'cursor' | 'link' | 'words'
 type Pointer = 'over' | 'pressing'
 
-// Each case on the page and on a bar (depth 1), where the editor's bars and the page's Cards sit;
-// one that also occurs on a menu (depth 2) is measured there too (owner, 2026-11-28).
-const SURFACES = [
+// Each case on every surface it occurs on: the page and a bar or Card (depth 1), and, but for a
+// block's lines, which are only ever in the page, a menu (depth 2) and a modal (depth 3) (owner,
+// 2026-11-28).
+const IN_PAGE = [
 	{ name: 'the page', depth: 'sf-depth-0' },
 	{ name: 'a bar', depth: 'sf-depth-1' },
 ]
-const MENU = { name: 'a menu', depth: 'sf-depth-2' }
+const SURFACES = [
+	...IN_PAGE,
+	{ name: 'a menu', depth: 'sf-depth-2' },
+	{ name: 'a modal', depth: 'sf-depth-3' },
+]
 
 const CASES: {
 	name: string
@@ -30,37 +35,42 @@ const CASES: {
 	part: Part
 	least: number
 	pointer?: Pointer
-	onMenu?: boolean
+	inPage?: boolean
 }[] = [
 	{
 		name: "a picked block's line",
 		html: '<p class="sf-on-selected">Picked</p>',
 		part: 'outline',
 		least: 3,
+		inPage: true,
 	},
 	{
 		name: "a picked block's line with a warning",
 		html: '<p class="sf-on-selected sf-is-warning">Warned</p>',
 		part: 'outline',
 		least: 3,
+		inPage: true,
 	},
 	{
 		name: "a picked block's line with an error",
 		html: '<p class="sf-on-selected sf-is-error">Wrong</p>',
 		part: 'outline',
 		least: 3,
+		inPage: true,
 	},
 	{
 		name: "a block's warning line",
 		html: '<p class="sf-is-warning">Warned</p>',
 		part: 'outline',
 		least: 3,
+		inPage: true,
 	},
 	{
 		name: "a block's error line",
 		html: '<p class="sf-is-error">Wrong</p>',
 		part: 'outline',
 		least: 3,
+		inPage: true,
 	},
 	{
 		name: "a field's error line",
@@ -97,7 +107,6 @@ const CASES: {
 		html: '<button class="sf sf-is-contained sf-on-ancestor">Portfolio</button>',
 		part: 'words',
 		least: 4.5,
-		onMenu: true,
 	},
 	{
 		name: 'words on a loud brand button',
@@ -242,7 +251,7 @@ const measure = (page: Page, part: Part) =>
 	}, part)
 
 for (const mode of MODES)
-	test(`lines, focus edges and words can be seen on the page and a bar, ${mode.name}`, async ({
+	test(`lines, focus edges and words can be seen on every surface, ${mode.name}`, async ({
 		page,
 	}) => {
 		await steadyRequests(page)
@@ -254,7 +263,7 @@ for (const mode of MODES)
 		await settle(page)
 
 		for (const c of CASES)
-			for (const surface of c.onMenu ? [...SURFACES, MENU] : SURFACES) {
+			for (const surface of c.inPage ? IN_PAGE : SURFACES) {
 				await show(page, c.html, surface.depth)
 				await putPointer(page, c.pointer)
 				const measured = await measure(page, c.part)

@@ -480,7 +480,7 @@ underscores (`--sf-fg_primary`); single-word names don't (`--sf-primary`).
 --sf-fg_on_info      text on a solid info fill
 --sf-border_color    border colour (the root theme points it at the text colour)
 --sf-border_alpha    border strength: a border is its colour at this (0.12 in the root theme)
---sf-surface_page    the page's surface: the shade the page and fields are (light 0, dark 1)
+--sf-surface_page    the page's surface, read by what isn't on a depth (light 2, dark 1)
 --sf-shadow          shadow colour
 --sf-spacing_page    page margin: room at the screen's edges and around the header and footer
 ```
@@ -680,17 +680,23 @@ sf-depth-2   dropdowns, popovers
 sf-depth-3   modals
 ```
 
-**Surfaces** (owner, 2026-11-28). Depth 0 is the page's surface (`--sf-surface_page`); depths 1
-to 3 take shades 2 to 4 of the neutral range, whose shade 0 is the end away from the text. Only the
-page differs by mode in which shade it is, so only the page has a token: light's page is shade 0
-(white), dark's shade 1 (`rgb(31,38,47)`), as a black page is harsh, keeping near-black for tints
-to fade towards. Fields are the page's colour in both modes, shown by their edge. Light and dark
-show height differently, as light and dark themes usually do: dark with each depth a step lighter
-(1.30, 1.20, 1.23 between neighbours), as shadows barely show on dark, so its shadows are also
-stronger (40%); light with surfaces near white (`#f4f4f5`, `#e4e4e7`, `#d4d4d8`) and lines and
-shadows between them. A surface on a surface isn't held to a contrast; a control's edge is, and a
-field has its 3:1 edge. White menus and dialogs in light, each depth with a token of its own, are
-parked (to-do).
+**Surfaces** (owner, 2026-11-28). Depth 0 is the page's surface (`--sf-surface_page`), the
+shade of the neutral range (shade 0 the end away from the text) that whatever isn't on a depth
+reads too: the page, a focus ring's gap. Light and dark show height differently, as light and dark
+themes usually do, so the root theme's depth rules say light's shades and the dark theme's own
+rules say dark's; a depth's shade is read only by its rules, so it needs no token.
+
+- Light, as apps usually are: a grey page (shade 2, `#f4f4f5`), and everything raised off it white
+  (shade 0), each depth lifted by its shadow; what floats (depths 2 and 3) also has an edge, as it
+  can sit over a white card. Fields are white. Words only ever sit on white or the page, so a
+  colour's words that read on the page read everywhere (a menu's parent item measured 4.37:1 on
+  the old grey menu). Darker greys are for lines and fills.
+- Dark: the page is shade 1 (`rgb(31,38,47)`), as a black page is harsh, keeping near-black for
+  tints to fade towards; each depth a step lighter (shades 2 to 4; 1.30, 1.20, 1.23 between
+  neighbours), as shadows barely show on dark, so its shadows are also stronger (40%). Fields are
+  the page's colour.
+
+A surface on a surface isn't held to a contrast; a control's edge is, and a field has its 3:1 edge.
 
 **Headings** — typographic prominence. h1–h6 encode document outline position; these
 classes carry visual prominence, which does not always align — a deeply nested section's
@@ -974,13 +980,16 @@ card-shaped `<div>`, or anything else that would otherwise draw its own containe
 **Chrome padding**: every `sf-depth-*` pads itself by `--sf-padding`, which its size sets
 (`sf-size-*`). Depths 1 to 3 default it to a card's; depth 0, the page's surface, has no default,
 as a page isn't padded unless a size asks, and an inset on it is a plain inset, the page's margin
-at its sides, its size padding only its top and bottom (owner, 2026-11-28; the editor's top bar,
-below).
+at its sides, its size padding only its top and bottom (owner, 2026-11-28).
 
 **Stuck bars**: a stuck bar (`sf-is-sticky`) gives up its depth's all-round shadow for a line
 under it in the border colour and a soft shadow below (`0 10px 32px -12px`, the theme's shadow
 colour), so it lifts off what scrolls under it, a Card the same shade as the bar included (owner,
 2026-11-28). The edge is the theme's.
+
+**Floating boxes**: the root theme draws a box over content (`sf-is-overlay`) nearly solid (95%)
+and blurs what's behind it, so words passing under a toolbar don't show through as words (owner,
+2026-11-28).
 
 `sf-flush` opts out of the chrome-class padding default — wear alongside `sf-depth-*`
 when the child touches the container's inner edge (image cards, toolbar slots).
@@ -1588,11 +1597,10 @@ from, as a link does, so the Leave question always applies; with none, home. Sav
 page stands in words ("Save", "Saving…", "Saved") and shows only to whoever could save. The
 editors scroll the line being written clear of the bar (`scrollClearOfEditorTopBar.ts`).
 
-The page's row is on the page's surface (depth 0), padded by its size; the path's row is a bar
-(depth 1) dividing it from the page. The page's Cards (depth 1) scroll under the path's row, the
-same shade: its stuck line and soft shadow lift it off them (owner, 2026-11-28). It was depth 2,
-a layer above them, which put its coloured words on the menu shade and let the ⋮ menu blend
-into it.
+Both rows are bars (depth 1), raised off the page: white in light, a step up from the page in
+dark. The page's Cards (depth 1) scroll under the path's row, the same shade: its stuck line and
+soft shadow lift it off them (owner, 2026-11-28). It was depth 2, a layer above them, which put its
+coloured words on the menu shade and let the ⋮ menu blend into it.
 
 Exit is an arrow back, not ✕, which reads as closing and throwing away (owner, 2026-11-21). Where
 the page's row is narrow (`xs`, a phone), the warnings and Code view go into "⋮", as the site's
