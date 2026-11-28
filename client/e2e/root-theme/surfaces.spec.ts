@@ -2,7 +2,7 @@ import { expect, test } from '../fixtures'
 import { steadyRequests } from '../helpers'
 
 // How the root theme draws a surface in a context: floating, a card or an ordinary button is
-// see-through; contained, it has no background or border; pinned, it is solid, so what scrolls
+// solid; contained, it has no background or border; pinned, it is solid, so what scrolls
 // under it doesn't show. A box with a fill keeps it instead (fill.spec.ts).
 
 const SURFACES = [
@@ -52,9 +52,7 @@ for (const mode of MODES)
 		)
 		SURFACES.forEach((surface, s) => {
 			const { floating, contained, pinned } = looks[s]!
-			const floatingAlpha = alpha(floating.background)
-			expect.soft(floatingAlpha, `${surface.name}, floating, see-through`).toBeGreaterThan(0)
-			expect.soft(floatingAlpha, `${surface.name}, floating, see-through`).toBeLessThan(1)
+			expect.soft(alpha(floating.background), `${surface.name}, floating, solid`).toBe(1)
 			expect.soft(contained.background, `${surface.name}, contained`).toBe('rgba(0, 0, 0, 0)')
 			expect
 				.soft(contained.border, `${surface.name}'s border, contained`)
@@ -65,8 +63,7 @@ for (const mode of MODES)
 
 // Under the pointer, a floating box keeps its surface, with the hover's tint over it, as the tint
 // alone let what it floats over show through; one contained in another (the drag handle in the
-// toolbar's slot) has neither surface nor blur, at rest or under the pointer (sf-system.md,
-// "Floating boxes").
+// toolbar's slot) has no surface, at rest or under the pointer (sf-system.md, "Floating boxes").
 for (const mode of MODES)
 	test(`a floating box under the pointer keeps its surface; a contained one has none, ${mode.name}`, async ({
 		page,
@@ -89,14 +86,13 @@ for (const mode of MODES)
 					tinted:
 						style.backgroundImage !== 'none'
 						|| style.backgroundColor !== 'rgba(0, 0, 0, 0)',
-					blur: style.backdropFilter,
 				}
 			})
 
 		const floatingAtRest = await look('floating')
 		await page.locator('#floating').hover()
 		const floatingOver = await look('floating')
-		expect.soft(alpha(floatingAtRest.surface), 'floating, at rest, see-through').toBeLessThan(1)
+		expect.soft(alpha(floatingAtRest.surface), 'floating, at rest, solid').toBe(1)
 		expect
 			.soft(floatingOver.surface, 'floating, under the pointer, its surface')
 			.toBe(floatingAtRest.surface)
@@ -108,8 +104,6 @@ for (const mode of MODES)
 		expect
 			.soft(containedAtRest.surface, 'contained, at rest, no surface')
 			.toBe('rgba(0, 0, 0, 0)')
-		expect.soft(containedAtRest.blur, 'contained, at rest, no blur').toBe('none')
-		expect.soft(containedOver.blur, 'contained, under the pointer, no blur').toBe('none')
 		expect
 			.soft(alpha(containedOver.surface), 'contained, under the pointer, only the tint')
 			.toBeLessThan(0.2)

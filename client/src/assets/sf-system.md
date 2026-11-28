@@ -450,7 +450,7 @@ tokens are prefixed `--sf-`. Two kinds, distinguished by separator:
 --sf-leading-*    line height      (none, tight, snug, normal, relaxed, loose)
 --sf-tracking-*   letter spacing   (tight, normal, wide)
 --sf-shadow-*     shadow elevation (sm..xl)
---sf-blur-*       backdrop blur    (sm, md; a floating box's, a scrim's)
+--sf-blur-*       backdrop blur    (sm, md; the root theme's scrim takes md)
 --sf-primary-*    primary palette  (1..9)
 --sf-surface-*    neutral range    (0..9; 0 the end away from the text)
 --sf-alpha-*      channel-tint alpha values     (1..9)
@@ -993,12 +993,11 @@ under it in the border colour and a soft shadow below (`0 10px 32px -12px`, the 
 colour), so it lifts off what scrolls under it, a Card the same shade as the bar included (owner,
 2026-11-28). The edge is the theme's.
 
-**Floating boxes**: the root theme draws a box over content (`sf-is-overlay`) see-through
-(`--sf-alpha-7`) and blurs what's behind it (`--sf-blur-sm`), so it shows something is under it
-without its words reading; nearly solid, the blur didn't show (owner, 2026-11-28). Under the
-pointer it keeps its surface, with the hover's tint over it, as the tint alone let what it floats
-over show through. One contained in another (the drag handle in the toolbar's slot) has neither
-surface nor blur, which would blur the box it's in under its own shape.
+**Floating boxes**: the root theme draws a box over content (`sf-is-overlay`) solid, its depth's
+surface, with no blur: see-through with a blur behind was one more look to balance, and is left
+for now (owner, 2026-11-28). Under the pointer it keeps its surface, with the hover's tint over it,
+as the tint alone let what it floats over show through. One contained in another (the drag handle
+in the toolbar's slot) has no surface of its own.
 
 `sf-flush` opts out of the chrome-class padding default — wear alongside `sf-depth-*`
 when the child touches the container's inner edge (image cards, toolbar slots).

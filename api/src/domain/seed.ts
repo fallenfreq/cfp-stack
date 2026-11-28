@@ -83,7 +83,7 @@ const ROOT_TOKENS: TokenSpec[] = [
 	// Shadow opacity (theme-character knob)
 	{ name: '--sf-shadow-opacity', value: '0.12', kind: 'number' },
 
-	// Blur: how much a box blurs what's behind it (a floating box's, a scrim's).
+	// Blur: how much a box blurs what's behind it (a scrim's; sm is unused by the root theme).
 	{ name: '--sf-blur-sm', value: '6px', kind: 'length' },
 	{ name: '--sf-blur-md', value: '8px', kind: 'length' },
 
@@ -929,8 +929,8 @@ const fillBorder = (selector: RuleSelector, color: string): RuleSpec[] => [
 ]
 /** A surface's background, or the box's fill when it has one. */
 const underFill = (background: string) => `var(--sfx-fill-color, ${background})`
-/** A floating box's surface: its depth's, see-through (sf-system.md, "Floating boxes"). */
-const FLOATING_SURFACE = 'rgb(var(--sfx-surface-color, var(--sf-surface_page)) / var(--sf-alpha-7))'
+/** A floating box's surface: its depth's (sf-system.md, "Floating boxes"). */
+const FLOATING_SURFACE = 'rgb(var(--sfx-surface-color, var(--sf-surface_page)))'
 /** The hover look's tint: the words' colour, faint. */
 const HOVER_TINT = 'rgb(from currentColor r g b / var(--sf-alpha-1))'
 /** A border: the theme's border colour at its strength (sf-system.md, "Edges"). */
@@ -1702,17 +1702,12 @@ const ROOT_RULES: RuleSpec[] = [
 	// Overlay context — reads --sfx-surface-color (bridge variable set by each depth bundle) so one
 	// bare rule works at any depth without duplicating colour knowledge. Theme can compound
 	// (e.g. sf-depth-3.sf-is-overlay) to override for specific depths where different treatment is needed.
-	// A context changes a box's surface, never its fill (sf-system.md, "Fill parts"). See-through,
-	// with what's behind blurred, so it shows something is under it without its words reading.
+	// A context changes a box's surface, never its fill (sf-system.md, "Fill parts"). Solid, so what
+	// it floats over doesn't show through (sf-system.md, "Floating boxes").
 	{
 		classNames: ['sf-is-overlay'],
 		cssProperty: 'background',
 		value: underFill(FLOATING_SURFACE),
-	},
-	{
-		classNames: ['sf-is-overlay'],
-		cssProperty: 'backdrop-filter',
-		value: 'blur(var(--sf-blur-sm))',
 	},
 
 	// Sticky context: a stuck bar's edge is a line under it and a soft shadow below, in place of
@@ -1805,18 +1800,12 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-is-warning'], cssProperty: '--sfx-line-style', value: 'dotted' },
 	...drawsLine(['sf-is-warning']),
-	// sf-is-contained × sf-is-overlay — contained wins over the overlay's see-through surface and
-	// its blur, which would blur the box it's in under its own shape (alphabetical emission order
-	// would let sf-is-overlay win at equal specificity).
+	// sf-is-contained × sf-is-overlay — contained wins over the overlay's surface (alphabetical
+	// emission order would let sf-is-overlay win at equal specificity).
 	{
 		classNames: ['sf-is-contained', 'sf-is-overlay'],
 		cssProperty: 'background',
 		value: underFill('none'),
-	},
-	{
-		classNames: ['sf-is-contained', 'sf-is-overlay'],
-		cssProperty: 'backdrop-filter',
-		value: 'none',
 	},
 	// sf-is-overlay × sf-loudness-2 × sf-variant-* — a floating tint gets its depth's shadow back
 	// (a tinted box in a card is flat; a floating one isn't). It keeps its fill as any box does.
