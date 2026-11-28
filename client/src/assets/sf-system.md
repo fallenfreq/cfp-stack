@@ -400,17 +400,22 @@ A theme changes a fill by setting its part, never `background`:
 
 A box's words say two things, each a part, as the line's and the fill's do (owner, 2026-11-25):
 
-| Part                          | Says                                                                                 | Passed by                                                                                            |
-| ----------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| Colour (`--sfx-text-color`)   | what the words are: a colour's words, or those for a fill                            | each colour (`sf-variant-*`); each fill                                                              |
-| Strength (`--sfx-text-alpha`) | how strong: 60% quiet, 40% a quiet icon, full when hovered or a quiet field typed in | `sf-loudness-1`, `sf-icon` with it, `sf-on-hover`, an `input` or `textarea` with `sf-field` typed in |
+| Part                          | Says                                                                                            | Passed by                                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Colour (`--sfx-text-color`)   | what the words are: a colour's words, or those for a fill                                       | each colour (`sf-variant-*`); each fill                                                              |
+| Strength (`--sfx-text-alpha`) | how strong: 70% quiet (dark 80%), 60% a quiet icon, full when hovered or a quiet field typed in | `sf-loudness-1`, `sf-icon` with it, `sf-on-hover`, an `input` or `textarea` with `sf-field` typed in |
 
 A fill is a loud button, chip, tag, status or counter, a loud colour, an avatar or the switch's
 knob; it passes its `fg_on_*` (or `fg_inverted`). Whatever passes the colour draws the words from
-it at the strength passed, so quiet coloured words are that colour at 60%, with no rule of their
-own. A field's hint (its placeholder) isn't its words: 50%, read by neither part, so hover
-doesn't brighten it and it reads as nothing entered yet, the editor's "Untitled" too (owner,
-2026-11-27). Picked and current read the colour, `var(--sfx-text-color, <the brand's words>)`: a coloured
+it at the strength passed, so quiet coloured words are that colour at quiet's strength, with no
+rule of their own. A field's hint (its placeholder) isn't its words: the text colour at quiet
+words' 70%, read by neither part, so hover doesn't brighten it, and italic, so it reads as
+nothing entered yet beside quiet words of the same strength, the editor's "Untitled" too (owner,
+2026-11-28).
+
+Quiet is dimmed, never past what can be read: quiet words reach 4.5:1 and a quiet icon or the drag
+handle 3:1 on the page, a bar, a menu and a modal (owner, 2026-11-28). At 60% and 40% they were
+3.94:1 and 2.32:1 on light's page; dark's words take 80%, as 70% is 4.40:1 on its modal. Picked and current read the colour, `var(--sfx-text-color, <the brand's words>)`: a coloured
 thing keeps its colour and a loud one its fill's words, one rule each; current says it again
 with hover, or the loud hover rule below would win on a loud link that is on. Under the pointer a loud
 thing turns dark, so its words are its fill's, or light where it has no fill of its own (an
@@ -424,7 +429,7 @@ lilac, 2.72:1).
 
 Limits, none in the app: a plain loud button that is on doesn't darken under the pointer; a filled
 box that is on looks nearly as it does off (only its edge changes); a quiet coloured avatar's
-words are at 60% on its fill. Coloured words on a hover tint can dip under 4.5:1 (Portfolio
+words are at quiet's strength on its fill. Coloured words on a hover tint can dip under 4.5:1 (Portfolio
 4.42:1).
 
 A theme changes words by setting the part, never `color`, as with fills. Both parts are
@@ -521,7 +526,7 @@ classes that read it, so an author's choice follows a theme that points it elsew
 colour, chroma doubled (`oklch(from color-mix(in oklab, <colour> 50%, <text>) l calc(c * 2) h)`),
 which reaches 4.5:1 on the page in both themes. The brand's words (links in running text,
 `sf-variant-primary` and `-featured`, `sf-on-current`, `sf-on-ancestor`) take the same rule;
-plain lilac on white is 2.04:1. Quiet brand words are the brand's words at quiet's 60%, 2.52:1,
+plain lilac on white is 2.04:1. Quiet brand words are the brand's words at quiet's 70%, 3.01:1,
 short of 4.5:1 for now. A menu's parent item (`sf-on-ancestor`) was the brand at 70%,
 1.53:1 on the light header; it now shares the current item's words without its tinted box, so
 plain, parent and current still differ (owner, 2026-11-24).
@@ -930,7 +935,7 @@ tints are made from the text colour where they sit (`currentColor`), not from th
 white text, and on a card a faded version of the card's text. Each box sets only its own
 text colour: a solid fill its `fg_on_*`, a `sf-depth-*` surface the theme's `fg_primary`, so
 a card inside a coloured box has normal text again. No rule redefines a theme token.
-Quiet passes its strength rather than a colour (60%, an icon 40%; "Text parts"), so a colour's
+Quiet passes its strength rather than a colour (70%, an icon 60%; "Text parts"), so a colour's
 words read it too, and hover passes full strength.
 A marker with its own colour that is worn with a depth (`sf-drag-handle`) needs a compound
 with that depth, since depth sits in the higher layer.

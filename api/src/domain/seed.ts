@@ -1097,8 +1097,9 @@ const ROOT_RULES: RuleSpec[] = [
 	// Loudness bare rules — apply at any depth; compounds below refine per-surface behaviour.
 	// loudness-1: muted foreground (low-attention text/element). It passes its strength, which a
 	// colour's words read too. Border cleared so text-only tier has no visible chrome. Pairs with
-	// sf-on-hover, which passes full strength, for dim-at-rest, full-on-hover pattern.
-	{ classNames: ['sf-loudness-1'], cssProperty: '--sfx-text-alpha', value: 'var(--sf-alpha-6)' },
+	// sf-on-hover, which passes full strength, for dim-at-rest, full-on-hover pattern. Strong enough
+	// to read on every surface (sf-system.md, "Text parts").
+	{ classNames: ['sf-loudness-1'], cssProperty: '--sfx-text-alpha', value: 'var(--sf-alpha-7)' },
 	{
 		classNames: ['sf-loudness-1'],
 		cssProperty: 'color',
@@ -1110,7 +1111,7 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-icon', 'sf-loudness-1'],
 		cssProperty: '--sfx-text-alpha',
-		value: 'var(--sf-alpha-4)',
+		value: 'var(--sf-alpha-6)',
 	},
 
 	// loudness-3 solid fill is button-only — see button.sf.sf-loudness-3 compound in the
@@ -2394,28 +2395,28 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-spacing-sm)',
 	},
 
-	// sf-drag-handle: dim icon at rest; border marks its floating extent. Hover/drag state
+	// sf-drag-handle: dim icon at rest, as a quiet icon; border marks its floating extent. Hover/drag state
 	// compounds below in sf-state layer override the active treatment.
 	{
 		classNames: ['sf-drag-handle'],
 		cssProperty: 'color',
-		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-6))',
 	},
 	// A depth sets the text colour; a drag handle on one stays dim.
 	{
 		classNames: ['sf-drag-handle', 'sf-depth-1'],
 		cssProperty: 'color',
-		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-6))',
 	},
 	{
 		classNames: ['sf-drag-handle', 'sf-depth-2'],
 		cssProperty: 'color',
-		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-6))',
 	},
 	{
 		classNames: ['sf-drag-handle', 'sf-depth-3'],
 		cssProperty: 'color',
-		value: 'rgb(from currentColor r g b / var(--sf-alpha-4))',
+		value: 'rgb(from currentColor r g b / var(--sf-alpha-6))',
 	},
 	{
 		classNames: ['sf-drag-handle'],
@@ -2946,12 +2947,19 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'border',
 		value: 'var(--sf-stroke-1) solid rgb(var(--sf-fg_primary) / var(--sf-alpha-6))',
 	},
-	// Placeholder — muted foreground tint so hint text reads as inactive.
+	// Placeholder — muted, at quiet words' strength so it reads on every surface, and italic, so it
+	// reads as nothing entered yet beside quiet words of the same strength.
 	{
 		classNames: ['sf-field'],
 		pseudo: '::placeholder',
 		cssProperty: 'color',
-		value: 'rgba(var(--sf-fg_primary) / var(--sf-alpha-5))',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-7))',
+	},
+	{
+		classNames: ['sf-field'],
+		pseudo: '::placeholder',
+		cssProperty: 'font-style',
+		value: 'italic',
 	},
 
 	// select.sf-field — chevron indicator + right-padding to clear it. Element-scoped
@@ -3074,13 +3082,16 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-depth-1'],
 		pseudo: ' th',
 		cssProperty: 'color',
-		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-5))',
+		value: 'rgb(var(--sf-fg_primary) / var(--sf-alpha-7))',
 	},
 ]
 
 // Dark shows height by lighter surfaces, a step a depth up from the page, where light makes all
-// that's raised white; and its fields are the page's colour (sf-system.md, "Surfaces").
+// that's raised white; and its fields are the page's colour (sf-system.md, "Surfaces"). Its quiet
+// words are a step stronger, as at light's 70% they'd fall short on a modal, its lightest surface
+// (4.40:1).
 const DARK_RULES: RuleSpec[] = [
+	{ classNames: ['sf-loudness-1'], cssProperty: '--sfx-text-alpha', value: 'var(--sf-alpha-8)' },
 	...(['1', '2', '3'] as const).flatMap((depth): RuleSpec[] => {
 		const shade = `var(--sf-surface-${Number(depth) + 1})`
 		return [

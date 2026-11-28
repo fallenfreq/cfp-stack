@@ -13,7 +13,7 @@ const MODES = [
 	{ name: 'dark', dark: true },
 ]
 
-type Part = 'outline' | 'edge' | 'cursor' | 'link' | 'words'
+type Part = 'outline' | 'edge' | 'cursor' | 'link' | 'words' | 'hint'
 type Pointer = 'over' | 'pressing'
 
 // Each case on every surface it occurs on: the page and a bar or Card (depth 1), and, but for a
@@ -94,6 +94,31 @@ const CASES: {
 		name: "a field's cursor, which shows its focus",
 		html: '<input class="sf sf-field" />',
 		part: 'cursor',
+		least: 3,
+	},
+	{
+		name: "a field's hint",
+		html: '<input class="sf sf-field" placeholder="Untitled" />',
+		part: 'hint',
+		least: 4.5,
+	},
+	// Quiet is dimmed, never past what can be read (sf-system.md, "Text parts").
+	{
+		name: 'quiet words',
+		html: '<button class="sf sf-loudness-1">Back</button>',
+		part: 'words',
+		least: 4.5,
+	},
+	{
+		name: 'a quiet icon',
+		html: '<span class="material-symbols-rounded sf-icon sf-loudness-1">close</span>',
+		part: 'words',
+		least: 3,
+	},
+	{
+		name: 'a drag handle',
+		html: '<div class="sf sf-drag-handle">⠿</div>',
+		part: 'words',
 		least: 3,
 	},
 	{
@@ -238,6 +263,9 @@ const measure = (page: Page, part: Part) =>
 			box.focus()
 			const own = getComputedStyle(box)
 			color = own.caretColor === 'auto' ? own.color : own.caretColor
+			under = behind(box)
+		} else if (part === 'hint') {
+			color = getComputedStyle(box, '::placeholder').color
 			under = behind(box)
 		} else if (part === 'edge') {
 			color = getComputedStyle(box).borderTopColor
