@@ -3,4 +3,4 @@
 // on its own. After bumping, run `pnpm seed:local`, and `pnpm seed:live` after the change
 // is deployed (live builds the stylesheet with its own code).
 // Must be valid semver (MAJOR.MINOR.PATCH).
-export const SEED_VERSION = '2.108.0'
+export const SEED_VERSION = '2.109.0'

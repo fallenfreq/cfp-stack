@@ -2,8 +2,9 @@ import { expect, test } from '../fixtures'
 import { steadyRequests } from '../helpers'
 
 // How the root theme draws a surface in a context: floating, a card or an ordinary button is
-// solid; contained, it has no background or border; pinned, it is solid, so what scrolls
-// under it doesn't show. A box with a fill keeps it instead (fill.spec.ts).
+// solid, with one edge (a button's own border isn't drawn twice); contained, it has no background
+// or border; pinned, it is solid, so what scrolls under it doesn't show. A box with a fill keeps
+// it instead (fill.spec.ts).
 
 const SURFACES = [
 	{ name: 'a card', html: '<div class="sf-depth-2">Card</div>' },
@@ -40,7 +41,13 @@ for (const mode of MODES)
 					box.classList.add(...classes.split(' '))
 					cases.append(holder)
 					const style = getComputedStyle(box)
-					return { background: style.backgroundColor, border: style.borderTopColor }
+					return {
+						background: style.backgroundColor,
+						border: style.borderTopColor,
+						borderWidth: style.borderTopWidth,
+						// A line drawn round the box by its shadow: no offset, no blur, spread only.
+						shadowLine: /(^|,\s*|\)\s)0px 0px 0px [1-9]/.test(style.boxShadow),
+					}
 				}
 				return surfaces.map((surface) => ({
 					floating: look('', surface.html, 'sf-is-overlay'),
@@ -53,6 +60,13 @@ for (const mode of MODES)
 		SURFACES.forEach((surface, s) => {
 			const { floating, contained, pinned } = looks[s]!
 			expect.soft(alpha(floating.background), `${surface.name}, floating, solid`).toBe(1)
+			expect.soft(floating.borderWidth, `${surface.name}, floating, an edge`).toBe('1px')
+			expect
+				.soft(alpha(floating.border), `${surface.name}, floating, an edge seen`)
+				.toBeGreaterThan(0)
+			expect
+				.soft(floating.shadowLine, `${surface.name}, floating, no second edge`)
+				.toBe(false)
 			expect.soft(contained.background, `${surface.name}, contained`).toBe('rgba(0, 0, 0, 0)')
 			expect
 				.soft(contained.border, `${surface.name}'s border, contained`)
@@ -83,6 +97,7 @@ for (const mode of MODES)
 				const style = getComputedStyle(box)
 				return {
 					surface: style.backgroundColor,
+					edge: style.borderTopColor,
 					tinted:
 						style.backgroundImage !== 'none'
 						|| style.backgroundColor !== 'rgba(0, 0, 0, 0)',
@@ -104,6 +119,7 @@ for (const mode of MODES)
 		expect
 			.soft(containedAtRest.surface, 'contained, at rest, no surface')
 			.toBe('rgba(0, 0, 0, 0)')
+		expect.soft(containedAtRest.edge, 'contained, no edge').toBe('rgba(0, 0, 0, 0)')
 		expect
 			.soft(alpha(containedOver.surface), 'contained, under the pointer, only the tint')
 			.toBeLessThan(0.2)

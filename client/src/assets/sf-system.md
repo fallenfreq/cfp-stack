@@ -693,8 +693,8 @@ themes usually do, so the root theme's depth rules say light's shades and the da
 rules say dark's; a depth's shade is read only by its rules, so it needs no token.
 
 - Light, as apps usually are: a grey page (shade 2, `#f4f4f5`), and everything raised off it white
-  (shade 0), each depth lifted by its shadow; what floats (depths 2 and 3) also has an edge, as it
-  can sit over a white card. Fields are white. Words only ever sit on white or the page, so a
+  (shade 0), each depth lifted by its shadow; what floats also has an edge, as it can sit over a
+  white card ("Floating boxes"). Fields are white. Words only ever sit on white or the page, so a
   colour's words that read on the page read everywhere (a menu's parent item measured 4.37:1 on
   the old grey menu). Darker greys are for lines and fills.
 - Dark: the page is shade 1 (`rgb(31,38,47)`), as a black page is harsh, keeping near-black for
@@ -996,8 +996,12 @@ colour), so it lifts off what scrolls under it, a Card the same shade as the bar
 **Floating boxes**: the root theme draws a box over content (`sf-is-overlay`) solid, its depth's
 surface, with no blur: see-through with a blur behind was one more look to balance, and is left
 for now (owner, 2026-11-28). Under the pointer it keeps its surface, with the hover's tint over it,
-as the tint alone let what it floats over show through. One contained in another (the drag handle
-in the toolbar's slot) has no surface of its own.
+as the tint alone let what it floats over show through. Its edge is floating's, not a depth's: a
+1px border in the border colour, which takes the place of a box's own (a floating button's), so
+nothing floating has two lines round it; a tint keeps its coloured one (owner, 2026-11-28). A box
+over the page that doesn't float (a modal, over its backdrop) has none, nor does a mark floating
+over a box (`sf-badge`, `sf-counter`): it's a fill, which its colour sets apart. One contained in another
+(the drag handle in the toolbar's slot) has no surface or edge of its own.
 
 `sf-flush` opts out of the chrome-class padding default — wear alongside `sf-depth-*`
 when the child touches the container's inner edge (image cards, toolbar slots).

@@ -1021,9 +1021,8 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-depth-1'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 
-	// depth-2: dropdowns, popovers — stronger shadow, and an edge: what floats can sit over a
-	// surface its own colour (a white menu on a white card). The edge is a ring in the shadow, so
-	// it takes no room.
+	// depth-2: dropdowns, popovers — stronger shadow. A floating one's edge is floating's
+	// (sf-is-overlay), not a depth's.
 	{
 		classNames: ['sf-depth-2'],
 		cssProperty: '--sfx-surface-color',
@@ -1043,12 +1042,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-depth-2'],
 		cssProperty: 'box-shadow',
-		value: `0 0 0 1px ${BORDER}, var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))`,
+		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{
 		classNames: ['sf-depth-2'],
 		cssProperty: '--sfx-depth-shadow',
-		value: `0 0 0 1px ${BORDER}, var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))`,
+		value: 'var(--sf-shadow-lg) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{ classNames: ['sf-depth-2'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
 	{
@@ -1058,7 +1057,7 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-depth-2'], cssProperty: 'padding', value: 'var(--sf-padding)' },
 
-	// depth-3: modals — strongest shadow, and depth-2's edge
+	// depth-3: modals — strongest shadow
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: '--sfx-surface-color',
@@ -1078,12 +1077,12 @@ const ROOT_RULES: RuleSpec[] = [
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: 'box-shadow',
-		value: `0 0 0 1px ${BORDER}, var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))`,
+		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	{
 		classNames: ['sf-depth-3'],
 		cssProperty: '--sfx-depth-shadow',
-		value: `0 0 0 1px ${BORDER}, var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))`,
+		value: 'var(--sf-shadow-xl) var(--sf-shadow-color, rgb(var(--sf-shadow) / var(--sf-shadow-opacity)))',
 	},
 	// Matches sf-depth-1/2 — chip-scale radius belongs to sf-chip, not depth.
 	{ classNames: ['sf-depth-3'], cssProperty: 'border-radius', value: 'var(--sf-radius-2)' },
@@ -1709,6 +1708,14 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'background',
 		value: underFill(FLOATING_SURFACE),
 	},
+	// Its edge, as it can sit over a surface its own colour (a white menu on a white card). A
+	// border, so it takes the place of a box's own (a floating button's) rather than adding a
+	// second; a tint keeps its coloured one.
+	{
+		classNames: ['sf-is-overlay'],
+		cssProperty: 'border',
+		value: `1px solid var(--sfx-fill-border-color, ${BORDER})`,
+	},
 
 	// Sticky context: a stuck bar's edge is a line under it and a soft shadow below, in place of
 	// the depth's all-round shadow, so it lifts off what scrolls under it (sf-system.md, "Stuck
@@ -1800,12 +1807,17 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-is-warning'], cssProperty: '--sfx-line-style', value: 'dotted' },
 	...drawsLine(['sf-is-warning']),
-	// sf-is-contained × sf-is-overlay — contained wins over the overlay's surface (alphabetical
-	// emission order would let sf-is-overlay win at equal specificity).
+	// sf-is-contained × sf-is-overlay — contained wins over the overlay's surface and edge
+	// (alphabetical emission order would let sf-is-overlay win at equal specificity).
 	{
 		classNames: ['sf-is-contained', 'sf-is-overlay'],
 		cssProperty: 'background',
 		value: underFill('none'),
+	},
+	{
+		classNames: ['sf-is-contained', 'sf-is-overlay'],
+		cssProperty: 'border-color',
+		value: 'var(--sfx-fill-border-color, transparent)',
 	},
 	// sf-is-overlay × sf-loudness-2 × sf-variant-* — a floating tint gets its depth's shadow back
 	// (a tinted box in a card is flat; a floating one isn't). It keeps its fill as any box does.
@@ -2384,7 +2396,7 @@ const ROOT_RULES: RuleSpec[] = [
 		value: 'var(--sf-spacing-sm)',
 	},
 
-	// sf-drag-handle: dim icon at rest, as a quiet icon; border marks its floating extent. Hover/drag state
+	// sf-drag-handle: dim icon at rest, as a quiet icon; its edge is floating's. Hover/drag state
 	// compounds below in sf-state layer override the active treatment.
 	{
 		classNames: ['sf-drag-handle'],
@@ -2406,11 +2418,6 @@ const ROOT_RULES: RuleSpec[] = [
 		classNames: ['sf-drag-handle', 'sf-depth-3'],
 		cssProperty: 'color',
 		value: 'rgb(from currentColor r g b / var(--sf-alpha-6))',
-	},
-	{
-		classNames: ['sf-drag-handle'],
-		cssProperty: 'border',
-		value: `var(--sf-stroke-1) solid ${BORDER}`,
 	},
 	// sf-drag-handle × sf-is-contained — sits in toolbar slot; drop shadow and radius.
 	// sf-is-contained already zeros border-color; sf-boundary-right restores the separator.
@@ -2774,7 +2781,8 @@ const ROOT_RULES: RuleSpec[] = [
 	// over what it marks), and keeps the box's top, as one in a bar at the top of the screen has
 	// only the bar's room above it (owner, 2026-11-26). The mark is the text colour, a fill, so
 	// floating keeps it; one wearing a variant takes the variant's fill (loudness × variant, a
-	// later layer), as on any box.
+	// later layer), as on any box. Floating, it has no edge: it's a fill, which its colour sets
+	// apart, not a surface that could meet one its own colour.
 	{ classNames: ['sf-badge'], cssProperty: 'border-radius', value: 'var(--sf-radius-full)' },
 	{
 		classNames: ['sf-counter', 'sf-is-overlay'],
@@ -2783,6 +2791,8 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-badge', 'sf-is-overlay'], cssProperty: 'margin', value: '-0.125rem' },
 	{ classNames: ['sf-counter', 'sf-is-overlay'], cssProperty: 'margin', value: '0 -0.5rem' },
+	{ classNames: ['sf-badge', 'sf-is-overlay'], cssProperty: 'border', value: 'none' },
+	{ classNames: ['sf-counter', 'sf-is-overlay'], cssProperty: 'border', value: 'none' },
 	...fill({ classNames: ['sf-badge'] }, 'currentColor'),
 	{ classNames: ['sf-badge'], cssProperty: 'inline-size', value: '0.5rem' },
 	{ classNames: ['sf-badge'], cssProperty: 'block-size', value: '0.5rem' },
