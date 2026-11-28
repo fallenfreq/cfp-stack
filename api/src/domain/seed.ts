@@ -83,9 +83,9 @@ const ROOT_TOKENS: TokenSpec[] = [
 	// Shadow opacity (theme-character knob)
 	{ name: '--sf-shadow-opacity', value: '0.12', kind: 'number' },
 
-	// Blur: how much a box blurs what's behind it (a scrim's, a floating box's).
-	{ name: '--sf-blur-sm', value: '8px', kind: 'length' },
-	{ name: '--sf-blur-md', value: '12px', kind: 'length' },
+	// Blur: how much a box blurs what's behind it (a floating box's, a scrim's).
+	{ name: '--sf-blur-sm', value: '6px', kind: 'length' },
+	{ name: '--sf-blur-md', value: '8px', kind: 'length' },
 
 	// Primary palette: soft lilac. The brand's fill is step 4 and its ink step 6 (sf-system.md,
 	// "Fill and ink").
@@ -929,6 +929,10 @@ const fillBorder = (selector: RuleSelector, color: string): RuleSpec[] => [
 ]
 /** A surface's background, or the box's fill when it has one. */
 const underFill = (background: string) => `var(--sfx-fill-color, ${background})`
+/** A floating box's surface: its depth's, see-through (sf-system.md, "Floating boxes"). */
+const FLOATING_SURFACE = 'rgb(var(--sfx-surface-color, var(--sf-surface_page)) / var(--sf-alpha-7))'
+/** The hover look's tint: the words' colour, faint. */
+const HOVER_TINT = 'rgb(from currentColor r g b / var(--sf-alpha-1))'
 /** A border: the theme's border colour at its strength (sf-system.md, "Edges"). */
 const BORDER = 'rgb(var(--sf-border_color) / var(--sf-border_alpha))'
 
@@ -1697,17 +1701,17 @@ const ROOT_RULES: RuleSpec[] = [
 	// Overlay context — reads --sfx-surface-color (bridge variable set by each depth bundle) so one
 	// bare rule works at any depth without duplicating colour knowledge. Theme can compound
 	// (e.g. sf-depth-3.sf-is-overlay) to override for specific depths where different treatment is needed.
-	// A context changes a box's surface, never its fill (sf-system.md, "Fill parts"). Nearly solid,
-	// with what's behind blurred, so words passing under don't show through as words.
+	// A context changes a box's surface, never its fill (sf-system.md, "Fill parts"). See-through,
+	// with what's behind blurred, so it shows something is under it without its words reading.
 	{
 		classNames: ['sf-is-overlay'],
 		cssProperty: 'background',
-		value: underFill('rgb(var(--sfx-surface-color, var(--sf-surface_page)) / 0.95)'),
+		value: underFill(FLOATING_SURFACE),
 	},
 	{
 		classNames: ['sf-is-overlay'],
 		cssProperty: 'backdrop-filter',
-		value: 'blur(var(--sf-blur-md))',
+		value: 'blur(var(--sf-blur-sm))',
 	},
 
 	// Sticky context: a stuck bar's edge is a line under it and a soft shadow below, in place of
@@ -1800,12 +1804,18 @@ const ROOT_RULES: RuleSpec[] = [
 	},
 	{ classNames: ['sf-is-warning'], cssProperty: '--sfx-line-style', value: 'dotted' },
 	...drawsLine(['sf-is-warning']),
-	// sf-is-contained × sf-is-overlay — contained wins over the overlay's see-through surface
-	// (alphabetical emission order would let sf-is-overlay win at equal specificity).
+	// sf-is-contained × sf-is-overlay — contained wins over the overlay's see-through surface and
+	// its blur, which would blur the box it's in under its own shape (alphabetical emission order
+	// would let sf-is-overlay win at equal specificity).
 	{
 		classNames: ['sf-is-contained', 'sf-is-overlay'],
 		cssProperty: 'background',
 		value: underFill('none'),
+	},
+	{
+		classNames: ['sf-is-contained', 'sf-is-overlay'],
+		cssProperty: 'backdrop-filter',
+		value: 'none',
 	},
 	// sf-is-overlay × sf-loudness-2 × sf-variant-* — a floating tint gets its depth's shadow back
 	// (a tinted box in a card is flat; a floating one isn't). It keeps its fill as any box does.
@@ -2053,10 +2063,18 @@ const ROOT_RULES: RuleSpec[] = [
 	// than setting the words, as resetting them took every colour's away (sf-system.md, "Text
 	// parts").
 	{ classNames: ['sf-on-hover'], cssProperty: '--sfx-text-alpha', value: '1' },
+	{ classNames: ['sf-on-hover'], cssProperty: 'background', value: HOVER_TINT },
+	// A floating box keeps its surface under the tint, as what it floats over would show through
+	// the tint alone; one contained in another (the drag handle in the toolbar's slot) has none.
 	{
-		classNames: ['sf-on-hover'],
+		classNames: ['sf-is-overlay', 'sf-on-hover'],
 		cssProperty: 'background',
-		value: 'rgb(from currentColor r g b / var(--sf-alpha-1))',
+		value: `linear-gradient(${HOVER_TINT} 0 0), ${FLOATING_SURFACE}`,
+	},
+	{
+		classNames: ['sf-is-contained', 'sf-is-overlay', 'sf-on-hover'],
+		cssProperty: 'background',
+		value: HOVER_TINT,
 	},
 
 	// A control that is busy and also natively disabled (hand-written markup; SfButton never
@@ -2873,7 +2891,7 @@ const ROOT_RULES: RuleSpec[] = [
 		cssProperty: 'background',
 		value: 'rgb(0 0 0 / var(--sf-alpha-5))',
 	},
-	{ classNames: ['sf-scrim'], cssProperty: 'backdrop-filter', value: 'blur(var(--sf-blur-sm))' },
+	{ classNames: ['sf-scrim'], cssProperty: 'backdrop-filter', value: 'blur(var(--sf-blur-md))' },
 
 	// ─── sf-content-frame ─────────────────────────────────────────────────────
 	// Frame around focusable content (CodeMirror, TipTap, contenteditable, iframe).

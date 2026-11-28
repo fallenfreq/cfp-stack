@@ -62,3 +62,55 @@ for (const mode of MODES)
 			expect.soft(alpha(pinned.background), `${surface.name}, pinned, solid`).toBe(1)
 		})
 	})
+
+// Under the pointer, a floating box keeps its surface, with the hover's tint over it, as the tint
+// alone let what it floats over show through; one contained in another (the drag handle in the
+// toolbar's slot) has neither surface nor blur, at rest or under the pointer (sf-system.md,
+// "Floating boxes").
+for (const mode of MODES)
+	test(`a floating box under the pointer keeps its surface; a contained one has none, ${mode.name}`, async ({
+		page,
+	}) => {
+		await steadyRequests(page)
+		await page.goto('/')
+		await page.evaluate((modeClass) => {
+			const cases = document.createElement('div')
+			cases.className = `${modeClass} sf-depth-1`
+			cases.innerHTML = `
+				<button id="floating" class="sf sf-depth-2 sf-is-overlay sf-on-hover">Drag</button>
+				<button id="contained" class="sf sf-depth-2 sf-is-overlay sf-is-contained sf-on-hover">Drag</button>`
+			document.body.prepend(cases)
+		}, mode.themeClass)
+		const look = (id: string) =>
+			page.locator(`#${id}`).evaluate((box) => {
+				const style = getComputedStyle(box)
+				return {
+					surface: style.backgroundColor,
+					tinted:
+						style.backgroundImage !== 'none'
+						|| style.backgroundColor !== 'rgba(0, 0, 0, 0)',
+					blur: style.backdropFilter,
+				}
+			})
+
+		const floatingAtRest = await look('floating')
+		await page.locator('#floating').hover()
+		const floatingOver = await look('floating')
+		expect.soft(alpha(floatingAtRest.surface), 'floating, at rest, see-through').toBeLessThan(1)
+		expect
+			.soft(floatingOver.surface, 'floating, under the pointer, its surface')
+			.toBe(floatingAtRest.surface)
+		expect.soft(floatingOver.tinted, 'floating, under the pointer, tinted').toBe(true)
+
+		const containedAtRest = await look('contained')
+		await page.locator('#contained').hover()
+		const containedOver = await look('contained')
+		expect
+			.soft(containedAtRest.surface, 'contained, at rest, no surface')
+			.toBe('rgba(0, 0, 0, 0)')
+		expect.soft(containedAtRest.blur, 'contained, at rest, no blur').toBe('none')
+		expect.soft(containedOver.blur, 'contained, under the pointer, no blur').toBe('none')
+		expect
+			.soft(alpha(containedOver.surface), 'contained, under the pointer, only the tint')
+			.toBeLessThan(0.2)
+	})

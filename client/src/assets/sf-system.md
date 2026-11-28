@@ -445,7 +445,7 @@ tokens are prefixed `--sf-`. Two kinds, distinguished by separator:
 --sf-leading-*    line height      (none, tight, snug, normal, relaxed, loose)
 --sf-tracking-*   letter spacing   (tight, normal, wide)
 --sf-shadow-*     shadow elevation (sm..xl)
---sf-blur-*       backdrop blur    (sm, md; a scrim's, a floating box's)
+--sf-blur-*       backdrop blur    (sm, md; a floating box's, a scrim's)
 --sf-primary-*    primary palette  (1..9)
 --sf-surface-*    neutral range    (0..9; 0 the end away from the text)
 --sf-alpha-*      channel-tint alpha values     (1..9)
@@ -988,9 +988,12 @@ under it in the border colour and a soft shadow below (`0 10px 32px -12px`, the 
 colour), so it lifts off what scrolls under it, a Card the same shade as the bar included (owner,
 2026-11-28). The edge is the theme's.
 
-**Floating boxes**: the root theme draws a box over content (`sf-is-overlay`) nearly solid (95%)
-and blurs what's behind it (`--sf-blur-md`), so words passing under a toolbar don't show through as words (owner,
-2026-11-28).
+**Floating boxes**: the root theme draws a box over content (`sf-is-overlay`) see-through
+(`--sf-alpha-7`) and blurs what's behind it (`--sf-blur-sm`), so it shows something is under it
+without its words reading; nearly solid, the blur didn't show (owner, 2026-11-28). Under the
+pointer it keeps its surface, with the hover's tint over it, as the tint alone let what it floats
+over show through. One contained in another (the drag handle in the toolbar's slot) has neither
+surface nor blur, which would blur the box it's in under its own shape.
 
 `sf-flush` opts out of the chrome-class padding default — wear alongside `sf-depth-*`
 when the child touches the container's inner edge (image cards, toolbar slots).
@@ -1598,8 +1601,8 @@ from, as a link does, so the Leave question always applies; with none, home. Sav
 page stands in words ("Save", "Saving…", "Saved") and shows only to whoever could save. The
 editors scroll the line being written clear of the bar (`scrollClearOfEditorTopBar.ts`).
 
-Both rows are bars (depth 1), raised off the page: white in light, a step up from the page in
-dark. The page's Cards (depth 1) scroll under the path's row, the same shade: its stuck line and
+The page's row is on the page's surface (depth 0), padded by its size; the path's row is a bar
+(depth 1) dividing it from the page, white in light (owner, 2026-11-28). The page's Cards (depth 1) scroll under the path's row, the same shade: its stuck line and
 soft shadow lift it off them (owner, 2026-11-28). It was depth 2, a layer above them, which put its
 coloured words on the menu shade and let the ⋮ menu blend into it.
 
